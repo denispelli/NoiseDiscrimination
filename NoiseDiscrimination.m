@@ -582,7 +582,7 @@ try
         targetOffsetPix=eccentricityPix+fixationOffsetPix;
         assert(abs(targetOffsetPix)<=maxTargetOffsetPix);
     end
-    
+
     if o.fixationBlankedNearTarget
         ffprintf(ff,'Fixation is blanked near target. No delay in showing fixation after stimulus.\n');
     else
@@ -658,7 +658,7 @@ try
         fixationXY=[x+targetOffsetPix-eccentricityPix,y];
         % clip to o.stimulusRect
         r=OffsetRect(o.stimulusRect,-fixationXY(1),-fixationXY(2));
-        
+
         % horizontal line
         lineStart=-fixationWidthPix/2;
         lineEnd=fixationWidthPix/2;
@@ -694,7 +694,7 @@ try
         if eccentricityPix<0
             fixationLines=-fixationLines;
         end
-        
+
         % vertical line
         lineStart=-fixationWidthPix/2;
         lineEnd=fixationWidthPix/2;
@@ -735,7 +735,7 @@ try
             clear screen; ShowCursor;
             error('Unknown noiseType ''%s''',o.noiseType);
     end
-    
+
     o.noiseListSd=std(noiseList);
     a=0.9*o.noiseListSd/o.noiseListBound;
     if o.noiseSD>a
@@ -800,7 +800,7 @@ try
     end
     ffprintf(ff,'Your (log) guess is %.2f ± %.2f\n',tGuess,tGuessSd);
     ffprintf(ff,'o.trialsPerRun %.0f\n',o.trialsPerRun);
-    
+
     switch o.task
         case '4afc'
             boundsRect=[-targetWidthPix,-targetHeightPix,targetWidthPix+gap,targetHeightPix+gap];
@@ -858,7 +858,7 @@ try
             targetRect=rect;
             rect=OffsetRect(rect,targetOffsetPix,0);
             boundsRect=rect;
-            
+
             % Compute noise hole mask
             noiseHoleMask=zeros(o.noiseSize);
             rect=RectOfMatrix(noiseHoleMask);
@@ -870,13 +870,13 @@ try
                 noiseHoleMask=FillRectInMatrix(0,r,noiseHoleMask);
             end
             noiseHoleMask=logical(noiseHoleMask);
-            
+
             % Compute outer noise mask (all the noise beyond the hole).
             outerNoiseMask=ones(o.noiseSize);
             outerNoiseMask=FillRectInMatrix(0,holeRect,outerNoiseMask);
             outerNoiseMask=logical(outerNoiseMask);
     end
-    
+
     power=1:length(signal);
     for i=1:length(power)
         power(i)=sum(signal(i).image(:));
@@ -918,7 +918,7 @@ try
         if o.flipClick; Speak('before Flip 911');GetClicks; end
         Screen('Flip', window); % Show gray screen at LMean with fixation and crop marks.
         if o.flipClick; Speak('after Flip 911');GetClicks; end
-        
+
         Speak('Starting new run. ');
         if isfinite(o.eccentricityDeg)
             if fixationIsOffscreen
@@ -1192,7 +1192,7 @@ try
                         % o.observerQuadratic=-2*k.
                         % The paper finds k=0.6, so
                         % o.observerQuadratic=-1.2
-                        
+
                         for i=1:locations
                             im=location(i).image(signalImageIndex);
                             im=im(:)-1;
@@ -1288,6 +1288,7 @@ try
                         ok=0;
                         while ~ok
                             try
+                                if o.flipClick; Speak('trying new gamma table 1291');GetClicks; end
                                 cal.gamma(2,:)=0.5*(cal.gamma(1,:)+cal.gamma(3,:));
                                 assert(all(all(diff(cal.gamma)>=0))); % monotonic for Windows
                                 fprintf('LoadNormalizedGammaTable test %d\n',1294); % just for debugging.
@@ -1464,7 +1465,7 @@ try
                 Screen('FillRect',window,gray1,topCaptionRect);
                 message=sprintf('Trial %d of %d. Run %d of %d.',trial,o.trialsPerRun,o.runNumber,o.runsDesired);
                 Screen('DrawText',window,message,textSize/2,textSize/2,black);
-                
+
                 % Print instructions in lower left corner.
                 textRect=[0,0,100,1.2*textSize];
                 textRect=AlignRect(textRect,screenRect,'left','bottom');
@@ -1483,7 +1484,7 @@ try
                 end
                 Screen('DrawText',window,message,textRect(1),textRect(4),black,0,1);
                 Screen('TextSize',window,textSize);
-                
+
                 % Display response alternatives.
                 switch o.task
                     case '4afc',
@@ -1832,7 +1833,7 @@ try
         end
     end
     % end
-    
+
     %     t=mean(tSample);
     %     tse=std(tSample)/sqrt(length(tSample));
     %     switch o.signalKind
