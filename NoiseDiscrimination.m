@@ -1,5 +1,5 @@
 function o=NoiseDiscrimination(oIn)
-% o=NoiseDiscrimination(o); 
+% o=NoiseDiscrimination(o);
 % Pass all your parameters in the "o" struct, which will be returned with
 % all the results as additional fields. NoiseDiscrimination may adjust some
 % of your parameters to satisfy physical constraints. Constraints include
@@ -90,7 +90,7 @@ end
 o=[];
 % THESE STATEMENTS PROVIDE DEFAULT VALUES FOR ALL THE "o" parameters.
 % They are overridden by what you provide in the argument struct oIn.
-o.useTinyWindow=0; % Just for debugging. Keeps cursor visible.
+o.useFractionOfScreen=0; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 o.distanceCm=50; % viewing distance
 o.flipScreenHorizontally=0; % Use this when viewing the display in a mirror.
 o.screen=0; % 0 for main screen
@@ -155,7 +155,7 @@ o.printCrossCorrelation=0;
 o.assessLinearity=0;
 o.assessContrast=0; % diagnostic information
 o.assessLowLuminance=0;
-flipClick=0; % For debugging, speak and wait for click before and after each flip.
+o.flipClick=0; % For debugging, speak and wait for click before and after each flip.
 assessGray=0; % For debugging. Diagnostic printout when we load gamma table.
 % o.observerQuadratic=-1.2; % estimated from old second harmonic data
 o.observerQuadratic=-0.7; % adjusted to fit noise letter data.
@@ -208,8 +208,8 @@ if o.replicatePelli2006 || isfield(oIn,'replicatePelli2006') && oIn.replicatePel
     o.targetHeightDeg=29*o.noiseCheckDeg;
     [screenWidthMm,screenHeightMm]=Screen('DisplaySize',o.screen);
     screenRect=Screen('Rect',o.screen); % CAUTION: Gives wrong result on Retina display in HiDPI mode
-    if o.useTinyWindow
-        screenRect=round(screenRect/2);
+    if o.useFractionOfScreen
+        screenRect=round(o.useFractionOfScreen*screenRect);
     end
     pixPerCm=RectWidth(screenRect)/(0.1*screenWidthMm);
     pixPerDeg=2/0.0633; % As in Pelli et al. (2006).
@@ -234,6 +234,7 @@ end
 if cal.screen>0
     fprintf('Using external monitor.\n');
 end
+cal.macModelName=MacModelName; % returns "not a mac" if appropriate.
 cal=OurScreenCalibrations(cal);
 if ~isfield(cal,'old') || ~isfield(cal.old,'L')
     fprintf('This screen has not yet been calibrated. Please use CalibrateScreenLuminance to calibrate it.\n');
@@ -242,8 +243,8 @@ end
 [screenWidthMm,screenHeightMm]=Screen('DisplaySize',cal.screen);
 screenRect=Screen('Rect',cal.screen); % CAUTION: Gives wrong result on Retina display in HiDPI mode
 % That's ok here only because we later quit if in HiDPI mode.
-if o.useTinyWindow
-    screenRect=round(screenRect/2);
+if o.useFractionOfScreen
+    screenRect=round(o.useFractionOfScreen*screenRect);
 end
 pixPerCm=RectWidth(screenRect)/(0.1*screenWidthMm);
 degPerCm=57/o.distanceCm;
@@ -377,8 +378,8 @@ end
 [screenWidthMm,screenHeightMm]=Screen('DisplaySize',cal.screen);
 cal.screenWidthCm=screenWidthMm/10;
 screenRect=Screen('Rect',cal.screen);
-if o.useTinyWindow
-    screenRect=round(screenRect/2);
+if o.useFractionOfScreen
+    screenRect=round(o.useFractionOfScreen*screenRect);
 end
 ffprintf(ff,'Computer %s, %s, screen %d, %dx%d, %.1fx%.1f cm\n',cal.machineName,cal.macModelName,cal.screen,RectWidth(screenRect),RectHeight(screenRect),screenWidthMm/10,screenHeightMm/10);
 assert(cal.screenWidthCm==screenWidthMm/10);
@@ -420,7 +421,7 @@ try
         % experiment, in which to display stimuli. If o.observer is machine,
         % we need a screen only briefly, to create the letters to be
         % identified.
-        if o.useTinyWindow
+        if o.useFractionOfScreen
             ffprintf(ff,'Using tiny window for debugging.\n');
         end
         if o.flipScreenHorizontally
@@ -431,9 +432,9 @@ try
             window=PsychImaging('OpenWindow',cal.screen,255,screenRect,[],[],[],0);
             %[windowPtr,rect]=Screen('OpenWindow',windowPtrOrScreenNumber [,color] [,rect][,pixelSize][,numberOfBuffers][,stereomode][,multisample][,imagingmode][,specialFlags][,clientRect]);
         else
-            if flipClick; Speak('before OpenWindow 348');GetClicks; end
+            if o.flipClick; Speak('before OpenWindow 435');GetClicks; end
             window=Screen('OpenWindow',cal.screen,255,screenRect);
-            if flipClick; Speak('after OpenWindow 348');GetClicks; end
+            if o.flipClick; Speak('after OpenWindow 435');GetClicks; end
         end
         if exist('cal')
             gray=mean([2 254]);  % Will be a CLUT color code for gray.
@@ -471,14 +472,17 @@ try
                 cal.nLast=gray;
                 cal=LinearizeClut(cal);
             end
+            if IsWin; assert(all(all(diff(cal.gamma)>=0))); end % monotonic for Windows
+            fprintf('LoadNormalizedGammaTable delayed %d\n',476); % just for debugging.
             Screen('LoadNormalizedGammaTable',window,cal.gamma,1); % load during flip
             Screen('FillRect',window,gray1);
             Screen('FillRect',window,gray,o.stimulusRect);
         else
             Screen('FillRect',window);
         end % if cal
+        if o.flipClick; Speak('before Flip 481');GetClicks; end
         Screen('Flip',window);
-        if flipClick; Speak('after Flip 365');GetClicks; end
+        if o.flipClick; Speak('after Flip 481');GetClicks; end
         if ~isfinite(window) || window==0
             fprintf('error\n');
             error('Screen OpenWindow failed. Please try again.');
@@ -498,9 +502,9 @@ try
         gray=mean([2 254]);  % Will be a CLUT color code for gray.
         Screen('FillRect',window,gray1);
         Screen('FillRect',window,gray,o.stimulusRect);
-        if flipClick; Speak('before Flip 448');GetClicks; end
+        if o.flipClick; Speak('before Flip 506');GetClicks; end
         Screen('Flip',window); % Screen is now all gray, at LMean.
-        if flipClick; Speak('after Flip 448. Screen should be gray.');GetClicks; end
+        if o.flipClick; Speak('after Flip 506.');GetClicks; end
     else
         window=-1;
     end
@@ -537,9 +541,9 @@ try
             Screen('DrawText',window,question1,10,RectHeight(screenRect)/2-48,black,white,1);
             Screen('DrawText',window,question2,10,RectHeight(screenRect)/2,black,white,1);
             Screen('DrawText',window,question3,10,RectHeight(screenRect)/2+48,black,white,1);
-            if flipClick; Speak('before Flip 418');GetClicks; end
+            if o.flipClick; Speak('before Flip 542');GetClicks; end
             Screen('Flip',window);
-            if flipClick; Speak('after Flip 418');GetClicks; end
+            if o.flipClick; Speak('after Flip 542');GetClicks; end
             question=[question1 question2 question3];
             Speak(question);
             answer=questdlg(question,'Fixation','Ok','Cancel','Ok');
@@ -787,7 +791,7 @@ try
         tGuess=0;
         tGuessSd=4;
     end
-    ffprintf(ff,'Your (log) guess is %.2f ?%.2f\n',tGuess,tGuessSd);
+    ffprintf(ff,'Your (log) guess is %.2f ± %.2f\n',tGuess,tGuessSd);
     ffprintf(ff,'o.trialsPerRun %.0f\n',o.trialsPerRun);
     
     switch o.task
@@ -886,7 +890,7 @@ try
         Screen('TextFont',window,textFont);
         Screen('TextSize',window,textSize);
         Screen('TextStyle',window,textStyle);
-        if ~o.useTinyWindow
+        if ~o.useFractionOfScreen
             HideCursor;
         end
     end
@@ -899,19 +903,24 @@ try
             TrimMarks(window,frameRect);
         end
         Screen('DrawLines',window,fixationLines,fixationLineWeightPix,0,fixationXY); % fixation
-        if flipClick; Speak('before LoadNormalizedGammaTable 711');GetClicks; end
+        if o.flipClick; Speak('before LoadNormalizedGammaTable delayed 911');GetClicks; end
+        if IsWin; assert(all(all(diff(cal.gamma)>=0))); end; % monotonic for Windows
         Screen('LoadNormalizedGammaTable',window,cal.gamma,1); % Wait for Flip.
         if assessGray; pp=Screen('GetImage',window,[20 20 21 21]);ffprintf(ff,'line 712: Gray index is %d (%.1f cd/m^2). Corner is %d.\n',gray,LuminanceOfIndex(cal,gray),pp(1)); end
-        if flipClick; Speak('before Flip 714');GetClicks; end
+        if o.flipClick; Speak('before Flip 911');GetClicks; end
         Screen('Flip', window); % Show gray screen at LMean with fixation and crop marks.
-        if flipClick; Speak('after Flip 714');GetClicks; end
+        if o.flipClick; Speak('after Flip 911');GetClicks; end
         
         Speak('Starting new run. ');
         if isfinite(o.eccentricityDeg)
             if fixationIsOffscreen
                 Speak('Please fihx your eyes on your offscreen fixation mark,');
             else
-                Speak('Please fihx your eyes on the center of the cross,');
+                if ismac
+                    Speak('Please fihx your eyes on the center of the cross,');
+                else
+                    Speak('Please fix your eyes on the center of the cross,');
+                end
             end
             word='and';
         else
@@ -921,7 +930,11 @@ try
             case '4afc',
                 Speak([word ' click when ready to begin']);
             case 'identify',
-                Speak([word ' press  the  spasebar  when ready to begin']);
+                if ismac
+                    Speak([word ' press  the  spasebar  when ready to begin']);
+                else
+                    Speak([word ' press  the  space bar  when ready to begin']);
+                end
         end
         switch o.task
             case '4afc',
@@ -1263,6 +1276,7 @@ try
                     cal.nLast=254;
                     cal=LinearizeClut(cal);
                     if IsWin
+                        cal.gamma(2,:)=0.5*(cal.gamma(1,:)+cal.gamma(3,:));
                         assert(all(all(diff(cal.gamma)>=0))); % monotonic for Windows
                     end
                     grayCheck=IndexOfLuminance(cal,LMean);
@@ -1510,17 +1524,27 @@ try
                         end
                         leftEdgeOfResponse=rect(1);
                 end
-                if flipClick; Speak('before LoadNormalizedGammaTable 1259');GetClicks; end
+                if IsWin
+%                     cal.gamma(2,:)=0.5*(cal.gamma(1,:)+cal.gamma(3,:));
+%                     cal.gamma(255,:)=0.5*(cal.gamma(254,:)+cal.gamma(256,:));
+%                     assert(all(all(diff(cal.gamma)>0))); % monotonic for Windows
+%                     fprintf('cal.gamma=[');
+%                     fprintf('%g ',cal.gamma(:,1)); fprintf(';');
+%                     fprintf('%g ',cal.gamma(:,2)); fprintf(';');
+%                     fprintf('%g ',cal.gamma(:,3)); fprintf(']'';');
+                    cal.gamma=[0:255;0:255;0:255]'/255;
+                end
+                if o.flipClick; Speak('before LoadNormalizedGammaTable 1538');GetClicks; end
                 Screen('LoadNormalizedGammaTable',window,cal.gamma);
                 if assessGray; pp=Screen('GetImage',window,[20 20 21 21]);ffprintf(ff,'line 1264: Gray index is %d (%.1f cd/m^2). Corner is %d.\n',gray,LuminanceOfIndex(cal,gray),pp(1)); end
                 if trial==1
                     WaitSecs(1); % First time is slow. Mario suggested a work around, explained at beginning of this file.
                 end
-                if flipClick; Speak('before Flip');GetClicks; end
+                if o.flipClick; Speak('before Flip dontclear 1545');GetClicks; end
                 Snd('Play',purr); % Announce that image is up, awaiting response.
                 Screen('Flip',window,0,1); % Show target with instructions.
                 signalOnset=GetSecs;
-                if flipClick; Speak('after Flip');GetClicks; end
+                if o.flipClick; Speak('after Flip dontclear 1545');GetClicks; end
                 if o.saveSnapshot
                     if o.cropOneImage
                         cropRect=location(1).rect;
@@ -1637,8 +1661,9 @@ try
                 end
                 if isfinite(o.durationSec)
                     Screen('FillRect',window,gray,eraseRect);
+                    if o.flipClick; Speak('before Flip dontclear 1665');GetClicks; end
                     Screen('Flip',window,signalOnset+o.durationSec-1/frameRate,1); % Duration is over. Erase target.
-                    %Speak('Flip 1367');
+                    if o.flipClick; Speak('after Flip dontclear 1665');GetClicks; end
                     signalOffset=GetSecs;
                     actualDuration=GetSecs-signalOnset;
                     if abs(actualDuration-o.durationSec)>0.05
@@ -1652,7 +1677,9 @@ try
                         WaitSecs(o.postStimulusPauseSecs);
                     end
                     Screen('DrawLines',window,fixationLines,fixationLineWeightPix,0,fixationXY); % fixation
+                    if o.flipClick; Speak('before Flip dontclear 1681');GetClicks; end
                     Screen('Flip',window,signalOffset+0.3,1,1); % After o.postStimulusPauseSecs, display new fixation.
+                    if o.flipClick; Speak('after Flip dontclear 1681');GetClicks; end
                 end
                 switch o.task
                     case '4afc',
@@ -1757,9 +1784,9 @@ try
     o.EOverN=10^(2*o.questMean)*E1/N;
     o.efficiency = o.idealEOverNThreshold/o.EOverN;
     if streq(o.signalKind,'luminance')
-        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold±sd log(contrast) %.2f?.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
+        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold±sd log(contrast) %.2f±%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
     else
-        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold±sd log(sigma-1) %.2f?.2f, approx required n %.0f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
+        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold±sd log(sigma-1) %.2f±%.2f, approx required n %.0f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
     end
     if abs(trialsRight/trial-o.pThreshold)>0.1
         ffprintf(ff,'WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.\n');
@@ -1784,14 +1811,14 @@ try
     %     tse=std(tSample)/sqrt(length(tSample));
     %     switch o.signalKind
     %         case 'luminance',
-    %         ffprintf(ff,'SUMMARY: %s %d runs mean±se: log(contrast) %.2f?.2f, contrast %.3f\n',o.observer,length(tSample),mean(tSample),tse,10^mean(tSample));
+    %         ffprintf(ff,'SUMMARY: %s %d runs mean±se: log(contrast) %.2f±%.2f, contrast %.3f\n',o.observer,length(tSample),mean(tSample),tse,10^mean(tSample));
     %         %         efficiency = (o.idealEOverNThreshold^2) / (10^(2*t));
     %         %         ffprintf(ff,'Efficiency = %f\n', efficiency);
     %         %o.EOverN=10^mean(2*tSample)*E1/N;
-    %         ffprintf(ff,'Threshold log E/N %.2f?.2f, E/N %.1f\n',mean(log10(o.EOverN)),std(log10(o.EOverN))/sqrt(length(o.EOverN)),o.EOverN);
+    %         ffprintf(ff,'Threshold log E/N %.2f±%.2f, E/N %.1f\n',mean(log10(o.EOverN)),std(log10(o.EOverN))/sqrt(length(o.EOverN)),o.EOverN);
     %         %o.efficiency=o.idealEOverNThreshold/o.EOverN;
     %         ffprintf(ff,'User-provided ideal threshold E/N log E/N %.2f, E/N %.1f\n',log10(o.idealEOverNThreshold),o.idealEOverNThreshold);
-    %         ffprintf(ff,'Efficiency log %.2f?.2f, %.4f %%\n',mean(log10(o.efficiency)),std(log10(o.efficiency))/sqrt(length(o.efficiency)),100*10^mean(log10(o.efficiency)));
+    %         ffprintf(ff,'Efficiency log %.2f±%.2f, %.4f %%\n',mean(log10(o.efficiency)),std(log10(o.efficiency))/sqrt(length(o.efficiency)),100*10^mean(log10(o.efficiency)));
     %         corr=zeros(length(signal));
     %         for i=1:length(signal)
     %             for j=1:i
@@ -1821,7 +1848,7 @@ try
             o.logApproxRequiredNumber=log10(o.approxRequiredNumber);
             ffprintf(ff,'sigma %.3f, approx required number %.0f\n',o.sigma,o.approxRequiredNumber);
             %              logNse=std(logApproxRequiredNumber)/sqrt(length(tSample));
-            %              ffprintf(ff,'SUMMARY: %s %d runs mean±se: log(sigma-1) %.2f?.2f, log(approx required n) %.2f?.2f\n',o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
+            %              ffprintf(ff,'SUMMARY: %s %d runs mean±se: log(sigma-1) %.2f±%.2f, log(approx required n) %.2f±%.2f\n',o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
     end
     if o.runAborted && o.runNumber<o.runsDesired
         Speak('Please type period to skip the rest and quit now, or space to continue with next run.');
@@ -1874,9 +1901,13 @@ try
     % immediately. Among several computers, the problem is always present
     % in MATLAB 2014a and never in MATLAB 2015a. (All computers are running
     % Mavericks.) denis.pelli@nyu.edu, June 18, 2015
-    status=system('osascript -e ''tell application "MATLAB" to activate''');
+    if ismac
+        status=system('osascript -e ''tell application "MATLAB" to activate''');
+    end
     RestoreCluts;
-    AutoBrightness(cal.screen,1); % Restore autobrightness.
+    if ismac
+        AutoBrightness(cal.screen,1); % Restore autobrightness.
+    end
     if window>=0
         Screen('Preference', 'VisualDebugLevel', oldVisualDebugLevel);
         Screen('Preference', 'SuppressAllWarnings', oldSupressAllWarnings);
