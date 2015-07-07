@@ -166,6 +166,7 @@ o.screen=0;
 o.alphabet='DHKNORSVZ';
 o.alphabetPlacement='top'; % 'top' or 'right';
 o.replicatePelli2006=0;
+o.isWin=IsWin; % override this to simulate Windows on a Mac.
 if isfield(oIn,'snapshot') && oIn.saveSnapshot
     % These are defaults when you enable saveSnapshot.
     o.cropOneImage=0; % Show only the target and noise, without unnecessary gray background.
@@ -234,7 +235,11 @@ end
 if cal.screen>0
     fprintf('Using external monitor.\n');
 end
-cal.macModelName=MacModelName; % returns "not a mac" if appropriate.
+if ismac
+    cal.macModelName=MacModelName;
+else
+    cal.macModelName='Not a mac';
+end
 cal=OurScreenCalibrations(cal);
 if ~isfield(cal,'old') || ~isfield(cal.old,'L')
     fprintf('This screen has not yet been calibrated. Please use CalibrateScreenLuminance to calibrate it.\n');
@@ -277,6 +282,8 @@ end
 o.stimulusRect=round(o.stimulusRect);
 fixationWidthPix=round(o.fixationWidthDeg*cal.pixPerDeg);
 fixationLineWeightPix=round(o.fixationLineWeightDeg*cal.pixPerDeg);
+fixationLineWeightPix=max(1,fixationLineWeightPix);
+o.fixationLineWeightDeg=fixationLineWeightPix/cal.pixPerDeg
 maxOnscreenFixationOffsetPix=round(RectWidth(o.stimulusRect)/2-20*fixationLineWeightPix); % allowable fixation offset, with 20 linewidth margin.
 maxTargetOffsetPix=RectWidth(o.stimulusRect)/2-targetHeightPix/2; % allowable target offset for eccentric viewing.
 if o.useFlankers
@@ -432,9 +439,9 @@ try
             window=PsychImaging('OpenWindow',cal.screen,255,screenRect,[],[],[],0);
             %[windowPtr,rect]=Screen('OpenWindow',windowPtrOrScreenNumber [,color] [,rect][,pixelSize][,numberOfBuffers][,stereomode][,multisample][,imagingmode][,specialFlags][,clientRect]);
         else
-            if o.flipClick; Speak('before OpenWindow 435');GetClicks; end
+            if o.flipClick; Speak('before OpenWindow 443');GetClicks; end
             window=Screen('OpenWindow',cal.screen,255,screenRect);
-            if o.flipClick; Speak('after OpenWindow 435');GetClicks; end
+            if o.flipClick; Speak('after OpenWindow 443');GetClicks; end
         end
         if exist('cal')
             gray=mean([2 254]);  % Will be a CLUT color code for gray.
@@ -444,7 +451,7 @@ try
             if o.assessLowLuminance
                 LMean=0.8*LMin+0.2*LMax;
             end
-            if IsWin
+            if o.isWin
                 % Windows insists on a monotonic CLUT. So we linearize
                 % practically the whole CLUT, and use the middle entry
                 % for gray.
@@ -472,8 +479,8 @@ try
                 cal.nLast=gray;
                 cal=LinearizeClut(cal);
             end
-            if IsWin; assert(all(all(diff(cal.gamma)>=0))); end % monotonic for Windows
-            fprintf('LoadNormalizedGammaTable delayed %d\n',476); % just for debugging.
+%             if o.isWin; assert(all(all(diff(cal.gamma)>=0))); end % monotonic for Windows
+            fprintf('LoadNormalizedGammaTable delayed %d\n',484); % just for debugging.
             Screen('LoadNormalizedGammaTable',window,cal.gamma,1); % load during flip
             Screen('FillRect',window,gray1);
             Screen('FillRect',window,gray,o.stimulusRect);
@@ -904,7 +911,8 @@ try
         end
         Screen('DrawLines',window,fixationLines,fixationLineWeightPix,0,fixationXY); % fixation
         if o.flipClick; Speak('before LoadNormalizedGammaTable delayed 911');GetClicks; end
-        if IsWin; assert(all(all(diff(cal.gamma)>=0))); end; % monotonic for Windows
+        if o.isWin; assert(all(all(diff(cal.gamma)>=0))); end; % monotonic for Windows
+        fprintf('LoadNormalizedGammaTable delayed %d\n',916); % just for debugging.
         Screen('LoadNormalizedGammaTable',window,cal.gamma,1); % Wait for Flip.
         if assessGray; pp=Screen('GetImage',window,[20 20 21 21]);ffprintf(ff,'line 712: Gray index is %d (%.1f cd/m^2). Corner is %d.\n',gray,LuminanceOfIndex(cal,gray),pp(1)); end
         if o.flipClick; Speak('before Flip 911');GetClicks; end
@@ -1250,8 +1258,8 @@ try
                         cal.LLast=max(L);
                     end
                     % Compute clut for all possible images. Note: Except
-                    % under Windows, the gray screen is drawn with CLUT
-                    % index n=1.
+                    % under Windows, the gray screen in the non-stimulus
+                    % areas is drawn with CLUT index n=1.
                     %
                     % Noise
                     cal.LFirst=LMean*(1-o.noiseListBound*sigma*o.noiseSD/o.noiseListSd);
@@ -1266,6 +1274,7 @@ try
                     end
                     % Center the range on LMean.
                     delta=max(cal.LLast-LMean,LMean-cal.LFirst);
+                    maxDelta=min(max(cal.old.L)-LMean,LMean-min(cal.old.L));
                     cal.LFirst=LMean-delta;
                     cal.LLast=LMean+delta;
                     if o.saveSnapshot
@@ -1275,9 +1284,25 @@ try
                     cal.nFirst=2;
                     cal.nLast=254;
                     cal=LinearizeClut(cal);
-                    if IsWin
-                        cal.gamma(2,:)=0.5*(cal.gamma(1,:)+cal.gamma(3,:));
-                        assert(all(all(diff(cal.gamma)>=0))); % monotonic for Windows
+                    if o.isWin
+                        ok=0;
+                        while ~ok
+                            try
+                                cal.gamma(2,:)=0.5*(cal.gamma(1,:)+cal.gamma(3,:));
+                                assert(all(all(diff(cal.gamma)>=0))); % monotonic for Windows
+                                fprintf('LoadNormalizedGammaTable test %d\n',1294); % just for debugging.
+                                Screen('LoadNormalizedGammaTable',window,cal.gamma); % might fail
+                                ok=1;
+                            catch
+                                if delta==maxDelta
+                                    error('Couldn''t fix the gamma table. Alas. delta=%.1f cd/m^2',delta);
+                                end
+                                delta=min(maxDelta,delta+LMean*0.02);
+                                cal.LFirst=LMean-delta;
+                                cal.LLast=LMean+delta;
+                                cal=LinearizeClut(cal);
+                            end
+                        end
                     end
                     grayCheck=IndexOfLuminance(cal,LMean);
                     if ~o.saveSnapshot && grayCheck~=gray
@@ -1524,7 +1549,7 @@ try
                         end
                         leftEdgeOfResponse=rect(1);
                 end
-                if IsWin
+                if o.isWin
 %                     cal.gamma(2,:)=0.5*(cal.gamma(1,:)+cal.gamma(3,:));
 %                     cal.gamma(255,:)=0.5*(cal.gamma(254,:)+cal.gamma(256,:));
 %                     assert(all(all(diff(cal.gamma)>0))); % monotonic for Windows
@@ -1532,9 +1557,10 @@ try
 %                     fprintf('%g ',cal.gamma(:,1)); fprintf(';');
 %                     fprintf('%g ',cal.gamma(:,2)); fprintf(';');
 %                     fprintf('%g ',cal.gamma(:,3)); fprintf(']'';');
-                    cal.gamma=[0:255;0:255;0:255]'/255;
+%                     cal.gamma=[0:255;0:255;0:255]'/255;
                 end
                 if o.flipClick; Speak('before LoadNormalizedGammaTable 1538');GetClicks; end
+                fprintf('LoadNormalizedGammaTable %d\n',1564); % just for debugging.
                 Screen('LoadNormalizedGammaTable',window,cal.gamma);
                 if assessGray; pp=Screen('GetImage',window,[20 20 21 21]);ffprintf(ff,'line 1264: Gray index is %d (%.1f cd/m^2). Corner is %d.\n',gray,LuminanceOfIndex(cal,gray),pp(1)); end
                 if trial==1
