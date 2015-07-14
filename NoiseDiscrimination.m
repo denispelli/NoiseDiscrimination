@@ -942,23 +942,16 @@ try
         Screen('Flip', window,0,1); % Show gray screen at LMean with fixation and crop marks. Don't clear buffer.
         if o.flipClick; Speak('after Flip 911');GetClicks; end
         
-        if o.speakInstructions
-            Speak('Starting new run. ');
-        end
         Screen('DrawText',window,'Starting new run. ',textSize,1.5*textSize,black0,gray1);
         if isfinite(o.eccentricityDeg)
             if fixationIsOffscreen
-                if o.speakInstructions
-                    Speak('Please fihx your eyes on your offscreen fixation mark,');
-                end
+                speech{1}='Please fihx your eyes on your offscreen fixation mark,';
                 msg='Please fix your eyes on your offscreen fixation mark, ';
             else
-                if o.speakInstructions
-                    if ismac
-                        Speak('Please fihx your eyes on the center of the cross,');
-                    else
-                        Speak('Please fix your eyes on the center of the cross,');
-                    end
+                if ismac
+                    speech{1}='Please fihx your eyes on the center of the cross,';
+                else
+                    speech{1}='Please fix your eyes on the center of the cross,';
                 end
                 msg='Please fix your eyes on the center of the cross, ';
             end
@@ -969,21 +962,22 @@ try
         Screen('DrawText',window,msg,textSize,2*1.5*textSize);
         switch o.task
             case '4afc',
-                if o.speakInstructions
-                    Speak([word ' click when ready to begin']);
-                end
+                speech{2}=[word ' click when ready to begin'];
                 Screen('DrawText',window,[word ' click when ready to begin.'],textSize,3*1.5*textSize);
             case 'identify',
-                if o.speakInstructions
-                    if ismac
-                        Speak([word ' press  the  spasebar  when ready to begin']);
-                    else
-                        Speak([word ' press  the  space bar  when ready to begin']);
-                    end
+                if ismac
+                    speech{2}=[word ' press  the  spasebar  when ready to begin'];
+                else
+                    speech{2}=[word ' press  the  space bar  when ready to begin'];
                 end
                 Screen('DrawText',window,[word ' press  the  space bar  when ready to begin.'],textSize,3*1.5*textSize);
         end
         Screen('Flip',window);
+        if o.speakInstructions
+            Speak('Starting new run. ');
+            Speak(speech{1});
+            Speak(speech{2});
+        end
         switch o.task
             case '4afc',
                 GetClicks;
