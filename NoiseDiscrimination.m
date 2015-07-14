@@ -90,6 +90,7 @@ end
 o=[];
 % THESE STATEMENTS PROVIDE DEFAULT VALUES FOR ALL THE "o" parameters.
 % They are overridden by what you provide in the argument struct oIn.
+o.logLoadNormalizedGammaTable=0; % Keep a log of these calls.
 o.useFractionOfScreen=0; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 o.distanceCm=50; % viewing distance
 o.flipScreenHorizontally=0; % Use this when viewing the display in a mirror.
@@ -138,7 +139,8 @@ o.outerNoiseSD=nan; % Typically nan (i.e. use o.noiseSD) or 0.2. For noise beyon
 o.noiseCheckDeg=0.2; % Typically 0.05 or 0.2.
 o.noiseToTargetRatio=inf; % Noise extent re target. Typically 1 or inf.
 o.noiseHoleToTargetRatio=0; % Typically 1 or 0 (no hole).
-o.noiseHoleSparesTargetArea=0; % 0 (no sparing) or 1 (put noise on the target, despite any hole).
+o.noiseOnTargetRegardless=0; % 0 (no noise in noise hole) or 1 (put noise on the target, despite any hole).
+o.yellowHoleToTargetRatio=inf; % Typically 1, or 2, or inf (for no yellow);
 o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
 o.noiseFrozenInTrial=0; % 0 or 1.  If true (1), use same noise at all locations
 o.noiseFrozenInRun=0; % 0 or 1.  If true (1), use same noise on every trial
@@ -479,8 +481,8 @@ try
                 cal.nLast=gray;
                 cal=LinearizeClut(cal);
             end
-%             if o.isWin; assert(all(all(diff(cal.gamma)>=0))); end % monotonic for Windows
-            fprintf('LoadNormalizedGammaTable delayed %d\n',484); % just for debugging.
+            %             if o.isWin; assert(all(all(diff(cal.gamma)>=0))); end % monotonic for Windows
+            if o.logLoadNormalizedGammaTable; fprintf('LoadNormalizedGammaTable %d\n',486); end
             Screen('LoadNormalizedGammaTable',window,cal.gamma,1); % load during flip
             Screen('FillRect',window,gray1);
             Screen('FillRect',window,gray,o.stimulusRect);
@@ -644,6 +646,9 @@ try
     o.noiseHoleSize=o.noiseHoleToTargetRatio*[targetHeightPix/o.noiseCheckPix,targetWidthPix/o.noiseCheckPix];
     o.noiseHoleSize=round(o.noiseHoleSize);
     o.noiseHoleToTargetRatio = o.noiseHoleSize(1)/(targetHeightPix/o.noiseCheckPix);
+    o.yellowHoleSize=o.yellowHoleToTargetRatio*[targetHeightPix/o.noiseCheckPix,targetWidthPix/o.noiseCheckPix];
+    o.yellowHoleSize=round(o.yellowHoleSize);
+    o.yellowHoleToTargetRatio= o.yellowHoleSize(1)/(targetHeightPix/o.noiseCheckPix);
     %ffprintf(ff,'Ratio of height of hole in noise to that of target is %.2f\n',o.noiseHoleToTargetRatio);
     ffprintf(ff,'Noise height %.2f deg. Noise hole %.2f deg. Height is %.2f and hole is %.2f of target height.\n',...
         o.noiseToTargetRatio*o.targetHeightDeg,o.noiseHoleToTargetRatio*o.targetHeightDeg,o.noiseToTargetRatio,o.noiseHoleToTargetRatio);
@@ -798,7 +803,7 @@ try
         tGuess=0;
         tGuessSd=4;
     end
-    ffprintf(ff,'Your (log) guess is %.2f ± %.2f\n',tGuess,tGuessSd);
+    ffprintf(ff,'Your (log) guess is %.2f ?%.2f\n',tGuess,tGuessSd);
     ffprintf(ff,'o.trialsPerRun %.0f\n',o.trialsPerRun);
 
     switch o.task
@@ -865,7 +870,7 @@ try
             holeRect=[0 0 o.noiseHoleSize(1) o.noiseHoleSize(2)];
             holeRect=round(CenterRect(holeRect,rect));
             noiseHoleMask=FillRectInMatrix(1,holeRect,noiseHoleMask);
-            if o.noiseHoleSparesTargetArea
+            if o.noiseOnTargetRegardless
                 r=CenterRect(targetRect/o.noiseCheckPix,rect);
                 noiseHoleMask=FillRectInMatrix(0,r,noiseHoleMask);
             end
@@ -875,6 +880,15 @@ try
             outerNoiseMask=ones(o.noiseSize);
             outerNoiseMask=FillRectInMatrix(0,holeRect,outerNoiseMask);
             outerNoiseMask=logical(outerNoiseMask);
+
+            if isfinite(o.yellowHoleToTargetRatio)
+                % Compute yellow mask (everything beyond the hole).
+                yellowMask=ones(o.noiseSize);
+                yellowHoleRect=[0 0 o.yellowHoleSize(1) o.yellowHoleSize(2)];
+                yellowHoleRect=round(CenterRect(yellowHoleRect,rect));
+                yellowMask=FillRectInMatrix(0,yellowHoleRect,yellowMask);
+                yellowMask=logical(yellowMask);
+            end
     end
 
     power=1:length(signal);
@@ -912,7 +926,7 @@ try
         Screen('DrawLines',window,fixationLines,fixationLineWeightPix,0,fixationXY); % fixation
         if o.flipClick; Speak('before LoadNormalizedGammaTable delayed 911');GetClicks; end
         if o.isWin; assert(all(all(diff(cal.gamma)>=0))); end; % monotonic for Windows
-        fprintf('LoadNormalizedGammaTable delayed %d\n',916); % just for debugging.
+        if o.logLoadNormalizedGammaTable; fprintf('LoadNormalizedGammaTable delayed %d\n',930); end
         Screen('LoadNormalizedGammaTable',window,cal.gamma,1); % Wait for Flip.
         if assessGray; pp=Screen('GetImage',window,[20 20 21 21]);ffprintf(ff,'line 712: Gray index is %d (%.1f cd/m^2). Corner is %d.\n',gray,LuminanceOfIndex(cal,gray),pp(1)); end
         if o.flipClick; Speak('before Flip 911');GetClicks; end
@@ -948,7 +962,7 @@ try
             case '4afc',
                 GetClicks;
             case 'identify',
-                FlushEvents; % flush. May not be needed.
+%                 FlushEvents; % flush. May not be needed.
                 ListenChar(0); % flush. May not be needed.
                 ListenChar(2); % no echo. Needed.
                 GetChar;
@@ -1288,21 +1302,31 @@ try
                         ok=0;
                         while ~ok
                             try
-                                if o.flipClick; Speak('trying new gamma table 1291');GetClicks; end
+                                if o.flipClick; Speak('Trying new gamma table 1305');GetClicks; end
                                 cal.gamma(2,:)=0.5*(cal.gamma(1,:)+cal.gamma(3,:));
                                 assert(all(all(diff(cal.gamma)>=0))); % monotonic for Windows
-                                fprintf('LoadNormalizedGammaTable test %d\n',1294); % just for debugging.
+                                if o.logLoadNormalizedGammaTable; ffprintf(ff,'LoadNormalizedGammaTable %d, delta/LMean=%.2f\n',1308,delta/LMean); end
                                 Screen('LoadNormalizedGammaTable',window,cal.gamma); % might fail
                                 ok=1;
                             catch
                                 if delta==maxDelta
-                                    error('Couldn''t fix the gamma table. Alas. delta=%.1f cd/m^2',delta);
+                                    error('Couldn''t fix the gamma table. Alas. delta/LMean=%.2f cd/m^2',delta/LMean);
                                 end
                                 delta=min(maxDelta,delta+LMean*0.02);
                                 cal.LFirst=LMean-delta;
                                 cal.LLast=LMean+delta;
                                 cal=LinearizeClut(cal);
                             end
+                        end
+                        if ~Screen(window,'WindowKind')
+                            % Alas, Screen LoadNormalizedGammaTable closes
+                            % our window when it cannot load the CLUT. So
+                            % we reopen it here. This is visible to the
+                            % observer and causes an unsightly delay.
+                            if o.logLoadNormalizedGammaTable; ffprintf(ff,'LoadNormalizedGammaTable succeeded with delta/LMean=%.2f\n',delta/LMean); end
+                            window=Screen('OpenWindow',cal.screen,gray1,screenRect);
+                            Screen('TextSize',window,textSize);
+                            Screen('TextFont',window,'Verdana');
                         end
                     end
                     grayCheck=IndexOfLuminance(cal,LMean);
@@ -1368,6 +1392,15 @@ try
                         img=location(1).image;
                         % ffprintf(ff,'o.noiseSD %.1f, contrast %.2f, image max %.2f, min %.2f, clut min %.2f, max %.2f\n',o.noiseSD,o.contrast,max(img(:)),min(img(:)),cal.LFirst/LMean,cal.LLast/LMean);
                         img=IndexOfLuminance(cal,img*LMean);
+                        if isfinite(o.yellowHoleToTargetRatio)
+                            m=img;
+                            a=zeros(size(m,1),size(m,2),3);
+                            a(:,:,1)=m;
+                            a(:,:,2)=m;
+                            m(yellowMask)=0;
+                            a(:,:,3)=m;
+                            img=a;
+                        end
                         img=Expand(img,o.noiseCheckPix);
                         if o.assessLinearity
                             gratingL=LMean*repmat([0.2 1.8],400,200);
@@ -1551,17 +1584,17 @@ try
                         leftEdgeOfResponse=rect(1);
                 end
                 if o.isWin
-%                     cal.gamma(2,:)=0.5*(cal.gamma(1,:)+cal.gamma(3,:));
-%                     cal.gamma(255,:)=0.5*(cal.gamma(254,:)+cal.gamma(256,:));
-%                     assert(all(all(diff(cal.gamma)>0))); % monotonic for Windows
-%                     fprintf('cal.gamma=[');
-%                     fprintf('%g ',cal.gamma(:,1)); fprintf(';');
-%                     fprintf('%g ',cal.gamma(:,2)); fprintf(';');
-%                     fprintf('%g ',cal.gamma(:,3)); fprintf(']'';');
-%                     cal.gamma=[0:255;0:255;0:255]'/255;
+                    %                     cal.gamma(2,:)=0.5*(cal.gamma(1,:)+cal.gamma(3,:));
+                    %                     cal.gamma(255,:)=0.5*(cal.gamma(254,:)+cal.gamma(256,:));
+                    %                     assert(all(all(diff(cal.gamma)>0))); % monotonic for Windows
+                    %                     ffprintf(ff,'cal.gamma=[');
+                    %                     ffprintf(ff,'%g ',cal.gamma(:,1)); ffprintf(ff,';');
+                    %                     ffprintf(ff,'%g ',cal.gamma(:,2)); ffprintf(ff,';');
+                    %                     ffprintf(ff,'%g ',cal.gamma(:,3)); ffprintf(ff,']'';');
+                    %                     cal.gamma=[0:255;0:255;0:255]'/255;
                 end
                 if o.flipClick; Speak('before LoadNormalizedGammaTable 1538');GetClicks; end
-                fprintf('LoadNormalizedGammaTable %d\n',1564); % just for debugging.
+                if o.logLoadNormalizedGammaTable;ffprintf(ff,'LoadNormalizedGammaTable %d\n',1597); end
                 Screen('LoadNormalizedGammaTable',window,cal.gamma);
                 if assessGray; pp=Screen('GetImage',window,[20 20 21 21]);ffprintf(ff,'line 1264: Gray index is %d (%.1f cd/m^2). Corner is %d.\n',gray,LuminanceOfIndex(cal,gray),pp(1)); end
                 if trial==1
@@ -1786,7 +1819,7 @@ try
             %Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
             cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
             if abs(cal.brightnessSetting-cal.brightnessReading)>0.01
-                fprintf('Screen brightness was set to %.0f%%, but now reads as %.0f%%.\n',100*cal.brightnessSetting,100*cal.brightnessReading);
+                ffprintf(ff,'Screen brightness was set to %.0f%%, but now reads as %.0f%%.\n',100*cal.brightnessSetting,100*cal.brightnessReading);
                 sca;
                 Speak('Error. The screen brightness changed. In System Preferences Displays please turn off "Automatically adjust brightness".');
                 error('Screen brighness changed. Please disable System Preferences:Displays:"Automatically adjust brightness".');
@@ -1802,18 +1835,18 @@ try
     o.trials=trial;
     switch o.thresholdParameter
         case 'spacing',
-            fprintf('%s: p %.0f%%, size %.2f deg, ecc. %.1f deg, critical spacing %.2f deg.\n',o.observer,100*o.p,targetSizeDeg,o.eccentricityDeg,10^QuestMean(q));
+            ffprintf(ff,'%s: p %.0f%%, size %.2f deg, ecc. %.1f deg, critical spacing %.2f deg.\n',o.observer,100*o.p,targetSizeDeg,o.eccentricityDeg,10^QuestMean(q));
         case 'size',
-            fprintf('%s: p %.0f%%, ecc. %.1f deg, threshold size %.3f deg.\n',o.observer,100*o.p,o.eccentricityDeg,10^QuestMean(q));
+            ffprintf(ff,'%s: p %.0f%%, ecc. %.1f deg, threshold size %.3f deg.\n',o.observer,100*o.p,o.eccentricityDeg,10^QuestMean(q));
         case 'contrast',
     end
     o.contrast=-10^o.questMean;
     o.EOverN=10^(2*o.questMean)*E1/N;
     o.efficiency = o.idealEOverNThreshold/o.EOverN;
     if streq(o.signalKind,'luminance')
-        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold±sd log(contrast) %.2f±%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
+        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold±sd log(contrast) %.2f?.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
     else
-        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold±sd log(sigma-1) %.2f±%.2f, approx required n %.0f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
+        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold±sd log(sigma-1) %.2f?.2f, approx required n %.0f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
     end
     if abs(trialsRight/trial-o.pThreshold)>0.1
         ffprintf(ff,'WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.\n');
@@ -1825,11 +1858,11 @@ try
         qq=q;
         qq.beta=bestBeta;
         qq=QuestRecompute(qq);
-        fprintf('dt    P\n');
+        ffprintf(ff,'dt    P\n');
         tt=QuestMean(qq);
         for offset=sort(offsetToMeasureBeta)
             t=tt+offset;
-            fprintf('%5.2f %.2f\n',offset,QuestP(qq,offset));
+            ffprintf(ff,'%5.2f %.2f\n',offset,QuestP(qq,offset));
         end
     end
     % end
@@ -1838,14 +1871,14 @@ try
     %     tse=std(tSample)/sqrt(length(tSample));
     %     switch o.signalKind
     %         case 'luminance',
-    %         ffprintf(ff,'SUMMARY: %s %d runs mean±se: log(contrast) %.2f±%.2f, contrast %.3f\n',o.observer,length(tSample),mean(tSample),tse,10^mean(tSample));
+    %         ffprintf(ff,'SUMMARY: %s %d runs mean±se: log(contrast) %.2f?.2f, contrast %.3f\n',o.observer,length(tSample),mean(tSample),tse,10^mean(tSample));
     %         %         efficiency = (o.idealEOverNThreshold^2) / (10^(2*t));
     %         %         ffprintf(ff,'Efficiency = %f\n', efficiency);
     %         %o.EOverN=10^mean(2*tSample)*E1/N;
-    %         ffprintf(ff,'Threshold log E/N %.2f±%.2f, E/N %.1f\n',mean(log10(o.EOverN)),std(log10(o.EOverN))/sqrt(length(o.EOverN)),o.EOverN);
+    %         ffprintf(ff,'Threshold log E/N %.2f?.2f, E/N %.1f\n',mean(log10(o.EOverN)),std(log10(o.EOverN))/sqrt(length(o.EOverN)),o.EOverN);
     %         %o.efficiency=o.idealEOverNThreshold/o.EOverN;
     %         ffprintf(ff,'User-provided ideal threshold E/N log E/N %.2f, E/N %.1f\n',log10(o.idealEOverNThreshold),o.idealEOverNThreshold);
-    %         ffprintf(ff,'Efficiency log %.2f±%.2f, %.4f %%\n',mean(log10(o.efficiency)),std(log10(o.efficiency))/sqrt(length(o.efficiency)),100*10^mean(log10(o.efficiency)));
+    %         ffprintf(ff,'Efficiency log %.2f?.2f, %.4f %%\n',mean(log10(o.efficiency)),std(log10(o.efficiency))/sqrt(length(o.efficiency)),100*10^mean(log10(o.efficiency)));
     %         corr=zeros(length(signal));
     %         for i=1:length(signal)
     %             for j=1:i
@@ -1875,7 +1908,7 @@ try
             o.logApproxRequiredNumber=log10(o.approxRequiredNumber);
             ffprintf(ff,'sigma %.3f, approx required number %.0f\n',o.sigma,o.approxRequiredNumber);
             %              logNse=std(logApproxRequiredNumber)/sqrt(length(tSample));
-            %              ffprintf(ff,'SUMMARY: %s %d runs mean±se: log(sigma-1) %.2f±%.2f, log(approx required n) %.2f±%.2f\n',o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
+            %              ffprintf(ff,'SUMMARY: %s %d runs mean±se: log(sigma-1) %.2f?.2f, log(approx required n) %.2f?.2f\n',o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
     end
     if o.runAborted && o.runNumber<o.runsDesired
         Speak('Please type period to skip the rest and quit now, or space to continue with next run.');
