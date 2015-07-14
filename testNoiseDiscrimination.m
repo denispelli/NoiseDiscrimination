@@ -13,6 +13,6 @@ o.noiseOnTargetRegardless=0; % 0 (no noise in noise hole) or 1 (put noise on the
 o.durationSec=inf; % Typically 0.2 or inf (wait indefinitely for response).
 o.flipClick=0;
 o.trialsPerRun=70; % Typically 40.
-o.speakInstructions=1;
+o.speakInstructions=0;
 o=NoiseDiscrimination(o);
 sca;

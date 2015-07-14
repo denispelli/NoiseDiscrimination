@@ -942,7 +942,7 @@ try
         Screen('Flip', window,0,1); % Show gray screen at LMean with fixation and crop marks. Don't clear buffer.
         if o.flipClick; Speak('after Flip 911');GetClicks; end
         
-        Screen('DrawText',window,'Starting new run. ',textSize,1.5*textSize,black0,gray1);
+        Screen('DrawText',window,'Starting new run. ',0.5*textSize,1.5*textSize,black0,gray1,1);
         if isfinite(o.eccentricityDeg)
             if fixationIsOffscreen
                 speech{1}='Please fihx your eyes on your offscreen fixation mark,';
@@ -959,18 +959,18 @@ try
         else
             word='Please';
         end
-        Screen('DrawText',window,msg,textSize,2*1.5*textSize);
+        Screen('DrawText',window,msg,0.5*textSize,2*1.5*textSize,black0,gray1,1);
         switch o.task
             case '4afc',
                 speech{2}=[word ' click when ready to begin'];
-                Screen('DrawText',window,[word ' click when ready to begin.'],textSize,3*1.5*textSize);
+                Screen('DrawText',window,[word ' click when ready to begin.'],0.5*textSize,3*1.5*textSize,black0,gray1,1);
             case 'identify',
                 if ismac
                     speech{2}=[word ' press  the  spasebar  when ready to begin'];
                 else
                     speech{2}=[word ' press  the  space bar  when ready to begin'];
                 end
-                Screen('DrawText',window,[word ' press  the  space bar  when ready to begin.'],textSize,3*1.5*textSize);
+                Screen('DrawText',window,[word ' press  the  space bar  when ready to begin.'],0.5*textSize,3*1.5*textSize,black0,gray1,1);
         end
         Screen('Flip',window);
         if o.speakInstructions
