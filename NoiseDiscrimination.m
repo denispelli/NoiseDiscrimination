@@ -944,16 +944,14 @@ try
         
         if o.speakInstructions
             Speak('Starting new run. ');
-        else
-            Screen('DrawText',window,'Starting new run. ',textSize,1.5*textSize,black0,gray1);
         end
+        Screen('DrawText',window,'Starting new run. ',textSize,1.5*textSize,black0,gray1);
         if isfinite(o.eccentricityDeg)
             if fixationIsOffscreen
                 if o.speakInstructions
                     Speak('Please fihx your eyes on your offscreen fixation mark,');
-                else
-                    msg='Please fix your eyes on your offscreen fixation mark, ';
                 end
+                msg='Please fix your eyes on your offscreen fixation mark, ';
             else
                 if o.speakInstructions
                     if ismac
@@ -961,24 +959,20 @@ try
                     else
                         Speak('Please fix your eyes on the center of the cross,');
                     end
-                else
-                    msg='Please fix your eyes on the center of the cross, ';
                 end
+                msg='Please fix your eyes on the center of the cross, ';
             end
             word='and';
         else
             word='Please';
         end
-        if ~o.speakInstructions
-            Screen('DrawText',window,msg,textSize,2*1.5*textSize);
-        end
+        Screen('DrawText',window,msg,textSize,2*1.5*textSize);
         switch o.task
             case '4afc',
                 if o.speakInstructions
                     Speak([word ' click when ready to begin']);
-                else
-                    Screen('DrawText',window,[word ' click when ready to begin.'],textSize,3*1.5*textSize);
                 end
+                Screen('DrawText',window,[word ' click when ready to begin.'],textSize,3*1.5*textSize);
             case 'identify',
                 if o.speakInstructions
                     if ismac
@@ -986,13 +980,10 @@ try
                     else
                         Speak([word ' press  the  space bar  when ready to begin']);
                     end
-                else
-                    Screen('DrawText',window,[word ' press  the  space bar  when ready to begin.'],textSize,3*1.5*textSize);
                 end
+                Screen('DrawText',window,[word ' press  the  space bar  when ready to begin.'],textSize,3*1.5*textSize);
         end
-        if ~o.speakInstructions
-            Screen('Flip',window);
-        end
+        Screen('Flip',window);
         switch o.task
             case '4afc',
                 GetClicks;
