@@ -105,6 +105,7 @@ o.observer='junk'; % Name of person or existing algorithm.
 o.trialsPerRun=40; % Typically 40.
 o.runNumber=1; % For display only, indicate the run number. When o.runNumber==runsDesired this program says "Congratulations" before returning.
 o.runsDesired=1; % How many runs you to plan to do, used solely for display (and congratulations).
+o.speakInstructions=1;
 o.congratulateWhenDone=1; % 0 or 1. Spoken after last run (i.e. when o.runNumber==0.runsDesired). You can turn this off.
 o.runAborted=0; % 0 or 1. Returned value is 1 if the user aborts this run (i.e. threshold).
 o.quitNow=0; % 0 or 1. Returned value is 1 if the observer wants to quit now; no more runs.
@@ -560,7 +561,9 @@ try
             Screen('Flip',window);
             if o.flipClick; Speak('after Flip 542');GetClicks; end
             question=[question1 question2 question3];
-            Speak(question);
+            if o.speakInstructions
+                Speak(question);
+            end
             answer=questdlg(question,'Fixation','Ok','Cancel','Ok');
             switch answer
                 case 'Ok',
@@ -646,14 +649,14 @@ try
     % pixels that won't be seen. We could instead limit o.noiseSize. The
     % end result is the same.
     o.noiseSize=o.noiseToTargetRatio*[targetHeightPix/o.noiseCheckPix,targetWidthPix/o.noiseCheckPix];
-    o.noiseSize=round(o.noiseSize);
+    o.noiseSize=2*round(o.noiseSize/2); % An even number, so we can center it on center of letter.
     o.noiseToTargetRatio = o.noiseSize(1)/(targetHeightPix/o.noiseCheckPix);
     %ffprintf(ff,'Ratio of height of noise to that of target is %.2f\n',o.noiseToTargetRatio);
     o.noiseHoleSize=o.noiseHoleToTargetRatio*[targetHeightPix/o.noiseCheckPix,targetWidthPix/o.noiseCheckPix];
-    o.noiseHoleSize=round(o.noiseHoleSize);
+    o.noiseHoleSize=2*round(o.noiseHoleSize/2); % An even number, so we can center it on center of letter.
     o.noiseHoleToTargetRatio = o.noiseHoleSize(1)/(targetHeightPix/o.noiseCheckPix);
     o.yellowHoleSize=o.yellowHoleToTargetRatio*[targetHeightPix/o.noiseCheckPix,targetWidthPix/o.noiseCheckPix];
-    o.yellowHoleSize=round(o.yellowHoleSize);
+    o.yellowHoleSize=2*round(o.yellowHoleSize/2); % An even number, so we can center it on center of letter.
     o.yellowHoleToTargetRatio= o.yellowHoleSize(1)/(targetHeightPix/o.noiseCheckPix);
     %ffprintf(ff,'Ratio of height of hole in noise to that of target is %.2f\n',o.noiseHoleToTargetRatio);
     ffprintf(ff,'Noise height %.2f deg. Noise hole %.2f deg. Height is %.2f and hole is %.2f of target height.\n',...
@@ -936,33 +939,59 @@ try
         Screen('LoadNormalizedGammaTable',window,cal.gamma,1); % Wait for Flip.
         if assessGray; pp=Screen('GetImage',window,[20 20 21 21]);ffprintf(ff,'line 712: Gray index is %d (%.1f cd/m^2). Corner is %d.\n',gray,LuminanceOfIndex(cal,gray),pp(1)); end
         if o.flipClick; Speak('before Flip 911');GetClicks; end
-        Screen('Flip', window); % Show gray screen at LMean with fixation and crop marks.
+        Screen('Flip', window,0,1); % Show gray screen at LMean with fixation and crop marks. Don't clear buffer.
         if o.flipClick; Speak('after Flip 911');GetClicks; end
         
-        Speak('Starting new run. ');
+        if o.speakInstructions
+            Speak('Starting new run. ');
+        else
+            Screen('DrawText',window,'Starting new run. ',textSize,1.5*textSize,black0,gray1);
+        end
         if isfinite(o.eccentricityDeg)
             if fixationIsOffscreen
-                Speak('Please fihx your eyes on your offscreen fixation mark,');
-            else
-                if ismac
-                    Speak('Please fihx your eyes on the center of the cross,');
+                if o.speakInstructions
+                    Speak('Please fihx your eyes on your offscreen fixation mark,');
                 else
-                    Speak('Please fix your eyes on the center of the cross,');
+                    msg='Please fix your eyes on your offscreen fixation mark, ';
+                end
+            else
+                if o.speakInstructions
+                    if ismac
+                        Speak('Please fihx your eyes on the center of the cross,');
+                    else
+                        Speak('Please fix your eyes on the center of the cross,');
+                    end
+                else
+                    msg='Please fix your eyes on the center of the cross, ';
                 end
             end
             word='and';
         else
             word='Please';
         end
+        if ~o.speakInstructions
+            Screen('DrawText',window,msg,textSize,2*1.5*textSize);
+        end
         switch o.task
             case '4afc',
-                Speak([word ' click when ready to begin']);
-            case 'identify',
-                if ismac
-                    Speak([word ' press  the  spasebar  when ready to begin']);
+                if o.speakInstructions
+                    Speak([word ' click when ready to begin']);
                 else
-                    Speak([word ' press  the  space bar  when ready to begin']);
+                    Screen('DrawText',window,[word ' click when ready to begin.'],textSize,3*1.5*textSize);
                 end
+            case 'identify',
+                if o.speakInstructions
+                    if ismac
+                        Speak([word ' press  the  spasebar  when ready to begin']);
+                    else
+                        Speak([word ' press  the  space bar  when ready to begin']);
+                    end
+                else
+                    Screen('DrawText',window,[word ' press  the  space bar  when ready to begin.'],textSize,3*1.5*textSize);
+                end
+        end
+        if ~o.speakInstructions
+            Screen('Flip',window);
         end
         switch o.task
             case '4afc',
