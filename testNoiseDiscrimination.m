@@ -14,5 +14,7 @@ o.durationSec=inf; % Typically 0.2 or inf (wait indefinitely for response).
 o.flipClick=0;
 o.trialsPerRun=70; % Typically 40.
 o.speakInstructions=0;
+o.saveSnapshot=1;
+o.cropSnapshot=1; % Show only the target and noise, without unnecessary gray background.
 o=NoiseDiscrimination(o);
 sca;

@@ -1,15 +1,20 @@
 clear all
+o.speakInstructions=1;
+o.speakMute=0;
 %Script to test effects of outside noise vs. inside noise. 
 o.runNumber=0;
-o.runsDesired = 14;
-saveData = 0;
-maskType = 'OverlapMask'; %choose from 'GeneralMask', 'OverlapMask', 'Crowding';
+% o.runsDesired = 14;
+o.runsDesired = 1;
+saveData = 1;
+maskType = 'Crowding'; %choose from 'GeneralMask', 'OverlapMask', 'Crowding';
 for run=1:o.runsDesired
-    for noiseContrast = shuffle([0 0 .01 .01 .02 .02 .04 .04 .08 .08 .16 .16 .32 .32])
-    
+%     for noiseContrast = Shuffle([0 0 .01 .01 .02 .02 .04 .04 .08 .08 .16 .16 .32 .32])
+        for noiseContrast = Shuffle([.2])
+
         o.noiseSD=noiseContrast;
         o.targetHeightDeg=2;
         o.eccentricityDeg=8;
+%         o.eccentricityDeg=20;
         acuityDeg = .029*(o.eccentricityDeg + 2.72);
         criticalSpacingDeg = .3*(o.eccentricityDeg + .45);
 
@@ -23,7 +28,8 @@ for run=1:o.runsDesired
         o.durationSec=inf;
         o.noiseType='gaussian';
         o.noiseCheckDeg=(1/10)*o.targetHeightDeg;
-        o.trialsPerRun =70 ; 
+%         o.trialsPerRun =70 ; 
+        o.trialsPerRun =50; 
         o.useFlankers=0;
 
         switch maskType
@@ -62,7 +68,7 @@ for run=1:o.runsDesired
             o=NoiseDiscrimination(o);
             o.idealEOverNThreshold=o.EOverN;
         end
-        o.observer='Nick';
+        o.observer='QiZhang';
         %o.observer = 'ideal';
         o.congratulateWhenDone=1; % You can turn this off, and Speak your own progress report in your main program.
         o=NoiseDiscrimination(o);

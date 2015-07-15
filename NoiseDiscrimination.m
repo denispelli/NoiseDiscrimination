@@ -132,7 +132,7 @@ o.flankerContrast=nan; % Nan requests that flanker contrast always equal signal 
 o.flankerSpacingDeg=4;
 % o.flankerSpacingDeg=1.4*o.targetHeightDeg; % Put this in your code, if
 % you like. It won't work here.
-o.noiseSD=0.2; % Usually in the range 0 to 0.3. Typically 0.2.
+o.noiseSD=0.2; % Usually in the range 0 to 0.4. Typically 0.2.
 o.outerNoiseSD=nan; % Typically nan (i.e. use o.noiseSD) or 0.2. For noise beyond the hole.
 o.noiseCheckDeg=0.2; % Typically 0.05 or 0.2.
 o.noiseToTargetRatio=inf; % Noise extent re target. Typically 1 or inf.
@@ -168,23 +168,12 @@ o.alphabet='DHKNORSVZ';
 o.alphabetPlacement='top'; % 'top' or 'right';
 o.replicatePelli2006=0;
 o.isWin=IsWin; % override this to simulate Windows on a Mac.
-if isfield(oIn,'snapshot') && oIn.saveSnapshot
+if isfield(oIn,'saveSnapshot') && oIn.saveSnapshot
     % These are defaults when you enable saveSnapshot.
-    o.cropOneImage=0; % Show only the target and noise, without unnecessary gray background.
+    o.cropSnapshot=0; % Show only the target and noise, without unnecessary gray background.
     o.showCropMarks=0;
     o.eccentricityDeg=inf;
-    switch o.signalKind
-        case 'luminance',
-            tSaveOneImage= -0.0; % log10(sd-1)
-            o.noiseSD=0.2;
-        case 'noise',
-            tSaveOneImage= .3; % log10(sd-1)
-            o.noiseSD=0.2;
-        case 'entropy',
-            tSaveOneImage= 0; % log10(sd-1)
-            o.noiseSD=0.5;
-            o.noiseSD=0.2;
-    end
+    o.noiseSD=0.2;
 end
 
 if o.replicatePelli2006 || isfield(oIn,'replicatePelli2006') && oIn.replicatePelli2006
@@ -232,6 +221,17 @@ fields=fieldnames(oIn);
 for i=1:length(fields)
     field=fields{i};
     o.(field)=oIn.(field);
+end
+
+if o.saveSnapshot
+    switch o.signalKind
+        case 'luminance',
+            tSaveOneImage= -0.0; % log10(contrast)
+        case 'noise',
+            tSaveOneImage= .3; % log10(sd-1)
+        case 'entropy',
+            tSaveOneImage= 0; % log10(sd-1)
+    end
 end
 
 useImresize=exist('imresize','file'); % Requires the Image Processing Toolbox.
@@ -926,7 +926,7 @@ try
     end
     frameRect=InsetRect(boundsRect,-1,-1);
     % for o.runNumber=1:o.runsDesired
-    if ~ismember(o.observer,{'ideal','brightnessSeeker','maximum'}) && ~o.saveSnapshot;
+    if ~ismember(o.observer,{'ideal','brightnessSeeker','maximum'}) %&& ~o.saveSnapshot;
         Screen('FillRect',window,gray1);
         Screen('FillRect',window,gray,o.stimulusRect);
         if o.showCropMarks
@@ -1645,7 +1645,7 @@ try
                 signalOnset=GetSecs;
                 if o.flipClick; Speak('after Flip dontclear 1545');GetClicks; end
                 if o.saveSnapshot
-                    if o.cropOneImage
+                    if o.cropSnapshot
                         cropRect=location(1).rect;
                         if streq(o.task,'4afc')
                             for i=2:4
@@ -1707,7 +1707,10 @@ try
                             Screen('DrawText',window,sprintf('sd ratio %.3f',1+10^tTest),rect(1),rect(2)-90);
                             Screen('DrawText',window,sprintf('approx required n %.0f',approxRequiredN),rect(1),rect(2)-60);
                     end
-                    Screen('DrawText',window,sprintf('n %.0f',checks),rect(1),rect(2)-30);
+                    switch o.signalKind
+                        case {'noise','entropy'},
+                            Screen('DrawText',window,sprintf('n %.0f',checks),rect(1),rect(2)-30);
+                    end
                     switch o.task
                         case '4afc',
                             answer=signalLocation;
@@ -1735,7 +1738,12 @@ try
                         otherwise
                             signalDescription=sprintf('%s',o.signalKind);
                     end
-                    filename=sprintf('%s_%s_%s%s_%.3fsigma_%.0fpix_%.0freq_%s',signalDescription,o.task,o.noiseType,freezing,1+10^tTest,checks,approxRequiredN,answerString);
+                    switch o.signalKind
+                        case 'luminance',
+                            filename=sprintf('%s_%s_%s%s_%.3fc_%.0fpix_%s',signalDescription,o.task,o.noiseType,freezing,10^tTest,checks,answerString);
+                        case {'noise','entropy'},
+                            filename=sprintf('%s_%s_%s%s_%.3fsigma_%.0fpix_%.0freq_%s',signalDescription,o.task,o.noiseType,freezing,1+10^tTest,checks,approxRequiredN,answerString);
+                    end
                     mypath=fileparts(mfilename('fullpath'));
                     saveSnapshotFid=fopen(fullfile(mypath,[filename '.png']),'rt');
                     if saveSnapshotFid~=-1
@@ -1753,10 +1761,16 @@ try
                     filename=[filename '.png'];
                     imwrite(img,fullfile(mypath,filename),'png');
                     ffprintf(ff,'Saving image to file "%s" ',filename);
-                    ffprintf(ff,'approx required n %.0f, sd ratio %.3f, log(sd-1) %.2f\n',approxRequiredN,1+10^tTest,tTest);
+                    switch o.signalKind
+                        case 'luminance',
+                            ffprintf(ff,'log(contrast) %.2f\n',tTest);
+                        case {'noise','entropy'},
+                            ffprintf(ff,'approx required n %.0f, sd ratio %.3f, log(sd-1) %.2f\n',approxRequiredN,1+10^tTest,tTest);
+                    end
                     o.trialsPerRun=1;
                     o.runsDesired=1;
-                    throw(MException('o.saveSnapshot:Done','SUCCESS: Image saved, now returning.'));
+%                     throw(MException('o.saveSnapshot:Done','SUCCESS: Image saved, now returning.'));
+                    error('NOT AN ERROR: o.saveSnapshot is done. SUCCESS: Image saved, now returning.');
                 end
                 if isfinite(o.durationSec)
                     if ~isfinite(o.yellowHoleToTargetRatio)

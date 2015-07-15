@@ -184,7 +184,23 @@ if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && streq(cal.machin
 	cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
 	cal.old.L=[ 1.054 1.088 1.283 1.85 3.417 5.244 7.556 10.18 13.82 17.95 22.64 28.14 34.3 41.6 49.56 57.47 66.82 75.91 86.85 99 111.6 125.7 139.5 154.3 169.8 188.1 206 223.7 243.7 264.9 286.6 310.1 328.1]; % cd/m^2
 end
-
+% 
+% if cal.screen==0 && cal.screenWidthMm==345 && cal.screenHeightMm==194
+% 	cal.screenOutput=[]; % used only under Linux
+% 	cal.ScreenConfigureDisplayBrightnessWorks=0;
+% 	cal.brightnessSetting=1.00;
+% 	cal.brightnessRmsError=NaN;
+% 	cal.screenRect=[0 0 1366 768];
+% 	cal.mfilename='CalibrateScreenLuminance';
+% 	cal.datestr='04-Jul-2015 19:43:51';
+% 	cal.notes='Lab 1603 TPY, dusk, with lights off; ThinkPad E50 LCD, HID: MONITOR\LEN40B0, Windows 8.1 64bit, MATLAB R2015a';
+% 	cal.calibratedBy='Hormet Yiltiz';
+% 	cal.dacBits=8; % Assumed value.
+% %	cal.dacBits=8; % From ReadNormalizedGammaTable, unverified.
+% 	cal.dacMax=(2^cal.dacBits)-1;
+% 	cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
+% 	cal.old.L=[ 2.88 4.64 6.57 8.93 11.76 14.92 18.09 20.95 25.99 29.1 32.2 36.9 42.09 46 50.12 52.91 55.09 56.52 58.23 62.27 62.06 64.9 69.44 69.95 108.1 108.8 126.4 132.5 138.4 144.2 149.3 153.6 152.6]; % cd/m^2
+% end
 if cal.screen==0 && cal.screenWidthMm==345 && cal.screenHeightMm==194
 	cal.screenOutput=[]; % used only under Linux
 	cal.ScreenConfigureDisplayBrightnessWorks=0;
@@ -192,12 +208,12 @@ if cal.screen==0 && cal.screenWidthMm==345 && cal.screenHeightMm==194
 	cal.brightnessRmsError=NaN;
 	cal.screenRect=[0 0 1366 768];
 	cal.mfilename='CalibrateScreenLuminance';
-	cal.datestr='04-Jul-2015 19:43:51';
-	cal.notes='Lab 1603 TPY, dusk, with lights off; ThinkPad E50 LCD, HID: MONITOR\LEN40B0, Windows 8.1 64bit, MATLAB R2015a';
-	cal.calibratedBy='Hormet Yiltiz';
+	cal.datestr='14-Jul-2015 20:23:19';
+	cal.notes='Lab 1603 lab room total darkness; ThinkPad E50 LCD, HID: MONITOR\LEN40B0, Windows 8.1 64bit, MATLAB R2015a';
+	cal.calibratedBy='';
 	cal.dacBits=8; % Assumed value.
 %	cal.dacBits=8; % From ReadNormalizedGammaTable, unverified.
 	cal.dacMax=(2^cal.dacBits)-1;
 	cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
-	cal.old.L=[ 2.88 4.64 6.57 8.93 11.76 14.92 18.09 20.95 25.99 29.1 32.2 36.9 42.09 46 50.12 52.91 55.09 56.52 58.23 62.27 62.06 64.9 69.44 69.95 108.1 108.8 126.4 132.5 138.4 144.2 149.3 153.6 152.6]; % cd/m^2
+	cal.old.L=[ 1.62 2.53 3.74 5.59 7.73 9.96 12.95 15.77 18.66 22.1 25.65 29.25 33.4 36.06 39.08 44.32 53.4 57.17 63.19 68.05 76.3 84.29 91.73 99.04 106.9 116.5 125.5 134.6 142.4 150.5 157.9 162.5 163.5]; % cd/m^2
 end
