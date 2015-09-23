@@ -1,11 +1,11 @@
 function imageLuminance = LuminanceOfIndex(cal,image)
-% IndexOfLuminance uses the calibration to convert color
-% index to luminance.
+% LuminanceOfIndex uses the linear cal mapping to convert color index to
+% luminance.
 
 image=round(image);
 ii=image(:)<cal.nFirst | image(:)>cal.nLast;
 if any(ii)
-    msg1=sprintf('%.0f out-of-range pixels, with values [',sum(ii));
+    msg1=sprintf('%d out-of-range pixels, with values [',sum(ii));
     msg2=sprintf(' %.0f',unique(image(ii)));
     msg3=sprintf('], were bounded to the range %d to %d.',cal.nFirst,cal.nLast);
     warning('%s%s%s',msg1,msg2,msg3);

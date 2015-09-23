@@ -1,6 +1,9 @@
 function newCal=LinearizeClut(cal)
-% LINEARCLUT use existing luminance measurements to linearize the display's
-% luminance relative to the pixel values in the image array.
+% cal=LinearizeClut(cal);
+% LINEARCLUT uses existing luminance measurements to compute a gamma table
+% that will linearize the display's luminance relative to the pixel values
+% in the image array. To load the gamma table you can call:
+% Screen('LoadNormalizedGammaTable',screen,cal.gamma)
 % Denis Pelli, NYU, July 5, 2014
 %
 % INPUT FIELDS
@@ -79,6 +82,7 @@ assert(all(cal.old.n<=255) && all(cal.old.n>=0))
 cal.old.vG=cal.old.gamma(round(1+cal.old.n*gammaMax/255),2); % green voltage of each pixel value.
 assert(cal.nFirst<=cal.nLast);
 assert(rem(cal.nFirst,1)==0 && rem(cal.nLast,1)==0);
+assert(cal.nFirst<=cal.nLast);
 cal.n=cal.nFirst:cal.nLast; % nFirst:nLast
 cal.LFirst=min(cal.LFirst,max(cal.old.L));
 cal.LFirst=max(cal.LFirst,min(cal.old.L));
