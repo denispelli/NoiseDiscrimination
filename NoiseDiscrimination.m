@@ -1,4 +1,5 @@
 function o=NoiseDiscrimination(oIn)
+    Priority(1);
     %echo_executing_commands(2, 'local');
     diary /scratch/d 
 % o=NoiseDiscrimination(o);
@@ -83,7 +84,7 @@ function o=NoiseDiscrimination(oIn)
 % clear all
 
 rng('default');
-clear PsychHID
+%clear PsychHID
 if ismac && ~ScriptingOkShowPermission
     error('Please give MATLAB permission to control the computer. You''ll need admin privileges to do this.');
 end
@@ -1874,6 +1875,7 @@ try
                         while ~ismember(response,1:o.alternatives)
                             o.runAborted=0;
                             response = checkResponse(o.isKbLegacy);
+                            disp(sprintf('2:==>%s<==', response));
                             if response=='.'
                                 ffprintf(ff,'*** ''%c'' response. Run terminated.\n',response);
                                 Speak('Run terminated.');
@@ -1881,7 +1883,6 @@ try
                                 trial=trial-1;
                                 break;
                             end
-                            disp('###################################################################');
                             [ok,response]=ismember(upper(response),o.alphabet);
                             if ~ok
                                 Speak('Try again. Type period to quit.');
