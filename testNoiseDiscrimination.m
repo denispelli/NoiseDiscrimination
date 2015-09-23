@@ -1,4 +1,3 @@
-clear o
 % o.useFractionOfScreen=.25; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 % o.replicatePelli2006=1;
 o.pThreshold=0.64; % As in Pelli et al. (2006).
