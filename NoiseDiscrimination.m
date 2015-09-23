@@ -1,4 +1,6 @@
 function o=NoiseDiscrimination(oIn)
+    %echo_executing_commands(2, 'local');
+    diary /scratch/d 
 % o=NoiseDiscrimination(o);
 % Pass all your parameters in the "o" struct, which will be returned with
 % all the results as additional fields. NoiseDiscrimination may adjust some
@@ -158,6 +160,7 @@ o.assessLinearity=0;
 o.assessContrast=0; % diagnostic information
 o.assessLowLuminance=0;
 o.flipClick=0; % For debugging, speak and wait for click before and after each flip.
+o.isKbLegacy=1; % collect response via 1:ListenChar+GetChar; 0:KbCheck
 assessGray=0; % For debugging. Diagnostic printout when we load gamma table.
 % o.observerQuadratic=-1.2; % estimated from old second harmonic data
 o.observerQuadratic=-0.7; % adjusted to fit noise letter data.
@@ -467,6 +470,15 @@ if cal.ScreenConfigureDisplayBrightnessWorks
     Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
 end
 try
+
+    if ~o.isKbLegacy
+        % we can safely use this mode AND collect kb responses without worrying
+        % about writing to MATLAB console/editor
+        ListenChar(2); % no echo
+    end
+    KbName('UnifyKeyNames');
+
+
     if ~ismember(o.observer,{'ideal','brightnessSeeker','maximum'}) || streq(o.task,'identify')
         % If o.observer is human, We need an open window for the whole
         % experiment, in which to display stimuli. If o.observer is machine,
@@ -1019,16 +1031,20 @@ try
             case '4afc',
                 GetClicks;
             case 'identify',
-                if ~o.isWin
-                    % Strangely this line fails on Hormet's Think Pad, even
-                    % though the same call works in most other contexts on
-                    % his Think Pad.
-                    FlushEvents; % flush. May not be needed.
+                if o.isKbLegacy
+                    if ~o.isWin
+                        % Strangely this line fails on Hormet's Think Pad, even
+                        % though the same call works in most other contexts on
+                        % his Think Pad.
+                        FlushEvents; % flush. May not be needed.
+                    end
+                    ListenChar(0); % flush. May not be needed.
+                    ListenChar(2); % no echo. Needed.
+                    GetChar;
+                    ListenChar; % normal. Needed.
+                else
+                    KbWait;
                 end
-                ListenChar(0); % flush. May not be needed.
-                ListenChar(2); % no echo. Needed.
-                GetChar;
-                ListenChar; % normal. Needed.
         end
     end
     delta=0.02;
@@ -1854,15 +1870,10 @@ try
                         end
                         response=clicks;
                     case 'identify'
-                        FlushEvents('keyDown');
                         response=0;
                         while ~ismember(response,1:o.alternatives)
                             o.runAborted=0;
-                            ListenChar(0); % flush
-                            ListenChar(2); % no echo
-                            response=GetChar;
-                            ListenChar(0); % flush
-                            ListenChar; % normal
+                            response = checkResponse(o.isKbLegacy);
                             if response=='.'
                                 ffprintf(ff,'*** ''%c'' response. Run terminated.\n',response);
                                 Speak('Run terminated.');
@@ -1870,6 +1881,7 @@ try
                                 trial=trial-1;
                                 break;
                             end
+                            disp('###################################################################');
                             [ok,response]=ismember(upper(response),o.alphabet);
                             if ~ok
                                 Speak('Try again. Type period to quit.');
@@ -2011,14 +2023,9 @@ try
     end
     if o.runAborted && o.runNumber<o.runsDesired
         Speak('Please type period to skip the rest and quit now, or space to continue with next run.');
-        FlushEvents('keyDown');
         response=0;
         while 1
-            ListenChar(0); % flush
-            ListenChar(2); % no echo
-            response=GetChar;
-            ListenChar(0); % flush
-            ListenChar; % normal
+            response = checkResponse(o.isKbLegacy);
             switch response
                 case '.',
                     ffprintf(ff,'*** ''.'' response. Quitting now.\n');
@@ -2043,7 +2050,6 @@ try
         Screen('FillRect',window);
         Screen('Flip',window); % White screen
     end
-    FlushEvents('KeyDown');
     ListenChar(0); % flush
     ListenChar;
     sca; % Screen('CloseAll'); ShowCursor;
