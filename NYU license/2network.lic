@@ -1,0 +1,4 @@
+# CNS license server
+SERVER matlic2.cns.nyu.edu 27000
+USE_SERVER
+

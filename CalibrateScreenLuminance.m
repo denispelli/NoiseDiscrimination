@@ -14,6 +14,18 @@ function CalibrateScreenLuminance(screen,screenOutput)
 % Results will be appended to "OurScreenCalibrations.m".
 % Denis Pelli, March 23, 2015
 
+% Photometers that report in cd/m^2 tend to be expensive. However, there
+% are very cheap apps that run on an iPhone and report luminance in EV
+% units. EV (exposure value) units are a photographers term, and are
+% relative to a film speed. From two web pages I have the impression that
+% if one set the film speed to ISO 100, then luminance L (cd/m^2) can be
+% computed from the EV reading as
+% L = 2^(EV-3)
+% http://www.sekonic.com/downloads/l-408_english.pdf
+% https://www.resna.org/sites/default/files/legacy/conference/proceedings/2010/Outcomes/Student%20Papers/HilderbrandH.html
+% To facilitate use of such cheap light meters, I've added an EV mode to
+% the program, allowing you to specify each luminance in EV units.
+
 % For Mac OSX, Apple says, on a portable/desktop computer: Press the F1/F14 key to
 % decrease the brightness, and press the F2/F15 key to increase the
 % brightness.
@@ -146,6 +158,27 @@ try
         fprintf('Please set your screen to maximum brightness.\n');
         input('Hit return when ready to proceed:\n');
     end
+    useEV=0;
+%     response='x';
+%     Speak('What units will you use for luminance? Type E or C');
+%     while ~ismember(response,{'e','c'})
+%         response=input('What units will you use to specify luminance? Type   e (for EV)   or c (for cd/m^2) followed by return:','S');
+%         response=lower(response);
+%     end
+%     useEV= response=='e';
+    if useEV
+        luminanceUnitWords='exposure value EV';
+        luminanceUnit='EV';
+    else
+        luminanceUnitWords='candelas per meter squared';
+        luminanceUnit='cd/m^2';
+    end
+    fprintf(['Thanks. You will enter luminances in units of ' luminanceUnit '\n']);
+    if useEV
+        Speak('Please set the film speed to ISO 100 on your light meter. Then hit return to continue.');
+        fprintf('IMPORTANT: Please set the film speed to ISO 100 on your light meter.\n');
+        x=input('Hit return to continue:','S');
+    end
     fprintf('We will create a linearized gamma table that you can save for future use with this display.\n');
     computer=Screen('Computer');
     if isfield(computer,'processUserLongName')
@@ -166,7 +199,7 @@ try
     screenRect=Screen('Rect',cal.screen);
     fprintf('Computer %s, %s, screenWidthCm %.1f, screenHeightCm %.1f\n',prep(cal.machineName),prep(cal.macModelName),cal.screenWidthMm/10,cal.screenHeightMm/10);
     Speak(sprintf('We will now measure %d luminances.',luminances));
-    Speak('Use a photometer to measure the screen luminance in candelas per meter squared. Then type your reading followed by return.');
+    Speak(['Use a photometer to measure the screen luminance in ' luminanceUnitWords '.  Then type your reading followed by return.']);
     Speak('If you make a mistake, you can go back by typing -1, followed by return.');
     Screen('Preference', 'SkipSyncTests', 1);
     cal.useRetinaResolution=0;
@@ -186,7 +219,7 @@ try
         if blindCalibration
             msg=sprintf('%d of %d.',i,luminances);
             Screen('DrawText',window,msg,10,screenRect(4)-200);
-            msg=sprintf('Please measure luminance (cd/m^2) and type it in, followed by <return>:_____');
+            msg=sprintf(['Please measure luminance (' luminanceUnit ') and type it in, followed by <return>:_____']);
             Screen('DrawText',window,msg,10,screenRect(4)-150);
             msg=sprintf('For example "1.1" or "10". The screen is frozen. Just type blindly and wait to hear it.');
             Screen('DrawText',window,msg,10,screenRect(4)-100);
@@ -201,7 +234,11 @@ try
                 i=i-1;
                 continue;
             else
-                cal.old.L(i)=x;
+                if useEV
+                    cal.old.L(i)=2^(x-3); % Convert EV to cd/m^2, assuming film speed is ISO 100.
+                else
+                    cal.old.L(i)=x;
+                end
             end
             if cal.old.L(i)<0
                 Speak('Erasing one setting.');
@@ -210,7 +247,7 @@ try
             end
             Speak(sprintf('%g',cal.old.L(i)));
         else
-            msg=sprintf('%d of %d. Please typed measured luminance (cd/m^2), followed by <return>:',i,luminances);
+            msg=sprintf(['%d of %d. Please typed measured luminance (' luminanceUnit '), followed by <return>:'],i,luminances);
             ListenChar(2); % suppress echoing of keyboard in Command Window
             n=[];
             while 1
@@ -223,7 +260,11 @@ try
                     break;
                 end
             end
-            cal.old.L(i)=n;
+            if useEV
+                cal.old.L(i)=2^(n-3); % Convert EV to cd/m^2, assuming film speed is ISO 100.
+            else
+                cal.old.L(i)=n;
+            end
             if cal.old.L(i)<0
                 Speak('Erasing one setting.');
                 i=i-2;
@@ -260,6 +301,15 @@ try
     fid=fopen(fullfilename,'a+');
     for f=[1,fid]
         fprintf(f,'if ');
+        if IsWin
+            fprintf(f,'IsWin && ');
+        end
+        if IsLinux
+            fprintf(f,'IsLinux && ');
+        end
+        if IsOSX
+            fprintf(f,'IsOSX && ');
+        end
         if ismac
             fprintf(f,'streq(cal.macModelName,''%s'') && ',prep(cal.macModelName));
         end
@@ -281,13 +331,12 @@ try
         fprintf(f,'\tcal.brightnessSetting=%.2f;\n',cal.brightnessSetting);
         fprintf(f,'\tcal.brightnessRmsError=%.4f;\n',cal.brightnessRmsError);
         cal.screenRect=screenRect;
-        fprintf(f,'\tcal.screenRect=[%d %d %d %d];\n',cal.screenRect);
+        fprintf(f,'\t%% cal.screenRect=[%d %d %d %d];\n',cal.screenRect);
         fprintf(f,'\tcal.mfilename=''%s'';\n',mfilename);
         fprintf(f,'\tcal.datestr=''%s'';\n',datestr(now));
         fprintf(f,'\tcal.notes=''%s'';\n',prep(cal.notes));
         fprintf(f,'\tcal.calibratedBy=''%s'';\n',prep(cal.processUserLongName));
-        fprintf(f,'\tcal.dacBits=8; %% Assumed value.\n');
-        fprintf(f,'%%\tcal.dacBits=%d; %% From ReadNormalizedGammaTable, unverified.\n',cal.dacBits);
+        fprintf(f,'\tcal.dacBits=%d; %% From ReadNormalizedGammaTable, unverified.\n',cal.dacBits);
         fprintf(f,'\tcal.dacMax=(2^cal.dacBits)-1;\n');
         fprintf(f,'\tcal.old.n=[');
         fprintf(f,' %g',cal.old.n);

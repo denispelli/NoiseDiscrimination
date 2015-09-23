@@ -1,8 +1,8 @@
 function imageLuminance=EstimateLuminance(cal,image)
-% EsimateLuminance use existing luminance measurements to estimate the luminance
-% image that will result from displaying a given integer image. The
-% estimation includes the effect of quantization by the video DAC, which
-% has an integer range from 0 to cal.dacMax.
+% EsimateLuminance use existing luminance measurements to estimate the
+% luminance image that will result from displaying a given integer image.
+% The estimation includes the effect of quantization by the video DAC,
+% which has an integer range from 0 to cal.dacMax.
 % Denis Pelli, NYU, July 5, 2014
 % "cal" fields
 % cal.old.vG is the voltage of the green channel at pixel value cal.old.n
