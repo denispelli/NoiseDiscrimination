@@ -12,7 +12,6 @@ Register a Github account, and please contact hyiltiz@gmail.com providing your a
 
 Install one of the clients in [this](http://git-scm.com/downloads/guis) list. All these are GUI clients. You could also install the vanilla `git` from [here](http://git-scm.com/downloads) which could only be used form the command line *if you prefer*. Note that most of the features of the command-line interface is also available from the GUI, and the GUI clients also *ships with the command-line* client. *SmartGit* and/or *Github for Mac/Windows* are strongly recommended. (I have personally used vanilla git as well as SmartGit). 
 
-**In short**, install SmartGit from [here](http://www.syntevo.com/smartgit/).
 
 ## Clone the repository (from the client to your computer)
 
