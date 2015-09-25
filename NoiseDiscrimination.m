@@ -341,7 +341,8 @@ degPerCm=57/o.distanceCm;
 o.pixPerDeg=pixPerCm/degPerCm;
 textSize=round(o.textSizeDeg*o.pixPerDeg); 
 o.textSizeDeg=textSize/o.pixPerDeg;
-o.stimulusRect=InsetRect(screenRect,0,1.5*1.2*textSize);
+o.lineSpacing = o.lineSpacing;
+o.stimulusRect=InsetRect(screenRect,0,o.lineSpacing*1.2*textSize);
 o.noiseCheckPix=round(o.noiseCheckDeg*o.pixPerDeg);
 switch o.task
     case 'identify',
@@ -1083,7 +1084,7 @@ try
         Screen('Flip', window,0,1); % Show gray screen at LMean with fixation and crop marks. Don't clear buffer.
         if o.flipClick; Speak('after Flip 911');GetClicks; end
         
-        Screen('DrawText',window,'Starting new run. ',0.5*textSize,1.5*textSize,black0,gray1,1);
+        Screen('DrawText',window,'Starting new run. ',0.5*textSize,o.lineSpacing*textSize,black0,gray1,1);
         if isfinite(o.eccentricityDeg)
             if fixationIsOffscreen
                 speech{1}='Please fihx your eyes on your offscreen fixation mark,';
@@ -1100,11 +1101,11 @@ try
         else
             word='Please';
         end
-        Screen('DrawText',window,msg,0.5*textSize,2*1.5*textSize,black0,gray1,1);
+        Screen('DrawText',window,msg,0.5*textSize,2*o.lineSpacing*textSize,black0,gray1,1);
         switch o.task
             case '4afc',
                 speech{2}=[word ' click when ready to begin'];
-                Screen('DrawText',window,[word ' click when ready to begin.'],0.5*textSize,3*1.5*textSize,black0,gray1,1);
+                Screen('DrawText',window,[word ' click when ready to begin.'],0.5*textSize,3*o.lineSpacing*textSize,black0,gray1,1);
                 fprintf('Please click when ready to begin.\n');
             case 'identify',
                 if ismac
@@ -1112,7 +1113,7 @@ try
                 else
                     speech{2}=[word ' press  the  space bar  when ready to begin'];
                 end
-                Screen('DrawText',window,[word ' press the space bar when ready to begin.'],0.5*textSize,3*1.5*textSize,black0,gray1,1);
+                Screen('DrawText',window,[word ' press the space bar when ready to begin.'],0.5*textSize,3*o.lineSpacing*textSize,black0,gray1,1);
                 fprintf('Please press the space bar when ready to begin.\n');
         end
         Screen('Flip',window);
@@ -1806,7 +1807,7 @@ try
                             if o.responseNumbersInCorners
                                 % in corners
                                 r=[0 0 textSize 1.4*textSize];
-                                labelBounds=InsetRect(boundsRect,-1.1*textSize,-1.5*textSize);
+                                labelBounds=InsetRect(boundsRect,-1.1*textSize,-o.lineSpacing*textSize);
                             else
                                 % on sides
                                 r=[0 0 textSize o.targetHeightPix];
