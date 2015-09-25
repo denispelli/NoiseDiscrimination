@@ -1,7 +1,7 @@
 function o=NoiseDiscrimination(oIn)
-    Priority(1);
+    %Priority(1);
     %echo_executing_commands(2, 'local');
-    diary /scratch/d 
+    %diary /scratch/d 
 % o=NoiseDiscrimination(o);
 % Pass all your parameters in the "o" struct, which will be returned with
 % all the results as additional fields. NoiseDiscrimination may adjust some
