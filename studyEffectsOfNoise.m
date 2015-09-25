@@ -1,36 +1,29 @@
 clear o
+% o.observer='junk';
+% o.observer='ideal';
+
+
+%#### Adjust values within this block of code #####################
+o.observer='denis';
+o.distanceCm=50; % viewing distance
 o.targetHeightDeg=2;
 o.durationSec=0.2;
-o.noiseRadiusDeg=1;
-o.eccentricityDeg=0; % 0, 2, 8, 32
-o.noiseEnvelopeSpaceConstantDeg=INF; % 0.5, 2, 8, inf
-o.noiseCheckDeg=o.targetHeightDeg/10;
+o.noiseRadiusDeg=inf;
+o.eccentricityDeg=32; % 0, 2, 8, 32
+o.noiseEnvelopeSpaceConstantDeg=2; % 0.5, 2, 8, inf
+%##################################################################
 
-o.pThreshold=0.64; % As in Pelli et al. (2006).
+
+o.noiseCheckDeg=o.targetHeightDeg/10;
 % o.isWin=0; % use the Windows code even if we're on a Mac
 o.task='identify'; 
 o.signalKind='luminance'; % Display a luminance decrement.
 o.noiseType='gaussian';
 o.noiseSD=0.1;
-% o.annularNoiseSD=0.2;
-%o.noiseRadiusDeg=o.targetHeightDeg/2;
 
 % o.noiseRaisedCosineEdgeThicknessDeg=0; % midpoint of raised cosine is at o.noiseRadiusDeg.
-% o.annularNoiseSmallRadiusDeg=inf;
-% o.annularNoiseBigRadiusDeg=inf;
-% o.yellowAnnulusSmallRadiusDeg=6; % Typically 1, or 2, or inf (for no yellow);
-% o.yellowAnnulusBigRadiusDeg=7; % Typically inf.
-% o.showBlackAnnulus=0;
-% o.blackAnnulusContrast=-1; % (LBlack-LMean)/LMean. -1 for black line. >-1 for gray line.
-% o.blackAnnulusSmallRadiusDeg=3;
-% o.blackAnnulusThicknessDeg=0.1;
 % o.durationSec=inf; % Typically 0.2 or inf (wait indefinitely for response).
 % o.tGuess=log10(0.2); % Optionally tell Quest the initial log contrast on first trial.
-% o.saveStimulus=0; % saves stimulus from screen to o.savedStimulus
-% o.textSizeDeg=0.6;
-% o.fixationCrossDeg=inf;
-% o.showCropMarks=0; % mark the bounding box of the target
-% o.flipClick=0;
 % o.speakInstructions=0;
 % o.saveSnapshot=0; % 0 or 1.  If true (1), take snapshot for public presentation.
 % o.snapshotLetterContrast=0.2; % nan to request program default. If set, this determines o.tSnapshot.
@@ -38,14 +31,6 @@ o.noiseSD=0.1;
 % o.snapshotCaptionTextSizeDeg=0.5;
 % o.snapshotShowsFixationBefore=1;
 % o.snapshotShowsFixationAfter=0;
-% o.showCropMarks=1;
-% o.trialsPerRun=2; % Typically 40.
-% o.observer='junk';
-% o=NoiseDiscrimination(o);
-o.trialsPerRun=100; % Typically 40.
-% o.printLikelihood=0;
-% o.observer='ideal';
+o.trialsPerRun=100; 
 o=NoiseDiscrimination(o);
-% o.observer='blackshot';
-% o=NoiseDiscrimination(o);
 sca;
