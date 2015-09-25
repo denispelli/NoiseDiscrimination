@@ -4,7 +4,7 @@ clear o
 
 
 %#### Adjust values within this block of code #####################
-o.observer='denis';
+o.observer='shivam';
 o.distanceCm=50; % viewing distance
 o.targetHeightDeg=2;
 o.durationSec=0.2;
