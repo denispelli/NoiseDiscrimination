@@ -17,19 +17,36 @@ screenRect=Screen('Rect',cal.screen,1);
 cal.hiDPIMultiple=RectWidth(screenRect)/RectWidth(screenBufferRect);
 cal.dualResRetinaDisplay=cal.hiDPIMultiple~=1;
 
+
+cal=calRequest;
 computer=Screen('Computer');
 [cal.screenWidthMm,cal.screenHeightMm]=Screen('DisplaySize',cal.screen);
-cal.processUserLongName=computer.processUserLongName;
-cal.machineName=strrep(computer.machineName,'’',''''); % work around bug in Screen('Computer')
-cal.macModelName=MacModelName;
+if computer.windows
+    cal.processUserLongName=getenv('USERNAME');
+    cal.machineName=getenv('USERDOMAIN');
+    cal.macModelName=[];
+elseif computer.linux
+    cal.processUserLongName=getenv('USER');
+    cal.machineName=strrep(computer.machineName,'鈥?',''''); % work around bug in Screen('Computer')
+    cal.osversion=computer.kern.version;
+    cal.macModelName=[];
+elseif computer.osx || computer.macintosh
+    cal.processUserLongName=computer.processUserLongName;
+    cal.machineName=strrep(computer.machineName,'鈥?',''''); % work around bug in Screen('Computer')
+    cal.macModelName=MacModelName;
+end
 cal.screenOutput=[]; % only for Linux
 cal.ScreenConfigureDisplayBrightnessWorks=1; % default value
 cal.brightnessSetting=1.00; % default value
 cal.brightnessRMSError=0; % default value
+
 [savedGamma,cal.dacBits]=Screen('ReadNormalizedGammaTable',cal.screen);
 cal.dacMax=(2^cal.dacBits)-1;
-switch cal.macModelName
-    case 'MacBookAir4,2'
+
+
+if ~isempty(cal.macModelName)
+    switch cal.macModelName
+        case 'MacBookAir4,2'
         cal.mfilename='CalibrateScreenLuminance';
         cal.datestr='none';
         cal.notes='Not calibrated!';
