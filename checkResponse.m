@@ -15,10 +15,10 @@ function response = checkResponse(isKbLegacy)
         % use modern Kb* functions
         [secs, keyCode] = KbStrokeWait(); % we only need keyIsDown and keyCode
         response = KbName(keyCode);
-        disp(sprintf('0:==>%s<==', response));
+        %disp(sprintf('0:==>%s<==', response));
 
         if ismember(response, {'period', '.>', '.'}); response = '.'; end
-        disp(sprintf('1:==>%s<==', response));
+        %disp(sprintf('1:==>%s<==', response));
 
         if 0
             %[keyIsDown, secs, keyCode] = KbCheck(); % we only need keyIsDown and keyCode

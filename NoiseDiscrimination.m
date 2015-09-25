@@ -2152,7 +2152,7 @@ try
                         while ~ismember(response,1:o.alternatives)
                             o.runAborted=0;
                             response = checkResponse(o.isKbLegacy);
-                            disp(sprintf('2:==>%s<==', response));
+                            %disp(sprintf('2:==>%s<==', response));
                             if response=='.'
                                 ffprintf(ff,'*** ''%c'' response. Run terminated.\n',response);
                                 Speak('Run terminated.');
