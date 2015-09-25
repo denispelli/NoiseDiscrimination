@@ -11,6 +11,7 @@ o.durationSec=0.2;
 o.noiseRadiusDeg=inf;
 o.eccentricityDeg=32; % 0, 2, 8, 32
 o.noiseEnvelopeSpaceConstantDeg=2; % 0.5, 2, 8, inf
+o.noiseSD=0.1;
 %##################################################################
 
 
@@ -19,7 +20,6 @@ o.noiseCheckDeg=o.targetHeightDeg/10;
 o.task='identify'; 
 o.signalKind='luminance'; % Display a luminance decrement.
 o.noiseType='gaussian';
-o.noiseSD=0.1;
 
 % o.noiseRaisedCosineEdgeThicknessDeg=0; % midpoint of raised cosine is at o.noiseRadiusDeg.
 % o.durationSec=inf; % Typically 0.2 or inf (wait indefinitely for response).
