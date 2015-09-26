@@ -1,7 +1,4 @@
 function [ ret ] = Speak(saytext, voice, rate, volume, pitch, language)
-    if IsLinux
-        return;
-    end
 % Use speech output to speak a given text.
 %
 % Usage:
@@ -57,7 +54,6 @@ function [ ret ] = Speak(saytext, voice, rate, volume, pitch, language)
 % 24.07.15 mk           Use double-quotes instead of pairs of single quotes
 %                       to protect strings containing apostrophes etc.
 %                       Suggested by elladawu. Successfully tested on Linux.
-
 if nargin < 1
     error('You must provide the text string to speak!');
 end
@@ -85,8 +81,8 @@ if IsOSX
 end
 
 if IsLinux
-    %cmd = 'spd-say --wait ';
-    cmd = 'spd-say ';
+    cmd = 'spd-say --wait ';
+    %cmd = 'spd-say ';
 
     if nargin >= 2 && ~isempty(voice)
         cmd = [cmd sprintf('--voice-type "%s" ', voice)];
@@ -110,14 +106,17 @@ if IsLinux
 
     ret = 0;
     disp(saytext);
+    % FIXME: do not make call to spd-say
+    return
+
     for k=1:length(saytext)
         % Build command string for speech output and do a system() call:
-        system(sprintf('which %s', cmd));
-        disp('killing');
-        killStatus = system('killall speech-dispatcher');
-        warning('killed status: `%d`', killStatus);
+        %system(sprintf('which %s', cmd));
+        %disp('killing');
+        %killStatus = system('killall speech-dispatcher');
+        %warning('killed status: `%d`', killStatus);
         ret = system(sprintf('%s "%s"', cmd, saytext{k}));
-        disp(sprintf('Speak:Linux = %d -> trying to say `%s`',ret, saytext{k}));
+        %disp(sprintf('Speak:Linux = %d -> trying to say `%s`',ret, saytext{k}));
         if ret
             break;
         end
