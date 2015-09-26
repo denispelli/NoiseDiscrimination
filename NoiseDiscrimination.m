@@ -1,5 +1,6 @@
 function o=NoiseDiscrimination(oIn)
     addpath('AutoBrightness');
+    addpath('lib');
     %Priority(1);
     %echo_executing_commands(2, 'local');
     %diary /scratch/d 
