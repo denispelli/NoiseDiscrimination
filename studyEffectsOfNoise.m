@@ -24,13 +24,14 @@ o.noiseType='gaussian';
 % o.noiseRaisedCosineEdgeThicknessDeg=0; % midpoint of raised cosine is at o.noiseRadiusDeg.
 % o.durationSec=inf; % Typically 0.2 or inf (wait indefinitely for response).
 % o.tGuess=log10(0.2); % Optionally tell Quest the initial log contrast on first trial.
-% o.speakInstructions=0;
+ o.speakInstructions=0;
 % o.saveSnapshot=0; % 0 or 1.  If true (1), take snapshot for public presentation.
 % o.snapshotLetterContrast=0.2; % nan to request program default. If set, this determines o.tSnapshot.
 % o.cropSnapshot=0; % If true (1), show only the target and noise, without unnecessary gray background.
 % o.snapshotCaptionTextSizeDeg=0.5;
 % o.snapshotShowsFixationBefore=1;
 % o.snapshotShowsFixationAfter=0;
+o.useFractionOfScreen=0.4; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 o.trialsPerRun=100; 
 o=NoiseDiscrimination(o);
 sca;

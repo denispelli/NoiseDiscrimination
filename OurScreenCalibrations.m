@@ -294,4 +294,22 @@ if IsWin && cal.screen==0 && cal.screenWidthMm==677 && cal.screenHeightMm==381
 	cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
 	cal.old.L=[ 3.718 3.729 3.892 4.15 5.052 6.079 7.317 8.909 11.08 13.8 17.46 21.6 26.55 32.12 38.17 44.51 52.07 58.17 66.44 74.86 85.2 94.96 106.8 119.4 132.9 148.7 165.8 181.9 201.5 221.1 241.6 265.1 287.2]; % cd/m^2
 end
+
+    if cal.screen==0 && strcmpi(cal.machineName, 'ThPad')
+        cal.screenOutput=[]; % used only under Linux
+        cal.ScreenConfigureDisplayBrightnessWorks=0;
+        cal.brightnessSetting=1.00;
+        cal.brightnessRmsError=NaN;
+        cal.screenRect=[0 0 1366 768];
+        cal.mfilename='CalibrateScreenLuminance';
+        cal.datestr='14-Jul-2015 20:23:19';
+        cal.notes='Lab 1603 lab room total darkness; ThinkPad E50 LCD, HID: MONITOR\LEN40B0, Windows 8.1 64bit, MATLAB R2015a';
+        cal.calibratedBy='';
+        cal.dacBits=8; % Assumed value.
+        %	cal.dacBits=8; % From ReadNormalizedGammaTable, unverified.
+        cal.dacMax=(2^cal.dacBits)-1;
+        cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
+        cal.old.L=[ 1.62 2.53 3.74 5.59 7.73 9.96 12.95 15.77 18.66 22.1 25.65 29.25 33.4 36.06 39.08 44.32 53.4 57.17 63.19 68.05 76.3 84.29 91.73 99.04 106.9 116.5 125.5 134.6 142.4 150.5 157.9 162.5 163.5]; % cd/m^2
+        disp('###################################################################');
+    end
 end

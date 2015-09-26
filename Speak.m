@@ -1,4 +1,7 @@
 function [ ret ] = Speak(saytext, voice, rate, volume, pitch, language)
+    if IsLinux
+        return;
+    end
 % Use speech output to speak a given text.
 %
 % Usage:
@@ -82,8 +85,8 @@ if IsOSX
 end
 
 if IsLinux
-    cmd = 'spd-say --wait ';
-    %cmd = 'spd-say ';
+    %cmd = 'spd-say --wait ';
+    cmd = 'spd-say ';
 
     if nargin >= 2 && ~isempty(voice)
         cmd = [cmd sprintf('--voice-type "%s" ', voice)];
