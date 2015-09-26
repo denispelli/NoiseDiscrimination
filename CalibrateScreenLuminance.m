@@ -77,6 +77,7 @@ function CalibrateScreenLuminance(screen,screenOutput)
 % with others.
 % http://osxdaily.com/2010/05/15/stop-the-macbook-pro-and-macbook-screen-from-dimming/
 addpath('lib');
+addpath('AutoBrightness');
 try
     Speak('Welcome to Calibrate Screen Luminance.');
     fprintf('This program uses text to speech. Please turn up the sound volume to hear it.\n');

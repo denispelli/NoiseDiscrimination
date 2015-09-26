@@ -293,11 +293,26 @@ if IsOSX && streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.scr
 	cal.old.L=[ 1.154 1.225 1.507 2.279 3.414 5.276 7.461 10.18 13.47 17.46 22.01 27.3 33.04 40.03 46.85 54.35 63.1 71.46 81.58 92.77 104.7 117.2 130.1 142.9 157.2 173.9 190.5 208 226.4 247 265.9 285 308.2]; % cd/m^2
 end
 
+if IsOSX && streq(cal.macModelName,'MacBookAir5,1') && cal.screen==0 && cal.screenWidthMm==260 && cal.screenHeightMm==140 && streq(cal.machineName,'Kant')
+	cal.screenOutput=[]; % used only under Linux
+	cal.profile='Color LCD';
+	cal.ScreenConfigureDisplayBrightnessWorks=1;
+	cal.brightnessSetting=1.00;
+	cal.brightnessRmsError=0.0000;
+	% cal.screenRect=[0 0 1366 768];
+	cal.mfilename='CalibrateScreenLuminance';
+	cal.datestr='26-Sep-2015 15:07:15';
+	cal.notes='Hormet MBA11'' Meyer 406 9/26 15:06 Env.:40-60cd/m2';
+	cal.calibratedBy='Hormet Yiltiz';
+	cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
+	cal.dacMax=(2^cal.dacBits)-1;
+	cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
+	cal.old.L=[ 1.991 2.045 2.167 2.557 3.281 4.469 6.667 9.642 12.81 16.58 20.59 25.03 30.38 36.29 43.17 50.17 57.96 65.19 75.67 85.81 97.61 109.2 123.1 137.7 152.1 168.8 185.4 203.4 223.6 246.9 269.5 293.5 332.7]; % cd/m^2
+end
 
 else
     
 if IsWin && cal.screen==0 && cal.screenWidthMm==677 && cal.screenHeightMm==381
-    disp('hi');
 	cal.screenOutput=[]; % used only under Linux
 	cal.ScreenConfigureDisplayBrightnessWorks=0;
 	cal.brightnessSetting=1.00;
