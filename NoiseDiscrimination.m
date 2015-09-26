@@ -925,7 +925,7 @@ try
     N=o.noiseCheckPix^2*o.pixPerDeg^-2*o.noiseSD^2;
     ffprintf(ff,'log N/deg^2 %.2f, where N is power spectral density\n',log10(N));
     ffprintf(ff,'pThreshold %.2f, beta %.1f\n',o.pThreshold,o.beta);
-    ffprintf(ff,'Your (log) guess is %.2f „1¤7 %.2f\n',o.tGuess,o.tGuessSd);
+    ffprintf(ff,'Your (log) guess is %.2f Â± %.2f\n',o.tGuess,o.tGuessSd);
     ffprintf(ff,'o.trialsPerRun %.0f\n',o.trialsPerRun);
     white1=1;
     black0=0;
@@ -2254,9 +2254,9 @@ try
     o.EOverN=10^(2*o.questMean)*E1/N;
     o.efficiency = o.idealEOverNThreshold/o.EOverN;
     if streq(o.signalKind,'luminance')
-        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold±sd log(contrast) %.2f„1¤7%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
+        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. ThresholddÂ±sd log(contrast) %.2fÂ±%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
     else
-        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold±sd log(r-1) %.2f„1¤7%.2f, approx required n %.0f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
+        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. ThresholddÂ±sd log(r-1) %.2fÂ±%.2f, approx required n %.0f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
     end
     if abs(trialsRight/trial-o.pThreshold)>0.1
         ffprintf(ff,'WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.\n');
@@ -2281,14 +2281,14 @@ try
     %     tse=std(tSample)/sqrt(length(tSample));
     %     switch o.signalKind
     %         case 'luminance',
-    %         ffprintf(ff,'SUMMARY: %s %d runs mean±se: log(contrast) %.2f„1¤7%.2f, contrast %.3f\n',o.observer,length(tSample),mean(tSample),tse,10^mean(tSample));
+    %         ffprintf(ff,'SUMMARY: %s %d runs meançœ˜e: log(contrast) %.2fï¿½%.2f, contrast %.3f\n',o.observer,length(tSample),mean(tSample),tse,10^mean(tSample));
     %         %         efficiency = (o.idealEOverNThreshold^2) / (10^(2*t));
     %         %         ffprintf(ff,'Efficiency = %f\n', efficiency);
     %         %o.EOverN=10^mean(2*tSample)*E1/N;
-    %         ffprintf(ff,'Threshold log E/N %.2f„1¤7%.2f, E/N %.1f\n',mean(log10(o.EOverN)),std(log10(o.EOverN))/sqrt(length(o.EOverN)),o.EOverN);
+    %         ffprintf(ff,'Threshold log E/N %.2fï¿½%.2f, E/N %.1f\n',mean(log10(o.EOverN)),std(log10(o.EOverN))/sqrt(length(o.EOverN)),o.EOverN);
     %         %o.efficiency=o.idealEOverNThreshold/o.EOverN;
     %         ffprintf(ff,'User-provided ideal threshold E/N log E/N %.2f, E/N %.1f\n',log10(o.idealEOverNThreshold),o.idealEOverNThreshold);
-    %         ffprintf(ff,'Efficiency log %.2f„1¤7%.2f, %.4f %%\n',mean(log10(o.efficiency)),std(log10(o.efficiency))/sqrt(length(o.efficiency)),100*10^mean(log10(o.efficiency)));
+    %         ffprintf(ff,'Efficiency log %.2fï¿½%.2f, %.4f %%\n',mean(log10(o.efficiency)),std(log10(o.efficiency))/sqrt(length(o.efficiency)),100*10^mean(log10(o.efficiency)));
     %         corr=zeros(length(signal));
     %         for i=1:length(signal)
     %             for j=1:i
@@ -2318,7 +2318,7 @@ try
             o.logApproxRequiredNumber=log10(o.approxRequiredNumber);
             ffprintf(ff,'r %.3f, approx required number %.0f\n',o.r,o.approxRequiredNumber);
             %              logNse=std(logApproxRequiredNumber)/sqrt(length(tSample));
-            %              ffprintf(ff,'SUMMARY: %s %d runs mean±se: log(r-1) %.2f„1¤7%.2f, log(approx required n) %.2f„1¤7%.2f\n',o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
+            %              ffprintf(ff,'SUMMARY: %s %d runs meançœ˜e: log(r-1) %.2fï¿½%.2f, log(approx required n) %.2fï¿½%.2f\n',o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
        case 'entropy',
             t=o.questMean;
             o.r=10^t+1;
