@@ -278,18 +278,3 @@ if IsWin && cal.screen==0 && cal.screenWidthMm==677 && cal.screenHeightMm==381
 	cal.old.L=[ 3.718 3.729 3.892 4.15 5.052 6.079 7.317 8.909 11.08 13.8 17.46 21.6 26.55 32.12 38.17 44.51 52.07 58.17 66.44 74.86 85.2 94.96 106.8 119.4 132.9 148.7 165.8 181.9 201.5 221.1 241.6 265.1 287.2]; % cd/m^2
 end
 end
-
-cal.screenOutput=[]; % used only under Linux
-	cal.ScreenConfigureDisplayBrightnessWorks=0;
-	cal.brightnessSetting=1.00;
-	cal.brightnessRmsError=NaN;
-	% cal.screenRect=[0 0 1920 1080];
-	cal.mfilename='CalibrateScreenLuminance';
-	cal.datestr='21-Sep-2015 18:03:19';
-	cal.notes='Xiuyun Dell 15'' Win7 Meyer406 18:00 With Lights Env 25-35cd/m2';
-	cal.calibratedBy='';
-	cal.dacBits=8; % From ReadNormalizedGammaTable, unverified.
-	cal.dacMax=(2^cal.dacBits)-1;
-	cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
-	cal.old.L=[ 3.718 3.729 3.892 4.15 5.052 6.079 7.317 8.909 11.08 13.8 17.46 21.6 26.55 32.12 38.17 44.51 52.07 58.17 66.44 74.86 85.2 94.96 106.8 119.4 132.9 148.7 165.8 181.9 201.5 221.1 241.6 265.1 287.2]; % cd/m^2
-
