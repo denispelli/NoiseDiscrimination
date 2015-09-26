@@ -295,9 +295,15 @@ if length(stack)==1;
 else
     o.functionNames=[stack(2).name '-' stack(1).name];
 end
+
+if exist('data', 'dir') ~= 7
+    mkdir('data');
+end
+
 o.datafilename=sprintf('%s-%s.%d.%d.%d.%d.%d.%d',o.functionNames,o.observer,round(t));
-datafullfilename=fullfile(fileparts(mfilename('fullpath')),o.datafilename);
+datafullfilename=fullfile(fileparts(mfilename('fullpath')),'data',o.datafilename);
 dataFid=fopen([datafullfilename '.txt'],'rt');
+keyboard
 if dataFid~=-1
     error('Oops. There''s already a file called "%s.txt". Try again.',datafullfilename);
 end
