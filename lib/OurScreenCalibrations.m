@@ -276,6 +276,24 @@ if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthM
 	cal.old.L=[ 1.3 1.449 1.584 2.362 3.446 5.096 7.153 9.688 12.77 16.54 20.8 25.77 25.75 37.64 41.51 51.28 59.53 67.29 76.88 87.17 98.6 110 122.4 134.7 147.8 163.9 178.7 195 211.9 230.5 248.8 266.4 283.3]; % cd/m^2
 end
 
+if IsOSX && streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthMm==286 && cal.screenHeightMm==179 && streq(cal.machineName,'Kant')
+	cal.screenOutput=[]; % used only under Linux
+	cal.profile='CIE RGB';
+	cal.ScreenConfigureDisplayBrightnessWorks=1;
+	cal.brightnessSetting=1.00;
+	cal.brightnessRmsError=0.0000;
+	% cal.screenRect=[0 0 1280 800];
+	cal.mfilename='CalibrateScreenLuminance';
+	cal.datestr='26-Sep-2015 14:32:53';
+	cal.notes='Xiuyun MBP new 13 14:31 Env: 28-47cd/m2 Meyer 406';
+	cal.calibratedBy='Xiuyun Wu';
+	cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
+	cal.dacMax=(2^cal.dacBits)-1;
+	cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
+	cal.old.L=[ 1.154 1.225 1.507 2.279 3.414 5.276 7.461 10.18 13.47 17.46 22.01 27.3 33.04 40.03 46.85 54.35 63.1 71.46 81.58 92.77 104.7 117.2 130.1 142.9 157.2 173.9 190.5 208 226.4 247 265.9 285 308.2]; % cd/m^2
+end
+
+
 else
     
 if IsWin && cal.screen==0 && cal.screenWidthMm==677 && cal.screenHeightMm==381
