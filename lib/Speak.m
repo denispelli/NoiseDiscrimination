@@ -105,7 +105,7 @@ if IsLinux
     end
 
     ret = 0;
-    disp(saytext);
+    %disp(saytext);
     % FIXME: do not make call to spd-say
     return
 
