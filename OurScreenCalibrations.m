@@ -259,6 +259,23 @@ if streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==602
 	cal.old.L=[ 1.24 1.242 1.613 2.506 4.349 7.091 10.01 13.89 19.21 24.71 30.47 36.86 45.06 55.14 63.33 74.51 88.68 97.94 110.9 123.4 146.8 157.7 182.6 192.8 211.7 242.2 249.2 292 315.7 346.1 374.2 387.6 426.1]; % cd/m^2
 end
 
+if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthMm==286 && cal.screenHeightMm==179 && streq(cal.machineName,'UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME.')
+	cal.screenOutput=[]; % used only under Linux
+	cal.profile='/Users/Oana/Downloads/Archive/AutoBrightness/ScreenProfile.applescript:3700:3704: execution error: System Events got an error: Can¡¯t get window 1 of process "System Preferences". Invalid index. (-1719)';
+	cal.ScreenConfigureDisplayBrightnessWorks=1;
+	cal.brightnessSetting=1.00;
+	cal.brightnessRmsError=0.0000;
+	% cal.screenRect=[0 0 1280 800];
+	cal.mfilename='CalibrateScreenLuminance';
+	cal.datestr='22-Sep-2015 16:17:17';
+	cal.notes='Oana Meyer 406 16:15 Env:50-70cd/m2 MBP13';
+	cal.calibratedBy='Oana Daniela Dumitru';
+	cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
+	cal.dacMax=(2^cal.dacBits)-1;
+	cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
+	cal.old.L=[ 1.3 1.449 1.584 2.362 3.446 5.096 7.153 9.688 12.77 16.54 20.8 25.77 25.75 37.64 41.51 51.28 59.53 67.29 76.88 87.17 98.6 110 122.4 134.7 147.8 163.9 178.7 195 211.9 230.5 248.8 266.4 283.3]; % cd/m^2
+end
+
 else
     
 if IsWin && cal.screen==0 && cal.screenWidthMm==677 && cal.screenHeightMm==381
