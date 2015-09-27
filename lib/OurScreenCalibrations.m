@@ -259,6 +259,23 @@ if streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==602
 	cal.old.L=[ 1.24 1.242 1.613 2.506 4.349 7.091 10.01 13.89 19.21 24.71 30.47 36.86 45.06 55.14 63.33 74.51 88.68 97.94 110.9 123.4 146.8 157.7 182.6 192.8 211.7 242.2 249.2 292 315.7 346.1 374.2 387.6 426.1]; % cd/m^2
 end
 
+if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthMm==285 && cal.screenHeightMm==179 && streq(cal.machineName,'UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME.')
+    cal.screenOutput=[]; % used only under Linux
+    %cal.profile='';
+    cal.ScreenConfigureDisplayBrightnessWorks=1;
+    cal.brightnessSetting=1.00;
+    cal.brightnessRmsError=0.0000;
+    cal.screenRect=[0 0 1280 800];
+    cal.mfilename='CalibrateScreenLuminance';
+    cal.datestr='22-Sep-2015 16:30';
+    cal.notes='Shivam Verma 406 16:30 Env:50-70cd/m2 MBP13';
+    cal.calibratedBy='Shivam Verma';
+    cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
+    cal.dacMax=(2^cal.dacBits)-1;
+    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
+    cal.old.L=[ 1.1 1.2 1.21 1.22 1.3 1.7 2.4 3.7 5.3 7.1 9.6 12.1 15.8 19.5 24.0 29.1 35.8 40.8 48.3 57.1 66.7 77.1 88.0 100.8 114.3 129.5 144.7 162.2 181.0 200.8 223.8 248.5 284.7]; % cd/m^2
+end
+
 if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthMm==286 && cal.screenHeightMm==179 && streq(cal.machineName,'UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME.')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='/Users/Oana/Downloads/Archive/AutoBrightness/ScreenProfile.applescript:3700:3704: execution error: System Events got an error: Can¡¯t get window 1 of process "System Preferences". Invalid index. (-1719)';
