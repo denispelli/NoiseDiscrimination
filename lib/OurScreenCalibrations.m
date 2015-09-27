@@ -1,4 +1,4 @@
-cfunction cal=OurScreenCalibrations(screen)
+function cal=OurScreenCalibrations(screen)
 % cal=OurScreenCalibrations(screen)
 % This holds our screen calibrations. Please use CalibrateScreenLuminance
 % to add data for your screen to this file. If you'll send the resulting
