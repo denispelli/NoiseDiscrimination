@@ -1,4 +1,4 @@
-function cal=OurScreenCalibrations(screen)
+cfunction cal=OurScreenCalibrations(screen)
 % cal=OurScreenCalibrations(screen)
 % This holds our screen calibrations. Please use CalibrateScreenLuminance
 % to add data for your screen to this file. If you'll send the resulting
@@ -274,6 +274,23 @@ if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthM
 	cal.dacMax=(2^cal.dacBits)-1;
 	cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
 	cal.old.L=[ 1.3 1.449 1.584 2.362 3.446 5.096 7.153 9.688 12.77 16.54 20.8 25.77 25.75 37.64 41.51 51.28 59.53 67.29 76.88 87.17 98.6 110 122.4 134.7 147.8 163.9 178.7 195 211.9 230.5 248.8 266.4 283.3]; % cd/m^2
+end
+
+if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthMm==285 && cal.screenHeightMm==179 && streq(cal.machineName,'UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME.')
+	cal.screenOutput=[]; % used only under Linux
+	%cal.profile='';
+	cal.ScreenConfigureDisplayBrightnessWorks=1;
+	cal.brightnessSetting=1.00;
+	cal.brightnessRmsError=0.0000;
+	cal.screenRect=[0 0 1280 800];
+	cal.mfilename='CalibrateScreenLuminance';
+	cal.datestr='22-Sep-2015 16:30';
+	cal.notes='Shivam Verma 406 16:30 Env:50-70cd/m2 MBP13';
+	cal.calibratedBy='Shivam Verma';
+	cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
+	cal.dacMax=(2^cal.dacBits)-1;
+	cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
+	cal.old.L=[ 1.1 1.2 1.21 1.22 1.3 1.7 2.4 3.7 5.3 7.1 9.6 12.1 15.8 19.5 24.0 29.1 35.8 40.8 48.3 57.1 66.7 77.1 88.0 100.8 114.3 129.5 144.7 162.2 181.0 200.8 223.8 248.5 284.7]; % cd/m^2
 end
 
 if IsOSX && streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthMm==286 && cal.screenHeightMm==179 && streq(cal.machineName,'Kant')
