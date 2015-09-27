@@ -4,14 +4,15 @@ clear o
 
 
 %#### Adjust values within this block of code #####################
-o.observer='shivam';
+o.observer='shivam'; %add your name here
 o.distanceCm=50; % viewing distance
-o.targetHeightDeg=2;
 o.durationSec=0.2;
 o.noiseRadiusDeg=inf;
-o.eccentricityDeg=32; % 0, 2, 8, 32
-o.noiseEnvelopeSpaceConstantDeg=2; % 0.5, 2, 8, inf
-o.noiseSD=0.1;
+%############################ for now, change these ###############
+o.targetHeightDeg=2; %letter size [2]
+o.noiseSD=0.1; %noise contrast [0.1,0.35,0]
+o.noiseEnvelopeSpaceConstantDeg=8; % noise decay radius [0.5, 2, 8, inf]
+o.eccentricityDeg=32; % eccentricity [0, 2, 8, 32]
 %##################################################################
 
 
