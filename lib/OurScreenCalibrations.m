@@ -17,19 +17,36 @@ screenRect=Screen('Rect',cal.screen,1);
 cal.hiDPIMultiple=RectWidth(screenRect)/RectWidth(screenBufferRect);
 cal.dualResRetinaDisplay=cal.hiDPIMultiple~=1;
 
+
+% cal=calRequest;
 computer=Screen('Computer');
 [cal.screenWidthMm,cal.screenHeightMm]=Screen('DisplaySize',cal.screen);
-cal.processUserLongName=computer.processUserLongName;
-cal.machineName=strrep(computer.machineName,'â€™',''''); % work around bug in Screen('Computer')
-cal.macModelName=MacModelName;
+if computer.windows
+    cal.processUserLongName=getenv('USERNAME');
+    cal.machineName=getenv('USERDOMAIN');
+    cal.macModelName=[];
+elseif computer.linux
+    cal.processUserLongName=getenv('USER');
+    cal.machineName=strrep(computer.machineName,'éˆ„1¤7',''''); % work around bug in Screen('Computer')
+    cal.osversion=computer.kern.version;
+    cal.macModelName=[];
+elseif computer.osx || computer.macintosh
+    cal.processUserLongName=computer.processUserLongName;
+    cal.machineName=strrep(computer.machineName,'éˆ„1¤7',''''); % work around bug in Screen('Computer')
+    cal.macModelName=MacModelName;
+end
 cal.screenOutput=[]; % only for Linux
 cal.ScreenConfigureDisplayBrightnessWorks=1; % default value
 cal.brightnessSetting=1.00; % default value
 cal.brightnessRMSError=0; % default value
+
 [savedGamma,cal.dacBits]=Screen('ReadNormalizedGammaTable',cal.screen);
 cal.dacMax=(2^cal.dacBits)-1;
-switch cal.macModelName
-    case 'MacBookAir4,2'
+
+
+if ~isempty(cal.macModelName)
+    switch cal.macModelName
+        case 'MacBookAir4,2'
         cal.mfilename='CalibrateScreenLuminance';
         cal.datestr='none';
         cal.notes='Not calibrated!';
@@ -241,6 +258,60 @@ if streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==602
 	cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
 	cal.old.L=[ 1.24 1.242 1.613 2.506 4.349 7.091 10.01 13.89 19.21 24.71 30.47 36.86 45.06 55.14 63.33 74.51 88.68 97.94 110.9 123.4 146.8 157.7 182.6 192.8 211.7 242.2 249.2 292 315.7 346.1 374.2 387.6 426.1]; % cd/m^2
 end
+
+if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthMm==286 && cal.screenHeightMm==179 && streq(cal.machineName,'UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME.')
+	cal.screenOutput=[]; % used only under Linux
+	cal.profile='/Users/Oana/Downloads/Archive/AutoBrightness/ScreenProfile.applescript:3700:3704: execution error: System Events got an error: Can¡¯t get window 1 of process "System Preferences". Invalid index. (-1719)';
+	cal.ScreenConfigureDisplayBrightnessWorks=1;
+	cal.brightnessSetting=1.00;
+	cal.brightnessRmsError=0.0000;
+	% cal.screenRect=[0 0 1280 800];
+	cal.mfilename='CalibrateScreenLuminance';
+	cal.datestr='22-Sep-2015 16:17:17';
+	cal.notes='Oana Meyer 406 16:15 Env:50-70cd/m2 MBP13';
+	cal.calibratedBy='Oana Daniela Dumitru';
+	cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
+	cal.dacMax=(2^cal.dacBits)-1;
+	cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
+	cal.old.L=[ 1.3 1.449 1.584 2.362 3.446 5.096 7.153 9.688 12.77 16.54 20.8 25.77 25.75 37.64 41.51 51.28 59.53 67.29 76.88 87.17 98.6 110 122.4 134.7 147.8 163.9 178.7 195 211.9 230.5 248.8 266.4 283.3]; % cd/m^2
+end
+
+if IsOSX && streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthMm==286 && cal.screenHeightMm==179 && streq(cal.machineName,'Kant')
+	cal.screenOutput=[]; % used only under Linux
+	cal.profile='CIE RGB';
+	cal.ScreenConfigureDisplayBrightnessWorks=1;
+	cal.brightnessSetting=1.00;
+	cal.brightnessRmsError=0.0000;
+	% cal.screenRect=[0 0 1280 800];
+	cal.mfilename='CalibrateScreenLuminance';
+	cal.datestr='26-Sep-2015 14:32:53';
+	cal.notes='Xiuyun MBP new 13 14:31 Env: 28-47cd/m2 Meyer 406';
+	cal.calibratedBy='Xiuyun Wu';
+	cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
+	cal.dacMax=(2^cal.dacBits)-1;
+	cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
+	cal.old.L=[ 1.154 1.225 1.507 2.279 3.414 5.276 7.461 10.18 13.47 17.46 22.01 27.3 33.04 40.03 46.85 54.35 63.1 71.46 81.58 92.77 104.7 117.2 130.1 142.9 157.2 173.9 190.5 208 226.4 247 265.9 285 308.2]; % cd/m^2
+end
+
+if IsOSX && streq(cal.macModelName,'MacBookAir5,1') && cal.screen==0 && cal.screenWidthMm==260 && cal.screenHeightMm==140 && streq(cal.machineName,'Kant')
+	cal.screenOutput=[]; % used only under Linux
+	cal.profile='Color LCD';
+	cal.ScreenConfigureDisplayBrightnessWorks=1;
+	cal.brightnessSetting=1.00;
+	cal.brightnessRmsError=0.0000;
+	% cal.screenRect=[0 0 1366 768];
+	cal.mfilename='CalibrateScreenLuminance';
+	cal.datestr='26-Sep-2015 15:07:15';
+	cal.notes='Hormet MBA11'' Meyer 406 9/26 15:06 Env.:40-60cd/m2';
+	cal.calibratedBy='Hormet Yiltiz';
+	cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
+	cal.dacMax=(2^cal.dacBits)-1;
+	cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
+	cal.old.L=[ 1.991 2.045 2.167 2.557 3.281 4.469 6.667 9.642 12.81 16.58 20.59 25.03 30.38 36.29 43.17 50.17 57.96 65.19 75.67 85.81 97.61 109.2 123.1 137.7 152.1 168.8 185.4 203.4 223.6 246.9 269.5 293.5 332.7]; % cd/m^2
+end
+
+else
+    
 if IsWin && cal.screen==0 && cal.screenWidthMm==677 && cal.screenHeightMm==381
 	cal.screenOutput=[]; % used only under Linux
 	cal.ScreenConfigureDisplayBrightnessWorks=0;
@@ -255,4 +326,23 @@ if IsWin && cal.screen==0 && cal.screenWidthMm==677 && cal.screenHeightMm==381
 	cal.dacMax=(2^cal.dacBits)-1;
 	cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
 	cal.old.L=[ 3.718 3.729 3.892 4.15 5.052 6.079 7.317 8.909 11.08 13.8 17.46 21.6 26.55 32.12 38.17 44.51 52.07 58.17 66.44 74.86 85.2 94.96 106.8 119.4 132.9 148.7 165.8 181.9 201.5 221.1 241.6 265.1 287.2]; % cd/m^2
+end
+
+    if cal.screen==0 && strcmpi(cal.machineName, 'ThPad')
+        cal.screenOutput=[]; % used only under Linux
+        cal.ScreenConfigureDisplayBrightnessWorks=0;
+        cal.brightnessSetting=1.00;
+        cal.brightnessRmsError=NaN;
+        cal.screenRect=[0 0 1366 768];
+        cal.mfilename='CalibrateScreenLuminance';
+        cal.datestr='14-Jul-2015 20:23:19';
+        cal.notes='Lab 1603 lab room total darkness; ThinkPad E50 LCD, HID: MONITOR\LEN40B0, Windows 8.1 64bit, MATLAB R2015a';
+        cal.calibratedBy='';
+        cal.dacBits=8; % Assumed value.
+        %	cal.dacBits=8; % From ReadNormalizedGammaTable, unverified.
+        cal.dacMax=(2^cal.dacBits)-1;
+        cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
+        cal.old.L=[ 1.62 2.53 3.74 5.59 7.73 9.96 12.95 15.77 18.66 22.1 25.65 29.25 33.4 36.06 39.08 44.32 53.4 57.17 63.19 68.05 76.3 84.29 91.73 99.04 106.9 116.5 125.5 134.6 142.4 150.5 157.9 162.5 163.5]; % cd/m^2
+        disp('###################################################################');
+    end
 end

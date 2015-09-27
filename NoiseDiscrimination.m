@@ -1,5 +1,6 @@
 function o=NoiseDiscrimination(oIn)
     addpath('AutoBrightness');
+    addpath('lib');
     %Priority(1);
     %echo_executing_commands(2, 'local');
     %diary /scratch/d
@@ -56,7 +57,7 @@ function o=NoiseDiscrimination(oIn)
 % of 1, the letters are indeed binary, since the font rendering software
 % emits only integers and there are no integers between 0 and 1. This
 % leaves me free to do whatever I want with the rest of the color table.
-% The letters are imaged well, because the antialiasing software is 
+% The letters are imaged well, because the antialiasing software is
 % allowed to do its best with the binary gamut.
 %
 % Similarly, it wasn't easy to put the signal on the screen without getting
@@ -163,10 +164,10 @@ o.flankerSpacingDeg=4;
 % o.flankerSpacingDeg=1.4*o.targetHeightDeg; % Put this in your code, if
 % you like. It won't work here.
 o.noiseSD=0.2; % Usually in the range 0 to 0.4. Typically 0.2.
-o.annularNoiseSD=nan; % Typically nan (i.e. use o.noiseSD) or 0.2. 
+o.annularNoiseSD=nan; % Typically nan (i.e. use o.noiseSD) or 0.2.
 o.noiseCheckDeg=0.2; % Typically 0.05 or 0.2.
 o.noiseRadiusDeg=1; % When o.task=4afc, the program will set o.noiseRadiusDeg=o.targetHeightDeg/2;
-o.noiseEnvelopeSpaceConstantDeg=inf; 
+o.noiseEnvelopeSpaceConstantDeg=inf;
 o.noiseRaisedCosineEdgeThicknessDeg=0; % midpoint of raised cosine is at noiseRadiusDeg.
 o.showBlackAnnulus=0;
 o.blackAnnulusContrast=-1; % (LBlack-LMean)/LMean. -1 for black line. >-1 for gray line.
@@ -179,7 +180,7 @@ o.yellowAnnulusBigRadiusDeg=inf; % Typically inf.
 o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
 o.noiseFrozenInTrial=0; % 0 or 1.  If true (1), use same noise at all locations
 o.noiseFrozenInRun=0; % 0 or 1.  If true (1), use same noise on every trial
-o.noiseFrozenInRunSeed=0; % 0 or positive integer. If o.noiseFrozenInRun, then any nonzero positive integer will be used as the seed for the run. 
+o.noiseFrozenInRunSeed=0; % 0 or positive integer. If o.noiseFrozenInRun, then any nonzero positive integer will be used as the seed for the run.
 o.fixationCrossDeg=inf; % Typically 1 or inf. Make this at least 4 deg for scotopic testing, since the fovea is blind scotopically.
 o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
 o.fixationCrossBlankedNearTarget=1; % 0 or 1.
@@ -221,8 +222,8 @@ o.replicatePelli2006=0;
 o.isWin=IsWin; % override this to simulate Windows on a Mac.
 
 [screenWidthMm,screenHeightMm]=Screen('DisplaySize',o.screen);
-screenBufferRect=Screen('Rect',o.screen); 
-screenRect=Screen('Rect',o.screen,1); 
+screenBufferRect=Screen('Rect',o.screen);
+screenRect=Screen('Rect',o.screen,1);
 resolution=Screen('Resolution',o.screen);
 
 if o.useFractionOfScreen
@@ -294,9 +295,15 @@ if length(stack)==1;
 else
     o.functionNames=[stack(2).name '-' stack(1).name];
 end
+
+if exist('data', 'dir') ~= 7
+    mkdir('data');
+end
+
 o.datafilename=sprintf('%s-%s.%d.%d.%d.%d.%d.%d',o.functionNames,o.observer,round(t));
-datafullfilename=fullfile(fileparts(mfilename('fullpath')),o.datafilename);
+datafullfilename=fullfile(fileparts(mfilename('fullpath')),'data',o.datafilename);
 dataFid=fopen([datafullfilename '.txt'],'rt');
+keyboard
 if dataFid~=-1
     error('Oops. There''s already a file called "%s.txt". Try again.',datafullfilename);
 end
@@ -339,9 +346,10 @@ end
 pixPerCm=RectWidth(screenRect)/(0.1*screenWidthMm);
 degPerCm=57/o.distanceCm;
 o.pixPerDeg=pixPerCm/degPerCm;
-textSize=round(o.textSizeDeg*o.pixPerDeg); 
+textSize=round(o.textSizeDeg*o.pixPerDeg);
 o.textSizeDeg=textSize/o.pixPerDeg;
-o.stimulusRect=InsetRect(screenRect,0,1.5*1.2*textSize);
+o.lineSpacing =1.5;
+o.stimulusRect=InsetRect(screenRect,0,o.lineSpacing*1.2*textSize);
 o.noiseCheckPix=round(o.noiseCheckDeg*o.pixPerDeg);
 switch o.task
     case 'identify',
@@ -738,7 +746,7 @@ try
         targetOffsetPix=eccentricityPix+fixationOffsetPix;
         assert(abs(targetOffsetPix)<=maxTargetOffsetPix);
     end
-    
+
     if o.fixationCrossBlankedNearTarget
         ffprintf(ff,'Fixation cross is blanked near target. No delay in showing fixation after target.\n');
     else
@@ -802,7 +810,7 @@ try
     o.yellowAnnulusBigSize(2)=min(o.yellowAnnulusBigSize(2),RectHeight(o.stimulusRect)/o.noiseCheckPix);
     o.yellowAnnulusBigSize=2*round(o.yellowAnnulusBigSize/2); % An even number, so we can center it on center of letter.
     o.yellowAnnulusBigRadiusDeg= 0.5*o.yellowAnnulusBigSize(1)/(o.pixPerDeg/o.noiseCheckPix);
-    
+
     % Make o.canvasSize to hold the biggest thing we're showing, signal or
     % noise. We  limit o.canvasSize to fit in o.stimulusRect.
     o.canvasSize=[o.targetHeightPix o.targetWidthPix]/o.noiseCheckPix;
@@ -861,7 +869,7 @@ try
 %             clear screen; ShowCursor;
             error('Unknown noiseType "%s"',o.noiseType);
     end
-    
+
     o.noiseListSd=std(noiseList);
     a=0.9*o.noiseListSd/o.noiseListBound;
     if o.noiseSD>a
@@ -917,7 +925,11 @@ try
     N=o.noiseCheckPix^2*o.pixPerDeg^-2*o.noiseSD^2;
     ffprintf(ff,'log N/deg^2 %.2f, where N is power spectral density\n',log10(N));
     ffprintf(ff,'pThreshold %.2f, beta %.1f\n',o.pThreshold,o.beta);
+<<<<<<< HEAD
     ffprintf(ff,'Your (log) guess is %.2f � %.2f\n',o.tGuess,o.tGuessSd);
+=======
+    ffprintf(ff,'Your (log) guess is %.2f ± %.2f\n',o.tGuess,o.tGuessSd);
+>>>>>>> master
     ffprintf(ff,'o.trialsPerRun %.0f\n',o.trialsPerRun);
     white1=1;
     black0=0;
@@ -934,7 +946,7 @@ try
             oldFont=Screen('TextFont',scratchWindow,'Sloan');
             font=Screen('TextFont',scratchWindow);
             assert(streq(font,'Sloan'));
-            oldSize=Screen('TextSize',scratchWindow,round(o.targetHeightPix/o.noiseCheckPix)); 
+            oldSize=Screen('TextSize',scratchWindow,round(o.targetHeightPix/o.noiseCheckPix));
             oldStyle=Screen('TextStyle',scratchWindow,0);
             canvasRect=[0 0 o.canvasSize];
             for i=1:o.alternatives
@@ -979,7 +991,7 @@ try
             boundsRect=OffsetRect(targetRect,targetOffsetPix,0);
             % targetRect not used. boundsRect used solely for the snapshot.
     end % switch o.task
-    
+
     % Compute annular noise mask
     annularNoiseMask=zeros(o.canvasSize); % initialize with 0
     rect=RectOfMatrix(annularNoiseMask);
@@ -990,7 +1002,7 @@ try
     r=round(CenterRect(r,rect));
     annularNoiseMask=FillRectInMatrix(0,r,annularNoiseMask); % fill small radius with 0
     annularNoiseMask=logical(annularNoiseMask);
-    
+
     % Compute central noise mask
     centralNoiseMask=zeros(o.canvasSize); % initialize with 0
     rect=RectOfMatrix(centralNoiseMask);
@@ -998,11 +1010,11 @@ try
     r=round(r);
     centralNoiseMask=FillRectInMatrix(1,r,centralNoiseMask); % fill radius with 1
     centralNoiseMask=logical(centralNoiseMask);
-    
+
     if isfinite(o.noiseEnvelopeSpaceConstantDeg) && o.noiseRaisedCosineEdgeThicknessDeg>0
         error('Sorry. Please set o.noiseEnvelopeSpaceConstantDeg=inf or set o.noiseRaisedCosineEdgeThicknessDeg=0.');
     end
-    
+
     if isfinite(o.noiseEnvelopeSpaceConstantDeg)
         % Compute Gaussian central noise envelope
         [x,y]=meshgrid(1:o.canvasSize(1),1:o.canvasSize(2));
@@ -1024,7 +1036,7 @@ try
     else
         centralNoiseEnvelope=ones(o.canvasSize);
     end
-    
+
     if o.yellowAnnulusBigRadiusDeg>o.yellowAnnulusSmallRadiusDeg
         % Compute yellow mask, with small and large radii.
         yellowMask=zeros(o.canvasSize);
@@ -1036,7 +1048,7 @@ try
         yellowMask=FillRectInMatrix(0,r,yellowMask);
         yellowMask=logical(yellowMask);
     end
-    
+
     % E1 is energy at unit contrast.
     power=1:length(signal);
     for i=1:length(power)
@@ -1046,7 +1058,7 @@ try
     end
     E1=mean(power)*(o.noiseCheckPix/o.pixPerDeg)^2;
     ffprintf(ff,'log E1/deg^2 %.2f, where E1 is energy at unit contrast.\n',log10(E1));
-    
+
     if ismember(o.observer,algorithmicObservers);
         Screen('CloseAll');
         window=-1;
@@ -1059,7 +1071,7 @@ try
         Screen('TextFont',window,textFont);
         Screen('TextSize',window,textSize);
         Screen('TextStyle',window,textStyle);
-        if ~o.useFractionOfScreen 
+        if ~o.useFractionOfScreen
             HideCursor;
         end
     end
@@ -1082,8 +1094,8 @@ try
         if o.flipClick; Speak('before Flip 911');GetClicks; end
         Screen('Flip', window,0,1); % Show gray screen at LMean with fixation and crop marks. Don't clear buffer.
         if o.flipClick; Speak('after Flip 911');GetClicks; end
-        
-        Screen('DrawText',window,'Starting new run. ',0.5*textSize,1.5*textSize,black0,gray1,1);
+
+        Screen('DrawText',window,'Starting new run. ',0.5*textSize,o.lineSpacing*textSize,black0,gray1,1);
         if isfinite(o.eccentricityDeg)
             if fixationIsOffscreen
                 speech{1}='Please fihx your eyes on your offscreen fixation mark,';
@@ -1100,11 +1112,11 @@ try
         else
             word='Please';
         end
-        Screen('DrawText',window,msg,0.5*textSize,2*1.5*textSize,black0,gray1,1);
+        Screen('DrawText',window,msg,0.5*textSize,2*o.lineSpacing*textSize,black0,gray1,1);
         switch o.task
             case '4afc',
                 speech{2}=[word ' click when ready to begin'];
-                Screen('DrawText',window,[word ' click when ready to begin.'],0.5*textSize,3*1.5*textSize,black0,gray1,1);
+                Screen('DrawText',window,[word ' click when ready to begin.'],0.5*textSize,3*o.lineSpacing*textSize,black0,gray1,1);
                 fprintf('Please click when ready to begin.\n');
             case 'identify',
                 if ismac
@@ -1112,7 +1124,7 @@ try
                 else
                     speech{2}=[word ' press  the  space bar  when ready to begin'];
                 end
-                Screen('DrawText',window,[word ' press the space bar when ready to begin.'],0.5*textSize,3*1.5*textSize,black0,gray1,1);
+                Screen('DrawText',window,[word ' press the space bar when ready to begin.'],0.5*textSize,3*o.lineSpacing*textSize,black0,gray1,1);
                 fprintf('Please press the space bar when ready to begin.\n');
         end
         Screen('Flip',window);
@@ -1141,7 +1153,7 @@ try
                 end
         end
     end
-    
+
     delta=0.02;
     switch o.task
         case '4afc',
@@ -1149,7 +1161,7 @@ try
         case 'identify',
             gamma=1/o.alternatives;
     end
-    
+
     % Default values for tGuess and tGuessSd
     if streq(o.signalKind,'luminance')
         tGuess=-0.5;
@@ -1175,7 +1187,7 @@ try
     if isfinite(o.tGuessSd)
         tGuessSd=o.tGuessSd;
     end
-    
+
     o.data=[];
     q=QuestCreate(tGuess,tGuessSd,o.pThreshold,o.beta,delta,gamma);
     q.normalizePdf=1; % adds a few ms per call to QuestUpdate, but otherwise the pdf will underflow after about 1000 trials.
@@ -1741,7 +1753,7 @@ try
                         eraseRect=dstRect;
                         Screen('Close',texture);
                         rect=CenterRect([0 0 o.targetHeightPix o.targetWidthPix],rect);
-                        rect=round(rect); % target rect 
+                        rect=round(rect); % target rect
                         if o.useFlankers
                             flankerOffset=[-1 0;1 0;0 -1;0 1]*flankerSpacingPix;
                             flankerBoundsRect=[];
@@ -1806,7 +1818,7 @@ try
                             if o.responseNumbersInCorners
                                 % in corners
                                 r=[0 0 textSize 1.4*textSize];
-                                labelBounds=InsetRect(boundsRect,-1.1*textSize,-1.5*textSize);
+                                labelBounds=InsetRect(boundsRect,-1.1*textSize,-o.lineSpacing*textSize);
                             else
                                 % on sides
                                 r=[0 0 textSize o.targetHeightPix];
@@ -1823,12 +1835,12 @@ try
                         end
                 end % switch o.task
                 eraseRect=ClipRect(eraseRect,o.stimulusRect);
-                
+
                 % Print instruction in upper left corner.
                 Screen('FillRect',window,gray1,topCaptionRect);
                 message=sprintf('Trial %d of %d. Run %d of %d.',trial,o.trialsPerRun,o.runNumber,o.runsDesired);
                 Screen('DrawText',window,message,textSize/2,textSize/2,black,gray1);
-                
+
                 % Print instructions in lower left corner.
                 textRect=[0,0,textSize,1.2*textSize];
                 textRect=AlignRect(textRect,screenRect,'left','bottom');
@@ -1848,7 +1860,7 @@ try
                 Screen('FillRect',window,gray1,bottomCaptionRect);
                 Screen('DrawText',window,message,textRect(1),textRect(4),black,gray1,1);
                 Screen('TextSize',window,textSize);
-                
+
                 % Display response alternatives.
                 switch o.task
                     case '4afc',
@@ -2246,9 +2258,15 @@ try
     o.EOverN=10^(2*o.questMean)*E1/N;
     o.efficiency = o.idealEOverNThreshold/o.EOverN;
     if streq(o.signalKind,'luminance')
+<<<<<<< HEAD
         ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold�sd log(contrast) %.2f�%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
     else
         ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold�sd log(r-1) %.2f�%.2f, approx required n %.0f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
+=======
+        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Thresholdd±sd log(contrast) %.2f±%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
+    else
+        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Thresholdd±sd log(r-1) %.2f±%.2f, approx required n %.0f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
+>>>>>>> master
     end
     if abs(trialsRight/trial-o.pThreshold)>0.1
         ffprintf(ff,'WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.\n');
@@ -2268,11 +2286,12 @@ try
         end
     end
     % end
-    
+
     %     t=mean(tSample);
     %     tse=std(tSample)/sqrt(length(tSample));
     %     switch o.signalKind
     %         case 'luminance',
+<<<<<<< HEAD
     %         ffprintf(ff,'SUMMARY: %s %d runs mean�se: log(contrast) %.2f�%.2f, contrast %.3f\n',o.observer,length(tSample),mean(tSample),tse,10^mean(tSample));
     %         %         efficiency = (o.idealEOverNThreshold^2) / (10^(2*t));
     %         %         ffprintf(ff,'Efficiency = %f\n', efficiency);
@@ -2281,6 +2300,16 @@ try
     %         %o.efficiency=o.idealEOverNThreshold/o.EOverN;
     %         ffprintf(ff,'User-provided ideal threshold E/N log E/N %.2f, E/N %.1f\n',log10(o.idealEOverNThreshold),o.idealEOverNThreshold);
     %         ffprintf(ff,'Efficiency log %.2f�%.2f, %.4f %%\n',mean(log10(o.efficiency)),std(log10(o.efficiency))/sqrt(length(o.efficiency)),100*10^mean(log10(o.efficiency)));
+=======
+    %         ffprintf(ff,'SUMMARY: %s %d runs mean±se: log(contrast) %.2f±%.2f, contrast %.3f\n',o.observer,length(tSample),mean(tSample),tse,10^mean(tSample));
+    %         %         efficiency = (o.idealEOverNThreshold^2) / (10^(2*t));
+    %         %         ffprintf(ff,'Efficiency = %f\n', efficiency);
+    %         %o.EOverN=10^mean(2*tSample)*E1/N;
+    %         ffprintf(ff,'Threshold log E/N %.2f±%.2f, E/N %.1f\n',mean(log10(o.EOverN)),std(log10(o.EOverN))/sqrt(length(o.EOverN)),o.EOverN);
+    %         %o.efficiency=o.idealEOverNThreshold/o.EOverN;
+    %         ffprintf(ff,'User-provided ideal threshold E/N log E/N %.2f, E/N %.1f\n',log10(o.idealEOverNThreshold),o.idealEOverNThreshold);
+    %         ffprintf(ff,'Efficiency log %.2f±%.2f, %.4f %%\n',mean(log10(o.efficiency)),std(log10(o.efficiency))/sqrt(length(o.efficiency)),100*10^mean(log10(o.efficiency)));
+>>>>>>> master
     %         corr=zeros(length(signal));
     %         for i=1:length(signal)
     %             for j=1:i
@@ -2310,7 +2339,11 @@ try
             o.logApproxRequiredNumber=log10(o.approxRequiredNumber);
             ffprintf(ff,'r %.3f, approx required number %.0f\n',o.r,o.approxRequiredNumber);
             %              logNse=std(logApproxRequiredNumber)/sqrt(length(tSample));
+<<<<<<< HEAD
             %              ffprintf(ff,'SUMMARY: %s %d runs mean�se: log(r-1) %.2f�%.2f, log(approx required n) %.2f�%.2f\n',o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
+=======
+            %              ffprintf(ff,'SUMMARY: %s %d runs mean±se: log(r-1) %.2f±%.2f, log(approx required n) %.2f±%.2f\n',o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
+>>>>>>> master
        case 'entropy',
             t=o.questMean;
             o.r=10^t+1;

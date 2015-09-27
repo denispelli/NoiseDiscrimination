@@ -76,7 +76,8 @@ function CalibrateScreenLuminance(screen,screenOutput)
 % for brightness is display specific - works with some displays but not
 % with others.
 % http://osxdaily.com/2010/05/15/stop-the-macbook-pro-and-macbook-screen-from-dimming/
-
+addpath('lib');
+addpath('AutoBrightness');
 try
     Speak('Welcome to Calibrate Screen Luminance.');
     fprintf('This program uses text to speech. Please turn up the sound volume to hear it.\n');
@@ -297,7 +298,7 @@ try
     filename='OurScreenCalibrations.m';
     fprintf('Appending this calibration data to %s.\n',filename);
     mypath=fileparts(mfilename('fullpath'));
-    fullfilename=fullfile(mypath,filename);
+    fullfilename=fullfile(mypath,'lib', filename);
     fid=fopen(fullfilename,'a+');
     for f=[1,fid]
         fprintf(f,'if ');
