@@ -1,0 +1,11 @@
+Fix: Segmented letters in Windows
+  Interactively generate letter set, and keep using that throughout the whole run;
+
+Pink Noise 
+  Generate pink noise using Bandpass2
+
+Interleaved Quest sequences
+  o struct as an array
+
+
+  
