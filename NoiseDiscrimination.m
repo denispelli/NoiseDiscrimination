@@ -303,7 +303,6 @@ end
 o.datafilename=sprintf('%s-%s.%d.%d.%d.%d.%d.%d',o.functionNames,o.observer,round(t));
 datafullfilename=fullfile(fileparts(mfilename('fullpath')),'data',o.datafilename);
 dataFid=fopen([datafullfilename '.txt'],'rt');
-keyboard
 if dataFid~=-1
     error('Oops. There''s already a file called "%s.txt". Try again.',datafullfilename);
 end
@@ -859,6 +858,38 @@ try
             noiseList=find(sign(temp.^2-o.noiseListBound^2)-1);
             noiseList=temp(noiseList);
             clear temp;
+        case 'pink'
+            o.noiseListBound=2;
+            temp=randn([1,20000]);
+            noiseList=find(sign(temp.^2-o.noiseListBound^2)-1);
+            noiseList=temp(noiseList);
+            clear temp;
+            noiseRmsContrast = 1;
+            o.filtering = 'radial';
+            fLow = 1e-4;
+            fHigh = 1e-1;
+            fNyquist = 1e-2;
+
+            % noise size
+            noise=zeros(o.canvasSize);
+            % mtf
+            switch o.filtering
+                case {'radial'}
+                    mtf=Bandpass2(o.canvasSize,fLow/fNyquist,fHigh/fNyquist);
+                case {'x'}
+                    mtf=ones(size(noise,1),1)*Bandpass(size(noise,2),fLow/fNyquist,fHigh/fNyquist);
+                case {'y'}
+                    mtf=Bandpass(size(noise,1),fLow/fNyquist,fHigh/fNyquist)'*ones(1,size(noise,2));
+                case {'none'}
+                    mtf=ones(o.canvasSize);
+                otherwise
+                    clear screen; ShowCursor;
+                    error('SignalInNoise: don''t recognize filtering=''%s''',filtering);
+            end
+            if noiseRmsContrast==0
+                mtf=0;
+            end
+
         case 'uniform',
             o.noiseListBound=1;
             noiseList=-1:1/1024:1;
@@ -1301,7 +1332,23 @@ try
                         end
                         rng(o.noiseListSeed);
                     end
+
                     noise=PsychRandSample(noiseList,o.canvasSize);
+                    switch o.noiseType
+                        case 'pink',
+                            if any(mtf(:)~=1)
+                                if any(mtf(:)~=0)
+                                    % filtering 50x50 takes 200 ms on PowerMac 7500/100
+                                    ft=mtf.*fftshift(fft2(noise));
+                                    noise=real(ifft2(ifftshift(ft)));
+                                    clear ft
+                                else
+                                    noise=zeros(size(noise));
+                                end
+                            end
+
+                    end
+
                     if i==signalLocation
                         switch o.signalKind
                             case 'noise',

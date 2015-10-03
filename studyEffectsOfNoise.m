@@ -19,7 +19,8 @@ o.noiseCheckDeg=o.targetHeightDeg/10;
 % o.isWin=0; % use the Windows code even if we're on a Mac
 o.task='identify'; 
 o.signalKind='luminance'; % Display a luminance decrement.
-o.noiseType='gaussian';
+%o.noiseType='gaussian';
+o.noiseType='pink';
 
 % o.noiseRaisedCosineEdgeThicknessDeg=0; % midpoint of raised cosine is at o.noiseRadiusDeg.
 % o.durationSec=inf; % Typically 0.2 or inf (wait indefinitely for response).
@@ -31,8 +32,8 @@ o.noiseType='gaussian';
 % o.snapshotShowsFixationBefore=1;
 % o.snapshotShowsFixationAfter=0;
 %o.useFractionOfScreen=0.4; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
-%o.speakInstructions=1;
-%o.isKbLegacy = 0; 
+o.speakInstructions=0;
+o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar() (Linux compatibility)
 o.trialsPerRun=100; 
 o=NoiseDiscrimination(o);
 sca;
