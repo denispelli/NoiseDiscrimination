@@ -14,7 +14,6 @@ loop=0; %loop = 0 (no looping) or 1 (full loop). To be added - 0.5 means semi/pa
 % grid2 = [grid; grid]; %each data point to be measured twice.
 % gridSize = size(grid2);
 % numIter = gridSize(1);
-
 %do random sampling (without replacement) from 96 of these enumerations.
 % grid2 = grid2(randperm(numIter),:);
 % grid3 = grid2;
