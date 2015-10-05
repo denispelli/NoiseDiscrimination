@@ -1,9 +1,9 @@
 function o=NoiseDiscrimination(oIn)
-    addpath('AutoBrightness');
-    addpath('lib');
-    %Priority(1);
-    %echo_executing_commands(2, 'local');
-    %diary /scratch/d
+addpath('AutoBrightness');
+addpath('lib');
+%Priority(1);
+%echo_executing_commands(2, 'local');
+%diary ./diary.log
 % o=NoiseDiscrimination(o);
 % Pass all your parameters in the "o" struct, which will be returned with
 % all the results as additional fields. NoiseDiscrimination may adjust some
@@ -169,6 +169,7 @@ o.noiseCheckDeg=0.2; % Typically 0.05 or 0.2.
 o.noiseRadiusDeg=1; % When o.task=4afc, the program will set o.noiseRadiusDeg=o.targetHeightDeg/2;
 o.noiseEnvelopeSpaceConstantDeg=inf;
 o.noiseRaisedCosineEdgeThicknessDeg=0; % midpoint of raised cosine is at noiseRadiusDeg.
+o.noiseSpectrum='pink'; % pink or white
 o.showBlackAnnulus=0;
 o.blackAnnulusContrast=-1; % (LBlack-LMean)/LMean. -1 for black line. >-1 for gray line.
 o.blackAnnulusSmallRadiusDeg=2;
@@ -302,12 +303,26 @@ end
 
 o.datafilename=sprintf('%s-%s.%d.%d.%d.%d.%d.%d',o.functionNames,o.observer,round(t));
 datafullfilename=fullfile(fileparts(mfilename('fullpath')),'data',o.datafilename);
-dataFid=fopen([datafullfilename '.txt'],'rt');
-keyboard
-if dataFid~=-1
-    error('Oops. There''s already a file called "%s.txt". Try again.',datafullfilename);
+if 0
+    dataFid=fopen([datafullfilename '.txt'],'rt');
+    if dataFid~=-1
+        error('Oops. There''s already a file called "%s.txt". Try again.',datafullfilename);
+    end
+    [dataFid,msg]=fopen([datafullfilename '.txt'],'wt');
+    if dataFid==-1
+        error('%s. Could not create data file: %s',msg,[datafullfilename '.txt']);
+    end
+else
+    cd(fileparts(datafullfilename));
+    dataFid=fopen([o.datafilename '.txt'],'rt');
+    if dataFid~=-1
+        error('Oops. There''s already a file called "%s.txt". Try again.',o.datafilename);
+    end
+    [dataFid,msg]=fopen([o.datafilename '.txt'],'wt');
+    if dataFid==-1
+        error('%s. Could not create data file: %s',msg,[o.datafilename '.txt']);
+    end
 end
-dataFid=fopen([datafullfilename '.txt'],'wt');
 assert(dataFid>-1);
 ff=[1 dataFid];
 fprintf('\nSaving results in:\n');
@@ -866,8 +881,24 @@ try
             o.noiseListBound=1;
             noiseList=[-1 1];
         otherwise,
-%             clear screen; ShowCursor;
             error('Unknown noiseType "%s"',o.noiseType);
+    end
+    
+    % Compute mtf to filter the noise
+    fNyquist=0.5/o.noiseCheckDeg;
+    fLow = 0;
+    fHigh = fNyquist;
+    switch o.noiseSpectrum
+        case 'pink'
+            o.noiseSpectrumExponent=-1;
+            mtf=MtfPowerLaw(o.noiseSize,o.noiseSpectrumExponent,fLow/fNyquist,fHigh/fNyquist);
+            o.noiseIsFiltered=1;
+        case 'white'
+            mtf=ones(o.noiseSize);
+            o.noiseIsFiltered=0;
+    end
+    if o.noiseSD==0
+        mtf=0;
     end
 
     o.noiseListSd=std(noiseList);
@@ -1302,6 +1333,18 @@ try
                         rng(o.noiseListSeed);
                     end
                     noise=PsychRandSample(noiseList,o.canvasSize);
+                    if o.noiseIsFiltered
+                            if any(mtf(:)~=1)
+                                if any(mtf(:)~=0)
+                                    % filtering 50x50 takes 200 ms on PowerMac 7500/100
+                                    ft=mtf.*fftshift(fft2(noise));
+                                    noise=real(ifft2(ifftshift(ft)));
+                                    clear ft
+                                else
+                                    noise=zeros(size(noise));
+                                end
+                            end
+                    end
                     if i==signalLocation
                         switch o.signalKind
                             case 'noise',
