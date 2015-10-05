@@ -1,16 +1,24 @@
-function tabdata = parseExpData(newpath, obs_name) 
-% Can add variables from_date, to_date later, to parse by date/time.
+function tabdata = parseExpData(newpath, obs_name, from_date, to_date) 
+%from_date/to_date of form 'dd-mmm-yyyy hh:mm:ss'.
 cd(newpath);
 files = dir('*mat');
 filenames = {files.name};
+filedates = {files.datenum};
+fmt = 'dd-mmm-yyyy HH:MM:SS';
+from_dt = datenum(from_date,fmt);
+to_dt = datenum(to_date, fmt);
 parsefiles=cell(1,length(filenames));
+
 for k=1:length(filenames)
     [pathstr,name,ext]=fileparts(char(filenames(k)));
     if not(isempty(strfind(name,char(obs_name))))
-        %if file_name >= from_date && <= to_date
-        parsefiles{k}=char(filenames(k));
+        curr_date = filedates{k};
+        if curr_date>=from_dt && curr_date<=to_dt
+            parsefiles{k}=char(filenames(k));
+        end
     end
 end
+parsefiles=parsefiles(~cellfun('isempty',parsefiles)); %command to remove empty cells
 pdata=cell(length(parsefiles),13);
 col_names={'observer','trials','letter_size','noise_contrast','noise_decay_radius','eccentricity','p_accuracy','threshold_log_contrast','threshold_contrast_SD','contrast','log_E_by_N','efficiency','file_name'};
 for i=1:length(parsefiles)
