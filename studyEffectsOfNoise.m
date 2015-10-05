@@ -1,11 +1,21 @@
-clear o
+  clear o
 % o.observer='junk';
 % o.observer='ideal';
 
-
+  
 %#### Adjust values within this block of code #####################
 o.observer='shivam'; %add your name here
 o.distanceCm=50; % viewing distance
+<<<<<<< HEAD
+o.durationSec=0.2;
+o.noiseRadiusDeg=inf;
+%############################ for now, change these ###############
+o.targetHeightDeg=2; %letter size [2]
+o.noiseSD=0.35; %noise  contrast [0.1,0.35,0]
+o.noiseEnvelopeSpaceConstantDeg=.5; % noise decay radius [0.5, 2, 8, inf]
+o.eccentricityDeg=32;
+ % eccentricity [0, 2, 8, 32]
+=======
 o.targetHeightDeg=2; %letter size [2]
 o.durationSec=0.2;
 o.noiseRadiusDeg=inf;
@@ -14,7 +24,9 @@ o.noiseEnvelopeSpaceConstantDeg=2; % noise decay radius [2, sqrt(2*16), 16]
 o.noiseSD=0.2; %noise contrast [0.2]
 %##################################################################
 
+>>>>>>> master
 
+%#########################################
 o.noiseCheckDeg=o.targetHeightDeg/10;
 % o.isWin=0; % use the Windows code even if we're on a Mac
 o.task='identify'; 

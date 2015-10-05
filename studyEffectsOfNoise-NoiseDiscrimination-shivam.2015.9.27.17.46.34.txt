@@ -1,0 +1,28 @@
+studyEffectsOfNoise-NoiseDiscrimination-shivam.2015.9.27.17.46.34
+studyEffectsOfNoise-NoiseDiscrimination 27-Sep-2015 17:46:34
+observer shivam, task identify, alternatives 9,  beta NaN,
+Reducing requested o.noiseRadiusDeg (Inf deg) to 17.4 deg, the max possible.
+Computer UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME., MacBookPro12,1, screen 0, 2880x1800, 28.5x17.9 cm
+Computer account Shivam Verma.
+UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME. MacBookPro12,1 calibrated by Shivam Verma on 22-Sep-2015 16:30.
+Shivam Verma 406 16:30 Env:50-70cd/m2 MBP13
+cal.ScreenConfigureDisplayBrightnessWorks=1;
+Turning autobrightness off. Setting "brightness" to 1.00, on a scale of 0.0 to 1.0;
+Fixation cross is blanked near target. No delay in showing fixation after target.
+Frame rate 58.9 Hz.
+o.pixPerDeg 88.6, o.distanceCm 50.0
+Minimum letter resolution is 8 checks.
+o.targetHeightPix 180, o.noiseCheckPix 18, o.durationSec 0.20 s
+o.signalKind luminance
+o.noiseType gaussian, o.noiseSD 0.100, o.annularNoiseSD 0.100
+Noise height 65.98 deg. Noise hole 65.98 deg. Height is 32.49T and hole is 32.49T, where T is target height.
+Target height is 10.0 checks, 2.0 deg.
+Letter size 2.03 deg, central check size 0.203 deg.
+No crop marks.
+Eccentricity 0.0 deg. Using fixation mark. Target offset 0.00 of screen width.
+log N/deg^2 -3.38, where N is power spectral density
+pThreshold 0.75, beta 3.5
+Your (log) guess is NaN � NaN
+o.trialsPerRun 100
+log E1/deg^2 0.37, where E1 is energy at unit contrast.
+Run    1 of 1.  100 trials. 75% right. 1.394 s/trial. Threshold�sd log(contrast) -0.81�0.02, contrast 0.15551, log E/N 2.14, efficiency NaN
