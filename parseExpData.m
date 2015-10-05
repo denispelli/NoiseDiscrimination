@@ -1,26 +1,45 @@
 function tabdata = parseExpData(newpath, obs_name, from_date, to_date) 
 %from_date/to_date of form 'dd-mmm-yyyy hh:mm:ss'.
+%Put from_date = -Inf and/or to_date = Inf when wanting unrestricted
+%lower/upper bound.
 cd(newpath);
 files = dir('*mat');
 filenames = {files.name};
-filedates = {files.datenum};
+filedates=cell(size(filenames));
+filedates2=cell(size(filenames));
 fmt = 'dd-mmm-yyyy HH:MM:SS';
-from_dt = datenum(from_date,fmt);
-to_dt = datenum(to_date, fmt);
-parsefiles=cell(1,length(filenames));
+for i=1:length(filenames)
+    temp=strsplit(filenames{i},'.');
+    filedates{i}=datestr(cellfun(@str2num,temp(2:7)),0);
+    filedates2{i}=datenum(filedates{i},fmt);
+end
+if sum(from_date==-Inf)==1
+    from_dt=-Inf;
+else
+    from_dt = datenum(from_date,fmt);
+end
+if sum(to_date==Inf)==1
+    to_dt=Inf;
+else
+    to_dt = datenum(to_date, fmt);
+end
 
+parsefiles=cell(1,length(filenames));
+parsedates=cell(1,length(filenames));
 for k=1:length(filenames)
     [pathstr,name,ext]=fileparts(char(filenames(k)));
     if not(isempty(strfind(name,char(obs_name))))
-        curr_date = filedates{k};
+        curr_date = filedates2{k};
         if curr_date>=from_dt && curr_date<=to_dt
             parsefiles{k}=char(filenames(k));
+            parsedates{k}=char(filedates(k));
         end
     end
 end
 parsefiles=parsefiles(~cellfun('isempty',parsefiles)); %command to remove empty cells
+parsedates=parsedates(~cellfun('isempty',parsedates));
 pdata=cell(length(parsefiles),13);
-col_names={'observer','trials','letter_size','noise_contrast','noise_decay_radius','eccentricity','p_accuracy','threshold_log_contrast','threshold_contrast_SD','contrast','log_E_by_N','efficiency','file_name'};
+col_names={'observer','trials','letter_size','noise_contrast','noise_decay_radius','eccentricity','p_accuracy','threshold_log_contrast','threshold_contrast_SD','contrast','log_E_by_N','efficiency','file_date_time'};
 for i=1:length(parsefiles)
     load(char(parsefiles(i)),'o');
     pdata{i,1}=o.observer; %observer name
@@ -36,7 +55,7 @@ for i=1:length(parsefiles)
     pdata{i,10}=o.contrast; %contrast
     pdata{i,11}=log(o.EOverN); %log E/N
     pdata{i,12}=o.efficiency; %efficiency
-    pdata{i,13}=char(parsefiles(i)); %file name for reference
+    pdata{i,13}=char(parsedates(i)); %file date for reference
     clear o;
 end
 pdata( all(cellfun(@isempty,pdata),2), : ) = []; %removes empty cell rows
