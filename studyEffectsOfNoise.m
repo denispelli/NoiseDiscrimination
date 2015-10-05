@@ -6,6 +6,7 @@
 %#### Adjust values within this block of code #####################
 o.observer='shivam'; %add your name here
 o.distanceCm=50; % viewing distance
+<<<<<<< HEAD
 o.durationSec=0.2;
 o.noiseRadiusDeg=inf;
 %############################ for now, change these ###############
@@ -14,6 +15,16 @@ o.noiseSD=0.35; %noise  contrast [0.1,0.35,0]
 o.noiseEnvelopeSpaceConstantDeg=.5; % noise decay radius [0.5, 2, 8, inf]
 o.eccentricityDeg=32;
  % eccentricity [0, 2, 8, 32]
+=======
+o.targetHeightDeg=2; %letter size [2]
+o.durationSec=0.2;
+o.noiseRadiusDeg=inf;
+o.eccentricityDeg=32; % eccentricity [32]
+o.noiseEnvelopeSpaceConstantDeg=2; % noise decay radius [2, sqrt(2*16), 16]
+o.noiseSD=0.2; %noise contrast [0.2]
+%##################################################################
+
+>>>>>>> master
 
 %#########################################
 o.noiseCheckDeg=o.targetHeightDeg/10;
@@ -34,6 +45,6 @@ o.noiseType='gaussian';
 %o.useFractionOfScreen=0.4; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 %o.speakInstructions=1;
 %o.isKbLegacy = 0; 
-o.trialsPerRun=100; 
+o.trialsPerRun=80; 
 o=NoiseDiscrimination(o);
 sca;
