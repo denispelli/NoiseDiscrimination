@@ -5,15 +5,15 @@ function o = funcNoiseParam(letterSizeDeg,noiseContrast,noiseDecayRadius,eccentr
 % Has optional inputs (observer, distanceCm, durationSec).
 %Author: Shivam Verma.
 clear o
-% only want 3 optional inputs at most.
+% only want 4 optional inputs at most.
 numvarargs = length(varargin);
-if numvarargs > 3
+if numvarargs > 4
     error('myfuns:funcNoiseDiscrimination:TooManyInputs', ...
-        'requires at most 3 optional inputs');
+        'requires at most 4 optional inputs');
 end
 
 % set defaults for optional inputs
-optargs = {'shivam' 50 0.2};
+optargs = {'shivam' 'gaussian' 50 0.2};
 
 % now put these defaults into the valuesToUse cell array, 
 % and overwrite the ones specified in varargin.
@@ -24,7 +24,7 @@ o.targetHeightDeg=letterSizeDeg;
 o.eccentricityDeg=eccentricityDeg; % 0, 2, 8, 32
 o.noiseEnvelopeSpaceConstantDeg=noiseDecayRadius; % 0.5, 2, 8, inf
 o.noiseRadiusDeg=noiseContrast;
-[o.observer,o.distanceCm,o.durationSec] = optargs{:};
+[o.observer,o.noiseType,o.distanceCm,o.durationSec] = optargs{:};
 
 % o.observer='junk';
 % o.observer='ideal';
@@ -45,7 +45,6 @@ o.noiseCheckDeg=o.targetHeightDeg/10;
 % o.isWin=0; % use the Windows code even if we're on a Mac
 o.task='identify'; 
 o.signalKind='luminance'; % Display a luminance decrement.
-o.noiseType='gaussian';
 o.noiseSD=0.1;
 
 % o.noiseRaisedCosineEdgeThicknessDeg=0; % midpoint of raised cosine is at o.noiseRadiusDeg.
