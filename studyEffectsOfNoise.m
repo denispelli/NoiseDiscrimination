@@ -4,7 +4,7 @@
 
   
 %#### Adjust values within this block of code #####################
-o.observer='shivam'; %add your name here
+o.observer='hormet'; %add your name here
 o.distanceCm=50; % viewing distance
 o.targetHeightDeg=2; %letter size [2]
 o.durationSec=0.2;
@@ -20,8 +20,8 @@ o.noiseCheckDeg=o.targetHeightDeg/10;
 % o.isWin=0; % use the Windows code even if we're on a Mac
 o.task='identify'; 
 o.signalKind='luminance'; % Display a luminance decrement.
-%o.noiseType='gaussian';
-o.noiseType='pink';
+o.noiseType='gaussian';
+o.noiseSpectrum='pink'; % pink or white
 
 % o.noiseRaisedCosineEdgeThicknessDeg=0; % midpoint of raised cosine is at o.noiseRadiusDeg.
 % o.durationSec=inf; % Typically 0.2 or inf (wait indefinitely for response).
