@@ -313,8 +313,8 @@ if 0
         error('%s. Could not create data file: %s',msg,[datafullfilename '.txt']);
     end
 else
-    cd(fileparts(datafullfilename));
-    dataFid=fopen([o.datafilename '.txt'],'rt');
+    dataFileDir = fileparts(datafullfilename);
+    dataFid=fopen([dataFileDir '/'  o.datafilename '.txt'],'rt');
     if dataFid~=-1
         error('Oops. There''s already a file called "%s.txt". Try again.',o.datafilename);
     end
