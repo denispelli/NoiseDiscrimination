@@ -22,3 +22,7 @@ junk/
 tmp.m
 tmp.mat
 buggy.mat
+
+*.mat
+*.*.*.*.*.*.txt
+octave-workspace
