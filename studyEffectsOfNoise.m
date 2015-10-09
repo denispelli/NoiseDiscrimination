@@ -6,12 +6,13 @@
 %#### Adjust values within this block of code #####################
 o.observer='hormet'; %add your name here
 o.distanceCm=50; % viewing distance
-o.targetHeightDeg=2; %letter size [2]
 o.durationSec=0.2;
 o.noiseRadiusDeg=inf;
-o.eccentricityDeg=32; % eccentricity [32]
-o.noiseEnvelopeSpaceConstantDeg=2; % noise decay radius [2, sqrt(2*16), 16]
-o.noiseSD=0.2; %noise contrast [0.2]
+
+o.targetHeightDeg=6; %letter size [2,sqrt(2*6),6];
+o.noiseEnvelopeSpaceConstantDeg=Inf; % noise decay radius [1,sqrt(3), 3,3*sqrt(3), 9, Inf]
+o.eccentricityDeg=32; % eccentricity [0,32]
+o.noiseSD=0.16; %noise contrast [0.16]
 %##################################################################
 
 
@@ -34,7 +35,7 @@ o.noiseSpectrum='pink'; % pink or white
 % o.snapshotShowsFixationAfter=0;
 %o.useFractionOfScreen=0.4; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 o.speakInstructions=0;
-%o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar() (Linux compatibility)
+o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar() (Linux compatibility)
 o.trialsPerRun=80; 
 o=NoiseDiscrimination(o);
 sca;

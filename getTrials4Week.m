@@ -19,8 +19,8 @@ function grid1b = getTrials4Week(WeekNumber)
             repeatPerCondition      = 2;
 
         case 3
-            letterSize              = [2,sqrt(2*6),6];
-            noiseDecayRadius        = [2,sqrt(2*16),16,Inf]; %noise decay radius
+            letterSize              = [2,2*sqrt(3),6];
+            noiseDecayRadius        = [1,sqrt(3),3,3*sqrt(3),9,Inf]; %noise decay radius
             eccentricity            = [0,32]; %eccentricity
             noiseContrast           = [0.16]; %noise contrast takes values. 
             repeatPerCondition      = 2;
