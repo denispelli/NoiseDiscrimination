@@ -18,6 +18,14 @@ function grid1b = getTrials4Week(WeekNumber)
             noiseContrast           = [0.2]; %noise contrast takes values . 
             repeatPerCondition      = 2;
 
+        case 3
+            noiseDecayRadius        = [1,2,sqrt(2*16),16]; %noise decay radius
+            letterSize              = [sqrt(2*6) 6];
+            noiseDecayRadius        = [2,sqrt(2*16),16]; %noise decay radius
+            eccentricity            = [32]; %eccentricity
+            noiseContrast           = [0.16]; %noise contrast takes values . 
+            repeatPerCondition      = 2;
+
         otherwise
             error('Invalid week number %d', WeekNumber);
 
