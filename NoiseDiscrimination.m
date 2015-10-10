@@ -732,9 +732,18 @@ try
             if o.speakInstructions
                 Speak(question);
             end
-            answer=questdlg(question,'Fixation','Ok','Cancel','Ok');
+            if o.isKbLegacy
+              answer=questdlg(question,'Fixation','Ok','Cancel','Ok');
+              
+            else
+              ListenChar(0); % get ready for the quesdlg
+              answer=questdlg(question,'Fixation','Ok','Cancel','Ok');
+              ListenChar(2); % go back to orig status; no echo
+              
+            end
+            
             switch answer
-                case 'Ok',
+              case 'Ok',
                     fixationIsOffscreen=1;
                     if fixationOffscreenCm<0
                         ffprintf(ff,'Offscreen fixation mark is %.0f cm left of the left edge of the stimulusRect.\n',-fixationOffscreenCm);
