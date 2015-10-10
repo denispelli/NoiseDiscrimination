@@ -33,9 +33,9 @@ o.noiseSpectrum='pink'; % pink or white
 % o.snapshotCaptionTextSizeDeg=0.5;
 % o.snapshotShowsFixationBefore=1;
 % o.snapshotShowsFixationAfter=0;
-%o.useFractionOfScreen=0.4; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
-o.speakInstructions=0;
-o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar() (Linux compatibility)
+% o.useFractionOfScreen=0.2; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
+% o.speakInstructions=1;
+% o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar() (Linux compatibility)
 o.trialsPerRun=80; 
 o=NoiseDiscrimination(o);
 sca;
