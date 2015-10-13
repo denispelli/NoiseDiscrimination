@@ -26,3 +26,4 @@ buggy.mat
 *.mat
 *.*.*.*.*.*.txt
 octave-workspace
+.Rproj.user
