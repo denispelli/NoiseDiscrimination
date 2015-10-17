@@ -10,8 +10,8 @@ o.durationSec=0.2;
 o.noiseRadiusDeg=inf;
 
 o.targetHeightDeg=2; %letter size [2,sqrt(2*6),6];
-o.noiseEnvelopeSpaceConstantDeg=4; % noise decay radius [1,sqrt(3), 3,3*sqrt(3), 9, Inf]
-o.eccentricityDeg=0; % eccentricity [0,32]
+o.noiseEnvelopeSpaceConstantDeg=inf; % noise decay radius [1,sqrt(3), 3,3*sqrt(3), 9, Inf]
+o.eccentricityDeg=32; % eccentricity [0,32]
 o.noiseSD=0 ; %noise contrast [0.16]
 %##################################################################
 
