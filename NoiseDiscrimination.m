@@ -963,6 +963,7 @@ try
         ffprintf(ff,'Eccentricity %.1f deg. No fixation mark.\n',0);
     end
     N=o.noiseCheckPix^2*o.pixPerDeg^-2*o.noiseSD^2;
+    o.N = N;
     ffprintf(ff,'log N/deg^2 %.2f, where N is power spectral density\n',log10(N));
     ffprintf(ff,'pThreshold %.2f, beta %.1f\n',o.pThreshold,o.beta);
     ffprintf(ff,'Your (log) guess is %.2f ± %.2f\n',o.tGuess,o.tGuessSd);
@@ -1094,6 +1095,7 @@ try
     end
     E1=mean(power)*(o.noiseCheckPix/o.pixPerDeg)^2;
     ffprintf(ff,'log E1/deg^2 %.2f, where E1 is energy at unit contrast.\n',log10(E1));
+    o.E1 = E1;
 
     if ismember(o.observer,algorithmicObservers);
         Screen('CloseAll');

@@ -1,9 +1,12 @@
-function tabdata = parseExpData(newpath, obs_name, from_date, to_date) 
+function tabdata = parseExpData(newpath, obs_name, from_date, to_date)
 %from_date/to_date of form 'dd-mmm-yyyy hh:mm:ss'.
 %Put from_date = -Inf and/or to_date = Inf when wanting unrestricted
 %lower/upper bound.
+
+smallestTrialNum = 80;
+
 cd(newpath);
-files = dir('*mat');
+files = dir('study*.mat');
 filenames = {files.name};
 filedates=cell(size(filenames));
 filedates2=cell(size(filenames));
@@ -38,27 +41,52 @@ for k=1:length(filenames)
 end
 parsefiles=parsefiles(~cellfun('isempty',parsefiles)); %command to remove empty cells
 parsedates=parsedates(~cellfun('isempty',parsedates));
-pdata=cell(length(parsefiles),13);
-col_names={'observer','trials','letter_size','noise_contrast','noise_decay_radius','eccentricity','p_accuracy','threshold_log_contrast','threshold_contrast_SD','contrast','log_E_by_N','efficiency','file_date_time'};
+% pdata=cell(length(parsefiles),13);
+pdata = {};
+col_names={'observer','trials','letter_size','noise_contrast','noise_decay_radius','eccentricity','p_accuracy','threshold_log_contrast','threshold_contrast_SD','contrast','log_E_by_N','efficiency','file_date_time','energy_at_unit_contrast','noise_power_spectral_density', 'threshold_energy'};
+
+j = 1; % to skip the re-run runs(unfinished runs due to mis-representation of letters)
 for i=1:length(parsefiles)
     load(char(parsefiles(i)),'o');
-    pdata{i,1}=o.observer; %observer name
-    pdata{i,2}=o.trials; %trials per run
-    pdata{i,3}=o.targetHeightDeg; %letter size
-    pdata{i,4}=o.noiseSD; %noise contrast
-    pdata{i,5}=o.noiseEnvelopeSpaceConstantDeg; %noise decay radius
-    pdata{i,6}=o.eccentricityDeg; %eccentricity
-    %pdata(i,)=o.; %seconds per trials
-    pdata{i,7}=o.p; %percentage accuracy
-    pdata{i,8}=o.questMean; %threshold log contrast
-    pdata{i,9}=o.questSd; %threshold log contrast SD
-    pdata{i,10}=o.contrast; %contrast
-    pdata{i,11}=log(o.EOverN); %log E/N
-    pdata{i,12}=o.efficiency; %efficiency
-    pdata{i,13}=char(parsedates(i)); %file date for reference
+    if o.trials>=smallestTrialNum
+        pdata{j,1}=o.observer; %observer name
+        pdata{j,2}=o.trials; %trials per run
+        pdata{j,3}=o.targetHeightDeg; %letter size
+        pdata{j,4}=o.noiseSD; %noise contrast
+        pdata{j,5}=o.noiseEnvelopeSpaceConstantDeg; %noise decay radius
+        pdata{j,6}=o.eccentricityDeg; %eccentricity
+        %pdata(j,)=o.; %seconds per trials
+        pdata{j,7}=o.p; %percentage accuracy
+        pdata{j,8}=o.questMean; %threshold log contrast
+        pdata{j,9}=o.questSd; %threshold log contrast SD
+        pdata{j,10}=o.contrast; %contrast
+        pdata{j,11}=log(o.EOverN); %log E/N
+        pdata{j,12}=o.efficiency; %efficiency
+        pdata{j,13}=char(parsedates(i)); %file date for reference
+        % the following commands might be used later when E1 and N are saved
+        % into o
+        %     pdata{j,14}=o.E1; % energy at unit contrast
+        %     pdata{j,15}=o.N; % noise power spectral density
+        
+        % for now we just compute E1 and N from o
+        N = (o.noiseSD^2)*o.noiseCheckDeg^2;
+        E=o.EOverN*N;
+        E1=E/o.contrast^2;
+        
+        pdata{j,14}=E1; % energy at unit contrast
+        pdata{j,15}=N; % noise power spectral density 
+       
+        E = E1*exp(o.questMean)^2;
+        pdata{j,16}=E; %threshold energy
+        
+        j = j+1;
+    end;
     clear o;
 end
 pdata( all(cellfun(@isempty,pdata),2), : ) = []; %removes empty cell rows
 tabdata = cell2table(pdata, 'VariableNames', col_names); %converts to table
 %Use this command to save file - writetable(tabdata,'test1.txt','Delimiter',',')
+
+%Also save a .mat file for further processing
+save('xiuyunW2-3.mat','tabdata');
 end
