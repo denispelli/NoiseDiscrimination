@@ -2308,6 +2308,7 @@ try
     o.contrast=-10^o.questMean;
     o.EOverN=10^(2*o.questMean)*E1/N;
     o.efficiency = o.idealEOverNThreshold/o.EOverN;
+    o.E = 10^(2*o.questMean)*E1;
     if streq(o.signalKind,'luminance')
         ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Thresholdd±sd log(contrast) %.2f±%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
     else
