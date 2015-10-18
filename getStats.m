@@ -58,7 +58,7 @@ if doNeq==1
             end;
             
             cE0 = repmat(me(arr0),[2 1]);
-            runNeq(arr, 1)=(cE0./(tabdata{arr,14}-cE0))./tabdata{arr,15}; %Neq for the two runs
+            runNeq(arr, 1)=(cE0./(tabdata{arr,16}-cE0)).*tabdata{arr,15}; %Neq for the two runs
         end;
     end;
     ME = accumarray(subs, runNeq, [], @mean);
