@@ -80,14 +80,14 @@ for i=1:length(parsefiles)
         % for old data with noise contrast~=0 we just compute E1 and N from o
         if o.noiseSD~=0
         N = (o.noiseSD^2)*o.noiseCheckDeg^2;
-        E10=o.EOverN*N;
-        E1=E10/o.contrast^2;
+        E=o.EOverN*N;
+        E1=E/o.contrast^2;
 
         pdata{j,14}=E1; % energy at unit contrast
         pdata{j,15}=N; % noise power spectral density
         end;
 
-        E = E1*exp(o.questMean)^2;
+        E = E1*o.contrast^2;
         pdata{j,16}=E; %threshold energy
 
         j = j+1;
