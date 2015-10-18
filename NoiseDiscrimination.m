@@ -400,6 +400,7 @@ if o.isWin
             break;
         end
     end
+
     RestoreCluts;
     if ~isfinite(o.minLRange)
         error('Couldn''t fix the gamma table. Alas. LRange/LMean=%.2f',LRange/LMean);
@@ -734,14 +735,14 @@ try
             end
             if o.isKbLegacy
               answer=questdlg(question,'Fixation','Ok','Cancel','Ok');
-              
+
             else
               ListenChar(0); % get ready for the quesdlg
               answer=questdlg(question,'Fixation','Ok','Cancel','Ok');
               ListenChar(2); % go back to orig status; no echo
-              
+
             end
-            
+
             switch answer
               case 'Ok',
                     fixationIsOffscreen=1;
@@ -892,7 +893,7 @@ try
         otherwise,
             error('Unknown noiseType "%s"',o.noiseType);
     end
-    
+
     % Compute mtf to filter the noise
     fNyquist=0.5/o.noiseCheckDeg;
     fLow = 0;

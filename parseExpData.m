@@ -3,8 +3,8 @@ function tabdata = parseExpData(newpath, obs_name, from_date, to_date)
 %Put from_date = -Inf and/or to_date = Inf when wanting unrestricted
 %lower/upper bound.
 cd(newpath);
-files = dir('*mat');
-filenames = {files.name};
+files = cellstr(ls('*.mat'));
+%filenames = {files.name};
 filedates=cell(size(filenames));
 filedates2=cell(size(filenames));
 fmt = 'dd-mmm-yyyy HH:MM:SS';
@@ -60,5 +60,6 @@ for i=1:length(parsefiles)
 end
 pdata( all(cellfun(@isempty,pdata),2), : ) = []; %removes empty cell rows
 tabdata = cell2table(pdata, 'VariableNames', col_names); %converts to table
-%Use this command to save file - writetable(tabdata,'test1.txt','Delimiter',',')
+%Use this command to save file - 
+% writetable(tabdata,'test1.csv','Delimiter',',')
 end
