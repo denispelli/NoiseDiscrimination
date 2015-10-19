@@ -15,7 +15,7 @@ cd(newpath);
 load(filename);
 % This should be the table directly saved after running parseExpData.m
 
-col_name = {'letter_size','noise_contrast','noise_decay_radius','eccentricity','mean_threshold','sd_threshold','squared_noise_contrast','mean_squared_threshod','sd_squared_threshold'};
+col_name = {'letter_size','noise_contrast','noise_decay_radius','eccentricity','mean_threshold','sd_threshold','squared_noise_contrast','mean_squared_threshod','sd_squared_threshold','Energy'};
 
 % convert conditions to positive integers so that can be used in accumarray()
 % subs is the converted condition for each run
@@ -36,13 +36,12 @@ M1 = accumarray(subs, LinTh, [], @mean); % mean for linear threshold contrast
 M2 = accumarray(subs, squaTh, [], @mean); % mean for squared linear threshold contrast
 SD1 = accumarray(subs, LinTh, [], @std); % std for linear threshold contrast
 SD2 = accumarray(subs, squaTh, [], @std); % std for squared linear threshold contrast
+ME = accumarray(subs, tabdata{:, 16}, [], @mean); % mean of energy
 
-out = [con,M1,SD1,con(:,2).^2,M2,SD2]; %output data for the table 'tab'
+out = [con,M1,SD1,con(:,2).^2,M2,SD2,ME]; %output data for the table 'tab'
 
 if doNeq==1
     % computing Neq
-    % only use the mean of E0 in me(when noise contrast is 0)
-    me = accumarray(subs, tabdata{:, 16}, [], @mean);
     runNeq = zeros(size(tabdata,1),1); % Neq for each run(when noise contrast = 0, Neq = 0)
     
     for t = 1:size(con,1)
@@ -57,14 +56,14 @@ if doNeq==1
                 end;
             end;
             
-            cE0 = repmat(me(arr0),[2 1]);
+            cE0 = repmat(ME(arr0),[2 1]);
             runNeq(arr, 1)=(cE0./(tabdata{arr,16}-cE0)).*tabdata{arr,15}; %Neq for the two runs
         end;
     end;
-    ME = accumarray(subs, runNeq, [], @mean);
-    SDE = accumarray(subs, runNeq, [], @std);
+    MNeq = accumarray(subs, runNeq, [], @mean);
+    SDNeq = accumarray(subs, runNeq, [], @std);
     
-    out = [out,ME,SDE];
+    out = [out,MNeq,SDNeq];
     col_name = {col_name{:}, 'Neq','sd_Neq'};
 end;
 
