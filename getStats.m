@@ -15,7 +15,7 @@ cd(newpath);
 load(filename);
 % This should be the table directly saved after running parseExpData.m
 
-col_name = {'letter_size','noise_contrast','noise_decay_radius','eccentricity','mean_threshold','sd_threshold','squared_noise_contrast','mean_squared_threshod','sd_squared_threshold','Energy'};
+col_name = {'letter_size','noise_contrast','noise_decay_radius','eccentricity','mean_threshold','sd_threshold','squared_noise_contrast','mean_squared_threshod','sd_squared_threshold','Energy','Energy_at_unit_contrast','Noise_power_spectral_density'};
 
 % convert conditions to positive integers so that can be used in accumarray()
 % subs is the converted condition for each run
@@ -36,9 +36,13 @@ M1 = accumarray(subs, LinTh, [], @mean); % mean for linear threshold contrast
 M2 = accumarray(subs, squaTh, [], @mean); % mean for squared linear threshold contrast
 SD1 = accumarray(subs, LinTh, [], @std); % std for linear threshold contrast
 SD2 = accumarray(subs, squaTh, [], @std); % std for squared linear threshold contrast
-ME = accumarray(subs, tabdata{:, 16}, [], @mean); % mean of energy
+ME = accumarray(subs, tabdata{:, 16}, [], @mean); % mean of energy, E & E0
+ME1 = accumarray(subs, tabdata{:, 14}, [], @mean); % mean of energy at unit contrast, E1
+MN = accumarray(subs, tabdata{:, 15}, [], @mean); % mean of noise power spectral density, N
 
-out = [con,M1,SD1,con(:,2).^2,M2,SD2,ME]; %output data for the table 'tab'
+
+
+out = [con,M1,SD1,con(:,2).^2,M2,SD2,ME,ME1,MN]; %output data for the table 'tab'
 
 if doNeq==1
     % computing Neq
