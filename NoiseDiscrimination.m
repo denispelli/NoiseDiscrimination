@@ -182,6 +182,7 @@ o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
 o.noiseFrozenInTrial=0; % 0 or 1.  If true (1), use same noise at all locations
 o.noiseFrozenInRun=0; % 0 or 1.  If true (1), use same noise on every trial
 o.noiseFrozenInRunSeed=0; % 0 or positive integer. If o.noiseFrozenInRun, then any nonzero positive integer will be used as the seed for the run.
+o.targetCross=0; % No vertical line indicating target location.
 o.fixationCrossDeg=inf; % Typically 1 or inf. Make this at least 4 deg for scotopic testing, since the fovea is blind scotopically.
 o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
 o.fixationCrossBlankedNearTarget=1; % 0 or 1.
@@ -864,6 +865,7 @@ try
     end
     [x,y]=RectCenter(o.stimulusRect);
     if isfinite(o.eccentricityDeg)
+        fix.targetCross=o.targetCross;
         fix.x=x+targetOffsetPix-eccentricityPix; % x location of fixation
         fix.y=y; % y location of fixation
         fix.eccentricityPix=eccentricityPix;
