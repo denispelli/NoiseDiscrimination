@@ -14,7 +14,7 @@ o.noiseEnvelopeSpaceConstantDeg=inf; % noise decay radius [1,sqrt(3), 3,3*sqrt(3
 o.eccentricityDeg=32; % eccentricity [0,32]
 o.noiseSD=0 ; %noise contrast [0.16]
 
-o.noiseType='gaussian';
+o.noiseType='gaussian'; % gaussian, uniform
 o.noiseSpectrum='white'; % pink or white
 o.targetCross=1;
 %##################################################################
