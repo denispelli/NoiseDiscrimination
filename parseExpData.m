@@ -75,6 +75,8 @@ function tabdata = parseExpData(newpath, obs_name, from_date, to_date)
       if o.noiseSD==0 %for now just the new noise contrast=0 runs saved E1 and N into struct o
         pdata{j,14}=o.E1; % energy at unit contrast
         pdata{j,15}=o.N; % noise power spectral density
+        E1 = o.E1;
+        N = o.N;
       end;
 
       % for old data with noise contrast~=0 we just compute E1 and N from o

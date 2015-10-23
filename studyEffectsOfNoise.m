@@ -4,18 +4,18 @@
 
 
 %#### Adjust values within this block of code #####################
-o.observer='xiuyun'; %add your name here
+o.observer='ideal'; %add your name here
 o.distanceCm=50; % viewing distance
 o.durationSec=0.2;
 o.noiseRadiusDeg=inf;
 
-o.targetHeightDeg=2; %letter size [2,sqrt(2*6),6];
+o.targetHeightDeg=6; %letter size [2,sqrt(2*6),6];
 o.noiseEnvelopeSpaceConstantDeg=inf; % noise decay radius [1,sqrt(3), 3,3*sqrt(3), 9, Inf]
-o.eccentricityDeg=32; % eccentricity [0,32]
-o.noiseSD=0 ; %noise contrast [0.16]
+o.eccentricityDeg=0; % eccentricity [0,32]
+o.noiseSD=0.16; %noise contrast [0.16]
 
 o.noiseType='gaussian'; % gaussian, uniform
-o.noiseSpectrum='white'; % pink or white
+o.noiseSpectrum='pink'; % pink or white
 o.targetCross=1;
 %##################################################################
 
@@ -39,6 +39,6 @@ o.signalKind='luminance'; % Display a luminance decrement.
 % o.fixationCrossWeightDeg=0.05; % target line thickness
 o.speakInstructions=0;
 % o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar() (Linux compatibility)
-o.trialsPerRun=80;
+o.trialsPerRun=3000;
 o=NoiseDiscrimination(o);
 sca;
