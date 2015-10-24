@@ -7,12 +7,7 @@
 % the efficiency here is the 'high noise efficiency', which is E_ideal/(E-E0)
 % that means when noist contrast=0, there is no high-noise efficiency computed
 
-% function tab = getStats(newpath, obs_name, doNeq, doEfficiency)
-
-newpath='/Users/xiuyunwu/NoiseDiscrimination/data';
-obs_name='xiuyun';
-doNeq=1;
-doEfficiency=1;
+function tab = getStats(newpath, obs_name, doNeq, doEfficiency)
 
 %settings
 filename = [obs_name,'_runs.mat'];
@@ -127,4 +122,4 @@ tab = cell2table(out, 'VariableNames', col_name); %converts to table
 
 writetable(tab, csvfilename ,'Delimiter',',')
 save(matfilename,'tab');
-% end
+end
