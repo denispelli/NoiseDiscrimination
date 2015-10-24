@@ -39,6 +39,6 @@ o.signalKind='luminance'; % Display a luminance decrement.
 % o.fixationCrossWeightDeg=0.05; % target line thickness
 o.speakInstructions=0;
 % o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar() (Linux compatibility)
-o.trialsPerRun=3000;
+o.trialsPerRun=80;
 o=NoiseDiscrimination(o);
 sca;
