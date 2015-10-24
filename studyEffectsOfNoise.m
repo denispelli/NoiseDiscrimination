@@ -9,10 +9,10 @@ o.distanceCm=50; % viewing distance
 o.durationSec=0.2;
 o.noiseRadiusDeg=inf;
 
-o.targetHeightDeg=6; %letter size [2,sqrt(2*6),6];
-o.noiseEnvelopeSpaceConstantDeg=inf; % noise decay radius [1,sqrt(3), 3,3*sqrt(3), 9, Inf]
-o.eccentricityDeg=0; % eccentricity [0,32]
-o.noiseSD=0.16; %noise contrast [0.16]
+o.targetHeightDeg=2; %letter size [2,sqrt(2*6),6];
+o.noiseEnvelopeSpaceConstantDeg=16; % noise decay radius [1,sqrt(3), 3,3*sqrt(3), 9, Inf]
+o.eccentricityDeg=32; % eccentricity [0,32]
+o.noiseSD=0.2; %noise contrast [0.16]
 
 o.noiseType='gaussian'; % gaussian, uniform
 o.noiseSpectrum='pink'; % pink or white

@@ -1,9 +1,18 @@
-function tab = getStats(newpath, obs_name, doNeq)
-% to load table.mat file directly saved from parseExpData.m 
+% to load table.mat file directly saved from parseExpData.m
 % newpath is the file path, such as '/Users/xiuyunwu/NoiseDiscrimination/data';
 % obs_name is the same as in parseExpData.m, such as 'xiuyun';
-% doNeq when set to 0, Neq is not computed(such as when there are no noise_contrst=0 runs); 
+% doNeq when set to 0, Neq is not computed(such as when there are no noise_contrst=0 runs);
 %       when set to 1, Neq is computed
+% doEfficiency is the same as doNeq;
+% the efficiency here is the 'high noise efficiency', which is E_ideal/(E-E0)
+% that means when noist contrast=0, there is no high-noise efficiency computed
+
+% function tab = getStats(newpath, obs_name, doNeq, doEfficiency)
+
+newpath='/Users/xiuyunwu/NoiseDiscrimination/data';
+obs_name='xiuyun';
+doNeq=1;
+doEfficiency=1;
 
 %settings
 filename = [obs_name,'_runs.mat'];
@@ -60,6 +69,7 @@ if doNeq==1
             
             cE0 = repmat(ME(arr0),[2 1]);
             runNeq(arr, 1)=(cE0./(tabdata{arr,16}-cE0)).*tabdata{arr,15}; %Neq for the two runs
+            
         end;
     end;
     MNeq = accumarray(subs, runNeq, [], @mean);
@@ -69,9 +79,52 @@ if doNeq==1
     col_name = {col_name{:}, 'Neq','sd_Neq'};
 end;
 
+if doEfficiency==1
+    % computing high noise Efficiency = E_ideal/(E-E0)
+    ideal = load('ideal_runs.mat');
+    runEffi = zeros(size(tabdata,1),1); % Efficiency for each run(when noise contrast = 0, Efficiency = 0)
+    
+    coni = unique(ideal.tabdata{:, 3:6},'rows'); % sort the ideal data
+for t = 1:size(coni,1)
+    conti = repmat(coni(t,:),[size(ideal.tabdata,1) 1]);
+    arri = find(all(ideal.tabdata{:, 3:6}==conti,2)); % the index of the two runs under current condition
+    subsi(arri,1) = t;
+end
+    
+    meffi = accumarray(subsi, ideal.tabdata{:, 16}, [], @mean); % mean of ideal energy
+    for t = 1:size(con,1)
+        if con(t, 2)~=0
+            cont = repmat(con(t,:),[size(tabdata,1) 1]);
+            arr = find(all(tabdata{:, 3:6}==cont,2)); % the index of the two runs
+            
+            for j = 1:size(con,1)
+                if cont(t,1)==con(j,1) && cont(t,4)==con(j,4)
+                    arr0=j; %the index of E0, whose conditon has the same letter size and eccentricity
+                    break
+                end;
+            end;
+            cE0 = repmat(ME(arr0),[2 1]);
+            
+            cont2 = repmat(con(t,:),[size(coni,1) 1]);
+            arri = find(all(coni==cont2, 2)); % the index of ideal E
+            cEf = repmat(meffi(arri),[2 1]);
+            
+            runEffi(arr, 1)=cEf./(tabdata{arr,16}-cE0); %high noise efficiency for the two runs
+        end;
+        
+    end;
+    
+        MEffi = accumarray(subs, runEffi, [], @mean);
+        SDEffi = accumarray(subs, runEffi, [], @std);
+    
+        out = [out,MEffi,SDEffi];
+        col_name = {col_name{:}, 'mean_Efficiency','sd_Efficiency'};
+    
+end;
+
 out = mat2cell(out,ones(1,size(out,1)),ones(1,size(out,2)));
 tab = cell2table(out, 'VariableNames', col_name); %converts to table
 
 writetable(tab, csvfilename ,'Delimiter',',')
 save(matfilename,'tab');
-end
+% end

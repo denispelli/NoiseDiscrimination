@@ -1,7 +1,8 @@
-function tabdata = parseExpData(newpath, obs_name, from_date, to_date)
   %from_date/to_date of form 'dd-mmm-yyyy hh:mm:ss'.
   %Put from_date = -Inf and/or to_date = Inf when wanting unrestricted
   %lower/upper bound.
+  
+function tabdata = parseExpData(newpath, obs_name, from_date, to_date)
 
   % settings
   % I didn't include them into the function parameters since these may not
