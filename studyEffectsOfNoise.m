@@ -4,18 +4,18 @@
 
 
 %#### Adjust values within this block of code #####################
-o.observer='xiuyun'; %add your name here
+o.observer='ideal'; %add your name here
 o.distanceCm=50; % viewing distance
 o.durationSec=0.2;
 o.noiseRadiusDeg=inf;
 
 o.targetHeightDeg=2; %letter size [2,sqrt(2*6),6];
-o.noiseEnvelopeSpaceConstantDeg=inf; % noise decay radius [1,sqrt(3), 3,3*sqrt(3), 9, Inf]
+o.noiseEnvelopeSpaceConstantDeg=16; % noise decay radius [1,sqrt(3), 3,3*sqrt(3), 9, Inf]
 o.eccentricityDeg=32; % eccentricity [0,32]
-o.noiseSD=0 ; %noise contrast [0.16]
+o.noiseSD=0.2; %noise contrast [0.16]
 
 o.noiseType='gaussian'; % gaussian, uniform
-o.noiseSpectrum='white'; % pink or white
+o.noiseSpectrum='pink'; % pink or white
 o.targetCross=1;
 %##################################################################
 
