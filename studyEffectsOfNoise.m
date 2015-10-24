@@ -4,18 +4,27 @@
 
 
 %#### Adjust values within this block of code #####################
-o.observer='ideal'; %add your name here
+o.observer='hormet'; %add your name here
 o.distanceCm=50; % viewing distance
 o.durationSec=0.2;
-o.noiseRadiusDeg=inf;
+
+%For Gaussian envelope (soft)
+%o.noiseRadiusDeg=inf;
+%noiseEnvelopeSpaceConstantDeg: 1
+
+%For tophat (sharp cut off beyond disk with radius 1)
+%o.noiseRadiusDeg=1;
+%noiseEnvelopeSpaceConstantDeg: Inf
+
+o.noiseRadiusDeg=1;
+o.noiseEnvelopeSpaceConstantDeg=Inf; % noise decay radius [1,sqrt(3), 3,3*sqrt(3), 9, Inf]
 
 o.targetHeightDeg=2; %letter size [2,sqrt(2*6),6];
-o.noiseEnvelopeSpaceConstantDeg=16; % noise decay radius [1,sqrt(3), 3,3*sqrt(3), 9, Inf]
 o.eccentricityDeg=32; % eccentricity [0,32]
-o.noiseSD=0.2; %noise contrast [0.16]
+o.noiseSD=0.16; %noise contrast [0.16]
 
-o.noiseType='gaussian'; % gaussian, uniform
-o.noiseSpectrum='pink'; % pink or white
+o.noiseType='gaussian'; % ALWAYS use gaussian
+o.noiseSpectrum='white'; % pink or white
 o.targetCross=1;
 %##################################################################
 
