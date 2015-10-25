@@ -42,3 +42,4 @@ octave-workspace
 *.pdf
 *.numbers
 *.svg
+.Rproj.user
