@@ -1,4 +1,4 @@
-letter_size,noise_contrast,noise_decay_radius,eccentricity,HardOrSoft,TargetCross,mean_threshold,sd_threshold,squared_noise_contrast,mean_squared_threshod,sd_squared_threshold,mean_Energy,sd_Energy,Energy_at_unit_contrast,Noise_power_spectral_density,mean_Neq,sd_Neq,mean_Efficiency,sd_Efficiency
+letter_size,noise_contrast,noise_decay_radius,eccentricity,HardOrSoft,TargetCross,mean_threshold,sd_threshold,squared_noise_contrast,mean_squared_threshold,sd_squared_threshold,mean_Energy,sd_Energy,Energy_at_unit_contrast,Noise_power_spectral_density,mean_Neq,sd_Neq,mean_Efficiency,sd_Efficiency
 2.03775,0,1,0,soft,1,0.177295870077725,0.000220249813911221,0,0.0314338498016078,7.80987647836937e-05,0.000788929646059574,4.51334605822679e-06,2.274606173125,0,0,0,0,0
 2.03775,0,1,32,soft,1,0.344296608252136,0.00428134212281976,0,0.118549319399111,0.0029481031433077,0.0167757268460056,0.000960169983419476,2.274606173125,0,0,0,0,0
 2.03775,0,Inf,0,soft,0,0.160785284311327,0.00445632816888491,0,0.0258618370814487,0.00143302398323747,0.000504566040651416,6.42351761871719e-05,2.274606173125,0,0,0,0,0

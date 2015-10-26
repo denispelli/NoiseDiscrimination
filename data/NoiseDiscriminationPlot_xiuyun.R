@@ -22,6 +22,7 @@ T$letter_size = replace(T$letter_size, T$letter_size==2.03775,2)
 T$letter_size = replace(T$letter_size, T$letter_size==5.985890625,6)
 T$letter_size = replace(T$letter_size, T$letter_size==3.438703125,3.4641)
 T$RadiusRelative2letter_size = round(T$noise_decay_radius / T$letter_size, digits = 2)
+T$shiftedSquaredNoiseContrast = T$squared_noise_contrast +0.005
 #T$eccentricity = T$eccentricity - 0.45
 #noise_decay_radius = factor(noise_decay_radius, c(1,2,3,5,6,8,9,16))
 
@@ -117,6 +118,22 @@ pp[[4]] <- ggplot(subset(T, T$noise_contrast!=0), aes(x=RadiusRelative2letter_si
   labs(title = "LetterSize 2/3.4641/6, Gaussian pink", x = "RadiusRelative2LetterSize", y = "Neq")+
   facet_grid(letter_size ~.)+
   theme(text=element_text(size=32))
+
+# xbreaks = c(0.01,0.02,0.03,0.04, 0.05)
+# ybreaks = c(0.01, 0.03, 0.05, 0.07, 0.1, 0.3, 0.5, 0.6)
+# ylimits = aes(ymax = mean_squared_threshold + sd_squared_threshold, ymin=mean_squared_threshold - sd_squared_threshold)
+# pp[[5]] <- ggplot(T, aes(x=shiftedSquaredNoiseContrast, y=mean_squared_threshold, size=factor(HardOrSoft), color=factor(eccentricity), linetype = factor(letter_size),shape=factor(TargetCross) )) +
+#   geom_errorbar(ylimits)+
+#   geom_line()+
+#   geom_point(size=12, alpha=0.6)+
+#   scale_y_log10(breaks=ybreaks)+
+#   scale_x_log10(breaks=xbreaks)+
+#   scale_linetype_manual(values=c("solid", "longdash","dotted"))+
+#   scale_size_discrete(range=c(0.5,2)) +
+#   #scale_color_brewer(type="div",  palette = 7)+
+#   noGrid+
+#   labs(title = "NoiseContrast 0/0.16/0.2, Gaussian pink", x = "shifted_squared_Noise_Contrast", y = "squared_Threshold_Contrast")+
+#   theme(text=element_text(size=32)) 
 
 y2limits = aes(ymax = mean_threshold^2 + sd_threshold^2, ymin=mean_threshold^2 - sd_threshold^2)
 # pp[[2]] <- ggplot(T, aes(x=noise_decay_radius, y=mean_threshold, size=factor(letter_size), color=factor(noise_contrast), linetype=factor(eccentricity), shape=factor(eccentricity) )) +
