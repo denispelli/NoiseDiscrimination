@@ -120,7 +120,7 @@ pp[[4]] <- ggplot(subset(T, T$noise_contrast!=0), aes(x=RadiusRelative2letter_si
   theme(text=element_text(size=32))
 
 xbreaks = c(0.5, 1, 2, 3, 6, 9, 16, 32)
-ybreaks = c(0.01,0.05, 0.1, 0.15, 0.2)
+ybreaks = c(0.01,0.02,0.035,0.04,0.05, 0.06,0.07, 0.08,0.09,0.1, 0.15, 0.2)
 ylimits = aes(ymax = mean_Efficiency + sd_Efficiency, ymin=mean_Efficiency - sd_Efficiency)
 pp[[5]] <- ggplot(subset(T, T$letter_size==2 & T$noise_contrast==0.16), aes(x=shiftedEccentricity, y=mean_Efficiency, color=factor(noise_decay_radius), size=factor(HardOrSoft), shape=factor(TargetCross) )) +
   geom_errorbar(ylimits)+
