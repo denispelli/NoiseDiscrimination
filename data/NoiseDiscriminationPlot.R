@@ -10,6 +10,7 @@ mytheme <- theme_bw() +
   theme(panel.border=element_rect(color=NA), strip.background=element_rect(fill=NA),
         text=element_text(size=32), axis.text.x = element_text(angle = 60, hjust = 1))
 
+noGrid <- theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black"))
 
 ylimits = aes(ymax = mean_threshold + sd_threshold, ymin=mean_threshold - sd_threshold)
 y2limits = aes(ymax = mean_threshold^2 + sd_threshold^2, ymin=mean_threshold^2 - sd_threshold^2)
