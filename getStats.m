@@ -31,7 +31,11 @@ cd(newpath);
 load(filename);
 % This should be the table directly saved after running parseExpData.m
 
+<<<<<<< HEAD
 col_name = {'letter_size','noise_contrast','noise_decay_radius','eccentricity','HardOrSoft','TargetCross','mean_threshold','sd_threshold','squared_noise_contrast','mean_squared_threshod','sd_squared_threshold','mean_Energy','sd_Energy','Energy_at_unit_contrast','Noise_power_spectral_density'};
+=======
+col_name = {'letter_size','noise_contrast','noise_decay_radius','eccentricity','HardOrSoft','TargetCross','mean_threshold','sd_threshold','squared_noise_contrast','mean_squared_threshod','sd_squared_threshold','mean_Energy','sd_Energy', 'Energy_at_unit_contrast','Noise_power_spectral_density'};
+>>>>>>> master
 
 % convert conditions to positive integers so that can be used in accumarray()
 % subs is the converted condition for each run
@@ -108,7 +112,7 @@ if doNeq==1
     SDNeq = accumarray(subs, runNeq, [], @std);
     
     out = [out,MNeq,SDNeq];
-    col_name = {col_name{:}, 'Neq','sd_Neq'};
+    col_name = {col_name{:}, 'mean_Neq','sd_Neq'};
 end;
 
 if doEfficiency==1
