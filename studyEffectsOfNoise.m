@@ -4,7 +4,7 @@
 
 
 %#### Adjust values within this block of code #####################
-o.observer='hormet'; %add your name here
+o.observer='xiuyun'; %add your name here
 o.distanceCm=50; % viewing distance
 o.durationSec=0.2;
 
@@ -26,9 +26,10 @@ o.noiseSD=0.16; %noise contrast [0.16]
 o.noiseType='gaussian'; % ALWAYS use gaussian
 o.noiseSpectrum='pink'; % pink or white
 o.targetCross=1;
+o.fixationCrossWeightDeg = 0.05; % target line thickness
 %##################################################################
 
-
+ 
 %#########################################
 o.noiseCheckDeg=o.targetHeightDeg/10;
 % o.isWin=0; % use the Windows code even if we're on a Mac
