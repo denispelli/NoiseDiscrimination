@@ -1,31 +1,33 @@
 function fixationLines=ComputeFixationLines(fix)
 %ComputeFixationLines returns an array suitable for Screen('Drawlines')
-% to draw a fixation cross specified by the paramaters in the struct
-% argument  "fix".
+% to draw a fixation cross and target cross specified by the parameters in
+% the struct argument  "fix".
 % fix.x=50; % x location of fixation in screen coordinates.
 % fix.y=screenHeight/2; % y location of fixation in screen coordinates.
-% fix.eccentricityPix=eccentricityPix; % positive or negative horizontal
+% fix.eccentricityPix=eccentricityPix; % Positive or negative horizontal
                                        % offset of target from fixation.
-% fix.bouma=0.5;
+% fix.bouma=0.5;                        % Critical spacing multiple of
+                                        % eccentricity.
 % fix.clipRect=screenRect;
 % fix.fixationCrossPix=fixationCrossPix; % full width & height of fixation
                                          % line.
 % fix.fixationCrossBlankedNearTarget=1; % 0 or 1. Smart blanking of the
-                                        % fixation line near the target.
-                                        % We blank within one critical
-                                        % spacing of the target location, left and
+                                        % fixation line near the target. We
+                                        % blank within one critical spacing
+                                        % of the target location, left and
                                         % right. We also blank a radius
                                         % proportional to target radius.
 % fix.blankingRadiusReTargetHeight=1.5; % Blank a radius of 1.5 times 
                                         % target size.
-% fix.targetHeightPix=targetHeightPix; % We blank within triple target size
-                                       % of target center.
-                                       % We also blank with critical
-                                       % spacing of crowding, i.e. from
-                                       % (1-bouma)*ecc to (1+bouma)*ecc,
-                                       % where ecc is target eccentricity.
-% fix.targetCross=1;                    % Vertical line indicating target
-                                        % location.
+% fix.targetHeightPix=targetHeightPix; % We blank near target within a 
+                                       % radius proportional to target
+                                       % height. We also blank within the
+                                       % critical spacing of crowding, i.e.
+                                       % from (1-bouma)*ecc to
+                                       % (1+bouma)*ecc, where ecc is target
+                                       % eccentricity.
+% fix.targetCross=1;                    % Draw vertical line indicating
+                                        % target location.
 % fixationLines=ComputeFixationLines(fix);
 % Screen('DrawLines',window,fixationLines,fixationLineWeightPix,black);
 % We initially use abs(eccentricity) and assume fixation is at (0,0).
