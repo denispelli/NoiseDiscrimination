@@ -184,10 +184,7 @@ for t = 1:size(out,1)
     if out{t, 5}>17 % soft conditions
 out{t,5} = 'soft';
     else
-        out{t,3}=floor(out{t,5}); 
-        % just to make sure the radius is 1... out{t,3} should equal to
-        % out{t,5}, but the value in o is a little bit larger than been
-        % typed...
+        out{t,3}=out{t,5}; 
         out{t,5}='hard';
 end;
 % convert noise decay radius and noisedecayradius to noise decay radius in
