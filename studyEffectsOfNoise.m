@@ -19,7 +19,7 @@ o.durationSec=0.2;
 o.noiseRadiusDeg=1; % change this to manipulate noise decay radius [1,sqrt(3), 3,3*sqrt(3), 9, Inf]
 o.noiseEnvelopeSpaceConstantDeg=Inf; % always Inf for hard edge
 
-o.targetHeightDeg=2; %letter size [2,sqrt(2*6),6];
+o.targetHeightDeg=1; %letter size [2,sqrt(2*6),6];
 o.eccentricityDeg=32; % eccentricity [0,32]
 o.noiseSD=0.16; %noise contrast [0.16]
 
@@ -29,7 +29,7 @@ o.targetCross=1;
 o.fixationCrossWeightDeg = 0.05; % target line thickness
 %##################################################################
 
- 
+
 %#########################################
 o.noiseCheckDeg=o.targetHeightDeg/10;
 % o.isWin=0; % use the Windows code even if we're on a Mac
@@ -48,7 +48,7 @@ o.signalKind='luminance'; % Display a luminance decrement.
 % o.useFractionOfScreen=0.2; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 % o.fixationCrossWeightDeg=0.05; % target line thickness
 o.speakInstructions=0;
-% o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar() (Linux compatibility)
-o.trialsPerRun=80;
+o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar() (Linux compatibility)
+o.trialsPerRun=8;
 o=NoiseDiscrimination(o);
 sca;

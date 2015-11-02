@@ -14,8 +14,10 @@ function fixationLines=ComputeFixationLines(fix)
                                         % fixation line near the target.
                                         % We blank within one critical
                                         % spacing of the target location, left and
-                                        % right. We blank a radius of 1.5
-                                        % times target size.
+                                        % right. We also blank a radius
+                                        % proportional to target radius.
+% fix.blankingRadiusReTargetHeight=1.5; % Blank a radius of 1.5 times 
+                                        % target size.
 % fix.targetHeightPix=targetHeightPix; % We blank within triple target size
                                        % of target center.
                                        % We also blank with critical
@@ -34,6 +36,9 @@ end
 if ~isfield(fix,'targetCross') 
     fix.targetCross=0; % Default is no vertical line indicating target location.
 end
+if ~isfield(fix,'blankingRadiusReTargetRadius') 
+    fix.blankingRadiusReTargetHeight=1.5; % Blank a radius of 1.5 times target size.
+end
 if isfinite(fix.eccentricityPix)
     % clip to fix.clipRect
     r=OffsetRect(fix.clipRect,-fix.x,-fix.y);
@@ -44,8 +49,8 @@ if isfinite(fix.eccentricityPix)
     lineStart=max(lineStart,r(1)); % clip to fix.clipRect
     lineEnd=min(lineEnd,r(3)); % clip to fix.clipRect
     if fix.fixationCrossBlankedNearTarget
-        blankStart=min(abs(fix.eccentricityPix)*(1-fix.bouma),abs(fix.eccentricityPix)-1.5*fix.targetHeightPix);
-        blankEnd=max(abs(fix.eccentricityPix)*(1+fix.bouma),abs(fix.eccentricityPix)+1.5*fix.targetHeightPix);
+        blankStart=min(abs(fix.eccentricityPix)*(1-fix.bouma),abs(fix.eccentricityPix)-fix.blankingRadiusReTargetHeight*fix.targetHeightPix);
+        blankEnd=max(abs(fix.eccentricityPix)*(1+fix.bouma),abs(fix.eccentricityPix)+fix.blankingRadiusReTargetHeight*fix.targetHeightPix);
     else
         blankStart=lineStart-1;
         blankEnd=blankStart;
@@ -80,13 +85,13 @@ if isfinite(fix.eccentricityPix)
     lineStart=max(lineStart,r(2)); % clip to fix.clipRect
     lineEnd=min(lineEnd,r(4)); % clip to fix.clipRect
     fixationLinesV=[];
-    if ~fix.fixationCrossBlankedNearTarget || abs(fix.eccentricityPix)>3*fix.targetHeightPix
+    if ~fix.fixationCrossBlankedNearTarget || abs(fix.eccentricityPix)>fix.blankingRadiusReTargetHeight*fix.targetHeightPix
         % no blanking of line
         fixationLinesV(1:2,1:2)=[0 0;lineStart lineEnd];
-    elseif lineStart<-3*fix.targetHeightPix
+    elseif lineStart<-fix.blankingRadiusReTargetHeight*fix.targetHeightPix
         % blank breaks the line
-        fixationLinesV(1:2,1:2)=[0 0; lineStart -3*fix.targetHeightPix];
-        fixationLinesV(1:2,3:4)=[0 0; 3*fix.targetHeightPix lineEnd];
+        fixationLinesV(1:2,1:2)=[0 0; lineStart -fix.blankingRadiusReTargetHeight*fix.targetHeightPix];
+        fixationLinesV(1:2,3:4)=[0 0; fix.blankingRadiusReTargetHeight*fix.targetHeightPix lineEnd];
     else
         % whole line is blanked
         fixationLinesV=[0 0;0 0];
@@ -105,10 +110,10 @@ if isfinite(fix.eccentricityPix)
         if ~fix.fixationCrossBlankedNearTarget 
             % no blanking of line
             fixationLinesV(1:2,1:2)=[0 0;lineStart lineEnd];
-        elseif lineStart<-3*fix.targetHeightPix
+        elseif lineStart<-fix.blankingRadiusReTargetHeight*fix.targetHeightPix
             % blank breaks the line
-            fixationLinesV(1:2,1:2)=[0 0; lineStart -3*fix.targetHeightPix];
-            fixationLinesV(1:2,3:4)=[0 0; 3*fix.targetHeightPix lineEnd];
+            fixationLinesV(1:2,1:2)=[0 0; lineStart -fix.blankingRadiusReTargetHeight*fix.targetHeightPix];
+            fixationLinesV(1:2,3:4)=[0 0; fix.blankingRadiusReTargetHeight*fix.targetHeightPix lineEnd];
         else
             % whole line is blanked
             fixationLinesV=[0 0;0 0];
