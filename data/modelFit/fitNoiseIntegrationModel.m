@@ -5,12 +5,18 @@
 %sqrt(integrated noise power) is proportional to noise contrast and
 %can be computed by the computeContrast function.
 %This function returns the best-fit offset, scale, and integration radius
-
-
-function [offset,scale,integrationRadius] = fitNoiseIntegrationModel(userThresholds,userRadii)
-    %set offset to the threshold contrast for the first decay radius (0)
-    offset = userThresholds(1);
-
+function [thresholdContrastFit,offset,scale,integrationRadius] = fitNoiseIntegrationModel(userThresholds,userRadii,noiseSD)
+    %set offset to the average of all cases in which there is no noise
+    Sum = 0;
+    count = 0;
+    for i = 1:length(userThresholds)
+        if noiseSD(i) == 0 || userRadii(i) == 0
+            Sum = Sum + userThresholds(i);
+            count = count + 1;
+        end
+    end
+    offset = Sum/count;
+    
     intRadii = 0:.1:4; %integration radii to test
     scalars = 0:.01:1; %scale factors to test
     %initializing variables
@@ -20,11 +26,11 @@ function [offset,scale,integrationRadius] = fitNoiseIntegrationModel(userThresho
     %test a range of integration radii. for each radius tested, find the
     %optimal scale factor. save as a pair.
     for index=1:length(intRadii)
-        contrastFit(:,index) = computeContrast(intRadii(index),userRadii);
+        contrastFit(:,index) = computeContrast(intRadii(index),userRadii,noiseSD);
         SE = zeros(length(scalars),1);
         for index2 = 1:length(scalars)
             contrast(:,index2) = offset + scalars(index2)*contrastFit(:,index);
-            SE(index2) = sum((userThresholds(:) - contrast(:,index2)).^2);
+            SE(index2,1) = sum((userThresholds(:) - contrast(:,index2)).^2);
         end
         
         [minVal,indexOfMin] = min(SE);
@@ -44,6 +50,8 @@ function [offset,scale,integrationRadius] = fitNoiseIntegrationModel(userThresho
     %Return the best-fit parameters
     scale = fitParameters(1,indexOfMin);
     integrationRadius = fitParameters(2,indexOfMin);
+    thresholdContrastFit = offset + scale*computeContrast(integrationRadius,userRadii,noiseSD);
     
 
 end
+

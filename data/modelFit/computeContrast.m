@@ -6,15 +6,16 @@
 %A typical model is of the form a + b*contrastFit, where contrastFit is the
 %output of this function. 
 
-function contrastFit = computeContrast(integrationRadius,userRadii)
+function contrastFit = computeContrast(integrationRadius,userRadii,noiseSD)
     decayRadii = userRadii;
     gaussianIntegral = zeros(length(decayRadii),1);
-    increment = .1;
-    bounds = -integrationRadius:increment:integrationRadius;
-    [x,y] = meshgrid(bounds,bounds);
+    relativeNoiseCheckSize = .1; %relative to letter size
+    checkSites = -integrationRadius:relativeNoiseCheckSize:integrationRadius;
+    [x,y] = meshgrid(checkSites,checkSites);
     for i = 2:length(decayRadii)
             gaussian = exp(-2*(x.^2 + y.^2)./(decayRadii(i).^2));
-            gaussianIntegral(i) = trapezoidal_rule_double_integral(bounds,bounds,gaussian);
+            power =(noiseSD(i).^2)*gaussian.^2;
+            gaussianIntegral(i) = trapezoidal_rule_double_integral(checkSites,checkSites,power);
     end
     contrastFit = (gaussianIntegral).^.5;
     
