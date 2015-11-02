@@ -12,6 +12,10 @@ function fixationLines=ComputeFixationLines(fix)
                                          % line.
 % fix.fixationCrossBlankedNearTarget=1; % 0 or 1. Smart blanking of the
                                         % fixation line near the target.
+                                        % We blank within one critical
+                                        % spacing of the target location, left and
+                                        % right. We blank a radius of 1.5
+                                        % times target size.
 % fix.targetHeightPix=targetHeightPix; % We blank within triple target size
                                        % of target center.
                                        % We also blank with critical
@@ -40,8 +44,8 @@ if isfinite(fix.eccentricityPix)
     lineStart=max(lineStart,r(1)); % clip to fix.clipRect
     lineEnd=min(lineEnd,r(3)); % clip to fix.clipRect
     if fix.fixationCrossBlankedNearTarget
-        blankStart=min(abs(fix.eccentricityPix)*(1-fix.bouma),abs(fix.eccentricityPix)-3*fix.targetHeightPix);
-        blankEnd=max(abs(fix.eccentricityPix)*(1+fix.bouma),abs(fix.eccentricityPix)+3*fix.targetHeightPix);
+        blankStart=min(abs(fix.eccentricityPix)*(1-fix.bouma),abs(fix.eccentricityPix)-1.5*fix.targetHeightPix);
+        blankEnd=max(abs(fix.eccentricityPix)*(1+fix.bouma),abs(fix.eccentricityPix)+1.5*fix.targetHeightPix);
     else
         blankStart=lineStart-1;
         blankEnd=blankStart;
