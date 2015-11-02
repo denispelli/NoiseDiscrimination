@@ -53,7 +53,7 @@ for t = 1:size(con,1)
             end;
             k=k+1;
         end;
-    end; % the index of the two runs under current condition
+    end; % the index of the runs under current condition
     subs(arr,1) = t;
 end
 
@@ -89,7 +89,7 @@ if doNeq==1
                     end;
                     k=k+1;
                 end;
-            end; % the index of the two runs under current condition
+            end; % the index of the god-knows-how-many runs under current condition
             
             
             for j = 1:size(con,1)
@@ -99,8 +99,8 @@ if doNeq==1
                 end;
             end;
             
-            cE0 = repmat(ME(arr0),[2 1]);
-            runNeq(arr, 1)=(cE0./(tabdata{arr,16}-cE0)).*tabdata{arr,15}; %Neq for the two runs
+            cE0 = repmat(ME(arr0),[length(arr) 1]);
+            runNeq(arr, 1)=(cE0./(tabdata{arr,16}-cE0)).*tabdata{arr,15}; %Neq for the runs
             
         end;
     end;
@@ -120,7 +120,7 @@ if doEfficiency==1
     coni = unique(conis,'rows'); % sort the ideal data
     for t = 1:size(coni,1)
         conti = repmat(coni(t,:),[size(ideal.tabdata,1) 1]);
-        arri = find(all(ideal.tabdata{:, 3:6}==conti(:, 1:4),2)); % the index of the two runs under current condition
+        arri = find(all(ideal.tabdata{:, 3:6}==conti(:, 1:4),2)); % the index of the runs under current condition
         
         if length(arri)>2 % soft/hard and cross 0/1 conditions together
             k=1;
@@ -131,7 +131,7 @@ if doEfficiency==1
                 end;
                 k=k+1;
             end;
-        end; % the index of the two runs under current condition
+        end; % the index of the runs under current condition
         subsi(arri,1) = t;
     end
     
@@ -149,7 +149,7 @@ if doEfficiency==1
                     end;
                     k=k+1;
                 end;
-            end; % the index of the two runs under current condition
+            end; % the index of the god-knows-how-many runs under current condition
             
             
             for j = 1:size(con,1)
@@ -158,14 +158,14 @@ if doEfficiency==1
                     break
                 end;
             end;
-            cE0 = repmat(ME(arr0),[2 1]);
+            cE0 = repmat(ME(arr0),[length(arr) 1]);
             
             cont2 = repmat(con(t,:),[size(coni,1) 1]);
             arri = find(all(coni(:,1:5)==cont2(:,1:5), 2)); % the index of ideal E
             % has the same lettersize, noisecontrast, noisedecayradius, eccentricity and noiseRadiusDeg
-            cEf = repmat(meffi(arri),[2 1]);
+            cEf = repmat(meffi(arri),[length(arr) 1]);
             
-            runEffi(arr, 1)=cEf./(tabdata{arr,16}-cE0); %high noise efficiency for the two runs
+            runEffi(arr, 1)=cEf./(tabdata{arr,16}-cE0); %high noise efficiency for the runs
         end;
         
     end;
@@ -189,7 +189,7 @@ out{t,5} = 'soft';
 end;
 % convert noise decay radius and noisedecayradius to noise decay radius in
 % display and soft/hard, so it would be easier when plotting
-
+end;
 tab = cell2table(out, 'VariableNames', col_name); %converts to table
 
 writetable(tab, csvfilename ,'Delimiter',',')
