@@ -98,7 +98,7 @@ addpath('lib');
 %
 % FIXATION CROSS. The fixation cross is quite flexible. You specify its
 % size (full width) and stroke thickness in deg. If you request
-% o.fixationCrossBlankedNearTarget=1 then it maintains a blank margin (with
+% o.blankedNearTarget=1 then it maintains a blank margin (with
 % no fixation line) around the target that is at least a target width (to
 % avoid overlap masking) and at least half the eccentricity (to avoid
 % crowding). Otherwise the fixation cross is blanked during target
@@ -185,8 +185,8 @@ o.noiseFrozenInRunSeed=0; % 0 or positive integer. If o.noiseFrozenInRun, then a
 o.targetCross=0; % No vertical line indicating target location.
 o.fixationCrossDeg=inf; % Typically 1 or inf. Make this at least 4 deg for scotopic testing, since the fovea is blind scotopically.
 o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
-o.fixationCrossBlankedNearTarget=1; % 0 or 1.
-o.fixationCrossBlankedUntilSecsAfterTarget=0.6; % Pause after stimulus before display of fixation. Skipped when fixationCrossBlankedNearTarget. Not needed when eccentricity is bigger than the target.
+o.blankedNearTarget=1; % 0 or 1.
+o.fixationCrossBlankedUntilSecsAfterTarget=0.6; % Pause after stimulus before display of fixation. Skipped when blankedNearTarget. Not needed when eccentricity is bigger than the target.
 o.textSizeDeg=0.6;
 o.saveSnapshot=0; % 0 or 1.  If true (1), take snapshot for public presentation.
 o.snapshotLetterContrast=0.2; % nan to request program default. If set, this determines o.tSnapshot.
@@ -773,7 +773,7 @@ try
         assert(abs(targetOffsetPix)<=maxTargetOffsetPix);
     end
 
-    if o.fixationCrossBlankedNearTarget
+    if o.blankedNearTarget
         ffprintf(ff,'Fixation cross is blanked near target. No delay in showing fixation after target.\n');
     else
         ffprintf(ff,'Fixation cross is blanked during and until %.2f s after target. No selective blanking near target. \n',o.fixationCrossBlankedUntilSecsAfterTarget);
@@ -871,7 +871,7 @@ try
         fix.eccentricityPix=eccentricityPix;
         fix.clipRect=o.stimulusRect;
         fix.fixationCrossPix=fixationCrossPix;
-        fix.fixationCrossBlankedNearTarget=o.fixationCrossBlankedNearTarget;
+        fix.blankedNearTarget=o.blankedNearTarget;
         fix.targetHeightPix=o.targetHeightPix;
         fixationLines=ComputeFixationLines(fix);
     end
@@ -2191,7 +2191,7 @@ try
                             ffprintf(ff,'Duration requested %.2f, actual %.2f\n',o.durationSec,actualDuration);
                         end
                     end
-                    if ~o.fixationCrossBlankedNearTarget
+                    if ~o.blankedNearTarget
                         WaitSecs(o.fixationCrossBlankedUntilSecsAfterTarget);
                     end
                     Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,black); % fixation
