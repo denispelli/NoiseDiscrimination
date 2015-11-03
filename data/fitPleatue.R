@@ -13,11 +13,13 @@ dat$noise_decay_radius <- dat$NoiseDecayRadius
 dat$letter_size <- dat$LetterSize
 dat$noise_contrast <- dat$NoiseContrast
 dat$mean_threshold <- dat$ThresholdContrast
+dat$eccentricity <- dat$Eccentricity - 0.45
 
 # some transformations necessary for computation
 dat$noise_decay_radius <- replace(dat$noise_decay_radius, dat$noise_decay_radius==Inf,32)
 dat$RadiusRelative2letter_size <- dat$noise_decay_radius / (dat$letter_size/2)
-dat <- subset(dat, dat$noise_contrast == 0.16 & dat$HardOrSoft == "soft")
+# dat <- subset(dat, dat$noise_contrast == 0.16 & dat$HardOrSoft == "soft")
+dat <- subset(dat, dat$noise_contrast %in% c(0.1) )
 
 
 
@@ -56,6 +58,8 @@ Rsquared <- 1 - (RSS.p/TSS)
 
 # plot our result and the original data
 with(dat, plot(y ~ x, pch = NA, bty = 'n', axes = FALSE, xlab = NA, ylab = NA))
+# with(subset(dat, eccentricity == 0), points(y ~ x, pch = 0))
+# with(subset(dat, eccentricity == 32), points(y ~ x, pch = 1))
 with(subset(dat, eccentricity == 0), points(y ~ x, pch = 0))
 with(subset(dat, eccentricity == 32), points(y ~ x, pch = 1))
 title(main = "Gaussian Pink Noise Contrast: 0.16", xlab = "Log Decay Radius / Letter Radius", ylab = "Log Threshold Contrast")
