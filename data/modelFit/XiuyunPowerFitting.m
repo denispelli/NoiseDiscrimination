@@ -7,6 +7,8 @@ XiuyunFilteredWithFit = [XiuyunFiltered table(contrastFit)];
 XiuyunFilteredWithFit(1:4,:) = [];
 XiuyunFilteredWithFit(21:end,:) = [];
 
+XiuyunFilteredWithFit = sortrows(XiuyunFilteredWithFit,'RadiusRelative2letter_size','ascend');
+
 figure
 hold on
 plot(XiuyunFilteredWithFit.RadiusRelative2letter_size, XiuyunFilteredWithFit.contrastFit);
@@ -24,3 +26,5 @@ title('Xiuyun data, noiseSD = .16, all letter sizes, eccentricity = 32 deg');
 xlabel('Relative decay radius (decay radius/letter size)');
 ylabel('Threshold contrast residual');
 hold off
+
+
