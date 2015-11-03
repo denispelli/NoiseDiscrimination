@@ -1,16 +1,15 @@
-%Author: Nick Blauch; Last edited: 10/18/2015
-%This function uses the computeContrast function to solve for a power-integration model of
+%Author: Nick Blauch; Last edited: 11/02/2015
+%This function uses the integratePower function to solve for a power-integration model of
 %threshold contrast, in the form: 
-%threshold contrast = offset + scale*(sqrt(integrated noise power))
-%sqrt(integrated noise power) is proportional to noise contrast and
-%can be computed by the computeContrast function.
-%This function returns the best-fit offset, scale, and integration radius
-function [thresholdContrastFit,offset,scale,integrationRadius,SE] = fitNoiseIntegrationModel(userThresholds,userRadii,noiseSD)
+%threshold contrast.^2 = offset + scale*integrated noise power
+%This function returns the best-fit threshold contrast values, as well
+% as the offset, scale, and integration radius used in calculation.
+function [thresholdContrastFit,offset,scale,integrationRadius] = fitNoiseIntegrationModel(userThresholds,userRadii,noiseSD)
     %set offset to the average of all cases in which there is no noise
     Sum = 0;
     count = 0;
     for i = 1:length(userThresholds)
-        if noiseSD(i) == 0 || userRadii(i) == 0
+        if noiseSD(i) ==0 
             Sum = Sum + userThresholds(i).^2;
             count = count + 1;
         end
@@ -30,7 +29,7 @@ function [thresholdContrastFit,offset,scale,integrationRadius,SE] = fitNoiseInte
         SE = zeros(length(scalars),1);
         for index2 = 1:length(scalars)
             squaredContrast(:,index2) = offset + scalars(index2).*integratedPower(:,index);
-            SE(index2,1) = sum((userThresholds(:).^2 - squaredContrast(:,index2)).^2);
+            SE(index2,1) = sum((log10(userThresholds(:).^2) - log10(squaredContrast(:,index2))).^2);
         end
         
         [minVal,indexOfMin] = min(SE);
@@ -43,7 +42,7 @@ function [thresholdContrastFit,offset,scale,integrationRadius,SE] = fitNoiseInte
     SE2 = zeros(length(intRadii),1);
     for index = 1:length(intRadii)
         finalSquaredContrast(:,index) = offset + fitParameters(1,index).*integratedPower(:,index);
-        SE2(index) = sum((userThresholds(:).^2 - finalSquaredContrast(:,index)).^2);
+        SE2(index) = sum((log10(userThresholds(:).^2) - log10(finalSquaredContrast(:,index))).^2);
     end
     [minVal,indexOfMin] = min(SE2);
     

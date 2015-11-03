@@ -1,10 +1,8 @@
-%Author: Nick Blauch; Last edited: 10/19/2015
-%This function computes the square-root of the integrated noise power of a gaussian 
-%envelope. This value is calculated for an integrationRadius and set of radii specified
-%by the input. This function is used for modeling threshold contrast in
+%Author: Nick Blauch; Last edited: 11/02/2015
+%This function computes the integrated noise power of a gaussian 
+%envelope of noise. This value is calculated for an integrationRadius, set of radii, and set of
+%noiseSD specified by the input. This function is used for modeling threshold contrast in
 %terms of noise-power integration. 
-%A typical model is of the form a + b*contrastFit, where contrastFit is the
-%output of this function. 
 
 function integratedPower = integratePower(integrationRadius,userRadii,noiseSD)
     decayRadii = userRadii;
