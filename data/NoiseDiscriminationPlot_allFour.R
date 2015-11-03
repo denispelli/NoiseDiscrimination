@@ -16,14 +16,14 @@ mytheme <- theme_bw() +
 # xbreaks = c(0.5, 1, 2, 3, 6, 9, 16, 32)
 # ybreaks = c(0.1, 0.15, 0.2, 0.3, 0.5, 0.7, 1, 1.5, 2.0)
 pp = list()
-T <- read.csv("four_alldataThreshold.csv")
-T$noise_decay_radius = replace(T$noise_decay_radius, T$noise_decay_radius==Inf,32)
-T$letter_size = replace(T$letter_size, T$letter_size==2.030625,2)
-# T$letter_size = replace(T$letter_size, T$letter_size==2.000566406,2)
-T$letter_size = replace(T$letter_size, T$letter_size==5.985890625,6)
-T$letter_size = replace(T$letter_size, T$letter_size==3.438703125,3.4641)
-T$RadiusRelative2letter_size = round(T$noise_decay_radius / T$letter_size, digits = 2)
-T$shiftedSquaredNoiseContrast = T$squared_noise_contrast +0.005
+T <- read.csv("tempfourdata.csv")
+# T$noise_decay_radius = replace(T$noise_decay_radius, T$noise_decay_radius==Inf,32)
+# T$letter_size = replace(T$letter_size, T$letter_size==2.030625,2)
+# # T$letter_size = replace(T$letter_size, T$letter_size==2.000566406,2)
+# T$letter_size = replace(T$letter_size, T$letter_size==5.985890625,6)
+# T$letter_size = replace(T$letter_size, T$letter_size==3.438703125,3.4641)
+# T$RadiusRelative2letter_size = round(T$noise_decay_radius / T$letter_size, digits = 2)
+# T$shiftedSquaredNoiseContrast = T$squared_noise_contrast +0.005
 T$shiftedEccentricity = T$eccentricity + 0.5
 #noise_decay_radius = factor(noise_decay_radius, c(1,2,3,5,6,8,9,16))
 
@@ -53,27 +53,10 @@ T$shiftedEccentricity = T$eccentricity + 0.5
 noGrid <-
   theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.background=element_blank(),axis.line=element_line(colour='black'))
 
-# xbreaks = c(0.5, 1, 2, 3, 6, 9, 16, 32)
-# ybreaks = c(0.05, 0.1, 0.2, 0.3, 0.5, 1, 2.0)
-# ylimits = aes(ymax = mean_Efficiency + sd_Efficiency, ymin=mean_Efficiency - sd_Efficiency)
-# pp[[1]] <- ggplot(subset(T, T$noise_contrast!=0), aes(x=RadiusRelative2letter_size, y=mean_Efficiency, color=factor(eccentricity), linetype=factor(noise_contrast), size=factor(HardOrSoft), shape=factor(TargetCross) )) +
-#   geom_errorbar(ylimits)+
-#   geom_line()+
-#   geom_point(size=12, alpha=0.6)+
-#   scale_y_log10(breaks=ybreaks)+
-#   scale_x_log10(breaks=xbreaks)+
-#   scale_linetype_manual(values=c("solid", "longdash", "dotted"))+
-#   scale_size_discrete(range=c(0.5,2)) +
-#   #scale_color_brewer(type="div",  palette = 7)+
-#   noGrid+
-#   labs(title = "LetterSize 2/3.4641/6, Gaussian pink", x = "RadiusRelative2LetterSize", y = "Efficiency")+
-#   facet_grid(letter_size ~.)+
-#   theme(text=element_text(size=32))
-
-xbreaks = c(0.5, 1, 2, 3, 6, 9, 16, 32)
-ybreaks = c(0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 1, 1.5, 2.0)
-ylimits = aes(ymax = mean_threshold + sd_threshold, ymin=mean_threshold - sd_threshold)
-pp[[2]] <- ggplot(subset(T, T$letter_size==2 & T$noise_contrast!=0 & T$TargetCross==0), aes(x=RadiusRelative2letter_size, y=mean_threshold, size=factor(HardOrSoft), color = factor(Observer), linetype=factor(eccentricity), shape=factor(noise_contrast) )) +
+xbreaks = c(0.5,  32.5)
+ybreaks = c(0.02, 0.05, 0.1, 0.2, 0.3, 0.5, 1, 2.0)
+ylimits = aes(ymax = mean_Efficiency + sd_Efficiency, ymin=mean_Efficiency - sd_Efficiency)
+pp[[1]] <- ggplot(subset(T), aes(x=shiftedEccentricity, y=mean_Efficiency, color=factor(Observer), linetype=factor(noise_decay_radius), shape=factor(HardOrSoft) )) +
   geom_errorbar(ylimits)+
   geom_line()+
   geom_point(size=12, alpha=0.6)+
@@ -83,8 +66,25 @@ pp[[2]] <- ggplot(subset(T, T$letter_size==2 & T$noise_contrast!=0 & T$TargetCro
   scale_size_discrete(range=c(0.5,2)) +
   #scale_color_brewer(type="div",  palette = 7)+
   noGrid+
-  labs(title = "LetterSize 2, Gaussian pink", x = "RadiusRelative2LetterSize", y = "Threshold_Contrast")+
-  theme(text=element_text(size=32)) 
+  labs(title = "LetterSize 2, Gaussian pink", x = "shiftedEccentricity(deg)", y = "Efficiency")+
+  # facet_grid(letter_size ~.)+
+  theme(text=element_text(size=32))
+
+# xbreaks = c(0.5, 1, 2, 3, 6, 9, 16, 32)
+# ybreaks = c(0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 1, 1.5, 2.0)
+# ylimits = aes(ymax = mean_threshold + sd_threshold, ymin=mean_threshold - sd_threshold)
+# pp[[2]] <- ggplot(subset(T, T$letter_size==2 & T$noise_contrast!=0 & T$TargetCross==0), aes(x=RadiusRelative2letter_size, y=mean_threshold, size=factor(HardOrSoft), color = factor(Observer), linetype=factor(eccentricity), shape=factor(noise_contrast) )) +
+#   geom_errorbar(ylimits)+
+#   geom_line()+
+#   geom_point(size=12, alpha=0.6)+
+#   scale_y_log10(breaks=ybreaks)+
+#   scale_x_log10(breaks=xbreaks)+
+#   scale_linetype_manual(values=c("solid", "longdash"))+
+#   scale_size_discrete(range=c(0.5,2)) +
+#   #scale_color_brewer(type="div",  palette = 7)+
+#   noGrid+
+#   labs(title = "LetterSize 2, Gaussian pink", x = "RadiusRelative2LetterSize", y = "Threshold_Contrast")+
+#   theme(text=element_text(size=32)) 
 
 # xbreaks = c(0.5, 1, 2, 3, 6, 9, 16, 32)
 # ybreaks = c(1e-03, 1e-02, 0.1, 0.25, 0.5, 1, 2)
