@@ -5,7 +5,7 @@
 %sqrt(integrated noise power) is proportional to noise contrast and
 %can be computed by the computeContrast function.
 %This function returns the best-fit offset, scale, and integration radius
-function [thresholdContrastFit,offset,scale,integrationRadius] = fitNoiseIntegrationModel(userThresholds,userRadii,noiseSD)
+function [thresholdContrastFit,offset,scale,integrationRadius,SE] = fitNoiseIntegrationModel(userThresholds,userRadii,noiseSD)
     %set offset to the average of all cases in which there is no noise
     Sum = 0;
     count = 0;
@@ -18,7 +18,7 @@ function [thresholdContrastFit,offset,scale,integrationRadius] = fitNoiseIntegra
     offset = Sum/count;
     
     intRadii = 0:.1:3; %integration radii to test
-    scalars = 0:.01:1; %scale factors to test
+    scalars = 0:.01:10; %scale factors to test
     %initializing variables
     integratedPower = zeros(length(userThresholds),length(intRadii));
     squaredContrast = zeros(length(userThresholds),length(scalars));
@@ -29,7 +29,7 @@ function [thresholdContrastFit,offset,scale,integrationRadius] = fitNoiseIntegra
         integratedPower(:,index) = integratePower(intRadii(index),userRadii,noiseSD);
         SE = zeros(length(scalars),1);
         for index2 = 1:length(scalars)
-            squaredContrast(:,index2) = scalars(index2).*(offset + integratedPower(:,index));
+            squaredContrast(:,index2) = offset + scalars(index2).*integratedPower(:,index);
             SE(index2,1) = sum((userThresholds(:).^2 - squaredContrast(:,index2)).^2);
         end
         
@@ -42,7 +42,7 @@ function [thresholdContrastFit,offset,scale,integrationRadius] = fitNoiseIntegra
     %minimizes squared-error when compared against user input data.
     SE2 = zeros(length(intRadii),1);
     for index = 1:length(intRadii)
-        finalSquaredContrast(:,index) = fitParameters(1,index).*(offset + integratedPower(:,index));
+        finalSquaredContrast(:,index) = offset + fitParameters(1,index).*integratedPower(:,index);
         SE2(index) = sum((userThresholds(:).^2 - finalSquaredContrast(:,index)).^2);
     end
     [minVal,indexOfMin] = min(SE2);
@@ -51,7 +51,7 @@ function [thresholdContrastFit,offset,scale,integrationRadius] = fitNoiseIntegra
     scale = fitParameters(1,indexOfMin);
     integrationRadius = fitParameters(2,indexOfMin);
     thresholdContrastFit = sqrt(offset + scale*integratePower(integrationRadius,userRadii,noiseSD));
-    
+    SE = minVal;
 
 end
 
