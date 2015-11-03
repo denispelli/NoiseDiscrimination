@@ -16,11 +16,11 @@ o.durationSec=0.2;
 %o.noiseRadiusDeg=1;
 %noiseEnvelopeSpaceConstantDeg: Inf
 
-o.noiseRadiusDeg=1; % change this to manipulate noise decay radius [1,sqrt(3), 3,3*sqrt(3), 9, Inf]
+o.noiseRadiusDeg=6; % change this to manipulate noise decay radius [1,sqrt(3), 3,3*sqrt(3), 9, Inf]
 o.noiseEnvelopeSpaceConstantDeg=Inf; % always Inf for hard edge
 
-o.targetHeightDeg=1; %letter size [2,sqrt(2*6),6];
-o.eccentricityDeg=32; % eccentricity [0,32]
+o.targetHeightDeg=2; %letter size [2,sqrt(2*6),6];
+o.eccentricityDeg=24; % eccentricity [0,32]
 o.noiseSD=0.16; %noise contrast [0.16]
 
 o.noiseType='gaussian'; % ALWAYS use gaussian

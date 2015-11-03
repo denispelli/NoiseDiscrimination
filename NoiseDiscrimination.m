@@ -103,6 +103,46 @@ addpath('lib');
 % avoid overlap masking) and at least half the eccentricity (to avoid
 % crowding). Otherwise the fixation cross is blanked during target
 % presentation and until o.fixationCrossBlankedUntilSecsAfterTarget.
+%
+% Annular Gaussian noise envelope.
+% Use these three parameters to specify an annular gaussian envelope. 
+% The amplitude is a Gaussian of R-Ra where R is the distance from letter
+% center and Ra is o.annularNoiseEnvelopeRadiusDeg. When Ra is zero, this reduces to a
+% normal gaussian centered on the letter. The code now computes a new
+% summary of the "area" of the envelope: o.centralNoiseEnvelopeE1degdeg
+% We should equate this when we compare hard edge annulus with gaussian
+% envelope.
+% 
+if 0
+    % Copy this to produce a Gaussian annulus:
+    o.noiseRadiusDeg=inf;
+    o.annularNoiseEnvelopeRadiusDeg=2;
+    o.noiseEnvelopeSpaceConstantDeg=1.1;
+    o.annularNoiseBigRadiusDeg=inf;
+    o.annularNoiseSmallRadiusDeg=inf;
+    % Returns: o.centralNoiseEnvelopeE1degdeg
+end
+if 0
+    % Copy this to produce a hard-edge annulus:
+    o.noiseSD=0; % Usually in the range 0 to 0.4. Typically 0.2.
+    o.noiseRadiusDeg=0;
+    o.annularNoiseEnvelopeRadiusDeg=0;
+    o.noiseEnvelopeSpaceConstantDeg=inf;
+    o.annularNoiseSD=0.2; % Typically nan (i.e. use o.noiseSD) or 0.2.
+    o.annularNoiseBigRadiusDeg=3; % Noise extent re target. Typically 1 or inf.
+    o.annularNoiseSmallRadiusDeg=1; % Typically 1 or 0 (no hole).
+    % Returns: o.centralNoiseEnvelopeE1degdeg
+end
+% For a "fair" contest of hard and soft annuli, we should:
+%
+% 1. make the central radius of the soft one
+% o.annularNoiseEnvelopeRadiusDeg match the central radius of the hard one:
+% (o.annularNoiseSmallRadiusDeg+o.annularNoiseBigRadiusDeg)/2
+% 
+% 2. adjust the annulus thickness of the hard annulus
+% o.annularNoiseSmallRadiusDeg-o.annularNoiseBigRadiusDeg to achieve the
+% same "area" as the Gaussian annulus. This "area" is reported in a new
+% variable: o.centralNoiseEnvelopeE1degdeg
 
 % clear all
 
@@ -174,8 +214,8 @@ o.showBlackAnnulus=0;
 o.blackAnnulusContrast=-1; % (LBlack-LMean)/LMean. -1 for black line. >-1 for gray line.
 o.blackAnnulusSmallRadiusDeg=2;
 o.blackAnnulusThicknessDeg=0.1;
-o.annularNoiseBigRadiusDeg=inf; % Noise extent re target. Typically 1 or inf.
-o.annularNoiseSmallRadiusDeg=inf; % Typically 1 or 0 (no hole).
+o.annularNoiseBigRadiusDeg=inf; % Noise extent in deg, or inf.
+o.annularNoiseSmallRadiusDeg=inf; % Hole extent or 0 (no hole).
 o.yellowAnnulusSmallRadiusDeg=inf; % Typically 1, or 2, or inf (for no yellow);
 o.yellowAnnulusBigRadiusDeg=inf; % Typically inf.
 o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
@@ -838,7 +878,7 @@ try
     o.yellowAnnulusBigRadiusDeg= 0.5*o.yellowAnnulusBigSize(1)/(o.pixPerDeg/o.noiseCheckPix);
 
     % Make o.canvasSize to hold the biggest thing we're showing, signal or
-    % noise. We  limit o.canvasSize to fit in o.stimulusRect.
+    % noise. We limit o.canvasSize to fit in o.stimulusRect.
     o.canvasSize=[o.targetHeightPix o.targetWidthPix]/o.noiseCheckPix;
     o.canvasSize=max(o.canvasSize,o.noiseSize);
     if o.annularNoiseBigRadiusDeg>o.annularNoiseSmallRadiusDeg
@@ -903,7 +943,11 @@ try
     switch o.noiseSpectrum
         case 'pink'
             o.noiseSpectrumExponent=-1;
-            mtf=MtfPowerLaw(o.noiseSize,o.noiseSpectrumExponent,fLow/fNyquist,fHigh/fNyquist);
+            if all(o.noiseSize>0)
+                mtf=MtfPowerLaw(o.noiseSize,o.noiseSpectrumExponent,fLow/fNyquist,fHigh/fNyquist);
+            else
+                mtf=[];
+            end
             o.noiseIsFiltered=1;
         case 'white'
             mtf=ones(o.noiseSize);
@@ -1060,8 +1104,20 @@ try
         [x,y]=meshgrid(1:o.canvasSize(1),1:o.canvasSize(2));
         x=x-mean(x(:));
         y=y-mean(y(:));
+        radius=sqrt(x.^2+y.^2);
         sigma=o.noiseEnvelopeSpaceConstantDeg*o.pixPerDeg/o.noiseCheckPix;
-        centralNoiseEnvelope=exp(-(x.^2+y.^2)/sigma^2);
+        if ~isfield(o,'annularNoiseEnvelopeRadiusDeg')
+            o.annularNoiseEnvelopeRadiusDeg=0;
+        end
+        assert(isfinite(o.annularNoiseEnvelopeRadiusDeg));
+        assert(o.annularNoiseEnvelopeRadiusDeg>=0);
+        if o.annularNoiseEnvelopeRadiusDeg>0
+            noiseEnvelopeRadiusPix=o.annularNoiseEnvelopeRadiusDeg*o.pixPerDeg/o.noiseCheckPix;
+            distance=radius-noiseEnvelopeRadiusPix;
+        else
+            distance=radius;
+        end
+        centralNoiseEnvelope=exp(-(distance.^2)/sigma^2);
     elseif o.noiseRaisedCosineEdgeThicknessDeg>0
         % Compute central noise envelope with raised-cosine border
         [x,y]=meshgrid(1:o.canvasSize(1),1:o.canvasSize(2));
@@ -1076,7 +1132,7 @@ try
     else
         centralNoiseEnvelope=ones(o.canvasSize);
     end
-
+    o.centralNoiseEnvelopeE1degdeg=sum(centralNoiseEnvelope(:).^2*o.noiseCheckPix/o.pixPerDeg^2);
     if o.yellowAnnulusBigRadiusDeg>o.yellowAnnulusSmallRadiusDeg
         % Compute yellow mask, with small and large radii.
         yellowMask=zeros(o.canvasSize);
