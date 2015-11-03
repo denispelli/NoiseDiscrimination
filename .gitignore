@@ -34,7 +34,6 @@ octave-workspace
 *.png
 *.zip
 *.mp4
-*.csv
 *.xls
 *.xlsx
 *.doc
