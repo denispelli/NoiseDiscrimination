@@ -23,7 +23,6 @@ tmp.m
 tmp.mat
 buggy.mat
 
-*.mat
 *.*.*.*.*.*.txt
 octave-workspace
 *.Rproj.user
@@ -34,7 +33,6 @@ octave-workspace
 *.png
 *.zip
 *.mp4
-*.csv
 *.xls
 *.xlsx
 *.doc
