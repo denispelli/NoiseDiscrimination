@@ -1,0 +1,171 @@
+library(car)
+library(MASS)
+library(plyr)
+library(ggplot2)
+library(Hmisc)
+library(reshape2)
+options(digits=2)
+
+mytheme <- theme_bw() +
+  theme(panel.border=element_rect(color=NA), strip.background=element_rect(fill=NA),
+        text=element_text(size=32), axis.text.x = element_text(angle = 60, hjust = 1))
+
+
+#ylimits = aes(ymax = mean_Efficiency + sd_Efficiency, ymin=mean_Efficiency - sd_Efficiency)
+#y2limits = aes(ymax = mean_threshold^2 + sd_threshold^2, ymin=mean_threshold^2 - sd_threshold^2)
+# xbreaks = c(0.5, 1, 2, 3, 6, 9, 16, 32)
+# ybreaks = c(0.1, 0.15, 0.2, 0.3, 0.5, 0.7, 1, 1.5, 2.0)
+pp = list()
+T <- read.csv("xiuyun_conditions.csv")
+T$noise_decay_radius = replace(T$noise_decay_radius, T$noise_decay_radius==Inf,32)
+T$noise_decay_radius = replace(T$noise_decay_radius, T$noise_decay_radius==1.018875,1)
+T$noise_decay_radius = replace(T$noise_decay_radius, T$noise_decay_radius==1.6302,1.73205080756888)
+T$noise_decay_radius = replace(T$noise_decay_radius, T$noise_decay_radius==3.056625,3)
+T$noise_decay_radius = replace(T$noise_decay_radius, T$noise_decay_radius==5.094375,5.19615242270663)
+T$noise_decay_radius = replace(T$noise_decay_radius, T$noise_decay_radius==8.9661,9)
+T$letter_size = replace(T$letter_size, T$letter_size==2.03775,2)
+T$letter_size = replace(T$letter_size, T$letter_size==5.985890625,6)
+T$letter_size = replace(T$letter_size, T$letter_size==3.438703125,3.4641)
+T$RadiusRelative2letter_size = round(T$noise_decay_radius / T$letter_size, digits = 2)
+T$shiftedSquaredNoiseContrast = T$squared_noise_contrast +0.005
+T$shiftedEccentricity = T$eccentricity + 0.5
+#noise_decay_radius = factor(noise_decay_radius, c(1,2,3,5,6,8,9,16))
+
+
+# dat <- within(T, {
+#   id = factor(S.No.)
+#  letter_size = factor(letter_size, c(2,3,6))
+#   eccentricity = factor(eccentricity, c(0,2,8,32))
+#  Trials = factor(Trials, c(80, 100))
+# })
+
+
+#t1<-ftable(xtabs(~cond+resp, dat))
+#average=t1[,2]/(t1[,1]+t1[,2])
+
+# a=c()
+# t2<-ftable(xtabs(~cond+resp+id, dat))
+# for (i in 1:4) {a=append(a, (t2[2*i,]/(t2[2*i-1,]+t2[2*i,])))}
+# a=matrix(a, 4, 7, 1)
+# rownames(a) = c("angry", "neutral", "happy", "baseline")
+# colnames(a) = paste("id:", 1:7, sep="")
+# print(cbind(a, b))
+# A = melt(a)
+# colnames(A)<-c("cond","id","OutwardFreq")
+# A=subset(A, id!=3)
+# A=subset(A, id!=2)
+noGrid <-
+  theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.background=element_blank(),axis.line=element_line(colour='black'))
+
+xbreaks = c(0.5, 1, 2, 3, 6, 9, 16, 32)
+ybreaks = c(0.05, 0.1, 0.2, 0.3, 0.5, 1, 2.0)
+ylimits = aes(ymax = mean_Efficiency + sd_Efficiency, ymin=mean_Efficiency - sd_Efficiency)
+pp[[1]] <- ggplot(subset(T, T$noise_contrast==0.16 & T$letter_size==2), aes(x=RadiusRelative2letter_size, y=mean_Efficiency, color=factor(HardOrSoft), linetype=factor(eccentricity), shape=factor(TargetCross) )) +
+  geom_errorbar(ylimits)+
+  geom_line()+
+  geom_point(size=12, alpha=0.6)+
+  scale_y_log10(breaks=ybreaks)+
+  scale_x_log10(breaks=xbreaks)+
+  scale_linetype_manual(values=c("solid", "longdash"))+
+  scale_size_discrete(range=c(0.5,2)) +
+  #scale_color_brewer(type="div",  palette = 7)+
+  noGrid+
+  labs(title = "LetterSize 2, Noise Contrast 0.16, Gaussian pink", x = "RadiusRelative2LetterSize", y = "Efficiency")+
+  facet_grid(letter_size ~.)+
+  theme(text=element_text(size=32))
+
+xbreaks = c(0.5, 1, 2, 3, 6, 9, 16, 32)
+ybreaks = c(0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 1, 1.5, 2.0)
+ylimits = aes(ymax = mean_threshold + sd_threshold, ymin=mean_threshold - sd_threshold)
+pp[[2]] <- ggplot(subset(T, T$noise_contrast==0.16 & T$letter_size==2), aes(x=RadiusRelative2letter_size, y=mean_threshold, color=factor(HardOrSoft), linetype=factor(eccentricity), shape=factor(TargetCross) )) +
+  geom_errorbar(ylimits)+
+  geom_line()+
+  geom_point(size=12, alpha=0.6)+
+  scale_y_log10(breaks=ybreaks)+
+  scale_x_log10(breaks=xbreaks)+
+  scale_linetype_manual(values=c("solid", "longdash"))+
+  scale_size_discrete(range=c(0.5,2)) +
+  #scale_color_brewer(type="div",  palette = 7)+
+  noGrid+
+  labs(title = "LetterSize 2, Noise Contrast 0.16, Gaussian pink", x = "RadiusRelative2LetterSize", y = "Threshold_Contrast")+
+  theme(text=element_text(size=32)) 
+
+xbreaks = c(0.5, 1, 2, 3, 6, 9, 16, 32)
+ybreaks = c(1e-06, 1e-05, 1e-04, 1e-03, 1e-02)
+ylimits = aes(ymax = mean_Neq + sd_Neq, ymin=mean_Neq - sd_Neq)
+pp[[3]] <- ggplot(subset(T, T$noise_contrast==0.16 & T$letter_size==2), aes(x=RadiusRelative2letter_size, y=mean_Neq, color=factor(HardOrSoft), linetype=factor(eccentricity), shape=factor(TargetCross) )) +
+  geom_errorbar(ylimits)+
+  geom_line()+
+  geom_point(size=12, alpha=0.6)+
+  scale_y_log10(breaks=ybreaks)+
+  scale_x_log10(breaks=xbreaks)+
+  scale_linetype_manual(values=c("solid", "longdash"))+
+  scale_size_discrete(range=c(0.5,2)) +
+  #scale_color_brewer(type="div",  palette = 7)+
+  noGrid+
+  labs(title = "LetterSize 2, Noise Contrast 0.16, Gaussian pink", x = "RadiusRelative2LetterSize", y = "Neq")+
+  facet_grid(letter_size ~.)+
+  theme(text=element_text(size=32))
+
+xbreaks = c(1,32)
+ybreaks = c(0.01,0.02,0.035,0.05,0.1, 0.15, 0.2,0.3)
+ylimits = aes(ymax = mean_Efficiency + sd_Efficiency, ymin=mean_Efficiency - sd_Efficiency)
+pp[[4]] <- ggplot(subset(T, T$letter_size==2 & T$noise_contrast==0.16), aes(x=shiftedEccentricity, y=mean_Efficiency, color=factor(noise_decay_radius), linetype=factor(HardOrSoft), shape=factor(TargetCross) )) +
+  geom_errorbar(ylimits)+
+  geom_line()+
+  geom_point(size=12, alpha=0.6)+
+  scale_y_log10(breaks=ybreaks)+
+  scale_x_log10(breaks=xbreaks)+
+  scale_linetype_manual(values=c("solid", "longdash"))+
+  scale_size_discrete(range=c(0.5,2)) +
+  #scale_color_brewer(type="div",  palette = 7)
+  facet_grid(letter_size ~.)+
+  noGrid+
+  labs(title = "NoiseContrast 0.16, Gaussian pink", x = "shiftedEccentricity(deg)", y = "Efficiency")+
+  theme(text=element_text(size=32))
+
+xbreaks = c(1, 32)
+ybreaks = c(0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 1, 1.5, 2.0)
+ylimits = aes(ymax = mean_threshold + sd_threshold, ymin=mean_threshold - sd_threshold)
+pp[[5]] <- ggplot(subset(T, T$letter_size==2 & T$noise_contrast==0.16), aes(x=shiftedEccentricity, y=mean_threshold, color=factor(noise_decay_radius), linetype=factor(HardOrSoft), shape=factor(TargetCross) )) +
+  geom_errorbar(ylimits)+
+  geom_line()+
+  geom_point(size=12, alpha=0.6)+
+  scale_y_log10(breaks=ybreaks)+
+  scale_x_log10(breaks=xbreaks)+
+  scale_linetype_manual(values=c("solid", "longdash"))+
+  scale_size_discrete(range=c(0.5,2)) +
+  #scale_color_brewer(type="div",  palette = 7)
+  noGrid+
+  facet_grid(letter_size ~.)+
+  labs(title = "NoiseContrast 0.16, Gaussian pink", x = "shiftedEccentricity(deg)", y = "Threshold_Contrast")+
+  theme(text=element_text(size=32))
+
+xbreaks = c(1, 32)
+ybreaks = c(1e-06, 1e-05, 1e-04, 1e-03, 1e-02)
+ylimits = aes(ymax = mean_Neq + sd_Neq, ymin=mean_Neq - sd_Neq)
+pp[[6]] <- ggplot(subset(T, T$letter_size==2 & T$noise_contrast==0.16), aes(x=shiftedEccentricity, y=mean_Neq, color=factor(noise_decay_radius), linetype=factor(HardOrSoft), shape=factor(TargetCross) )) +
+  geom_errorbar(ylimits)+
+  geom_line()+
+  geom_point(size=12, alpha=0.6)+
+  scale_y_log10(breaks=ybreaks)+
+  scale_x_log10(breaks=xbreaks)+
+  scale_linetype_manual(values=c("solid", "longdash"))+
+  scale_size_discrete(range=c(0.5,2)) +
+  #scale_color_brewer(type="div",  palette = 7)
+  noGrid+
+  # facet_grid(letter_size ~.)+
+  labs(title = "LetterSize 2, NoiseContrast 0.16, Gaussian pink", x = "shiftedEccentricity(deg)", y = "Neq")+
+  theme(text=element_text(size=32))
+
+if(TRUE){
+  cat('Saving figures to disk...\n')
+ii = 0;
+for (i in pp){
+  ii = ii + 1
+  cat('Saving figure ', ii, '.png.\n', sep="")
+  png(paste(as.character(ii), '.png', sep=""), width=1024, height = 1024)
+  print(i)
+  dev.off()
+}
+}
