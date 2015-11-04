@@ -50,7 +50,7 @@ parsefiles=parsefiles(~cellfun('isempty',parsefiles)); %command to remove empty 
 parsedates=parsedates(~cellfun('isempty',parsedates));
 % pdata=cell(length(parsefiles),13);
 pdata = {};
-col_names={'observer','trials','letter_size','noise_contrast','noise_decay_radius','eccentricity','p_accuracy','threshold_log_contrast','threshold_contrast_SD','contrast','log_E_by_N','efficiency','file_date_time','energy_at_unit_contrast','noise_power_spectral_density', 'threshold_energy','noiseRadiusDeg','TargetCross'};
+col_names={'observer','trials','letter_size','noise_contrast','noise_decay_radius','eccentricity','p_accuracy','threshold_log_contrast','threshold_contrast_SD','contrast','log_E_by_N','efficiency','file_date_time','energy_at_unit_contrast','noise_power_spectral_density', 'threshold_energy','noiseRadiusDeg','TargetCross','noiseSpectrum'};
 
 j = 1; % to skip the re-run runs(unfinished runs due to mis-representation of letters)
 for i=1:length(parsefiles)
@@ -102,6 +102,18 @@ for i=1:length(parsefiles)
         else
             pdata{j,18}=0;
         end;
+        
+        if isfield(o,'noiseSpectrum')
+            if strcmp(o.noiseSpectrum, 'white')
+                pdata{j,19}=0;
+            elseif strcmp(o.noiseSpectrum, 'pink')
+                pdata{j,19}=1;
+            end;
+        else
+            pdata{j,19}=0; % data in week 1&2, all white noise
+        end;
+        % 0 is white and 1 is pink, for computing in getStats
+        % would be converted back after getStats
         
         j = j+1;
     end;

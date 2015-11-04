@@ -8,18 +8,19 @@
 % the efficiency here is the 'high noise efficiency', which is E_ideal/(E-E0)
 % that means when noist contrast=0, there is no high-noise efficiency computed
 %
-% To be able to compute E0(needed for Neq and Efficiency), you should have noise contrast=0, 
+% To be able to compute E0(needed for Neq and Efficiency), you should have noise contrast=0,
 % whose conditon has the same letter size,eccentricity,and TargetCross with
 % other noise contrast~=0 conditions;
 %
 % To be able to compute Efficiency, besides E0, you should also have ideal
-% data with the same letter size, noisecontrast(~=0), noisedecayradius, eccentricity and noiseRadiusDeg
+% data with the same letter size, noisecontrast(~=0), noisedecayradius,
+% eccentricity, noiseRadiusDeg and noiseSpectrum
 
-function tab = getStats(newpath, obs_name, doNeq, doEfficiency)
-% newpath = '/Users/xiuyunwu/NoiseDiscrimination/data';
-% obs_name = 'xiuyun';
-% doNeq=1;
-% doEfficiency=1;
+% function tab = getStats(newpath, obs_name, doNeq, doEfficiency)
+newpath = '/Users/xiuyunwu/NoiseDiscrimination/data';
+obs_name = 'xiuyun';
+doNeq=1;
+doEfficiency=0;
 
 %settings
 filename = [obs_name,'_runs.mat'];
@@ -31,23 +32,23 @@ cd(newpath);
 load(filename);
 % This should be the table directly saved after running parseExpData.m
 
-col_name = {'letter_size','noise_contrast','noise_decay_radius','eccentricity','HardOrSoft','TargetCross','mean_threshold','sd_threshold','squared_noise_contrast','mean_squared_threshold','sd_squared_threshold','mean_Energy','sd_Energy', 'Energy_at_unit_contrast','Noise_power_spectral_density'};
+col_name = {'letter_size','noise_contrast','noise_decay_radius','eccentricity','HardOrSoft','TargetCross','noiseSpectrum','mean_threshold','sd_threshold','squared_noise_contrast','mean_squared_threshold','sd_squared_threshold','mean_Energy','sd_Energy', 'Energy_at_unit_contrast','Noise_power_spectral_density'};
 
 % convert conditions to positive integers so that can be used in accumarray()
 % subs is the converted condition for each run
 % each number 'n' in subs means the condition is the n_th row in con
 % the columns in con are lettersize, noisecontrast, noisedecayradius,
 % eccentricity, noiseRadiusDeg and TargetCross
-cons = [tabdata{:, 3:6} tabdata{:, 17:18}];
 
+cons = [tabdata{:, 3:6} tabdata{:, 17:19}];
 con = unique(cons,'rows');
 for t = 1:size(con,1)
     cont = repmat(con(t,:),[size(tabdata,1) 1]);
     arr = find(all(tabdata{:, 3:6}==cont(:,1:4),2));
-    if length(arr)>2 % soft/hard and cross 0/1 conditions together
+    if length(arr)>2 % soft/hard and cross 0/1 and pink/white conditions together
         k=1;
         while k<=length(arr)
-            if tabdata{arr(k), 17}~=con(t,5)||tabdata{arr(k), 18}~=con(t,6)
+            if tabdata{arr(k), 17}~=con(t,5)||tabdata{arr(k), 18}~=con(t,6) || tabdata{arr(k), 19}~=con(t,7)
                 arr(k)=[];
                 k=k-1;
             end;
@@ -80,10 +81,10 @@ if doNeq==1
         if con(t, 2)~=0
             cont = repmat(con(t,:),[size(tabdata,1) 1]);
             arr = find(all(tabdata{:, 3:6}==cont(:,1:4),2));
-            if length(arr)>2 % soft/hard and cross 0/1 conditions together
+            if length(arr)>2 % soft/hard and cross 0/1 and pink/white conditions together
                 k=1;
                 while k<=length(arr)
-                    if tabdata{arr(k), 17}~=con(t,5)||tabdata{arr(k), 18}~=con(t,6)
+                    if tabdata{arr(k), 17}~=con(t,5)||tabdata{arr(k), 18}~=con(t,6)|| tabdata{arr(k), 19}~=con(t,7)
                         arr(k)=[];
                         k=k-1;
                     end;
@@ -116,16 +117,16 @@ if doEfficiency==1
     ideal = load('ideal_runs.mat');
     runEffi = zeros(size(ideal.tabdata,1),1); % Efficiency for each run(when noise contrast = 0, Efficiency = 0)
     
-    conis = [ideal.tabdata{:, 3:6} ideal.tabdata{:, 17:18}];
+    conis = [ideal.tabdata{:, 3:6} ideal.tabdata{:, 17:19}];
     coni = unique(conis,'rows'); % sort the ideal data
     for t = 1:size(coni,1)
         conti = repmat(coni(t,:),[size(ideal.tabdata,1) 1]);
-        arri = find(all(ideal.tabdata{:, 3:6}==conti(:, 1:4),2)); % the index of the runs under current condition
+        arri = find(all(ideal.tabdata{:, 3:6}==conti(:, 1:4),2));
         
         if length(arri)>2 % soft/hard and cross 0/1 conditions together
             k=1;
             while k<=length(arri)
-                if ideal.tabdata{arri(k), 17}~=coni(t,5)||ideal.tabdata{arri(k), 18}~=coni(t,6)
+                if ideal.tabdata{arri(k), 17}~=coni(t,5)||ideal.tabdata{arri(k), 18}~=coni(t,6)|| ideal.tabdata{arr(k), 19}~=coni(t,7)
                     arri(k)=[];
                     k=k-1;
                 end;
@@ -143,7 +144,7 @@ if doEfficiency==1
             if length(arr)>2 % soft/hard and cross 0/1 conditions together
                 k=1;
                 while k<=length(arr)
-                    if tabdata{arr(k), 17}~=con(t,5)||tabdata{arr(k), 18}~=con(t,6)
+                    if tabdata{arr(k), 17}~=con(t,5)||tabdata{arr(k), 18}~=con(t,6)|| tabdata{arr(k), 19}~=con(t,7)
                         arr(k)=[];
                         k=k-1;
                     end;
@@ -161,8 +162,21 @@ if doEfficiency==1
             cE0 = repmat(ME(arr0),[length(arr) 1]);
             
             cont2 = repmat(con(t,:),[size(coni,1) 1]);
-            arri = find(all(coni(:,1:5)==cont2(:,1:5), 2)); % the index of ideal E
-            % has the same lettersize, noisecontrast, noisedecayradius, eccentricity and noiseRadiusDeg
+            arri = find(all(coni(:,1:5)==cont2(:,1:5), 2));
+            if length(arri)>1 % to discriminate white or pink
+                k = 1;
+                while k<=length(arri)
+                    if coni(arri(k),7)~=con(t, 7)
+                        arri(k)=[];
+                        k = k-1;
+                    end;
+                    k = k+1;
+                end;
+            end;
+            % the index of ideal E
+            % has the same lettersize, noisecontrast, noisedecayradius,
+            % eccentricity, noiseRadiusDeg and noiseSpectrum
+            
             cEf = repmat(meffi(arri),[length(arr) 1]);
             
             runEffi(arr, 1)=cEf./(tabdata{arr,16}-cE0); %high noise efficiency for the runs
@@ -182,16 +196,23 @@ out = mat2cell(out,ones(1,size(out,1)),ones(1,size(out,2)));
 
 for t = 1:size(out,1)
     if out{t, 5}>17 % soft conditions
-out{t,5} = 'soft';
+        out{t,5} = 'soft';
     else
-        out{t,3}=out{t,5}; 
+        out{t,3}=out{t,5};
         out{t,5}='hard';
-end;
-% convert noise decay radius and noisedecayradius to noise decay radius in
-% display and soft/hard, so it would be easier when plotting
+    end;
+    % convert noise decay radius and noisedecayradius to noise decay radius in
+    % display and soft/hard, so it would be easier when plotting
+    
+    if out{t, 7}==0
+        out{t, 7} = 'white';
+    elseif out{t, 7}==1
+        out{t, 7} = 'pink';
+    end;
+    % convert noiseSpectrum back to strings
 end;
 tab = cell2table(out, 'VariableNames', col_name); %converts to table
 
 writetable(tab, csvfilename ,'Delimiter',',')
 save(matfilename,'tab');
-end
+% end
