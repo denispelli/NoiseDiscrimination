@@ -126,7 +126,7 @@ minor.tick(5)
 
 # residual plot
 # plot(m.lrp)
-if (FALSE) {
+if (TRUE) {
 
 ggplotRegression <- function (fit) {
   ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) +
@@ -148,7 +148,7 @@ mytheme <- theme_bw() +
 niceLegend <- theme(legend.key = element_rect(colour = 'NA', fill = 'NA', size = 0.5), legend.background = element_rect(color = "black"), legend.justification = 'right', legend.position=c(1,0.6))
 
 # Or using ggplot2
-pp <- ggplot(dat, aes(x = x, y = y, shape = factor(dat$eccentricity))) +
+pp <- ggplot(dat, aes(x = x, y = y, shape = factor(eccentricity), color = factor(LetterSize))) +
 geom_point(size = 5) +
   geom_errorbar(ylimits, size = 1) +
 stat_smooth(method = "nls",
