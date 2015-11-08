@@ -16,11 +16,11 @@
 % data with the same letter size, noisecontrast(~=0), noisedecayradius,
 % eccentricity, noiseRadiusDeg and noiseSpectrum
 
-% function tab = getStats(newpath, obs_name, doNeq, doEfficiency)
-newpath = '/Users/xiuyunwu/NoiseDiscrimination/data';
-obs_name = 'xiuyun';
-doNeq=1;
-doEfficiency=0;
+function tab = getStats(newpath, obs_name, doNeq, doEfficiency)
+% newpath = '/Users/xiuyunwu/NoiseDiscrimination/data';
+% obs_name = 'xiuyun';
+% doNeq=1;
+% doEfficiency=1;
 
 %settings
 filename = [obs_name,'_runs.mat'];
@@ -126,7 +126,7 @@ if doEfficiency==1
         if length(arri)>2 % soft/hard and cross 0/1 conditions together
             k=1;
             while k<=length(arri)
-                if ideal.tabdata{arri(k), 17}~=coni(t,5)||ideal.tabdata{arri(k), 18}~=coni(t,6)|| ideal.tabdata{arr(k), 19}~=coni(t,7)
+                if ideal.tabdata{arri(k), 17}~=coni(t,5)||ideal.tabdata{arri(k), 18}~=coni(t,6)|| ideal.tabdata{arri(k), 19}~=coni(t,7)
                     arri(k)=[];
                     k=k-1;
                 end;
@@ -215,4 +215,4 @@ tab = cell2table(out, 'VariableNames', col_name); %converts to table
 
 writetable(tab, csvfilename ,'Delimiter',',')
 save(matfilename,'tab');
-% end
+end

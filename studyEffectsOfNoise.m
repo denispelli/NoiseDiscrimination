@@ -4,7 +4,7 @@
 
 
 %#### Adjust values within this block of code #####################
-o.observer='xiuyun'; %add your name here
+o.observer='ideal'; %add your name here
 o.distanceCm=50; % viewing distance
 o.durationSec=0.2;
 
@@ -16,15 +16,15 @@ o.durationSec=0.2;
 %o.noiseRadiusDeg=1;
 %noiseEnvelopeSpaceConstantDeg: Inf
 
-o.noiseRadiusDeg=6; % change this to manipulate noise decay radius [1,sqrt(3), 3,3*sqrt(3), 9, Inf]
+o.noiseRadiusDeg=inf; % change this to manipulate noise decay radius [1,sqrt(3), 3,3*sqrt(3), 9, Inf]
 o.noiseEnvelopeSpaceConstantDeg=Inf; % always Inf for hard edge
 
 o.targetHeightDeg=2; %letter size [2,sqrt(2*6),6];
-o.eccentricityDeg=24; % eccentricity [0,32]
+o.eccentricityDeg=32; % eccentricity [0,32]
 o.noiseSD=0.16; %noise contrast [0.16]
 
 o.noiseType='gaussian'; % ALWAYS use gaussian
-o.noiseSpectrum='pink'; % pink or white
+o.noiseSpectrum='white'; % pink or white
 o.targetCross=1;
 o.fixationCrossWeightDeg = 0.05; % target line thickness
 %##################################################################
@@ -49,6 +49,6 @@ o.signalKind='luminance'; % Display a luminance decrement.
 % o.fixationCrossWeightDeg=0.05; % target line thickness
 o.speakInstructions=0;
 o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar() (Linux compatibility)
-o.trialsPerRun=80;
+o.trialsPerRun=3000;
 o=NoiseDiscrimination(o);
 sca;
