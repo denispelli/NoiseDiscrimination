@@ -13,11 +13,13 @@ dat$noise_decay_radius <- dat$NoiseDecayRadius
 dat$letter_size <- dat$LetterSize
 dat$noise_contrast <- dat$NoiseContrast
 dat$mean_threshold <- dat$ThresholdContrast
+dat$eccentricity <- round(dat$Eccentricity - 0.45,digits = 2)
 
 # some transformations necessary for computation
 dat$noise_decay_radius <- replace(dat$noise_decay_radius, dat$noise_decay_radius==Inf,32)
 dat$RadiusRelative2letter_size <- dat$noise_decay_radius / (dat$letter_size/2)
-dat <- subset(dat, dat$noise_contrast == 0.16 & dat$HardOrSoft == "soft")
+# dat <- subset(dat, dat$noise_contrast == 0.16 & dat$HardOrSoft == "soft")
+dat <- subset(dat, dat$noise_contrast %in% c(0.1) & eccentricity %in% c(0,2,8))
 
 
 
@@ -36,7 +38,7 @@ f.lrp <- function(x, a, b, t.x) ifelse(x > t.x, a + b * t.x, a + b * x)
 
 
 # fit the model
-m.lrp <- nls(y ~ f.lrp(x, a, b, t.x), data = dat, start = list(a = -2, b = 0.5, t.x = 1), trace = T, control = list(warnOnly = TRUE, minFactor = 1/2048) )
+m.lrp <- nls(y ~ f.lrp(x, a, b, t.x), data = dat, start = list(a = -0.5, b = 0.64, t.x = .5), trace = T, control = list(warnOnly = TRUE, minFactor = 1/2048) )
 
 # show model fit
 print(summary(m.lrp))
@@ -56,16 +58,20 @@ Rsquared <- 1 - (RSS.p/TSS)
 
 # plot our result and the original data
 with(dat, plot(y ~ x, pch = NA, bty = 'n', axes = FALSE, xlab = NA, ylab = NA))
+# with(subset(dat, eccentricity == 0), points(y ~ x, pch = 0))
+# with(subset(dat, eccentricity == 32), points(y ~ x, pch = 1))
 with(subset(dat, eccentricity == 0), points(y ~ x, pch = 0))
-with(subset(dat, eccentricity == 32), points(y ~ x, pch = 1))
-title(main = "Gaussian Pink Noise Contrast: 0.16", xlab = "Log Decay Radius / Letter Radius", ylab = "Log Threshold Contrast")
+with(subset(dat, eccentricity == 2), points(y ~ x, pch = 1))
+with(subset(dat, eccentricity == 8), points(y ~ x, pch = 2))
+with(subset(dat, eccentricity == 32), points(y ~ x, pch = 3))
+title(main = "Gaussian White Noise Contrast: 0.1", xlab = "Log Decay Radius / Letter Radius", ylab = "Log Threshold Contrast")
 
 lines(x = c(min(dat$x), coefficients(m.lrp)["t.x"], max(dat$x)), y = c(f.lrp(min(dat$x), coef(m.lrp)["a"], coef(m.lrp)["b"], coef(m.lrp)["t.x"]), max.yield, max.yield), lty = 1, col="red")
 # abline(v = coefficients(m.lrp)["t.x"], lty = 4)
 # abline(h = max.yield, lty = 4)
 
-text(x = rep(0.5, 5), y = seq(-0.4,-0.7, length.out = 5), labels = paste(c("max", "intercept", "slope", "saturation", "R^2"), round(c(max.yield, coef(m.lrp), Rsquared), digits = 3), sep = " = "), adj = c(0,1))
-legend(1.15, -0.4, c("0", "32"), title = "Eccentricity", pch = c(0, 1))
+text(x = rep(0.5, 5), y = seq(-0.4,-0.7, length.out = 5), labels = paste(c("max", "intercept", "slope", "saturation", expression(R^2)), round(c(10^max.yield, 10^coef(m.lrp), Rsquared), digits = 3), sep = " = "), adj = c(0,1))
+legend(1.15, -0.4, paste(c(0,2,8), "deg"), title = "Eccentricity", pch = c(0, 1,2))
 
 axis.log <- function(whichAxis=1, x, nBreak, nTicks, Digits=2)
 {
@@ -116,6 +122,7 @@ minor.tick(5)
 
 # residual plot
 # plot(m.lrp)
+if (FALSE) {
 
 ggplotRegression <- function (fit) {
   ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) +
@@ -153,3 +160,4 @@ pp1 <- pp + noGrid + niceLegend
 
 print(pp)
 
+}

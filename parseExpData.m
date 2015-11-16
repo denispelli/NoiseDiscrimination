@@ -58,7 +58,14 @@ for i=1:length(parsefiles)
     if o.trials>=smallestTrialNum
         pdata{j,1}=o.observer; %observer name
         pdata{j,2}=o.trials; %trials per run
-        pdata{j,3}=o.targetHeightDeg; %letter size
+        %letter size
+        if o.targetHeightDeg<1 % we only got 0.5 and sqrt(2*6) as non-integer for now; but if we get more this should be modified
+            pdata{j,3}=0.5;
+        elseif o.targetHeightDeg>3 && o.targetHeightDeg<4
+            pdata{j,3}=sqrt(2*6);
+        else
+            pdata{j,3}=round(o.targetHeightDeg);
+        end;
         pdata{j,4}=o.noiseSD; %noise contrast
         pdata{j,5}=o.noiseEnvelopeSpaceConstantDeg; %noise decay radius
         pdata{j,6}=o.eccentricityDeg; %eccentricity
