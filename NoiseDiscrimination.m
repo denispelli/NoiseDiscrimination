@@ -1,6 +1,8 @@
-function o=NoiseDiscrimination(oIn)
-addpath('AutoBrightness');
-addpath('lib');
+function o=NoiseDiscrimination(oIn) 
+addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder in same directory as this file
+addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this file
+% addpath('AutoBrightness');
+% addpath('lib');
 %Priority(1);
 %echo_executing_commands(2, 'local');
 %diary ./diary.log
@@ -147,7 +149,6 @@ end
 % clear all
 
 rng('default');
-%clear PsychHID
 if ismac && ~ScriptingOkShowPermission
     error('Please give MATLAB permission to control the computer. You''ll need admin privileges to do this.');
 end
@@ -178,9 +179,16 @@ o.speakInstructions=1;
 o.congratulateWhenDone=1; % 0 or 1. Spoken after last run (i.e. when o.runNumber==o.runsDesired). You can turn this off.
 o.runAborted=0; % 0 or 1. Returned value is 1 if the user aborts this run (i.e. threshold).
 o.quitNow=0; % 0 or 1. Returned value is 1 if the observer wants to quit now; no more runs.
-% o.signalKind='noise';  % Display a noise increment.
-o.signalKind='luminance'; % Display a luminance decrement.
-% o.signalKind='entropy'; % Display an entropy increment.
+% o.targetModulates='noise';  % Display a noise increment.
+o.targetKind='letter';
+% o.targetKind='gabor'; % one cycle within targetSize
+o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
+o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
+o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
+o.targetGaborOrientationsDeg=[0 90]; % Orientations relative to vertical.
+o.targetGaborNames='VH';
+o.targetModulates='luminance'; % Display a luminance decrement.
+% o.targetModulates='entropy'; % Display an entropy increment.
 o.task='identify'; % 'identify' or '4afc'
 % o.thresholdParameter='size';
 % o.thresholdParameter='spacing';
@@ -204,12 +212,14 @@ o.flankerSpacingDeg=4;
 % o.flankerSpacingDeg=1.4*o.targetHeightDeg; % Put this in your code, if
 % you like. It won't work here.
 o.noiseSD=0.2; % Usually in the range 0 to 0.4. Typically 0.2.
+% o.noiseSD=0; % Usually in the range 0 to 0.4. Typically 0.2.
 o.annularNoiseSD=nan; % Typically nan (i.e. use o.noiseSD) or 0.2.
 o.noiseCheckDeg=0.2; % Typically 0.05 or 0.2.
+o.noiseCheckDeg=0.05; % Typically 0.05 or 0.2.
 o.noiseRadiusDeg=1; % When o.task=4afc, the program will set o.noiseRadiusDeg=o.targetHeightDeg/2;
 o.noiseEnvelopeSpaceConstantDeg=inf;
 o.noiseRaisedCosineEdgeThicknessDeg=0; % midpoint of raised cosine is at noiseRadiusDeg.
-o.noiseSpectrum='pink'; % pink or white
+o.noiseSpectrum='white'; % pink or white
 o.showBlackAnnulus=0;
 o.blackAnnulusContrast=-1; % (LBlack-LMean)/LMean. -1 for black line. >-1 for gray line.
 o.blackAnnulusSmallRadiusDeg=2;
@@ -254,8 +264,8 @@ o.isKbLegacy=1; % collect response via 1:ListenChar+GetChar; 0:KbCheck
 assessGray=0; % For debugging. Diagnostic printout when we load gamma table.
 % o.observerQuadratic=-1.2; % estimated from old second harmonic data
 o.observerQuadratic=-0.7; % adjusted to fit noise letter data.
-o.backgroundEntropyLevels=2; % Value used only if o.signalKind is 'entropy'
-o.idealEOverNThreshold=nan; % You can run the ideal first, and then provide it as a reference when testing human observers.
+o.backgroundEntropyLevels=2; % Value used only if o.targetModulates is 'entropy'
+o.idealEOverNThreshold=nan; % You can run the ideal first, and then provide its threshold as a reference when testing human observers.
 o.screen=0;
 % o.screen=max(Screen('Screens'));
 o.alphabet='DHKNORSVZ';
@@ -312,11 +322,11 @@ if isnan(o.annularNoiseSD)
 end
 
 if o.saveSnapshot
-    if isfinite(o.snapshotLetterContrast) && streq(o.signalKind,'luminance')
+    if isfinite(o.snapshotLetterContrast) && streq(o.targetModulates,'luminance')
         o.tSnapshot=log10(o.snapshotLetterContrast);
     end
     if ~isfinite(o.tSnapshot)
-        switch o.signalKind
+        switch o.targetModulates
             case 'luminance',
                 o.tSnapshot= -0.0; % log10(contrast)
             case 'noise',
@@ -324,11 +334,15 @@ if o.saveSnapshot
             case 'entropy',
                 o.tSnapshot= 0; % log10(r-1)
             otherwise
-                error('Unknown o.signalKind "%s".',o.signalKind);
+                error('Unknown o.targetModulates "%s".',o.targetModulates);
         end
     end
 end
-
+if streq(o.targetKind,'gabor')
+    assert(length(o.targetGaborNames)>=length(o.targetGaborOrientationsDeg))
+    o.alternatives=length(o.targetGaborOrientationsDeg);
+    o.alphabet=o.targetGaborNames(1:o.alternatives);
+end
 o.beginningTime=now;
 t=datevec(o.beginningTime);
 stack=dbstack;
@@ -431,7 +445,7 @@ if o.isWin
             cal=LinearizeClut(cal);
             cal.gamma(2,:)=0.5*(cal.gamma(1,:)+cal.gamma(3,:)); % for Windows
             assert(all(all(diff(cal.gamma)>=0))); % monotonic for Windows
-            if o.printGammaLoadings; ffprintf(ff,'LoadNormalizedGammaTable %d, LRange/LMean=%.2f\n',332,LRange/LMean); end
+            if o.printGammaLoadings; ffprintf(ff,'LoadNormalizedGammaTable %d, LRange/LMean=%.2f\n',MFileLineNr,LRange/LMean); end
             Screen('LoadNormalizedGammaTable',o.screen,cal.gamma); % might fail
             % Success!
             o.minLRange=LRange;
@@ -441,7 +455,6 @@ if o.isWin
             break;
         end
     end
-
     RestoreCluts;
     if ~isfinite(o.minLRange)
         error('Couldn''t fix the gamma table. Alas. LRange/LMean=%.2f',LRange/LMean);
@@ -458,9 +471,9 @@ if streq(o.task,'identify')
     o.showResponseNumbers=0; % Inappropriate so suppress.
     switch o.alphabetPlacement
         case 'right',
-            o.stimulusRect(3)=o.stimulusRect(3)-RectHeight(screenRect)/o.alternatives;
+            o.stimulusRect(3)=o.stimulusRect(3)-RectHeight(screenRect)/max(6,o.alternatives);
         case 'top',
-            o.stimulusRect(2)=max(o.stimulusRect(2),screenRect(2)+0.5*RectWidth(screenRect)/o.alternatives);
+            o.stimulusRect(2)=max(o.stimulusRect(2),screenRect(2)+0.5*RectWidth(screenRect)/max(6,o.alternatives));
         otherwise
             error('Unknown alphabetPlacement "%d".\n',o.alphabetPlacement);
     end
@@ -538,8 +551,8 @@ rightCaptionRect(1)=o.stimulusRect(3); % right caption
 leftCaptionRect=screenRect;
 leftCaptionRect(3)=o.stimulusRect(1); % left caption
 % The caption rects are hardly used. It turns out that I typically do a
-% FillRect of screenRect with the caption background, and then a
-% smaller FillRect of stimulusRect with the stimulus background.
+% FillRect of screenRect with the caption background (1), and then a
+% smaller FillRect of stimulusRect with the stimulus background (128).
 
 textStyle=0; % plain
 window=nan;
@@ -569,7 +582,7 @@ switch o.observer
             o.trialsPerRun=max(200,o.trialsPerRun);
         end
         if ~isfield(o,'beta') || ~isfinite(o.beta)
-            switch o.signalKind
+            switch o.targetModulates
                 case 'luminance',
                     o.beta=3.5;
                 case {'noise','entropy'}
@@ -649,7 +662,7 @@ try
         if o.useFractionOfScreen
             ffprintf(ff,'Using tiny window for debugging.\n');
         end
-        if o.flipClick; Speak('before OpenWindow 500');GetClicks; end
+        if o.flipClick; Speak(['before OpenWindow ' num2str(MFileLineNr)]);GetClicks; end
         if 1
             PsychImaging('PrepareConfiguration');
             if o.flipScreenHorizontally
@@ -669,7 +682,7 @@ try
             [window,r]=Screen('OpenWindow',cal.screen,255,screenRect);
         end
         assert(all(r==screenRect));
-        if o.flipClick; Speak('after OpenWindow 500');GetClicks; end
+        if o.flipClick; Speak(['after OpenWindow ' num2str(MFileLineNr)]);GetClicks; end
         if exist('cal')
             gray=mean([2 254]);  % Will be a CLUT color code for gray.
             LMin=min(cal.old.L);
@@ -709,16 +722,16 @@ try
                 cal.nLast=gray1;
                 cal=LinearizeClut(cal);
             end %if o.isWin
-            if o.printGammaLoadings; fprintf('LoadNormalizedGammaTable %d; LRange/Lmean=%.2f\n',591,(cal.LLast-LMean)/LMean); end
+            if o.printGammaLoadings; fprintf('LoadNormalizedGammaTable %d; LRange/Lmean=%.2f\n',MFileLineNr,(cal.LLast-LMean)/LMean); end
             Screen('LoadNormalizedGammaTable',window,cal.gamma,1); % load during flip
             Screen('FillRect',window,gray1);
             Screen('FillRect',window,gray,o.stimulusRect);
         else
             Screen('FillRect',window);
         end % if cal
-        if o.flipClick; Speak('before Flip 548');GetClicks; end
+        if o.flipClick; Speak(['before Flip ' num2str(MFileLineNr)]);GetClicks; end
         Screen('Flip',window);
-        if o.flipClick; Speak('after Flip 548');GetClicks; end
+        if o.flipClick; Speak(['after Flip ' num2str(MFileLineNr)]);GetClicks; end
         if ~isfinite(window) || window==0
             fprintf('error\n');
             error('Screen OpenWindow failed. Please try again.');
@@ -728,9 +741,9 @@ try
         gray=mean([2 254]);  % Will be a CLUT color code for gray.
         Screen('FillRect',window,gray1);
         Screen('FillRect',window,gray,o.stimulusRect);
-        if o.flipClick; Speak('before Flip 560');GetClicks; end
+        if o.flipClick; Speak(['before Flip ' num2str(MFileLineNr)]);GetClicks; end
         Screen('Flip',window); % Screen is now all gray, at LMean.
-        if o.flipClick; Speak('after Flip 560.');GetClicks; end
+        if o.flipClick; Speak(['after Flip ' num2str(MFileLineNr)]);GetClicks; end
     else
         window=-1;
     end
@@ -767,21 +780,19 @@ try
             Screen('DrawText',window,question1,10,RectHeight(screenRect)/2-48,black,white,1);
             Screen('DrawText',window,question2,10,RectHeight(screenRect)/2,black,white,1);
             Screen('DrawText',window,question3,10,RectHeight(screenRect)/2+48,black,white,1);
-            if o.flipClick; Speak('before Flip 542');GetClicks; end
+            if o.flipClick; Speak(['before Flip ' num2str(MFileLineNr)]);GetClicks; end
             Screen('Flip',window);
-            if o.flipClick; Speak('after Flip 542');GetClicks; end
+            if o.flipClick; Speak(['after Flip ' num2str(MFileLineNr)]);GetClicks; end
             question=[question1 question2 question3];
             if o.speakInstructions
                 Speak(question);
             end
             if o.isKbLegacy
               answer=questdlg(question,'Fixation','Ok','Cancel','Ok');
-
             else
               ListenChar(0); % get ready for the quesdlg
               answer=questdlg(question,'Fixation','Ok','Cancel','Ok');
               ListenChar(2); % go back to orig status; no echo
-
             end
 
             switch answer
@@ -834,8 +845,8 @@ try
     end
     %     ffprintf(ff,'%s font\n',targetFont);
     ffprintf(ff,'o.targetHeightPix %.0f, o.noiseCheckPix %.0f, o.durationSec %.2f s\n',o.targetHeightPix,o.noiseCheckPix,o.durationSec);
-    ffprintf(ff,'o.signalKind %s\n',o.signalKind);
-    if streq(o.signalKind,'entropy')
+    ffprintf(ff,'o.targetModulates %s\n',o.targetModulates);
+    if streq(o.targetModulates,'entropy')
         o.noiseType='uniform';
         ffprintf(ff,'o.backgroundEntropyLevels %d\n',o.backgroundEntropyLevels);
     end
@@ -1013,7 +1024,7 @@ try
     o.N = N;
     ffprintf(ff,'log N/deg^2 %.2f, where N is power spectral density\n',log10(N));
     ffprintf(ff,'pThreshold %.2f, beta %.1f\n',o.pThreshold,o.beta);
-    ffprintf(ff,'Your (log) guess is %.2f Â± %.2f\n',o.tGuess,o.tGuessSd);
+    ffprintf(ff,'Your (log) guess is %.2f ± %.2f\n',o.tGuess,o.tGuessSd);
     ffprintf(ff,'o.trialsPerRun %.0f\n',o.trialsPerRun);
     white1=1;
     black0=0;
@@ -1026,32 +1037,51 @@ try
             targetRect=round([0 0 o.targetHeightPix o.targetHeightPix]/o.noiseCheckPix);
             signal(1).image=ones(targetRect(3:4));
         case 'identify',
-            [scratchWindow,scratchRect]=Screen('OpenOffscreenWindow',-1 ,[],[0 0 400 400],8);
-            oldFont=Screen('TextFont',scratchWindow,'Sloan');
-            font=Screen('TextFont',scratchWindow);
-            assert(streq(font,'Sloan'));
-            oldSize=Screen('TextSize',scratchWindow,round(o.targetHeightPix/o.noiseCheckPix));
-            oldStyle=Screen('TextStyle',scratchWindow,0);
-            canvasRect=[0 0 o.canvasSize];
-            for i=1:o.alternatives
-                Screen('FillRect',scratchWindow,white1);
-                rect=CenterRect(canvasRect,scratchRect);
-                targetRect=round([0 0 o.targetHeightPix o.targetHeightPix]/o.noiseCheckPix);
-                targetRect=CenterRect(targetRect,rect);
-                Screen('DrawText',scratchWindow,signal(i).letter,targetRect(1),targetRect(4),black0,white1,1);
-                letter=Screen('GetImage',scratchWindow,targetRect,'drawBuffer');
-                Screen('FillRect',scratchWindow);
-                letter=letter(:,:,1);
-                if o.flipScreenHorizontally
-%                     letter=fliplr(letter);
-                end
-                signal(i).image=letter<(white1+black0)/2;
+            switch o.targetKind
+                case 'letter',
+                    [scratchWindow,scratchRect]=Screen('OpenOffscreenWindow',-1 ,[],[0 0 400 400],8);
+                    oldFont=Screen('TextFont',scratchWindow,'Sloan');
+                    font=Screen('TextFont',scratchWindow);
+                    assert(streq(font,'Sloan'));
+                    oldSize=Screen('TextSize',scratchWindow,round(o.targetHeightPix/o.noiseCheckPix));
+                    oldStyle=Screen('TextStyle',scratchWindow,0);
+                    canvasRect=[0 0 o.canvasSize];
+                    for i=1:o.alternatives
+                        Screen('FillRect',scratchWindow,white1);
+                        rect=CenterRect(canvasRect,scratchRect);
+                        targetRect=round([0 0 o.targetHeightPix o.targetHeightPix]/o.noiseCheckPix);
+                        targetRect=CenterRect(targetRect,rect);
+                        Screen('DrawText',scratchWindow,signal(i).letter,targetRect(1),targetRect(4),black0,white1,1);
+                        letter=Screen('GetImage',scratchWindow,targetRect,'drawBuffer');
+                        Screen('FillRect',scratchWindow);
+                        letter=letter(:,:,1);
+                        signal(i).image=letter<(white1+black0)/2;
+                    end
+                    %             Screen('TextFont',scratchWindow,oldFont);
+                    %             Screen('TextSize',scratchWindow,oldSize);
+                    %             Screen('TextStyle',scratchWindow,oldStyle);
+                    Screen('Close',scratchWindow);
+                    scratchWindow=-1;
+                case 'gabor',
+                    % o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
+                    % o.targetGaborSpaceConstantCycles=1.5; % The 1/e space constant of the gaussian envelope in periods of the sinewave.
+                    % o.targetGaborCycles=3; % cycles of the sinewave.
+                    % o.targetGaborOrientationsDeg=[0 90]; % Orientations relative to vertical.
+                    % o.targetGaborNames='VH';
+                    targetRect=round([0 0 o.targetHeightPix o.targetHeightPix]/o.noiseCheckPix);
+                    widthChecks = RectWidth(targetRect)-1;
+                    axisValues = -widthChecks/2 : widthChecks/2;  % axisValues is used in creating the meshgrid.
+                    [x,y] = meshgrid(axisValues,axisValues);
+                    spaceConstantChecks=o.targetGaborSpaceConstantCycles*(o.targetHeightPix/o.noiseCheckPix)/o.targetGaborCycles;
+                    cyclesPerCheck=o.targetGaborCycles/(o.targetHeightPix/o.noiseCheckPix);
+                    for i=1:o.alternatives
+                        a=cos(o.targetGaborOrientationsDeg(i)*pi/180)*2*pi*cyclesPerCheck; 
+                        b=sin(o.targetGaborOrientationsDeg(i)*pi/180)*2*pi*cyclesPerCheck;
+                        signal(i).image=sin(a*x+b*y+o.targetGaborPhaseDeg*pi/180).*exp(-(x.^2 + y.^2)/spaceConstantChecks^2);
+                    end
+                otherwise
+                    error('Unknown o.targetKind');
             end
-            %             Screen('TextFont',scratchWindow,oldFont);
-            %             Screen('TextSize',scratchWindow,oldSize);
-            %             Screen('TextStyle',scratchWindow,oldStyle);
-            Screen('Close',scratchWindow);
-            scratchWindow=-1;
             if o.printCrossCorrelation
                 ffprintf(ff,'Cross-correlation of the letters.\n');
                 for i=1:o.alternatives
@@ -1145,16 +1175,18 @@ try
         yellowMask=logical(yellowMask);
     end
 
-    % E1 is energy at unit contrast.
+    
+    % o.E1 is energy at unit contrast.
     power=1:length(signal);
     for i=1:length(power)
-        power(i)=sum(signal(i).image(:));
-        ok=ismember(unique(signal(i).image(:)),[0 1]);
-        assert(all(ok));
+        power(i)=sum(signal(i).image(:).^2);
+        if streq(o.targetKind,'letter')
+            ok=ismember(unique(signal(i).image(:)),[0 1]);
+            assert(all(ok));
+        end
     end
-    E1=mean(power)*(o.noiseCheckPix/o.pixPerDeg)^2;
-    ffprintf(ff,'log E1/deg^2 %.2f, where E1 is energy at unit contrast.\n',log10(E1));
-    o.E1 = E1;
+    o.E1=mean(power)*(o.noiseCheckPix/o.pixPerDeg)^2;
+    ffprintf(ff,'log E1/deg^2 %.2f, where E1 is energy at unit contrast.\n',log10(o.E1));
 
     if ismember(o.observer,algorithmicObservers);
         Screen('CloseAll');
@@ -1183,14 +1215,14 @@ try
             TrimMarks(window,frameRect);
         end
         Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
-        if o.flipClick; Speak('before LoadNormalizedGammaTable delayed 1043');GetClicks; end
+        if o.flipClick; Speak(['before LoadNormalizedGammaTable delayed ' num2str(MFileLineNr)]);GetClicks; end
         if o.isWin; assert(all(all(diff(cal.gamma)>=0))); end; % monotonic for Windows
         if o.printGammaLoadings; fprintf('LoadNormalizedGammaTable %d; LRange/LMean=%.2f\n',930,2*(cal.LLast-LMean)/LMean); end
         Screen('LoadNormalizedGammaTable',window,cal.gamma,1); % Wait for Flip.
         if assessGray; pp=Screen('GetImage',window,[20 20 21 21]);ffprintf(ff,'line 712: Gray index is %d (%.1f cd/m^2). Corner is %d.\n',gray,LuminanceOfIndex(cal,gray),pp(1)); end
-        if o.flipClick; Speak('before Flip 911');GetClicks; end
+        if o.flipClick; Speak(['before Flip ' num2str(MFileLineNr)]);GetClicks; end
         Screen('Flip', window,0,1); % Show gray screen at LMean with fixation and crop marks. Don't clear buffer.
-        if o.flipClick; Speak('after Flip 911');GetClicks; end
+        if o.flipClick; Speak(['after Flip ' num2str(MFileLineNr)]);GetClicks; end
 
         Screen('DrawText',window,'Starting new run. ',0.5*textSize,o.lineSpacing*textSize,black0,gray1,1);
         if isfinite(o.eccentricityDeg)
@@ -1260,7 +1292,7 @@ try
     end
 
     % Default values for tGuess and tGuessSd
-    if streq(o.signalKind,'luminance')
+    if streq(o.targetModulates,'luminance')
         tGuess=-0.5;
         tGuessSd=2;
     else
@@ -1317,7 +1349,7 @@ try
                 o.targetHeightPix=targetSizeDeg*o.pixPerDeg;
                 o.targetWidthPix=o.targetHeightPix;
             case 'contrast',
-                if streq(o.signalKind,'luminance')
+                if streq(o.targetModulates,'luminance')
                     r=1;
                     o.contrast=-10^tTest; % negative contrast, dark letters
                     if o.saveSnapshot && isfinite(o.snapshotLetterContrast)
@@ -1337,7 +1369,7 @@ try
             ffprintf(ff,'WARNING: Reducing o.annularNoiseSD of %s noise to %.2f to avoid overflow.\n',o.noiseType,a);
             o.annularNoiseSD=a;
         end
-        switch o.signalKind
+        switch o.targetModulates
             case 'noise',
                 a=(1-LMin/LMean)/(o.noiseListBound*o.noiseSD/o.noiseListSd);
                 if r>a
@@ -1369,7 +1401,7 @@ try
                 r=signalEntropyLevels/o.backgroundEntropyLevels; % define r as ratio of number of levels
                 tTest=log10(r-1);
             otherwise
-                error('Unknown o.signalKind "%s"',o.signalKind);
+                error('Unknown o.targetModulates "%s"',o.targetModulates);
         end
         if o.noiseFrozenInRun
             if trial==1
@@ -1416,7 +1448,7 @@ try
                             end
                     end
                     if i==signalLocation
-                        switch o.signalKind
+                        switch o.targetModulates
                             case 'noise',
                                 location(i).image=1+r*(o.noiseSD/o.noiseListSd)*noise;
                             case 'luminance',
@@ -1427,7 +1459,7 @@ try
                                 location(i).image=1+(o.noiseSD/q.sd)*(0.5+floor(noise*0.499999*signalEntropyLevels))/(0.5*signalEntropyLevels);
                         end
                     else
-                        switch o.signalKind
+                        switch o.targetModulates
                             case 'entropy',
                                 q.noiseList=(0.5+floor(noiseList*0.499999*o.backgroundEntropyLevels))/(0.5*o.backgroundEntropyLevels);
                                 q.sd=std(q.noiseList);
@@ -1457,7 +1489,7 @@ try
                 signalImage(signalImageIndex)=signal(whichSignal).image(:);
 %                 figure(2);imshow(signalImage);
                 signalMask=logical(signalImage);
-                switch o.signalKind
+                switch o.targetModulates
                     case 'luminance',
                         location(1).image=ones(o.canvasSize);
                         location(1).image(centralNoiseMask)=1+(o.noiseSD/o.noiseListSd)*noise(centralNoiseMask);
@@ -1482,7 +1514,7 @@ try
                 clear likely
                 switch o.task
                     case '4afc',
-                        switch o.signalKind
+                        switch o.targetModulates
                             case 'luminance',
                                 % pick darkest
                                 for i=1:locations
@@ -1506,7 +1538,7 @@ try
                                 end
                         end
                     case 'identify',
-                        switch o.signalKind
+                        switch o.targetModulates
                             case 'luminance',
                                 for i=1:o.alternatives
                                     im=zeros(size(signal(i).image));
@@ -1681,7 +1713,7 @@ try
                     % Noise
                     cal.LFirst=LMean*(1-o.noiseListBound*r*o.noiseSD/o.noiseListSd);
                     cal.LLast=LMean*(1+o.noiseListBound*r*o.noiseSD/o.noiseListSd);
-                    if streq(o.signalKind,'luminance')
+                    if streq(o.targetModulates,'luminance')
                         cal.LFirst=cal.LFirst+min(0,LMean*o.contrast);
                         cal.LLast=cal.LLast+max(0,LMean*o.contrast);
                     end
@@ -1730,7 +1762,7 @@ try
                     else
                         contrastEstimate=nan;
                     end
-                    switch o.signalKind
+                    switch o.targetModulates
                         case 'luminance',
                             img=[1 1+o.contrast];
                         otherwise
@@ -1741,7 +1773,7 @@ try
                     imgEstimate=EstimateLuminance(cal,index)/LMean;
                     rmsContrastError=rms(img(:)-imgEstimate(:));
                     ffprintf(ff,'Assess contrast: At LMean, the minimum contrast step is %.4f, with rmsContrastError %.3f\n',contrastEstimate,rmsContrastError);
-                    switch o.signalKind
+                    switch o.targetModulates
                         case 'luminance',
                             img=[1,1+o.contrast];
                             img=IndexOfLuminance(cal,img*LMean);
@@ -1985,7 +2017,15 @@ try
                                 desiredLengthPix=0.5*RectWidth(screenRect);
                                 signalChecks=RectWidth(rect);
                         end
-                        spacingFraction=0.25;
+                        switch o.targetKind
+                            case 'letter',
+                                spacingFraction=0.25;
+                            case 'gabor'
+                                spacingFraction=0;
+                        end
+                        if o.alternatives<6
+                            desiredLengthPix=desiredLengthPix*o.alternatives/6;
+                        end
                         alphaSpaces=o.alternatives+spacingFraction*(o.alternatives+1);
                         alphaPix=desiredLengthPix/alphaSpaces;
 %                         alphaCheckPix=alphaPix/(signalChecks/o.noiseCheckPix);
@@ -2037,14 +2077,14 @@ try
                         end
                         leftEdgeOfResponse=rect(1);
                 end % switch o.task
-                if o.flipClick; Speak('before LoadNormalizedGammaTable 1777');GetClicks; end
+                if o.flipClick; Speak(['before LoadNormalizedGammaTable ' num2str(MFileLineNr)]);GetClicks; end
                 if o.printGammaLoadings;ffprintf(ff,'LoadNormalizedGammaTable %d, LRange/LMean=%.2f\n',1597,(cal.LLast-LMean)/LMean); end
                 Screen('LoadNormalizedGammaTable',window,cal.gamma);
                 if assessGray; pp=Screen('GetImage',window,[20 20 21 21]);ffprintf(ff,'line 1264: Gray index is %d (%.1f cd/m^2). Corner is %d.\n',gray,LuminanceOfIndex(cal,gray),pp(1)); end
                 if trial==1
                     WaitSecs(1); % First time is slow. Mario suggested a work around, explained at beginning of this file.
                 end
-                if o.flipClick; Speak('before Flip dontclear 1687');GetClicks; end
+                if o.flipClick; Speak(['before Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
                 Snd('Play',purr); % Announce that image is up, awaiting response.
                 if o.showBlackAnnulus
                     radius=round(o.blackAnnulusSmallRadiusDeg*o.pixPerDeg);
@@ -2069,7 +2109,7 @@ try
                 end
                 Screen('Flip',window,0,1); % Show target with instructions. Don't clear buffer.
                 signalOnset=GetSecs;
-                if o.flipClick; Speak('after Flip dontclear 1687');GetClicks; end
+                if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
                 if o.saveSnapshot
                     if o.snapshotShowsFixationAfter
                         Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
@@ -2133,7 +2173,7 @@ try
                     saveSize=Screen('TextSize',window,o.snapshotCaptionTextSize);
                     saveFont=Screen('TextFont',window,'Courier');
                     caption={''};
-                    switch o.signalKind
+                    switch o.targetModulates
                         case 'luminance',
                             caption{1}=sprintf('signal %.3f',10^tTest);
                             caption{2}=sprintf('noise sd %.3f',o.noiseSD);
@@ -2167,9 +2207,9 @@ try
                     end
                     Screen('TextSize',window,saveSize);
                     Screen('TextFont',window,saveFont);
-                    if o.flipClick; Speak('before Flip dontclear 1800');GetClicks; end
+                    if o.flipClick; Speak(['before Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
                     Screen('Flip', window,0,1); % Save image for snapshot. Show target, instructions, and fixation.
-                    if o.flipClick; Speak('after Flip dontclear 1800');GetClicks; end
+                    if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
                     img=Screen('GetImage',window,cropRect);
                     %                         grayPixels=img==gray;
                     %                         img(grayPixels)=128;
@@ -2180,13 +2220,13 @@ try
                     if o.noiseFrozenInRun
                         freezing=[freezing '_frozenInRun'];
                     end
-                    switch o.signalKind
+                    switch o.targetModulates
                         case 'entropy'
-                            signalDescription=sprintf('%s_%dv%dlevels',o.signalKind,signalEntropyLevels,o.backgroundEntropyLevels);
+                            signalDescription=sprintf('%s_%dv%dlevels',o.targetModulates,signalEntropyLevels,o.backgroundEntropyLevels);
                         otherwise
-                            signalDescription=sprintf('%s',o.signalKind);
+                            signalDescription=sprintf('%s',o.targetModulates);
                     end
-                    switch o.signalKind
+                    switch o.targetModulates
                         case 'luminance',
                             filename=sprintf('%s_%s_%s%s_%.3fc_%.0fpix_%s',signalDescription,o.task,o.noiseType,freezing,10^tTest,checks,answerString);
                         case {'noise','entropy'},
@@ -2209,7 +2249,7 @@ try
                     filename=[filename '.png'];
                     imwrite(img,fullfile(mypath,filename),'png');
                     ffprintf(ff,'Saving image to file "%s" ',filename);
-                    switch o.signalKind
+                    switch o.targetModulates
                         case 'luminance',
                             ffprintf(ff,'log(contrast) %.2f\n',tTest);
                         case 'noise',
@@ -2235,9 +2275,9 @@ try
                         r=OffsetRect(r,targetOffsetPix,0);
                         Screen('FillRect',window,gray,r);
                     end
-                    if o.flipClick; Speak('before Flip dontclear 1665');GetClicks; end
+                    if o.flipClick; Speak(['before Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
                     Screen('Flip',window,signalOnset+o.durationSec-1/frameRate,1); % Duration is over. Erase target.
-                    if o.flipClick; Speak('after Flip dontclear 1665');GetClicks; end
+                    if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
                     signalOffset=GetSecs;
                     actualDuration=GetSecs-signalOnset;
                     if abs(actualDuration-o.durationSec)>0.05
@@ -2251,9 +2291,9 @@ try
                         WaitSecs(o.fixationCrossBlankedUntilSecsAfterTarget);
                     end
                     Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,black); % fixation
-                    if o.flipClick; Speak('before Flip dontclear 1681');GetClicks; end
+                    if o.flipClick; Speak(['before Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
                     Screen('Flip',window,signalOffset+0.3,1,1); % After o.fixationCrossBlankedUntilSecsAfterTarget, display new fixation.
-                    if o.flipClick; Speak('after Flip dontclear 1681');GetClicks; end
+                    if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
                 end
                 switch o.task
                     case '4afc',
@@ -2364,13 +2404,13 @@ try
         case 'contrast',
     end
     o.contrast=-10^o.questMean;
-    o.EOverN=10^(2*o.questMean)*E1/N;
+    o.EOverN=10^(2*o.questMean)*o.E1/N;
     o.efficiency = o.idealEOverNThreshold/o.EOverN;
-    o.E = 10^(2*o.questMean)*E1;
-    if streq(o.signalKind,'luminance')
-        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. ThresholddÂ±sd log(contrast) %.2fÂ±%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
+    o.E = 10^(2*o.questMean)*o.E1;
+    if streq(o.targetModulates,'luminance')
+        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold±sd log(contrast) %.2f±%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
     else
-        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. ThresholddÂ±sd log(r-1) %.2fÂ±%.2f, approx required n %.0f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
+        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold±sd log(r-1) %.2f±%.2f, approx required n %.0f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
     end
     if abs(trialsRight/trial-o.pThreshold)>0.1
         ffprintf(ff,'WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.\n');
@@ -2393,16 +2433,16 @@ try
 
     %     t=mean(tSample);
     %     tse=std(tSample)/sqrt(length(tSample));
-    %     switch o.signalKind
+    %     switch o.targetModulates
     %         case 'luminance',
-    %         ffprintf(ff,'SUMMARY: %s %d runs meanÂ±se: log(contrast) %.2fÂ±%.2f, contrast %.3f\n',o.observer,length(tSample),mean(tSample),tse,10^mean(tSample));
+    %         ffprintf(ff,'SUMMARY: %s %d runs mean±se: log(contrast) %.2f±%.2f, contrast %.3f\n',o.observer,length(tSample),mean(tSample),tse,10^mean(tSample));
     %         %         efficiency = (o.idealEOverNThreshold^2) / (10^(2*t));
     %         %         ffprintf(ff,'Efficiency = %f\n', efficiency);
-    %         %o.EOverN=10^mean(2*tSample)*E1/N;
-    %         ffprintf(ff,'Threshold log E/N %.2fÂ±%.2f, E/N %.1f\n',mean(log10(o.EOverN)),std(log10(o.EOverN))/sqrt(length(o.EOverN)),o.EOverN);
+    %         %o.EOverN=10^mean(2*tSample)*o.E1/N;
+    %         ffprintf(ff,'Threshold log E/N %.2f±%.2f, E/N %.1f\n',mean(log10(o.EOverN)),std(log10(o.EOverN))/sqrt(length(o.EOverN)),o.EOverN);
     %         %o.efficiency=o.idealEOverNThreshold/o.EOverN;
     %         ffprintf(ff,'User-provided ideal threshold E/N log E/N %.2f, E/N %.1f\n',log10(o.idealEOverNThreshold),o.idealEOverNThreshold);
-    %         ffprintf(ff,'Efficiency log %.2fÂ±%.2f, %.4f %%\n',mean(log10(o.efficiency)),std(log10(o.efficiency))/sqrt(length(o.efficiency)),100*10^mean(log10(o.efficiency)));
+    %         ffprintf(ff,'Efficiency log %.2f±%.2f, %.4f %%\n',mean(log10(o.efficiency)),std(log10(o.efficiency))/sqrt(length(o.efficiency)),100*10^mean(log10(o.efficiency)));
     %         corr=zeros(length(signal));
     %         for i=1:length(signal)
     %             for j=1:i
@@ -2424,7 +2464,7 @@ try
     %         %         logErr=log10(max(maxEst/estimatedIdealEOverN,estimatedIdealEOverN/minEst));
     %         ffprintf(ff,'Approximation, assuming pThreshold=0.64, predicts ideal threshold is about log E/N %.2f, E/N %.1f\n',log10(approximateIdealEOverN),approximateIdealEOverN);
     %         ffprintf(ff,'The approximation is Eq. A.24 of Pelli et al. (2006) Vision Research 46:4646-4674.\n');
-    switch o.signalKind
+    switch o.targetModulates
         case 'noise',
             t=o.questMean;
             o.r=10^t+1;
@@ -2432,14 +2472,14 @@ try
             o.logApproxRequiredNumber=log10(o.approxRequiredNumber);
             ffprintf(ff,'r %.3f, approx required number %.0f\n',o.r,o.approxRequiredNumber);
             %              logNse=std(logApproxRequiredNumber)/sqrt(length(tSample));
-            %              ffprintf(ff,'SUMMARY: %s %d runs meanÂ±se: log(r-1) %.2fÂ±%.2f, log(approx required n) %.2fÂ±%.2f\n',o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
+            %              ffprintf(ff,'SUMMARY: %s %d runs mean±se: log(r-1) %.2f±%.2f, log(approx required n) %.2f±%.2f\n',o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
        case 'entropy',
             t=o.questMean;
             o.r=10^t+1;
             signalEntropyLevels=o.r*o.backgroundEntropyLevels;
             ffprintf(ff,'Entropy levels: r %.2f, background levels %d, signal levels %.1f\n',o.r,o.backgroundEntropyLevels,signalEntropyLevels);
     end
-    switch o.signalKind
+    switch o.targetModulates
         case 'entropy'
             if ~isempty(o.psych)
                 ffprintf(ff,'t\tr\tlevels\tbits\tright\ttrials\t%%\n');
