@@ -214,7 +214,6 @@ o.flankerSpacingDeg=4;
 o.noiseSD=0.2; % Usually in the range 0 to 0.4. Typically 0.2.
 % o.noiseSD=0; % Usually in the range 0 to 0.4. Typically 0.2.
 o.annularNoiseSD=nan; % Typically nan (i.e. use o.noiseSD) or 0.2.
-o.noiseCheckDeg=0.2; % Typically 0.05 or 0.2.
 o.noiseCheckDeg=0.05; % Typically 0.05 or 0.2.
 o.noiseRadiusDeg=1; % When o.task=4afc, the program will set o.noiseRadiusDeg=o.targetHeightDeg/2;
 o.noiseEnvelopeSpaceConstantDeg=inf;
@@ -255,12 +254,11 @@ o.printGammaLoadings=0; % print a log of these calls.
 o.printSignalDuration=0; % print out actual duration of each trial.
 o.printCrossCorrelation=0;
 o.printLikelihood=0;
-o.checkGammaTableColor=1;
 o.assessLinearity=0;
 o.assessContrast=0; % diagnostic information
 o.assessLowLuminance=0;
 o.flipClick=0; % For debugging, speak and wait for click before and after each flip.
-o.isKbLegacy=1; % collect response via 1:ListenChar+GetChar; 0:KbCheck
+o.isKbLegacy=0; % collect response via 1:ListenChar+GetChar; 0:KbCheck
 assessGray=0; % For debugging. Diagnostic printout when we load gamma table.
 % o.observerQuadratic=-1.2; % estimated from old second harmonic data
 o.observerQuadratic=-0.7; % adjusted to fit noise letter data.
@@ -433,6 +431,13 @@ o.noiseCheckDeg=o.noiseCheckPix/o.pixPerDeg;
 BackupCluts(o.screen);
 LMean=(max(cal.old.L)+min(cal.old.L))/2;
 o.maxLRange=2*min(max(cal.old.L)-LMean,LMean-min(cal.old.L));
+if IsOSX
+    firstGrayClutEntry=10; % Used to be 2, but now need 10 in Mac OSX 10.11.1
+    lastGrayClutEntry=254;
+else
+    firstGrayCLUTEntry=2;
+    lastGrayClutEntry=254;
+end
 if o.isWin
     LRange=o.maxLRange;
     o.minLRange=inf;
@@ -440,8 +445,8 @@ if o.isWin
         try
             cal.LFirst=LMean-LRange/2;
             cal.LLast=LMean+LRange/2;
-            cal.nFirst=2;
-            cal.nLast=254;
+            cal.nFirst=firstGrayClutEntry;
+            cal.nLast=lastGrayClutEntry;
             cal=LinearizeClut(cal);
             cal.gamma(2,:)=0.5*(cal.gamma(1,:)+cal.gamma(3,:)); % for Windows
             assert(all(all(diff(cal.gamma)>=0))); % monotonic for Windows
@@ -684,7 +689,7 @@ try
         assert(all(r==screenRect));
         if o.flipClick; Speak(['after OpenWindow ' num2str(MFileLineNr)]);GetClicks; end
         if exist('cal')
-            gray=mean([2 254]);  % Will be a CLUT color code for gray.
+            gray=mean([firstGrayClutEntry lastGrayClutEntry]);  % Will be a CLUT color code for gray.
             LMin=min(cal.old.L);
             LMax=max(cal.old.L);
             LMean=mean([LMin,LMax]); % Desired background luminance.
@@ -693,8 +698,8 @@ try
             end
             cal.LFirst=LMin;
             cal.LLast=LMean+(LMean-LMin); % Symmetric about LMean.
-            cal.nFirst=2;
-            cal.nLast=254;
+            cal.nFirst=firstGrayClutEntry;
+            cal.nLast=lastGrayClutEntry;
             cal=LinearizeClut(cal);
             if o.isWin
                 % Windows insists on a monotonic CLUT. So we linearize
@@ -702,9 +707,11 @@ try
                 % gray. We spare entries 0 and 255, which are used by the
                 % OS for black and white. Thus any screens using only those
                 % colors won't be affected by our clut changes. We don't
-                % explicitly use clut entry 1. The range 2 to 254 is odd in
-                % length so it will have a middle entry, which we use for a
-                % stable gray, across trials.
+                % explicitly use clut entry 1. Both firstGrayClutEntry and
+                % lastGrayClutEntry are even, so the range
+                % firstGrayClutEntry to lastGrayClutEntry is odd in length,
+                % so it will have a middle entry, which we use for a stable
+                % gray, across trials.
                 gray1=gray;
                 % We don't use entry 1, but Windows insists on a monotonic
                 % clut. Set entry 1 to be average of entries 0 and 2.
@@ -716,10 +723,15 @@ try
                 % having gray1==1 is that we get better blending of letters
                 % written (as black=0) on that background.
                 gray1=1;
-                cal.LFirst=LMean;
-                cal.LLast=LMean;
-                cal.nFirst=gray1;
-                cal.nLast=gray1;
+                if IsOSX
+                    cal.LFirst=LMean*1.17; % Correct for OSX 10.11.1 bug
+                    cal.LLast=LMean*1.17; % Correct for OSX 10.11.1 bug
+                else
+                    cal.LFirst=LMean;
+                    cal.LLast=LMean;
+                end
+                cal.nFirst=firstGrayClutEntry-1; % Ought to be 1, but need 9 in Mac OSX 10.11.1
+                cal.nLast=firstGrayClutEntry-1; % Ought to be 1, but need 9 in Mac OSX 10.11.1
                 cal=LinearizeClut(cal);
             end %if o.isWin
             if o.printGammaLoadings; fprintf('LoadNormalizedGammaTable %d; LRange/Lmean=%.2f\n',MFileLineNr,(cal.LLast-LMean)/LMean); end
@@ -738,7 +750,7 @@ try
         end
         black = BlackIndex(window);  % Retrieves the CLUT color code for black.
         white = WhiteIndex(window);  % Retrieves the CLUT color code for white.
-        gray=mean([2 254]);  % Will be a CLUT color code for gray.
+        gray=mean([firstGrayClutEntry lastGrayClutEntry]);  % Will be a CLUT color code for gray.
         Screen('FillRect',window,gray1);
         Screen('FillRect',window,gray,o.stimulusRect);
         if o.flipClick; Speak(['before Flip ' num2str(MFileLineNr)]);GetClicks; end
@@ -1734,8 +1746,8 @@ try
                     LRange=min(LRange,o.maxLRange);
                     cal.LFirst=LMean-LRange/2;
                     cal.LLast=LMean+LRange/2;
-                    cal.nFirst=2;
-                    cal.nLast=254;
+                    cal.nFirst=firstGrayClutEntry;
+                    cal.nLast=lastGrayClutEntry;
                     if o.saveSnapshot
                         cal.LFirst=min(cal.old.L);
                         cal.LLast=max(cal.old.L);
@@ -1799,8 +1811,8 @@ try
                     LMean=(LMax+LMin)/2;
                     cal.LFirst=LMin;
                     cal.LLast=LMean+(LMean-LMin); % Symmetric about LMean.
-                    cal.nFirst=2;
-                    cal.nLast=254;
+                    cal.nFirst=firstGrayClutEntry;
+                    cal.nLast=lastGrayClutEntry;
                     cal=LinearizeClut(cal);
                     img=cal.nFirst:cal.nLast;
                     n=floor(RectWidth(screenRect)/length(img));
