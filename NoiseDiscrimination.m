@@ -3,9 +3,9 @@ addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder i
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this file
 % addpath('AutoBrightness');
 % addpath('lib');
-%Priority(1);
-%echo_executing_commands(2, 'local');
-%diary ./diary.log
+% Priority(1);
+% echo_executing_commands(2, 'local');
+% diary ./diary.log
 % o=NoiseDiscrimination(o);
 % Pass all your parameters in the "o" struct, which will be returned with
 % all the results as additional fields. NoiseDiscrimination may adjust some
