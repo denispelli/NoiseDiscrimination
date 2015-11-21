@@ -7,10 +7,21 @@ o.observer='hyiltiz'; % insert your name here
 o.distanceCm=50; % viewing distance
 o.durationSec=0.2;
 o.trialsPerRun=80;
-o.targetHeightDeg=6; % letter or gabor size [2 3.5 6];
+% o.targetHeightDeg=6; % OLD: letter or gabor size [2 3.5 6];
+o.targetHeightDeg=8; % letter or gabor size [2 4 8]. Later add size 16 deg at [0 32] ecc.
+% Later add sizes [0.5 1] at the fovea.
 o.eccentricityDeg=0; % eccentricity [0 32]
 o.noiseSD=0.16; % noise contrast [0 0.16]
+% Initial question is to compare efficiency of 8 deg letter at 0 ecc. in
+% max noise contrast with these two check sizes.
+o.noiseCheckDeg=o.targetHeightDeg/10; % Currently choosing between 10 & 20.
+o.noiseCheckDeg=o.targetHeightDeg/20; % " "
 %##########################################################
+
+% o.targetGaborOrientationsDeg=[0 90]; % Orientations relative to vertical.
+% o.targetGaborNames='VH'; % Observer types V for vertical or H for horizontal.
+o.targetGaborOrientationsDeg=[0 30 60 90]; % Orientations relative to vertical.
+o.targetGaborNames='0369'; % Observer types 0 for 0 deg, 3 for 30 deg, 6 for 60 deg, or 9 for 90 deg.
 
 %## Fixed values, for all current testing. Do not adjust. #
 % Gaussian noise envelope (soft cut off)
@@ -31,12 +42,7 @@ o.targetKind='gabor'; % one cycle within targetSize
 o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
 o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
 o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
-% o.targetGaborOrientationsDeg=[0 90]; % Orientations relative to vertical.
-% o.targetGaborNames='VH'; % Observer types V for vertical or H for horizontal.
-o.targetGaborOrientationsDeg=[0 30 60 90]; % Orientations relative to vertical.
-o.targetGaborNames='0369'; % Observer types 0 for 0 deg, 3 for 30 deg, 6 for 60 deg, or 9 for 90 deg.
 % o.useFractionOfScreen=0.5; % Normally 0, or 0.5 for debugging.
-o.noiseCheckDeg=o.targetHeightDeg/20;
 o.task='identify';
 o.targetModulates='luminance'; % Display a luminance decrement.
 % o.isWin=0; % use the Windows code even if we're on a Mac
