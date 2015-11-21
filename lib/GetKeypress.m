@@ -1,6 +1,8 @@
 function response = GetKeypress(isKbLegacy)
 % Wait for keypress, and return the lowercase character, e.g. 'a' or '4',
-% or key name, e.g. 'left_shift'.
+% or key name, e.g. 'left_shift'. We do not distinguish between pressing a
+% number key on the main or separate numeric keyboard; we just return the
+% one-digit number as a character.
 %
 % Originally called "checkResponse" written by Hörmet Yiltiz, October 2015.
 % Renamed "GetKeypress" by Denis Pelli, November 2015.
@@ -23,9 +25,9 @@ function response = GetKeypress(isKbLegacy)
         %disp(sprintf('0:==>%s<==', response));
         
         % KbName, used by checkResponse, returns 2 characters, e.g. '0)',
-        % when you press a number key. So we use only the first character
-        % of the string returned by checkResponse. This ignores the state
-        % of the shift key, assuming no shift. We intentionally do not
+        % when you press a number key on the main keyboard. So when KbName
+        % returns two characters, we use only the first. This ignores the
+        % state of the shift key, assuming no shift. Thus we do not
         % distinguish between a number key on a number pad and a number key
         % on the main keyboard.
         if length(response)==2
