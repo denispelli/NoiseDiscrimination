@@ -1,32 +1,32 @@
-%#### Adjust values within this block #####################
 clear o
+
+%#### Adjust values within this block #####################
 % o.observer='junk';
 % o.observer='ideal';
-o.observer='hyiltiz'; %add your name here
+o.observer='hyiltiz'; % insert your name here
 o.distanceCm=50; % viewing distance
 o.durationSec=0.2;
 o.trialsPerRun=80;
+o.targetHeightDeg=6; % letter or gabor size [2 3.5 6];
+o.eccentricityDeg=0; % eccentricity [0 32]
+o.noiseSD=0.16; % noise contrast [0 0.16]
+%##########################################################
 
-%For Gaussian envelope (soft)
-%o.noiseRadiusDeg=inf;
-%noiseEnvelopeSpaceConstantDeg: 1
+%## Fixed values, for all current testing. Do not adjust. #
+% Gaussian noise envelope (soft cut off)
+% o.noiseRadiusDeg=inf;
+% noiseEnvelopeSpaceConstantDeg: 1
 
-%For tophat (sharp cut off beyond disk with radius 1)
-%o.noiseRadiusDeg=1;
-%noiseEnvelopeSpaceConstantDeg: Inf
-
-o.noiseRadiusDeg=inf; % change this to manipulate noise decay radius [1,1.7,3,5.2,9,Inf]
+% Tophat noise envelope (sharp cut off)
 o.noiseEnvelopeSpaceConstantDeg=Inf; % always Inf for hard edge
-
-o.targetHeightDeg=6; %letter size [2,3.5,6];
-o.eccentricityDeg=0; % eccentricity [0,32]
-o.noiseSD=0.16; %noise contrast [0.16]
+% o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
+o.noiseRadiusDeg=inf; 
 
 o.noiseType='gaussian'; % ALWAYS use gaussian
 o.noiseSpectrum='white'; % pink or white
 o.targetCross=1;
 o.fixationCrossWeightDeg = 0.05; % target line thickness
-
+% o.targetKind='letter';
 o.targetKind='gabor'; % one cycle within targetSize
 o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
 o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
@@ -35,10 +35,6 @@ o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
 % o.targetGaborNames='VH'; % Observer types V for vertical or H for horizontal.
 o.targetGaborOrientationsDeg=[0 30 60 90]; % Orientations relative to vertical.
 o.targetGaborNames='0369'; % Observer types 0 for 0 deg, 3 for 30 deg, 6 for 60 deg, or 9 for 90 deg.
-%##################################################################
-
-
-%## Fixed values, for all current testing. Do not adjust. #######################################
 % o.useFractionOfScreen=0.5; % Normally 0, or 0.5 for debugging.
 o.noiseCheckDeg=o.targetHeightDeg/20;
 o.task='identify';
