@@ -2312,7 +2312,7 @@ try
                         response=0;
                         while ~ismember(response,1:o.alternatives)
                             o.runAborted=0;
-                            response = checkResponse(o.isKbLegacy);
+                            response = GetKeypress(o.isKbLegacy);
                             %disp(sprintf('2:==>%s<==', response));
                             if response=='.'
                                 ffprintf(ff,'*** ''%c'' response. Run terminated.\n',response);
@@ -2321,7 +2321,7 @@ try
                                 trial=trial-1;
                                 break;
                             end
-                            [ok,response]=ismember(upper(response),o.alphabet);
+                            [ok,response]=ismember(upper(response),o.alphabet);  
                             if ~ok
                                 Speak('Try again. Type period to quit.');
                             end
@@ -2493,7 +2493,7 @@ try
         Speak('Please type period to skip the rest and quit now, or space to continue with next run.');
         response=0;
         while 1
-            response = checkResponse(o.isKbLegacy);
+            response = GetKeypress(o.isKbLegacy);
             switch response
                 case '.',
                     ffprintf(ff,'*** ''.'' response. Quitting now.\n');
