@@ -12,10 +12,13 @@ o.targetHeightDeg=8; % letter or gabor size [2 4 8]. Later add size 16 deg at [0
 % Later add sizes [0.5 1] at the fovea.
 o.eccentricityDeg=0; % eccentricity [0 32]
 o.noiseSD=0.16; % noise contrast [0 0.16]
-% Initial question is to compare efficiency of 8 deg letter at 0 ecc. in
+o.noiseSD=0; % noise contrast [0 0.16]
+% Initial question is to compare threshold of 8 deg letter at 0 ecc. in
 % max noise contrast with these two check sizes.
+o.noiseCheckDeg=0; % Smallest possible, no jaggies.
 o.noiseCheckDeg=o.targetHeightDeg/10; % Currently choosing between 10 & 20.
-o.noiseCheckDeg=o.targetHeightDeg/20; % " "
+% o.targetKind='letter';
+o.targetKind='gabor'; % a grating patch
 %##########################################################
 
 % o.targetGaborOrientationsDeg=[0 90]; % Orientations relative to vertical.
@@ -24,11 +27,11 @@ o.targetGaborOrientationsDeg=[0 30 60 90]; % Orientations relative to vertical.
 o.targetGaborNames='0369'; % Observer types 0 for 0 deg, 3 for 30 deg, 6 for 60 deg, or 9 for 90 deg.
 
 %## Fixed values, for all current testing. Do not adjust. #
-% Gaussian noise envelope (soft cut off)
+% Gaussian noise envelope: soft cut off
 % o.noiseRadiusDeg=inf;
 % noiseEnvelopeSpaceConstantDeg: 1
 
-% Tophat noise envelope (sharp cut off)
+% Top-hat noise envelope: sharp cut off
 o.noiseEnvelopeSpaceConstantDeg=Inf; % always Inf for hard edge
 % o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
 o.noiseRadiusDeg=inf; 
@@ -37,12 +40,9 @@ o.noiseType='gaussian'; % ALWAYS use gaussian
 o.noiseSpectrum='white'; % pink or white
 o.targetCross=1;
 o.fixationCrossWeightDeg = 0.05; % target line thickness
-% o.targetKind='letter';
-o.targetKind='gabor'; % one cycle within targetSize
-o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
+o.targetGaborPhaseDeg=90; % Phase offset of sinewave in deg at center of gabor.
 o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
 o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
-% o.useFractionOfScreen=0.5; % Normally 0, or 0.5 for debugging.
 o.task='identify';
 o.targetModulates='luminance'; % Display a luminance decrement.
 % o.isWin=0; % use the Windows code even if we're on a Mac
@@ -55,10 +55,10 @@ o.targetModulates='luminance'; % Display a luminance decrement.
 % o.snapshotCaptionTextSizeDeg=0.5;
 % o.snapshotShowsFixationBefore=1;
 % o.snapshotShowsFixationAfter=0;
-% o.useFractionOfScreen=0.2; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 % o.fixationCrossWeightDeg=0.05; % target line thickness
 o.speakInstructions=0;
-o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar() (Linux compatibility)
+o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar, for Linux compatibility.
+% o.useFractionOfScreen=0.3; % 0: normal, 0.5: small for debugging.
 o=NoiseDiscrimination(o);
 sca;
 
