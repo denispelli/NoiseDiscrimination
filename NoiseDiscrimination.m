@@ -526,13 +526,27 @@ o.yellowAnnulusBigRadiusDeg=max(o.yellowAnnulusBigRadiusDeg,0);
 o.yellowAnnulusBigRadiusDeg=min(o.yellowAnnulusBigRadiusDeg,RectWidth(screenRect)/o.pixPerDeg);
 o.yellowAnnulusSmallRadiusDeg=min(o.yellowAnnulusSmallRadiusDeg,RectWidth(screenRect)/o.pixPerDeg);
 o.yellowAnnulusBigRadiusDeg=max(o.yellowAnnulusBigRadiusDeg,o.yellowAnnulusSmallRadiusDeg);
-
+if ~isfield(o,'blankingRadiusReTargetHeight')
+    switch o.targetKind
+        case 'letter';
+            o.blankingRadiusReTargetHeight=1.5; % Make blanking radius 1.5 times
+            %                                       % target height. That's a good
+            %                                       % value for letters, which are
+            %                                       % strong right up to the edge of
+            %                                       % the target height. 
+        case 'gabor';
+            o.blankingRadiusReTargetHeight=0.5; % Make blanking radius 0.5 times
+            %                                       % target height. That's good for gabors,
+            %                                       % which are greatly diminished
+            %                                       % at their edge.
+    end
+end
 fixationCrossPix=round(o.fixationCrossDeg*o.pixPerDeg);
 fixationCrossWeightPix=round(o.fixationCrossWeightDeg*o.pixPerDeg);
 fixationCrossWeightPix=max(1,fixationCrossWeightPix);
 o.fixationCrossWeightDeg=fixationCrossWeightPix/o.pixPerDeg;
-maxOnscreenFixationOffsetPix=round(RectWidth(o.stimulusRect)/2-20*fixationCrossWeightPix); % allowable fixation offset, with 20 linewidth margin.
-maxTargetOffsetPix=RectWidth(o.stimulusRect)/2-o.targetHeightPix/2; % allowable target offset for eccentric viewing.
+maxOnscreenFixationOffsetPix=round(RectWidth(o.stimulusRect)/2-20*fixationCrossWeightPix); % max possible fixation offset, with 20 linewidth margin.
+maxTargetOffsetPix=RectWidth(o.stimulusRect)/2-o.targetHeightPix/2; % max possible target offset for eccentric viewing.
 if o.useFlankers
     maxTargetOffsetPix=maxTargetOffsetPix-o.flankerSpacingDeg*o.pixPerDeg;
 end
@@ -915,17 +929,18 @@ try
         ffprintf(ff,'Adding four flankers at center spacing of %.0f pix = %.1f deg = %.1fx letter height. Dark contrast %.3f (nan means same as target).\n',flankerSpacingPix,flankerSpacingPix/o.pixPerDeg,flankerSpacingPix/o.targetHeightPix,o.flankerContrast);
     end
     [x,y]=RectCenter(o.stimulusRect);
-    if isfinite(o.eccentricityDeg)
-        fix.targetCross=o.targetCross;
-        fix.x=x+targetOffsetPix-eccentricityPix; % x location of fixation
-        fix.y=y; % y location of fixation
-        fix.eccentricityPix=eccentricityPix;
-        fix.clipRect=o.stimulusRect;
-        fix.fixationCrossPix=fixationCrossPix;
-        fix.fixationCrossBlankedNearTarget=o.fixationCrossBlankedNearTarget;
-        fix.targetHeightPix=o.targetHeightPix;
-        fixationLines=ComputeFixationLines(fix);
-    end
+%     if isfinite(o.eccentricityDeg)
+fix.blankingRadiusReTargetHeight=o.blankingRadiusReTargetHeight;
+fix.targetCross=o.targetCross;
+fix.x=x+targetOffsetPix-eccentricityPix; % x location of fixation
+fix.y=y; % y location of fixation
+fix.eccentricityPix=eccentricityPix;
+fix.clipRect=o.stimulusRect;
+fix.fixationCrossPix=fixationCrossPix;
+fix.fixationCrossBlankedNearTarget=o.fixationCrossBlankedNearTarget;
+fix.targetHeightPix=o.targetHeightPix;
+fixationLines=ComputeFixationLines(fix);
+%     end
     if window~=-1 && ~isempty(fixationLines)
         Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,black); % fixation
     end
