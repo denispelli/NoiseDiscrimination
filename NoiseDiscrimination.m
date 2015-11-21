@@ -69,8 +69,8 @@ addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same dire
 % intermediate pixel values which were all darker than the background gray.
 % I fixed this by making the background be 128. Thus the background is
 % always gray LMean, but it's produced by a color index of 128 inside
-% stimulusRect, and a color index of 1 outside it. This is easily drawn by
-% calling FillRect with 1 for the whole screen, and again with 128 for the
+% stimulusRect, and a color index of 1 outside it. This is drawn by calling
+% FillRect with 1 for the whole screen, and again with 128 for the
 % stimulusRect.
 
 % MIRRORING. PutImage does not respect mirroring. Mario Kleiner, July 13,
