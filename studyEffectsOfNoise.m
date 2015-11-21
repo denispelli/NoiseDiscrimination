@@ -1,12 +1,11 @@
-  clear o
+%#### Adjust values within this block #####################
+clear o
 % o.observer='junk';
 % o.observer='ideal';
-
-
-%#### Adjust values within this block of code #####################
 o.observer='hyiltiz'; %add your name here
 o.distanceCm=50; % viewing distance
 o.durationSec=0.2;
+o.trialsPerRun=80;
 
 %For Gaussian envelope (soft)
 %o.noiseRadiusDeg=inf;
@@ -28,26 +27,23 @@ o.noiseSpectrum='white'; % pink or white
 o.targetCross=1;
 o.fixationCrossWeightDeg = 0.05; % target line thickness
 
-
+o.targetKind='gabor'; % one cycle within targetSize
 o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
 o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
 o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
-o.targetGaborOrientationsDeg=[0 90]; % Orientations relative to vertical.
-
+% o.targetGaborOrientationsDeg=[0 90]; % Orientations relative to vertical.
+% o.targetGaborNames='VH'; % Observer types V for vertical or H for horizontal.
+o.targetGaborOrientationsDeg=[0 30 60 90]; % Orientations relative to vertical.
+o.targetGaborNames='0369'; % Observer types 0 for 0 deg, 3 for 30 deg, 6 for 60 deg, or 9 for 90 deg.
 %##################################################################
 
 
-%#########################################
-o.noiseCheckDeg=o.targetHeightDeg/10;
-% o.isWin=0; % use the Windows code even if we're on a Mac
-o.targetKind='gabor';
-% o.targetKind='gabor'; % one cycle within targetSize
-o.targetGaborNames='VH';
+%## Fixed values, for all current testing. Do not adjust. #######################################
+% o.useFractionOfScreen=0.5; % Normally 0, or 0.5 for debugging.
+o.noiseCheckDeg=o.targetHeightDeg/20;
 o.task='identify';
-% o.targetModulates='noise';  % Display a noise increment.
 o.targetModulates='luminance'; % Display a luminance decrement.
-% o.targetModulates='entropy'; % Display an entropy increment.
-
+% o.isWin=0; % use the Windows code even if we're on a Mac
 % o.noiseRaisedCosineEdgeThicknessDeg=0; % midpoint of raised cosine is at o.noiseRadiusDeg.
 % o.durationSec=inf; % Typically 0.2 or inf (wait indefinitely for response).
 % o.tGuess=log10(0.2); % Optionally tell Quest the initial log contrast on first trial.
@@ -61,7 +57,6 @@ o.targetModulates='luminance'; % Display a luminance decrement.
 % o.fixationCrossWeightDeg=0.05; % target line thickness
 o.speakInstructions=0;
 o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar() (Linux compatibility)
-o.trialsPerRun=3000;
 o=NoiseDiscrimination(o);
 sca;
 
