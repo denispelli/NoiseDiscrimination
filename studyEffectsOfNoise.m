@@ -1,6 +1,5 @@
-clear o
-
 %#### Adjust values within this block #####################
+clear o
 % o.observer='junk';
 % o.observer='ideal';
 o.observer='hyiltiz'; % insert your name here
@@ -14,9 +13,8 @@ o.eccentricityDeg=0; % eccentricity [0 32]
 o.noiseSD=0.16; % noise contrast [0 0.16]
 o.noiseSD=0; % noise contrast [0 0.16]
 % Initial question is to compare threshold of 8 deg letter at 0 ecc. in
-% max noise contrast with these two check sizes.
-o.noiseCheckDeg=0; % Smallest possible, no jaggies.
-o.noiseCheckDeg=o.targetHeightDeg/10; % Currently choosing between 10 & 20.
+% zero and max noise contrast with these three check sizes.
+o.noiseCheckDeg=o.targetHeightDeg/10; % Try [10 20 inf]. Note: 1/inf=0.
 % o.targetKind='letter';
 o.targetKind='gabor'; % a grating patch
 %##########################################################
