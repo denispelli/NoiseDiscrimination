@@ -158,6 +158,7 @@ end
 o=[];
 % THESE STATEMENTS PROVIDE DEFAULT VALUES FOR ALL THE "o" parameters.
 % They are overridden by what you provide in the argument struct oIn.
+o.EnableCLUTMapping=1;
 o.testBitDepth=0;
 o.useFractionOfScreen=0; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 o.distanceCm=50; % viewing distance
@@ -400,12 +401,13 @@ if cal.screen>0
     fprintf('Using external monitor.\n');
 end
 cal=OurScreenCalibrations(cal.screen);
+
 o.cal=cal;
 if ~isfield(cal,'old') || ~isfield(cal.old,'L')
     fprintf('This screen has not yet been calibrated. Please use CalibrateScreenLuminance to calibrate it.\n');
     error('This screen has not yet been calibrated. Please use CalibrateScreenLuminance to calibrate it.\n');
 end
-screenRect=Screen('Rect',cal.screen,1); % screeb rect in UseRetinaResolution mode
+screenRect=Screen('Rect',cal.screen,1); % screen rect in UseRetinaResolution mode
 if o.useFractionOfScreen
     screenRect=round(o.useFractionOfScreen*screenRect);
 end
@@ -694,7 +696,11 @@ try
             if cal.hiDPIMultiple~=1
                 PsychImaging('AddTask','General','UseRetinaResolution');
             end
-%             PsychImaging('AddTask','AllViews','EnableCLUTMapping'); % may not be needed
+            if o.EnableCLUTMapping
+                % Mario says this is the ONLY way to get reasonable color
+                % mapping behavior.
+                PsychImaging('AddTask','AllViews','EnableCLUTMapping');
+            end
             if ~o.useFractionOfScreen
                 [window,r]=PsychImaging('OpenWindow',cal.screen,255);
             else
@@ -704,7 +710,16 @@ try
         else
             [window,r]=Screen('OpenWindow',cal.screen,255,screenRect);
         end
+        if o.EnableCLUTMapping
+            gamma=Screen('ReadNormalizedGammaTable',window);
+            gamma=interp1(gamma,1:(size(gamma,1)-1)/255:size(gamma,1),'pchip'); % Down sample to 256.
+            % PsychImaging EnableCLUTMapping does not initialize the color
+            % table, so we do it here.
+            Screen('LoadNormalizedGammaTable',window,gamma,2);
+            Screen('Flip',window);
+        end
         assert(all(r==screenRect));
+        
         if o.flipClick; Speak(['after OpenWindow ' num2str(MFileLineNr)]);GetClicks; end
         if exist('cal')
             gray=mean([2 254]);  % Will be a CLUT color code for gray.
