@@ -343,6 +343,15 @@ if streq(o.targetKind,'gabor')
     o.alternatives=length(o.targetGaborOrientationsDeg);
     o.alphabet=o.targetGaborNames(1:o.alternatives);
 end
+if ~isfield(o,'labelAlternatives')
+    switch o.targetKind
+        case 'gabor'
+            o.labelAlternatives=1;
+        case 'letter'
+            o.labelAlternatives=0;
+            
+    end
+end
 o.beginningTime=now;
 t=datevec(o.beginningTime);
 stack=dbstack;
@@ -2080,14 +2089,18 @@ fixationLines=ComputeFixationLines(fix);
                                     img=signal(i).image;
                                     % If the imresize function (in Image
                                     % Processing Toolbox) is not available
-                                    % we don't need it, because the image
-                                    % resizing can be done by the
-                                    % DrawTexture command below.
+                                    % the image resizing will then be done
+                                    % by the DrawTexture command below.
                                 end
                             end
                             texture=Screen('MakeTexture',window,(1-img)*gray);
                             Screen('DrawTexture',window,texture,RectOfMatrix(img),rect);
                             Screen('Close',texture);
+                            if o.labelAlternatives
+                                Screen('TextSize',window,textSize);
+                                textRect=AlignRect([0 0 textSize textSize],rect,'center','top');
+                                Screen('DrawText',window,o.alphabet(i),textRect(1),textRect(4),black,gray1,1);
+                            end
                             rect=OffsetRect(rect,step(1),step(2));
                         end
                         leftEdgeOfResponse=rect(1);
