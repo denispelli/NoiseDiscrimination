@@ -13,14 +13,10 @@ o.trialsPerRun=80;
 % o.targetHeightDeg=6; % OLD: letter or gabor size [2 3.5 6];
 o.targetHeightDeg=8; % letter/gabor size [2 4 8].
 o.eccentricityDeg=0; % eccentricity [0 16 32]
+o.noiseSD=0.16; % noise contrast [0 0.16]
 % We want to compare these:
-if 0
-    o.noiseSD=0.16; % noise contrast [0 0.16]
-    o.noiseCheckDeg=o.targetHeightDeg/20; % Try [10 20 inf]. Note: 1/inf=0.
-else
-    o.noiseSD=0.08;
-    o.noiseCheckDeg=o.targetHeightDeg/10;
-end
+    o.noiseCheckDeg=o.targetHeightDeg/20; 
+    o.noiseCheckDeg=o.targetHeightDeg/40;
 % #########################################################
 
 % ############# We plan to test these soon #######
