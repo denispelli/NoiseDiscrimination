@@ -11,13 +11,18 @@ o.targetHeightDeg=8; % letter/gabor size [2 4 8].
 % Also size 16 at [0 32] ecc. Also sizes [0.5 1] at 0 deg.
 o.eccentricityDeg=0; % eccentricity [0 32]
 o.noiseSD=0.16; % noise contrast [0 0.16]
-o.noiseSD=0; % noise contrast [0 0.16]
+% o.noiseSD=0; % noise contrast [0 0.16]
 % Initial question is to compare threshold of 8 deg letter at 0 ecc. in
 % zero and max noise contrast with these three check sizes.
-o.noiseCheckDeg=o.targetHeightDeg/10; % Try [10 20 inf]. Note: 1/inf=0.
+o.noiseCheckDeg=o.targetHeightDeg/inf; % Try [10 20 inf]. Note: 1/inf=0.
 % o.targetKind='letter';
 o.targetKind='gabor'; % a grating patch
+% These two sets of orientation produce the same gabors, they differ only
+% in the order in which they appear on the response screen. The first set
+% begins at 0 vertical. The second set begins at horizontal. Use whichever
+% you prefer.
 o.targetGaborOrientationsDeg=[0 30 60 90 120 150]; % Orientations relative to vertical.
+o.targetGaborOrientationsDeg=[-90 -60 -30 0 30 60]; % Orientations relative to vertical.
 o.targetGaborNames='123456'; % Observer types 1 for 0 deg, 2 for 30 deg, etc.
 %##########################################################
 
