@@ -2,7 +2,7 @@
 clear o
 % o.observer='junk';
 o.observer='ideal';
-% o.observer='h?rmet'; % use your name
+% o.observer='hormet'; % use your name
 % o.observer='xiuyun'; % use your name
 % o.observer='shivam'; % use your name
 o.distanceCm=50; % viewing distance
@@ -12,15 +12,22 @@ o.trialsPerRun=80;
 % ############# we test target size x ecc w/o noise #######
 % o.targetHeightDeg=6; % OLD: letter or gabor size [2 3.5 6];
 o.targetHeightDeg=8; % letter/gabor size [2 4 8].
-% Also size 16 at [0 32] ecc. Also sizes [0.5 1] at 0 deg ecc. Also size 1 at 16 ecc.
 o.eccentricityDeg=0; % eccentricity [0 16 32]
-o.noiseSD=0.16; % noise contrast [0 0.16]
+% We want to compare these:
+if 0
+    o.noiseSD=0.16; % noise contrast [0 0.16]
+    o.noiseCheckDeg=o.targetHeightDeg/20; % Try [10 20 inf]. Note: 1/inf=0.
+else
+    o.noiseSD=0.08;
+    o.noiseCheckDeg=o.targetHeightDeg/10;
+end
 % #########################################################
 
+% ############# We plan to test these soon #######
+% Also size 16 at [0 32] ecc. Also sizes [0.5 1] at 0 deg ecc. Also size 1 at 16 ecc.
+% #########################################################
 
 % ############## Below is constant for this week ##########
-o.noiseCheckDeg=o.targetHeightDeg/inf; % Try [10 20 inf]. Note: 1/inf=0.
-o.noiseCheckDeg=o.targetHeightDeg/20; % Xiuyun's pretest indicated 20 is more comparable to letters threshold
 % o.targetKind='letter';
 o.targetKind='gabor'; % a grating patch
 % These two sets of orientation produce the same gabors, they differ only
