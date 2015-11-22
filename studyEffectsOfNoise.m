@@ -1,11 +1,13 @@
 %#### Adjust values within this block #####################
 clear o
 % o.observer='junk';
-% o.observer='ideal';
-o.observer='hyiltiz'; % insert your name here
+o.observer='ideal';
+% o.observer='hörmet'; % use your name 
+% o.observer='xiuyun'; % use your name 
+% o.observer='shivam'; % use your name 
 o.distanceCm=50; % viewing distance
 o.durationSec=0.2;
-o.trialsPerRun=80;
+o.trialsPerRun=100;
 % o.targetHeightDeg=6; % OLD: letter or gabor size [2 3.5 6];
 o.targetHeightDeg=8; % letter/gabor size [2 4 8]. 
 % Also size 16 at [0 32] ecc. Also sizes [0.5 1] at 0 deg.
