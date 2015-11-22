@@ -1566,7 +1566,7 @@ fixationLines=ComputeFixationLines(fix);
                             case 'luminance',
                                 for i=1:o.alternatives
                                     im=zeros(size(signal(i).image));
-                                    im(:)=location(1).image(signalImageIndex);
+                                    im(:)=location(1).image(signalImageIndex); % here be the signal
                                     d=im-1-o.contrast*signal(i).image;
                                     likely(i)=-sum(d(:).^2);
                                 end

@@ -6,15 +6,19 @@ o.observer='hyiltiz'; % insert your name here
 o.distanceCm=50; % viewing distance
 o.durationSec=0.2;
 o.trialsPerRun=80;
+
+% ############# we test target size x ecc w/o noise #######
 % o.targetHeightDeg=6; % OLD: letter or gabor size [2 3.5 6];
-o.targetHeightDeg=8; % letter/gabor size [2 4 8]. 
-% Also size 16 at [0 32] ecc. Also sizes [0.5 1] at 0 deg.
-o.eccentricityDeg=0; % eccentricity [0 32]
+o.targetHeightDeg=8; % letter/gabor size [2 4 8].
+% Also size 16 at [0 32] ecc. Also sizes [0.5 1] at 0 deg ecc. Also size 1 at 16 ecc.
+o.eccentricityDeg=0; % eccentricity [0 16 32]
 o.noiseSD=0.16; % noise contrast [0 0.16]
-% o.noiseSD=0; % noise contrast [0 0.16]
-% Initial question is to compare threshold of 8 deg letter at 0 ecc. in
-% zero and max noise contrast with these three check sizes.
+% #########################################################
+
+
+% ############## Below is constant for this week ##########
 o.noiseCheckDeg=o.targetHeightDeg/inf; % Try [10 20 inf]. Note: 1/inf=0.
+o.noiseCheckDeg=o.targetHeightDeg/20; % Xiuyun's pretest indicated 20 is more comparable to letters threshold
 % o.targetKind='letter';
 o.targetKind='gabor'; % a grating patch
 % These two sets of orientation produce the same gabors, they differ only
@@ -37,7 +41,7 @@ o.targetGaborNames='123456'; % Observer types 1 for 0 deg, 2 for 30 deg, etc.
 % Top-hat noise envelope: sharp cut off
 o.noiseEnvelopeSpaceConstantDeg=Inf; % always Inf for hard edge
 % o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
-o.noiseRadiusDeg=inf; 
+o.noiseRadiusDeg=inf;
 
 o.noiseType='gaussian'; % ALWAYS use gaussian
 o.noiseSpectrum='white'; % pink or white
