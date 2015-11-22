@@ -1,8 +1,10 @@
 %#### Adjust values within this block #####################
 clear o
 % o.observer='junk';
-% o.observer='ideal';
-o.observer='hyiltiz'; % insert your name here
+o.observer='ideal';
+% o.observer='h?rmet'; % use your name
+% o.observer='xiuyun'; % use your name
+% o.observer='shivam'; % use your name
 o.distanceCm=50; % viewing distance
 o.durationSec=0.2;
 o.trialsPerRun=80;
