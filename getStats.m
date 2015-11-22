@@ -10,7 +10,7 @@
 %
 % To be able to compute E0(needed for Neq and Efficiency), you should have noise contrast=0,
 % whose conditon
-% has the same letter size,eccentricity,TargetCross,noiseCheckDeg and targetKind
+% has the same target size,eccentricity,TargetCross,noiseCheckDeg and targetKind
 % with other noise contrast~=0 conditions;
 %
 % To be able to compute Efficiency, besides E0, you should also have ideal
@@ -19,11 +19,11 @@
 % noiseRadiusDeg, noiseSpectrum, noiseCheckDeg and targetKind
 
 
-% function tab = getStats(newpath, obs_name, doNeq, doEfficiency)
-newpath = '/Users/xiuyunwu/NoiseDiscrimination/data';
-obs_name = 'xiuyun';
-doNeq=1;
-doEfficiency=1;
+function tab = getStats(newpath, obs_name, doNeq, doEfficiency)
+% newpath = '/Users/xiuyunwu/NoiseDiscrimination/data';
+% obs_name = 'xiuyun';
+% doNeq=1;
+% doEfficiency=1;
 
 %settings
 filename = [obs_name,'_runs.mat'];
@@ -239,4 +239,4 @@ tab = cell2table(out, 'VariableNames', col_name); %converts to table
 
 writetable(tab, csvfilename ,'Delimiter',',')
 save(matfilename,'tab');
-% end
+end
