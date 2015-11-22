@@ -7,8 +7,8 @@ o.distanceCm=50; % viewing distance
 o.durationSec=0.2;
 o.trialsPerRun=80;
 % o.targetHeightDeg=6; % OLD: letter or gabor size [2 3.5 6];
-o.targetHeightDeg=8; % letter or gabor size [2 4 8]. Later add size 16 deg at [0 32] ecc.
-% Later add sizes [0.5 1] at the fovea.
+o.targetHeightDeg=8; % letter/gabor size [2 4 8]. 
+% Also size 16 at [0 32] ecc. Also sizes [0.5 1] at 0 deg.
 o.eccentricityDeg=0; % eccentricity [0 32]
 o.noiseSD=0.16; % noise contrast [0 0.16]
 o.noiseSD=0; % noise contrast [0 0.16]
@@ -17,12 +17,12 @@ o.noiseSD=0; % noise contrast [0 0.16]
 o.noiseCheckDeg=o.targetHeightDeg/10; % Try [10 20 inf]. Note: 1/inf=0.
 % o.targetKind='letter';
 o.targetKind='gabor'; % a grating patch
+o.targetGaborOrientationsDeg=[0 30 60 90 120 150]; % Orientations relative to vertical.
+o.targetGaborNames='123456'; % Observer types 1 for 0 deg, 2 for 30 deg, etc.
 %##########################################################
 
 % o.targetGaborOrientationsDeg=[0 90]; % Orientations relative to vertical.
 % o.targetGaborNames='VH'; % Observer types V for vertical or H for horizontal.
-o.targetGaborOrientationsDeg=[0 30 60 90]; % Orientations relative to vertical.
-o.targetGaborNames='0369'; % Observer types 0 for 0 deg, 3 for 30 deg, 6 for 60 deg, or 9 for 90 deg.
 
 %## Fixed values, for all current testing. Do not adjust. #
 % Gaussian noise envelope: soft cut off
