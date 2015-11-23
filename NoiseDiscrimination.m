@@ -158,7 +158,7 @@ end
 o=[];
 % THESE STATEMENTS PROVIDE DEFAULT VALUES FOR ALL THE "o" parameters.
 % They are overridden by what you provide in the argument struct oIn.
-o.EnableCLUTMapping=1;
+o.EnableCLUTMapping=0; % Broken. Screws up gamma correction.
 o.testBitDepth=0;
 o.useFractionOfScreen=0; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 o.distanceCm=50; % viewing distance
