@@ -1,7 +1,7 @@
 %#### Adjust values within this block #####################
 clear o
-% o.observer='junk';
-o.observer='ideal';
+o.observer='junk';
+% o.observer='ideal';
 % o.observer='hormet'; % use your name
 % o.observer='xiuyun'; % use your name
 % o.observer='shivam'; % use your name
