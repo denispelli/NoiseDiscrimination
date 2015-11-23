@@ -699,7 +699,7 @@ try
             if o.EnableCLUTMapping
                 % Mario says this is the ONLY way to get reasonable color
                 % mapping behavior.
-                PsychImaging('AddTask','AllViews','EnableCLUTMapping');
+                PsychImaging('AddTask','AllViews','EnableCLUTMapping',256,1); % clutSize, high res
             end
             if ~o.useFractionOfScreen
                 [window,r]=PsychImaging('OpenWindow',cal.screen,255);
