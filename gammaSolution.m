@@ -33,4 +33,3 @@ Screen('Flip',window);
 Speak('A yellow square on white. Click to quit.');
 GetClicks;
 sca;
-RestoreCluts;
