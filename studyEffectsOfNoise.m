@@ -23,8 +23,8 @@ o.targetHeightDeg=8; % letter/gabor size [2 4 8].
 o.eccentricityDeg=0; % eccentricity [0 16 32]
 o.noiseSD=0.16; % noise contrast [0 0.16]
 % We want to compare these:
-    o.noiseCheckDeg=o.targetHeightDeg/20; 
-    o.noiseCheckDeg=o.targetHeightDeg/40;
+o.noiseCheckDeg=o.targetHeightDeg/20;
+o.noiseCheckDeg=o.targetHeightDeg/40;
 % #########################################################
 
 % ############# We plan to test these soon #######
@@ -75,7 +75,7 @@ o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
 o.targetGaborOrientationsDeg=[0 90]; % Orientations relative to vertical.
 o.targetGaborNames='VH'; % "V" for vertical, and "H" for horizontal.
 % When plotting the gabor data, use either spatial frequency f in c/deg, or
-% period size A in deg. 
+% period size A in deg.
 % f = o.targetGaborCycles/o.targetSizeDeg;
 % A = 1/f;
 % We should test the same values of o.targetHeightDeg for gabors as for
@@ -104,6 +104,5 @@ o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of Get
 % o.useFractionOfScreen=0.3; % 0: normal, 0.5: small for debugging.
 o=NoiseDiscrimination(o);
 sca;
-
 
 

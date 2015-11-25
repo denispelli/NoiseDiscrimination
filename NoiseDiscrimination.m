@@ -1,4 +1,4 @@
-function o=NoiseDiscrimination(oIn) 
+function o=NoiseDiscrimination(oIn)
 % o=NoiseDiscrimination(o);
 % Pass all your parameters in the "o" struct, which will be returned with
 % all the results as additional fields. NoiseDiscrimination may adjust some
@@ -100,14 +100,14 @@ function o=NoiseDiscrimination(oIn)
 % presentation and until o.fixationCrossBlankedUntilSecsAfterTarget.
 %
 % Annular Gaussian noise envelope.
-% Use these three parameters to specify an annular gaussian envelope. 
+% Use these three parameters to specify an annular gaussian envelope.
 % The amplitude is a Gaussian of R-Ra where R is the distance from letter
 % center and Ra is o.annularNoiseEnvelopeRadiusDeg. When Ra is zero, this reduces to a
 % normal gaussian centered on the letter. The code now computes a new
 % summary of the "area" of the envelope: o.centralNoiseEnvelopeE1degdeg
 % We should equate this when we compare hard edge annulus with gaussian
 % envelope.
-% 
+%
 addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder in same directory as this file
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this file
 %echo_executing_commands(2, 'local');
@@ -137,7 +137,7 @@ end
 % 1. make the central radius of the soft one
 % o.annularNoiseEnvelopeRadiusDeg match the central radius of the hard one:
 % (o.annularNoiseSmallRadiusDeg+o.annularNoiseBigRadiusDeg)/2
-% 
+%
 % 2. adjust the annulus thickness of the hard annulus
 % o.annularNoiseSmallRadiusDeg-o.annularNoiseBigRadiusDeg to achieve the
 % same "area" as the Gaussian annulus. This "area" is reported in a new
@@ -360,19 +360,18 @@ if exist('data', 'dir') ~= 7
     mkdir('data');
 end
 o.dataFilename=sprintf('%s-%s.%d.%d.%d.%d.%d.%d',o.functionNames,o.observer,round(t));
-o.datafullfilename=fullfile(fileparts(mfilename('fullpath')),'data',o.dataFilename);
 o.dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
 if ~exist(o.dataFolder,'dir')
-   success=mkdir(o.dataFolder);
-   if ~success
-       error('Failed attempt to create data folder: %s',o.dataFolder);
-   end
+    success=mkdir(o.dataFolder);
+    if ~success
+        error('Failed attempt to create data folder: %s',o.dataFolder);
+    end
 end
 dataFid=fopen(fullfile(o.dataFolder,[o.dataFilename '.txt']),'rt');
 if dataFid~=-1
     error('Oops. There''s already a file called "%s.txt". Try again.',o.dataFilename);
 end
-[dataFid,msg]=fopen([o.dataFilename '.txt'],'wt');
+[dataFid,msg]=fopen(fullfile(o.dataFolder,[o.dataFilename '.txt']),'wt');
 if dataFid==-1
     error('%s. Could not create data file: %s',msg,[o.dataFilename '.txt']);
 end
@@ -540,7 +539,7 @@ if ~isfield(o,'blankingRadiusReTargetHeight')
             %                                       % target height. That's a good
             %                                       % value for letters, which are
             %                                       % strong right up to the edge of
-            %                                       % the target height. 
+            %                                       % the target height.
         case 'gabor';
             o.blankingRadiusReTargetHeight=0.5; % Make blanking radius 0.5 times
             %                                       % target height. That's good for gabors,
@@ -672,10 +671,10 @@ try
         ListenChar(2); % no echo
     end
     KbName('UnifyKeyNames');
-
-
+    
+    
     if ~ismember(o.observer,algorithmicObservers) || streq(o.task,'identify')
-
+        
         % If o.observer is human, We need an open window for the whole
         % experiment, in which to display stimuli. If o.observer is machine,
         % we need a screen only briefly, to create the letters to be
@@ -829,15 +828,15 @@ try
                 Speak(question);
             end
             if o.isKbLegacy
-              answer=questdlg(question,'Fixation','Ok','Cancel','Ok');
+                answer=questdlg(question,'Fixation','Ok','Cancel','Ok');
             else
-              ListenChar(0); % get ready for the quesdlg
-              answer=questdlg(question,'Fixation','Ok','Cancel','Ok');
-              ListenChar(2); % go back to orig status; no echo
+                ListenChar(0); % get ready for the quesdlg
+                answer=questdlg(question,'Fixation','Ok','Cancel','Ok');
+                ListenChar(2); % go back to orig status; no echo
             end
-
+            
             switch answer
-              case 'Ok',
+                case 'Ok',
                     fixationIsOffscreen=1;
                     if fixationOffscreenCm<0
                         ffprintf(ff,'Offscreen fixation mark is %.0f cm left of the left edge of the stimulusRect.\n',-fixationOffscreenCm);
@@ -864,7 +863,7 @@ try
         targetOffsetPix=eccentricityPix+fixationOffsetPix;
         assert(abs(targetOffsetPix)<=maxTargetOffsetPix);
     end
-
+    
     if o.fixationCrossBlankedNearTarget
         ffprintf(ff,'Fixation cross is blanked near target. No delay in showing fixation after target.\n');
     else
@@ -905,9 +904,9 @@ try
     o.noiseSize=2*o.noiseRadiusDeg*[1,1]*o.pixPerDeg/o.noiseCheckPix;
     switch o.task
         case 'identify',
-        o.noiseSize=2*round(o.noiseSize/2); % Even numbers, so we can center it on letter.
+            o.noiseSize=2*round(o.noiseSize/2); % Even numbers, so we can center it on letter.
         case '4afc',
-        o.noiseSize=round(o.noiseSize);
+            o.noiseSize=round(o.noiseSize);
     end
     o.noiseRadiusDeg=0.5*o.noiseSize(1)*o.noiseCheckPix/o.pixPerDeg;
     noiseBorder=ceil(0.5*o.noiseRaisedCosineEdgeThicknessDeg*o.pixPerDeg/o.noiseCheckPix);
@@ -928,7 +927,7 @@ try
     o.yellowAnnulusBigSize(2)=min(o.yellowAnnulusBigSize(2),RectHeight(o.stimulusRect)/o.noiseCheckPix);
     o.yellowAnnulusBigSize=2*round(o.yellowAnnulusBigSize/2); % An even number, so we can center it on center of letter.
     o.yellowAnnulusBigRadiusDeg= 0.5*o.yellowAnnulusBigSize(1)/(o.pixPerDeg/o.noiseCheckPix);
-
+    
     % Make o.canvasSize to hold the biggest thing we're showing, signal or
     % noise. We limit o.canvasSize to fit in o.stimulusRect.
     o.canvasSize=[o.targetHeightPix o.targetWidthPix]/o.noiseCheckPix;
@@ -956,18 +955,18 @@ try
         ffprintf(ff,'Adding four flankers at center spacing of %.0f pix = %.1f deg = %.1fx letter height. Dark contrast %.3f (nan means same as target).\n',flankerSpacingPix,flankerSpacingPix/o.pixPerDeg,flankerSpacingPix/o.targetHeightPix,o.flankerContrast);
     end
     [x,y]=RectCenter(o.stimulusRect);
-%     if isfinite(o.eccentricityDeg)
-fix.blankingRadiusReTargetHeight=o.blankingRadiusReTargetHeight;
-fix.targetCross=o.targetCross;
-fix.x=x+targetOffsetPix-eccentricityPix; % x location of fixation
-fix.y=y; % y location of fixation
-fix.eccentricityPix=eccentricityPix;
-fix.clipRect=o.stimulusRect;
-fix.fixationCrossPix=fixationCrossPix;
-fix.fixationCrossBlankedNearTarget=o.fixationCrossBlankedNearTarget;
-fix.targetHeightPix=o.targetHeightPix;
-fixationLines=ComputeFixationLines(fix);
-%     end
+    %     if isfinite(o.eccentricityDeg)
+    fix.blankingRadiusReTargetHeight=o.blankingRadiusReTargetHeight;
+    fix.targetCross=o.targetCross;
+    fix.x=x+targetOffsetPix-eccentricityPix; % x location of fixation
+    fix.y=y; % y location of fixation
+    fix.eccentricityPix=eccentricityPix;
+    fix.clipRect=o.stimulusRect;
+    fix.fixationCrossPix=fixationCrossPix;
+    fix.fixationCrossBlankedNearTarget=o.fixationCrossBlankedNearTarget;
+    fix.targetHeightPix=o.targetHeightPix;
+    fixationLines=ComputeFixationLines(fix);
+    %     end
     if window~=-1 && ~isempty(fixationLines)
         Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,black); % fixation
     end
@@ -988,7 +987,7 @@ fixationLines=ComputeFixationLines(fix);
         otherwise,
             error('Unknown noiseType "%s"',o.noiseType);
     end
-
+    
     % Compute mtf to filter the noise
     fNyquist=0.5/o.noiseCheckDeg;
     fLow = 0;
@@ -1009,7 +1008,7 @@ fixationLines=ComputeFixationLines(fix);
     if o.noiseSD==0
         mtf=0;
     end
-
+    
     o.noiseListSd=std(noiseList);
     a=0.9*o.noiseListSd/o.noiseListBound;
     if o.noiseSD>a
@@ -1117,7 +1116,7 @@ fixationLines=ComputeFixationLines(fix);
                     spaceConstantChecks=o.targetGaborSpaceConstantCycles*(o.targetHeightPix/o.noiseCheckPix)/o.targetGaborCycles;
                     cyclesPerCheck=o.targetGaborCycles/(o.targetHeightPix/o.noiseCheckPix);
                     for i=1:o.alternatives
-                        a=cos(o.targetGaborOrientationsDeg(i)*pi/180)*2*pi*cyclesPerCheck; 
+                        a=cos(o.targetGaborOrientationsDeg(i)*pi/180)*2*pi*cyclesPerCheck;
                         b=sin(o.targetGaborOrientationsDeg(i)*pi/180)*2*pi*cyclesPerCheck;
                         signal(i).image=sin(a*x+b*y+o.targetGaborPhaseDeg*pi/180).*exp(-(x.^2 + y.^2)/spaceConstantChecks^2);
                     end
@@ -1147,7 +1146,7 @@ fixationLines=ComputeFixationLines(fix);
             boundsRect=OffsetRect(targetRect,targetOffsetPix,0);
             % targetRect not used. boundsRect used solely for the snapshot.
     end % switch o.task
-
+    
     % Compute annular noise mask
     annularNoiseMask=zeros(o.canvasSize); % initialize with 0
     rect=RectOfMatrix(annularNoiseMask);
@@ -1158,7 +1157,7 @@ fixationLines=ComputeFixationLines(fix);
     r=round(CenterRect(r,rect));
     annularNoiseMask=FillRectInMatrix(0,r,annularNoiseMask); % fill small radius with 0
     annularNoiseMask=logical(annularNoiseMask);
-
+    
     % Compute central noise mask
     centralNoiseMask=zeros(o.canvasSize); % initialize with 0
     rect=RectOfMatrix(centralNoiseMask);
@@ -1166,11 +1165,11 @@ fixationLines=ComputeFixationLines(fix);
     r=round(r);
     centralNoiseMask=FillRectInMatrix(1,r,centralNoiseMask); % fill radius with 1
     centralNoiseMask=logical(centralNoiseMask);
-
+    
     if isfinite(o.noiseEnvelopeSpaceConstantDeg) && o.noiseRaisedCosineEdgeThicknessDeg>0
         error('Sorry. Please set o.noiseEnvelopeSpaceConstantDeg=inf or set o.noiseRaisedCosineEdgeThicknessDeg=0.');
     end
-
+    
     if isfinite(o.noiseEnvelopeSpaceConstantDeg)
         % Compute Gaussian central noise envelope
         [x,y]=meshgrid(1:o.canvasSize(1),1:o.canvasSize(2));
@@ -1216,7 +1215,7 @@ fixationLines=ComputeFixationLines(fix);
         yellowMask=FillRectInMatrix(0,r,yellowMask);
         yellowMask=logical(yellowMask);
     end
-
+    
     
     % o.E1 is energy at unit contrast.
     power=1:length(signal);
@@ -1229,7 +1228,7 @@ fixationLines=ComputeFixationLines(fix);
     end
     o.E1=mean(power)*(o.noiseCheckPix/o.pixPerDeg)^2;
     ffprintf(ff,'log E1/deg^2 %.2f, where E1 is energy at unit contrast.\n',log10(o.E1));
-
+    
     if ismember(o.observer,algorithmicObservers);
         Screen('CloseAll');
         window=-1;
@@ -1265,7 +1264,7 @@ fixationLines=ComputeFixationLines(fix);
         if o.flipClick; Speak(['before Flip ' num2str(MFileLineNr)]);GetClicks; end
         Screen('Flip', window,0,1); % Show gray screen at LMean with fixation and crop marks. Don't clear buffer.
         if o.flipClick; Speak(['after Flip ' num2str(MFileLineNr)]);GetClicks; end
-
+        
         Screen('DrawText',window,'Starting new run. ',0.5*textSize,o.lineSpacing*textSize,black0,gray1,1);
         if isfinite(o.eccentricityDeg)
             if fixationIsOffscreen
@@ -1324,7 +1323,7 @@ fixationLines=ComputeFixationLines(fix);
                 end
         end
     end
-
+    
     delta=0.02;
     switch o.task
         case '4afc',
@@ -1332,7 +1331,7 @@ fixationLines=ComputeFixationLines(fix);
         case 'identify',
             gamma=1/o.alternatives;
     end
-
+    
     % Default values for tGuess and tGuessSd
     if streq(o.targetModulates,'luminance')
         tGuess=-0.5;
@@ -1358,7 +1357,7 @@ fixationLines=ComputeFixationLines(fix);
     if isfinite(o.tGuessSd)
         tGuessSd=o.tGuessSd;
     end
-
+    
     o.data=[];
     q=QuestCreate(tGuess,tGuessSd,o.pThreshold,o.beta,delta,gamma);
     q.normalizePdf=1; % adds a few ms per call to QuestUpdate, but otherwise the pdf will underflow after about 1000 trials.
@@ -1478,16 +1477,16 @@ fixationLines=ComputeFixationLines(fix);
                     end
                     noise=PsychRandSample(noiseList,o.canvasSize);
                     if o.noiseIsFiltered
-                            if any(mtf(:)~=1)
-                                if any(mtf(:)~=0)
-                                    % filtering 50x50 takes 200 ms on PowerMac 7500/100
-                                    ft=mtf.*fftshift(fft2(noise));
-                                    noise=real(ifft2(ifftshift(ft)));
-                                    clear ft
-                                else
-                                    noise=zeros(size(noise));
-                                end
+                        if any(mtf(:)~=1)
+                            if any(mtf(:)~=0)
+                                % filtering 50x50 takes 200 ms on PowerMac 7500/100
+                                ft=mtf.*fftshift(fft2(noise));
+                                noise=real(ifft2(ifftshift(ft)));
+                                clear ft
+                            else
+                                noise=zeros(size(noise));
                             end
+                        end
                     end
                     if i==signalLocation
                         switch o.targetModulates
@@ -1526,10 +1525,10 @@ fixationLines=ComputeFixationLines(fix);
                 sRect=round(CenterRect(sRect,canvasRect));
                 assert(IsRectInRect(sRect,canvasRect));
                 signalImageIndex=logical(FillRectInMatrix(true,sRect,zeros(o.canvasSize)));
-%                 figure(1);imshow(signalImageIndex);
+                %                 figure(1);imshow(signalImageIndex);
                 signalImage=zeros(o.canvasSize);
                 signalImage(signalImageIndex)=signal(whichSignal).image(:);
-%                 figure(2);imshow(signalImage);
+                %                 figure(2);imshow(signalImage);
                 signalMask=logical(signalImage);
                 switch o.targetModulates
                     case 'luminance',
@@ -1649,7 +1648,7 @@ fixationLines=ComputeFixationLines(fix);
                         end
                 end
                 [junk,response]=max(likely);
-           case 'blackshot'
+            case 'blackshot'
                 clear likely
                 % Michelle Qiu digitized Fig. 6, observer CC, of Chubb et
                 % al. (2004). c is the contrast, defined as luminance
@@ -2018,12 +2017,12 @@ fixationLines=ComputeFixationLines(fix);
                         end
                 end % switch o.task
                 eraseRect=ClipRect(eraseRect,o.stimulusRect);
-
+                
                 % Print instruction in upper left corner.
                 Screen('FillRect',window,gray1,topCaptionRect);
                 message=sprintf('Trial %d of %d. Run %d of %d.',trial,o.trialsPerRun,o.runNumber,o.runsDesired);
                 Screen('DrawText',window,message,textSize/2,textSize/2,black,gray1);
-
+                
                 % Print instructions in lower left corner.
                 textRect=[0,0,textSize,1.2*textSize];
                 textRect=AlignRect(textRect,screenRect,'left','bottom');
@@ -2043,7 +2042,7 @@ fixationLines=ComputeFixationLines(fix);
                 Screen('FillRect',window,gray1,bottomCaptionRect);
                 Screen('DrawText',window,message,textRect(1),textRect(4),black,gray1,1);
                 Screen('TextSize',window,textSize);
-
+                
                 % Display response alternatives.
                 switch o.task
                     case '4afc',
@@ -2070,7 +2069,7 @@ fixationLines=ComputeFixationLines(fix);
                         end
                         alphaSpaces=o.alternatives+spacingFraction*(o.alternatives+1);
                         alphaPix=desiredLengthPix/alphaSpaces;
-%                         alphaCheckPix=alphaPix/(signalChecks/o.noiseCheckPix);
+                        %                         alphaCheckPix=alphaPix/(signalChecks/o.noiseCheckPix);
                         alphaCheckPix=alphaPix/signalChecks;
                         alphaGapPixCeil=(desiredLengthPix-o.alternatives*ceil(alphaCheckPix)*signalChecks)/(o.alternatives+1);
                         alphaGapPixFloor=(desiredLengthPix-o.alternatives*floor(alphaCheckPix)*signalChecks)/(o.alternatives+1);
@@ -2367,7 +2366,7 @@ fixationLines=ComputeFixationLines(fix);
                                 trial=trial-1;
                                 break;
                             end
-                            [ok,response]=ismember(upper(response),o.alphabet);  
+                            [ok,response]=ismember(upper(response),o.alphabet);
                             if ~ok
                                 Speak('Try again. Type period to quit.');
                             end
@@ -2476,7 +2475,7 @@ fixationLines=ComputeFixationLines(fix);
         end
     end
     % end
-
+    
     %     t=mean(tSample);
     %     tse=std(tSample)/sqrt(length(tSample));
     %     switch o.targetModulates
@@ -2519,7 +2518,7 @@ fixationLines=ComputeFixationLines(fix);
             ffprintf(ff,'r %.3f, approx required number %.0f\n',o.r,o.approxRequiredNumber);
             %              logNse=std(logApproxRequiredNumber)/sqrt(length(tSample));
             %              ffprintf(ff,'SUMMARY: %s %d runs mean±se: log(r-1) %.2f±%.2f, log(approx required n) %.2f±%.2f\n',o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
-       case 'entropy',
+        case 'entropy',
             t=o.questMean;
             o.r=10^t+1;
             signalEntropyLevels=o.r*o.backgroundEntropyLevels;
@@ -2593,7 +2592,7 @@ fixationLines=ComputeFixationLines(fix);
     end
     fclose(dataFid); dataFid=-1;
     o.signal=signal; % worth saving
-%     o.q=q; % not worth saving
+    %     o.q=q; % not worth saving
     save(fullfile(o.dataFolder,[o.dataFilename '.mat']),'o','cal');
     fprintf('Results saved in %s with extensions .txt and .mat\nin folder %s\n',o.dataFilename,o.dataFolder);
 catch
