@@ -73,6 +73,10 @@ pp[[2]] <- ggplot(T, aes(x=noise_decay_radius, y=mean_threshold, size=factor(let
   scale_linetype_manual(values=c("solid", "longdash", "dashed", "dotted"))+
   scale_size_discrete(range=c(1.5,4)) +
   #scale_color_brewer(type="div",  palette = 7)+
+
+  noGrid+
+  labs(title = "LetterSize 2, NoiseContrast 0.16, Gaussian pink", x = "Noise_decay_radius(deg)", y = "Threshold_Contrast")+
+
   theme(text=element_text(size=32))
 
 print(pp[[2]])
@@ -142,6 +146,7 @@ pp[[7]] <-ggplot(subset(T, T$letter_size==2), aes(x=shiftednoise_contrast, y=mea
   #scale_color_brewer(type="div",  palette = 7)+
   theme(text=element_text(size=32))
 
+
 pp[[8]] <- ggplot(subset(T, T$letter_size==2), aes(x=shiftednoise_contrast^2, y=mean_threshold^2, size=factor(letter_size), color=factor(RadiusRelative2letter_size), linetype=factor(eccentricity), shape=factor(letter_size) )) +
   #facet_grid(eccentricity ~ .) +
   #geom_errorbar(y2limits, width=0.03)+
@@ -156,6 +161,102 @@ pp[[8]] <- ggplot(subset(T, T$letter_size==2), aes(x=shiftednoise_contrast^2, y=
 
 
 print(pp[[8]])
+
+y2limits = aes(ymax = mean_threshold^2 + sd_threshold^2, ymin=mean_threshold^2 - sd_threshold^2)
+# pp[[2]] <- ggplot(T, aes(x=noise_decay_radius, y=mean_threshold, size=factor(letter_size), color=factor(noise_contrast), linetype=factor(eccentricity), shape=factor(eccentricity) )) +
+#   facet_grid(eccentricity ~ .) +
+#   geom_errorbar(ylimits)+
+#   geom_line()+
+#   geom_point(size=9, alpha=0.6)+
+#   scale_y_log10(breaks=c(1/4, 1/2,1,2))+
+#   scale_x_log10(breaks=xbreaks)+
+#   scale_linetype_manual(values=c("solid", "longdash", "dashed", "dotted"))+
+#   scale_size_discrete(range=c(1.5,4)) +
+#   #scale_color_brewer(type="div",  palette = 7)+
+#   theme(text=element_text(size=32))
+#
+# print(pp[[2]])
+#
+# pp[[3]] <- ggplot(T, aes(x=noise_decay_radius, y=mean_threshold, size=factor(letter_size), color=factor(noise_contrast), linetype=factor(eccentricity), shape=factor(eccentricity) )) +
+#   facet_grid(letter_size ~ .) +
+#   geom_errorbar(ylimits)+
+#   geom_line()+
+#   geom_point(size=9, alpha=0.6)+
+#   scale_y_log10(breaks=c(1/4, 1/2,1,2))+
+#   scale_x_log10(breaks=xbreaks)+
+#   scale_linetype_manual(values=c("solid", "longdash", "dashed", "dotted"))+
+#   scale_size_discrete(range=c(1.5,4)) +
+#   #scale_color_brewer(type="div",  palette = 7)+
+#   theme(text=element_text(size=32))
+#
+# print(pp[[3]])
+#
+# T$shiftednoise_contrast = T$noise_contrast + 0.08
+#
+# pp[[4]] <- ggplot(subset(T, T$letter_size==2), aes(x=shiftednoise_contrast, y=mean_threshold, size=factor(letter_size), color=factor(noise_decay_radius), linetype=factor(eccentricity), shape=factor(eccentricity) )) +
+#   facet_grid(eccentricity ~ .) +
+#   geom_errorbar(ylimits)+
+#   geom_line()+
+#   geom_point(size=9, alpha=0.6)+
+#   scale_y_log10(breaks=c(1/4, 1/2,1,2))+
+#   scale_x_log10(breaks=c(0.08, 0.1, 0.16, 0.2, 0.35))+
+#   scale_linetype_manual(values=c("solid", "longdash", "dashed", "dotted"))+
+#   scale_size_discrete(range=c(1.5,4)) +
+#   #scale_color_brewer(type="div",  palette = 7)+
+#   theme(text=element_text(size=32))
+#
+# pp[[5]] <- ggplot(T, aes(x=RadiusRelative2letter_size, y=mean_threshold, color=factor(noise_contrast))) +
+#   #geom_errorbar(ylimits)+
+#   geom_line(position = position_jitter())+
+#   facet_grid(eccentricity ~ .) +
+#   geom_point(size=9, alpha=0.6)+
+#   scale_y_log10(breaks=ybreaks)+
+#   scale_x_log10(breaks=unique(T$RadiusRelative2letter_size))+
+#   scale_linetype_manual(values=c("solid", "longdash", "dashed", "dotted"))+
+#   scale_size_discrete(range=c(1.5,4)) +
+#  # scale_color_brewer(type="seq",  palette = 8)+
+#   theme(text=element_text(size=32), axis.text.x = element_text(angle = 45, hjust = 1), axis.text.y = element_text(size=18))
+#
+# pp[[6]] <- ggplot(subset(T,  (T$eccentricity %in% c(0,32))), aes(x=RadiusRelative2letter_size, y=mean_threshold, color=factor(noise_contrast), linetype=factor(eccentricity) )) +
+#   #geom_errorbar(ylimits, size=2, alpha=1)+
+#   stat_summary(fun.y=mean, ylimits, geom="smooth", size = 2) +
+#   #geom_line(size=2, aes(linetype=factor(eccentricity)))+
+#   geom_point(size=7, alpha=0.5, aes(shape=factor(letter_size)))+
+#   scale_y_log10(breaks=ybreaks)+
+#   scale_x_log10(breaks=unique(T$RadiusRelative2letter_size))+
+#   scale_linetype_manual(values=c("solid", "dotted", "dashed", "longdash"))+
+#   scale_size_discrete(range=c(1.5,4)) +
+#   #scale_color_brewer(type="seq",  palette = 8)+
+#   ggtitle( expression(eccentricity %in% group("{", list(0,32), "}") )) +
+#   theme(text=element_text(size=32), axis.text.x = element_text(angle = 45, hjust = 1, size=18), axis.text.y = element_text(size=18))
+#
+# pp[[7]] <-ggplot(subset(T, T$letter_size==2), aes(x=shiftednoise_contrast, y=mean_threshold, size=factor(letter_size), color=factor(RadiusRelative2letter_size), linetype=factor(eccentricity), shape=factor(letter_size) )) +
+#   #facet_grid(eccentricity ~ .) +
+#   geom_errorbar(ylimits, width=0.03)+
+#   geom_line()+
+#   geom_point(size=9, alpha=0.6)+
+#   scale_y_log10(breaks=ybreaks)+
+#   scale_x_log10(breaks=unique(T$shiftednoise_contrast))+
+#   scale_linetype_manual(values=c("solid", "longdash", "dashed", "dotted"))+
+#   scale_size_discrete(range=c(1.5,4)) +
+#   #scale_color_brewer(type="div",  palette = 7)+
+#   theme(text=element_text(size=32))
+#
+# pp[[8]] <- ggplot(subset(T, T$letter_size==2), aes(x=shiftednoise_contrast^2, y=mean_threshold^2, size=factor(letter_size), color=factor(RadiusRelative2letter_size), linetype=factor(eccentricity), shape=factor(letter_size) )) +
+#   #facet_grid(eccentricity ~ .) +
+#   #geom_errorbar(y2limits, width=0.03)+
+#   geom_line(alpha=0.6)+
+#   geom_point(size=9, alpha=0.6)+
+#   scale_y_log10(breaks=ybreaks)+
+#   scale_x_log10(breaks=unique(T$shiftednoise_contrast^2))+
+#   scale_linetype_manual(values=c("solid", "longdash", "dashed", "dotted"))+
+#   scale_size_discrete(range=c(1.5,4)) +
+#   #scale_color_brewer(type="div",  palette = 7)+
+#   theme(text=element_text(size=32), axis.text.x = element_text(angle = 45, hjust = 1, size=18), axis.text.y = element_text(size=18))
+#
+#
+# print(pp[[8]])
+
 
 if(TRUE){
   cat('Saving figures to disk...\n')
