@@ -50,7 +50,7 @@ parsefiles=parsefiles(~cellfun('isempty',parsefiles)); %command to remove empty 
 parsedates=parsedates(~cellfun('isempty',parsedates));
 % pdata=cell(length(parsefiles),13);
 pdata = {};
-col_names={'observer','trials','letter_size','noise_contrast','noise_decay_radius','eccentricity','p_accuracy','threshold_log_contrast','threshold_contrast_SD','contrast','log_E_by_N','efficiency','file_date_time','energy_at_unit_contrast','noise_power_spectral_density', 'threshold_energy','noiseRadiusDeg','TargetCross','noiseSpectrum'};
+col_names={'observer','trials','target_size','noise_contrast','noise_decay_radius','eccentricity','p_accuracy','threshold_log_contrast','threshold_contrast_SD','contrast','log_E_by_N','efficiency','file_date_time','energy_at_unit_contrast','noise_power_spectral_density', 'threshold_energy','noiseRadiusDeg','TargetCross','noiseSpectrum', 'noiseCheckDeg', 'targetKind'};
 
 j = 1; % to skip the re-run runs(unfinished runs due to mis-representation of letters)
 for i=1:length(parsefiles)
@@ -58,7 +58,7 @@ for i=1:length(parsefiles)
     if o.trials>=smallestTrialNum
         pdata{j,1}=o.observer; %observer name
         pdata{j,2}=o.trials; %trials per run
-        %letter size
+        %target size
         if o.targetHeightDeg<1 % we only got 0.5 and sqrt(2*6) as non-integer for now; but if we get more this should be modified
             pdata{j,3}=0.5;
         elseif o.targetHeightDeg>3 && o.targetHeightDeg<4
@@ -121,6 +121,18 @@ for i=1:length(parsefiles)
         end;
         % 0 is white and 1 is pink, for computing in getStats
         % would be converted back after getStats
+        
+        pdata{j,20}=o.noiseCheckDeg;
+        
+        if isfield(o,'targetKind')
+            if strcmp(o.targetKind, 'letter')
+                pdata{j,21}=0;
+            elseif strcmp(o.targetKind, 'gabor')
+                pdata{j,21}=1;
+            end;
+        else
+            pdata{j,21}=0; % data before, all letters
+        end;
         
         j = j+1;
     end;

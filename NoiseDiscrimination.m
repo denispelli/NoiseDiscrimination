@@ -1,4 +1,14 @@
 function o=NoiseDiscrimination(oIn) 
+<<<<<<< HEAD
+=======
+addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder in same directory as this file
+addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this file
+% addpath('AutoBrightness');
+% addpath('lib');
+% Priority(1);
+% echo_executing_commands(2, 'local');
+% diary ./diary.log
+>>>>>>> origin/master
 % o=NoiseDiscrimination(o);
 % Pass all your parameters in the "o" struct, which will be returned with
 % all the results as additional fields. NoiseDiscrimination may adjust some
@@ -62,8 +72,8 @@ function o=NoiseDiscrimination(oIn)
 % intermediate pixel values which were all darker than the background gray.
 % I fixed this by making the background be 128. Thus the background is
 % always gray LMean, but it's produced by a color index of 128 inside
-% stimulusRect, and a color index of 1 outside it. This is easily drawn by
-% calling FillRect with 1 for the whole screen, and again with 128 for the
+% stimulusRect, and a color index of 1 outside it. This is drawn by calling
+% FillRect with 1 for the whole screen, and again with 128 for the
 % stimulusRect.
 
 % MIRRORING. PutImage does not respect mirroring. Mario Kleiner, July 13,
@@ -155,6 +165,7 @@ end
 o=[];
 % THESE STATEMENTS PROVIDE DEFAULT VALUES FOR ALL THE "o" parameters.
 % They are overridden by what you provide in the argument struct oIn.
+o.EnableCLUTMapping=0; % Broken. Screws up gamma correction.
 o.testBitDepth=0;
 o.useFractionOfScreen=0; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 o.distanceCm=50; % viewing distance
@@ -338,6 +349,15 @@ if streq(o.targetKind,'gabor')
     o.alternatives=length(o.targetGaborOrientationsDeg);
     o.alphabet=o.targetGaborNames(1:o.alternatives);
 end
+if ~isfield(o,'labelAlternatives')
+    switch o.targetKind
+        case 'gabor'
+            o.labelAlternatives=1;
+        case 'letter'
+            o.labelAlternatives=0;
+            
+    end
+end
 o.beginningTime=now;
 t=datevec(o.beginningTime);
 stack=dbstack;
@@ -374,12 +394,13 @@ if cal.screen>0
     fprintf('Using external monitor.\n');
 end
 cal=OurScreenCalibrations(cal.screen);
+
 o.cal=cal;
 if ~isfield(cal,'old') || ~isfield(cal.old,'L')
     fprintf('This screen has not yet been calibrated. Please use CalibrateScreenLuminance to calibrate it.\n');
     error('This screen has not yet been calibrated. Please use CalibrateScreenLuminance to calibrate it.\n');
 end
-screenRect=Screen('Rect',cal.screen,1); % screeb rect in UseRetinaResolution mode
+screenRect=Screen('Rect',cal.screen,1); % screen rect in UseRetinaResolution mode
 if o.useFractionOfScreen
     screenRect=round(o.useFractionOfScreen*screenRect);
 end
@@ -516,13 +537,27 @@ o.yellowAnnulusBigRadiusDeg=max(o.yellowAnnulusBigRadiusDeg,0);
 o.yellowAnnulusBigRadiusDeg=min(o.yellowAnnulusBigRadiusDeg,RectWidth(screenRect)/o.pixPerDeg);
 o.yellowAnnulusSmallRadiusDeg=min(o.yellowAnnulusSmallRadiusDeg,RectWidth(screenRect)/o.pixPerDeg);
 o.yellowAnnulusBigRadiusDeg=max(o.yellowAnnulusBigRadiusDeg,o.yellowAnnulusSmallRadiusDeg);
-
+if ~isfield(o,'blankingRadiusReTargetHeight')
+    switch o.targetKind
+        case 'letter';
+            o.blankingRadiusReTargetHeight=1.5; % Make blanking radius 1.5 times
+            %                                       % target height. That's a good
+            %                                       % value for letters, which are
+            %                                       % strong right up to the edge of
+            %                                       % the target height. 
+        case 'gabor';
+            o.blankingRadiusReTargetHeight=0.5; % Make blanking radius 0.5 times
+            %                                       % target height. That's good for gabors,
+            %                                       % which are greatly diminished
+            %                                       % at their edge.
+    end
+end
 fixationCrossPix=round(o.fixationCrossDeg*o.pixPerDeg);
 fixationCrossWeightPix=round(o.fixationCrossWeightDeg*o.pixPerDeg);
 fixationCrossWeightPix=max(1,fixationCrossWeightPix);
 o.fixationCrossWeightDeg=fixationCrossWeightPix/o.pixPerDeg;
-maxOnscreenFixationOffsetPix=round(RectWidth(o.stimulusRect)/2-20*fixationCrossWeightPix); % allowable fixation offset, with 20 linewidth margin.
-maxTargetOffsetPix=RectWidth(o.stimulusRect)/2-o.targetHeightPix/2; % allowable target offset for eccentric viewing.
+maxOnscreenFixationOffsetPix=round(RectWidth(o.stimulusRect)/2-20*fixationCrossWeightPix); % max possible fixation offset, with 20 linewidth margin.
+maxTargetOffsetPix=RectWidth(o.stimulusRect)/2-o.targetHeightPix/2; % max possible target offset for eccentric viewing.
 if o.useFlankers
     maxTargetOffsetPix=maxTargetOffsetPix-o.flankerSpacingDeg*o.pixPerDeg;
 end
@@ -661,7 +696,11 @@ try
             if cal.hiDPIMultiple~=1
                 PsychImaging('AddTask','General','UseRetinaResolution');
             end
-%             PsychImaging('AddTask','AllViews','EnableCLUTMapping'); % may not be needed
+            if o.EnableCLUTMapping
+                % Mario says this is the ONLY way to get reasonable color
+                % mapping behavior.
+                PsychImaging('AddTask','AllViews','EnableCLUTMapping',256,1); % clutSize, high res
+            end
             if ~o.useFractionOfScreen
                 [window,r]=PsychImaging('OpenWindow',cal.screen,255);
             else
@@ -671,7 +710,16 @@ try
         else
             [window,r]=Screen('OpenWindow',cal.screen,255,screenRect);
         end
+        if o.EnableCLUTMapping
+            gamma=Screen('ReadNormalizedGammaTable',window);
+            gamma=interp1(gamma,1:(size(gamma,1)-1)/255:size(gamma,1),'pchip'); % Down sample to 256.
+            % PsychImaging EnableCLUTMapping does not initialize the color
+            % table, so we do it here.
+            Screen('LoadNormalizedGammaTable',window,gamma,2);
+            Screen('Flip',window);
+        end
         assert(all(r==screenRect));
+        
         if o.flipClick; Speak(['after OpenWindow ' num2str(MFileLineNr)]);GetClicks; end
         if exist('cal')
             gray=mean([firstGrayClutEntry lastGrayClutEntry]);  % Will be a CLUT color code for gray.
@@ -912,17 +960,18 @@ try
         ffprintf(ff,'Adding four flankers at center spacing of %.0f pix = %.1f deg = %.1fx letter height. Dark contrast %.3f (nan means same as target).\n',flankerSpacingPix,flankerSpacingPix/o.pixPerDeg,flankerSpacingPix/o.targetHeightPix,o.flankerContrast);
     end
     [x,y]=RectCenter(o.stimulusRect);
-    if isfinite(o.eccentricityDeg)
-        fix.targetCross=o.targetCross;
-        fix.x=x+targetOffsetPix-eccentricityPix; % x location of fixation
-        fix.y=y; % y location of fixation
-        fix.eccentricityPix=eccentricityPix;
-        fix.clipRect=o.stimulusRect;
-        fix.fixationCrossPix=fixationCrossPix;
-        fix.fixationCrossBlankedNearTarget=o.fixationCrossBlankedNearTarget;
-        fix.targetHeightPix=o.targetHeightPix;
-        fixationLines=ComputeFixationLines(fix);
-    end
+%     if isfinite(o.eccentricityDeg)
+fix.blankingRadiusReTargetHeight=o.blankingRadiusReTargetHeight;
+fix.targetCross=o.targetCross;
+fix.x=x+targetOffsetPix-eccentricityPix; % x location of fixation
+fix.y=y; % y location of fixation
+fix.eccentricityPix=eccentricityPix;
+fix.clipRect=o.stimulusRect;
+fix.fixationCrossPix=fixationCrossPix;
+fix.fixationCrossBlankedNearTarget=o.fixationCrossBlankedNearTarget;
+fix.targetHeightPix=o.targetHeightPix;
+fixationLines=ComputeFixationLines(fix);
+%     end
     if window~=-1 && ~isempty(fixationLines)
         Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,black); % fixation
     end
@@ -1539,7 +1588,7 @@ try
                             case 'luminance',
                                 for i=1:o.alternatives
                                     im=zeros(size(signal(i).image));
-                                    im(:)=location(1).image(signalImageIndex);
+                                    im(:)=location(1).image(signalImageIndex); % here be the signal
                                     d=im-1-o.contrast*signal(i).image;
                                     likely(i)=-sum(d(:).^2);
                                 end
@@ -2062,14 +2111,18 @@ try
                                     img=signal(i).image;
                                     % If the imresize function (in Image
                                     % Processing Toolbox) is not available
-                                    % we don't need it, because the image
-                                    % resizing can be done by the
-                                    % DrawTexture command below.
+                                    % the image resizing will then be done
+                                    % by the DrawTexture command below.
                                 end
                             end
                             texture=Screen('MakeTexture',window,(1-img)*gray);
                             Screen('DrawTexture',window,texture,RectOfMatrix(img),rect);
                             Screen('Close',texture);
+                            if o.labelAlternatives
+                                Screen('TextSize',window,textSize);
+                                textRect=AlignRect([0 0 textSize textSize],rect,'center','top');
+                                Screen('DrawText',window,o.alphabet(i),textRect(1),textRect(4),black,gray1,1);
+                            end
                             rect=OffsetRect(rect,step(1),step(2));
                         end
                         leftEdgeOfResponse=rect(1);
@@ -2309,7 +2362,7 @@ try
                         response=0;
                         while ~ismember(response,1:o.alternatives)
                             o.runAborted=0;
-                            response = checkResponse(o.isKbLegacy);
+                            response = GetKeypress(o.isKbLegacy);
                             %disp(sprintf('2:==>%s<==', response));
                             if response=='.'
                                 ffprintf(ff,'*** ''%c'' response. Run terminated.\n',response);
@@ -2318,7 +2371,7 @@ try
                                 trial=trial-1;
                                 break;
                             end
-                            [ok,response]=ismember(upper(response),o.alphabet);
+                            [ok,response]=ismember(upper(response),o.alphabet);  
                             if ~ok
                                 Speak('Try again. Type period to quit.');
                             end
@@ -2490,7 +2543,7 @@ try
         Speak('Please type period to skip the rest and quit now, or space to continue with next run.');
         response=0;
         while 1
-            response = checkResponse(o.isKbLegacy);
+            response = GetKeypress(o.isKbLegacy);
             switch response
                 case '.',
                     ffprintf(ff,'*** ''.'' response. Quitting now.\n');

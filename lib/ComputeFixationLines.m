@@ -1,6 +1,7 @@
 function fixationLines=ComputeFixationLines(fix)
-%ComputeFixationLines returns an array suitable for Screen('Drawlines')
-% to draw a fixation cross and target cross specified by the parameters in
+%ComputeFixationLines returns an array fixationLines so that calling
+% Screen('DrawLines',window,fixationLines); 
+% will draw fixation and target crosses specified by the parameters in
 % the struct argument "fix".
 % fix.x=50;                             % x location of fixation on screen.
 % fix.y=screenHeight/2;                 % y location of fixation on screen.
@@ -23,7 +24,13 @@ function fixationLines=ComputeFixationLines(fix)
 %                                       % blank a radius proportional to
 %                                       % target radius.
 % fix.blankingRadiusReTargetHeight=1.5; % Make blanking radius 1.5 times
-%                                       % target height.
+%                                       % target height. That's a good
+%                                       % value for letters, which are
+%                                       % strong right up to the edge of
+%                                       % the target height. For gabors,
+%                                       % which are greatly diminished
+%                                       % there, I recommend a value of
+%                                       % 0.5.
 % fix.targetHeightPix=targetHeightPix;  % Blanking radius is proportional
 %                                       % to specified target height.
 % fix.targetCross=1;                    % Draw vertical line indicating
@@ -44,7 +51,7 @@ end
 if ~isfield(fix,'fixationCrossBlankedNearTarget')
     fix.fixationCrossBlankedNearTarget=1; % Default is yes.
 end
-if ~isfield(fix,'blankingRadiusReTargetRadius')
+if ~isfield(fix,'blankingRadiusReTargetHeight')
     fix.blankingRadiusReTargetHeight=1.5; % Blank a radius of 1.5 times target height.
 end
 blankingRadiusPix=fix.blankingRadiusReTargetHeight*fix.targetHeightPix;
