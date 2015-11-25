@@ -1,14 +1,4 @@
 function o=NoiseDiscrimination(oIn) 
-<<<<<<< HEAD
-=======
-addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder in same directory as this file
-addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this file
-% addpath('AutoBrightness');
-% addpath('lib');
-% Priority(1);
-% echo_executing_commands(2, 'local');
-% diary ./diary.log
->>>>>>> origin/master
 % o=NoiseDiscrimination(o);
 % Pass all your parameters in the "o" struct, which will be returned with
 % all the results as additional fields. NoiseDiscrimination may adjust some
@@ -370,8 +360,14 @@ if exist('data', 'dir') ~= 7
     mkdir('data');
 end
 o.datafilename=sprintf('%s-%s.%d.%d.%d.%d.%d.%d',o.functionNames,o.observer,round(t));
-datafullfilename=fullfile(fileparts(mfilename('fullpath')),'data',o.datafilename);
-dataFolder=fileparts(datafullfilename);
+o.datafullfilename=fullfile(fileparts(mfilename('fullpath')),'data',o.datafilename);
+dataFolder=fileparts(o.datafullfilename);
+if ~exist(dataFolder,'dir')
+   success=mkdir(dataFolder);
+   if ~success
+       error('Failed attempt to create "data" folder.');
+   end
+end
 dataFid=fopen(fullfile(dataFolder,[o.datafilename '.txt']),'rt');
 if dataFid~=-1
     error('Oops. There''s already a file called "%s.txt". Try again.',o.datafilename);
