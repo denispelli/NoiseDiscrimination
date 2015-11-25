@@ -1,11 +1,4 @@
 function o=NoiseDiscrimination(oIn) 
-addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder in same directory as this file
-addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this file
-% addpath('AutoBrightness');
-% addpath('lib');
-%Priority(1);
-%echo_executing_commands(2, 'local');
-%diary ./diary.log
 % o=NoiseDiscrimination(o);
 % Pass all your parameters in the "o" struct, which will be returned with
 % all the results as additional fields. NoiseDiscrimination may adjust some
@@ -115,6 +108,10 @@ addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same dire
 % We should equate this when we compare hard edge annulus with gaussian
 % envelope.
 % 
+addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder in same directory as this file
+addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this file
+%echo_executing_commands(2, 'local');
+%diary ./diary.log
 if 0
     % Copy this to produce a Gaussian annulus:
     o.noiseRadiusDeg=inf;
@@ -349,33 +346,21 @@ if length(stack)==1;
 else
     o.functionNames=[stack(2).name '-' stack(1).name];
 end
-
 if exist('data', 'dir') ~= 7
     mkdir('data');
 end
-
 o.datafilename=sprintf('%s-%s.%d.%d.%d.%d.%d.%d',o.functionNames,o.observer,round(t));
 datafullfilename=fullfile(fileparts(mfilename('fullpath')),'data',o.datafilename);
-if 0
-    dataFid=fopen([datafullfilename '.txt'],'rt');
-    if dataFid~=-1
-        error('Oops. There''s already a file called "%s.txt". Try again.',datafullfilename);
-    end
-    [dataFid,msg]=fopen([datafullfilename '.txt'],'wt');
-    if dataFid==-1
-        error('%s. Could not create data file: %s',msg,[datafullfilename '.txt']);
-    end
-else
-    dataFileDir = fileparts(datafullfilename);
-    dataFid=fopen([dataFileDir '/'  o.datafilename '.txt'],'rt');
-    if dataFid~=-1
-        error('Oops. There''s already a file called "%s.txt". Try again.',o.datafilename);
-    end
-    [dataFid,msg]=fopen([o.datafilename '.txt'],'wt');
-    if dataFid==-1
-        error('%s. Could not create data file: %s',msg,[o.datafilename '.txt']);
-    end
+dataFolder=fileparts(datafullfilename);
+dataFid=fopen(fullfile(dataFolder,[o.datafilename '.txt']),'rt');
+if dataFid~=-1
+    error('Oops. There''s already a file called "%s.txt". Try again.',o.datafilename);
 end
+[dataFid,msg]=fopen([o.datafilename '.txt'],'wt');
+if dataFid==-1
+    error('%s. Could not create data file: %s',msg,[o.datafilename '.txt']);
+end
+
 assert(dataFid>-1);
 ff=[1 dataFid];
 fprintf('\nSaving results in:\n');
@@ -2558,10 +2543,10 @@ try
         Screen('Preference', 'SuppressAllWarnings', oldSupressAllWarnings);
     end
     fclose(dataFid); dataFid=-1;
-    save([datafullfilename '.mat'],'o','cal');
-    fprintf('Results saved in %s with extensions .txt and .mat\nin folder %s\n',o.datafilename,fileparts(datafullfilename));
     o.signal=signal;
     o.q=q;
+    save([datafullfilename '.mat'],'o','cal');
+    fprintf('Results saved in %s with extensions .txt and .mat\nin folder %s\n',o.datafilename,fileparts(datafullfilename));
 catch
     sca; % screen close all
     AutoBrightness(cal.screen,1); % Restore autobrightness.
