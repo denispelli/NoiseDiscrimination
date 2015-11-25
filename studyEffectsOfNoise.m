@@ -50,7 +50,7 @@ o.targetHeightDeg=2; % letter size [2,sqrt(2*6),6];
 o.eccentricityDeg=32; % eccentricity [0,32]
 o.noiseSD=0.16; % noise contrast [0.16]
 
-%## Fixed values, for all current testing. Do not adjust. #
+%## Fixed values, for all current testing. Do not adjust. #####
 % Gaussian noise envelope: soft cut off
 % o.noiseRadiusDeg=inf;
 % noiseEnvelopeSpaceConstantDeg: 1
@@ -83,11 +83,9 @@ o.targetGaborNames='VH'; % "V" for vertical, and "H" for horizontal.
 %#########################################
 o.noiseCheckDeg=o.targetHeightDeg/20;
 % o.isWin=0; % use the Windows code even if we're on a Mac
-
 o.targetGaborPhaseDeg=90; % Phase offset of sinewave in deg at center of gabor.
 o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
 o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
-
 o.task='identify';
 o.targetModulates='luminance'; % Display a luminance decrement.
 % o.isWin=0; % use the Windows code even if we're on a Mac
