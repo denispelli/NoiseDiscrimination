@@ -21,7 +21,7 @@
 
 function tab = getStats(newpath, obs_name, doNeq, doEfficiency)
 % newpath = '/Users/xiuyunwu/NoiseDiscrimination/data';
-% obs_name = 'xiuyun';
+% obs_name = 'shivam';
 % doNeq=1;
 % doEfficiency=1;
 
@@ -122,7 +122,8 @@ end;
 if doEfficiency==1
     % computing high noise Efficiency = E_ideal/(E-E0)
     ideal = load('ideal_conditions.mat');
-    
+    runEffi = zeros(size(tabdata,1),1); % Neq for each run(when noise contrast = 0, Neq = 0)
+
     for t = 1:size(con,1)
         if con(t, 2)~=0
             cont = repmat(con(t,:),[size(tabdata,1) 1]);
