@@ -359,28 +359,28 @@ end
 if exist('data', 'dir') ~= 7
     mkdir('data');
 end
-o.datafilename=sprintf('%s-%s.%d.%d.%d.%d.%d.%d',o.functionNames,o.observer,round(t));
-o.datafullfilename=fullfile(fileparts(mfilename('fullpath')),'data',o.datafilename);
-dataFolder=fileparts(o.datafullfilename);
-if ~exist(dataFolder,'dir')
-   success=mkdir(dataFolder);
+o.dataFilename=sprintf('%s-%s.%d.%d.%d.%d.%d.%d',o.functionNames,o.observer,round(t));
+o.datafullfilename=fullfile(fileparts(mfilename('fullpath')),'data',o.dataFilename);
+o.dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
+if ~exist(o.dataFolder,'dir')
+   success=mkdir(o.dataFolder);
    if ~success
-       error('Failed attempt to create "data" folder.');
+       error('Failed attempt to create data folder: %s',o.dataFolder);
    end
 end
-dataFid=fopen(fullfile(dataFolder,[o.datafilename '.txt']),'rt');
+dataFid=fopen(fullfile(o.dataFolder,[o.dataFilename '.txt']),'rt');
 if dataFid~=-1
-    error('Oops. There''s already a file called "%s.txt". Try again.',o.datafilename);
+    error('Oops. There''s already a file called "%s.txt". Try again.',o.dataFilename);
 end
-[dataFid,msg]=fopen([o.datafilename '.txt'],'wt');
+[dataFid,msg]=fopen([o.dataFilename '.txt'],'wt');
 if dataFid==-1
-    error('%s. Could not create data file: %s',msg,[o.datafilename '.txt']);
+    error('%s. Could not create data file: %s',msg,[o.dataFilename '.txt']);
 end
 
 assert(dataFid>-1);
 ff=[1 dataFid];
 fprintf('\nSaving results in:\n');
-ffprintf(ff,'%s\n',o.datafilename);
+ffprintf(ff,'%s\n',o.dataFilename);
 ffprintf(ff,'%s %s\n',o.functionNames,datestr(now));
 ffprintf(ff,'observer %s, task %s, alternatives %d,  beta %.1f,\n',o.observer,o.task,o.alternatives,o.beta);
 
@@ -2588,14 +2588,14 @@ fixationLines=ComputeFixationLines(fix);
         AutoBrightness(cal.screen,1); % Restore autobrightness.
     end
     if window>=0
-        Screen('Preference', 'VisualDebugLevel', oldVisualDebugLevel);
-        Screen('Preference', 'SuppressAllWarnings', oldSupressAllWarnings);
+        Screen('Preference','VisualDebugLevel',oldVisualDebugLevel);
+        Screen('Preference','SuppressAllWarnings',oldSupressAllWarnings);
     end
     fclose(dataFid); dataFid=-1;
-    o.signal=signal;
-    o.q=q;
-    save([datafullfilename '.mat'],'o','cal');
-    fprintf('Results saved in %s with extensions .txt and .mat\nin folder %s\n',o.datafilename,fileparts(datafullfilename));
+    o.signal=signal; % worth saving
+%     o.q=q; % not worth saving
+    save(fullfile(o.dataFolder,[o.dataFilename '.mat']),'o','cal');
+    fprintf('Results saved in %s with extensions .txt and .mat\nin folder %s\n',o.dataFilename,o.dataFolder);
 catch
     sca; % screen close all
     AutoBrightness(cal.screen,1); % Restore autobrightness.
