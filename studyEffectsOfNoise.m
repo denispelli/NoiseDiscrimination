@@ -1,17 +1,3 @@
-<<<<<<< HEAD
-clear o
-% o.observer='junk';
-% o.observer='ideal';
-
-
-%#### Adjust values within this block of code #####################
-% o.observer='ideal'; %add your name here
-% o.observer='shivam'; %add your name here
-o.observer='xiuyun'; %add your name here
-
-o.trialsPerRun=80;
-
-=======
 %#### Adjust values within this block #####################
 clear o
 o.observer='junk';
@@ -19,12 +5,10 @@ o.observer='junk';
 % o.observer='hormet'; % use your name
 % o.observer='xiuyun'; % use your name
 % o.observer='shivam'; % use your name
->>>>>>> origin/master
 o.distanceCm=50; % viewing distance
 o.durationSec=0.2;
 o.trialsPerRun=80;
 
-<<<<<<< HEAD
 %For noise with Gaussian envelope (soft)
 %o.noiseRadiusDeg=inf;
 %noiseEnvelopeSpaceConstantDeg: 1
@@ -32,7 +16,7 @@ o.trialsPerRun=80;
 %For noise with tophat envelope (sharp cut off beyond disk with radius 1)
 %o.noiseRadiusDeg=1;
 %noiseEnvelopeSpaceConstantDeg: Inf
-=======
+
 % ############# we test target size x ecc w/o noise #######
 % o.targetHeightDeg=6; % OLD: letter or gabor size [2 3.5 6];
 o.targetHeightDeg=8; % letter/gabor size [2 4 8].
@@ -46,7 +30,6 @@ o.noiseSD=0.16; % noise contrast [0 0.16]
 % ############# We plan to test these soon #######
 % Also size 16 at [0 32] ecc. Also sizes [0.5 1] at 0 deg ecc. Also size 1 at 16 ecc.
 % #########################################################
->>>>>>> origin/master
 
 % ############## Below is constant for this week ##########
 % o.targetKind='letter';
@@ -63,11 +46,10 @@ o.targetGaborNames='123456'; % Observer types 1 for 0 deg, 2 for 30 deg, etc.
 % o.targetGaborOrientationsDeg=[0 90]; % Orientations relative to vertical.
 % o.targetGaborNames='VH'; % Observer types V for vertical or H for horizontal.
 
-<<<<<<< HEAD
 o.targetHeightDeg=2; % letter size [2,sqrt(2*6),6];
 o.eccentricityDeg=32; % eccentricity [0,32]
 o.noiseSD=0.16; % noise contrast [0.16]
-=======
+
 %## Fixed values, for all current testing. Do not adjust. #
 % Gaussian noise envelope: soft cut off
 % o.noiseRadiusDeg=inf;
@@ -77,13 +59,12 @@ o.noiseSD=0.16; % noise contrast [0.16]
 o.noiseEnvelopeSpaceConstantDeg=Inf; % always Inf for hard edge
 % o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
 o.noiseRadiusDeg=inf;
->>>>>>> origin/master
 
 o.noiseType='gaussian'; % ALWAYS use gaussian
 o.noiseSpectrum='white'; % pink or white
 o.targetCross=1;
 o.fixationCrossWeightDeg = 0.05; % target line thickness
-<<<<<<< HEAD
+
 o.alphabetPlacement='top'; % show possible answers on 'top' or 'right' for letters and gabors.
 % o.targetKind='letter'; % use letter target
 %##################################################################
@@ -102,11 +83,11 @@ o.targetGaborNames='VH'; % "V" for vertical, and "H" for horizontal.
 %#########################################
 o.noiseCheckDeg=o.targetHeightDeg/20;
 % o.isWin=0; % use the Windows code even if we're on a Mac
-=======
+
 o.targetGaborPhaseDeg=90; % Phase offset of sinewave in deg at center of gabor.
 o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
 o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
->>>>>>> origin/master
+
 o.task='identify';
 o.targetModulates='luminance'; % Display a luminance decrement.
 % o.isWin=0; % use the Windows code even if we're on a Mac
@@ -121,12 +102,8 @@ o.targetModulates='luminance'; % Display a luminance decrement.
 % o.snapshotShowsFixationAfter=0;
 % o.fixationCrossWeightDeg=0.05; % target line thickness
 o.speakInstructions=0;
-<<<<<<< HEAD
-o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar() (Linux compatibility)
-=======
 o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar, for Linux compatibility.
 % o.useFractionOfScreen=0.3; % 0: normal, 0.5: small for debugging.
->>>>>>> origin/master
 o=NoiseDiscrimination(o);
 sca;
 
