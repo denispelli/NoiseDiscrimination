@@ -19,23 +19,25 @@
 % noiseRadiusDeg, noiseSpectrum, noiseCheckDeg and targetKind
 
 
-function tab = getStats(newpath, obs_name, doNeq, doEfficiency)
+function tab = getStats(newpath, obsName, doNeq, doEfficiency, expDate)
 % newpath = '/Users/xiuyunwu/NoiseDiscrimination/data';
 % obs_name = 'shivam';
 % doNeq=1;
 % doEfficiency=1;
 
 %settings
-filename = [obs_name,'_runs.mat'];
+[yyyy,mm,dd]=datevec(expDate);
+dt=[num2str(yyyy),num2str(mm),num2str(dd)];
+filename = [obsName,'_runs_',dt,'.mat'];
 % This should be the same as the matfilename in parseExpData.m
-csvfilename=[obs_name,'_conditions.csv'];
-matfilename=[obs_name,'_conditions.mat'];
+csvfilename=[obsName,'_conditions_',dt,'.csv'];
+matfilename=[obsName,'_conditions_',dt,'.mat'];
 
 cd(newpath);
 load(filename);
 % This should be the table directly saved after running parseExpData.m
 
-col_name = {'target_size','noise_contrast','noise_decay_radius','eccentricity','HardOrSoft','TargetCross','noiseSpectrum','noiseCheckDeg','targetKind','mean_threshold','sd_threshold','squared_noise_contrast','mean_squared_threshold','sd_squared_threshold','mean_Energy','sd_Energy', 'Energy_at_unit_contrast','Noise_power_spectral_density'};
+col_name = {'targetSize','noiseContrast','noiseDecayRadius','eccentricity','hardOrSoft','targetCross','noiseSpectrum','noiseCheckDeg','targetKind','meanThreshold','sdThreshold','squaredNoiseContrast','meanSquaredThreshold','sdSquaredThreshold','meanEnergy','sdEnergy', 'energyAtUnitContrast','noisePowerSpectralDensity'};
 
 % convert conditions to positive integers so that can be used in accumarray()
 % subs is the converted condition for each run
@@ -116,12 +118,13 @@ if doNeq==1
     SDNeq = accumarray(subs, runNeq, [], @std);
     
     out = [out,MNeq,SDNeq];
-    col_name = {col_name{:}, 'mean_Neq','sd_Neq'};
+    col_name = {col_name{:}, 'meanNeq','sdNeq'};
 end;
 
 if doEfficiency==1
     % computing high noise Efficiency = E_ideal/(E-E0)
-    ideal = load('ideal_conditions.mat');
+    idealFile=['ideal_conditions_',dt,'.mat'];
+    ideal = load(idealFile);
     runEffi = zeros(size(tabdata,1),1); % Neq for each run(when noise contrast = 0, Neq = 0)
 
     for t = 1:size(con,1)
@@ -206,7 +209,7 @@ if doEfficiency==1
     SDEffi = accumarray(subs, runEffi, [], @std);
     
     out = [out,MEffi,SDEffi];
-    col_name = {col_name{:}, 'mean_Efficiency','sd_Efficiency'};
+    col_name = {col_name{:}, 'meanEfficiency','sdEfficiency'};
     
 end;
 

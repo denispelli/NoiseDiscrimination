@@ -1,18 +1,20 @@
-%from_date/to_date of form 'dd-mmm-yyyy hh:mm:ss'.
-%Put from_date = -Inf and/or to_date = Inf when wanting unrestricted
+%fromDate/toDate of form 'dd-mmm-yyyy hh:mm:ss'.
+%Put fromDate = -Inf and/or toDate = Inf when wanting unrestricted
 %lower/upper bound.
-
-function tabdata = parseExpData(newpath, obs_name, from_date, to_date)
+% 
+function tabdata = parseExpData(newPath, obsName, fromDate, toDate)
 
 % settings
 % I didn't include them into the function parameters since these may not
 % change everytime
 smallestTrialNum = 80; %used for skipping unfinished runs
-csvfilename=[obs_name,'_runs.csv'];
-matfilename=[obs_name,'_runs.mat'];
+[yyyy,mm,dd]=datevec(date);
+dt=[num2str(yyyy),num2str(mm),num2str(dd)];
+csvfilename=[obsName,'_runs_',dt,'.csv'];
+matfilename=[obsName,'_runs_',dt,'.mat'];
 %settings end
 
-cd(newpath);
+cd(newPath);
 files = dir('study*.mat');
 filenames = {files.name};
 filedates=cell(size(filenames));
@@ -23,22 +25,22 @@ for i=1:length(filenames)
     filedates{i}=datestr(cellfun(@str2num,temp(2:7)),0);
     filedates2{i}=datenum(filedates{i},fmt);
 end
-if sum(from_date==-Inf)==1
+if sum(fromDate==-Inf)==1
     from_dt=-Inf;
 else
-    from_dt = datenum(from_date,fmt);
+    from_dt = datenum(fromDate,fmt);
 end
-if sum(to_date==Inf)==1
+if sum(toDate==Inf)==1
     to_dt=Inf;
 else
-    to_dt = datenum(to_date, fmt);
+    to_dt = datenum(toDate, fmt);
 end
 
 parsefiles=cell(1,length(filenames));
 parsedates=cell(1,length(filenames));
 for k=1:length(filenames)
     [pathstr,name,ext]=fileparts(char(filenames(k)));
-    if not(isempty(strfind(name,char(obs_name))))
+    if not(isempty(strfind(name,char(obsName))))
         curr_date = filedates2{k};
         if curr_date>=from_dt && curr_date<=to_dt
             parsefiles{k}=char(filenames(k));
@@ -50,8 +52,7 @@ parsefiles=parsefiles(~cellfun('isempty',parsefiles)); %command to remove empty 
 parsedates=parsedates(~cellfun('isempty',parsedates));
 % pdata=cell(length(parsefiles),13);
 pdata = {};
-col_names={'observer','trials','target_size','noise_contrast','noise_decay_radius','eccentricity','p_accuracy','threshold_log_contrast','threshold_contrast_SD','contrast','log_E_by_N','efficiency','file_date_time','energy_at_unit_contrast','noise_power_spectral_density', 'threshold_energy','noiseRadiusDeg','TargetCross','noiseSpectrum', 'noiseCheckDeg', 'targetKind'};
-
+col_names={'observer','trials','targetSize','noiseContrast','noiseDecayRadius','eccentricity','pAccuracy','thresholdLogContrast','thresholdContrastSD','contrast','logEbyN','efficiency','fileDateTime','energyAtUnitContrast','noisePowerSpectralDensity', 'thresholdEnergy','noiseRadiusDeg','targetCross','noiseSpectrum', 'noiseCheckDeg', 'targetKind'};
 j = 1; % to skip the re-run runs(unfinished runs due to mis-representation of letters)
 for i=1:length(parsefiles)
     load(char(parsefiles(i)),'o');
@@ -80,22 +81,22 @@ for i=1:length(parsefiles)
         
         % the following commands might be used for all conditions later
         % when E1 and N are saved into o using the modified NoiseDiscrimination.m
-        if o.noiseSD==0 %for now just the new noise contrast=0 runs saved E1 and N into struct o
-            pdata{j,14}=o.E1; % energy at unit contrast
-            pdata{j,15}=o.N; % noise power spectral density
-            E1 = o.E1;
-            N = o.N;
-        end;
+        %if o.noiseSD==0 %for now just the new noise contrast=0 runs saved E1 and N into struct o
+        pdata{j,14}=o.E1; % energy at unit contrast
+        pdata{j,15}=o.N; % noise power spectral density
+        E1 = o.E1;
+        N = o.N;
+        %end;
         
         % for old data with noise contrast~=0 we just compute E1 and N from o
-        if o.noiseSD~=0
-            N = (o.noiseSD^2)*o.noiseCheckDeg^2;
-            E=o.EOverN*N;
-            E1=E/o.contrast^2;
-            
-            pdata{j,14}=E1; % energy at unit contrast
-            pdata{j,15}=N; % noise power spectral density
-        end;
+%         if o.noiseSD~=0
+%             N = (o.noiseSD^2)*o.noiseCheckDeg^2;
+%             E=o.EOverN*N;
+%             E1=E/o.contrast^2;
+%             
+%             pdata{j,14}=E1; % energy at unit contrast
+%             pdata{j,15}=N; % noise power spectral density
+%         end;
         
         E = E1*o.contrast^2;
         pdata{j,16}=E; %threshold energy
@@ -135,12 +136,12 @@ for i=1:length(parsefiles)
         end;
         
         j = j+1;
+
     end;
     clear o;
 end
 pdata( all(cellfun(@isempty,pdata),2), : ) = []; %removes empty cell rows
 tabdata = cell2table(pdata, 'VariableNames', col_names); %converts to table
-
 %Use this command to save file -
 writetable(tabdata, csvfilename,'Delimiter',',')
 
