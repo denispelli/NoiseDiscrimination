@@ -2,7 +2,7 @@
 rm(list = ls())
 
 # load the data
-dat <- read.csv("data/xiuyun_conditions.csv")
+dat <- read.csv("xiuyun_conditions.csv")
 
 # some transformations necessary for computation
 dat$noise_decay_radius = replace(dat$noise_decay_radius, dat$noise_decay_radius==Inf,32)
