@@ -1,8 +1,13 @@
 %fromDate/toDate of form 'dd-mmm-yyyy hh:mm:ss'.
 %Put fromDate = -Inf and/or toDate = Inf when wanting unrestricted
 %lower/upper bound.
-% 
+%
 function tabdata = parseExpData(newPath, obsName, fromDate, toDate)
+
+% newPath = '/Users/xiuyunwu/NoiseDiscrimination/data','xiuyun';
+% obsName = 'xiuyun';
+% fromDate = -inf;
+% toDate = inf;
 
 % settings
 % I didn't include them into the function parameters since these may not
@@ -79,24 +84,23 @@ for i=1:length(parsefiles)
         pdata{j,12}=o.efficiency; %efficiency
         pdata{j,13}=char(parsedates(i)); %file date for reference
         
-        % the following commands might be used for all conditions later
-        % when E1 and N are saved into o using the modified NoiseDiscrimination.m
-        %if o.noiseSD==0 %for now just the new noise contrast=0 runs saved E1 and N into struct o
-        pdata{j,14}=o.E1; % energy at unit contrast
-        pdata{j,15}=o.N; % noise power spectral density
-        E1 = o.E1;
-        N = o.N;
+        if isfield(o, 'E1')
+            pdata{j,14}=o.E1; % energy at unit contrast
+            E1 = o.E1;
+        else % for old data without o.E1
+            N = (o.noiseSD^2)*o.noiseCheckDeg^2;
+            E=o.EOverN*N;
+            E1=E/o.contrast^2;
+            pdata{j,14}=E1;
+        end;
+        if isfield(o, 'N')
+            pdata{j,15}=o.N; % noise power spectral density
+            N = o.N;
+        else % for old data without o.N
+            N = (o.noiseSD^2)*o.noiseCheckDeg^2;
+            pdata{j,15}=N;
+        end;
         %end;
-        
-        % for old data with noise contrast~=0 we just compute E1 and N from o
-%         if o.noiseSD~=0
-%             N = (o.noiseSD^2)*o.noiseCheckDeg^2;
-%             E=o.EOverN*N;
-%             E1=E/o.contrast^2;
-%             
-%             pdata{j,14}=E1; % energy at unit contrast
-%             pdata{j,15}=N; % noise power spectral density
-%         end;
         
         E = E1*o.contrast^2;
         pdata{j,16}=E; %threshold energy
@@ -136,7 +140,7 @@ for i=1:length(parsefiles)
         end;
         
         j = j+1;
-
+        
     end;
     clear o;
 end
