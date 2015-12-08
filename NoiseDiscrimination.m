@@ -108,10 +108,15 @@ function o=NoiseDiscrimination(oIn)
 % We should equate this when we compare hard edge annulus with gaussian
 % envelope.
 %
-addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder in same directory as this file
-addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this file
-%echo_executing_commands(2, 'local');
-%diary ./diary.log
+addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder in same directory as this M file
+addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
+% echo_executing_commands(2, 'local');
+% diary ./diary.log
+[vString,vStruct]=PsychtoolboxVersion;
+if IsOSX && vStruct.revision<7283
+    % Revision 7283 fixed the bug. December 8, 2015.
+    error('Old versions of Mac OSX Psychtoolbox had gamma table bug. Please update to the latest version: UpdatePsychtoolbox');
+end
 if 0
     % Copy this to produce a Gaussian annulus:
     o.noiseRadiusDeg=inf;
@@ -432,13 +437,8 @@ o.noiseCheckDeg=o.noiseCheckPix/o.pixPerDeg;
 BackupCluts(o.screen);
 LMean=(max(cal.old.L)+min(cal.old.L))/2;
 o.maxLRange=2*min(max(cal.old.L)-LMean,LMean-min(cal.old.L));
-if IsOSX
-    firstGrayClutEntry=10; % Used to be 2, but now need 10 in Mac OSX 10.11.1
-    lastGrayClutEntry=254;
-else
-    firstGrayCLUTEntry=2;
-    lastGrayClutEntry=254;
-end
+firstGrayClutEntry=2;
+lastGrayClutEntry=254;
 if o.isWin
     LRange=o.maxLRange;
     o.minLRange=inf;
@@ -751,15 +751,10 @@ try
                 % having gray1==1 is that we get better blending of letters
                 % written (as black=0) on that background.
                 gray1=1;
-                if IsOSX
-                    cal.LFirst=LMean*1.17; % Correct for OSX 10.11.1 bug
-                    cal.LLast=LMean*1.17; % Correct for OSX 10.11.1 bug
-                else
-                    cal.LFirst=LMean;
-                    cal.LLast=LMean;
-                end
-                cal.nFirst=firstGrayClutEntry-1; % Ought to be 1, but need 9 in Mac OSX 10.11.1
-                cal.nLast=firstGrayClutEntry-1; % Ought to be 1, but need 9 in Mac OSX 10.11.1
+                cal.LFirst=LMean;
+                cal.LLast=LMean;
+                cal.nFirst=firstGrayClutEntry-1; 
+                cal.nLast=firstGrayClutEntry-1; 
                 cal=LinearizeClut(cal);
             end %if o.isWin
             if o.printGammaLoadings; fprintf('LoadNormalizedGammaTable %d; LRange/Lmean=%.2f\n',MFileLineNr,(cal.LLast-LMean)/LMean); end

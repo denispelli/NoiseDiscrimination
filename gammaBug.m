@@ -1,4 +1,5 @@
 % gammaBug.m
+% Psychtoolbox Revision 7283 fixed the bug. December 8, 2015.
 % This program is a trivial example of using the CLUT to control the color
 % displayed by a particular color index. I would expect color 0 to be the
 % first CLUT entry, and color 1 to the the second, and so on. It used to
