@@ -104,7 +104,7 @@ function o=NoiseDiscrimination(oIn)
 % The amplitude is a Gaussian of R-Ra where R is the distance from letter
 % center and Ra is o.annularNoiseEnvelopeRadiusDeg. When Ra is zero, this reduces to a
 % normal gaussian centered on the letter. The code now computes a new
-% summary of the "area" of the envelope: o.centralNoiseEnvelopeE1degdeg
+% summary of the "area" of the envelope: o.centralNoiseEnvelopeE1DegDeg
 % We should equate this when we compare hard edge annulus with gaussian
 % envelope.
 %
@@ -124,7 +124,7 @@ if 0
     o.noiseEnvelopeSpaceConstantDeg=1.1;
     o.annularNoiseBigRadiusDeg=inf;
     o.annularNoiseSmallRadiusDeg=inf;
-    % Returns: o.centralNoiseEnvelopeE1degdeg
+    % Returns: o.centralNoiseEnvelopeE1DegDeg
 end
 if 0
     % Copy this to produce a hard-edge annulus:
@@ -135,7 +135,7 @@ if 0
     o.annularNoiseSD=0.2; % Typically nan (i.e. use o.noiseSD) or 0.2.
     o.annularNoiseBigRadiusDeg=3; % Noise extent re target. Typically 1 or inf.
     o.annularNoiseSmallRadiusDeg=1; % Typically 1 or 0 (no hole).
-    % Returns: o.centralNoiseEnvelopeE1degdeg
+    % Returns: o.centralNoiseEnvelopeE1DegDeg
 end
 % For a "fair" contest of hard and soft annuli, we should:
 %
@@ -146,7 +146,7 @@ end
 % 2. adjust the annulus thickness of the hard annulus
 % o.annularNoiseSmallRadiusDeg-o.annularNoiseBigRadiusDeg to achieve the
 % same "area" as the Gaussian annulus. This "area" is reported in a new
-% variable: o.centralNoiseEnvelopeE1degdeg
+% variable: o.centralNoiseEnvelopeE1DegDeg
 
 % clear all
 
@@ -1198,7 +1198,7 @@ try
     else
         centralNoiseEnvelope=ones(o.canvasSize);
     end
-    o.centralNoiseEnvelopeE1degdeg=sum(centralNoiseEnvelope(:).^2*o.noiseCheckPix/o.pixPerDeg^2);
+    o.centralNoiseEnvelopeE1DegDeg=sum(centralNoiseEnvelope(:).^2*o.noiseCheckPix/o.pixPerDeg^2);
     if o.yellowAnnulusBigRadiusDeg>o.yellowAnnulusSmallRadiusDeg
         % Compute yellow mask, with small and large radii.
         yellowMask=zeros(o.canvasSize);
