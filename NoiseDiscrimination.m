@@ -1088,7 +1088,31 @@ try
                         targetRect=round([0 0 o.targetHeightPix o.targetHeightPix]/o.noiseCheckPix);
                         targetRect=CenterRect(targetRect,rect);
                         Screen('DrawText',scratchWindow,signal(i).letter,targetRect(1),targetRect(4),black0,white1,1);
+                        Screen('DrawingFinished',scratchWindow); % Might make GetImage more reliable. Suggested by Mario Kleiner.
+                        WaitSecs(0.1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
                         letter=Screen('GetImage',scratchWindow,targetRect,'drawBuffer');
+                        
+                        % The scrambling sounds like something is going wrong in detiling of read
+                        % back renderbuffer memory, maybe a race condition in the driver. Maybe
+                        % something else, in any case not really fixable by us, although the "wait
+                        % a bit and hope for the best" approach would the the most likely of all
+                        % awful approaches to work around it. Maybe add a Screen('DrawingFinished',
+                        % window, [], 1); before the 'getimage' and/or before the random wait.
+                        %
+                        % You could test a different machine, in case only one type of graphics
+                        % card or vendor has the driver bug.
+                        %
+                        % Or you could completely switch to the software renderer via
+                        % Screen('preference','Conservevram', 64). That would shutdown all hardware
+                        % acceleration and render very slowly on the cpu in main memory. However,
+                        % that renderer can't handle fullscreen windows afaik, and timing will also
+                        % be screwed. And there might be various other limitations or bugs,
+                        % including failure to work at all. If you! can live with that, worth a
+                        % try. If you run into trouble don't bother even reporting it. I'm
+                        % absolutely not interested.
+                        %
+                        % -mario (psychtoolbox forum december 13, 2015)
+                        
                         Screen('FillRect',scratchWindow);
                         letter=letter(:,:,1);
                         signal(i).image=letter<(white1+black0)/2;
