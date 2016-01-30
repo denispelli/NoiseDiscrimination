@@ -2,6 +2,12 @@
 % fine in the latest Psychtoolbox release:
 % PTB-INFO: This is Psychtoolbox-3 for Apple OS X, under Matlab 64-Bit (Version 3.0.12 - Build date: Nov 27 2015).
 % Denis Pelli December 2015.
+% It now works on my 15" PowerBook Pro, which has both Intel and AMD
+% chips. It fails on my MacBook Air, which has an Intel chip. Mario thinks
+% the Intel driver is broken. Presumably the improvement happened because the
+% new Psychtoolbox chose the AMD instead of the Intel driver. Mario thinks
+% there's no way to work around the driver bug. We have to wait for a new
+% driver.
 
 window=Screen('OpenWindow',0,255);
 LoadIdentityClut(window);
