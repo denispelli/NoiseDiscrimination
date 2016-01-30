@@ -1088,7 +1088,7 @@ try
                         targetRect=round([0 0 o.targetHeightPix o.targetHeightPix]/o.noiseCheckPix);
                         targetRect=CenterRect(targetRect,rect);
                         Screen('DrawText',scratchWindow,signal(i).letter,targetRect(1),targetRect(4),black0,white1,1);
-                        Screen('DrawingFinished',scratchWindow); % Might make GetImage more reliable. Suggested by Mario Kleiner.
+                        Screen('DrawingFinished',scratchWindow,[],1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
                         WaitSecs(0.1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
                         letter=Screen('GetImage',scratchWindow,targetRect,'drawBuffer');
                         
