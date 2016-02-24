@@ -1,3 +1,5 @@
+% Psychtoolbox Revision 7283 fixed the bug. December 8, 2015.
+sca
 Screen('Preference', 'SkipSyncTests', 1);
 PsychDefaultSetup(0);
 PsychImaging('PrepareConfiguration');
@@ -7,7 +9,7 @@ Screen('FillRect',window,255);
 Screen('Flip',window);
 Speak('Supposed to be white. Click to continue.');
 GetClicks;
-gamma=Screen('ReadNormalizedGammaTable',window);
+[gamma, dacBits, realLutSize]=Screen('ReadNormalizedGammaTable',window);
 gamma=interp1(gamma,1:(size(gamma,1)-1)/255:size(gamma,1),'pchip'); % Down sample to 256.
 Screen('LoadNormalizedGammaTable',window,gamma,2);
 Speak('Now is white. Click to continue.');
@@ -23,7 +25,7 @@ end
 Screen('Flip',window);
 Speak('A ramp. Click to continue.');
 GetClicks;
-fprintf('gamma size %dx%d, dacbits %d, reallutsize %d\n',size(gamma),dacbits,realLutSize);
+fprintf('gamma size %dx%d, dacBits %d, realLutSize %d\n',size(gamma),dacBits,realLutSize);
 for i=2
     gamma(i,1:3)=[1 1 0]; % yellow background
 end

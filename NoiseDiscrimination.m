@@ -104,14 +104,19 @@ function o=NoiseDiscrimination(oIn)
 % The amplitude is a Gaussian of R-Ra where R is the distance from letter
 % center and Ra is o.annularNoiseEnvelopeRadiusDeg. When Ra is zero, this reduces to a
 % normal gaussian centered on the letter. The code now computes a new
-% summary of the "area" of the envelope: o.centralNoiseEnvelopeE1degdeg
+% summary of the "area" of the envelope: o.centralNoiseEnvelopeE1DegDeg
 % We should equate this when we compare hard edge annulus with gaussian
 % envelope.
 %
-addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder in same directory as this file
-addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this file
-%echo_executing_commands(2, 'local');
-%diary ./diary.log
+addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder in same directory as this M file
+addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
+% echo_executing_commands(2, 'local');
+% diary ./diary.log
+[vString,vStruct]=PsychtoolboxVersion;
+if IsOSX && vStruct.revision<7283
+    % Revision 7283 fixed the bug. December 8, 2015.
+    error('Old versions of Mac OSX Psychtoolbox had gamma table bug. Please update to the latest version: UpdatePsychtoolbox');
+end
 if 0
     % Copy this to produce a Gaussian annulus:
     o.noiseRadiusDeg=inf;
@@ -119,7 +124,7 @@ if 0
     o.noiseEnvelopeSpaceConstantDeg=1.1;
     o.annularNoiseBigRadiusDeg=inf;
     o.annularNoiseSmallRadiusDeg=inf;
-    % Returns: o.centralNoiseEnvelopeE1degdeg
+    % Returns: o.centralNoiseEnvelopeE1DegDeg
 end
 if 0
     % Copy this to produce a hard-edge annulus:
@@ -130,7 +135,7 @@ if 0
     o.annularNoiseSD=0.2; % Typically nan (i.e. use o.noiseSD) or 0.2.
     o.annularNoiseBigRadiusDeg=3; % Noise extent re target. Typically 1 or inf.
     o.annularNoiseSmallRadiusDeg=1; % Typically 1 or 0 (no hole).
-    % Returns: o.centralNoiseEnvelopeE1degdeg
+    % Returns: o.centralNoiseEnvelopeE1DegDeg
 end
 % For a "fair" contest of hard and soft annuli, we should:
 %
@@ -141,7 +146,7 @@ end
 % 2. adjust the annulus thickness of the hard annulus
 % o.annularNoiseSmallRadiusDeg-o.annularNoiseBigRadiusDeg to achieve the
 % same "area" as the Gaussian annulus. This "area" is reported in a new
-% variable: o.centralNoiseEnvelopeE1degdeg
+% variable: o.centralNoiseEnvelopeE1DegDeg
 
 % clear all
 
@@ -432,13 +437,8 @@ o.noiseCheckDeg=o.noiseCheckPix/o.pixPerDeg;
 BackupCluts(o.screen);
 LMean=(max(cal.old.L)+min(cal.old.L))/2;
 o.maxLRange=2*min(max(cal.old.L)-LMean,LMean-min(cal.old.L));
-if IsOSX
-    firstGrayClutEntry=10; % Used to be 2, but now need 10 in Mac OSX 10.11.1
-    lastGrayClutEntry=254;
-else
-    firstGrayCLUTEntry=2;
-    lastGrayClutEntry=254;
-end
+firstGrayClutEntry=2;
+lastGrayClutEntry=254;
 if o.isWin
     LRange=o.maxLRange;
     o.minLRange=inf;
@@ -751,15 +751,10 @@ try
                 % having gray1==1 is that we get better blending of letters
                 % written (as black=0) on that background.
                 gray1=1;
-                if IsOSX
-                    cal.LFirst=LMean*1.17; % Correct for OSX 10.11.1 bug
-                    cal.LLast=LMean*1.17; % Correct for OSX 10.11.1 bug
-                else
-                    cal.LFirst=LMean;
-                    cal.LLast=LMean;
-                end
-                cal.nFirst=firstGrayClutEntry-1; % Ought to be 1, but need 9 in Mac OSX 10.11.1
-                cal.nLast=firstGrayClutEntry-1; % Ought to be 1, but need 9 in Mac OSX 10.11.1
+                cal.LFirst=LMean;
+                cal.LLast=LMean;
+                cal.nFirst=firstGrayClutEntry-1; 
+                cal.nLast=firstGrayClutEntry-1; 
                 cal=LinearizeClut(cal);
             end %if o.isWin
             if o.printGammaLoadings; fprintf('LoadNormalizedGammaTable %d; LRange/Lmean=%.2f\n',MFileLineNr,(cal.LLast-LMean)/LMean); end
@@ -1093,7 +1088,31 @@ try
                         targetRect=round([0 0 o.targetHeightPix o.targetHeightPix]/o.noiseCheckPix);
                         targetRect=CenterRect(targetRect,rect);
                         Screen('DrawText',scratchWindow,signal(i).letter,targetRect(1),targetRect(4),black0,white1,1);
+                        Screen('DrawingFinished',scratchWindow); % Might make GetImage more reliable. Suggested by Mario Kleiner.
+                        WaitSecs(0.1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
                         letter=Screen('GetImage',scratchWindow,targetRect,'drawBuffer');
+                        
+                        % The scrambling sounds like something is going wrong in detiling of read
+                        % back renderbuffer memory, maybe a race condition in the driver. Maybe
+                        % something else, in any case not really fixable by us, although the "wait
+                        % a bit and hope for the best" approach would the the most likely of all
+                        % awful approaches to work around it. Maybe add a Screen('DrawingFinished',
+                        % window, [], 1); before the 'getimage' and/or before the random wait.
+                        %
+                        % You could test a different machine, in case only one type of graphics
+                        % card or vendor has the driver bug.
+                        %
+                        % Or you could completely switch to the software renderer via
+                        % Screen('preference','Conservevram', 64). That would shutdown all hardware
+                        % acceleration and render very slowly on the cpu in main memory. However,
+                        % that renderer can't handle fullscreen windows afaik, and timing will also
+                        % be screwed. And there might be various other limitations or bugs,
+                        % including failure to work at all. If you! can live with that, worth a
+                        % try. If you run into trouble don't bother even reporting it. I'm
+                        % absolutely not interested.
+                        %
+                        % -mario (psychtoolbox forum december 13, 2015)
+                        
                         Screen('FillRect',scratchWindow);
                         letter=letter(:,:,1);
                         signal(i).image=letter<(white1+black0)/2;
@@ -1203,7 +1222,7 @@ try
     else
         centralNoiseEnvelope=ones(o.canvasSize);
     end
-    o.centralNoiseEnvelopeE1degdeg=sum(centralNoiseEnvelope(:).^2*o.noiseCheckPix/o.pixPerDeg^2);
+    o.centralNoiseEnvelopeE1DegDeg=sum(centralNoiseEnvelope(:).^2*o.noiseCheckPix/o.pixPerDeg^2);
     if o.yellowAnnulusBigRadiusDeg>o.yellowAnnulusSmallRadiusDeg
         % Compute yellow mask, with small and large radii.
         yellowMask=zeros(o.canvasSize);

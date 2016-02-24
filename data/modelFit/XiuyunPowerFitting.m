@@ -36,18 +36,20 @@ xiuyunECC0degconditionsWithFit = sortrows(xiuyunECC0degconditionsWithFit,'radius
 figure
 hold on
 plot(xiuyunECC32degconditionsWithFit.radius_relative_to_letter_radius, xiuyunECC32degconditionsWithFit.contrastFit);
-s1 = 'Power integration fit for ecc = 32 deg: radius of 1.6*letter radius';
+s1 = 'Power integration fit, eccentricity = 32 deg';
 plot(xiuyunECC32degconditionsWithFit.radius_relative_to_letter_radius, xiuyunECC32degconditionsWithFit.mean_threshold,'o');
-s2 = 'Xiuyun ecc = 32 deg';
+s2 = 'Observer 1, eccentricity = 32 deg';
 plot(xiuyunECC0degconditionsWithFit.radius_relative_to_letter_radius, xiuyunECC0degconditionsWithFit.contrastFit);
-s3 = 'Power integration fit for ecc = 0 deg: radius of 1.4*letter radius';
+s3 = 'Power integration fit, eccentricity = 0 deg';
 plot(xiuyunECC0degconditionsWithFit.radius_relative_to_letter_radius, xiuyunECC0degconditionsWithFit.mean_threshold,'o');
-s4 = 'Xiuyun ecc = 0 deg';
+s4 = 'Observer 1, eccentricity = 0 deg';
 legend(s1,s2,s3,s4);
-title('Xiuyun data, noiseSD = .16, all letter sizes');
+%title('Xiuyun data, noiseSD = .16, all letter sizes');
 xlabel('Relative decay radius (decay radius/letter radius)');
 ylabel('Threshold contrast');
-axis([.1 100 .1 .7])
+set( gca,'xscale','log')
+set( gca,'yscale','log')
+axis([.1 100 .15 .7])
 
 hold off
 
@@ -55,17 +57,18 @@ hold off
 figure
 hold on
 plot(xiuyunconditionsWithFit.radius_relative_to_letter_radius, xiuyunconditionsWithFit.contrastFit);
-s1 = 'Power integration fit: radius of 1.6*letter radius';
+s1 = 'Power integration fit';
 plot(xiuyunECC32degconditionsWithFit.radius_relative_to_letter_radius, xiuyunECC32degconditionsWithFit.mean_threshold,'o');
-s2 = 'Xiuyun ecc = 32 deg';
+s2 = 'Observer 1, eccentricity = 32 deg';
 plot(xiuyunECC0degconditionsWithFit.radius_relative_to_letter_radius, xiuyunECC0degconditionsWithFit.mean_threshold,'o');
-s3 = 'Xiuyun ecc = 0 deg';
+s3 = 'Observer 1, eccentricity = 0 deg';
 legend(s1,s2,s3);
-title('Xiuyun data, noiseSD = .16, all letter sizes');
+%title('Observer 1, noiseSD = .16, all letter sizes');
 xlabel('Relative decay radius (decay radius/letter radius)');
 ylabel('Threshold contrast');
 set( gca,'xscale','log')
 set( gca,'yscale','log')
+axis([.1 100 .15 .7])
 hold off
 
 
