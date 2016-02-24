@@ -22,8 +22,9 @@ junk/
 tmp.m
 tmp.mat
 buggy.mat
+backup_[0-9]*.mat
 
-*.mat
+#*.mat
 *.*.*.*.*.*.txt
 octave-workspace
 *.Rproj.user
