@@ -1,0 +1,337 @@
+library(car)
+library(MASS)
+library(plyr)
+library(ggplot2)
+library(Hmisc)
+library(reshape2)
+options(digits=2)
+
+mytheme <- theme_bw() +
+  theme(panel.border=element_rect(color=NA), strip.background=element_rect(fill=NA),
+        text=element_text(size=32), axis.text.x = element_text(angle = 60, hjust = 1))
+
+setwd('~/Documents/Github/NoiseDiscrimination/data')
+#setwd('/Users/xiuyunwu/NoiseDiscrimination/data')
+pp = list()
+#T <- read.csv("xiuyun_conditionsN.csv")
+# T <- read.csv("xiuyun_conditions_2015122.csv") # this uses exp for log transformation
+# T <- read.csv("xiuyun_conditions_2016222.csv") # this file also includes data collected during 2015 fall and winter
+# T <- read.csv("xiuyun_conditions_2016222_1.csv") # only includes 2015 fall and winter data
+T <- read.csv("xiuyun_conditions_2016222_2.csv") # only includes 2016 winter data
+
+T$noiseDecayRadius = replace(T$noiseDecayRadius, T$noiseDecayRadius==Inf,32)
+T$noiseDecayRadius = replace(T$noiseDecayRadius, T$noiseDecayRadius==1.018875,1)
+T$noiseDecayRadius = replace(T$noiseDecayRadius, T$noiseDecayRadius==1.6302,1.73205080756888)
+T$noiseDecayRadius = replace(T$noiseDecayRadius, T$noiseDecayRadius==3.056625,3)
+T$noiseDecayRadius = replace(T$noiseDecayRadius, T$noiseDecayRadius==5.094375,5.19615242270663)
+T$noiseDecayRadius = replace(T$noiseDecayRadius, T$noiseDecayRadius==8.9661,9)
+T$shiftedSquaredNoiseContrast = T$squaredNoiseContrast +0.005
+T$targetSize[abs(T$targetSize-2*sqrt(3)) < 1e-3] = 3.5
+T$shiftedEccentricity = T$eccentricity + 0.05 # foveal critical spcaing
+#noiseDecayRadius = factor(noiseDecayRadius, c(1,2,3,5,6,8,9,16))
+
+
+# dat <- within(T, {
+#   id = factor(S.No.)
+#  letterSize = factor(letterSize, c(2,3,6))
+#   eccentricity = factor(eccentricity, c(0,2,8,32))
+#  Trials = factor(Trials, c(80, 100))
+# })
+
+
+
+noGrid <-
+  theme(panel.grid.major=element_blank(),panel.grid.minor=element_blank(),panel.background=element_blank(),axis.line=element_line(colour='black'))
+
+
+# xbreaks = c(1, 2, 4, 8, 16, 32)
+# ybreaks = c(0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 1, 1.5, 2.0)
+# ylimits = aes(ymax = meanThreshold + sdThreshold, ymin=meanThreshold - sdThreshold)
+# pp[[2]] <- ggplot(subset(T, T$targetKind=='gabor'), aes(x=targetSize, y=meanThreshold, color=factor(eccentricity), linetype=factor(noiseContrast) )) +
+
+
+
+
+
+
+  # get rid of eccessive measurements using *gabors* with various noiseCheckDeg
+  T = T[!(T$noiseSpectrum=='white' & T$noiseContrast==0.16 & T$eccentricity==0 & T$targetKind == 'gabor' & (T$targetSize==8 & abs(T$noiseCheckDeg-0.395) > 0.01)),]
+
+  bakT <- T
+
+  T <- subset(T, T$noiseSpectrum=='white'
+              & T$noiseContrast==0.16
+              & noiseDecayRadius >= 16
+  )
+
+
+  if(TRUE){
+
+
+  # Threshold vs. DecayRadius/TargetSize
+  xbreaks = c(0.01, 0.25, 0.5,1, 2, 4, 8, 16, 32)
+  ybreaks = c(0.01, 0.05, 0.1, 0.2)
+  ylimits = aes(ymax = meanThreshold + sdThreshold, ymin=meanThreshold - sdThreshold)
+  pp[[2]] <- ggplot(subset(bakT, noiseDecayRadius>0 & noiseSpectrum == 'white' & noiseContrast == 0.16), aes(x=noiseDecayRadius/targetSize, y=meanThreshold, size=factor(targetSize), color=factor(shiftedEccentricity))) +
+    geom_errorbar(ylimits, width=0.1, alpha=0.6)+
+    geom_line(alpha=0.6)+
+    geom_point(alpha=0.6, size=5)+
+    # geom_abline(intercept = 5e-5, slope = 0, color="black", size=5) +
+    # geom_line(data=data.frame(x=seq(0.45, 32, 0.5),y=seq(0.45, 32, 0.5)), aes(x=x, y=y))+
+    # geom_segment(aes(x = 1, y = 1e-6, xend = 10, yend = 1e-4), color="black", linetype="dashed", size=1.5)+
+    scale_y_log10(breaks=ybreaks)+
+    scale_x_log10(breaks=xbreaks, label=as.character(xbreaks))+
+    scale_linetype_manual(values=c("solid", "longdash"))+
+    scale_size_discrete(range=c(0.5,3), name="Target Size (deg)") +
+    scale_color_discrete(name=expression(Eccentricity[shifted]~ (deg)), labels = sort(unique(bakT$eccentricity)))+
+    #scale_color_brewer(type="div",  palette = 7)
+    noGrid+
+    facet_grid(.~targetKind)+
+    labs(title = "Object Identification", x = "Noise Decay Radius / Target Size", y = 'Threshold Contrast')+
+    # annotate("text", hjust=1, x = 32, y = 5e-7, label = c("Global Gaussian White Noise"), size=8) +
+    # annotate("text", hjust=1, x = 32, y = 7e-7, label = c("Observer: Wu"), size=8) +
+    theme(text=element_text(size=32))
+  print(pp[[2]])
+
+
+
+  # Threshold vs. Ecc
+  xbreaks = c(1, 8, 16, 32)
+  ybreaks = c(0.03,0.05,0.1,0.15, 0.2)
+  ylimits = aes(ymax = meanThreshold + sdThreshold, ymin=meanThreshold - sdThreshold)
+  pp[[3]] <- ggplot(T, aes(x=shiftedEccentricity, y=meanThreshold, color=factor(targetSize))) +
+    geom_errorbar(ylimits, width=0.1)+
+    geom_line()+
+    geom_point(alpha=0.6, size=8)+
+    # geom_segment(aes(x = 1, y = 0.02, xend = 10, yend = 0.2), color="black", linetype="dashed", size=1.5)+
+    scale_y_log10(breaks=ybreaks)+
+    # scale_x_log10(breaks=xbreaks)+
+    scale_x_continuous(breaks=xbreaks)+
+    scale_linetype_manual(values=c("solid", "longdash"))+
+    scale_size_discrete(range=c(0.7,2), name="Target Size (deg)") +
+    scale_color_discrete(name="Target Size (deg)")+
+    #scale_color_brewer(type="div",  palette = 7)
+    noGrid+
+    facet_grid(.~targetKind)+
+    labs(title = "Object Identification", x =  expression(Eccentricity[shifted]~ (deg)), y = "Threshold Contrast")+
+    # annotate("text", hjust=0, x = 0.5, y = 6e-3, label = c("Global Gaussian White Noise"), size=8) +
+    # annotate("text", hjust=0, x = 0.5, y = 7e-3, label = c("Observer: Wu"), size=8) +
+    theme(text=element_text(size=32))
+  print(pp[[3]])
+
+
+  # Neq vs. Ecc
+  xbreaks = c(0.05, 1, 8, 16, 32)
+  ybreaks = c(1e-06, 1e-05, 1e-04, 1e-03, 1e-02)
+  ylimits = aes(ymax = meanNeq + sdNeq, ymin=meanNeq - sdNeq)
+  pp[[4]] <- ggplot(T, aes(x=shiftedEccentricity, y=meanNeq, color=factor(targetSize), size=factor(targetSize))) +
+    geom_errorbar(ylimits, width=0.1)+
+    geom_line()+
+    geom_point(alpha=0.6, size=8)+
+    # geom_abline(intercept = 5e-5, slope = 0, color="black", size=5) +
+    # geom_line(data=data.frame(x=seq(0.45, 32, 0.5),y=seq(0.45, 32, 0.5)), aes(x=x, y=y))+
+    geom_segment(aes(x = 1, y = 1e-6, xend = 10, yend = 1e-4), color="black", linetype="dashed", size=1.5)+
+    scale_y_log10(breaks=ybreaks)+
+    scale_x_log10(breaks=xbreaks, label=as.character(xbreaks))+
+    scale_linetype_manual(values=c("solid", "longdash"))+
+    scale_size_discrete(range=c(0.7,2), name="Target Size (deg)") +
+    scale_color_discrete(name="Target Size (deg)")+
+    #scale_color_brewer(type="div",  palette = 7)
+    noGrid+
+    facet_grid(.~targetKind)+
+    labs(title = "Object Identification", x = expression(Eccentricity[shifted]~ (deg)), y = expression(Neq~(deg^2)))+
+    annotate("text", hjust=1, x = 32, y = 3e-7, label = c("log-log slope: 2"), size=8) +
+    annotate("text", hjust=1, x = 32, y = 5e-7, label = c("Global Gaussian White Noise"), size=8) +
+    annotate("text", hjust=1, x = 32, y = 7e-7, label = c("Observer: Wu"), size=8) +
+    theme(text=element_text(size=32))
+  print(pp[[4]])
+
+
+  # Neq vs. targetSize
+  xbreaks = c(1, 2, 4, 6, 8, 16, 32)
+  ybreaks = c(1e-06, 1e-05, 1e-04, 1e-03, 1e-02)
+  ylimits = aes(ymax = meanNeq + sdNeq, ymin=meanNeq - sdNeq)
+  pp[[5]] <- ggplot(T, aes(x=targetSize, y=meanNeq, color=factor(shiftedEccentricity))) +
+    geom_errorbar(ylimits, width=0.1)+
+    geom_line()+
+    geom_point(alpha=0.6, size=8)+
+    geom_segment(aes(x = 1, y = 1e-6, xend = 10, yend = 1e-4), color="black", linetype="dashed", size=1.5)+
+    scale_y_log10(breaks=ybreaks)+
+    scale_x_log10(breaks=xbreaks)+
+    scale_linetype_manual(values=c("solid", "longdash"))+
+    scale_color_discrete(name=expression(Eccentricity[shifted]~ (deg)), labels = sort(unique(T$eccentricity)))+
+    #scale_color_brewer(type="div",  palette = 7)
+    noGrid+
+    facet_grid(.~targetKind)+
+    labs(title = "Object Identification", x = "Target Size (deg)", y = expression(Neq~(deg^2)))+
+    annotate("text", hjust=1, x = 16, y = 3e-7, label = c("log-log slope: 2"), size=8) +
+    annotate("text", hjust=1, x = 16, y = 5e-7, label = c("Global Gaussian White Noise"), size=8) +
+    annotate("text", hjust=1, x = 16, y = 7e-7, label = c("Observer: Wu"), size=8) +
+    theme(text=element_text(size=32))
+  print(pp[[5]])
+
+
+  # Eff vs. Ecc
+  xbreaks = c(0.05, 1, 8, 16, 32)
+  ybreaks = c(0.01,0.02,0.035,0.05,0.1, 0.15, 0.2,0.3)
+  ylimits = aes(ymax = meanEfficiency + sdEfficiency, ymin=meanEfficiency - sdEfficiency)
+  pp[[6]] <- ggplot(T, aes(x=shiftedEccentricity, y=meanEfficiency, color=factor(targetSize), size=factor(targetSize))) +
+    geom_errorbar(ylimits, width=0.1)+
+    geom_line()+
+    geom_point(alpha=0.6, size=8)+
+    scale_y_log10(breaks=ybreaks)+
+    scale_x_log10(breaks=xbreaks, label=as.character(xbreaks))+
+    scale_linetype_manual(values=c("solid", "longdash"))+
+    scale_size_discrete(range=c(0.7,2), name="Target Size (deg)") +
+    scale_color_discrete(name="Target Size (deg)")+
+    #scale_color_brewer(type="div",  palette = 7)
+    noGrid+
+    facet_grid(.~targetKind)+
+    labs(title = "Object Identification", x = expression(Eccentricity[shifted]~ (deg)), y = "Efficiency (%)")+
+    annotate("text", hjust=0, x = 0.5, y = 6e-3, label = c("Global Gaussian White Noise"), size=8) +
+    annotate("text", hjust=0, x = 0.5, y = 7e-3, label = c("Observer: Wu"), size=8) +
+    theme(text=element_text(size=32))
+  print(pp[[6]])
+
+
+  # Eff vs. target size
+  xbreaks = c(1, 2, 4, 6, 8, 16, 32)
+  ybreaks = c(0.01,0.02,0.035,0.05,0.1, 0.15, 0.2,0.3)
+  ylimits = aes(ymax = meanEfficiency + sdEfficiency, ymin=meanEfficiency - sdEfficiency)
+  pp[[7]] <- ggplot(T, aes(x=targetSize, y=meanEfficiency, color=factor(shiftedEccentricity))) +
+    geom_errorbar(ylimits, width=0.1)+
+    geom_line()+
+    geom_point(alpha=0.6, size=8)+
+    scale_y_log10(breaks=ybreaks)+
+    scale_x_log10(breaks=xbreaks)+
+    scale_linetype_manual(values=c("solid", "longdash"))+
+    scale_size_discrete(range=c(0.7,2), name="Target Size (deg)") +
+    scale_color_discrete(name=expression(Eccentricity[shifted]~ (deg)), labels = sort(unique(T$eccentricity)))+
+    #scale_color_brewer(type="div",  palette = 7)
+    noGrid+
+    facet_grid(.~targetKind)+
+    labs(title = "Object Identification", x = "Target Size (deg)", y = "Efficiency (%)")+
+    annotate("text", hjust=0, x = 0.5, y = 6e-3, label = c("Global Gaussian White Noise"), size=8) +
+    annotate("text", hjust=0, x = 0.5, y = 7e-3, label = c("Observer: Wu"), size=8) +
+    theme(text=element_text(size=32))
+  print(pp[[7]])
+
+
+  # R vs. H/Ecc
+  xbreaks = c(0.01, 0.1, 1, 10)
+  ybreaks = c(1e-06, 1e-05, 1e-04, 1e-03, 1e-02)
+  # ylimits = aes(ymax = meanNeq + sdNeq, ymin=meanNeq - sdNeq)
+  pp[[8]] <- ggplot(T, aes(x=targetSize/shiftedEccentricity, y=targetSize^2/meanNeq, color=factor(shiftedEccentricity), size=factor(targetSize))) +
+    # geom_errorbar(ylimits, width=0.1)+
+    geom_point(alpha=0.8)+
+    geom_segment(aes(x = .1, y = 1e5, xend = 1, yend = 1e7), color="black", linetype="dashed", size=1.5)+
+    # geom_segment(aes(x = 1, y = 1e4, xend = 10, yend = 1e6), color="black", linetype="dashed", size=1.5)+
+    scale_y_log10()+
+    scale_x_log10(breaks=xbreaks)+
+    scale_linetype_manual(values=c("solid", "longdash"))+
+    scale_color_discrete(name=expression(Eccentricity[shifted]~ (deg)), labels = sort(unique(T$eccentricity)))+
+    scale_size_discrete(range=c(4,10), name="Target Size (deg)") +
+    # scale_color_brewer(type="div",  palette = 7)+
+    noGrid+
+    facet_grid(.~targetKind)+
+    # labs(title = "Object Identification", x = expression(Eccentricity[shifted]/Target~ Size), y = "Poisson Rate (Target Area/Neq)")+
+    labs(title = "Object Identification", x = expression(Target~ Size/Eccentricity[shifted]), y = "Poisson Rate (Target Area/Neq)")+
+    annotate("text", hjust=0, x = 5e-2, y = 0.7e4, label = c("log-log slope: 2"), size=8) +
+    annotate("text", hjust=0, x = 5e-2, y = 1.0e4, label = c("Global Gaussian White Noise"), size=8) +
+    annotate("text", hjust=0, x = 5e-2, y = 1.4e4, label = c("Observer: Wu"), size=8) +
+    theme(text=element_text(size=32))
+  print(pp[[8]])
+
+
+}
+
+
+
+
+
+# xbreaks = c(1, 16, 32)
+# ybreaks = c(0.01,0.02,0.035,0.05,0.1, 0.15, 0.2,0.3)
+# ylimits = aes(ymax = meanEfficiency + sdEfficiency, ymin=meanEfficiency - sdEfficiency)
+# pp[[4]] <- ggplot(subset(T, T$noiseSpectrum=='white'&T$noiseContrast==0.16), aes(x=shiftedEccentricity, y=meanEfficiency, color=factor(targetSize), shape=factor(targetKind))) +
+#   geom_errorbar(ylimits)+
+#   geom_line()+
+#   geom_point(size=12, alpha=0.6)+
+#   scale_y_log10(breaks=ybreaks)+
+#   scale_x_log10(breaks=xbreaks)+
+#   scale_linetype_manual(values=c("solid", "longdash"))+
+#   scale_size_discrete(range=c(0.5,2)) +
+#   #scale_color_brewer(type="div",  palette = 7)
+#   facet_grid(targetKind ~.)+
+#   noGrid+
+#   labs(title = "Gabor(targetHeight/20)&Letter, Noise Contrast 0.16, Gaussian white", x = "shiftedEccentricity(+0.45deg)", y = "Efficiency")+
+#   theme(text=element_text(size=32))
+
+# xbreaks = c(1, 16, 32)
+# ybreaks = c(0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 1, 1.5, 2.0)
+# ylimits = aes(ymax = meanThreshold + sdThreshold, ymin=meanThreshold - sdThreshold)
+# pp[[5]] <- ggplot(subset(T, T$targetKind=='gabor'), aes(x=shiftedEccentricity, y=meanThreshold, color=factor(targetSize), linetype=factor(noiseContrast) )) +
+#   geom_errorbar(ylimits)+
+#   geom_line()+
+#   geom_point(size=12, alpha=0.6)+
+#   scale_y_log10(breaks=ybreaks)+
+#   scale_x_log10(breaks=xbreaks)+
+#   scale_linetype_manual(values=c("solid", "longdash"))+
+#   scale_size_discrete(range=c(0.5,2)) +
+#   #scale_color_brewer(type="div",  palette = 7)
+#   noGrid+
+#   # facet_grid(letter_size ~.)+
+#   labs(title = "Gabor, Gaussian white", x = "shiftedEccentricity(+0.45deg)", y = "Threshold_Contrast")+
+#   theme(text=element_text(size=32))
+
+# xbreaks = c(1, 16, 32)
+# ybreaks = c(1e-06, 1e-05, 1e-04, 1e-03, 1e-02)
+# ylimits = aes(ymax = meanNeq + sdNeq, ymin=meanNeq - sdNeq)
+# pp[[6]] <- ggplot(subset(T, T$noiseSpectrum=='white'& T$noiseContrast==0.16), aes(x=shiftedEccentricity, y=meanNeq, color=factor(targetSize), shape=factor(targetKind) )) +
+#   geom_errorbar(ylimits)+
+#   geom_line()+
+#   geom_point(size=12, alpha=0.6)+
+#   scale_y_log10(breaks=ybreaks)+
+#   scale_x_log10(breaks=xbreaks)+
+#   scale_linetype_manual(values=c("solid", "longdash"))+
+#   scale_size_discrete(range=c(1.5,2)) +
+#   #scale_color_brewer(type="div",  palette = 7)
+#   noGrid+
+#   facet_grid(targetKind ~.)+
+#   labs(title = "Gabor(targetHeight/20)&Letter, Noise Contrast 0.16, Gaussian white", x = "shiftedEccentricity(+0.45deg)", y = "Neq")+
+#   theme(text=element_text(size=32))
+
+# xbreaks = c(1, 2, 4, 8, 16, 32)
+# ybreaks = c(0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 1, 1.5, 2.0)
+# ylimits = aes(ymax = meanThreshold + sdThreshold, ymin=meanThreshold - sdThreshold)
+# pp[[2]] <- ggplot(subset(T,T$noiseSpectrum=='white'), aes(x=targetSize, y=meanThreshold, color=factor(eccentricity), linetype=factor(noiseContrast) )) +
+#   geom_errorbar(ylimits)+
+#   geom_line()+
+#   geom_point(size=12, alpha=0.6)+
+#   scale_y_log10(breaks=ybreaks)+
+#   scale_x_log10(breaks=xbreaks)+
+#   scale_linetype_manual(values=c("solid", "longdash"))+
+#   scale_size_discrete(range=c(0.5,2)) +
+#   #scale_color_brewer(type="div",  palette = 7)
+#   noGrid+
+#   facet_grid(targetKind ~.)+
+#   labs(title = "Gabor, Gaussian white", x = "Target Size", y = "ThresholdContrast")+
+#   theme(text=element_text(size=32))
+
+
+if(TRUE){
+  cat('Saving figures to disk...\n')
+  ii = 0;
+  # pdf('a.pdf', width=1366, height = 768)
+
+  for (i in pp){
+    ii = ii + 1
+    cat('Saving figure ', ii, '.png.\n', sep="")
+    png(paste(as.character(ii), '.png', sep=""), width=1366, height = 768)
+    print(i)
+    dev.off()
+
+  }
+  # dev.off()
+
+
+}
