@@ -73,6 +73,9 @@ for i=1:length(parsefiles)
             pdata{j,3}=round(o.targetHeightDeg);
         end;
         pdata{j,4}=o.noiseSD; %noise contrast
+        if o.noiseRadiusDeg==inf && o.noiseCheckDeg==0 % hard edge no noise
+            pdata{j, 4}=0;
+        end;
         pdata{j,5}=o.noiseEnvelopeSpaceConstantDeg; %noise decay radius
         pdata{j,6}=o.eccentricityDeg; %eccentricity
         %pdata(j,)=o.; %seconds per trials
@@ -80,7 +83,7 @@ for i=1:length(parsefiles)
         pdata{j,8}=o.questMean; %threshold log contrast
         pdata{j,9}=o.questSd; %threshold log contrast SD
         pdata{j,10}=o.contrast; %contrast
-        pdata{j,11}=log(o.EOverN); %log E/N
+        pdata{j,11}=log10(o.EOverN); %log E/N
         pdata{j,12}=o.efficiency; %efficiency
         pdata{j,13}=char(parsedates(i)); %file date for reference
         
