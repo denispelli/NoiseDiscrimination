@@ -17,7 +17,7 @@ We actually have two repositories here: one for the [code][code-repo] and anothe
 
 ### Lab meetings, project archive and more
 
-We are now having our lab meetings weekly on every Monday 11:00am-12:20pm at Meyer 406. Feel free to drop by. You can also join us through Skype.
+We are now having our lab meetings weekly on every Monday 4 pm in Meyer Hall 406 (6 Washington Place). Feel free to drop by. You can also join us through Skype. Denis's Skype name is: denispelli
 
 And [here][archive] is our project archive (at some point, we might consider migrating these to Github, but now we can stick to Google Docs).
 
