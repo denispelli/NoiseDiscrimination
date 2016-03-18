@@ -4,7 +4,7 @@ This is a *private* repository for the Object Recognition Project at the Pelli L
 
 ## How to use
 
-### Visible only for lab members (Register a Github account)
+### Only visible to lab members (Register a Github account)
 
 Register a Github account, and please contact [Hörmet](mailto:hyiltiz@gmail.com) providing your Github ID asking for permisison to this repository. Remember to **[Watch]** this repository so you will get notifications on the updates here. After that, you may want to set up a git client (or better, Github client). If you are new to Git/Github, check out our home-brewed wiki page [here][wiki-git] for how.
 
