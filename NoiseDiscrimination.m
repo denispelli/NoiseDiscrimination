@@ -3,7 +3,7 @@ function o=NoiseDiscrimination(oIn)
 % Pass all your parameters in the "o" struct, which will be returned with
 % all the results as additional fields. NoiseDiscrimination may adjust some
 % of your parameters to satisfy physical constraints. Constraints include
-% the screen size and the maximum possible contrast.
+% the screen size, resolution, and maximum possible contrast.
 %
 % You should write a short script that loads all your parameters into an
 % "o" struct and calls o=NoiseDiscrimination(o). I recommend beginning your
@@ -25,7 +25,8 @@ function o=NoiseDiscrimination(oIn)
 % cropping. Here are the parameters that you can control:
 % o.saveSnapshot=1; % If true (1), take snapshot for public presentation.
 % o.snapshotLetterContrast=0.2; % nan to request program default.
-% o.cropSnapshot=0; % If true (1), crop to include only target and noise, plus response numbers, if displayed.
+% o.cropSnapshot=0; % If true (1), crop to include only target and noise, 
+%                   % plus response numbers, if displayed.
 % o.snapshotCaptionTextSizeDeg=0.5;
 %
 % Standard condition for counting V1 neurons: o.noiseCheckPix=13;
@@ -65,31 +66,6 @@ function o=NoiseDiscrimination(oIn)
 % stimulusRect, and a color index of 1 outside it. This is drawn by calling
 % FillRect with 1 for the whole screen, and again with 128 for the
 % stimulusRect.
-
-% MIRRORING. PutImage does not respect mirroring. Mario Kleiner, July 13,
-% 2014, explains why: Screen('PutImage') is implemented via
-% glDrawPixels(). It doesn't respond to geometric transformations and
-% 'PutImage' by itself is very inflexible, restricted and inefficient. I
-% keep it intentionally so, so we have some very primitive way to put
-% pixels on the screen, mostly for debugging of the more complex functions.
-% Using it in any new code is not recommended.
-% The most easy thing is to use DrawFormattedText() instead of
-% Screen('DrawText') directly. DrawFormattedText() has optional parameters
-% to mirror text left-right / upside-down, center it onscreen or in a
-% selectable rect etc.
-% For mirroring of images with glScale you can use
-% Screen('MakeTexture/DrawTexture') or for online created content
-% 'OpenOffscreenWindow' + 'DrawTexture'.
-% texture=Screen('MakeTexture',window,imageMatrix);
-% Screen('DrawTexture',window,texture,sourceRect,destinationRect);
-% Screen('Close',texture);
-% If you want to mirror the whole stimulus display, the PsychImaging()
-% function has subtasks to ask for automatic mirroring of all the window
-% content.
-% PsychImaging('PrepareConfiguration');
-% PsychImaging('AddTask','General','FlipHorizontal');
-% You can use the RemapMouse() function to correct GetMouse() positions
-% for potential geometric distortions introduced by this function.
 %
 % FIXATION CROSS. The fixation cross is quite flexible. You specify its
 % size (full width) and stroke thickness in deg. If you request
@@ -112,7 +88,7 @@ addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder i
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
 % echo_executing_commands(2, 'local');
 % diary ./diary.log
-[vString,vStruct]=PsychtoolboxVersion;
+[~,vStruct]=PsychtoolboxVersion;
 if IsOSX && vStruct.revision<7283
     % Revision 7283 fixed the bug. December 8, 2015.
     error('Old versions of Mac OSX Psychtoolbox had gamma table bug. Please update to the latest version: UpdatePsychtoolbox');
@@ -2438,7 +2414,7 @@ try
             end
         end
     end % for trial=1:o.trialsPerRun
-    if length(o.data)>0
+    if ~isempty(o.data)
         psych.t=unique(o.data(:,1));
         psych.r=1+10.^psych.t;
         for i=1:length(psych.t)
