@@ -5,10 +5,10 @@ function o=NoiseDiscrimination(oIn)
 % of your parameters to satisfy physical constraints. Constraints include
 % the screen size and the maximum possible contrast.
 %
-% You should write a short script that loads up all your parameters into an
+% You should write a short script that loads all your parameters into an
 % "o" struct and calls o=NoiseDiscrimination(o). I recommend beginning your
 % script with "clear o" to make sure that you don't carry over any values
-% from the last run as defaults for the new run.
+% from the last session.
 %
 % OFF THE NYU CAMPUS: If you have an NYU netid and you're using the NYU
 % MATLAB license server then you can work from off campus if you install
@@ -360,9 +360,6 @@ if length(stack)==1;
     o.functionNames=stack.name;
 else
     o.functionNames=[stack(2).name '-' stack(1).name];
-end
-if exist('data', 'dir') ~= 7
-    mkdir('data');
 end
 o.dataFilename=sprintf('%s-%s.%d.%d.%d.%d.%d.%d',o.functionNames,o.observer,round(t));
 o.dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
