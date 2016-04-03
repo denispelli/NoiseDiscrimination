@@ -4,8 +4,8 @@
 %
 function tabdata = parseExpData(newPath, obsName, fromDate, toDate)
 
-% newPath = '/Users/xiuyunwu/NoiseDiscrimination/data','xiuyun';
-% obsName = 'xiuyun';
+% newPath = 'C:\Users\CaptainS5\Documents\NoiseDiscrimination/data','xiuyun';
+% obsName = 'Ryan';
 % fromDate = -inf;
 % toDate = inf;
 
