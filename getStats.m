@@ -45,10 +45,18 @@ col_name = {'targetSize','noiseContrast','noiseDecayRadius','eccentricity','hard
 % the columns in con are targetsize, noisecontrast, noisedecayradius,
 % eccentricity, noiseRadiusDeg, TargetCross, noiseCheckDeg and targetKind
 
+% noiseDecayRadius does not exist when there is no noise (noiseSD=0)
+% this should be coded as 0, not as NaN
+if any(isnan(tabdata.noiseDecayRadius(tabdata.noiseContrast==0)))
+  warning('getStats:NaNDecayRadius', 'NaN values for noiseDecayRadius found. Changing to 0'); 
+  tabdata.noiseDecayRadius(tabdata.noiseContrast==0)=0;
+end
+
 cons = [tabdata{:, 3:6} tabdata{:, 17:21}];
 con = unique(cons,'rows');
 for t = 1:size(con,1)
     cont = repmat(con(t,:),[size(tabdata,1) 1]);
+    if isnan(con(t,3)); keyboard;end
     arr = find(all(tabdata{:, 3:6}==cont(:,1:4),2));
     if length(arr)>2 % soft/hard and cross 0/1 and pink/white and noiseCheckDeg and letter/gabor conditions together
         k=1;
@@ -63,8 +71,8 @@ for t = 1:size(con,1)
     subs(arr,1) = t;
 end
 
-LinTh=exp(tabdata{:, 8}); % linear threshold contrast
-squaTh=exp(tabdata{:, 8}).^2; % squared linear threshold contrast
+LinTh=10.^(tabdata{:, 8}); % linear threshold contrast
+squaTh=10.^(tabdata{:, 8}).^2; % squared linear threshold contrast
 
 % mean and sd for threshold and squared threshold
 M1 = accumarray(subs, LinTh, [], @mean); % mean for linear threshold contrast
@@ -100,7 +108,7 @@ if doNeq==1
             
             for j = 1:size(con,1)
                 if con(j, 2)==0 && cont(t,1)==con(j,1) && cont(t,4)==con(j,4) && cont(t,6)==con(j,6) && cont(t,8)==con(j,8) && cont(t,9)==con(j,9)
-                    arr0=j; %the index of E0, whose conditon has the same target size,eccentricity,TargetCross,noiseCheckDeg and targetKind
+                    arr0=j; %the index of E0, whose condition has the same target size,eccentricity,TargetCross,noiseCheckDeg and targetKind
                     break
                 end;
             end;
