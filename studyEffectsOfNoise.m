@@ -1,12 +1,12 @@
 %#### Adjust values within this block #####################
 clear o
 useBackupSessions=1;
-o.observer='junk';
-% o.observer='ideal';
+% o.observer='junk';
+o.observer='ideal';
 % o.observer='xiuyun'; % use your name
 o.distanceCm=50; % viewing distance
 o.durationSec=0.2;
-o.trialsPerRun=80;
+o.trialsPerRun=300;
 
 %For noise with Gaussian envelope (soft)
 %o.noiseRadiusDeg=inf;

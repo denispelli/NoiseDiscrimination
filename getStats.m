@@ -20,10 +20,12 @@
 
 
 function tab = getStats(newpath, obsName, doNeq, doEfficiency, expDate)
-% newpath = '/Users/xiuyunwu/NoiseDiscrimination/data';
-% obs_name = 'shivam';
+% clear all
+% newpath = 'C:\Users\CaptainS5\Documents\NoiseDiscrimination\data';
+% obsName = 'Ryan';
 % doNeq=1;
 % doEfficiency=1;
+% expDate =  '03-apr-16';
 
 %settings
 [yyyy,mm,dd]=datevec(expDate);
@@ -43,13 +45,13 @@ col_name = {'targetSize','noiseContrast','noiseDecayRadius','eccentricity','hard
 % subs is the converted condition for each run
 % each number 'n' in subs means the condition is the n_th row in con
 % the columns in con are targetsize, noisecontrast, noisedecayradius,
-% eccentricity, noiseRadiusDeg, TargetCross, noiseCheckDeg and targetKind
+% eccentricity, noiseRadiusDeg, TargetCross, noiseSpectrum, noiseCheckDeg and targetKind
 
 % noiseDecayRadius does not exist when there is no noise (noiseSD=0)
 % this should be coded as 0, not as NaN
 if any(isnan(tabdata.noiseDecayRadius(tabdata.noiseContrast==0)))
-  warning('getStats:NaNDecayRadius', 'NaN values for noiseDecayRadius found. Changing to 0'); 
-  tabdata.noiseDecayRadius(tabdata.noiseContrast==0)=0;
+    warning('getStats:NaNDecayRadius', 'NaN values for noiseDecayRadius found. Changing to 0');
+    tabdata.noiseDecayRadius(tabdata.noiseContrast==0)=0;
 end
 
 cons = [tabdata{:, 3:6} tabdata{:, 17:21}];
@@ -107,7 +109,8 @@ if doNeq==1
             
             
             for j = 1:size(con,1)
-                if con(j, 2)==0 && cont(t,1)==con(j,1) && cont(t,4)==con(j,4) && cont(t,6)==con(j,6) && cont(t,8)==con(j,8) && cont(t,9)==con(j,9)
+                if con(j,2)==0 && cont(t,1)==con(j,1) && cont(t,4)==con(j,4) && cont(t,6)==con(j,6) && cont(t,9)==con(j,9) % ignore noiseCheckDeg
+%                                     if con(j,2)==0 && cont(t,1)==con(j,1) && cont(t,4)==con(j,4) && cont(t,6)==con(j,6) && cont(t,8)==con(j,8) && cont(t,9)==con(j,9)
                     arr0=j; %the index of E0, whose condition has the same target size,eccentricity,TargetCross,noiseCheckDeg and targetKind
                     break
                 end;
@@ -131,10 +134,11 @@ end;
 
 if doEfficiency==1
     % computing high noise Efficiency = E_ideal/(E-E0)
-    idealFile=['ideal_conditions_',dt,'.mat'];
+    %     idealFile=['ideal_conditions_',dt,'.mat'];
+    idealFile=['ideal_conditions_201641.mat'];
     ideal = load(idealFile);
     runEffi = zeros(size(tabdata,1),1); % Neq for each run(when noise contrast = 0, Neq = 0)
-
+    
     for t = 1:size(con,1)
         if con(t, 2)~=0
             cont = repmat(con(t,:),[size(tabdata,1) 1]);
@@ -151,7 +155,8 @@ if doEfficiency==1
             end; % the index of the god-knows-how-many runs under current condition
             
             for j = 1:size(con,1)
-                if con(j,2)==0 && cont(t,1)==con(j,1) && cont(t,4)==con(j,4) && cont(t,6)==con(j,6) && cont(t,8)==con(j,8) && cont(t,9)==con(j,9)
+                if con(j,2)==0 && cont(t,1)==con(j,1) && cont(t,4)==con(j,4) && cont(t,6)==con(j,6) && cont(t,9)==con(j,9) % ignore noiseCheckDeg
+%                                     if con(j,2)==0 && cont(t,1)==con(j,1) && cont(t,4)==con(j,4) && cont(t,6)==con(j,6) && abs(cont(t,8)-con(j,8))>0.02 && cont(t,9)==con(j,9)
                     arr0=j; %the index of E0, whose conditon has the same target size,eccentricity,TargetCross,noiseCheckDeg and targetKind
                     break
                 end;
@@ -185,10 +190,11 @@ if doEfficiency==1
             if length(arri)>1 % to discriminate radius, eccentricity, hard/soft, white or pink, noiseCheckDeg and targetKind
                 k = 1;
                 while k<=length(arri)
-                    if coni(arri(k),4)~=con(t, 4) || coni(arri(k),7)~=con(t, 7) || coni(arri(k),8)~=con(t, 8) || coni(arri(k),9)~=con(t, 9)
+                    if coni(arri(k),4)~=con(t, 4) || coni(arri(k),7)~=con(t, 7) || coni(arri(k),9)~=con(t, 9) % ignore noiseCheckDeg
+%                                             if coni(arri(k),4)~=con(t, 4) || coni(arri(k),7)~=con(t, 7) || abs(coni(arri(k),8)-con(t, 8))>0.03 || coni(arri(k),9)~=con(t, 9)
                         arri(k)=[];
                         k = k-1;
-                    elseif (coni(arri(k),5)==0 && (con(t, 5)<17 || con(t, 3)~=coni(arri(k),3))) || (coni(arri(k),5)==1 && (con(t, 5)>17 || con(t, 5)~=coni(arri(k),3)))% radius and hard/soft
+                    elseif (coni(arri(k),5)==0 && (con(t, 5)<17 || abs(con(t, 3)-coni(arri(k),3))>0.03)) || (coni(arri(k),5)==1 && (con(t, 5)>17 || abs(con(t, 5)~=coni(arri(k),3))>0.03))% radius and hard/soft
                         arri(k)=[];
                         k = k-1;
                     end;
@@ -222,7 +228,7 @@ if doEfficiency==1
 end;
 
 out = mat2cell(out,ones(1,size(out,1)),ones(1,size(out,2)));
-
+%%
 for t = 1:size(out,1)
     if out{t, 5}>17 % soft conditions
         out{t,5} = 'soft';
