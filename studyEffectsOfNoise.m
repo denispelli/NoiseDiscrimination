@@ -103,80 +103,125 @@ o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of Get
 
 
 if useBackupSessions % auto-generate full sequence of experiments for "Winter" data collection
-
-  % ecc    targetSize
-  tableCell = ...
-    {0 ,   [0.5, 1, 2, 4, 8, 16];
-    8 ,   [1,   2, 4, 8, 16   ];
-    16,   [1,   2, 4, 8, 16   ];
-    32,   [2,   4, 8, 16      ];}
-
-  NoiseDecayRaiusOverLetterRadius = [0.33, 0.58, 1.00, 1.75, 3.00, 32];
-
-  iCounter = 1;
-  for iEcc = 1:size(tableCell,1)
-    for iTargetSize=1:numel(tableCell{iEcc,2})
-      for iRatio=0:numel(NoiseDecayRaiusOverLetterRadius)
-        oo(iCounter) = o;
-        oo(iCounter).eccentricityDeg = tableCell{iEcc,1};
-        oo(iCounter).targetHeightDeg = tableCell{iEcc,2}(iTargetSize);
-
-        if iRatio==0
-          % no noise
-          oo(iCounter).noiseSD = 0; %override previously specified noiseSD
-          oo(iCounter).noiseEnvelopeSpaceConstantDeg = NaN;
-        else
-          % high noise; noise decay radius (noiseSD is already specified above as 0.16)
-          oo(iCounter).noiseEnvelopeSpaceConstantDeg = ...
-            NoiseDecayRaiusOverLetterRadius(iRatio).*oo(iCounter).targetHeightDeg/2;
+    
+    %   % ecc    targetSize
+    %   tableCell = ...
+    %     {0 ,   [0.5, 1, 2, 4, 8, 16];
+    %     8 ,   [1,   2, 4, 8, 16   ];
+    %     16,   [1,   2, 4, 8, 16   ];
+    %     32,   [2,   4, 8, 16      ];}
+    %
+    %   NoiseDecayRaiusOverLetterRadius = [0.33, 0.58, 1.00, 1.75, 3.00, 32];
+    %
+    %   iCounter = 1;
+    %   for iEcc = 1:size(tableCell,1)
+    %     for iTargetSize=1:numel(tableCell{iEcc,2})
+    %       for iRatio=0:numel(NoiseDecayRaiusOverLetterRadius)
+    %         oo(iCounter) = o;
+    %         oo(iCounter).eccentricityDeg = tableCell{iEcc,1};
+    %         oo(iCounter).targetHeightDeg = tableCell{iEcc,2}(iTargetSize);
+    %
+    %         if iRatio==0
+    %           % no noise
+    %           oo(iCounter).noiseSD = 0; %override previously specified noiseSD
+    %           oo(iCounter).noiseEnvelopeSpaceConstantDeg = NaN;
+    %         else
+    %           % high noise; noise decay radius (noiseSD is already specified above as 0.16)
+    %           oo(iCounter).noiseEnvelopeSpaceConstantDeg = ...
+    %             NoiseDecayRaiusOverLetterRadius(iRatio).*oo(iCounter).targetHeightDeg/2;
+    %         end
+    %
+    %         iCounter = iCounter + 1;
+    %       end
+    %     end
+    %   end
+    
+    % Ryan's conditions--using for generating ideal data
+    % I think we can ignored all targetSize=17 data but anyway...
+    % ecc    targetSize
+    tableCell = ...
+        {0,   [0.5, 2, sqrt(6), 8, 16, 17];
+        8,   [2, sqrt(6), 8, 16, 17];
+        16,   [2, sqrt(6), 8, 16, 17];
+        32,   [sqrt(6), 8, 16, 17];}
+    
+    NoiseDecayRaiusOverLetterRadius = [0.33, 0.58, 1.00, 1.75, 3.00, 32]*2;
+    NoiseDecayRaiusOverLetterRadius17 = [10.56, 18.56, 32, 56, 96, 1024]; % particularly for Ryan's weird data...
+    
+    iCounter = 1;
+    for iEcc = 1:size(tableCell,1)
+        for iTargetSize=1:numel(tableCell{iEcc,2})
+            for iRatio=0:numel(NoiseDecayRaiusOverLetterRadius)
+                oo(iCounter) = o;
+                oo(iCounter).eccentricityDeg = tableCell{iEcc,1};
+                oo(iCounter).targetHeightDeg = tableCell{iEcc,2}(iTargetSize);
+                
+                if iRatio==0
+                    % no noise
+                    oo(iCounter).noiseSD = 0; %override previously specified noiseSD
+                    oo(iCounter).noiseEnvelopeSpaceConstantDeg = NaN;
+                else
+                    % high noise; noise decay radius (noiseSD is already specified above as 0.16)
+                    if oo(iCounter).targetHeightDeg>2 && oo(iCounter).targetHeightDeg<4 % targetSize=sqrt(6)
+                        oo(iCounter).noiseEnvelopeSpaceConstantDeg = ...
+                            NoiseDecayRaiusOverLetterRadius(iRatio).*4/2;
+                    elseif oo(iCounter).targetHeightDeg==0.5 %targetSize=0.5
+                        oo(iCounter).noiseEnvelopeSpaceConstantDeg = ...
+                            NoiseDecayRaiusOverLetterRadius(iRatio).*oo(iCounter).targetHeightDeg;
+                    elseif oo(iCounter).targetHeightDeg==17 %targetSize=17
+                        oo(iCounter).noiseEnvelopeSpaceConstantDeg = NoiseDecayRaiusOverLetterRadius17(iRatio);
+                    else
+                        oo(iCounter).noiseEnvelopeSpaceConstantDeg = ...
+                            NoiseDecayRaiusOverLetterRadius(iRatio).*oo(iCounter).targetHeightDeg/2;
+                    end
+                end
+                
+                iCounter = iCounter + 1;
+            end
         end
-
-        iCounter = iCounter + 1;
-      end
     end
-  end
-
-  % now shuffle
-  oo = Shuffle(oo);
-
-  assert(numel(oo)==iCounter-1);
-  disp([num2str(iCounter) ' shuffled conditions at all eccentricies and letter sizes with noise at required decay radii and without noise have been generated in total!']);
-  disp('See https://github.com/hyiltiz/NoiseDiscrimination/wiki/How-to-collect-data#winter')
-
-  session.matFileName=['session_' datestr(now,'yyyymmddHHMMSS') '.mat'];
-  session.progressTrialNO=1;
-  if strcmp(lower(input(sprintf('\nYou will have to create new session file normally when you change to a new observer.\nCreate a new session file with the full data structure above?  (y/n)\n'), 's')),'y');
-    save(session.matFileName, 'oo', 'session');
-  else
-    disp('Did not create a new session file');
-    disp('We can use previously created ones');
-  end
-
-
-  % now start running the experiments
-  sessionFiles = dir('session_*.mat');
-  if numel(sessionFiles)>1;error('More than 1 session files are found! Please backup all, then only place one under current directory.');end
-
-  sessionFile = sessionFiles(1).name;
-  save(['backup_' datestr(now,'yyyymmddHHMMSS') '.mat']);
-  disp('A backup file is created for your current workspace. You can safely delete it if the previous experiment was successful. If not, then keep that backup.')
-
-  load(sessionFile); % WARNING: this overrides session and oo struct! Good we always backup before loading, so no data is lost
-  progressTrialNO=session.progressTrialNO;
-  for iProgressTrialNO=progressTrialNO:numel(oo) % pick up from where we left off
-    ooWithData{iProgressTrialNO}=NoiseDiscrimination(oo(iProgressTrialNO));
-    sca;
-    if ooWithData{iProgressTrialNO}.runAborted
-      break;
-      fprintf('Your previous run was not successful! \nNot saving the results into session. \nRun this file again when ready for future data collection.\n\n');
+    
+    % now shuffle
+    oo = Shuffle(oo);
+    
+    assert(numel(oo)==iCounter-1);
+    disp([num2str(iCounter) ' shuffled conditions at all eccentricies and letter sizes with noise at required decay radii and without noise have been generated in total!']);
+    disp('See https://github.com/hyiltiz/NoiseDiscrimination/wiki/How-to-collect-data#winter')
+    
+    session.matFileName=['session_' datestr(now,'yyyymmddHHMMSS') '.mat'];
+    session.progressTrialNO=1;
+    if strcmp(lower(input(sprintf('\nYou will have to create new session file normally when you change to a new observer.\nCreate a new session file with the full data structure above?  (y/n)\n'), 's')),'y');
+        save(session.matFileName, 'oo', 'session');
     else
-      session.progressTrialNO=session.progressTrialNO+1;
+        disp('Did not create a new session file');
+        disp('We can use previously created ones');
     end
-    save(session.matFileName, 'oo', 'session');
-    if ~strcmp(lower(input('Continue into next run? (y/n)\n', 's')),'y');break;end
-  end
-
+    
+    
+    % now start running the experiments
+    sessionFiles = dir('session_*.mat');
+    if numel(sessionFiles)>1;error('More than 1 session files are found! Please backup all, then only place one under current directory.');end
+    
+    sessionFile = sessionFiles(1).name;
+    save(['backup_' datestr(now,'yyyymmddHHMMSS') '.mat']);
+    disp('A backup file is created for your current workspace. You can safely delete it if the previous experiment was successful. If not, then keep that backup.')
+    
+    load(sessionFile); % WARNING: this overrides session and oo struct! Good we always backup before loading, so no data is lost
+    progressTrialNO=session.progressTrialNO;
+    for iProgressTrialNO=progressTrialNO:numel(oo) % pick up from where we left off
+        ooWithData{iProgressTrialNO}=NoiseDiscrimination(oo(iProgressTrialNO));
+        sca;
+        if ooWithData{iProgressTrialNO}.runAborted
+            break;
+            fprintf('Your previous run was not successful! \nNot saving the results into session. \nRun this file again when ready for future data collection.\n\n');
+        else
+            session.progressTrialNO=session.progressTrialNO+1;
+        end
+        save(session.matFileName, 'oo', 'session');
+        if ~strcmp(lower(input('Continue into next run? (y/n)\n', 's')),'y');break;end
+    end
+    
 else
-  o=NoiseDiscrimination(o);
-  sca;
+    o=NoiseDiscrimination(o);
+    sca;
 end
