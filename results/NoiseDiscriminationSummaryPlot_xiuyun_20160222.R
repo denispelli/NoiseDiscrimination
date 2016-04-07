@@ -19,6 +19,7 @@ pp = list()
 csvFileName <- "krish_runs_2016328.csv"
 csvFileName <- 'xiuyun_conditions_2016222_2.csv'
 csvFileName <- 'krish_conditions_201641.csv'
+csvFileName <- 'ideal_conditions_201641.csv'
 observer <- str_sub(str_extract(csvFileName, '.*?_'),1,-2)
 
 # csvFileName <- 'krish_runs_2016328_fineEccentricities1DegNoise.csv'
