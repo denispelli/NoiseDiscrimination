@@ -129,7 +129,7 @@ if useBackupSessions % auto-generate full sequence of experiments for "Winter" d
           % high noise; noise decay radius (noiseSD is already specified above as 0.16)
           oo(iCounter).noiseEnvelopeSpaceConstantDeg = ...
             NoiseDecayRaiusOverLetterRadius(iRatio).*oo(iCounter).targetHeightDeg/2;
-          o.noiseCheckDeg=o.targetHeightDeg/20;
+          oo(iCounter).noiseCheckDeg=oo(iCounter).targetHeightDeg/20;
         end
 
         iCounter = iCounter + 1;
