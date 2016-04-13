@@ -2,11 +2,11 @@
 clear o
 useBackupSessions=1;
 % o.observer='junk';
-o.observer='ideal';
-% o.observer='xiuyun'; % use your name
-o.distanceCm=50; % viewing distance
+%o.observer='ideal';
+o.observer='krish'; % use your name
+o.distanceCm=70; % viewing distance
 o.durationSec=0.2;
-o.trialsPerRun=300;
+o.trialsPerRun=40;
 
 %For noise with Gaussian envelope (soft)
 %o.noiseRadiusDeg=inf;
@@ -138,7 +138,7 @@ if useBackupSessions % auto-generate full sequence of experiments for "Winter" d
   end
 
   % now shuffle
-  oo = Shuffle(oo);
+  oo = Shuffle([oo oo]); % repeat twice
 
   assert(numel(oo)==iCounter-1);
   disp([num2str(iCounter) ' shuffled conditions at all eccentricies and letter sizes with noise at required decay radii and without noise have been generated in total!']);
