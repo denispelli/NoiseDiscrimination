@@ -140,7 +140,7 @@ if useBackupSessions % auto-generate full sequence of experiments for "Winter" d
   % now shuffle
   oo = Shuffle([oo oo]); % repeat twice
 
-  assert(numel(oo)==iCounter-1);
+  assert(numel(oo)/2==iCounter-1);
   disp([num2str(iCounter) ' shuffled conditions at all eccentricies and letter sizes with noise at required decay radii and without noise have been generated in total!']);
   disp('See https://github.com/hyiltiz/NoiseDiscrimination/wiki/How-to-collect-data#winter')
 
