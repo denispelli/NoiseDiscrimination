@@ -6,7 +6,7 @@ useBackupSessions=1;
 o.observer='krish'; % use your name
 o.distanceCm=70; % viewing distance
 o.durationSec=0.2;
-o.trialsPerRun=40;
+o.trialsPerRun=1;
 
 %For noise with Gaussian envelope (soft)
 %o.noiseRadiusDeg=inf;
@@ -113,7 +113,8 @@ if useBackupSessions % auto-generate full sequence of experiments for "Winter" d
 
   NoiseDecayRaiusOverLetterRadius = [0.33, 0.58, 1.00, 1.75, 3.00, 32];
 
-  iCounter = 1;
+  iCounter = 1; 
+  clear oo;
   for iEcc = 1:size(tableCell,1)
     for iTargetSize=1:numel(tableCell{iEcc,2})
       for iRatio=0:numel(NoiseDecayRaiusOverLetterRadius)
@@ -163,6 +164,7 @@ if useBackupSessions % auto-generate full sequence of experiments for "Winter" d
   disp('A backup file is created for your current workspace. You can safely delete it if the previous experiment was successful. If not, then keep that backup.')
 
   load(sessionFile); % WARNING: this overrides session and oo struct! Good we always backup before loading, so no data is lost
+  
   progressTrialNO=session.progressTrialNO;
   for iProgressTrialNO=progressTrialNO:numel(oo) % pick up from where we left off
     ooWithData{iProgressTrialNO}=NoiseDiscrimination(oo(iProgressTrialNO));
