@@ -25,7 +25,7 @@ function o=NoiseDiscrimination(oIn)
 % cropping. Here are the parameters that you can control:
 % o.saveSnapshot=1; % If true (1), take snapshot for public presentation.
 % o.snapshotLetterContrast=0.2; % nan to request program default.
-% o.cropSnapshot=0; % If true (1), crop to include only target and noise, 
+% o.cropSnapshot=0; % If true (1), crop to include only target and noise,
 %                   % plus response numbers, if displayed.
 % o.snapshotCaptionTextSizeDeg=0.5;
 %
@@ -326,7 +326,7 @@ if ~isfield(o,'labelAlternatives')
             o.labelAlternatives=1;
         case 'letter'
             o.labelAlternatives=0;
-            
+
     end
 end
 o.beginningTime=now;
@@ -644,10 +644,10 @@ try
         ListenChar(2); % no echo
     end
     KbName('UnifyKeyNames');
-    
-    
+
+
     if ~ismember(o.observer,algorithmicObservers) || streq(o.task,'identify')
-        
+
         % If o.observer is human, We need an open window for the whole
         % experiment, in which to display stimuli. If o.observer is machine,
         % we need a screen only briefly, to create the letters to be
@@ -687,7 +687,7 @@ try
             Screen('Flip',window);
         end
         assert(all(r==screenRect));
-        
+
         if o.flipClick; Speak(['after OpenWindow ' num2str(MFileLineNr)]);GetClicks; end
         if exist('cal')
             gray=mean([firstGrayClutEntry lastGrayClutEntry]);  % Will be a CLUT color code for gray.
@@ -726,8 +726,8 @@ try
                 gray1=1;
                 cal.LFirst=LMean;
                 cal.LLast=LMean;
-                cal.nFirst=firstGrayClutEntry-1; 
-                cal.nLast=firstGrayClutEntry-1; 
+                cal.nFirst=firstGrayClutEntry-1;
+                cal.nLast=firstGrayClutEntry-1;
                 cal=LinearizeClut(cal);
             end %if o.isWin
             if o.printGammaLoadings; fprintf('LoadNormalizedGammaTable %d; LRange/Lmean=%.2f\n',MFileLineNr,(cal.LLast-LMean)/LMean); end
@@ -765,6 +765,7 @@ try
     degPerCm=57/o.distanceCm;
     o.pixPerDeg=pixPerCm/degPerCm;
     eccentricityPix=round(pixPerCm*o.distanceCm*tand(o.eccentricityDeg));
+    eccentricityCm=o.distanceCm*tand(o.eccentricityDeg);
     if ~isfinite(o.eccentricityDeg)
         fixationOffscreenCm=0;
         fixationIsOffscreen=0;
@@ -802,7 +803,7 @@ try
                 answer=questdlg(question,'Fixation','Ok','Cancel','Ok');
                 ListenChar(2); % go back to orig status; no echo
             end
-            
+
             switch answer
                 case 'Ok',
                     fixationIsOffscreen=1;
@@ -831,7 +832,7 @@ try
         targetOffsetPix=eccentricityPix+fixationOffsetPix;
         assert(abs(targetOffsetPix)<=maxTargetOffsetPix);
     end
-    
+
     if o.fixationCrossBlankedNearTarget
         ffprintf(ff,'Fixation cross is blanked near target. No delay in showing fixation after target.\n');
     else
@@ -895,7 +896,7 @@ try
     o.yellowAnnulusBigSize(2)=min(o.yellowAnnulusBigSize(2),RectHeight(o.stimulusRect)/o.noiseCheckPix);
     o.yellowAnnulusBigSize=2*round(o.yellowAnnulusBigSize/2); % An even number, so we can center it on center of letter.
     o.yellowAnnulusBigRadiusDeg= 0.5*o.yellowAnnulusBigSize(1)/(o.pixPerDeg/o.noiseCheckPix);
-    
+
     % Make o.canvasSize to hold the biggest thing we're showing, signal or
     % noise. We limit o.canvasSize to fit in o.stimulusRect.
     o.canvasSize=[o.targetHeightPix o.targetWidthPix]/o.noiseCheckPix;
@@ -955,7 +956,7 @@ try
         otherwise,
             error('Unknown noiseType "%s"',o.noiseType);
     end
-    
+
     % Compute mtf to filter the noise
     fNyquist=0.5/o.noiseCheckDeg;
     fLow = 0;
@@ -976,7 +977,7 @@ try
     if o.noiseSD==0
         mtf=0;
     end
-    
+
     o.noiseListSd=std(noiseList);
     a=0.9*o.noiseListSd/o.noiseListBound;
     if o.noiseSD>a
@@ -1064,7 +1065,7 @@ try
                         Screen('DrawingFinished',scratchWindow,[],1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
                         WaitSecs(0.1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
                         letter=Screen('GetImage',scratchWindow,targetRect,'drawBuffer');
-                        
+
                         % The scrambling sounds like something is going wrong in detiling of read
                         % back renderbuffer memory, maybe a race condition in the driver. Maybe
                         % something else, in any case not really fixable by us, although the "wait
@@ -1085,7 +1086,7 @@ try
                         % absolutely not interested.
                         %
                         % -mario (psychtoolbox forum december 13, 2015)
-                        
+
                         Screen('FillRect',scratchWindow);
                         letter=letter(:,:,1);
                         signal(i).image=letter<(white1+black0)/2;
@@ -1138,7 +1139,7 @@ try
             boundsRect=OffsetRect(targetRect,targetOffsetPix,0);
             % targetRect not used. boundsRect used solely for the snapshot.
     end % switch o.task
-    
+
     % Compute annular noise mask
     annularNoiseMask=zeros(o.canvasSize); % initialize with 0
     rect=RectOfMatrix(annularNoiseMask);
@@ -1149,7 +1150,7 @@ try
     r=round(CenterRect(r,rect));
     annularNoiseMask=FillRectInMatrix(0,r,annularNoiseMask); % fill small radius with 0
     annularNoiseMask=logical(annularNoiseMask);
-    
+
     % Compute central noise mask
     centralNoiseMask=zeros(o.canvasSize); % initialize with 0
     rect=RectOfMatrix(centralNoiseMask);
@@ -1157,11 +1158,11 @@ try
     r=round(r);
     centralNoiseMask=FillRectInMatrix(1,r,centralNoiseMask); % fill radius with 1
     centralNoiseMask=logical(centralNoiseMask);
-    
+
     if isfinite(o.noiseEnvelopeSpaceConstantDeg) && o.noiseRaisedCosineEdgeThicknessDeg>0
         error('Sorry. Please set o.noiseEnvelopeSpaceConstantDeg=inf or set o.noiseRaisedCosineEdgeThicknessDeg=0.');
     end
-    
+
     if isfinite(o.noiseEnvelopeSpaceConstantDeg)
         % Compute Gaussian central noise envelope
         [x,y]=meshgrid(1:o.canvasSize(1),1:o.canvasSize(2));
@@ -1207,8 +1208,8 @@ try
         yellowMask=FillRectInMatrix(0,r,yellowMask);
         yellowMask=logical(yellowMask);
     end
-    
-    
+
+
     % o.E1 is energy at unit contrast.
     power=1:length(signal);
     for i=1:length(power)
@@ -1220,7 +1221,7 @@ try
     end
     o.E1=mean(power)*(o.noiseCheckPix/o.pixPerDeg)^2;
     ffprintf(ff,'log E1/deg^2 %.2f, where E1 is energy at unit contrast.\n',log10(o.E1));
-    
+
     if ismember(o.observer,algorithmicObservers);
         Screen('CloseAll');
         window=-1;
@@ -1256,19 +1257,19 @@ try
         if o.flipClick; Speak(['before Flip ' num2str(MFileLineNr)]);GetClicks; end
         Screen('Flip', window,0,1); % Show gray screen at LMean with fixation and crop marks. Don't clear buffer.
         if o.flipClick; Speak(['after Flip ' num2str(MFileLineNr)]);GetClicks; end
-        
+
         Screen('DrawText',window,'Starting new run. ',0.5*textSize,o.lineSpacing*textSize,black0,gray1,1);
         if isfinite(o.eccentricityDeg)
             if fixationIsOffscreen
                 speech{1}='Please fihx your eyes on your offscreen fixation mark,';
                 msg='Please fix your eyes on your offscreen fixation mark, ';
             else
+                msg=sprintf('Please fix your eyes on the center of the cross located at %.2f cm from target center, ', eccentricityCm);
                 if ismac
-                    speech{1}='Please fihx your eyes on the center of the cross,';
+                    speech{1}=strrep(msg, 'fix', 'fixh');
                 else
-                    speech{1}='Please fix your eyes on the center of the cross,';
+                    speech{1}=msg;
                 end
-                msg='Please fix your eyes on the center of the cross, ';
             end
             word='and';
         else
@@ -1315,7 +1316,7 @@ try
                 end
         end
     end
-    
+
     delta=0.02;
     switch o.task
         case '4afc',
@@ -1323,7 +1324,7 @@ try
         case 'identify',
             gamma=1/o.alternatives;
     end
-    
+
     % Default values for tGuess and tGuessSd
     if streq(o.targetModulates,'luminance')
         tGuess=-0.5;
@@ -1349,7 +1350,7 @@ try
     if isfinite(o.tGuessSd)
         tGuessSd=o.tGuessSd;
     end
-    
+
     o.data=[];
     q=QuestCreate(tGuess,tGuessSd,o.pThreshold,o.beta,delta,gamma);
     q.normalizePdf=1; % adds a few ms per call to QuestUpdate, but otherwise the pdf will underflow after about 1000 trials.
@@ -2009,12 +2010,12 @@ try
                         end
                 end % switch o.task
                 eraseRect=ClipRect(eraseRect,o.stimulusRect);
-                
+
                 % Print instruction in upper left corner.
                 Screen('FillRect',window,gray1,topCaptionRect);
                 message=sprintf('Trial %d of %d. Run %d of %d.',trial,o.trialsPerRun,o.runNumber,o.runsDesired);
                 Screen('DrawText',window,message,textSize/2,textSize/2,black,gray1);
-                
+
                 % Print instructions in lower left corner.
                 textRect=[0,0,textSize,1.2*textSize];
                 textRect=AlignRect(textRect,screenRect,'left','bottom');
@@ -2034,7 +2035,7 @@ try
                 Screen('FillRect',window,gray1,bottomCaptionRect);
                 Screen('DrawText',window,message,textRect(1),textRect(4),black,gray1,1);
                 Screen('TextSize',window,textSize);
-                
+
                 % Display response alternatives.
                 switch o.task
                     case '4afc',
@@ -2467,7 +2468,7 @@ try
         end
     end
     % end
-    
+
     %     t=mean(tSample);
     %     tse=std(tSample)/sqrt(length(tSample));
     %     switch o.targetModulates

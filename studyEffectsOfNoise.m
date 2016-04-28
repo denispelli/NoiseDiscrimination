@@ -1,12 +1,12 @@
 %#### Adjust values within this block #####################
 clear o
-useBackupSessions=1;
+useBackupSessions=0;
 % o.observer='junk';
 %o.observer='ideal';
-o.observer='krish'; % use your name
+o.observer='xiuyun'; % use your name
 o.distanceCm=70; % viewing distance
 o.durationSec=0.2;
-o.trialsPerRun=1;
+o.trialsPerRun=40;
 
 %For noise with Gaussian envelope (soft)
 %o.noiseRadiusDeg=inf;
@@ -18,9 +18,9 @@ o.trialsPerRun=1;
 
 % ############# we test target size x ecc w/o noise #######
 % o.targetHeightDeg=6; % OLD: letter or gabor size [2 3.5 6];
-o.targetHeightDeg=2; % letter/gabor size [2 4 8].
+o.targetHeightDeg=8; % letter/gabor size [2 4 8].
 o.eccentricityDeg=8; % eccentricity [0 16 32]
-o.noiseSD=0.16; % noise contrast [0 0.16]
+o.noiseSD=0; % noise contrast [0 0.16]
 % We want to compare these:
 o.noiseCheckDeg=o.targetHeightDeg/20;
 %o.noiseCheckDeg=o.targetHeightDeg/40;
@@ -60,6 +60,7 @@ o.noiseType='gaussian'; % ALWAYS use gaussian
 o.noiseSpectrum='white'; % pink or white
 o.targetCross=1;
 o.fixationCrossWeightDeg = 0.05; % target line thickness
+o.fixationCrossBlankedNearTarget=0; % always present fixation
 
 o.alphabetPlacement='top'; % show possible answers on 'top' or 'right' for letters and gabors.
 
@@ -113,8 +114,9 @@ if useBackupSessions % auto-generate full sequence of experiments for "Winter" d
 
   NoiseDecayRaiusOverLetterRadius = [0.33, 0.58, 1.00, 1.75, 3.00, 32];
 
-  iCounter = 1; 
+  iCounter = 1;
   clear oo;
+  ooNo = o;
   for iEcc = 1:size(tableCell,1)
     for iTargetSize=1:numel(tableCell{iEcc,2})
       for iRatio=0:numel(NoiseDecayRaiusOverLetterRadius)
@@ -126,14 +128,16 @@ if useBackupSessions % auto-generate full sequence of experiments for "Winter" d
           % no noise
           oo(iCounter).noiseSD = 0; %override previously specified noiseSD
           oo(iCounter).noiseEnvelopeSpaceConstantDeg = NaN;
+          iCounter = iCounter + 1;
+
         else
           % high noise; noise decay radius (noiseSD is already specified above as 0.16)
-          oo(iCounter).noiseEnvelopeSpaceConstantDeg = ...
+          ooNo(iCounter).noiseEnvelopeSpaceConstantDeg = ...
             NoiseDecayRaiusOverLetterRadius(iRatio).*oo(iCounter).targetHeightDeg/2;
-          oo(iCounter).noiseCheckDeg=oo(iCounter).targetHeightDeg/20;
+          ooNo(iCounter).noiseCheckDeg=oo(iCounter).targetHeightDeg/20;
         end
 
-        iCounter = iCounter + 1;
+        %iCounter = iCounter + 1;
       end
     end
   end
@@ -164,7 +168,7 @@ if useBackupSessions % auto-generate full sequence of experiments for "Winter" d
   disp('A backup file is created for your current workspace. You can safely delete it if the previous experiment was successful. If not, then keep that backup.')
 
   load(sessionFile); % WARNING: this overrides session and oo struct! Good we always backup before loading, so no data is lost
-  
+
   progressTrialNO=session.progressTrialNO;
   for iProgressTrialNO=progressTrialNO:numel(oo) % pick up from where we left off
     ooWithData{iProgressTrialNO}=NoiseDiscrimination(oo(iProgressTrialNO));
