@@ -249,13 +249,13 @@ o.alphabetPlacement='top'; % 'top' or 'right';
 o.replicatePelli2006=0;
 o.isWin=IsWin; % override this to simulate Windows on a Mac.
 o.dynamicFlipInterval = []; % to store flip interval (useful to calculate frame drops)
-o.dynamicPreSignalNoisePoolSize = 10;
-o.dynamicPostSignalNoisePoolSize = 10;
 
 % A value of 1 will cancel dynamic noise (only 1 flip of noise will be generated)
 % Actual value will depend on frame rate and stimulus presentation duration,
 % thus will be ALWAYS overwritten later for any value other than 1
 o.dynamicSignalPoolSize = 1; % or 1 for static noise
+o.dynamicPreSignalNoisePoolDur = 0.2;
+o.dynamicPostSignalNoisePoolDur = 0.2;
 
 [screenWidthMm,screenHeightMm]=Screen('DisplaySize',o.screen);
 screenBufferRect=Screen('Rect',o.screen);
@@ -861,8 +861,12 @@ try
     % do nothing
   else
     o.dynamicSignalPoolSize = ceil(o.durationSec*frameRate);
+    o.dynamicPreSignalNoisePoolSize = ceil(o.dynamicPreSignalNoisePoolDur*frameRate);
+    o.dynamicPostSignalNoisePoolSize = ceil(o.dynamicPostSignalNoisePoolDur*frameRate);
+
+    o.dynamicPoolSize = o.dynamicPreSignalNoisePoolSize+o.dynamicPreSignalNoisePoolSize + o.dynamicSignalPoolSize;
   end
-  o.dynamicPoolSize = o.dynamicPreSignalNoisePoolSize+o.dynamicPreSignalNoisePoolSize + o.dynamicSignalPoolSize;
+
 
   ffprintf(ff,'o.pixPerDeg %.1f, o.distanceCm %.1f\n',o.pixPerDeg,o.distanceCm);
   if streq(o.task,'identify')
@@ -1474,7 +1478,7 @@ try
 
     %o.dynamicSignalPoolSize = 100;
 
-    dynamicSignalPool = {};
+    dynamicPool = {};
     dynamicSignalIdx = [];
 
     for iDynamicPool=1:o.dynamicPoolSize
@@ -1560,7 +1564,7 @@ try
           signalImageIndex=logical(FillRectInMatrix(true,sRect,zeros(o.canvasSize)));
           %                 figure(1);imshow(signalImageIndex);
           signalImage=zeros(o.canvasSize);
-          if iDynamicPool <= o.dynamicPreSignalNoisePoolSize ... 
+          if iDynamicPool <= o.dynamicPreSignalNoisePoolSize ...
            | iDynamicPool >= o.dynamicPreSignalNoisePoolSize + o.dynamicSignalPoolSize
             % dummy signal
             signalImage(find(signalImageIndex,1))=0;
@@ -1589,7 +1593,7 @@ try
         otherwise
           error('Unknown o.task "%s"',o.task);
       end
-      dynamicSignalPool{iDynamicPool} = location;
+      dynamicPool{iDynamicPool} = location;
     end
 
 
@@ -1930,7 +1934,7 @@ try
 
 
         for iDynamicPool=1:o.dynamicPoolSize
-          location = dynamicSignalPool{iDynamicPool};
+          location = dynamicPool{iDynamicPool};
 
           tNoiseLoop = GetSecs;
           switch o.task
@@ -2404,15 +2408,18 @@ try
           if o.flipClick; Speak(['before Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
           % NOTE: OFFSET: Target presentatino offset flip
           if o.dynamicSignalPoolSize > 1
-            Screen('Flip',window,[],1); % immediate flip (no sticky)
+            Screen('Flip',window,0,1); % immediate flip (no sticky)
           else
             % present stimulus for longer (it has just been flipped on)
             Screen('Flip',window,signalOnset+o.durationSec-1/frameRate,1); % Duration is over. Erase target.
           end
 
           if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
+          
+          
           signalOffset=GetSecs;
           actualDuration=GetSecs-signalOnset;
+          if o.dynamicSignalPoolSize == 1 % do not warn about immediate flip
           if abs(actualDuration-o.durationSec)>0.05
             ffprintf(ff,'WARNING: Duration requested %.2f, actual %.2f\n',o.durationSec,actualDuration);
           else
@@ -2420,6 +2427,9 @@ try
               ffprintf(ff,'Duration requested %.2f, actual %.2f\n',o.durationSec,actualDuration);
             end
           end
+          end
+          
+          
           if ~o.fixationCrossBlankedNearTarget
             WaitSecs(o.fixationCrossBlankedUntilSecsAfterTarget);
           end
