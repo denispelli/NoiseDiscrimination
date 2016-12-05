@@ -249,6 +249,8 @@ o.alphabetPlacement='top'; % 'top' or 'right';
 o.replicatePelli2006=0;
 o.isWin=IsWin; % override this to simulate Windows on a Mac.
 o.dynamicFlipInterval = []; % to store flip interval (useful to calculate frame drops)
+o.dynamicPreSignalNoisePoolSize = 10;
+o.dynamicPostSignalNoisePoolSize = 10;
 
 % A value of 1 will cancel dynamic noise (only 1 flip of noise will be generated)
 % Actual value will depend on frame rate and stimulus presentation duration,
@@ -860,6 +862,7 @@ try
   else
     o.dynamicSignalPoolSize = ceil(o.durationSec*frameRate);
   end
+  o.dynamicPoolSize = o.dynamicPreSignalNoisePoolSize+o.dynamicPreSignalNoisePoolSize + o.dynamicSignalPoolSize;
 
   ffprintf(ff,'o.pixPerDeg %.1f, o.distanceCm %.1f\n',o.pixPerDeg,o.distanceCm);
   if streq(o.task,'identify')
@@ -1474,7 +1477,7 @@ try
     dynamicSignalPool = {};
     dynamicSignalIdx = [];
 
-    for iDynamicPool=1:o.dynamicSignalPoolSize
+    for iDynamicPool=1:o.dynamicPoolSize
       % for the dynamic pool, keep the signal but regenerate noise
 
       switch o.task % add noise to signal
@@ -1557,7 +1560,13 @@ try
           signalImageIndex=logical(FillRectInMatrix(true,sRect,zeros(o.canvasSize)));
           %                 figure(1);imshow(signalImageIndex);
           signalImage=zeros(o.canvasSize);
+          if iDynamicPool <= o.dynamicPreSignalNoisePoolSize ... 
+           | iDynamicPool >= o.dynamicPreSignalNoisePoolSize + o.dynamicSignalPoolSize
+            % dummy signal
+            signalImage(find(signalImageIndex,1))=0;
+          else
           signalImage(signalImageIndex)=signal(whichSignal).image(:);
+          end
           %                 figure(2);imshow(signalImage);
           signalMask=logical(signalImage);
           switch o.targetModulates
@@ -1920,7 +1929,7 @@ try
 
 
 
-        for iDynamicPool=1:o.dynamicSignalPoolSize
+        for iDynamicPool=1:o.dynamicPoolSize
           location = dynamicSignalPool{iDynamicPool};
 
           tNoiseLoop = GetSecs;
