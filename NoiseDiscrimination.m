@@ -141,7 +141,6 @@ o.testBitDepth=0;
 o.useFractionOfScreen=0; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 o.distanceCm=50; % viewing distance
 o.flipScreenHorizontally=0; % Use this when viewing the display in a mirror.
-o.screen=0; % 0 for main screen
 o.observer='junk'; % Name of person or existing algorithm.
 % o.observer='denis'; o.observer='michelle'; o.observer='martin';
 % o.observer='tiffany'; o.observer='irene'; o.observer='joy';
@@ -154,7 +153,7 @@ algorithmicObservers={'ideal','brightnessSeeker','blackshot','maximum'};
 o.trialsPerRun=40; % Typically 40.
 o.runNumber=1; % For display only, indicate the run number. When o.runNumber==runsDesired this program says "Congratulations" before returning.
 o.runsDesired=1; % How many runs you to plan to do, used solely for display (and congratulations).
-o.speakInstructions=1;
+o.speakInstructions=0;
 o.congratulateWhenDone=1; % 0 or 1. Spoken after last run (i.e. when o.runNumber==o.runsDesired). You can turn this off.
 o.runAborted=0; % 0 or 1. Returned value is 1 if the user aborts this run (i.e. threshold).
 o.quitNow=0; % 0 or 1. Returned value is 1 if the observer wants to quit now; no more runs.
@@ -215,17 +214,17 @@ o.fixationCrossDeg=inf; % Typically 1 or inf. Make this at least 4 deg for scoto
 o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
 o.fixationCrossBlankedNearTarget=1; % 0 or 1.
 o.fixationCrossBlankedUntilSecsAfterTarget=0.6; % Pause after stimulus before display of fixation. Skipped when fixationCrossBlankedNearTarget. Not needed when eccentricity is bigger than the target.
-o.textSizeDeg=0.6;
-o.saveSnapshot=0; % 0 or 1.  If true (1), take snapshot for public presentation.
-o.snapshotLetterContrast=0.2; % nan to request program default. If set, this determines o.tSnapshot.
-o.tSnapshot=nan; % nan to request program defaults.
-o.cropSnapshot=0; % If true (1), show only the target and noise, without unnecessary gray background.
-o.snapshotCaptionTextSizeDeg=0.5;
-o.snapshotShowsFixationBefore=1;
-o.snapshotShowsFixationAfter=0;
-o.saveStimulus=0; % saves to o.savedStimulus
-% o.eccentricityDeg=inf; % Requests no fixation, e.g. on snapshot.
-o.gapFraction4afc=0.03; % Typically 0, 0.03, or 0.2. Gap, as a fraction of o.targetHeightDeg, between the four squares in 4afc task, ignored in identify task.
+o.textSizeDeg=0.6;;
+o.saveSnapshot=0; % 0 or 1.  If true (1), take snapshot for public presentation.;
+o.snapshotLetterContrast=0.2; % nan to request program default. If set, this determines o.tSnapshot.;
+o.tSnapshot=nan; % nan to request program defaults.;
+o.cropSnapshot=0; % If true (1), show only the target and noise, without unnecessary gray background.;
+o.snapshotCaptionTextSizeDeg=0.5;;
+o.snapshotShowsFixationBefore=1;;
+o.snapshotShowsFixationAfter=0;;
+o.saveStimulus=0; % saves to o.savedStimulus;
+% o.eccentricityDeg=inf; % Requests no fixation, e.g. on snapshot.;
+o.gapFraction4afc=0.03; % Typically 0, 0.03, or 0.2. Gap, as a fraction of o.targetHeightDeg, between the four squares in 4afc task, ignored in identify task.;
 o.showCropMarks=0; % mark the bounding box of the target
 o.showResponseNumbers=1;
 o.responseNumbersInCorners=0;
@@ -244,7 +243,7 @@ o.observerQuadratic=-0.7; % adjusted to fit noise letter data.
 o.backgroundEntropyLevels=2; % Value used only if o.targetModulates is 'entropy'
 o.idealEOverNThreshold=nan; % You can run the ideal first, and then provide its threshold as a reference when testing human observers.
 o.screen=0;
-% o.screen=max(Screen('Screens'));
+%o.screen=max(Screen('Screens'));
 o.alphabet='DHKNORSVZ';
 o.alphabetPlacement='top'; % 'top' or 'right';
 o.replicatePelli2006=0;
@@ -940,6 +939,9 @@ try
         Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,black); % fixation
     end
     clear tSample
+
+    % NOTE: start of actual noise generation
+    tNoiseLoop = GetSecs;
     switch o.noiseType
         case 'gaussian',
             o.noiseListBound=2;
@@ -989,6 +991,8 @@ try
         o.annularNoiseSD=a;
     end
     %ffprintf(ff,'OBSOLETE: noiseContrast %.2f\n',o.noiseSD/o.noiseListSd);
+    % NOTE: end of actual noise generation
+
     rightBeep = MakeBeep(2000,0.05);
     rightBeep(end)=0;
     wrongBeep = MakeBeep(500,0.5);
@@ -1528,7 +1532,7 @@ try
                         location(1).image=ones(o.canvasSize);
                         location(1).image(centralNoiseMask)=1+(o.noiseSD/o.noiseListSd)*noise(centralNoiseMask);
                         location(1).image(annularNoiseMask)=1+(o.annularNoiseSD/o.noiseListSd)*noise(annularNoiseMask);
-                        location(1).image=location(1).image+o.contrast*signalImage;
+                        location(1).image=location(1).image+o.contrast*signalImage; % NOTE: noise and signal added here
                     case 'noise'
                         noise(signalMask)=r*noise(signalMask);
                         location(1).image=ones(o.canvasSize);
@@ -1592,6 +1596,7 @@ try
                                     paper=im(~signalMask)-1;
                                     likely(i)=-length(ink)*log(sdInk*sqrt(2*pi))-sum(0.5*(ink/sdInk).^2);
                                     likely(i)=likely(i)-length(paper)*log(sdPaper*sqrt(2*pi))-sum(0.5*(paper/sdPaper).^2);
+                                    save buggy
                                 end
                         end
                 end % switch o.task
@@ -1870,10 +1875,13 @@ try
                 if o.saveSnapshot && o.snapshotShowsFixationBefore
                     Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
                 end
+                
+                tNoiseLoop = GetSecs;
                 switch o.task
                     case 'identify'
                         locations=1;
                         % Convert to integer pixels.
+                        % NOTE: now preparing the presentation image data
                         img=location(1).image;
                         % ffprintf(ff,'signal rect height %.1f, image height %.0f, dst rect %d %d %d %d\n',RectHeight(rect),size(img,1),rect);
                         if o.printGammaLoadings
@@ -1922,6 +1930,8 @@ try
                         offset=dstRect(1:2)-srcRect(1:2);
                         dstRect=ClipRect(dstRect,o.stimulusRect);
                         srcRect=OffsetRect(dstRect,-offset(1),-offset(2));
+                        
+                        % NOTE: actual stimuli presentatoin onset
                         Screen('DrawTexture',window,texture,srcRect,dstRect);
                         % peekImg=Screen('GetImage',window,InsetRect(rect,-1,-1),'drawBuffer');
                         % imshow(peekImg);
@@ -2009,6 +2019,11 @@ try
                             end
                         end
                 end % switch o.task
+                Screen('Flip', window);
+                disp('+++++++++++++++++++++++++')
+                disp(GetSecs - tNoiseLoop);
+                disp('+++++++++++++++++++++++++')
+                
                 eraseRect=ClipRect(eraseRect,o.stimulusRect);
 
                 % Print instruction in upper left corner.
@@ -2103,6 +2118,7 @@ try
                                     % by the DrawTexture command below.
                                 end
                             end
+                            % NOTE: alphabet placement on rop right
                             texture=Screen('MakeTexture',window,(1-img)*gray);
                             Screen('DrawTexture',window,texture,RectOfMatrix(img),rect);
                             Screen('Close',texture);
@@ -2145,6 +2161,9 @@ try
                 if o.saveStimulus
                     o.savedStimulus=Screen('GetImage',window,o.stimulusRect,'drawBuffer');
                 end
+                % NOTE: (original) ONSET: Target presentatino onset flip
+                % start of waiting for response
+                
                 Screen('Flip',window,0,1); % Show target with instructions. Don't clear buffer.
                 signalOnset=GetSecs;
                 if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
@@ -2303,8 +2322,10 @@ try
                     fclose(dataFid);
                     return;
                 end % if o.saveSnapshot
-                if isfinite(o.durationSec)
-                    Screen('FillRect',window,gray,o.stimulusRect);
+
+                if isfinite(o.durationSec) % resopnse wait duration
+                    %Screen('FillRect',window,gray,o.stimulusRect);
+                    Screen('FillRect',window,255*[1 0 0],o.stimulusRect); % FIXME: red for easy debug
                     if o.yellowAnnulusBigRadiusDeg>o.yellowAnnulusSmallRadiusDeg
                         r=CenterRect([0 0 o.yellowAnnulusBigSize]*o.noiseCheckPix,o.stimulusRect);
                         r=OffsetRect(r,targetOffsetPix,0);
@@ -2314,6 +2335,7 @@ try
                         Screen('FillRect',window,gray,r);
                     end
                     if o.flipClick; Speak(['before Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
+                    % NOTE: OFFSET: Target presentatino offset flip
                     Screen('Flip',window,signalOnset+o.durationSec-1/frameRate,1); % Duration is over. Erase target.
                     if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
                     signalOffset=GetSecs;
@@ -2351,7 +2373,7 @@ try
                         while ~ismember(response,1:o.alternatives)
                             o.runAborted=0;
                             response = GetKeypress(o.isKbLegacy);
-                            %disp(sprintf('2:==>%s<==', response));
+                            disp(sprintf('2:==>%s<==', response));
                             if response=='.'
                                 ffprintf(ff,'*** ''%c'' response. Run terminated.\n',response);
                                 Speak('Run terminated.');
@@ -2588,6 +2610,7 @@ try
     %     o.q=q; % not worth saving
     save(fullfile(o.dataFolder,[o.dataFilename '.mat']),'o','cal');
     fprintf('Results saved in %s with extensions .txt and .mat\nin folder %s\n',o.dataFilename,o.dataFolder);
+
 catch
     sca; % screen close all
     AutoBrightness(cal.screen,1); % Restore autobrightness.

@@ -3,7 +3,7 @@ clear o
 useBackupSessions=0;
 % o.observer='junk';
 %o.observer='ideal';
-o.observer='xiuyun'; % use your name
+o.observer='ideal'; % use your name
 o.distanceCm=70; % viewing distance
 o.durationSec=0.2;
 o.trialsPerRun=40;

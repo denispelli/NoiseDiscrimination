@@ -8,6 +8,7 @@ require(Hmisc)
 # load the data
 dat <- read.csv("xiuyun_conditions.csv")
 
+
 if (FALSE){
 dat <- read.csv("XiuyunWeek123.csv")
 dat$noise_decay_radius <- dat$NoiseDecayRadius
