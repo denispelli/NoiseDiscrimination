@@ -331,7 +331,7 @@ if ~isfield(o,'labelAlternatives')
       o.labelAlternatives=1;
     case 'letter'
       o.labelAlternatives=0;
-      
+
   end
 end
 o.beginningTime=now;
@@ -649,10 +649,10 @@ try
     ListenChar(2); % no echo
   end
   KbName('UnifyKeyNames');
-  
-  
+
+
   if ~ismember(o.observer,algorithmicObservers) || streq(o.task,'identify')
-    
+
     % If o.observer is human, We need an open window for the whole
     % experiment, in which to display stimuli. If o.observer is machine,
     % we need a screen only briefly, to create the letters to be
@@ -692,7 +692,7 @@ try
       Screen('Flip',window);
     end
     assert(all(r==screenRect));
-    
+
     if o.flipClick; Speak(['after OpenWindow ' num2str(MFileLineNr)]);GetClicks; end
     if exist('cal')
       gray=mean([firstGrayClutEntry lastGrayClutEntry]);  % Will be a CLUT color code for gray.
@@ -808,7 +808,7 @@ try
         answer=questdlg(question,'Fixation','Ok','Cancel','Ok');
         ListenChar(2); % go back to orig status; no echo
       end
-      
+
       switch answer
         case 'Ok',
           fixationIsOffscreen=1;
@@ -837,7 +837,7 @@ try
     targetOffsetPix=eccentricityPix+fixationOffsetPix;
     assert(abs(targetOffsetPix)<=maxTargetOffsetPix);
   end
-  
+
   if o.fixationCrossBlankedNearTarget
     ffprintf(ff,'Fixation cross is blanked near target. No delay in showing fixation after target.\n');
   else
@@ -855,12 +855,12 @@ try
   ffprintf(ff,'Frame rate %.1f Hz.\n',frameRate);
   if o.dynamicSignalPoolSize == 1
     % statis noise is required, simply use a pool size of 1
-    
+
     % do nothing
   else
     o.dynamicSignalPoolSize = ceil(o.durationSec*frameRate);
   end
-  
+
   ffprintf(ff,'o.pixPerDeg %.1f, o.distanceCm %.1f\n',o.pixPerDeg,o.distanceCm);
   if streq(o.task,'identify')
     ffprintf(ff,'Minimum letter resolution is %.0f checks.\n',o.minimumTargetHeightChecks);
@@ -909,7 +909,7 @@ try
   o.yellowAnnulusBigSize(2)=min(o.yellowAnnulusBigSize(2),RectHeight(o.stimulusRect)/o.noiseCheckPix);
   o.yellowAnnulusBigSize=2*round(o.yellowAnnulusBigSize/2); % An even number, so we can center it on center of letter.
   o.yellowAnnulusBigRadiusDeg= 0.5*o.yellowAnnulusBigSize(1)/(o.pixPerDeg/o.noiseCheckPix);
-  
+
   % Make o.canvasSize to hold the biggest thing we're showing, signal or
   % noise. We limit o.canvasSize to fit in o.stimulusRect.
   o.canvasSize=[o.targetHeightPix o.targetWidthPix]/o.noiseCheckPix;
@@ -953,7 +953,7 @@ try
     Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,black); % fixation
   end
   clear tSample
-  
+
   % NOTE: start of actual noise generation
   tNoiseLoop = GetSecs;
   switch o.noiseType
@@ -972,7 +972,7 @@ try
     otherwise,
       error('Unknown noiseType "%s"',o.noiseType);
   end
-  
+
   % Compute mtf to filter the noise
   fNyquist=0.5/o.noiseCheckDeg;
   fLow = 0;
@@ -993,7 +993,7 @@ try
   if o.noiseSD==0
     mtf=0;
   end
-  
+
   o.noiseListSd=std(noiseList);
   a=0.9*o.noiseListSd/o.noiseListBound;
   if o.noiseSD>a
@@ -1006,7 +1006,7 @@ try
   end
   %ffprintf(ff,'OBSOLETE: noiseContrast %.2f\n',o.noiseSD/o.noiseListSd);
   % NOTE: end of actual noise generation
-  
+
   rightBeep = MakeBeep(2000,0.05);
   rightBeep(end)=0;
   wrongBeep = MakeBeep(500,0.5);
@@ -1083,7 +1083,7 @@ try
             Screen('DrawingFinished',scratchWindow,[],1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
             WaitSecs(0.1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
             letter=Screen('GetImage',scratchWindow,targetRect,'drawBuffer');
-            
+
             % The scrambling sounds like something is going wrong in detiling of read
             % back renderbuffer memory, maybe a race condition in the driver. Maybe
             % something else, in any case not really fixable by us, although the "wait
@@ -1104,7 +1104,7 @@ try
             % absolutely not interested.
             %
             % -mario (psychtoolbox forum december 13, 2015)
-            
+
             Screen('FillRect',scratchWindow);
             letter=letter(:,:,1);
             signal(i).image=letter<(white1+black0)/2;
@@ -1157,7 +1157,7 @@ try
       boundsRect=OffsetRect(targetRect,targetOffsetPix,0);
       % targetRect not used. boundsRect used solely for the snapshot.
   end % switch o.task
-  
+
   % Compute annular noise mask
   annularNoiseMask=zeros(o.canvasSize); % initialize with 0
   rect=RectOfMatrix(annularNoiseMask);
@@ -1168,7 +1168,7 @@ try
   r=round(CenterRect(r,rect));
   annularNoiseMask=FillRectInMatrix(0,r,annularNoiseMask); % fill small radius with 0
   annularNoiseMask=logical(annularNoiseMask);
-  
+
   % Compute central noise mask
   centralNoiseMask=zeros(o.canvasSize); % initialize with 0
   rect=RectOfMatrix(centralNoiseMask);
@@ -1176,11 +1176,11 @@ try
   r=round(r);
   centralNoiseMask=FillRectInMatrix(1,r,centralNoiseMask); % fill radius with 1
   centralNoiseMask=logical(centralNoiseMask);
-  
+
   if isfinite(o.noiseEnvelopeSpaceConstantDeg) && o.noiseRaisedCosineEdgeThicknessDeg>0
     error('Sorry. Please set o.noiseEnvelopeSpaceConstantDeg=inf or set o.noiseRaisedCosineEdgeThicknessDeg=0.');
   end
-  
+
   if isfinite(o.noiseEnvelopeSpaceConstantDeg)
     % Compute Gaussian central noise envelope
     [x,y]=meshgrid(1:o.canvasSize(1),1:o.canvasSize(2));
@@ -1226,8 +1226,8 @@ try
     yellowMask=FillRectInMatrix(0,r,yellowMask);
     yellowMask=logical(yellowMask);
   end
-  
-  
+
+
   % o.E1 is energy at unit contrast.
   power=1:length(signal);
   for i=1:length(power)
@@ -1239,7 +1239,7 @@ try
   end
   o.E1=mean(power)*(o.noiseCheckPix/o.pixPerDeg)^2;
   ffprintf(ff,'log E1/deg^2 %.2f, where E1 is energy at unit contrast.\n',log10(o.E1));
-  
+
   if ismember(o.observer,algorithmicObservers);
     Screen('CloseAll');
     window=-1;
@@ -1275,7 +1275,7 @@ try
     if o.flipClick; Speak(['before Flip ' num2str(MFileLineNr)]);GetClicks; end
     Screen('Flip', window,0,1); % Show gray screen at LMean with fixation and crop marks. Don't clear buffer.
     if o.flipClick; Speak(['after Flip ' num2str(MFileLineNr)]);GetClicks; end
-    
+
     Screen('DrawText',window,'Starting new run. ',0.5*textSize,o.lineSpacing*textSize,black0,gray1,1);
     if isfinite(o.eccentricityDeg)
       if fixationIsOffscreen
@@ -1334,7 +1334,7 @@ try
         end
     end
   end
-  
+
   delta=0.02;
   switch o.task
     case '4afc',
@@ -1342,7 +1342,7 @@ try
     case 'identify',
       gamma=1/o.alternatives;
   end
-  
+
   % Default values for tGuess and tGuessSd
   if streq(o.targetModulates,'luminance')
     tGuess=-0.5;
@@ -1368,7 +1368,7 @@ try
   if isfinite(o.tGuessSd)
     tGuessSd=o.tGuessSd;
   end
-  
+
   o.data=[];
   q=QuestCreate(tGuess,tGuessSd,o.pThreshold,o.beta,delta,gamma);
   q.normalizePdf=1; % adds a few ms per call to QuestUpdate, but otherwise the pdf will underflow after about 1000 trials.
@@ -1468,15 +1468,15 @@ try
       end
       rng(o.noiseListSeed);
     end
-    
+
     %o.dynamicSignalPoolSize = 100;
-    
+
     dynamicSignalPool = {};
     dynamicSignalIdx = [];
-    
+
     for iDynamicPool=1:o.dynamicSignalPoolSize
       % for the dynamic pool, keep the signal but regenerate noise
-      
+
       switch o.task % add noise to signal
         case '4afc'
           canvasRect=[0 0 o.canvasSize(2) o.canvasSize(1)];
@@ -1582,8 +1582,8 @@ try
       end
       dynamicSignalPool{iDynamicPool} = location;
     end
-    
-    
+
+
     switch o.observer
       case 'ideal'
         clear likely
@@ -1759,7 +1759,7 @@ try
         % NOTE: now, only this observer needs actual stimulus
         % presentation
         % That is why we didn't have stimulus presentation above
-        
+
         % imshow(location(1).image);
         % ffprintf(ff,'location(1).image size %dx%d\n',size(location(1).image));
         %  ffprintf(ff,'o.canvasSize %d %d\n',o.canvasSize);
@@ -1916,13 +1916,13 @@ try
         if o.saveSnapshot && o.snapshotShowsFixationBefore
           Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
         end
-        
-        
-        
-        
+
+
+
+
         for iDynamicPool=1:o.dynamicSignalPoolSize
           location = dynamicSignalPool{iDynamicPool};
-          
+
           tNoiseLoop = GetSecs;
           switch o.task
             case 'identify'
@@ -1977,7 +1977,7 @@ try
               offset=dstRect(1:2)-srcRect(1:2);
               dstRect=ClipRect(dstRect,o.stimulusRect);
               srcRect=OffsetRect(dstRect,-offset(1),-offset(2));
-              
+
               % NOTE: actual stimuli presentatoin onset
               Screen('DrawTexture',window,texture,srcRect,dstRect);
               % peekImg=Screen('GetImage',window,InsetRect(rect,-1,-1),'drawBuffer');
@@ -2066,29 +2066,29 @@ try
                 end
               end
           end % switch o.task
-          
+
           if o.dynamicSignalPoolSize > 1
             Screen('Flip', window);
           end
-          
+
           o.dynamicFlipInterval(iDynamicPool,trial) = GetSecs - tNoiseLoop;
         end
-        
+
         if o.dynamicSignalPoolSize > 1
           % Stimulus presentation over; clear screen
           Screen('FillRect',window,gray1,screenRect);
           Screen('Flip', window);
         end
-        
-        
-        
+
+
+
         eraseRect=ClipRect(eraseRect,o.stimulusRect);
-        
+
         % Print instruction in upper left corner.
         Screen('FillRect',window,gray1,topCaptionRect);
         message=sprintf('Trial %d of %d. Run %d of %d.',trial,o.trialsPerRun,o.runNumber,o.runsDesired);
         Screen('DrawText',window,message,textSize/2,textSize/2,black,gray1);
-        
+
         % Print instructions in lower left corner.
         textRect=[0,0,textSize,1.2*textSize];
         textRect=AlignRect(textRect,screenRect,'left','bottom');
@@ -2108,7 +2108,7 @@ try
         Screen('FillRect',window,gray1,bottomCaptionRect);
         Screen('DrawText',window,message,textRect(1),textRect(4),black,gray1,1);
         Screen('TextSize',window,textSize);
-        
+
         % Display response alternatives.
         switch o.task
           case '4afc',
@@ -2221,7 +2221,7 @@ try
         end
         % NOTE: (original) ONSET: Target presentatino onset flip
         % start of waiting for response
-        
+
         Screen('Flip',window,0,1); % Show target with instructions. Don't clear buffer.
         signalOnset=GetSecs;
         if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
@@ -2380,10 +2380,10 @@ try
           fclose(dataFid);
           return;
         end % if o.saveSnapshot
-        
+
         if isfinite(o.durationSec) % resopnse wait duration
-          %Screen('FillRect',window,gray,o.stimulusRect);
-          Screen('FillRect',window,255*[1 0 0],o.stimulusRect); % FIXME: red for easy debug
+          Screen('FillRect',window,gray,o.stimulusRect);
+          %Screen('FillRect',window,255*[1 0 0],o.stimulusRect); % FIXME: red for easy debug
           if o.yellowAnnulusBigRadiusDeg>o.yellowAnnulusSmallRadiusDeg
             r=CenterRect([0 0 o.yellowAnnulusBigSize]*o.noiseCheckPix,o.stimulusRect);
             r=OffsetRect(r,targetOffsetPix,0);
@@ -2400,7 +2400,7 @@ try
             % present stimulus for longer (it has just been flipped on)
             Screen('Flip',window,signalOnset+o.durationSec-1/frameRate,1); % Duration is over. Erase target.
           end
-          
+
           if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
           signalOffset=GetSecs;
           actualDuration=GetSecs-signalOnset;
@@ -2553,7 +2553,7 @@ try
     end
   end
   % end
-  
+
   %     t=mean(tSample);
   %     tse=std(tSample)/sqrt(length(tSample));
   %     switch o.targetModulates
@@ -2673,7 +2673,7 @@ try
   %     o.q=q; % not worth saving
   save(fullfile(o.dataFolder,[o.dataFilename '.mat']),'o','cal');
   fprintf('Results saved in %s with extensions .txt and .mat\nin folder %s\n',o.dataFilename,o.dataFolder);
-  
+
 catch
   sca; % screen close all
   AutoBrightness(cal.screen,1); % Restore autobrightness.

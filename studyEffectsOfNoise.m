@@ -3,10 +3,14 @@ clear o
 useBackupSessions=0;
 % o.observer='junk';
 %o.observer='ideal';
-o.observer='ideal'; % use your name
+o.observer='hyiltiz'; % use your name
 o.distanceCm=70; % viewing distance
 o.durationSec=0.2;
 o.trialsPerRun=40;
+o.dynamicSignalPoolSize = 100; % or 1 for static noise
+
+%o.useFlankers=1; % 0 or 1. Enable for crowding experiments.
+%o.thresholdParameter='spacing';
 
 %For noise with Gaussian envelope (soft)
 %o.noiseRadiusDeg=inf;
@@ -18,9 +22,9 @@ o.trialsPerRun=40;
 
 % ############# we test target size x ecc w/o noise #######
 % o.targetHeightDeg=6; % OLD: letter or gabor size [2 3.5 6];
-o.targetHeightDeg=8; % letter/gabor size [2 4 8].
+o.targetHeightDeg=2; % letter/gabor size [2 4 8].
 o.eccentricityDeg=8; % eccentricity [0 16 32]
-o.noiseSD=0; % noise contrast [0 0.16]
+o.noiseSD=0.16; % noise contrast [0 0.16]
 % We want to compare these:
 o.noiseCheckDeg=o.targetHeightDeg/20;
 %o.noiseCheckDeg=o.targetHeightDeg/40;
@@ -52,7 +56,7 @@ o.targetKind='letter';
 % o.noiseRadiusDeg=inf;
 % noiseEnvelopeSpaceConstantDeg: 1
 
-o.noiseEnvelopeSpaceConstantDeg=1; % always Inf for hard edge top-hat noise
+o.noiseEnvelopeSpaceConstantDeg=4; % always Inf for hard edge top-hat noise
 % o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
 o.noiseRadiusDeg=inf;
 
