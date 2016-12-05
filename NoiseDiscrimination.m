@@ -1454,7 +1454,15 @@ try
             end
             rng(o.noiseListSeed);
         end
-        switch o.task
+
+        o.dynamicSignalPoolSize = 100;
+        dynamicSignalPool = {};
+        dynamicSignalIdx = [];
+
+         for iDynamicPool=1:o.dynamicSignalPoolSize
+           % for the dynamic pool, keep the signal but regenerate noise
+
+        switch o.task % add noise to signal
             case '4afc'
                 canvasRect=[0 0 o.canvasSize(2) o.canvasSize(1)];
                 sRect=RectOfMatrix(signal(1).image);
@@ -1463,7 +1471,12 @@ try
                 signalImageIndex=logical(FillRectInMatrix(true,sRect,zeros(o.canvasSize)));
                 locations=4;
                 rng('shuffle');
+                if iDynamicPool == 1
                 signalLocation=randi(locations);
+                  dynamicSignalIdx = signalLocation;
+                else
+                signalLocation=dynamicSignalIdx;
+                end
                 for i=1:locations
                     if o.noiseFrozenInTrial
                         if i==1
@@ -1510,7 +1523,12 @@ try
             case 'identify'
                 locations=1;
                 rng('shuffle');
+                if iDynamicPool == 1
                 whichSignal=randi(o.alternatives);
+                  dynamicSignalIdx = whichSignal;
+                else
+                  whichSignal = dynamicSignalIdx;
+                end
                 if o.noiseFrozenInRun
                     rng(o.noiseListSeed);
                 end
@@ -1547,6 +1565,10 @@ try
             otherwise
                 error('Unknown o.task "%s"',o.task);
         end
+        dynamicSignalPool{iDynamicPool} = location;
+         end
+
+
         switch o.observer
             case 'ideal'
                 clear likely
@@ -1719,6 +1741,10 @@ try
                 end
                 [junk,response]=max(likely);
             otherwise % human o.observer
+              % NOTE: now, only this observer needs actual stimulus
+              % presentation
+              % That is why we didn't have stimulus presentation above
+
                 % imshow(location(1).image);
                 % ffprintf(ff,'location(1).image size %dx%d\n',size(location(1).image));
                 %  ffprintf(ff,'o.canvasSize %d %d\n',o.canvasSize);
@@ -1875,7 +1901,13 @@ try
                 if o.saveSnapshot && o.snapshotShowsFixationBefore
                     Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
                 end
-                
+
+
+
+
+         for iDynamicPool=1:o.dynamicSignalPoolSize
+           location = dynamicSignalPool{iDynamicPool};
+
                 tNoiseLoop = GetSecs;
                 switch o.task
                     case 'identify'
@@ -1930,7 +1962,7 @@ try
                         offset=dstRect(1:2)-srcRect(1:2);
                         dstRect=ClipRect(dstRect,o.stimulusRect);
                         srcRect=OffsetRect(dstRect,-offset(1),-offset(2));
-                        
+
                         % NOTE: actual stimuli presentatoin onset
                         Screen('DrawTexture',window,texture,srcRect,dstRect);
                         % peekImg=Screen('GetImage',window,InsetRect(rect,-1,-1),'drawBuffer');
@@ -2020,10 +2052,14 @@ try
                         end
                 end % switch o.task
                 Screen('Flip', window);
+
                 disp('+++++++++++++++++++++++++')
                 disp(GetSecs - tNoiseLoop);
                 disp('+++++++++++++++++++++++++')
-                
+        end
+
+
+
                 eraseRect=ClipRect(eraseRect,o.stimulusRect);
 
                 % Print instruction in upper left corner.
@@ -2163,7 +2199,7 @@ try
                 end
                 % NOTE: (original) ONSET: Target presentatino onset flip
                 % start of waiting for response
-                
+
                 Screen('Flip',window,0,1); % Show target with instructions. Don't clear buffer.
                 signalOnset=GetSecs;
                 if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
@@ -2391,8 +2427,7 @@ try
                         end
                 end
         end
-        switch o.task
-            % score as right or wrong
+        switch o.task % score as right or wrong
             case '4afc',
                 response=response==signalLocation;
             case 'identify',
