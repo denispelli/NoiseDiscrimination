@@ -920,6 +920,7 @@ try
   % Make o.canvasSize to hold the biggest thing we're showing, signal or
   % noise. We limit o.canvasSize to fit in o.stimulusRect.
   o.canvasSize=[o.targetHeightPix o.targetWidthPix]/o.noiseCheckPix;
+  o.canvasSize=2*o.canvasSize; % Denis. For extended noise background.
   o.canvasSize=max(o.canvasSize,o.noiseSize);
   if o.annularNoiseBigRadiusDeg>o.annularNoiseSmallRadiusDeg
     o.canvasSize=max(o.canvasSize,2*o.annularNoiseBigRadiusDeg*[1,1]*o.pixPerDeg/o.noiseCheckPix);
