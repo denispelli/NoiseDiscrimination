@@ -7,10 +7,10 @@ o.observer='hyiltiz'; % use your name
 o.distanceCm=70; % viewing distance
 o.trialsPerRun=40;
 o.durationSec=0.5;
-o.dynamicPreSignalNoisePoolDur = 0.5;
-o.dynamicPostSignalNoisePoolDur = 0.5;
+o.dynamicPreSignalNoisePoolDur = 0.5; % in seconds, before signal begins
+o.dynamicPostSignalNoisePoolDur = 0.5; % in seconds, after signal end
 o.dynamicSignalPoolSize = 100; % or 1 for static noise
-
+% dynamicSignalPoolSize is number of frames for signal.
 %o.useFlankers=1; % 0 or 1. Enable for crowding experiments.
 %o.thresholdParameter='spacing';
 
@@ -58,7 +58,7 @@ o.targetKind='letter';
 % o.noiseRadiusDeg=inf;
 % noiseEnvelopeSpaceConstantDeg: 1
 
-o.noiseEnvelopeSpaceConstantDeg=4; % always Inf for hard edge top-hat noise
+o.noiseEnvelopeSpaceConstantDeg=inf; % always Inf for hard edge top-hat noise
 % o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
 o.noiseRadiusDeg=inf;
 
