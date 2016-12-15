@@ -379,3 +379,19 @@ end
         cal.old.L=[ 1.62 2.53 3.74 5.59 7.73 9.96 12.95 15.77 18.66 22.1 25.65 29.25 33.4 36.06 39.08 44.32 53.4 57.17 63.19 68.05 76.3 84.29 91.73 99.04 106.9 116.5 125.5 134.6 142.4 150.5 157.9 162.5 163.5]; % cd/m^2
     end
 end
+if IsOSX && streq(cal.macModelName,'MacBookPro11,3') && cal.screen==0 && cal.screenWidthMm==331 && cal.screenHeightMm==206 && streq(cal.machineName,'Ivy')
+	cal.screenOutput=[]; % used only under Linux
+	cal.profile='Color LCD';
+	cal.ScreenConfigureDisplayBrightnessWorks=1;
+	cal.brightnessSetting=1.00;
+	cal.brightnessRmsError=0.0000;
+	% cal.screenRect=[0 0 1440 900];
+	cal.mfilename='CalibrateScreenLuminance';
+	cal.datestr='15-Dec-2016 12:47:32';
+	cal.notes='Hormet Yiltiz calibrated. Env background luminance: 3-6 cd/m2. Monitor mean lum: 53.06 cd/m2. Noon, with curtains on.';
+	cal.calibratedBy='qcao';
+	cal.dacBits=12; % From ReadNormalizedGammaTable, unverified.
+	cal.dacMax=(2^cal.dacBits)-1;
+	cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
+	cal.old.L=[ 1.521 1.238 1.999 2.797 4.372 6.234 7.869 10.19 13.19 16.55 20.07 24.71 29.87 34.52 40.84 47.29 53.11 59.82 67.1 75.65 83.49 92.95 103.4 111.5 122 130.4 141.6 153.3 166.5 182.3 194.4 209.4 223]; % cd/m^2
+end
