@@ -395,3 +395,18 @@ if IsOSX && streq(cal.macModelName,'MacBookPro11,3') && cal.screen==0 && cal.scr
 	cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
 	cal.old.L=[ 1.521 1.238 1.999 2.797 4.372 6.234 7.869 10.19 13.19 16.55 20.07 24.71 29.87 34.52 40.84 47.29 53.11 59.82 67.1 75.65 83.49 92.95 103.4 111.5 122 130.4 141.6 153.3 166.5 182.3 194.4 209.4 223]; % cd/m^2
 end
+if IsLinux && cal.screen==0 && cal.screenWidthMm==508 && cal.screenHeightMm==286
+	cal.screenOutput=[]; % used only under Linux
+	cal.ScreenConfigureDisplayBrightnessWorks=0;
+	cal.brightnessSetting=1.00;
+	cal.brightnessRmsError=NaN;
+	% cal.screenRect=[0 0 1920 1080];
+	cal.mfilename='CalibrateScreenLuminance';
+	cal.datestr='17-Dec-2016 17:43:53';
+	cal.notes='HYiltiz calibrated HP ZBook 17 G2 Ubuntu 14.04 ATI Bonaire XT (Radeon R9 M280X) GPU, 60Hz, Meyer #956, Environment (background wall) luminance: 53.60 cd/m2. Calibrated with tripods. 64 levels.';
+	cal.calibratedBy='';
+	cal.dacBits=8; % From ReadNormalizedGammaTable, unverified.
+	cal.dacMax=(2^cal.dacBits)-1;
+	cal.old.n=[ 0 4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120 124 128 131 135 139 143 147 151 155 159 163 167 171 175 179 183 187 191 195 199 203 207 211 215 219 223 227 231 235 239 243 247 251 255];
+	cal.old.L=[ 6.275 6.273 6.248 6.47 6.708 6.92 7.378 7.92 8.59 9.348 10.38 11.49 12.79 14.32 16.09 17.89 19.79 21.81 23.92 26.14 28.88 31.58 34.27 37.32 40.65 43.83 47.35 50.8 54.53 58.13 61.86 66.48 71.42 75.24 80.24 85.02 90.65 95.83 100.7 106 111.5 116.9 122.3 128.1 133.7 139.5 145.8 151.9 158.2 165 171.9 179.2 186.5 194.4 202.3 210.5 218.8 227.4 236 244.3 253 261.3 270.4 281.8 299.4]; % cd/m^2
+end

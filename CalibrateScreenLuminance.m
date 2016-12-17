@@ -94,7 +94,8 @@ try
     end
     KbName('UnifyKeyNames'); % Needed to work on Windows computer.
     blindCalibration=0;
-    luminances=32+1;
+    %luminances=32+1;
+    luminances=64+1;
 %     luminances=3;
     [cal.screenWidthMm,cal.screenHeightMm]=Screen('DisplaySize',cal.screen);
     % screenRect=Screen('Rect',cal.screen); % gives unreliable answer on
@@ -103,7 +104,7 @@ try
     cal.dacMax=(2^cal.dacBits)-1;
     fprintf('\n%s %s\n',mfilename,datestr(now));
     fprintf('Calibrate luminance.\n');
-    if IsOSX || IsLinux
+    if IsOSX %|| IsLinux
         if ~ScriptingOkShowPermission
             error('Please give MATLAB permission to control the computer. You''ll need admin privileges to do this.');
         end
