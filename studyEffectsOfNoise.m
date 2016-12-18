@@ -1,15 +1,15 @@
 %#### Adjust values within this block #####################
 clear o
-useBackupSessions=0;
+useBackupSessions=1;
 % o.observer='junk';
 %o.observer='ideal';
 o.observer='hyiltiz'; % use your name
 o.distanceCm=70; % viewing distance
 o.trialsPerRun=40;
-o.durationSec=0.5;
+o.durationSec=0.2;
 o.dynamicPreSignalNoisePoolDur = 0.5; % in seconds, before signal begins
 o.dynamicPostSignalNoisePoolDur = 0.5; % in seconds, after signal end
-o.dynamicSignalPoolSize = 100; % or 1 for static noise
+o.dynamicSignalPoolSize = 1; % or 1 for static noise
 % dynamicSignalPoolSize is number of frames for signal.
 %o.useFlankers=1; % 0 or 1. Enable for crowding experiments.
 %o.thresholdParameter='spacing';
@@ -24,7 +24,7 @@ o.dynamicSignalPoolSize = 100; % or 1 for static noise
 
 % ############# we test target size x ecc w/o noise #######
 % o.targetHeightDeg=6; % OLD: letter or gabor size [2 3.5 6];
-o.targetHeightDeg=7.37; % letter/gabor size [2 4 8].
+o.targetHeightDeg=4% letter/gabor size [2 4 8].
 o.eccentricityDeg=16; % eccentricity [0 16 32]
 o.noiseSD=0.16; % noise contrast [0 0.16]
 % We want to compare these:
