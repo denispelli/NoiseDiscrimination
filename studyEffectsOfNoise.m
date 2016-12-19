@@ -134,7 +134,7 @@ if useBackupSessions % auto-generate full sequence of experiments for "Winter" d
           % no noise
           oo(iCounter).noiseSD = 0; %override previously specified noiseSD
           oo(iCounter).noiseEnvelopeSpaceConstantDeg = NaN;
-          iCounter = iCounter + 1;
+%           iCounter = iCounter + 1;
 
         else
           % high noise; noise decay radius (noiseSD is already specified above as 0.16)
@@ -143,7 +143,7 @@ if useBackupSessions % auto-generate full sequence of experiments for "Winter" d
           ooNo(iCounter).noiseCheckDeg=oo(iCounter).targetHeightDeg/20;
         end
 
-        %iCounter = iCounter + 1;
+        iCounter = iCounter + 1;
       end
     end
   end

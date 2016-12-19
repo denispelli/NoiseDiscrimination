@@ -858,7 +858,7 @@ try
   if o.dynamicSignalPoolSize == 1
     % statis noise is required, simply use a pool size of 1
 
-    % do nothing
+    o.dynamicPoolSize = 1;
   else
     o.dynamicSignalPoolSize = ceil(o.durationSec*frameRate);
     o.dynamicPreSignalNoisePoolSize = ceil(o.dynamicPreSignalNoisePoolDur*frameRate);
@@ -1565,12 +1565,15 @@ try
           signalImageIndex=logical(FillRectInMatrix(true,sRect,zeros(o.canvasSize)));
           %                 figure(1);imshow(signalImageIndex);
           signalImage=zeros(o.canvasSize);
+          
+          signalImage(signalImageIndex)=signal(whichSignal).image(:);
+          if o.dynamicPoolSize > 1
+            % overwrite signal if dynamic for these cases
           if iDynamicPool <= o.dynamicPreSignalNoisePoolSize ...
            | iDynamicPool >= o.dynamicPreSignalNoisePoolSize + o.dynamicSignalPoolSize
             % dummy signal
             signalImage(find(signalImageIndex,1))=0;
-          else
-          signalImage(signalImageIndex)=signal(whichSignal).image(:);
+          end
           end
           %                 figure(2);imshow(signalImage);
           signalMask=logical(signalImage);
