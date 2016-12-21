@@ -243,7 +243,7 @@ o.observerQuadratic=-0.7; % adjusted to fit noise letter data.
 o.backgroundEntropyLevels=2; % Value used only if o.targetModulates is 'entropy'
 o.idealEOverNThreshold=nan; % You can run the ideal first, and then provide its threshold as a reference when testing human observers.
 o.screen=0;
-%o.screen=max(Screen('Screens'));
+o.screen=max(Screen('Screens'));
 o.alphabet='DHKNORSVZ';
 o.alphabetPlacement='top'; % 'top' or 'right';
 o.replicatePelli2006=0;
@@ -2416,8 +2416,8 @@ try
           end
 
           if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
-          
-          
+
+
           signalOffset=GetSecs;
           actualDuration=GetSecs-signalOnset;
           if o.dynamicSignalPoolSize == 1 % do not warn about immediate flip
@@ -2429,8 +2429,8 @@ try
             end
           end
           end
-          
-          
+
+
           if ~o.fixationCrossBlankedNearTarget
             WaitSecs(o.fixationCrossBlankedUntilSecsAfterTarget);
           end

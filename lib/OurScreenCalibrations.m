@@ -10,8 +10,8 @@ if nargin>0
 else
     cal.screen=0;
 end
-screenBufferRect=Screen('Rect',cal.screen); 
-screenRect=Screen('Rect',cal.screen,1); 
+screenBufferRect=Screen('Rect',cal.screen);
+screenRect=Screen('Rect',cal.screen,1);
 % Detect HiDPI mode, e.g. on a Retina display.
 % resolution=Screen('Resolution',cal.screen);
 cal.hiDPIMultiple=RectWidth(screenRect)/RectWidth(screenBufferRect);
@@ -345,7 +345,7 @@ if IsOSX && streq(cal.macModelName,'MacBookAir5,1') && cal.screen==0 && cal.scre
 end
 
 else
-    
+
 if IsWin && cal.screen==0 && cal.screenWidthMm==677 && cal.screenHeightMm==381
 	cal.screenOutput=[]; % used only under Linux
 	cal.ScreenConfigureDisplayBrightnessWorks=0;
@@ -409,4 +409,19 @@ if IsLinux && cal.screen==0 && cal.screenWidthMm==508 && cal.screenHeightMm==286
 	cal.dacMax=(2^cal.dacBits)-1;
 	cal.old.n=[ 0 4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120 124 128 131 135 139 143 147 151 155 159 163 167 171 175 179 183 187 191 195 199 203 207 211 215 219 223 227 231 235 239 243 247 251 255];
 	cal.old.L=[ 6.275 6.273 6.248 6.47 6.708 6.92 7.378 7.92 8.59 9.348 10.38 11.49 12.79 14.32 16.09 17.89 19.79 21.81 23.92 26.14 28.88 31.58 34.27 37.32 40.65 43.83 47.35 50.8 54.53 58.13 61.86 66.48 71.42 75.24 80.24 85.02 90.65 95.83 100.7 106 111.5 116.9 122.3 128.1 133.7 139.5 145.8 151.9 158.2 165 171.9 179.2 186.5 194.4 202.3 210.5 218.8 227.4 236 244.3 253 261.3 270.4 281.8 299.4]; % cd/m^2
+end
+if IsLinux && cal.screen==1 && cal.screenWidthMm==361 && cal.screenHeightMm==203 && strcmpi(cal.machineName, 'ThPad')
+	cal.screenOutput=[]; % used only under Linux
+	cal.ScreenConfigureDisplayBrightnessWorks=0;
+	cal.brightnessSetting=1.00;
+	cal.brightnessRmsError=NaN;
+	% cal.screenRect=[0 0 1366 768];
+	cal.mfilename='CalibrateScreenLuminance';
+	cal.datestr='20-Dec-2016 19:34:42';
+	cal.notes='HYiltiz calibrated ThPad with Debian 8 testing, Linux 4.7.0-1, Octave 4.0.3, Psychtoolbox 3.0.13, Photometer params.: measuring mode (ABS.), RESP. (SLOW), CALIB. (PRESET), at Meyer 957 Workstation, Env luminance background 48.68-39.88cd/m2, viewing distance ~ 70 cm.';
+	cal.calibratedBy='';
+	cal.dacBits=8; % From ReadNormalizedGammaTable, unverified.
+	cal.dacMax=(2^cal.dacBits)-1;
+	cal.old.n=[ 0 4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120 124 128 131 135 139 143 147 151 155 159 163 167 171 175 179 183 187 191 195 199 203 207 211 215 219 223 227 231 235 239 243 247 251 255];
+	cal.old.L=[ 3.623 3.675 3.683 3.688 3.71 3.783 3.903 4.07 4.288 4.555 4.868 5.228 5.645 6.09 6.605 7.158 7.773 8.44 9.165 9.935 10.77 11.63 12.56 13.5 14.54 15.58 16.72 17.85 19.06 20.38 21.73 23.16 24.65 25.93 27.79 29.7 31.74 33.9 36.14 38.54 41.07 43.73 46.49 49.38 52.44 55.69 59.09 62.74 66.48 70.92 75.71 80.69 85.77 91.18 96.43 101.8 107.3 113 118.9 125.1 131.9 139 145.4 150.5 151.1]; % cd/m^2
 end

@@ -1,18 +1,15 @@
+% function o = studyEffectsOfNoise(isIdealPlus)
 %#### Adjust values within this block #####################
 clear o
-useBackupSessions=1;
+useBackupSessions=0;
 % o.observer='junk';
-%o.observer='ideal';
-o.observer='hyiltiz'; % use your name
-o.distanceCm=70; % viewing distance
-o.trialsPerRun=40;
+% o.observer='ideal';
+o.observer='HTY'; % use your name
+o.weightIdealWithNoise=0;
+o.distanceCm=60; % viewing distance
 o.durationSec=0.2;
-o.dynamicPreSignalNoisePoolDur = 0.5; % in seconds, before signal begins
-o.dynamicPostSignalNoisePoolDur = 0.5; % in seconds, after signal end
-o.dynamicSignalPoolSize = 1; % or 1 for static noise
-% dynamicSignalPoolSize is number of frames for signal.
-%o.useFlankers=1; % 0 or 1. Enable for crowding experiments.
-%o.thresholdParameter='spacing';
+o.trialsPerRun=40;
+
 
 %For noise with Gaussian envelope (soft)
 %o.noiseRadiusDeg=inf;
@@ -24,8 +21,8 @@ o.dynamicSignalPoolSize = 1; % or 1 for static noise
 
 % ############# we test target size x ecc w/o noise #######
 % o.targetHeightDeg=6; % OLD: letter or gabor size [2 3.5 6];
-o.targetHeightDeg=4% letter/gabor size [2 4 8].
-o.eccentricityDeg=16; % eccentricity [0 16 32]
+o.targetHeightDeg=16; % letter/gabor size [2 4 8].
+o.eccentricityDeg=8; % eccentricity [0 8 16 32]
 o.noiseSD=0.16; % noise contrast [0 0.16]
 % We want to compare these:
 o.noiseCheckDeg=o.targetHeightDeg/20;
@@ -58,7 +55,7 @@ o.targetKind='letter';
 % o.noiseRadiusDeg=inf;
 % noiseEnvelopeSpaceConstantDeg: 1
 
-o.noiseEnvelopeSpaceConstantDeg=inf; % always Inf for hard edge top-hat noise
+o.noiseEnvelopeSpaceConstantDeg=128; % always Inf for hard edge top-hat noise
 % o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
 o.noiseRadiusDeg=inf;
 
@@ -66,7 +63,7 @@ o.noiseType='gaussian'; % ALWAYS use gaussian
 o.noiseSpectrum='white'; % pink or white
 o.targetCross=1;
 o.fixationCrossWeightDeg = 0.05; % target line thickness
-o.fixationCrossBlankedNearTarget=0; % always present fixation
+% o.fixationCrossBlankedNearTarget=0; % always present fixation
 
 o.alphabetPlacement='top'; % show possible answers on 'top' or 'right' for letters and gabors.
 
@@ -97,15 +94,15 @@ o.alphabetPlacement='top'; % show possible answers on 'top' or 'right' for lette
 % o.noiseRaisedCosineEdgeThicknessDeg=0; % midpoint of raised cosine is at o.noiseRadiusDeg.
 % o.durationSec=inf; % Typically 0.2 or inf (wait indefinitely for response).
 % o.tGuess=log10(0.2); % Optionally tell Quest the initial log contrast on first trial.
-% o.saveSnapshot=0; % 0 or 1.  If true (1), take snapshot for public presentation.
-% o.snapshotLetterContrast=0.2; % nan to request program default. If set, this determines o.tSnapshot.
-% o.cropSnapshot=0; % If true (1), show only the target and noise, without unnecessary gray background.
-% o.snapshotCaptionTextSizeDeg=0.5;
-% o.snapshotShowsFixationBefore=1;
-% o.snapshotShowsFixationAfter=0;
+o.saveSnapshot=1; % 0 or 1.  If true (1), take snapshot for public presentation.
+o.snapshotLetterContrast=0.2; % nan to request program default. If set, this determines o.tSnapshot.
+o.cropSnapshot=1; % If true (1), show only the target and noise, without unnecessary gray background.
+o.snapshotCaptionTextSizeDeg=0.5;
+o.snapshotShowsFixationBefore=1;
+o.snapshotShowsFixationAfter=0;
 % o.fixationCrossWeightDeg=0.05; % target line thickness
 o.speakInstructions=0;
-o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar, for Linux compatibility.
+o.isKbLegacy = 1; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar, for Linux compatibility.
 % o.useFractionOfScreen=0.3; % 0: normal, 0.5: small for debugging.
 
 
@@ -134,16 +131,16 @@ if useBackupSessions % auto-generate full sequence of experiments for "Winter" d
           % no noise
           oo(iCounter).noiseSD = 0; %override previously specified noiseSD
           oo(iCounter).noiseEnvelopeSpaceConstantDeg = NaN;
-          iCounter = iCounter + 1;
+%           iCounter = iCounter + 1;
 
         else
           % high noise; noise decay radius (noiseSD is already specified above as 0.16)
-          ooNo(iCounter).noiseEnvelopeSpaceConstantDeg = ...
+          oo(iCounter).noiseEnvelopeSpaceConstantDeg = ...
             NoiseDecayRaiusOverLetterRadius(iRatio).*oo(iCounter).targetHeightDeg/2;
-          ooNo(iCounter).noiseCheckDeg=oo(iCounter).targetHeightDeg/20;
+          oo(iCounter).noiseCheckDeg=oo(iCounter).targetHeightDeg/20;
         end
 
-        %iCounter = iCounter + 1;
+        iCounter = iCounter + 1;
       end
     end
   end
@@ -177,7 +174,7 @@ if useBackupSessions % auto-generate full sequence of experiments for "Winter" d
 
   progressTrialNO=session.progressTrialNO;
   for iProgressTrialNO=progressTrialNO:numel(oo) % pick up from where we left off
-    ooWithData{iProgressTrialNO}=NoiseDiscrimination(oo(iProgressTrialNO));
+    if ~oo(iProgressTrialNO).noiseSD==0; ooWithData{iProgressTrialNO}=NoiseDiscrimination(oo(iProgressTrialNO));end
     sca;
     if ooWithData{iProgressTrialNO}.runAborted
       break;
@@ -193,3 +190,4 @@ else
   o=NoiseDiscrimination(o);
   sca;
 end
+% end
