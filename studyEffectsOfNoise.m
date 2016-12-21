@@ -102,7 +102,7 @@ o.snapshotShowsFixationBefore=1;
 o.snapshotShowsFixationAfter=0;
 % o.fixationCrossWeightDeg=0.05; % target line thickness
 o.speakInstructions=0;
-o.isKbLegacy = 1; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar, for Linux compatibility.
+o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar, for Linux compatibility.
 % o.useFractionOfScreen=0.3; % 0: normal, 0.5: small for debugging.
 
 
