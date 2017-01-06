@@ -160,6 +160,11 @@ o.quitNow=0; % 0 or 1. Returned value is 1 if the observer wants to quit now; no
 % o.targetModulates='noise';  % Display a noise increment.
 o.targetKind='letter';
 % o.targetKind='gabor'; % one cycle within targetSize
+o.font='Sloan';
+% o.font='Bookman';
+o.allowAnyFont=0; % Old code assumes Sloan font.
+% o.allowAnyFont=1; % New code supports any font.
+o.printTargetBounds=0;
 o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
 o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
 o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
@@ -1075,19 +1080,61 @@ try
     case 'identify',
       switch o.targetKind
         case 'letter',
-          [scratchWindow,scratchRect]=Screen('OpenOffscreenWindow',-1 ,[],[0 0 400 400],8);
-          oldFont=Screen('TextFont',scratchWindow,'Sloan');
+          scratchHeight=round(3*o.targetHeightPix/o.noiseCheckPix);
+          [scratchWindow,scratchRect]=Screen('OpenOffscreenWindow',-1 ,[],[0 0 scratchHeight scratchHeight],8);
+          if ~streq(o.font,'Sloan') && ~o.allowAnyFont
+             warning('You should set o.allowAnyFont=1 unless o.font=''Sloan''.');
+          end
+          oldFont=Screen('TextFont',scratchWindow,o.font);
           font=Screen('TextFont',scratchWindow);
-          assert(streq(font,'Sloan'));
+          assert(streq(font,o.font));
           oldSize=Screen('TextSize',scratchWindow,round(o.targetHeightPix/o.noiseCheckPix));
           oldStyle=Screen('TextStyle',scratchWindow,0);
           canvasRect=[0 0 o.canvasSize];
+          if o.allowAnyFont
+             clear letters
+             for i=1:o.alternatives
+                letters{i}=signal(i).letter;
+             end
+             o.targetRectLocal=TextCenteredBounds(scratchWindow,letters,1);
+          else
+             o.targetRectLocal=round([0 0 o.targetHeightPix o.targetHeightPix]/o.noiseCheckPix);
+          end
+          if o.printTargetBounds
+             fprintf('o.targetRectLocal [%d %d %d %d]\n',o.targetRectLocal); 
+          end
           for i=1:o.alternatives
             Screen('FillRect',scratchWindow,white1);
             rect=CenterRect(canvasRect,scratchRect);
-            targetRect=round([0 0 o.targetHeightPix o.targetHeightPix]/o.noiseCheckPix);
-            targetRect=CenterRect(targetRect,rect);
-            Screen('DrawText',scratchWindow,signal(i).letter,targetRect(1),targetRect(4),black0,white1,1);
+            targetRect=CenterRect(o.targetRectLocal,rect);
+            if ~o.allowAnyFont
+               % Draw position is left at baseline
+               % targetRect is just big enough to hold any Sloan letter.
+               % targetRect=round([0 0 1 1]*o.targetHeightPix/o.noiseCheckPix),
+               x=targetRect(1);
+               y=targetRect(4);
+            else
+               % Desired draw position is horizontal middle at baseline.
+               % targetRect is just big enough to hold any letter.
+               % targetRect allows for descenders and extension in any
+               % direction.
+               % targetRect=round([a b c d]*o.targetHeightPix/o.noiseCheckPix), where a
+               % b c and d depend on the font.
+               x=(targetRect(1)+targetRect(3))/2; % horizontal middle
+               y=targetRect(4)-o.targetRectLocal(4); % baseline
+               % DrawText draws from left, so shift left by half letter width, to center letter at desired draw
+               % position.
+               bounds=Screen('TextBounds',scratchWindow,signal(i).letter,x,y,1);
+               if o.printTargetBounds
+                  fprintf('%c bounds [%4.0f %4.0f %4.0f %4.0f]\n',signal(i).letter,bounds);
+               end
+               width=bounds(3);
+               x=x-width/2;
+            end
+            if o.printTargetBounds
+               fprintf('%c %4.0f, %4.0f\n',signal(i).letter,x,y);
+            end
+            Screen('DrawText',scratchWindow,signal(i).letter,x,y,black0,white1,1);
             Screen('DrawingFinished',scratchWindow,[],1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
             WaitSecs(0.1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
             letter=Screen('GetImage',scratchWindow,targetRect,'drawBuffer');
@@ -1116,6 +1163,14 @@ try
             Screen('FillRect',scratchWindow);
             letter=letter(:,:,1);
             signal(i).image=letter<(white1+black0)/2;
+            % We have now drawn letter(i) into signal(i).image. The target
+            % size is always given by o.targetRectLocal. This is a square
+            % [0 0 1 1]*o.targetHeightPix/o.noiseCheckPix only if
+            % o.allowAnyFont=0. In general, it need not be square. Any code
+            % that needs a bounding rect for the target should use
+            % o.targetRectLocal, not o.targetHeightPix. In the letter
+            % generation, targetHeightPix is used solely to set the nominal
+            % font size ("points"), in pixels.
           end
           %             Screen('TextFont',scratchWindow,oldFont);
           %             Screen('TextSize',scratchWindow,oldSize);
@@ -1160,8 +1215,12 @@ try
         ffprintf(ff,'%c    ',o.alphabet(1:o.alternatives));
         ffprintf(ff,'\n');
       end
-      targetRect=[0,0,o.targetWidthPix,o.targetHeightPix];
-      targetRect=CenterRect(targetRect,o.stimulusRect);
+      if o.allowAnyFont
+         targetRect=CenterRect(o.targetRectLocal,o.stimulusRect);
+      else
+         targetRect=[0,0,o.targetWidthPix,o.targetHeightPix];
+         targetRect=CenterRect(targetRect,o.stimulusRect);
+      end
       boundsRect=OffsetRect(targetRect,targetOffsetPix,0);
       % targetRect not used. boundsRect used solely for the snapshot.
   end % switch o.task
@@ -1290,7 +1349,7 @@ try
         speech{1}='Please fihx your eyes on your offscreen fixation mark,';
         msg='Please fix your eyes on your offscreen fixation mark, ';
       else
-        msg=sprintf('Please fix your eyes on the center of the cross located at %.2f cm from target center, ', eccentricityCm);
+        msg=sprintf('Please fix your eyes on the center of the cross %.1f cm left of target center, ', eccentricityCm);
         if ismac
           speech{1}=strrep(msg, 'fix', 'fixh');
         else
@@ -1995,7 +2054,7 @@ try
               dstRect=ClipRect(dstRect,o.stimulusRect);
               srcRect=OffsetRect(dstRect,-offset(1),-offset(2));
 
-              % NOTE: actual stimuli presentatoin onset
+              % Present stimulus now.
               Screen('DrawTexture',window,texture,srcRect,dstRect);
               % peekImg=Screen('GetImage',window,InsetRect(rect,-1,-1),'drawBuffer');
               % imshow(peekImg);
@@ -2398,7 +2457,7 @@ try
           return;
         end % if o.saveSnapshot
 
-        if isfinite(o.durationSec) % resopnse wait duration
+        if isfinite(o.durationSec) % response wait duration
           Screen('FillRect',window,gray,o.stimulusRect);
           %Screen('FillRect',window,255*[1 0 0],o.stimulusRect); % FIXME: red for easy debug
           if o.yellowAnnulusBigRadiusDeg>o.yellowAnnulusSmallRadiusDeg
@@ -2461,6 +2520,12 @@ try
               o.runAborted=0;
               response = GetKeypress(o.isKbLegacy);
               %disp(sprintf('2:==>%s<==', response));
+              if length(response)>1
+                 % GetKeypress converts a symbol like space to a string,
+                 % e.g. 'space', but our code assumed response is a scalar,
+                 % not a matrix. So we replace the string by 0.
+                 response=0;
+              end
               if response=='.'
                 ffprintf(ff,'*** ''%c'' response. Run terminated.\n',response);
                 Speak('Run terminated.');
@@ -2468,7 +2533,7 @@ try
                 trial=trial-1;
                 break;
               end
-              [ok,response]=ismember(upper(response),o.alphabet);
+              [ok,response]=ismember(upper(response),upper(o.alphabet)); % dgp 1/6/17 upper alphabet, to work with lowercase letters
               if ~ok
                 Speak('Try again. Type period to quit.');
               end
