@@ -4,10 +4,10 @@ clear o
 useBackupSessions=0;
 % o.observer='junk';
 % o.observer='ideal';
-o.observer='HTY'; % use your name
+o.observer='ning'; % use your name
 o.weightIdealWithNoise=0;
 o.distanceCm=60; % viewing distance
-o.durationSec=0.2;
+o.durationSec=0.2; % will [0.05, 0.5]
 o.trialsPerRun=40;
 
 
@@ -21,11 +21,11 @@ o.trialsPerRun=40;
 
 % ############# we test target size x ecc w/o noise #######
 % o.targetHeightDeg=6; % OLD: letter or gabor size [2 3.5 6];
-o.targetHeightDeg=16; % letter/gabor size [2 4 8].
-o.eccentricityDeg=8; % eccentricity [0 8 16 32]
-o.noiseSD=0.16; % noise contrast [0 0.16]
+o.targetHeightDeg=7.64; % target size.
+o.eccentricityDeg=0; % eccentricity use "0"
+o.noiseSD=0.5; % rms contrast 0.5 instead of 0.16
 % We want to compare these:
-o.noiseCheckDeg=o.targetHeightDeg/20;
+o.noiseCheckDeg=0.09;
 %o.noiseCheckDeg=o.targetHeightDeg/40;
 % #########################################################
 
@@ -59,7 +59,7 @@ o.noiseEnvelopeSpaceConstantDeg=128; % always Inf for hard edge top-hat noise
 % o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
 o.noiseRadiusDeg=inf;
 
-o.noiseType='gaussian'; % ALWAYS use gaussian
+o.noiseType='binary'; % now it is binary
 o.noiseSpectrum='white'; % pink or white
 o.targetCross=1;
 o.fixationCrossWeightDeg = 0.05; % target line thickness
