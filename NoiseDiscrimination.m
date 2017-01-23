@@ -160,8 +160,8 @@ o.quitNow=0; % 0 or 1. Returned value is 1 if the observer wants to quit now; no
 % o.targetModulates='noise';  % Display a noise increment.
 o.targetKind='letter';
 % o.targetKind='gabor'; % one cycle within targetSize
-o.font='Sloan';
-% o.font='Bookman';
+% o.font='Sloan';
+o.font='Bookman';
 o.allowAnyFont=0; % Old code assumes Sloan font.
 % o.allowAnyFont=1; % New code supports any font.
 o.printTargetBounds=0;
@@ -1082,8 +1082,8 @@ try
         case 'letter',
           scratchHeight=round(3*o.targetHeightPix/o.noiseCheckPix);
           [scratchWindow,scratchRect]=Screen('OpenOffscreenWindow',-1 ,[],[0 0 scratchHeight scratchHeight],8);
-          if ~streq(o.font,'Sloan') && ~o.allowAnyFont
-             warning('You should set o.allowAnyFont=1 unless o.font=''Sloan''.');
+          if ~streq(o.font,'Bookman') && ~o.allowAnyFont
+             warning('You should set o.allowAnyFont=1 unless o.font=''Bookman''.');
           end
           oldFont=Screen('TextFont',scratchWindow,o.font);
           font=Screen('TextFont',scratchWindow);
@@ -1109,7 +1109,7 @@ try
             targetRect=CenterRect(o.targetRectLocal,rect);
             if ~o.allowAnyFont
                % Draw position is left at baseline
-               % targetRect is just big enough to hold any Sloan letter.
+               % targetRect is just big enough to hold any Bookman letter.
                % targetRect=round([0 0 1 1]*o.targetHeightPix/o.noiseCheckPix),
                x=targetRect(1);
                y=targetRect(4);
@@ -1314,7 +1314,7 @@ try
     LMax=200;
     LMean=100;
   end
-  % We are now done with Sloan, since we've saved our signals as images.
+  % We are now done with Bookman, since we've saved our signals as images.
   if window~=-1
     Screen('TextFont',window,textFont);
     Screen('TextSize',window,textSize);
