@@ -1565,7 +1565,7 @@ try
           signalImageIndex=logical(FillRectInMatrix(true,sRect,zeros(o.canvasSize)));
           %                 figure(1);imshow(signalImageIndex);
           signalImage=zeros(o.canvasSize);
-          
+
           signalImage(signalImageIndex)=signal(whichSignal).image(:);
           if o.dynamicPoolSize > 1
             % overwrite signal if dynamic for these cases
@@ -1909,24 +1909,17 @@ try
             msg=sprintf('bit %d, hit space bar to continue',bits);
             Speak(msg);
             newGamma=floor(cal.gamma*(2^bits-1))/(2^bits-1);
-            ListenChar(0); % flush. May not be needed.
-            ListenChar(2); % no echo. Needed.
-            while CharAvail
-              GetChar;
-            end
-            while ~CharAvail
+
+            KbStrokeWait;
               Screen('LoadNormalizedGammaTable',window,cal.gamma);
               WaitSecs(0.11);
               Screen('LoadNormalizedGammaTable',window,newGamma);
               WaitSecs(0.11);
-            end
             Screen('LoadNormalizedGammaTable',window,cal.gamma);
-            GetChar;
-            ListenChar; % Back to normal. Needed.
           end
           Speak('Done');
           break;
-        end % o.textBitDepth
+        end % o.testBitDepth
         if o.showCropMarks
           TrimMarks(window,frameRect); % This should be moved down, to be drawn AFTER the noise.
         end
