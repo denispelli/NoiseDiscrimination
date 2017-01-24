@@ -2,7 +2,7 @@ clear o
 o.observer='HTY'; % use your name
 o.weightIdealWithNoise=0;
 o.distanceCm=60; % viewing distance
-o.durationSec=0.2;
+o.durationSec=0.05; % [0.05, 0.5] for 50 ms and 500 ms 
 o.trialsPerRun=40;
 
 % A value of 1 will cancel dynamic noise (only 1 flip of noise will be generated)
@@ -20,6 +20,10 @@ o.targetHeightDeg=7.64; % Target size, range 0 to inf. If you ask for too much, 
 o.durationSec=0.5; % Typically 0.2 or inf (wait indefinitely for response).
 o.noiseType='binary'; % 'gaussian' or 'uniform' or 'binary'
 o.noiseSpectrum='white'; % pink or white
+o.targetCross=1;
+o.fixationCrossWeightDeg = 0.05; % target line thickness
+% o.fixationCrossBlankedNearTarget=0; % always present fixation
+o.alphabetPlacement='top'; % show possible answers on 'top' or 'right' for letters and gabors.
 o.noiseCheckDeg=0.09;
 o.noiseSD=0.5; % noise contrast [0 0.16]
 o.eccentricityDeg=0; % eccentricity [0 8 16 32]
@@ -33,7 +37,8 @@ o.noiseEnvelopeSpaceConstantDeg=128; % always Inf for hard edge top-hat noise
 %For noise with tophat envelope (sharp cut off beyond disk with radius 1)
 %o.noiseRadiusDeg=1;
 %noiseEnvelopeSpaceConstantDeg: Inf
-
+o = NoiseDiscrimination(o);
+sca;
 
 o.targetCross=1;
 o.fixationCrossWeightDeg = 0.05; % target line thickness
