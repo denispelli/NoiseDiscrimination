@@ -27,12 +27,12 @@ if computer.windows
     cal.macModelName=[];
 elseif computer.linux
     cal.processUserLongName=getenv('USER');
-    cal.machineName=strrep(computer.machineName,'éˆ„1¤7',''''); % work around bug in Screen('Computer')
+    cal.machineName=strrep(computer.machineName,'éˆ„1ï¿½7',''''); % work around bug in Screen('Computer')
     cal.osversion=computer.kern.version;
     cal.macModelName=[];
 elseif computer.osx || computer.macintosh
     cal.processUserLongName=computer.processUserLongName;
-    cal.machineName=strrep(computer.machineName,'éˆ„1¤7',''''); % work around bug in Screen('Computer')
+    cal.machineName=strrep(computer.machineName,'éˆ„1ï¿½7',''''); % work around bug in Screen('Computer')
     cal.macModelName=MacModelName;
 end
 cal.screenOutput=[]; % only for Linux
@@ -278,7 +278,7 @@ end
 
 if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthMm==286 && cal.screenHeightMm==179 && streq(cal.machineName,'UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME.')
 	cal.screenOutput=[]; % used only under Linux
-	cal.profile='/Users/Oana/Downloads/Archive/AutoBrightness/ScreenProfile.applescript:3700:3704: execution error: System Events got an error: Can¡¯t get window 1 of process "System Preferences". Invalid index. (-1719)';
+	cal.profile='/Users/Oana/Downloads/Archive/AutoBrightness/ScreenProfile.applescript:3700:3704: execution error: System Events got an error: Canï¿½ï¿½t get window 1 of process "System Preferences". Invalid index. (-1719)';
 	cal.ScreenConfigureDisplayBrightnessWorks=1;
 	cal.brightnessSetting=1.00;
 	cal.brightnessRmsError=0.0000;
@@ -395,7 +395,6 @@ if IsOSX && streq(cal.macModelName,'MacBookPro11,3') && cal.screen==0 && cal.scr
 	cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
 	cal.old.L=[ 1.521 1.238 1.999 2.797 4.372 6.234 7.869 10.19 13.19 16.55 20.07 24.71 29.87 34.52 40.84 47.29 53.11 59.82 67.1 75.65 83.49 92.95 103.4 111.5 122 130.4 141.6 153.3 166.5 182.3 194.4 209.4 223]; % cd/m^2
 end
-keyboard
 if IsLinux && cal.screen==0 && strcmpi(cal.machineName, 'ZBook') %cal.screenWidthMm==508 && cal.screenHeightMm==285
 	cal.screenOutput=[]; % used only under Linux
 	cal.ScreenConfigureDisplayBrightnessWorks=0;
