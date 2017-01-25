@@ -1,10 +1,10 @@
 % function o = studyEffectsOfNoise(isIdealPlus)
 %#### Adjust values within this block #####################
 clear o
-useBackupSessions=0;
+useBackupSessions=1;
 % o.observer='junk';
 % o.observer='ideal';
-o.observer='HTY'; % use your name
+o.observer='Ning'; % use your name
 o.weightIdealWithNoise=0;
 o.distanceCm=60; % viewing distance
 o.durationSec=0.2;
@@ -174,7 +174,8 @@ if useBackupSessions % auto-generate full sequence of experiments for "Winter" d
     
     progressTrialNO=session.progressTrialNO;
     for iProgressTrialNO=progressTrialNO:numel(oo) % pick up from where we left off
-        if ~oo(iProgressTrialNO).noiseSD==0; ooWithData{iProgressTrialNO}=NoiseDiscrimination(oo(iProgressTrialNO));end
+%         if ~oo(iProgressTrialNO).noiseSD==0; 
+        ooWithData{iProgressTrialNO}=NoiseDiscrimination(oo(iProgressTrialNO))%;end
         sca;
         if ooWithData{iProgressTrialNO}.runAborted
             break;
