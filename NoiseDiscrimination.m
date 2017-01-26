@@ -1948,34 +1948,41 @@ try
           end
         end % assess contrast
         if o.testBitDepth
-          % display a ramp. on/off at 1 Hz, add one part in n bits, where
-          % n=o.testBitDepth.
-          LMin=min(cal.old.L);
-          LMax=max(cal.old.L);
-          LMean=(LMax+LMin)/2;
-          cal.LFirst=LMin;
-          cal.LLast=LMean+(LMean-LMin); % Symmetric about LMean.
-          cal.nFirst=firstGrayClutEntry;
-          cal.nLast=lastGrayClutEntry;
-          cal=LinearizeClut(cal);
-          img=cal.nFirst:cal.nLast;
-          n=floor(RectWidth(screenRect)/length(img));
-          r=[0 0 n*length(img) RectHeight(screenRect)];
-          Screen('PutImage',window,img,r);
-          Screen('LoadNormalizedGammaTable',window,cal.gamma);
-          Screen('Flip',window);
-          for bits=2:11
-            msg=sprintf('bit %d, hit space bar to continue',bits);
-            Speak(msg);
-            newGamma=floor(cal.gamma*(2^bits-1))/(2^bits-1);
-
-            KbStrokeWait;
+           % display a ramp. on/off at 1 Hz, add one part in n bits, where
+           % n=o.testBitDepth.
+           LMin=min(cal.old.L);
+           LMax=max(cal.old.L);
+           LMean=(LMax+LMin)/2;
+           cal.LFirst=LMin;
+           cal.LLast=LMean+(LMean-LMin); % Symmetric about LMean.
+           cal.nFirst=firstGrayClutEntry;
+           cal.nLast=lastGrayClutEntry;
+           cal=LinearizeClut(cal);
+           img=cal.nFirst:cal.nLast;
+           n=floor(RectWidth(screenRect)/length(img));
+           r=[0 0 n*length(img) RectHeight(screenRect)];
+           Screen('PutImage',window,img,r);
+           Screen('LoadNormalizedGammaTable',window,cal.gamma);
+           Screen('Flip',window);
+           for bits=2:11
+              msg=sprintf('testing bit %d, hit space bar to continue',bits);
+              Speak(msg);
+              newGamma=floor(cal.gamma*(2^bits-1))/(2^bits-1);
+              ListenChar(0); % flush. May not be needed.
+              ListenChar(2); % no echo. Needed.
+              while CharAvail
+                 GetChar;
+              end
+              while ~CharAvail
+                 Screen('LoadNormalizedGammaTable',window,cal.gamma);
+                 WaitSecs(0.11);
+                 Screen('LoadNormalizedGammaTable',window,newGamma);
+                 WaitSecs(0.11);
+              end
               Screen('LoadNormalizedGammaTable',window,cal.gamma);
-              WaitSecs(0.11);
-              Screen('LoadNormalizedGammaTable',window,newGamma);
-              WaitSecs(0.11);
-            Screen('LoadNormalizedGammaTable',window,cal.gamma);
-          end
+              GetChar;
+              ListenChar; % Back to normal. Needed.
+           end
           Speak('Done');
           break;
         end % o.testBitDepth
