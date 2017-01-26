@@ -1,4 +1,4 @@
-clear o
+clear o % this works
 o.testBitDepth=1;
 o.isWin=0; % use the Windows code even if we're on a Mac
 % o.useFractionOfScreen=0.3;
