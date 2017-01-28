@@ -1948,7 +1948,7 @@ try
           end
         end % assess contrast
         if o.testBitDepth
-           % display a ramp. on/off at 1 Hz, add one part in n bits, where
+           % Display a linear luminance ramp. Alternate at 1 Hz, with something that is bit-limited. 
            % n=o.testBitDepth.
            LMin=min(cal.old.L);
            LMax=max(cal.old.L);
@@ -1961,13 +1961,18 @@ try
            img=cal.nFirst:cal.nLast;
            n=floor(RectWidth(screenRect)/length(img));
            r=[0 0 n*length(img) RectHeight(screenRect)];
-           Screen('PutImage',window,img,r);
            Screen('LoadNormalizedGammaTable',window,cal.gamma);
-           Screen('Flip',window);
-           for bits=2:11
-              msg=sprintf('testing bit %d, hit space bar to continue',bits);
-              Speak(msg);
-              newGamma=floor(cal.gamma*(2^bits-1))/(2^bits-1);
+           Screen('TextFont',window,'Verdana');
+           Screen('TextSize',window,24);
+           for bits=1:11
+              Screen('PutImage',window,img,r);
+%               msg=sprintf('o.testBitDepth: Now alternating with quantization to %d bits. Hit space bar to continue.',bits);
+%               newGamma=floor(cal.gamma*(2^bits-1))/(2^bits-1);
+              msg=sprintf(' Now alternately clearing video DAC bit %d. Hit space bar to continue. ',bits);
+              newGamma=bitset(round(cal.gamma*(2^17-1)),17-bits,0)/(2^17-1);
+              Screen('DrawText',window,' o.testBitDepth: Testing bits 1 to 11. ',100,100,0,255,1);
+              Screen('DrawText',window,msg,100,136,0,255,1);
+              Screen('Flip',window);
               ListenChar(0); % flush. May not be needed.
               ListenChar(2); % no echo. Needed.
               while CharAvail
@@ -1975,9 +1980,9 @@ try
               end
               while ~CharAvail
                  Screen('LoadNormalizedGammaTable',window,cal.gamma);
-                 WaitSecs(0.11);
+                 WaitSecs(1.11);
                  Screen('LoadNormalizedGammaTable',window,newGamma);
-                 WaitSecs(0.11);
+                 WaitSecs(1.11);
               end
               Screen('LoadNormalizedGammaTable',window,cal.gamma);
               GetChar;
