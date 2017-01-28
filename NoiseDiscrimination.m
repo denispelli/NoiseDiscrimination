@@ -1980,9 +1980,9 @@ try
               end
               while ~CharAvail
                  Screen('LoadNormalizedGammaTable',window,cal.gamma);
-                 WaitSecs(1.11);
+                 WaitSecs(0.2);
                  Screen('LoadNormalizedGammaTable',window,newGamma);
-                 WaitSecs(1.11);
+                 WaitSecs(0.2);
               end
               Screen('LoadNormalizedGammaTable',window,cal.gamma);
               GetChar;
