@@ -15,7 +15,7 @@ o.dynamicPostSignalNoisePoolDur = 0.2;
 
 o.allowAnyFont=1;
 % o.font='Sloan';
-o.font='Bookman';
+o.font='ITC Bookman';
 o.alphabet='abcdefghijklmnopqrstuvwxyz';
 o.alternatives=length(o.alphabet); % The number of letters to use from o.alphabet.
 o.targetHeightDeg=7.64; % Target size, range 0 to inf. If you ask for too much, it gives you the max possible.
