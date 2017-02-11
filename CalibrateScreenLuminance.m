@@ -96,11 +96,14 @@ try
     blindCalibration=0;
     %luminances=32+1;
     luminances=64+1;
+    using10bpc=false;
+    gamma10bpc=1/2.4;
 %     luminances=3;
     [cal.screenWidthMm,cal.screenHeightMm]=Screen('DisplaySize',cal.screen);
     % screenRect=Screen('Rect',cal.screen); % gives unreliable answer on
     % Retina display
     [savedGamma,cal.dacBits]=Screen('ReadNormalizedGammaTable',cal.screen,cal.screenOutput);
+    if using10bpc; cal.dacBits = 10; end
     cal.dacMax=(2^cal.dacBits)-1;
     fprintf('\n%s %s\n',mfilename,datestr(now));
     fprintf('Calibrate luminance.\n');
@@ -205,16 +208,24 @@ try
     Speak('If you make a mistake, you can go back by typing -1, followed by return.');
     Screen('Preference', 'SkipSyncTests', 1);
     cal.useRetinaResolution=0;
+    if ~using10bpc
     [window,screenRect]=Screen('OpenWindow',cal.screen,[],[],[],[],[],0);
+  else
+    PsychImaging('PrepareConfiguration');
+    PsychImaging('AddTask', 'General', 'EnableNative10BitFramebuffer');
+    PsychImaging('AddTask', 'FinalFormatting', 'DisplayColorCorrection', 'SimpleGamma');
+    [window,screenRect]=PsychImaging('OpenWindow', cal.screen, 0, []);
+    PsychColorCorrection('SetEncodingGamma', window, gamma10bpc);
+  end
     white = WhiteIndex(window);  % Retrieves the CLUT color code for white.
     fprintf('white %0.1f\n',white);
     i=0;
     while i<luminances
         i=i+1;
-        cal.old.n(i)=round(255*(i-1)/(luminances-1));
         Screen('FillRect',window,white/2,screenRect);
         rect=CenterRect(screenRect/2,screenRect);
-        Screen('FillRect',window,white*cal.old.n(i)/255,rect);
+        cal.old.n(i)=round(cal.dacMax*(i-1)/(luminances-1));
+        Screen('FillRect',window,white*cal.old.n(i)/cal.dacMax,rect);
         Screen('TextFont',window,'Verdana');
         Screen('TextSize',window,20);
         Screen('Flip',window,0,1); % Calibration: Show test patch and instructions.
