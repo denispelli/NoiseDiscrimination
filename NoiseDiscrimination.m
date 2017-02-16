@@ -1628,14 +1628,22 @@ try
                     %                 figure(1);imshow(signalImageIndex);
                     signalImage=zeros(o.canvasSize);
                     
-                    signalImage(signalImageIndex)=signal(whichSignal).image(:);
                     if o.dynamicPoolSize > 1
+                        
                         % overwrite signal if dynamic for these cases
+                        % FIXME: pre-post noise is overwritten by signal+noise
                         if iDynamicPool <= o.dynamicPreSignalNoisePoolSize ...
                                 | iDynamicPool >= o.dynamicPreSignalNoisePoolSize + o.dynamicSignalPoolSize
                             % dummy signal
+                            disp('dummy signal');
                             signalImage(find(signalImageIndex,1))=0;
+                        else
+                        signalImage(signalImageIndex)=signal(whichSignal).image(:);
                         end
+                        
+                    else
+                        signalImage(signalImageIndex)=signal(whichSignal).image(:);
+                        
                     end
                     %                 figure(2);imshow(signalImage);
                     signalMask=logical(signalImage);
@@ -2056,7 +2064,7 @@ try
                             rect=round(rect); % rect that will receive the stimulus (target and noises)
                             location(1).rect=rect;
                             
-                            texture=Screen('MakeTexture',window,uint8(img));
+                            texture(iDynamicPool)=Screen('MakeTexture',window,uint8(img));
                             
                             srcRect=RectOfMatrix(img);
                             dstRect=rect;
@@ -2065,14 +2073,14 @@ try
                             srcRect=OffsetRect(dstRect,-offset(1),-offset(2));
                             
                             % Present stimulus now.
-                            t0 = GetSecs();
-                            Screen('DrawTexture',window,texture,srcRect,dstRect);
-                            tSecs = [tSecs GetSecs()-t0];
+%                             t0 = GetSecs();
+%                             Screen('DrawTexture',window,texture,srcRect,dstRect);
+%                             tSecs = [tSecs GetSecs()-t0];
                             
                             % peekImg=Screen('GetImage',window,InsetRect(rect,-1,-1),'drawBuffer');
                             % imshow(peekImg);
                             eraseRect=dstRect;
-                            Screen('Close',texture);
+%                             Screen('Close',texture);
                             rect=CenterRect([0 0 o.targetHeightPix o.targetWidthPix],rect);
                             rect=round(rect); % target rect
                             if o.useFlankers
@@ -2101,8 +2109,8 @@ try
                                     offset=dstRect(1:2)-srcRect(1:2);
                                     dstRect=ClipRect(dstRect,o.stimulusRect);
                                     srcRect=OffsetRect(dstRect,-offset(1),-offset(2));
-                                    Screen('DrawTexture',window,texture,srcRect,dstRect);
-                                    Screen('Close',texture);
+%                                     Screen('DrawTexture',window,texture,srcRect,dstRect);
+%                                     Screen('Close',texture);
                                     eraseRect=UnionRect(eraseRect,r);
                                 end
                             end % if o.userFlankers
@@ -2117,9 +2125,8 @@ try
                                 img=location(i).image;
                                 img=IndexOfLuminance(cal,img*LMean);
                                 img=Expand(img,o.noiseCheckPix);
-                                texture=Screen('MakeTexture',window,uint8(img));
-                                Screen('DrawTexture',window,texture,RectOfMatrix(img),location(i).rect);
-                                Screen('Close',texture);
+                                texture=Screen('MakeTexture',window,uint8(img)); % FIXME: use one texture instead of 4
+
                                 eraseRect=UnionRect(eraseRect,location(i).rect);
                             end
                             if o.showResponseNumbers
@@ -2156,13 +2163,28 @@ try
                             end
                     end % switch o.task
                     
-                    if o.dynamicSignalPoolSize > 1
-                        Screen('Flip', window);
-                    end
+
                     
                     o.dynamicFlipInterval(iDynamicPool,trial) = GetSecs - tNoiseLoop;
                 end
                 o.tSecs = tSecs;
+                
+
+                for iDynamicPool=1:o.dynamicPoolSize
+                    Screen('DrawTexture',window,texture(iDynamicPool),srcRect,dstRect);
+%                     Screen('DrawTexture',window,texture(iDynamicPool),RectOfMatrix(img),location(i).rect); % 4AFC
+                    Screen('Flip', window);
+                end
+                
+                for iDynamicPool=1:o.dynamicPoolSize
+                    Screen('Close',texture(iDynamicPool));
+                end
+
+        
+                
+%                 if o.dynamicSignalPoolSize > 1
+%                     Screen('Flip', window);
+%                 end
                 
                 if o.dynamicSignalPoolSize > 1
                     % Stimulus presentation over; clear screen
