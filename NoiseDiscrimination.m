@@ -2003,7 +2003,7 @@ try
                 
                 
                 
-                
+                tSecs = [];
                 for iDynamicPool=1:o.dynamicPoolSize
                     location = dynamicPool{iDynamicPool};
                     
@@ -2055,7 +2055,9 @@ try
                             rect=OffsetRect(rect,targetOffsetPix,0);
                             rect=round(rect); % rect that will receive the stimulus (target and noises)
                             location(1).rect=rect;
+                            
                             texture=Screen('MakeTexture',window,uint8(img));
+                            
                             srcRect=RectOfMatrix(img);
                             dstRect=rect;
                             offset=dstRect(1:2)-srcRect(1:2);
@@ -2063,7 +2065,10 @@ try
                             srcRect=OffsetRect(dstRect,-offset(1),-offset(2));
                             
                             % Present stimulus now.
+                            t0 = GetSecs();
                             Screen('DrawTexture',window,texture,srcRect,dstRect);
+                            tSecs = [tSecs GetSecs()-t0];
+                            
                             % peekImg=Screen('GetImage',window,InsetRect(rect,-1,-1),'drawBuffer');
                             % imshow(peekImg);
                             eraseRect=dstRect;
@@ -2157,6 +2162,7 @@ try
                     
                     o.dynamicFlipInterval(iDynamicPool,trial) = GetSecs - tNoiseLoop;
                 end
+                o.tSecs = tSecs;
                 
                 if o.dynamicSignalPoolSize > 1
                     % Stimulus presentation over; clear screen

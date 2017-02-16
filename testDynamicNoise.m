@@ -14,15 +14,16 @@ o.dynamicPostSignalNoisePoolDur = 0.2;
 
 
 o.allowAnyFont=1;
-% o.font='Sloan';
-o.font='ITC Bookman Std';
-o.alphabet='abcdefghijklmnopqrstuvwxyz';
+o.font='Sloan';
+% o.font='ITC Bookman Std';
+% o.alphabet='abcdefghijklmnopqrstuvwxyz';
+o.alphabet = 'CHDNO';
 o.alternatives=length(o.alphabet); % The number of letters to use from o.alphabet.
 o.targetHeightDeg=7.64; % Target size, range 0 to inf. If you ask for too much, it gives you the max possible.
 o.noiseType='binary'; % 'gaussian' or 'uniform' or 'binary'
 o.noiseSpectrum='white'; % pink or white
 o.noiseCheckDeg=0.09;
-o.noiseSD=0.5; % noise contrast [0 0.16]
+o.noiseSD=0; % noise contrast [0 0.16]
 o.eccentricityDeg=0; % eccentricity [0 8 16 32]
 o.noiseEnvelopeSpaceConstantDeg=128; % always Inf for hard edge top-hat noise
 o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
