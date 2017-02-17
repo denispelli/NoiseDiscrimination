@@ -2160,7 +2160,6 @@ try
 
                     o.dynamicFrameGenInterval(iDynamicPool,trial) = GetSecs - tNoiseLoop;
                 end
-                o.tSecs = tSecs;
 
 
                 for iDynamicPool=1:o.dynamicPoolSize
