@@ -253,7 +253,8 @@ o.alphabet='DHKNORSVZ';
 o.alphabetPlacement='top'; % 'top' or 'right';
 o.replicatePelli2006=0;
 o.isWin=IsWin; % override this to simulate Windows on a Mac.
-o.dynamicFrameInterval = []; % to store flip interval (useful to calculate frame drops)
+o.dynamicFrameGenInterval = []; % to store flip interval (useful to calculate frame drops)
+o.dynamicFrameDrawInterval = []; % to store flip interval (useful to calculate frame drops)
 
 % A value of 1 will cancel dynamic noise (only 1 flip of noise will be generated)
 % Actual value will depend on frame rate and stimulus presentation duration,
@@ -1631,7 +1632,6 @@ try
                     if o.dynamicPoolSize == 1 ...
                       || (iDynamicPool > o.dynamicPreSignalNoisePoolSize ...
                       &&  iDynamicPool < o.dynamicPreSignalNoisePoolSize + o.dynamicSignalPoolSize)
-
                       % only add in the signal when using the static image
                       % or when using dynamic noise (movie) but during signal pool/frames
                       % which is sandwitched between PreSignalNoise and PostSignalNoise
@@ -2158,15 +2158,17 @@ try
 
 
 
-                    o.dynamicFrameInterval(iDynamicPool,trial) = GetSecs - tNoiseLoop;
+                    o.dynamicFrameGenInterval(iDynamicPool,trial) = GetSecs - tNoiseLoop;
                 end
                 o.tSecs = tSecs;
 
 
                 for iDynamicPool=1:o.dynamicPoolSize
+                  tFlip0 = GetSecs();
                     Screen('DrawTexture',window,texture(iDynamicPool),srcRect,dstRect);
 %                     Screen('DrawTexture',window,texture(iDynamicPool),RectOfMatrix(img),location(i).rect); % 4AFC
                     Screen('Flip', window);
+                    o.dynamicFrameDrawInterval(iDynamicPool,trial) = GetSecs - tNoiseLoop;
                 end
 
                 for iDynamicPool=1:o.dynamicPoolSize
