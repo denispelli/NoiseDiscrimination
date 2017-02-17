@@ -1628,24 +1628,18 @@ try
                     %                 figure(1);imshow(signalImageIndex);
                     signalImage=zeros(o.canvasSize);
 
-                    if o.dynamicPoolSize > 1
+                    if o.dynamicPoolSize > 1 ...
+                      & (iDynamicPool <= o.dynamicPreSignalNoisePoolSize ...
+                        | iDynamicPool >= o.dynamicPreSignalNoisePoolSize + o.dynamicSignalPoolSize)
 
-                        % overwrite signal if dynamic for these cases
-                        % FIXME: pre-post noise is overwritten by signal+noise
-                        if iDynamicPool <= o.dynamicPreSignalNoisePoolSize ...
-                                | iDynamicPool >= o.dynamicPreSignalNoisePoolSize + o.dynamicSignalPoolSize
-                            % dummy signal
-                            disp('dummy signal');
-                            signalImage(find(signalImageIndex,1))=0;
-                        else
-                        signalImage(signalImageIndex)=signal(whichSignal).image(:);
-                        end
-
+                      % Keep the noise and add no signal (dynamic noise)
+                      % overwrite signal if dynamic for these cases
+                      signalImage(find(signalImageIndex,1))=0;
                     else
-                        signalImage(signalImageIndex)=signal(whichSignal).image(:);
-
+                      signalImage(signalImageIndex)=signal(whichSignal).image(:);
                     end
-                    %                 figure(2);imshow(signalImage);
+
+                    % figure(2);imshow(signalImage);
                     signalMask=logical(signalImage);
                     switch o.targetModulates
                         case 'luminance',
