@@ -4,6 +4,7 @@ o.weightIdealWithNoise=0;
 o.distanceCm=60; % viewing distance
 o.durationSec=0.05; % [0.05, 0.5] for 50 ms and 500 ms 
 o.trialsPerRun=40;
+o.assessContrast=1;
 
 % A value of 1 will cancel dynamic noise (only 1 flip of noise will be generated)
 % Actual value will depend on frame rate and stimulus presentation duration,
