@@ -1628,14 +1628,13 @@ try
                     %                 figure(1);imshow(signalImageIndex);
                     signalImage=zeros(o.canvasSize);
 
-                    if o.dynamicPoolSize > 1 ...
-                      & (iDynamicPool <= o.dynamicPreSignalNoisePoolSize ...
-                        | iDynamicPool >= o.dynamicPreSignalNoisePoolSize + o.dynamicSignalPoolSize)
+                    if o.dynamicPoolSize == 1 ...
+                      || (iDynamicPool > o.dynamicPreSignalNoisePoolSize ...
+                      &&  iDynamicPool < o.dynamicPreSignalNoisePoolSize + o.dynamicSignalPoolSize)
 
-                      % Keep the noise and add no signal (dynamic noise)
-                      % overwrite signal if dynamic for these cases
-                      signalImage(find(signalImageIndex,1))=0;
-                    else
+                      % only add in the signal when using the static image
+                      % or when using dynamic noise (movie) but during signal pool/frames
+                      % which is sandwitched between PreSignalNoise and PostSignalNoise
                       signalImage(signalImageIndex)=signal(whichSignal).image(:);
                     end
 
