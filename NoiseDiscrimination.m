@@ -1916,9 +1916,9 @@ try
                     img=img:255;
                     L=EstimateLuminance(cal,img);
                     dL=diff(L);
-                    i=find(dL,1);
+                    i=find(dL,1); % index of first non-zero element in dL
                     if isfinite(i)
-                        contrastEstimate=dL(i)/L(i);
+                        contrastEstimate=dL(i)/L(i); % contrast of minimal increase near LMean
                     else
                         contrastEstimate=nan;
                     end
