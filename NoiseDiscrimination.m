@@ -423,8 +423,13 @@ o.noiseCheckDeg=o.noiseCheckPix/o.pixPerDeg;
 BackupCluts(o.screen);
 LMean=(max(cal.old.L)+min(cal.old.L))/2;
 o.maxLRange=2*min(max(cal.old.L)-LMean,LMean-min(cal.old.L));
+% We use nearly the whole clut (entries 2 to 254) for stimulus generation.
+% We reserve 0 and 255 for black and white. Unless this is Windows, we
+% reserve clut entry 1 (called gray1) for the screen background used in
+% non-stimulus parts of the display, e.g. top margin.
 firstGrayClutEntry=2;
 lastGrayClutEntry=254;
+assert(mod(firstGrayClutEntry,2)==0 && mod(lastGrayClutEntry,2)==0) % Must be even.
 if o.isWin
     LRange=o.maxLRange;
     o.minLRange=inf;
@@ -703,7 +708,8 @@ try
 
         if o.flipClick; Speak(['after OpenWindow ' num2str(MFileLineNr)]);GetClicks; end
         if exist('cal')
-            gray=mean([firstGrayClutEntry lastGrayClutEntry]);  % Will be a CLUT color code for gray.
+            gray=mean([firstGrayClutEntry lastGrayClutEntry]);  % CLUT color code for gray.
+            assert(gray==round(gray)); % First and last are even, so gray is integer.
             LMin=min(cal.old.L);
             LMax=max(cal.old.L);
             LMean=mean([LMin,LMax]); % Desired background luminance.
@@ -737,10 +743,11 @@ try
                 % having gray1==1 is that we get better blending of letters
                 % written (as black=0) on that background.
                 gray1=1;
+                assert(gray1 < firstGrayClutEntry);
                 cal.LFirst=LMean;
                 cal.LLast=LMean;
-                cal.nFirst=firstGrayClutEntry-1;
-                cal.nLast=firstGrayClutEntry-1;
+                cal.nFirst=gray1;
+                cal.nLast=gray1;
                 cal=LinearizeClut(cal);
             end %if o.isWin
             if o.printGammaLoadings; fprintf('LoadNormalizedGammaTable %d; LRange/Lmean=%.2f\n',MFileLineNr,(cal.LLast-LMean)/LMean); end
