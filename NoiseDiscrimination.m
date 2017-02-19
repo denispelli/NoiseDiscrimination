@@ -738,10 +738,11 @@ try
                 cal.gamma(2,:)=(cal.gamma(1,:)+cal.gamma(3,:))/2;
                 assert(all(all(diff(cal.gamma)>=0))); % monotonic for Windows
             else
-                % Otherwise we have two grays, one (gray) in the middle of
-                % the CLUT and one at entry 1 (gray1). The benefit of
-                % having gray1==1 is that we get better blending of letters
-                % written (as black=0) on that background.
+                % Otherwise we have two clut entries that prduce the same
+                % gray. One (gray) is in the middle of the CLUT and one is
+                % at entry 1 (gray1). The benefit of having gray1==1 is
+                % that we get better blending of letters written (as
+                % black=0) on that background.
                 gray1=1;
                 assert(gray1 < firstGrayClutEntry);
                 cal.LFirst=LMean;
@@ -750,6 +751,7 @@ try
                 cal.nLast=gray1;
                 cal=LinearizeClut(cal);
             end %if o.isWin
+            ffprintf(ff,'Non-stimulus background is %.1f cd/m^2 at CLUT entry %d (and %d).\n',LMean,gray1,gray);
             if o.printGammaLoadings; fprintf('LoadNormalizedGammaTable %d; LRange/Lmean=%.2f\n',MFileLineNr,(cal.LLast-LMean)/LMean); end
             Screen('LoadNormalizedGammaTable',window,cal.gamma,1); % load during flip
             Screen('FillRect',window,gray1);
