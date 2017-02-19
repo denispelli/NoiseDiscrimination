@@ -1,4 +1,5 @@
 clear o
+% o.showCropMarks=1; % mark the bounding box of the target
 o.observer='denis'; % use your name
 o.weightIdealWithNoise=0;
 o.distanceCm=60; % viewing distance
@@ -12,7 +13,6 @@ o.assessContrast=1;
 o.dynamicSignalPoolSize = 10; % or 1 for static noise
 o.dynamicPreSignalNoisePoolDur = 0.2;
 o.dynamicPostSignalNoisePoolDur = 0.2;
-
 
 o.allowAnyFont=1;
 % o.font='Sloan';
