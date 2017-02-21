@@ -4,11 +4,11 @@ clear o
 useBackupSessions=1;
 % o.observer='junk';
 % o.observer='ideal';
-o.observer='Ning'; % use your name
+o.observer='Chen'; % use your name
 o.weightIdealWithNoise=0;
 o.distanceCm=60; % viewing distance
 o.durationSec=0.2;
-o.trialsPerRun=40;
+o.trialsPerRun=80;
 
 
 %For noise with Gaussian envelope (soft)

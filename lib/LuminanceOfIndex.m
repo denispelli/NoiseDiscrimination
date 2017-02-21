@@ -1,6 +1,8 @@
 function imageLuminance = LuminanceOfIndex(cal,image)
+% imageLuminance = LuminanceOfIndex(cal,image)
 % LuminanceOfIndex uses the linear cal mapping to convert color index to
 % luminance.
+% See also IndexOfLuminance.
 
 image=round(image);
 ii=image(:)<cal.nFirst | image(:)>cal.nLast;

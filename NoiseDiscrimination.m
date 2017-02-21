@@ -84,6 +84,10 @@ function o=NoiseDiscrimination(oIn)
 % We should equate this when we compare hard edge annulus with gaussian
 % envelope.
 %
+% See also LinearizeClut, CalibrateScreenLuminance, OurScreenCalibrations,
+% testLuminanceCalibration, testGammaNull, IndexOfLuminance,
+% LuminanceOfIndex.
+
 addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder in same directory as this M file
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
 % echo_executing_commands(2, 'local');
@@ -423,8 +427,13 @@ o.noiseCheckDeg=o.noiseCheckPix/o.pixPerDeg;
 BackupCluts(o.screen);
 LMean=(max(cal.old.L)+min(cal.old.L))/2;
 o.maxLRange=2*min(max(cal.old.L)-LMean,LMean-min(cal.old.L));
+% We use nearly the whole clut (entries 2 to 254) for stimulus generation.
+% We reserve 0 and 255 for black and white. Unless this is Windows, we
+% reserve clut entry 1 (called gray1) for the screen background used in
+% non-stimulus parts of the display, e.g. top margin.
 firstGrayClutEntry=2;
 lastGrayClutEntry=254;
+assert(mod(firstGrayClutEntry,2)==0 && mod(lastGrayClutEntry,2)==0) % Must be even.
 if o.isWin
     LRange=o.maxLRange;
     o.minLRange=inf;
@@ -703,7 +712,8 @@ try
 
         if o.flipClick; Speak(['after OpenWindow ' num2str(MFileLineNr)]);GetClicks; end
         if exist('cal')
-            gray=mean([firstGrayClutEntry lastGrayClutEntry]);  % Will be a CLUT color code for gray.
+            gray=mean([firstGrayClutEntry lastGrayClutEntry]);  % CLUT color code for gray.
+            assert(gray==round(gray)); % First and last are even, so gray is integer.
             LMin=min(cal.old.L);
             LMax=max(cal.old.L);
             LMean=mean([LMin,LMax]); % Desired background luminance.
@@ -732,17 +742,20 @@ try
                 cal.gamma(2,:)=(cal.gamma(1,:)+cal.gamma(3,:))/2;
                 assert(all(all(diff(cal.gamma)>=0))); % monotonic for Windows
             else
-                % Otherwise we have two grays, one (gray) in the middle of
-                % the CLUT and one at entry 1 (gray1). The benefit of
-                % having gray1==1 is that we get better blending of letters
-                % written (as black=0) on that background.
+                % Otherwise we have two clut entries that prduce the same
+                % gray. One (gray) is in the middle of the CLUT and one is
+                % at entry 1 (gray1). The benefit of having gray1==1 is
+                % that we get better blending of letters written (as
+                % black=0) on that background.
                 gray1=1;
+                assert(gray1 < firstGrayClutEntry);
                 cal.LFirst=LMean;
                 cal.LLast=LMean;
-                cal.nFirst=firstGrayClutEntry-1;
-                cal.nLast=firstGrayClutEntry-1;
+                cal.nFirst=gray1;
+                cal.nLast=gray1;
                 cal=LinearizeClut(cal);
             end %if o.isWin
+            ffprintf(ff,'Non-stimulus background is %.1f cd/m^2 at CLUT entry %d (and %d).\n',LMean,gray1,gray);
             if o.printGammaLoadings; fprintf('LoadNormalizedGammaTable %d; LRange/Lmean=%.2f\n',MFileLineNr,(cal.LLast-LMean)/LMean); end
             Screen('LoadNormalizedGammaTable',window,cal.gamma,1); % load during flip
             Screen('FillRect',window,gray1);
@@ -1916,9 +1929,9 @@ try
                     img=img:255;
                     L=EstimateLuminance(cal,img);
                     dL=diff(L);
-                    i=find(dL,1);
+                    i=find(dL,1); % index of first non-zero element in dL
                     if isfinite(i)
-                        contrastEstimate=dL(i)/L(i);
+                        contrastEstimate=dL(i)/L(i); % contrast of minimal increase near LMean
                     else
                         contrastEstimate=nan;
                     end
@@ -2165,12 +2178,30 @@ try
                 for iDynamicPool=1:o.dynamicPoolSize
                   tFlip0 = GetSecs();
                     Screen('DrawTexture',window,texture(iDynamicPool),srcRect,dstRect);
-%                     Screen('DrawTexture',window,texture(iDynamicPool),RectOfMatrix(img),location(i).rect); % 4AFC
+                    Screen('DrawText',window, sprintf('%.2f', o.contrast), 20,100);
+                    %                     Screen('DrawTexture',window,texture(iDynamicPool),RectOfMatrix(img),location(i).rect); % 4AFC
+                    
+                    if iDynamicPool == o.dynamicPreSignalNoisePoolSize+1 && o.saveStimulus
+                        o.savedStimulus=Screen('GetImage',window,o.stimulusRect,'drawBuffer');
+                        fprintf('o.savedStimulus at contrast %.3f\n',o.contrast);
+                        Screen('DrawText',window,sprintf('o.contrast %.3f',o.contrast),20,150);
+                        o.newCal=cal;
+                    end
+                    
                     Screen('Flip', window);
+%                     KbWait;
                     o.dynamicFrameDrawInterval(iDynamicPool,trial) = GetSecs - tNoiseLoop;
                 end
 
                 for iDynamicPool=1:o.dynamicPoolSize
+                    
+                    if o.saveSnapshot
+          
+                        
+                        
+                        % SUBROUTINE NEEDED
+                        % Screen('CopyTexture', FIXME);
+                    end
                     Screen('Close',texture(iDynamicPool));
                 end
 
@@ -2322,15 +2353,16 @@ try
                     end
                     Screen('FrameRect',window,color,annulusRect,thickness);
                 end
-                if o.saveStimulus
-                    o.savedStimulus=Screen('GetImage',window,o.stimulusRect,'drawBuffer');
-                end
+             
+                
                 % NOTE: (original) ONSET: Target presentatino onset flip
                 % start of waiting for response
 
                 Screen('Flip',window,0,1); % Show target with instructions. Don't clear buffer.
                 signalOnset=GetSecs;
                 if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
+                
+                % =====================
                 if o.saveSnapshot
                     if o.snapshotShowsFixationAfter
                         Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
@@ -2504,7 +2536,10 @@ try
                         Screen('Flip',window,0,1); % immediate flip (no sticky)
                     else
                         % present stimulus for longer (it has just been flipped on)
-                        Screen('Flip',window,signalOnset+o.durationSec-1/frameRate,1); % Duration is over. Erase target.
+%                         Screen('Flip',window,signalOnset+o.durationSec-1/frameRate,1); % Duration is over. Erase target.
+                        Screen('Flip',window,0,1); % immediate flip (no sticky)
+                        % THS CODE IS BROKEN!
+                        WaitSecs(o.durationSec);
                     end
 
                     if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
@@ -2789,6 +2824,7 @@ try
     fclose(dataFid); dataFid=-1;
     o.signal=signal; % worth saving
     %     o.q=q; % not worth saving
+    o.newCal=cal;
     save(fullfile(o.dataFolder,[o.dataFilename '.mat']),'o','cal');
     fprintf('Results saved in %s with extensions .txt and .mat\nin folder %s\n',o.dataFilename,o.dataFolder);
 

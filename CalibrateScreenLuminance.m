@@ -13,6 +13,9 @@ function CalibrateScreenLuminance(screen,screenOutput)
 % on the screen, but don't make the room dark, because that's tiring.
 % Results will be appended to "OurScreenCalibrations.m".
 % Denis Pelli, March 23, 2015
+%
+% See also LinearizeClut, ourScreenCalibrations, testLuminanceCalibration,
+% testGammaNull, IndexOfLuminance, LuminanceOfIndex.
 
 % Photometers that report in cd/m^2 tend to be expensive. However, there
 % are very cheap apps that run on an iPhone and report luminance in EV
@@ -94,17 +97,17 @@ try
     end
     KbName('UnifyKeyNames'); % Needed to work on Windows computer.
     blindCalibration=0;
-    %luminances=32+1;
-    luminances=64+1;
+    luminances=32+1;
+%     luminances=3; % for quick debugging
     using10bpc=false;
     gamma10bpc=1/2.4;
-%     luminances=3;
     [cal.screenWidthMm,cal.screenHeightMm]=Screen('DisplaySize',cal.screen);
     % screenRect=Screen('Rect',cal.screen); % gives unreliable answer on
     % Retina display
     [savedGamma,cal.dacBits]=Screen('ReadNormalizedGammaTable',cal.screen,cal.screenOutput);
-    if using10bpc; cal.dacBits = 10; end
-    cal.dacMax=(2^cal.dacBits)-1;
+    cal.old.gamma = savedGamma;
+    cal.old.gammaIndexMax=length(cal.old.gamma)-1; % index into gamma table is 0..gammaIndexMax.
+    cal.pixelMax=255;
     fprintf('\n%s %s\n',mfilename,datestr(now));
     fprintf('Calibrate luminance.\n');
     if IsOSX %|| IsLinux
@@ -209,14 +212,14 @@ try
     Screen('Preference', 'SkipSyncTests', 1);
     cal.useRetinaResolution=0;
     if ~using10bpc
-    [window,screenRect]=Screen('OpenWindow',cal.screen,[],[],[],[],[],0);
-  else
-    PsychImaging('PrepareConfiguration');
-    PsychImaging('AddTask', 'General', 'EnableNative10BitFramebuffer');
-    PsychImaging('AddTask', 'FinalFormatting', 'DisplayColorCorrection', 'SimpleGamma');
-    [window,screenRect]=PsychImaging('OpenWindow', cal.screen, 0, []);
-    PsychColorCorrection('SetEncodingGamma', window, gamma10bpc);
-  end
+        [window,screenRect]=Screen('OpenWindow',cal.screen,[],[],[],[],[],0);
+    else
+        PsychImaging('PrepareConfiguration');
+        PsychImaging('AddTask', 'General', 'EnableNative10BitFramebuffer');
+        PsychImaging('AddTask', 'FinalFormatting', 'DisplayColorCorrection', 'SimpleGamma');
+        [window,screenRect]=PsychImaging('OpenWindow', cal.screen, 0, []);
+        PsychColorCorrection('SetEncodingGamma', window, gamma10bpc);
+    end
     white = WhiteIndex(window);  % Retrieves the CLUT color code for white.
     fprintf('white %0.1f\n',white);
     i=0;
@@ -224,8 +227,11 @@ try
         i=i+1;
         Screen('FillRect',window,white/2,screenRect);
         rect=CenterRect(screenRect/2,screenRect);
-        cal.old.n(i)=round(cal.dacMax*(i-1)/(luminances-1));
-        Screen('FillRect',window,white*cal.old.n(i)/cal.dacMax,rect);
+        % The index is volatile (dependent on gamma table). The dac value
+        % G is robust.
+        cal.old.n(i)=round(cal.pixelMax*(i-1)/(luminances-1));
+        cal.old.G(i)=cal.old.gamma(round(1+cal.old.n(i)*cal.old.gammaIndexMax/cal.pixelMax),2);
+        Screen('FillRect',window,white*cal.old.n(i)/cal.pixelMax,rect);
         Screen('TextFont',window,'Verdana');
         Screen('TextSize',window,20);
         Screen('Flip',window,0,1); % Calibration: Show test patch and instructions.
@@ -350,13 +356,17 @@ try
         fprintf(f,'\tcal.notes=''%s'';\n',prep(cal.notes));
         fprintf(f,'\tcal.calibratedBy=''%s'';\n',prep(cal.processUserLongName));
         fprintf(f,'\tcal.dacBits=%d; %% From ReadNormalizedGammaTable, unverified.\n',cal.dacBits);
-        fprintf(f,'\tcal.dacMax=(2^cal.dacBits)-1;\n');
-        fprintf(f,'\tcal.old.n=[');
-        fprintf(f,' %g',cal.old.n);
+        fprintf(f,'\tcal.old.gammaIndexMax=%d;\n',cal.old.gammaIndexMax);
+        fprintf(f,'\tcal.old.G=[');
+        fprintf(f,' %g',cal.old.G);
         fprintf(f,'];\n');
         fprintf(f,'\tcal.old.L=[');
         fprintf(f,' %g',cal.old.L);
         fprintf(f,']; %% cd/m^2\n');
+        fprintf(f,'\tcal.old.n=[');
+        fprintf(f,' %g',cal.old.n);
+        fprintf(f,'];\n');
+        fprintf(f,'\tcal.old.gamma=%s;\n', mat2str(cal.old.gamma));
         fprintf(f,'end\n');
     end
     fclose(fid);
