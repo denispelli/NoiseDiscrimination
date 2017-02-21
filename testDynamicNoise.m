@@ -10,7 +10,7 @@ o.assessContrast=1;
 % A value of 1 will cancel dynamic noise (only 1 flip of noise will be generated)
 % Actual value will depend on frame rate and stimulus presentation duration,
 % thus will be ALWAYS overwritten later for any value other than 1
-o.dynamicSignalPoolSize = 10; % or 1 for static noise
+o.dynamicSignalPoolSize = 2; % or 1 for static noise
 o.dynamicPreSignalNoisePoolDur = 0.2;
 o.dynamicPostSignalNoisePoolDur = 0.2;
 
