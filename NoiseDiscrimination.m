@@ -2179,7 +2179,7 @@ try
                   tFlip0 = GetSecs();
                     Screen('DrawTexture',window,texture(iDynamicPool),srcRect,dstRect);
                     % Screen('DrawText',window, sprintf('%.2f', o.contrast), 20,100); % used for DEBUG sessions
-                    %                     Screen('DrawTexture',window,texture(iDynamicPool),RectOfMatrix(img),location(i).rect); % 4AFC
+                    % Screen('DrawTexture',window,texture(iDynamicPool),RectOfMatrix(img),location(i).rect); % 4AFC
 
                     if iDynamicPool == o.dynamicPreSignalNoisePoolSize+1 && o.saveStimulus
                       o.savedStimulus=Screen('GetImage',window,o.stimulusRect,'drawBuffer');
@@ -2198,7 +2198,7 @@ try
 
                     Screen('Flip', window);
 %                     KbWait;
-                    o.dynamicFrameDrawInterval(iDynamicPool,trial) = GetSecs - tNoiseLoop;
+                    o.dynamicFrameDrawInterval(iDynamicPool,trial) = GetSecs - tFlip0;
                 end
 
                 for iDynamicPool=1:o.dynamicPoolSize
