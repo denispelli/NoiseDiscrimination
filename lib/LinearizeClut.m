@@ -50,7 +50,7 @@ if ~all(diff(cal.old.L)>0)
     cal.old.L=L;
 end
 checkLuminance=0;
-checkLinearization=0;
+checkLinearization=0; 
 if ~isfield(cal.old,'gamma')
     cal.old.gamma=Screen('ReadNormalizedGammaTable',cal.screen); 
 end
@@ -78,8 +78,11 @@ gammaMax=length(cal.old.gamma)-1; % index into gamma table is 0..gammaMax. 1023 
 % gray RGB triplets that drive the video DAC. RGB are voltages in a video
 % monitor. We analyze in terms of G channel, and then use the original RGB
 % triplet corresponding to each G value.
-assert(all(cal.old.n<=255) && all(cal.old.n>=0))
-cal.old.vG=cal.old.gamma(round(1+cal.old.n*gammaMax/255),2); % green voltage of each pixel value.
+% New code to cope with fact that iMac now reports 12 bits.
+[~, dacbits, ~] = Screen('ReadNormalizedGammaTable', cal.screen); % new code
+dacmax=2^dacbits-1;
+assert(all(cal.old.n<=dacmax) && all(cal.old.n>=0)) % new code
+cal.old.vG=cal.old.gamma(round(1+cal.old.n*gammaMax/dacmax),2); % green voltage of each pixel value.
 assert(cal.nFirst<=cal.nLast);
 assert(rem(cal.nFirst,1)==0 && rem(cal.nLast,1)==0);
 assert(cal.nFirst<=cal.nLast);
