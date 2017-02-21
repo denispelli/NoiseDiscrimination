@@ -1,11 +1,7 @@
-Fix: Segmented letters in Windows
-  Interactively generate letter set, and keep using that throughout the whole run;
+Now only o.task: identify is supported with dynamic noise
+Support 4AFC etc. tasks
 
-Pink Noise 
-  Generate pink noise using Bandpass2
+fix snapshot using a copy of the signal texture
 
-Interleaved Quest sequences
-  o struct as an array
-
-
-  
+make use of noise pool and texture processing to take advantage of small
+pool size and limited GPU memory
