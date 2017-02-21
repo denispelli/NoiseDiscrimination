@@ -1,6 +1,8 @@
 function image = IndexOfLuminance(cal,imageLuminance)
+% image = IndexOfLuminance(cal,imageLuminance)
 % IndexOfLuminance uses the calibration to convert luminance to color
 % index.
+% See also LuminanceOfIndex.
 
 image=cal.nFirst+(cal.nLast-cal.nFirst)*(imageLuminance-cal.LFirst)/(cal.LLast-cal.LFirst);
 image=round(image);
