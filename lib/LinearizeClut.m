@@ -1,8 +1,9 @@
 function newCal=LinearizeClut(cal)
 % cal=LinearizeClut(cal);
-% LINEARCLUT uses existing luminance measurements to compute a gamma table
-% that will linearize the display's luminance relative to the pixel values
-% in the image array. To load the gamma table you can call:
+% LINEARCLUT uses existing luminance measurements (made by
+% CalibrateLuminance.m) to compute a gamma table that will linearize the
+% display's luminance relative to the pixel values in the image array. To
+% load the gamma table you can call:
 % Screen('LoadNormalizedGammaTable',screen,cal.gamma)
 % Denis Pelli, NYU, July 5, 2014
 %
@@ -33,6 +34,13 @@ function newCal=LinearizeClut(cal)
 % and that would be a better solution, but careful calibrations are usually
 % monotone, so this seems to be good enough. It may be better to remeasure
 % than fix up a non-monotone calibration.
+%
+% See also CalibrateScreenLuminance, OurScreenCalibrations,
+% testLuminanceCalibration, testGammaNull, IndexOfLuminance,
+% LuminanceOfIndex.
+
+checkLuminance=0; % optional diagnostic print out
+checkLinearization=0; % optional diagnostic print out
 if ~all(diff(cal.old.L)>0)
     L=cal.old.L;
     % try to make it strictly monotonic
@@ -53,8 +61,6 @@ end
 if ~isfield(cal.old,'G')
     error('Obsolete screen calibration. Run CalibrateScreenLuminance again.');
 end
-checkLuminance=0;
-checkLinearization=0; 
 if ~isfield(cal.old,'gamma')
 %     error('Missing gamma table!');
     cal.old.gamma=Screen('ReadNormalizedGammaTable',cal.screen); 

@@ -5,6 +5,10 @@ function cal=OurScreenCalibrations(screen)
 % file to me, I'll add your screen calibration to the master copy of
 % OurScreenCalibrations.m, so you can use the master copy of the software.
 % Denis Pelli, March 24, 2015, July 28, 2015.
+%
+% See also LinearizeClut, CalibrateScreenLuminance,
+% testLuminanceCalibration, testGammaNull, IndexOfLuminance,
+% LuminanceOfIndex.
 if nargin>0
     cal.screen=screen;
 else

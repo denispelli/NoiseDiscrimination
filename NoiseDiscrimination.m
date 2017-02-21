@@ -84,6 +84,10 @@ function o=NoiseDiscrimination(oIn)
 % We should equate this when we compare hard edge annulus with gaussian
 % envelope.
 %
+% See also LinearizeClut, CalibrateScreenLuminance, OurScreenCalibrations,
+% testLuminanceCalibration, testGammaNull, IndexOfLuminance,
+% LuminanceOfIndex.
+
 addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder in same directory as this M file
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
 % echo_executing_commands(2, 'local');

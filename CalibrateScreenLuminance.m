@@ -13,6 +13,9 @@ function CalibrateScreenLuminance(screen,screenOutput)
 % on the screen, but don't make the room dark, because that's tiring.
 % Results will be appended to "OurScreenCalibrations.m".
 % Denis Pelli, March 23, 2015
+%
+% See also LinearizeClut, ourScreenCalibrations, testLuminanceCalibration,
+% testGammaNull, IndexOfLuminance, LuminanceOfIndex.
 
 % Photometers that report in cd/m^2 tend to be expensive. However, there
 % are very cheap apps that run on an iPhone and report luminance in EV
