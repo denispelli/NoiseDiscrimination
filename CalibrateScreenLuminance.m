@@ -94,8 +94,8 @@ try
     end
     KbName('UnifyKeyNames'); % Needed to work on Windows computer.
     blindCalibration=0;
-    %luminances=32+1;
-    luminances=64+1;
+    luminances=32+1;
+%     luminances=64+1;
     using10bpc=false;
     gamma10bpc=1/2.4;
 %     luminances=3;
