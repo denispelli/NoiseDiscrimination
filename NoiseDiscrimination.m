@@ -2174,12 +2174,30 @@ try
                 for iDynamicPool=1:o.dynamicPoolSize
                   tFlip0 = GetSecs();
                     Screen('DrawTexture',window,texture(iDynamicPool),srcRect,dstRect);
-%                     Screen('DrawTexture',window,texture(iDynamicPool),RectOfMatrix(img),location(i).rect); % 4AFC
+                    Screen('DrawText',window, sprintf('%.2f', o.contrast), 20,100);
+                    %                     Screen('DrawTexture',window,texture(iDynamicPool),RectOfMatrix(img),location(i).rect); % 4AFC
+                    
+                    if iDynamicPool == o.dynamicPreSignalNoisePoolSize+1 && o.saveStimulus
+                        o.savedStimulus=Screen('GetImage',window,o.stimulusRect,'drawBuffer');
+                        fprintf('o.savedStimulus at contrast %.3f\n',o.contrast);
+                        Screen('DrawText',window,sprintf('o.contrast %.3f',o.contrast),20,150);
+                        o.newCal=cal;
+                    end
+                    
                     Screen('Flip', window);
+%                     KbWait;
                     o.dynamicFrameDrawInterval(iDynamicPool,trial) = GetSecs - tNoiseLoop;
                 end
 
                 for iDynamicPool=1:o.dynamicPoolSize
+                    
+                    if o.saveSnapshot
+          
+                        
+                        
+                        % SUBROUTINE NEEDED
+                        % Screen('CopyTexture', FIXME);
+                    end
                     Screen('Close',texture(iDynamicPool));
                 end
 
@@ -2331,15 +2349,16 @@ try
                     end
                     Screen('FrameRect',window,color,annulusRect,thickness);
                 end
-                if o.saveStimulus
-                    o.savedStimulus=Screen('GetImage',window,o.stimulusRect,'drawBuffer');
-                end
+             
+                
                 % NOTE: (original) ONSET: Target presentatino onset flip
                 % start of waiting for response
 
                 Screen('Flip',window,0,1); % Show target with instructions. Don't clear buffer.
                 signalOnset=GetSecs;
                 if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
+                
+                % =====================
                 if o.saveSnapshot
                     if o.snapshotShowsFixationAfter
                         Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
@@ -2801,6 +2820,7 @@ try
     fclose(dataFid); dataFid=-1;
     o.signal=signal; % worth saving
     %     o.q=q; % not worth saving
+    o.newCal=cal;
     save(fullfile(o.dataFolder,[o.dataFilename '.mat']),'o','cal');
     fprintf('Results saved in %s with extensions .txt and .mat\nin folder %s\n',o.dataFilename,o.dataFolder);
 
