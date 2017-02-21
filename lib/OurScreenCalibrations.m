@@ -442,3 +442,20 @@ if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWid
     cal.old.n=[ 0 128 256 384 512 640 768 896 1024 1152 1280 1408 1536 1664 1792 1920 2048 2175 2303 2431 2559 2687 2815 2943 3071 3199 3327 3455 3583 3711 3839 3967 4095];
     cal.old.L=[ 1.732 1.83 2.169 3.018 4.714 7.309 10.25 13.89 18.58 24.04 29.92 36.64 44.47 53.14 62.73 73.03 83.8 93.85 107 122.1 137.4 153.5 169.7 186.3 204.6 223.6 247 271.2 297.7 324.6 353.7 382 406.5]; % cd/m^2
 end
+if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==541 && cal.screenHeightMm==338 && streq(cal.machineName,'pelliamdimac')
+	cal.screenOutput=[]; % used only under Linux
+	cal.profile='iMac';
+	cal.ScreenConfigureDisplayBrightnessWorks=1;
+	cal.brightnessSetting=1.00;
+	cal.brightnessRmsError=0.0000;
+	% cal.screenRect=[0 0 1280 800];
+	cal.mfilename='CalibrateScreenLuminance';
+	cal.datestr='21-Feb-2017 03:18:59';
+	cal.notes='Denis room 406 at night, room lights on iMac Feb 21, 2017';
+	cal.calibratedBy='Denis Pelli';
+	cal.dacBits=12; % From ReadNormalizedGammaTable, unverified.
+	cal.old.gammaIndexMax=255;
+	cal.old.G=[ 0 0.0313726 0.0627451 0.0941176 0.12549 0.156863 0.188235 0.219608 0.25098 0.282353 0.313726 0.345098 0.376471 0.407843 0.439216 0.470588 0.501961 0.529412 0.560784 0.592157 0.623529 0.654902 0.686275 0.717647 0.74902 0.780392 0.811765 0.843137 0.87451 0.905882 0.937255 0.968627 1];
+	cal.old.L=[ 1.763 1.83 2.16 3.82 4.72 7.33 10.28 13.93 18.64 24.13 30 36.73 44.61 53.23 62.76 73.04 83.8 93.8 106.9 121.9 137.3 153.2 169.4 185.9 204.4 223.3 246.7 271 297.5 324.3 353.5 381.6 406.2]; % cd/m^2
+	cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
+end
