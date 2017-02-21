@@ -2513,7 +2513,10 @@ try
                         Screen('Flip',window,0,1); % immediate flip (no sticky)
                     else
                         % present stimulus for longer (it has just been flipped on)
-                        Screen('Flip',window,signalOnset+o.durationSec-1/frameRate,1); % Duration is over. Erase target.
+%                         Screen('Flip',window,signalOnset+o.durationSec-1/frameRate,1); % Duration is over. Erase target.
+                        Screen('Flip',window,0,1); % immediate flip (no sticky)
+                        % THS CODE IS BROKEN!
+                        WaitSecs(o.durationSec);
                     end
 
                     if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
