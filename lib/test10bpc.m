@@ -1,27 +1,35 @@
-function test10bpc()
+function test10bpc(nBits, usingGradient, usingTexture)
   % Test 10 bit per channel display for AMD Radeon graphics cards
   %
   % Copyright 2017, Hormet Yiltiz <hyiltiz@gmail.com>
   % Released under GNU GPLv3+.
-  using11bpc = false;
-  usingTexture = true;
-  usingGradient = true;
+  if nargin < 3
+    nBits = 11; % supported values: 8, 10, 11, 12
+    usingTexture = true;
+    usingGradient = true;
+  end
   usingScreenshots = false;
-  if usingGradient; usingTexture = true; end
+  if usingGradient; usingTexture = true; end % gradients require textures
 
   try
     AssertOpenGL;
     screenNumber = max(Screen('Screens'));
     PsychImaging('PrepareConfiguration');
-    if using11bpc; PsychImaging('AddTask', 'General', 'EnableNative11BitFramebuffer'); % 11 bpc via Bit-stealing
-    else PsychImaging('AddTask', 'General', 'EnableNative10BitFramebuffer');end
+    switch nBits
+      case 8;; % do nothing
+      case 10; PsychImaging('AddTask', 'General', 'EnableNative10BitFramebuffer');
+      case 11; PsychImaging('AddTask', 'General', 'EnableNative11BitFramebuffer');
+      case 12; PsychImaging('AddTask', 'General', 'EnableNative16BitFramebuffer');
+    end
+
     PsychImaging('AddTask', 'FinalFormatting', 'DisplayColorCorrection', 'SimpleGamma');
 
+    % uncomment this line when using 11 bpc for the first time
+    % delete([PsychtoolboxConfigDir 'rgb111110remaplut.mat']); % clear cache
+
     [w, wRect]=PsychImaging('OpenWindow', screenNumber, 0.5, []);
-    if using11bpc;Screen('ConfigureDisplay', 'Dithering', screenNumber, 61696);end % 11 bpc via Bit-stealing
-    PsychColorCorrection('SetEncodingGamma', w, 1 / 2.4);
-    nBits = 10;
-    if using11bpc; nBits = 11; end
+    if nBits>=11;Screen('ConfigureDisplay', 'Dithering', screenNumber, 61696);end % 11 bpc via Bit-stealing
+    PsychColorCorrection('SetEncodingGamma', w, 1/2.50); % your display might have a different gamma
     Screen('Flip', w);
 
     if ~usingGradient
@@ -42,6 +50,7 @@ function test10bpc()
       [~,keyCode] = KbStrokeWait();
       if usingScreenshots; imwrite(Screen('GetImage', w, [], [], 1), ['test10bpc' datestr(now, 'YYYYmmDDHHMMSS') '.png']); end
       if strcmpi(KbName(keyCode), 'ESCAPE'); break; end
+      if usingTexture; Screen('Close', tex); end % prevents memory overload
     end
 
     sca; % closes windows and textures
