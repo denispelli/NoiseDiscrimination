@@ -11,14 +11,14 @@ o.assessContrast=1;
 % Actual value will depend on frame rate and stimulus presentation duration,
 % thus will be ALWAYS overwritten later for any value other than 1
 o.dynamicSignalPoolSize = 2; % or 1 for static noise
-o.dynamicPreSignalNoisePoolDur = 0.2;
-o.dynamicPostSignalNoisePoolDur = 0.2;
+o.dynamicPreSignalNoisePoolDur = 0;
+o.dynamicPostSignalNoisePoolDur = 0;
 
 o.allowAnyFont=1;
-% o.font='Sloan';
-o.font='ITC Bookman Std';
-o.alphabet='abcdefghijklmnopqrstuvwxyz';
-% o.alphabet = 'CHDNO';
+o.font='Sloan';
+o.alphabet = 'DHKNORSVZ';
+% o.font='ITC Bookman Std';
+% o.alphabet='abcdefghijklmnopqrstuvwxyz';
 o.alternatives=length(o.alphabet); % The number of letters to use from o.alphabet.
 o.targetHeightDeg=7.64; % Target size, range 0 to inf. If you ask for too much, it gives you the max possible.
 o.noiseType='binary'; % 'gaussian' or 'uniform' or 'binary'
@@ -47,6 +47,7 @@ o.fixationCrossWeightDeg = 0.05; % target line thickness
 % o.tGuess=log10(0.2); % Optionally tell Quest the initial log contrast on first trial.
 o.alphabetPlacement='top'; % show possible answers on 'top' or 'right' for letters and gabors.
 o.saveSnapshot=0; % 0 or 1.  If true (1), take snapshot for public presentation.
+o.saveStimulus=1;
 o.snapshotLetterContrast=0.2; % nan to request program default. If set, this determines o.tSnapshot.
 o.cropSnapshot=1; % If true (1), show only the target and noise, without unnecessary gray background.
 o.snapshotCaptionTextSizeDeg=0.5;
