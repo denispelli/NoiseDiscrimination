@@ -1,7 +1,6 @@
 clear o
 % o.showCropMarks=1; % mark the bounding box of the target
 o.observer='denis'; % use your name
-o.weightIdealWithNoise=0;
 o.distanceCm=60; % viewing distance
 o.durationSec=0.5; % [0.05, 0.5] for 50 ms and 500 ms 
 o.trialsPerRun=40;

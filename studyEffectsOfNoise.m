@@ -5,7 +5,6 @@ useBackupSessions=0;
 % o.observer='junk';
 % o.observer='ideal';
 o.observer='Chen'; % use your name
-o.weightIdealWithNoise=0;
 o.distanceCm=60; % viewing distance
 o.durationSec=0.2;
 o.trialsPerRun=80;
