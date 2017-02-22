@@ -4,7 +4,7 @@ function test10bpc(nBits, usingGradient, usingTexture)
   % Copyright 2017, Hormet Yiltiz <hyiltiz@gmail.com>
   % Released under GNU GPLv3+.
   if nargin < 3
-    nBits = 11; % supported values: 8, 10, 11, 12
+    nBits = 12; % supported values: 8, 10, 11, 12
     usingTexture = true;
     usingGradient = true;
   end
@@ -19,7 +19,7 @@ function test10bpc(nBits, usingGradient, usingTexture)
       case 8;; % do nothing
       case 10; PsychImaging('AddTask', 'General', 'EnableNative10BitFramebuffer');
       case 11; PsychImaging('AddTask', 'General', 'EnableNative11BitFramebuffer');
-      case 12; PsychImaging('AddTask', 'General', 'EnableNative16BitFramebuffer');
+      case 12; PsychImaging('AddTask', 'General', 'EnableNative16BitFramebuffer', [], 16);
     end
 
     PsychImaging('AddTask', 'FinalFormatting', 'DisplayColorCorrection', 'SimpleGamma');
@@ -47,7 +47,7 @@ function test10bpc(nBits, usingGradient, usingTexture)
       end
 
       Screen('Flip', w);
-      [~,keyCode] = KbStrokeWait();
+      [~,keyCode] = KbWait();
       if usingScreenshots; imwrite(Screen('GetImage', w, [], [], 1), ['test10bpc' datestr(now, 'YYYYmmDDHHMMSS') '.png']); end
       if strcmpi(KbName(keyCode), 'ESCAPE'); break; end
       if usingTexture; Screen('Close', tex); end % prevents memory overload
