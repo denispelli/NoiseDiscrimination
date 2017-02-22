@@ -5,7 +5,7 @@ o.weightIdealWithNoise=0;
 o.distanceCm=60; % viewing distance
 o.durationSec=0.5; % [0.05, 0.5] for 50 ms and 500 ms 
 o.trialsPerRun=40;
-o.assessContrast=1;
+o.assessContrast=0;
 
 % A value of 1 will cancel dynamic noise (only 1 flip of noise will be generated)
 % Actual value will depend on frame rate and stimulus presentation duration,
@@ -47,7 +47,7 @@ o.fixationCrossWeightDeg = 0.05; % target line thickness
 % o.tGuess=log10(0.2); % Optionally tell Quest the initial log contrast on first trial.
 o.alphabetPlacement='top'; % show possible answers on 'top' or 'right' for letters and gabors.
 o.saveSnapshot=0; % 0 or 1.  If true (1), take snapshot for public presentation.
-o.saveStimulus=1;
+o.saveStimulus=0;
 o.snapshotLetterContrast=0.2; % nan to request program default. If set, this determines o.tSnapshot.
 o.cropSnapshot=1; % If true (1), show only the target and noise, without unnecessary gray background.
 o.snapshotCaptionTextSizeDeg=0.5;
@@ -57,6 +57,7 @@ o.snapshotShowsFixationAfter=0;
 o.speakInstructions=0;
 o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar, for Linux compatibility.
 % o.useFractionOfScreen=0.3; % 0: normal, 0.5: small for debugging.
+o.flipClick=0;
 
 o = NoiseDiscrimination(o);
 sca;
