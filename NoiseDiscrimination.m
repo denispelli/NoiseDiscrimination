@@ -140,7 +140,7 @@ end
 o=[];
 % THESE STATEMENTS PROVIDE DEFAULT VALUES FOR ALL THE "o" parameters.
 % They are overridden by what you provide in the argument struct oIn.
-o.EnableCLUTMapping=0; % Broken. Screws up gamma correction.
+o.EnableCLUTMapping=0; % Needed for reasonable CLUT control.
 o.testBitDepth=0;
 o.useFractionOfScreen=0; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 o.distanceCm=50; % viewing distance
@@ -259,6 +259,7 @@ o.replicatePelli2006=0;
 o.isWin=IsWin; % override this to simulate Windows on a Mac.
 o.dynamicFrameGenInterval = []; % to store flip interval (useful to calculate frame drops)
 o.dynamicFrameDrawInterval = []; % to store flip interval (useful to calculate frame drops)
+plusMinusASCIIChar = char(177); % use this instead of literal plus minus sign to prevent platform-dependent encoding issues
 
 % A value of 1 will cancel dynamic noise (only 1 flip of noise will be generated)
 % Actual value will depend on frame rate and stimulus presentation duration,
@@ -678,7 +679,9 @@ try
             ffprintf(ff,'Using tiny window for debugging.\n');
         end
         if o.flipClick; Speak(['before OpenWindow ' num2str(MFileLineNr)]);GetClicks; end
-        if 1
+        
+if 1
+        PsychDefaultSetup(0);
             PsychImaging('PrepareConfiguration');
             if o.flipScreenHorizontally
                 PsychImaging('AddTask','AllViews','FlipHorizontal');
@@ -755,7 +758,10 @@ try
                 cal.nLast=gray1;
                 cal=LinearizeClut(cal);
             end %if o.isWin
+            ffprintf(ff,'Size of cal.gamma %d %d\n',size(cal.gamma));
             ffprintf(ff,'Non-stimulus background is %.1f cd/m^2 at CLUT entry %d (and %d).\n',LMean,gray1,gray);
+            ffprintf(ff,'%.1f cd/m^2 at %d; %.1f cd/m^2 at %d\n',LuminanceOfIndex(cal,gray1),gray1,LuminanceOfIndex(cal,gray),gray);
+            ffprintf(ff,'%.3f dac at %d; %.3f dac at %d\n',cal.gamma(gray1+1,2),gray1,cal.gamma(gray+1,2),gray);
             if o.printGammaLoadings; fprintf('LoadNormalizedGammaTable %d; LRange/Lmean=%.2f\n',MFileLineNr,(cal.LLast-LMean)/LMean); end
             Screen('LoadNormalizedGammaTable',window,cal.gamma,1); % load during flip
             Screen('FillRect',window,gray1);
@@ -787,6 +793,16 @@ try
     else
         screenWidthPix=1280;
     end
+%     DEBUG CLUT, FIXED BY EnableCLUTMapping
+%     rect=[0 0 200 200];
+%     rect=CenterRect(rect,screenRect);
+%     Screen('FillRect',window,gray1,rect);
+%     rect=rect/2;
+%     rect=CenterRect(rect,screenRect);
+%     Screen('FillRect',window,gray,rect);
+%     Screen('LoadNormalizedGammaTable',0,cal.gamma); 
+%     Screen('Flip',window);
+
     pixPerCm=screenWidthPix/cal.screenWidthCm;
     degPerCm=57/o.distanceCm;
     o.pixPerDeg=pixPerCm/degPerCm;
@@ -878,6 +894,8 @@ try
         % statis noise is required, simply use a pool size of 1
 
         o.dynamicPoolSize = 1;
+        o.dynamicPreSignalNoisePoolSize = 0;
+        o.dynamicPostSignalNoisePoolSize = 0;
     else
         o.dynamicSignalPoolSize = ceil(o.durationSec*frameRate);
         o.dynamicPreSignalNoisePoolSize = ceil(o.dynamicPreSignalNoisePoolDur*frameRate);
@@ -1079,7 +1097,7 @@ try
     o.N = N;
     ffprintf(ff,'log N/deg^2 %.2f, where N is power spectral density\n',log10(N));
     ffprintf(ff,'pThreshold %.2f, beta %.1f\n',o.pThreshold,o.beta);
-    ffprintf(ff,'Your (log) guess is %.2f ï¿½ %.2f\n',o.tGuess,o.tGuessSd);
+    ffprintf(ff,'Your (log) guess is %.2f ± %.2f\n',o.tGuess,o.tGuessSd);
     ffprintf(ff,'o.trialsPerRun %.0f\n',o.trialsPerRun);
     white1=1;
     black0=0;
@@ -1392,6 +1410,7 @@ try
                 Screen('DrawText',window,[word ' press the space bar when ready to begin.'],0.5*textSize,3*o.lineSpacing*textSize,black0,gray1,1);
                 fprintf('Please press the space bar when ready to begin.\n');
         end
+        fprintf('gray %d, gray1 %d, %.4f %.4f dac\n',gray,gray1,cal.gamma(1+gray,2),cal.gamma(1+gray1,2));
         Screen('Flip',window);
         if o.speakInstructions
             Speak('Starting new run. ');
@@ -2197,28 +2216,21 @@ try
 %                     KbWait;
                     o.dynamicFrameDrawInterval(iDynamicPool,trial) = GetSecs - tFlip0;
                 end
-
+                
                 for iDynamicPool=1:o.dynamicPoolSize
-
                     Screen('Close',texture(iDynamicPool));
                 end
-
-
-
-%                 if o.dynamicSignalPoolSize > 1
-%                     Screen('Flip', window);
-%                 end
-
-                if o.dynamicSignalPoolSize > 1
-                    % Stimulus presentation over; clear screen
-                    Screen('FillRect',window,gray1,screenRect);
-                    Screen('Flip', window);
-                end
-
-
-
+                
+                
+                % Stimulus presentation over; clear screen
+                Screen('FillRect',window,gray1);
+                Screen('FillRect',window,gray,o.stimulusRect);
+                Screen('Flip', window,0,1);
+                
+                
+                
                 eraseRect=ClipRect(eraseRect,o.stimulusRect);
-
+                
                 % Print instruction in upper left corner.
                 Screen('FillRect',window,gray1,topCaptionRect);
                 message=sprintf('Trial %d of %d. Run %d of %d.',trial,o.trialsPerRun,o.runNumber,o.runsDesired);
@@ -2682,9 +2694,9 @@ try
     o.efficiency = o.idealEOverNThreshold/o.EOverN;
     o.E = 10^(2*o.questMean)*o.E1;
     if streq(o.targetModulates,'luminance')
-        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Thresholdï¿½sd log(contrast) %.2fï¿½%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
+        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold±sd log(contrast) %.2f±%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
     else
-        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Thresholdï¿½sd log(r-1) %.2fï¿½%.2f, approx required n %.0f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
+        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold±sd log(r-1) %.2f±%.2f, approx required n %.0f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
     end
     if abs(trialsRight/trial-o.pThreshold)>0.1
         ffprintf(ff,'WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.\n');
@@ -2709,14 +2721,14 @@ try
     %     tse=std(tSample)/sqrt(length(tSample));
     %     switch o.targetModulates
     %         case 'luminance',
-    %         ffprintf(ff,'SUMMARY: %s %d runs meanï¿½se: log(contrast) %.2fï¿½%.2f, contrast %.3f\n',o.observer,length(tSample),mean(tSample),tse,10^mean(tSample));
+    %         ffprintf(ff,'SUMMARY: %s %d runs mean±se: log(contrast) %.2f±%.2f, contrast %.3f\n',o.observer,length(tSample),mean(tSample),tse,10^mean(tSample));
     %         %         efficiency = (o.idealEOverNThreshold^2) / (10^(2*t));
     %         %         ffprintf(ff,'Efficiency = %f\n', efficiency);
     %         %o.EOverN=10^mean(2*tSample)*o.E1/N;
-    %         ffprintf(ff,'Threshold log E/N %.2fï¿½%.2f, E/N %.1f\n',mean(log10(o.EOverN)),std(log10(o.EOverN))/sqrt(length(o.EOverN)),o.EOverN);
+    %         ffprintf(ff,'Threshold log E/N %.2f±%.2f, E/N %.1f\n',mean(log10(o.EOverN)),std(log10(o.EOverN))/sqrt(length(o.EOverN)),o.EOverN);
     %         %o.efficiency=o.idealEOverNThreshold/o.EOverN;
     %         ffprintf(ff,'User-provided ideal threshold E/N log E/N %.2f, E/N %.1f\n',log10(o.idealEOverNThreshold),o.idealEOverNThreshold);
-    %         ffprintf(ff,'Efficiency log %.2fï¿½%.2f, %.4f %%\n',mean(log10(o.efficiency)),std(log10(o.efficiency))/sqrt(length(o.efficiency)),100*10^mean(log10(o.efficiency)));
+    %         ffprintf(ff,'Efficiency log %.2f±%.2f, %.4f %%\n',mean(log10(o.efficiency)),std(log10(o.efficiency))/sqrt(length(o.efficiency)),100*10^mean(log10(o.efficiency)));
     %         corr=zeros(length(signal));
     %         for i=1:length(signal)
     %             for j=1:i
@@ -2746,7 +2758,7 @@ try
             o.logApproxRequiredNumber=log10(o.approxRequiredNumber);
             ffprintf(ff,'r %.3f, approx required number %.0f\n',o.r,o.approxRequiredNumber);
             %              logNse=std(logApproxRequiredNumber)/sqrt(length(tSample));
-            %              ffprintf(ff,'SUMMARY: %s %d runs meanï¿½se: log(r-1) %.2fï¿½%.2f, log(approx required n) %.2fï¿½%.2f\n',o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
+            %              ffprintf(ff,'SUMMARY: %s %d runs mean±se: log(r-1) %.2f±%.2f, log(approx required n) %.2f±%.2f\n',o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
         case 'entropy',
             t=o.questMean;
             o.r=10^t+1;
