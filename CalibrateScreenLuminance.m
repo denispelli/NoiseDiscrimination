@@ -83,7 +83,7 @@ addpath('lib');
 addpath('AutoBrightness');
 try
     Speak('Welcome to Calibrate Screen Luminance.');
-    fprintf('This program uses text to speech. Please turn up the sound volume to hear it.\n');
+    fprintf('This program uses computer speech. Please turn up the volume to hear it.\n');
 %     onCleanupInstance=onCleanup(@()sca); % clears screen when function is terminated.
     if nargin>1
         cal.screenOutput=screenOutput; % used only under Linux
@@ -98,14 +98,35 @@ try
     KbName('UnifyKeyNames'); % Needed to work on Windows computer.
     blindCalibration=0;
     luminances=32+1;
-%     luminances=3; % for quick debugging
+    %     luminances=3; % for quick debugging
     using10bpc=false;
     gamma10bpc=1/2.4;
     [cal.screenWidthMm,cal.screenHeightMm]=Screen('DisplaySize',cal.screen);
     % screenRect=Screen('Rect',cal.screen); % gives unreliable answer on
     % Retina display
-    [savedGamma,cal.dacBits]=Screen('ReadNormalizedGammaTable',cal.screen,cal.screenOutput);
-    cal.old.gamma = savedGamma;
+    
+    [cal.old.gamma,cal.dacBits]=Screen('ReadNormalizedGammaTable',cal.screen,cal.screenOutput);
+    cal.old.gammaHistogramStd=std(histcounts(cal.old.gamma(:,2),10,'Normalization','probability'));
+    macStd=[0.0005  0.0082  0.0085  0.0111  0.0123  0.0683 0.0082];
+    if cal.old.gammaHistogramStd > max(macStd);
+       fprintf(['CalibrateScreenLuminance: Probably this is not an Apple profile.\n'...
+          'We suggest that you use Apple:System preferences:Displays:Color:Display profile:\n'...
+          'to select another profile and then reselect the profile you want. The \n'...
+          'histogram of your display''s current color profile (or "gamma table") is very uneven,\n' ...
+          'which suggest that it''s custom-made by the user, not supplied by the manufacturer.  \n'...
+          'For calibration, it''s best to save one of the manufacturer''s original gamma tables\n'...
+          'in the calibration record. We use it later to achieve a consistent white at all \n'...
+          'luminances. Please ask our computer''s operating system to load a manufacturer-\n'...
+          'supplied color profile. In macOS, use System Preferences:Displays:Color.\n'...
+          'The profile you choose will determine only the precise color cast of white.\n'...
+          'The gamma function produced by our software is independent of the profile \n'...
+          'you select. Only the shade of white is affected. Then try again to run \n'...
+          'CalibrateScreenLuminance.\n']);
+       Speak(['ERROR: To get a consistent white in your stimuli, please use System Preferences '...
+          'Displays Color to select a color profile that you like. Then try again.']);
+       error('YOur gamma table seems custom-made. Please use an official color profile.\n');
+    end
+    fprintf('Successfully read your gamma table ("color profile").\n');
     cal.old.gammaIndexMax=length(cal.old.gamma)-1; % index into gamma table is 0..gammaIndexMax.
     cal.pixelMax=255;
     fprintf('\n%s %s\n',mfilename,datestr(now));
@@ -355,8 +376,9 @@ try
         fprintf(f,'\tcal.datestr=''%s'';\n',datestr(now));
         fprintf(f,'\tcal.notes=''%s'';\n',prep(cal.notes));
         fprintf(f,'\tcal.calibratedBy=''%s'';\n',prep(cal.processUserLongName));
-        fprintf(f,'\tcal.dacBits=%d; %% From ReadNormalizedGammaTable, unverified.\n',cal.dacBits);
+        fprintf(f,'\tcal.dacBits=%d; %% From ReadNormalizedGammaTable.\n',cal.dacBits);
         fprintf(f,'\tcal.old.gammaIndexMax=%d;\n',cal.old.gammaIndexMax);
+        fprintf(f,'\tcal.old.gammaHistogramStd=%.4f;\n',cal.old.gammaHistogramStd);
         fprintf(f,'\tcal.old.G=[');
         fprintf(f,' %g',cal.old.G);
         fprintf(f,'];\n');
@@ -366,7 +388,7 @@ try
         fprintf(f,'\tcal.old.n=[');
         fprintf(f,' %g',cal.old.n);
         fprintf(f,'];\n');
-        fprintf(f,'\tcal.old.gamma=%s;\n', mat2str(cal.old.gamma));
+        fprintf(f,'\tcal.old.gamma=%s;\n',mat2str(cal.old.gamma));
         fprintf(f,'end\n');
     end
     fclose(fid);
@@ -391,6 +413,7 @@ catch
     psychrethrow(psychlasterror);
 end
 
+% Preprocess text to remove illegal characters.
 function str=prep(str)
     str=regexprep(str,'''','''''');
 return
