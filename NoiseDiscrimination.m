@@ -2188,11 +2188,8 @@ try
                       o.newCal=cal;
 
                       if o.saveSnapshot
-
-
-
-                        % SUBROUTINE NEEDED
-                        % Screen('CopyTexture', FIXME);
+                        snapshotTexture = Screen('OpenOffscreenWindow',texture(iDynamicPool));
+                        Screen('CopyWindow',texture(iDynamicPool), snapshotTexture);
                       end
                     end
 
