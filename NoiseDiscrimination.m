@@ -2230,11 +2230,12 @@ if 1
 %                     Screen('Flip', window);
 %                 end
 
-                if o.dynamicSignalPoolSize > 1
+                
                     % Stimulus presentation over; clear screen
-                    Screen('FillRect',window,gray1,screenRect);
+                    Screen('FillRect',window,gray1);
+                    Screen('FillRect',window,gray,o.stimulusRect);
                     Screen('Flip', window);
-                end
+                    
 
 
 
