@@ -175,11 +175,12 @@ if useBackupSessions % auto-generate full sequence of experiments for "Winter" d
     progressTrialNO=session.progressTrialNO;
     for iProgressTrialNO=progressTrialNO:numel(oo) % pick up from where we left off
 %         if ~oo(iProgressTrialNO).noiseSD==0; 
-        ooWithData{iProgressTrialNO}=NoiseDiscrimination(oo(iProgressTrialNO))%;end
+        ooWithData{iProgressTrialNO}=NoiseDiscrimination(oo(iProgressTrialNO));
+        %;end
         sca;
         if ooWithData{iProgressTrialNO}.runAborted
-            break;
-            fprintf('Your previous run was not successful! \nNot saving the results into session. \nRun this file again when ready for future data collection.\n\n');
+            warning('\nYour previous run was not successful! \nNot saving the results into session. \nRun this file again when ready for future data collection.\n\n');
+              break;
         else
             session.progressTrialNO=session.progressTrialNO+1;
         end

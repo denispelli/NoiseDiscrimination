@@ -893,6 +893,8 @@ if 1
         % statis noise is required, simply use a pool size of 1
 
         o.dynamicPoolSize = 1;
+        o.dynamicPreSignalNoisePoolSize = 0;
+        o.dynamicPostSignalNoisePoolSize = 0;
     else
         o.dynamicSignalPoolSize = ceil(o.durationSec*frameRate);
         o.dynamicPreSignalNoisePoolSize = ceil(o.dynamicPreSignalNoisePoolDur*frameRate);
