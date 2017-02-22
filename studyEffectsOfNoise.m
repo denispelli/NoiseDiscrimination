@@ -1,7 +1,7 @@
 % function o = studyEffectsOfNoise(isIdealPlus)
 %#### Adjust values within this block #####################
 clear o
-useBackupSessions=1;
+useBackupSessions=0;
 % o.observer='junk';
 % o.observer='ideal';
 o.observer='Chen'; % use your name
@@ -92,7 +92,6 @@ o.alphabetPlacement='top'; % show possible answers on 'top' or 'right' for lette
 %o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
 %o.targetModulates='luminance'; % Display a luminance decrement.
 % o.noiseRaisedCosineEdgeThicknessDeg=0; % midpoint of raised cosine is at o.noiseRadiusDeg.
-% o.durationSec=inf; % Typically 0.2 or inf (wait indefinitely for response).
 % o.tGuess=log10(0.2); % Optionally tell Quest the initial log contrast on first trial.
 o.saveSnapshot=0; % 0 or 1.  If true (1), take snapshot for public presentation.
 o.snapshotLetterContrast=0.2; % nan to request program default. If set, this determines o.tSnapshot.
@@ -101,7 +100,7 @@ o.snapshotCaptionTextSizeDeg=0.5;
 o.snapshotShowsFixationBefore=1;
 o.snapshotShowsFixationAfter=0;
 % o.fixationCrossWeightDeg=0.05; % target line thickness
-o.speakInstructions=0;
+o.speakInstructions=1;
 o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar, for Linux compatibility.
 % o.useFractionOfScreen=0.3; % 0: normal, 0.5: small for debugging.
 
