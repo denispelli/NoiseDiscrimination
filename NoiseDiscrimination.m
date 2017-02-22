@@ -140,7 +140,7 @@ end
 o=[];
 % THESE STATEMENTS PROVIDE DEFAULT VALUES FOR ALL THE "o" parameters.
 % They are overridden by what you provide in the argument struct oIn.
-o.EnableCLUTMapping=0; % Broken. Screws up gamma correction.
+o.EnableCLUTMapping=1; % Needed for reasonable CLUT control.
 o.testBitDepth=0;
 o.useFractionOfScreen=0; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 o.distanceCm=50; % viewing distance
@@ -678,7 +678,9 @@ try
             ffprintf(ff,'Using tiny window for debugging.\n');
         end
         if o.flipClick; Speak(['before OpenWindow ' num2str(MFileLineNr)]);GetClicks; end
-        if 1
+        
+if 1
+        PsychDefaultSetup(0);
             PsychImaging('PrepareConfiguration');
             if o.flipScreenHorizontally
                 PsychImaging('AddTask','AllViews','FlipHorizontal');
@@ -755,7 +757,10 @@ try
                 cal.nLast=gray1;
                 cal=LinearizeClut(cal);
             end %if o.isWin
+            ffprintf(ff,'Size of cal.gamma %d %d\n',size(cal.gamma));
             ffprintf(ff,'Non-stimulus background is %.1f cd/m^2 at CLUT entry %d (and %d).\n',LMean,gray1,gray);
+            ffprintf(ff,'%.1f cd/m^2 at %d; %.1f cd/m^2 at %d\n',LuminanceOfIndex(cal,gray1),gray1,LuminanceOfIndex(cal,gray),gray);
+            ffprintf(ff,'%.3f dac at %d; %.3f dac at %d\n',cal.gamma(gray1+1,2),gray1,cal.gamma(gray+1,2),gray);
             if o.printGammaLoadings; fprintf('LoadNormalizedGammaTable %d; LRange/Lmean=%.2f\n',MFileLineNr,(cal.LLast-LMean)/LMean); end
             Screen('LoadNormalizedGammaTable',window,cal.gamma,1); % load during flip
             Screen('FillRect',window,gray1);
@@ -787,6 +792,16 @@ try
     else
         screenWidthPix=1280;
     end
+%     DEBUG CLUT, FIXED BY EnableCLUTMapping
+%     rect=[0 0 200 200];
+%     rect=CenterRect(rect,screenRect);
+%     Screen('FillRect',window,gray1,rect);
+%     rect=rect/2;
+%     rect=CenterRect(rect,screenRect);
+%     Screen('FillRect',window,gray,rect);
+%     Screen('LoadNormalizedGammaTable',0,cal.gamma); 
+%     Screen('Flip',window);
+
     pixPerCm=screenWidthPix/cal.screenWidthCm;
     degPerCm=57/o.distanceCm;
     o.pixPerDeg=pixPerCm/degPerCm;
@@ -1392,6 +1407,7 @@ try
                 Screen('DrawText',window,[word ' press the space bar when ready to begin.'],0.5*textSize,3*o.lineSpacing*textSize,black0,gray1,1);
                 fprintf('Please press the space bar when ready to begin.\n');
         end
+        fprintf('gray %d, gray1 %d, %.4f %.4f dac\n',gray,gray1,cal.gamma(1+gray,2),cal.gamma(1+gray1,2));
         Screen('Flip',window);
         if o.speakInstructions
             Speak('Starting new run. ');
