@@ -2219,29 +2219,21 @@ if 1
 %                     KbWait;
                     o.dynamicFrameDrawInterval(iDynamicPool,trial) = GetSecs - tFlip0;
                 end
-
+                
                 for iDynamicPool=1:o.dynamicPoolSize
-
                     Screen('Close',texture(iDynamicPool));
                 end
-
-
-
-%                 if o.dynamicSignalPoolSize > 1
-%                     Screen('Flip', window);
-%                 end
-
                 
-                    % Stimulus presentation over; clear screen
-                    Screen('FillRect',window,gray1);
-                    Screen('FillRect',window,gray,o.stimulusRect);
-                    Screen('Flip', window);
-                    
-
-
-
+                
+                % Stimulus presentation over; clear screen
+                Screen('FillRect',window,gray1);
+                Screen('FillRect',window,gray,o.stimulusRect);
+                Screen('Flip', window,0,1);
+                
+                
+                
                 eraseRect=ClipRect(eraseRect,o.stimulusRect);
-
+                
                 % Print instruction in upper left corner.
                 Screen('FillRect',window,gray1,topCaptionRect);
                 message=sprintf('Trial %d of %d. Run %d of %d.',trial,o.trialsPerRun,o.runNumber,o.runsDesired);
