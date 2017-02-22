@@ -1,6 +1,6 @@
 clear o
 % o.showCropMarks=1; % mark the bounding box of the target
-o.observer='denis'; % use your name
+o.observer='hyiltiz'; % use your name
 o.distanceCm=60; % viewing distance
 o.durationSec=0.5; % [0.05, 0.5] for 50 ms and 500 ms 
 o.trialsPerRun=40;
@@ -14,16 +14,16 @@ o.dynamicPreSignalNoisePoolDur = 0;
 o.dynamicPostSignalNoisePoolDur = 0;
 
 o.allowAnyFont=1;
-o.font='Sloan';
-o.alphabet = 'DHKNORSVZ';
-% o.font='ITC Bookman Std';
-% o.alphabet='abcdefghijklmnopqrstuvwxyz';
+% o.font='Sloan';
+% o.alphabet = 'DHKNORSVZ';
+o.font='ITC Bookman Std';
+o.alphabet='abcdefghijklmnopqrstuvwxyz';
 o.alternatives=length(o.alphabet); % The number of letters to use from o.alphabet.
 o.targetHeightDeg=7.64; % Target size, range 0 to inf. If you ask for too much, it gives you the max possible.
 o.noiseType='binary'; % 'gaussian' or 'uniform' or 'binary'
 o.noiseSpectrum='white'; % pink or white
 o.noiseCheckDeg=0.09;
-o.noiseSD=0.0; % noise contrast [0 0.16]
+o.noiseSD=0.5; % noise contrast [0], 0.5 when binary; 0.16 when using gaussian noise type
 o.eccentricityDeg=0; % eccentricity [0 8 16 32]
 o.noiseEnvelopeSpaceConstantDeg=128; % always Inf for hard edge top-hat noise
 o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
