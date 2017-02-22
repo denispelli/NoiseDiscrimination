@@ -1,3 +1,5 @@
+fix static noise
+
 Now only o.task: identify is supported with dynamic noise
 Support 4AFC etc. tasks
 
@@ -5,3 +7,4 @@ fix snapshot using a copy of the signal texture
 
 make use of noise pool and texture processing to take advantage of small
 pool size and limited GPU memory
+
