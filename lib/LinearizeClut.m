@@ -2,36 +2,35 @@ function newCal=LinearizeClut(cal)
 % cal=LinearizeClut(cal);
 % LINEARCLUT uses existing luminance measurements (made by
 % CalibrateLuminance.m) to compute a gamma table that will linearize the
-% display's luminance relative to the pixel values in the image array. To
-% load the gamma table you can call:
+% display's luminance for a specified range of image pixel values. To load
+% the gamma table call:
 % Screen('LoadNormalizedGammaTable',screen,cal.gamma)
-% Denis Pelli, NYU, July 5, 2014
+% Denis Pelli, NYU, July 5, 2014; February 21, 2017.
 %
 % INPUT FIELDS
-% cal.old.gamma is the gamma table (i.e. color lookup table or CLUT) when the luminance was calibrated.
-% If this field does not exist, it is initialized with old.gamma. 
-% cal.old.n is the pixel values used for luminance calibration
-% cal.old.G is the green dac value used for luminance calibration
-% cal.old.L is the luminance measured at pixel value cal.old.n
-% cal.nFirst is the first pixel value to be linearized, i.e. set gamma to yield LFirst.
+% cal.old.gamma is the gamma table (i.e. color lookup table or CLUT, also 
+%      called color profile) when the luminance was calibrated.
+% cal.old.G is the green DAC value used for luminance calibration
+% cal.old.L is the luminance measured at that green DAC value.
+% cal.nFirst is the first pixel value to be linearized.
 % cal.nLast is the last. We insist that nLast>=nFirst.
 % cal.LFirst is the desired luminance for pixel value nFirst.
-% cal.LLast is the desired luminance for pixel value nLast. May be less than,
-% equal to, or greater than cal.LFirst. Both LFirst and LLast are bounded
-% to the interval min(cal.old.L) to max(cal.old.L).
+% cal.LLast is the desired luminance for pixel value nLast. 
+% The only constraint on LFirst and LLast is that both must be in the
+% measured range min(cal.old.L) to max(cal.old.L).
 %
 % OUTPUT FIELDS, IN ADDITION TO THE INPUT FIELDS
 % cal.n are the pixel values, nFirst:nLast, for which new gamma table
 % entries were created.
 % cal.L is the linear sequence of luminances from LFirst to LLast.
 % cal.gamma is the new gamma table ready for loading into the CLUT. It is
-% created by copying cal.old.gamma and overwriting the n.L entries.
-% If necessary, try to force the calibration to be monotonic.
-% This is a quick hack. It will convert monotone data to strictly monotone
-% with hardly any change in value. It will replace a rogue low value with
-% something reasonable, but it will propagate a rogue high value.
-% I once wrote a simple program that makes a non-parametric monotone fit,
-% and that would be a better solution, but careful calibrations are usually
+% created by copying cal.old.gamma and overwriting the n.L entries. If
+% necessary, we try to force the calibration to be monotonic. This is a
+% quick hack. It will convert monotone data to strictly monotone with
+% hardly any change in value. It will replace a rogue low value with
+% something reasonable, but, alas, it will propagate a rogue high value. I
+% once wrote a simple program that makes a non-parametric monotone fit, and
+% that would be a better solution, but careful calibrations are usually
 % monotone, so this seems to be good enough. It may be better to remeasure
 % than fix up a non-monotone calibration.
 %
@@ -41,9 +40,10 @@ function newCal=LinearizeClut(cal)
 
 checkLuminance=0; % optional diagnostic print out
 checkLinearization=0; % optional diagnostic print out
+% If not strictly monotonic.
 if ~all(diff(cal.old.L)>0)
     L=cal.old.L;
-    % try to make it strictly monotonic
+    % Try to make it strictly monotonic.
     for i=1:length(L)-1
         if L(i)>=L(i+1)
             L(i+1)=L(i)+100*eps;
@@ -58,13 +58,10 @@ if ~all(diff(cal.old.L)>0)
     end
     cal.old.L=L;
 end
-if ~isfield(cal.old,'G')
-    error('Obsolete screen calibration. Run CalibrateScreenLuminance again.');
+if ~isfield(cal.old,'G') || ~isfield(cal.old,'gamma')
+    error('Obsolete screen calibration. Run the latest CalibrateScreenLuminance.');
 end
-if ~isfield(cal.old,'gamma')
-%     error('Missing gamma table!');
-    cal.old.gamma=Screen('ReadNormalizedGammaTable',cal.screen); 
-end
+% If green channel of old gamma table is not strictly monotonic.
 if ~all(diff(cal.old.gamma(:,2))>0)
     % If necessary, force monotonicity of the green channel of the old gamma table.
     g=cal.old.gamma(:,2);
@@ -77,17 +74,18 @@ if ~all(diff(cal.old.gamma(:,2))>0)
     end
     if ~all(diff(g)>0)
         fprintf('LinearizeClut: Nonmonotonic gamma table. Probably this is not an Apple profile.\n');
-        fprintf('I suggest that you use Apple:System preferences:Displays:Color:Display profile:\n');
+        fprintf('We suggest that you use Apple:System preferences:Displays:Color:Display profile:\n');
         fprintf('to select another profile and then reselect the profile you want.\n');
         error('Old gamma table not strictly monotonic. Couldn''t fix it. Sorry.\n');
     end
     cal.old.gamma(:,2)=g;
 end
-% 255 when using 8-bits per channel. Larger when using more bits.
 % In apple's gamma table the RGB values are all gray. We stick to those
 % gray RGB triplets that drive the video DAC. RGB are voltages in a video
 % monitor. We analyze in terms of G channel, and then use the original RGB
 % triplet corresponding to each G value.
+%
+% First make sure everything's reasonable.
 assert(all(cal.old.G<=1) && all(cal.old.G>=0)) 
 assert(length(cal.old.L)==length(cal.old.G))
 assert(cal.nFirst<=cal.nLast);
@@ -103,6 +101,7 @@ if cal.nLast==cal.nFirst
 else
     cal.L=cal.LFirst+(cal.LLast-cal.LFirst)*(cal.n-cal.nFirst)/(cal.nLast-cal.nFirst); % linear series, cal.LFirst to cal.LLast
 end
+% Use G and L calibration data to compute the G channel, in one call to interp1.
 cal.G=interp1(cal.old.L,cal.old.G,cal.L,'pchip'); % (takes 100 ms) interpolate green dac value G at luminance L
 if any(isnan(cal.G))
     warning('Cubic interpolation failed. Switching to linear.');
@@ -112,18 +111,21 @@ if any(isnan(cal.G))
     end
 end
 if checkLuminance
-    L=interp1(cal.old.G,cal.old.L,cal.G,'pchip');
-    err=rms(cal.L-L);
-    fprintf('Luminance %.3f to %.3f cd/m^2. rms error %.3f. ',cal.L([1,end]),err);
-    dL=diff(L);
-    fprintf('Step mean±sd %.4f±%.4f\n',mean(dL),std(dL));
+   % Use calibration data cal.old to compute the luminances produced by new gamma table.
+   L=interp1(cal.old.G,cal.old.L,cal.G,'pchip');
+   err=rms(cal.L-L);
+   fprintf('Luminance %.3f to %.3f cd/m^2. rms error %.3f. ',cal.L([1,end]),err);
+   dL=diff(L);
+   fprintf('Luminance increment mean±sd %.4f±%.4f\n',mean(dL),std(dL));
 end
-index=interp1(cal.old.gamma(:,2),1:length(cal.old.gamma),cal.G,'pchip'); % (takes few ms) interpolate index in cal.old.gamma of the green dac value G
-linearizedGamma=interp1(cal.old.gamma,index,'pchip'); % (takes few ms) interpolate RGB voltages at the green voltage
+% Interpolate index in cal.old.gamma of the green value G
+index=interp1(cal.old.gamma(:,2),1:length(cal.old.gamma),cal.G,'pchip'); % (takes few ms) 
+% Interpolate RGB color (a white triplet) at the index of the luminance we want.
+linearizedGamma=interp1(cal.old.gamma,index,'pchip'); % (takes few ms) 
 linearizedGamma=min(linearizedGamma,1);
 linearizedGamma=max(linearizedGamma,0);
 if ~isfield(cal,'gamma')
-    % if new gamma not provided, take old gamma table as default, scrunched
+    % If new gamma not provided, take old gamma table as default, scrunched
     % down to 256 entries.
     cal.gamma=ones(256,3);
     cal.gamma=cal.old.gamma(round(1+cal.old.gammaIndexMax*(0:255)/255),1:3);
@@ -132,17 +134,9 @@ cal.gamma(1+cal.n,1:3)=linearizedGamma;
 newCal=cal;
 if checkLinearization
     err=rms(linearizedGamma(:,2)'-cal.G);
-    fprintf('linearizedGamma-G %.3f to %.3f. rms error %.3f\n',cal.G(1),cal.G(end),err);
+    fprintf('linearizedGamma range %.3f to %.3f with rms error %.3f\n',cal.G(1),cal.G(end),err);
     err=rms(cal.gamma(1+cal.n,2)'-cal.G);
-    fprintf('gamma-G %.3f to %.3f. rms error %.3f\n',cal.G(1),cal.G(end),err);
-    if 0
-        % Consult actual gamma table.
-        Screen('LoadNormalizedGammaTable',cal.screen,cal.gamma);
-        gamma=Screen('ReadNormalizedGammaTable',cal.screen);
-    else
-        % consult the gamma table we made
-        gamma=cal.gamma;
-    end
+    fprintf('gamma-G rms error %.3f\n',err);
     err=rms(cal.gamma(1+cal.n,2)'-cal.G);
     fprintf('cal.gamma-G %.3f to %.3f. rms error %.3f\n',cal.gamma(1+cal.n([1,end])),err);
     gamma8=cal.gamma(1+round((length(cal.gamma)-1)*(0:255)/255),2);
