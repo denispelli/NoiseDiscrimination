@@ -93,9 +93,8 @@ addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same dire
 % echo_executing_commands(2, 'local');
 % diary ./diary.log
 [~,vStruct]=PsychtoolboxVersion;
-if IsOSX && vStruct.revision<7283
-    % Revision 7283 fixed the bug. December 8, 2015.
-    error('Old versions of Mac OSX Psychtoolbox had gamma table bug. Please update to the latest version: UpdatePsychtoolbox');
+if IsOSX && vStruct.major*1000+vStruct.minor*100+vStruct.point<=3013
+    error('Version 3.0.13 of Mac OSX Psychtoolbox had a gamma table bug. Please update to the latest version: UpdatePsychtoolbox');
 end
 if 0
     % Copy this to produce a Gaussian annulus:
@@ -140,7 +139,7 @@ end
 o=[];
 % THESE STATEMENTS PROVIDE DEFAULT VALUES FOR ALL THE "o" parameters.
 % They are overridden by what you provide in the argument struct oIn.
-o.EnableCLUTMapping=0; % Needed for reasonable CLUT control.
+o.EnableCLUTMapping=1; % Needed for reasonable CLUT control.
 o.testBitDepth=0;
 o.useFractionOfScreen=0; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 o.distanceCm=50; % viewing distance
@@ -384,7 +383,6 @@ if cal.screen>0
     fprintf('Using external monitor.\n');
 end
 cal=OurScreenCalibrations(cal.screen);
-
 o.cal=cal;
 if ~isfield(cal,'old') || ~isfield(cal.old,'L')
     fprintf('This screen has not yet been calibrated. Please use CalibrateScreenLuminance to calibrate it.\n');
@@ -431,9 +429,9 @@ o.maxLRange=2*min(max(cal.old.L)-LMean,LMean-min(cal.old.L));
 % We reserve 0 and 255 for black and white. Unless this is Windows, we
 % reserve clut entry 1 (called gray1) for the screen background used in
 % non-stimulus parts of the display, e.g. top margin.
-firstGrayClutEntry=2;
-lastGrayClutEntry=254;
-assert(mod(firstGrayClutEntry,2)==0 && mod(lastGrayClutEntry,2)==0) % Must be even.
+firstGrayClutEntry=6;
+lastGrayClutEntry=252;
+assert(mod(firstGrayClutEntry+lastGrayClutEntry,2)==0) % Must be even, so middle is an integer.
 if o.isWin
     LRange=o.maxLRange;
     o.minLRange=inf;
@@ -443,11 +441,13 @@ if o.isWin
             cal.LLast=LMean+LRange/2;
             cal.nFirst=firstGrayClutEntry;
             cal.nLast=lastGrayClutEntry;
+            cal.margin=1;
             cal=LinearizeClut(cal);
             cal.gamma(2,:)=0.5*(cal.gamma(1,:)+cal.gamma(3,:)); % for Windows
             assert(all(all(diff(cal.gamma)>=0))); % monotonic for Windows
             if o.printGammaLoadings; ffprintf(ff,'LoadNormalizedGammaTable %d, LRange/LMean=%.2f\n',MFileLineNr,LRange/LMean); end
-            Screen('LoadNormalizedGammaTable',o.screen,cal.gamma); % might fail
+            gammaLong=Expand(cal.gamma,1,size(cal.old.gamma,1)/size(cal.gamma,1));
+            Screen('LoadNormalizedGammaTable',o.screen,gammaLong);
             % Success!
             o.minLRange=LRange;
             LRange=LRange*0.9;
@@ -464,7 +464,6 @@ if o.isWin
 else
     o.minLRange=0;
 end % if o.isWin
-
 
 Screen('Preference','TextAntiAliasing',0);
 textFont='Verdana';
@@ -680,7 +679,7 @@ try
         if o.flipClick; Speak(['before OpenWindow ' num2str(MFileLineNr)]);GetClicks; end
         
 if 1
-        PsychDefaultSetup(0);
+%         PsychDefaultSetup(0);
             PsychImaging('PrepareConfiguration');
             if o.flipScreenHorizontally
                 PsychImaging('AddTask','AllViews','FlipHorizontal');
@@ -702,20 +701,22 @@ if 1
         else
             [window,r]=Screen('OpenWindow',cal.screen,255,screenRect);
         end
-        if o.EnableCLUTMapping
-            gamma=Screen('ReadNormalizedGammaTable',window);
-            gamma=interp1(gamma,1:(size(gamma,1)-1)/255:size(gamma,1),'pchip'); % Down sample to 256.
-            % PsychImaging EnableCLUTMapping does not initialize the color
-            % table, so we do it here.
-            Screen('LoadNormalizedGammaTable',window,gamma,2);
-            Screen('Flip',window);
-        end
+%         if o.EnableCLUTMapping
+% %             gamma=Screen('ReadNormalizedGammaTable',window);
+%             gamma=cal.old.gamma;
+%             gamma=interp1(gamma,1+(0:255)*(size(gamma,1)-1)/255,'pchip'); % Down sample to 256.
+% %             gamma=gamma(round(1+(0:255)*(size(gamma,1)-1)/255),:); % Down sample to 256.
+%             % PsychImaging EnableCLUTMapping does not initialize the color
+%             % table, so we do it here.
+%             Screen('LoadNormalizedGammaTable',window,gamma,2);
+%             Screen('Flip',window);
+%         end
         assert(all(r==screenRect));
 
         if o.flipClick; Speak(['after OpenWindow ' num2str(MFileLineNr)]);GetClicks; end
         if exist('cal')
             gray=mean([firstGrayClutEntry lastGrayClutEntry]);  % CLUT color code for gray.
-            assert(gray==round(gray)); % First and last are even, so gray is integer.
+            assert(gray==round(gray)); % Sum of first and last is even, so gray is integer.
             LMin=min(cal.old.L);
             LMax=max(cal.old.L);
             LMean=mean([LMin,LMax]); % Desired background luminance.
@@ -726,6 +727,7 @@ if 1
             cal.LLast=LMean+(LMean-LMin); % Symmetric about LMean.
             cal.nFirst=firstGrayClutEntry;
             cal.nLast=lastGrayClutEntry;
+            cal.margin=1;
             cal=LinearizeClut(cal);
             if o.isWin
                 % Windows insists on a monotonic CLUT. So we linearize
@@ -750,24 +752,30 @@ if 1
                 % that we get better blending of letters written (as
                 % black=0) on that background.
                 gray1=1;
-                assert(gray1 < firstGrayClutEntry);
+                % Allow for margins
+                assert(gray1+1 < firstGrayClutEntry-1);
+                % gray1 is surrounded by black on one side and white on the
+                % other.
                 cal.LFirst=LMean;
-                cal.LLast=LMean;
+                cal.LLast=max(cal.old.L);
                 cal.nFirst=gray1;
-                cal.nLast=gray1;
+                cal.nLast=gray1+1;
+                cal.margin=0;
                 cal=LinearizeClut(cal);
             end %if o.isWin
             ffprintf(ff,'Size of cal.gamma %d %d\n',size(cal.gamma));
             ffprintf(ff,'Non-stimulus background is %.1f cd/m^2 at CLUT entry %d (and %d).\n',LMean,gray1,gray);
-            ffprintf(ff,'%.1f cd/m^2 at %d; %.1f cd/m^2 at %d\n',LuminanceOfIndex(cal,gray1),gray1,LuminanceOfIndex(cal,gray),gray);
+            ffprintf(ff,'%.1f cd/m^2 at %d\n',LuminanceOfIndex(cal,gray1),gray1);
             ffprintf(ff,'%.3f dac at %d; %.3f dac at %d\n',cal.gamma(gray1+1,2),gray1,cal.gamma(gray+1,2),gray);
             if o.printGammaLoadings; fprintf('LoadNormalizedGammaTable %d; LRange/Lmean=%.2f\n',MFileLineNr,(cal.LLast-LMean)/LMean); end
-            Screen('LoadNormalizedGammaTable',window,cal.gamma,1); % load during flip
+            gammaLong=Expand(cal.gamma,1,size(cal.old.gamma,1)/size(cal.gamma,1));
+            Screen('LoadNormalizedGammaTable',window,gammaLong); % Load now! Postponing fails!
+            saveGamma=cal.gamma;
             Screen('FillRect',window,gray1);
             Screen('FillRect',window,gray,o.stimulusRect);
         else
             Screen('FillRect',window);
-        end % if cal
+        end % if exist('cal')
         if o.flipClick; Speak(['before Flip ' num2str(MFileLineNr)]);GetClicks; end
         Screen('Flip',window);
         if o.flipClick; Speak(['after Flip ' num2str(MFileLineNr)]);GetClicks; end
@@ -792,16 +800,6 @@ if 1
     else
         screenWidthPix=1280;
     end
-%     DEBUG CLUT, FIXED BY EnableCLUTMapping
-%     rect=[0 0 200 200];
-%     rect=CenterRect(rect,screenRect);
-%     Screen('FillRect',window,gray1,rect);
-%     rect=rect/2;
-%     rect=CenterRect(rect,screenRect);
-%     Screen('FillRect',window,gray,rect);
-%     Screen('LoadNormalizedGammaTable',0,cal.gamma); 
-%     Screen('Flip',window);
-
     pixPerCm=screenWidthPix/cal.screenWidthCm;
     degPerCm=57/o.distanceCm;
     o.pixPerDeg=pixPerCm/degPerCm;
@@ -1094,7 +1092,7 @@ if 1
     o.N = N;
     ffprintf(ff,'log N/deg^2 %.2f, where N is power spectral density\n',log10(N));
     ffprintf(ff,'pThreshold %.2f, beta %.1f\n',o.pThreshold,o.beta);
-    ffprintf(ff,'Your (log) guess is %.2f � %.2f\n',o.tGuess,o.tGuessSd);
+    ffprintf(ff,'Your (log) guess is %.2f +/- %.2f\n',o.tGuess,o.tGuessSd);
     ffprintf(ff,'o.trialsPerRun %.0f\n',o.trialsPerRun);
     white1=1;
     black0=0;
@@ -1326,7 +1324,6 @@ if 1
         yellowMask=logical(yellowMask);
     end
 
-
     % o.E1 is energy at unit contrast.
     power=1:length(signal);
     for i=1:length(power)
@@ -1368,14 +1365,24 @@ if 1
         Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
         if o.flipClick; Speak(['before LoadNormalizedGammaTable delayed ' num2str(MFileLineNr)]);GetClicks; end
         if o.isWin; assert(all(all(diff(cal.gamma)>=0))); end; % monotonic for Windows
-        if o.printGammaLoadings; fprintf('LoadNormalizedGammaTable %d; LRange/LMean=%.2f\n',930,2*(cal.LLast-LMean)/LMean); end
-        Screen('LoadNormalizedGammaTable',window,cal.gamma,1); % Wait for Flip.
+        % if o.printGammaLoadings; fprintf('LoadNormalizedGammaTable %d; LRange/LMean=%.2f\n',930,2*(cal.LLast-LMean)/LMean); end
+        % Why do we need this call to LoadNormalizedGammaTable? Is it
+        % working? I think the trial is over. It does not appear that we've
+        % changed cal.gamma since the last call to
+        % LoadNormalizedGammaTable.
+        if all(saveGamma==cal.gamma)
+           fprintf('cal.gamma unchanged.\n');
+        else
+           'cal.gamma changed'
+        end
+%         gammaLong=Expand(cal.gamma,1,size(cal.old.gamma,1)/size(cal.gamma,1));
+%         Screen('LoadNormalizedGammaTable',window,gammaLong);% LOAD NOW. BUT PROBABLY NOT NEEDED! % Wait for Flip.
         if assessGray; pp=Screen('GetImage',window,[20 20 21 21]);ffprintf(ff,'line 712: Gray index is %d (%.1f cd/m^2). Corner is %d.\n',gray,LuminanceOfIndex(cal,gray),pp(1)); end
         if o.flipClick; Speak(['before Flip ' num2str(MFileLineNr)]);GetClicks; end
         Screen('Flip', window,0,1); % Show gray screen at LMean with fixation and crop marks. Don't clear buffer.
         if o.flipClick; Speak(['after Flip ' num2str(MFileLineNr)]);GetClicks; end
 
-        Screen('DrawText',window,'Starting new run. ',0.5*textSize,o.lineSpacing*textSize,black0,gray1,1);
+        Screen('DrawText',window,'Starting new run. ',0.5*textSize,o.lineSpacing*textSize,black0,gray,1);
         if isfinite(o.eccentricityDeg)
             if fixationIsOffscreen
                 speech{1}='Please fihx your eyes on your offscreen fixation mark,';
@@ -1392,11 +1399,11 @@ if 1
         else
             word='Please';
         end
-        Screen('DrawText',window,msg,0.5*textSize,2*o.lineSpacing*textSize,black0,gray1,1);
+        Screen('DrawText',window,msg,0.5*textSize,2*o.lineSpacing*textSize,black0,gray,1);
         switch o.task
             case '4afc',
                 speech{2}=[word ' click when ready to begin'];
-                Screen('DrawText',window,[word ' click when ready to begin.'],0.5*textSize,3*o.lineSpacing*textSize,black0,gray1,1);
+                Screen('DrawText',window,[word ' click when ready to begin.'],0.5*textSize,3*o.lineSpacing*textSize,black0,gray,1);
                 fprintf('Please click when ready to begin.\n');
             case 'identify',
                 if ismac
@@ -1404,7 +1411,7 @@ if 1
                 else
                     speech{2}=[word ' press  the  space bar  when ready to begin'];
                 end
-                Screen('DrawText',window,[word ' press the space bar when ready to begin.'],0.5*textSize,3*o.lineSpacing*textSize,black0,gray1,1);
+                Screen('DrawText',window,[word ' press the space bar when ready to begin.'],0.5*textSize,3*o.lineSpacing*textSize,black0,gray,1);
                 fprintf('Please press the space bar when ready to begin.\n');
         end
         fprintf('gray %d, gray1 %d, %.4f %.4f dac\n',gray,gray1,cal.gamma(1+gray,2),cal.gamma(1+gray1,2));
@@ -1866,12 +1873,12 @@ if 1
                 [junk,response]=max(likely);
             otherwise % human o.observer
                 % NOTE: now, only this observer needs actual stimulus
-                % presentation
-                % That is why we didn't have stimulus presentation above
+                % presentation. That is why we didn't have stimulus
+                % presentation above
 
                 % imshow(location(1).image);
                 % ffprintf(ff,'location(1).image size %dx%d\n',size(location(1).image));
-                %  ffprintf(ff,'o.canvasSize %d %d\n',o.canvasSize);
+                % ffprintf(ff,'o.canvasSize %d %d\n',o.canvasSize);
                 Screen('FillRect',window,gray1);
                 Screen('FillRect',window,gray,o.stimulusRect);
                 if o.yellowAnnulusBigRadiusDeg>o.yellowAnnulusSmallRadiusDeg
@@ -1931,6 +1938,7 @@ if 1
                         cal.nFirst=1;
                         cal.nLast=255;
                     end
+                    cal.margin=0; % Not needed for data snapshot
                     cal=LinearizeClut(cal);
                     grayCheck=IndexOfLuminance(cal,LMean);
                     if ~o.saveSnapshot && grayCheck~=gray
@@ -1961,7 +1969,7 @@ if 1
                     index=IndexOfLuminance(cal,img*LMean);
                     imgEstimate=EstimateLuminance(cal,index)/LMean;
                     rmsContrastError=rms(img(:)-imgEstimate(:));
-                    ffprintf(ff,'Assess contrast: At LMean, the minimum contrast step is %.4f, with rmsContrastError %.3f\n',contrastEstimate,rmsContrastError);
+%                     ffprintf(ff,'Assess contrast: At LMean, the minimum contrast step is %.4f, with rmsContrastError %.3f\n',contrastEstimate,rmsContrastError);
                     switch o.targetModulates
                         case 'luminance',
                             img=[1,1+o.contrast];
@@ -1990,11 +1998,13 @@ if 1
                     cal.LLast=LMean+(LMean-LMin); % Symmetric about LMean.
                     cal.nFirst=firstGrayClutEntry;
                     cal.nLast=lastGrayClutEntry;
+                    cal.margin=1;
                     cal=LinearizeClut(cal);
                     img=cal.nFirst:cal.nLast;
                     n=floor(RectWidth(screenRect)/length(img));
                     r=[0 0 n*length(img) RectHeight(screenRect)];
-                    Screen('LoadNormalizedGammaTable',window,cal.gamma);
+                    gammaLong=Expand(cal.gamma,1,size(cal.old.gamma,1)/size(cal.gamma,1));
+                    Screen('LoadNormalizedGammaTable',window,gammaLong);
                     Screen('TextFont',window,'Verdana');
                     Screen('TextSize',window,24);
                     for bits=1:11
@@ -2011,13 +2021,15 @@ if 1
                         while CharAvail
                             GetChar;
                         end
+                        gammaLong=Expand(cal.gamma,1,size(cal.old.gamma,1)/size(cal.gamma,1));
                         while ~CharAvail
-                            Screen('LoadNormalizedGammaTable',window,cal.gamma);
-                            WaitSecs(0.2);
-                            Screen('LoadNormalizedGammaTable',window,newGamma);
-                            WaitSecs(0.2);
+                           Screen('LoadNormalizedGammaTable',window,gammaLong);
+                           WaitSecs(0.2);
+                           Screen('LoadNormalizedGammaTable',window,newGamma);
+                           WaitSecs(0.2);
                         end
-                        Screen('LoadNormalizedGammaTable',window,cal.gamma);
+                        gammaLong=Expand(cal.gamma,1,size(cal.old.gamma,1)/size(cal.gamma,1));
+                        Screen('LoadNormalizedGammaTable',window,gammaLong);
                         GetChar;
                         ListenChar; % Back to normal. Needed.
                     end
@@ -2345,7 +2357,8 @@ if 1
                 end % switch o.task
                 if o.flipClick; Speak(['before LoadNormalizedGammaTable ' num2str(MFileLineNr)]);GetClicks; end
                 if o.printGammaLoadings;ffprintf(ff,'LoadNormalizedGammaTable %d, LRange/LMean=%.2f\n',1597,(cal.LLast-LMean)/LMean); end
-                Screen('LoadNormalizedGammaTable',window,cal.gamma);
+                gammaLong=Expand(cal.gamma,1,size(cal.old.gamma,1)/size(cal.gamma,1));
+                Screen('LoadNormalizedGammaTable',window,gammaLong);
                 if assessGray; pp=Screen('GetImage',window,[20 20 21 21]);ffprintf(ff,'line 1264: Gray index is %d (%.1f cd/m^2). Corner is %d.\n',gray,LuminanceOfIndex(cal,gray),pp(1)); end
                 if trial==1
                     WaitSecs(1); % First time is slow. Mario suggested a work around, explained at beginning of this file.
@@ -2701,9 +2714,9 @@ if 1
     o.efficiency = o.idealEOverNThreshold/o.EOverN;
     o.E = 10^(2*o.questMean)*o.E1;
     if streq(o.targetModulates,'luminance')
-        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold�sd log(contrast) %.2f�%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
+        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold+/-sd log(contrast) %.2f+/-%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
     else
-        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold�sd log(r-1) %.2f�%.2f, approx required n %.0f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
+        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold+/-sd log(r-1) %.2f+/-%.2f, approx required n %.0f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
     end
     if abs(trialsRight/trial-o.pThreshold)>0.1
         ffprintf(ff,'WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.\n');
@@ -2728,14 +2741,14 @@ if 1
     %     tse=std(tSample)/sqrt(length(tSample));
     %     switch o.targetModulates
     %         case 'luminance',
-    %         ffprintf(ff,'SUMMARY: %s %d runs mean�se: log(contrast) %.2f�%.2f, contrast %.3f\n',o.observer,length(tSample),mean(tSample),tse,10^mean(tSample));
+    %         ffprintf(ff,'SUMMARY: %s %d runs mean+/-se: log(contrast) %.2f+/-%.2f, contrast %.3f\n',o.observer,length(tSample),mean(tSample),tse,10^mean(tSample));
     %         %         efficiency = (o.idealEOverNThreshold^2) / (10^(2*t));
     %         %         ffprintf(ff,'Efficiency = %f\n', efficiency);
     %         %o.EOverN=10^mean(2*tSample)*o.E1/N;
-    %         ffprintf(ff,'Threshold log E/N %.2f�%.2f, E/N %.1f\n',mean(log10(o.EOverN)),std(log10(o.EOverN))/sqrt(length(o.EOverN)),o.EOverN);
+    %         ffprintf(ff,'Threshold log E/N %.2f+/-%.2f, E/N %.1f\n',mean(log10(o.EOverN)),std(log10(o.EOverN))/sqrt(length(o.EOverN)),o.EOverN);
     %         %o.efficiency=o.idealEOverNThreshold/o.EOverN;
     %         ffprintf(ff,'User-provided ideal threshold E/N log E/N %.2f, E/N %.1f\n',log10(o.idealEOverNThreshold),o.idealEOverNThreshold);
-    %         ffprintf(ff,'Efficiency log %.2f�%.2f, %.4f %%\n',mean(log10(o.efficiency)),std(log10(o.efficiency))/sqrt(length(o.efficiency)),100*10^mean(log10(o.efficiency)));
+    %         ffprintf(ff,'Efficiency log %.2f+/-%.2f, %.4f %%\n',mean(log10(o.efficiency)),std(log10(o.efficiency))/sqrt(length(o.efficiency)),100*10^mean(log10(o.efficiency)));
     %         corr=zeros(length(signal));
     %         for i=1:length(signal)
     %             for j=1:i
@@ -2765,7 +2778,7 @@ if 1
             o.logApproxRequiredNumber=log10(o.approxRequiredNumber);
             ffprintf(ff,'r %.3f, approx required number %.0f\n',o.r,o.approxRequiredNumber);
             %              logNse=std(logApproxRequiredNumber)/sqrt(length(tSample));
-            %              ffprintf(ff,'SUMMARY: %s %d runs mean�se: log(r-1) %.2f�%.2f, log(approx required n) %.2f�%.2f\n',o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
+            %              ffprintf(ff,'SUMMARY: %s %d runs mean+/-se: log(r-1) %.2f+/-%.2f, log(approx required n) %.2f+/-%.2f\n',o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
         case 'entropy',
             t=o.questMean;
             o.r=10^t+1;
@@ -2844,12 +2857,13 @@ if 1
     o.newCal=cal;
     save(fullfile(o.dataFolder,[o.dataFilename '.mat']),'o','cal');
     fprintf('Results saved in %s with extensions .txt and .mat\nin folder %s\n',o.dataFilename,o.dataFolder);
-
+    Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
 catch
-    sca; % screen close all
-    AutoBrightness(cal.screen,1); % Restore autobrightness.
-    fclose(dataFid);
-    dataFid=-1;
-    psychrethrow(psychlasterror);
+   sca; % screen close all
+   Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
+   AutoBrightness(cal.screen,1); % Restore autobrightness.
+   fclose(dataFid);
+   dataFid=-1;
+   psychrethrow(psychlasterror);
 end
 return
