@@ -20,10 +20,11 @@ try
     periodPix=pixPerDeg/spatialFrequencyCyclesPerDeg;
     periodPix=2*round(periodPix/2);
     cal=OurScreenCalibrations(0);
-    cal.nFirst=2;
-    cal.nLast=254;
+    cal.nFirst=3;
+    cal.nLast=253;
     cal.LFirst=min(cal.old.L);
     cal.LLast=max(cal.old.L);
+    cal.margin=1; % CLUT margin to work around CLUT smoothing.
     cal=LinearizeClut(cal);
     Screen('LoadNormalizedGammaTable',0,cal.gamma);
     WaitSecs(0.1);
