@@ -258,6 +258,7 @@ o.replicatePelli2006=0;
 o.isWin=IsWin; % override this to simulate Windows on a Mac.
 o.dynamicFrameGenInterval = []; % to store flip interval (useful to calculate frame drops)
 o.dynamicFrameDrawInterval = []; % to store flip interval (useful to calculate frame drops)
+plusMinusASCIIChar = char(177); % use this instead of literal plus minus sign to prevent platform-dependent encoding issues
 
 % A value of 1 will cancel dynamic noise (only 1 flip of noise will be generated)
 % Actual value will depend on frame rate and stimulus presentation duration,
@@ -891,6 +892,8 @@ if 1
         % statis noise is required, simply use a pool size of 1
 
         o.dynamicPoolSize = 1;
+        o.dynamicPreSignalNoisePoolSize = 0;
+        o.dynamicPostSignalNoisePoolSize = 0;
     else
         o.dynamicSignalPoolSize = ceil(o.durationSec*frameRate);
         o.dynamicPreSignalNoisePoolSize = ceil(o.dynamicPreSignalNoisePoolDur*frameRate);
@@ -2216,11 +2219,8 @@ if 1
                       o.newCal=cal;
 
                       if o.saveSnapshot
-
-
-
-                        % SUBROUTINE NEEDED
-                        % Screen('CopyTexture', FIXME);
+                        snapshotTexture = Screen('OpenOffscreenWindow',texture(iDynamicPool));
+                        Screen('CopyWindow',texture(iDynamicPool), snapshotTexture);
                       end
                     end
 
@@ -2228,28 +2228,21 @@ if 1
 %                     KbWait;
                     o.dynamicFrameDrawInterval(iDynamicPool,trial) = GetSecs - tFlip0;
                 end
-
+                
                 for iDynamicPool=1:o.dynamicPoolSize
-
                     Screen('Close',texture(iDynamicPool));
                 end
-
-
-
-%                 if o.dynamicSignalPoolSize > 1
-%                     Screen('Flip', window);
-%                 end
-
-                if o.dynamicSignalPoolSize > 1
-                    % Stimulus presentation over; clear screen
-                    Screen('FillRect',window,gray1,screenRect);
-                    Screen('Flip', window);
-                end
-
-
-
+                
+                
+                % Stimulus presentation over; clear screen
+                Screen('FillRect',window,gray1);
+                Screen('FillRect',window,gray,o.stimulusRect);
+                Screen('Flip', window,0,1);
+                
+                
+                
                 eraseRect=ClipRect(eraseRect,o.stimulusRect);
-
+                
                 % Print instruction in upper left corner.
                 Screen('FillRect',window,gray1,topCaptionRect);
                 message=sprintf('Trial %d of %d. Run %d of %d.',trial,o.trialsPerRun,o.runNumber,o.runsDesired);
