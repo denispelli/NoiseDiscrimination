@@ -1,8 +1,8 @@
 % gamma256Bug.m
-% Psychtoolbox Revision 7283 December 8, 2015 fixed the for laptops with AMD
-% graphics (my MacBook Pro at home) not for Intel Graphics. Presumably my
-% MacBook Pro, which has both chips, now uses the AMD graphics rather than
-% Intel
+% Psychtoolbox Revision 7283 December 8, 2015 fixed bug for laptops with
+% AMD graphics (my MacBook Pro at home) not for Intel Graphics. Presumably
+% my MacBook Pro, which has both chips, now uses the AMD graphics rather
+% than Intel
 %
 % This program is a trivial example of using the CLUT to control the color
 % displayed by each color index. I would expect color 0 to be the first
