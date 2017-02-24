@@ -395,9 +395,9 @@ try
         fprintf(f,'];\n');
         fprintf(f,'\tcal.old.gamma=[');
         for i=1:size(cal.old.gamma,1)
-           fprintf('%.4f %.4f %.4f;',cal.old.gamma(i,:));
+           fprintf(f,'%.4f %.4f %.4f;',cal.old.gamma(i,:));
            if mod(i,4)==0
-              fprintf('...\n');
+              fprintf(f,'...\n');
            end
         end
         fprintf(f,'];\n');
