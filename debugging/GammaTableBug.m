@@ -15,19 +15,19 @@
 % though they are correct on my MacBook Air. This demo displays the 12 CLUT
 % entries all at once as an image, nominally a luminance ramp, in the upper
 % left. The gamma values appear below, and are also printed on the screen.
-% [0 0.6617 0.7001 0.7374 0.7661 .7916 .8137 0.8361 1.0 1 1 1] One of the CLUT
-% entries is displayed as a square in the middle of the screen, for
+% [0 0.6617 0.7001 0.7374 0.7661 .7916 .8137 0.8361 1.0 1 1 1] One of the
+% CLUT entries is displayed as a square in the middle of the screen, for
 % photometry. Each time you hit the shift key it advances to the next. A
 % numerical display tells you the gamma value displayed. The displayed
 % luminances are wrong, as explained below, even though
 % ReadNormalizedGammaTable always returns exactly what I loaded.
 %
-% On my MacBookPro? (running PTB 3.0.14)?, the darker part of the ramp
+% On my MacBookPro (running PTB 3.0.14), the darker part of the ramp
 % looks ok, but the nominally full white, 1.0, on the right, is less bright
 % than the gray that precedes it. In now runs fine on my MacBook Air, now
-% running PTB 3.0.14. However, ?while running PTB 3.0.13, the MacBook Air
+% running PTB 3.0.14. However, while running PTB 3.0.13, the MacBook Air
 % displayed the nominally black patch (0.0) as white, and all the
-% nominally gray and white patches appeared black.?
+% nominally gray and white patches appeared black.
 %
 % MacBookPro, macOS 10.12.3, MATLAB 8.6.0 (R2015b), Psychtoolbox 3.0.14
 % MacBookAir, macOS 10.12.3, MATLAB 8.6.0 (R2015b), Psychtoolbox 3.0.14
