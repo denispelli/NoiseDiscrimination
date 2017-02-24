@@ -1,6 +1,5 @@
 function o=NoiseDiscrimination(oIn)
 % o=NoiseDiscrimination(o);
-% BUG: lowercase Bookman 'm' is clipped on the right. denis 2/23/17
 %
 % Pass all your parameters in the "o" struct, which will be returned with
 % all the results as additional fields. NoiseDiscrimination may adjust some
@@ -89,6 +88,83 @@ function o=NoiseDiscrimination(oIn)
 % See also LinearizeClut, CalibrateScreenLuminance, OurScreenCalibrations,
 % testLuminanceCalibration, testGammaNull, IndexOfLuminance,
 % LuminanceOfIndex.
+
+% Dear Mario 
+% I figured out what's wrong. The sequence of luminances displayed on my
+% MacBook Pro 15" is smoother than the values I loaded into the CLUT. The
+% white (1.0) that I requested was coming out darker because the subsequent
+% values in the lookup table are darker. When I replace the neighboring
+% CLUT elements with white, then I get a good white. I suppose an Apple or
+% AMD engineer thought it would be helpful to smooth the CLUT. (The error
+% is not visible to ReadNormalizedGammaTable.) Can we prevent that?
+% Best Denis
+%
+% Hi Denis,
+% 
+% no there isn't anything we could do.
+% 
+% In general it's not a good idea anymore to use gamma tables for anything
+% but gamma correction.
+% 
+% On MS-Windows, gamma tables like yours won't work at all. They get
+% rejected by the OS as invalid if they don't have the general shape of a
+% gamma table.
+% 
+% More recent generations of at least Intel and AMD hardware, possibly
+% NVidia as well, do support a new type of gamma tables in their hardware
+% in addition to old style discrete lookup tables, and it is at the
+% discretion of the display driver (writer) if those new tables are used
+% instead of the old ones.
+% 
+% The new tables often have less slots than the framebuffer has bits per
+% color. E.g., you can have > 8 bpc framebuffers but the hardware tables
+% may only have 256 slots or maybe 512 slots. So the tables no longer store
+% one output value per framebuffer input value, but the slots store, e.g.,
+% 256 or 512 reference values. For given framebuffer input color values the
+% hardware interpolates between those reference values, could be piece-wise
+% linear interpolation or something more higher order.
+% 
+% Implementation details between hardware manufacturers and different
+% models from the same manufacturer differ, so the only safe assumption is
+% that you will screw up and/or make your code highly non-portable across
+% operating systems or different computers if you use gamma tables for
+% anything but gamma correction.
+% 
+% This could be an operating system bug for your gpu, or it could simply be
+% that Apples AMD display drivers now have switched to those new
+% interpolated gamma tables.
+% 
+% The only somewhat safe and sane way forward for > 8 bpc precision is to
+% use > 8 bpc framebuffers on suitable hardware.
+% 
+% Linux on AMD hardware would obviously provide that. On a 8 bpc panel it
+% could use 2 bit spatial dithering to simulate 10 bpc. That's what you got
+% so far on your OSX setup by twiddling the 9th and 10 th gamma table bits.
+% On 10 bpc panels via HDMI and DisplayPort it can do native 10 bits,
+% dithered 11 bits and for some special AMD gpu's up to dithered 12 bits if
+% Hormets results check out in the end.
+% 
+% On OSX with AMD hardware you could downgrade to the now unsupported OSX
+% 10.10 + PTB 3.0.13 + PsychtoolboxKernelDriver to get dithered 10 bits on
+% digital displays.
+% 
+% On OSX 10.12 + PTB 3.0.14 with AMD hardware you could give that iMac 5k
+% of yours a try, the one that presumably has a 10 bit panel? Apple claims
+% 10 bit should work on "the late 2014 and late 2015 iMac 27 inch Retina 5k
+% models." Psychtoolbox implements native 10 bit framebuffer mode via the
+% 'EnableNative10BitFramebuffer' task, based on the sparse documentation by
+% Apple. However this is completely untested on real hardware, as none of
+% the people who promised me to test this did.
+% 
+% -mario
+% February 24, 2017
+%
+% NOTE: Mario is discouraged, above, but in fact the limitations he
+% describes are acceptable. I am using 8-bit images, which have only 256
+% values per channel, so using a 256-element gamma table is fine. This
+% requires a bit of care (in this program) in loading the CLUT, but
+% everything else is plain vanilla 8-bit per channel imaging, which works
+% on every computer.
 
 addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder in same directory as this M file
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
@@ -1119,7 +1195,7 @@ try
                oldFont=Screen('TextFont',scratchWindow,o.font);
                font=Screen('TextFont',scratchWindow);
                if ~streq(font,o.font);
-                  fprintf('WARNING: Desired vs. actual font: "%s", "%s"\n',o.font,font);
+                  error('Can''t find requested font. Desired vs. actual font: "%s", "%s"\n',o.font,font);
                end
                assert(streq(font,o.font));
                oldSize=Screen('TextSize',scratchWindow,round(o.targetHeightPix/o.noiseCheckPix));
