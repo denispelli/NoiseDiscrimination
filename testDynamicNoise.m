@@ -8,19 +8,19 @@ o.trialsPerRun=40;
 o.assessContrast=0;
 o.assessLoadGamma=0;
 
-% A value of 1 will cancel dynamic noise (only 1 flip of noise will be generated)
-% Actual value will depend on frame rate and stimulus presentation duration,
-% thus will be ALWAYS overwritten later for any value other than 1
+% A value of 1 will cancel dynamic noise (only 1 flip of noise will be
+% generated) Actual value will depend on frame rate and stimulus
+% presentation duration, thus will be ALWAYS overwritten later for any
+% value other than 1
 o.dynamicSignalPoolSize = 2; % or 1 for static noise
 o.dynamicPreSignalNoisePoolDur = 0;
 o.dynamicPostSignalNoisePoolDur = 0;
 
-o.allowAnyFont=1;
 o.font='Sloan';
 o.alphabet = 'DHKNORSVZ';
-o.font='ITC Bookman Std';
-o.alphabet='abcdefghijklmnopqrstuvwxyz';
-o.alternatives=length(o.alphabet); % The number of letters to use from o.alphabet.
+% o.font='ITC Bookman Std';
+% o.alphabet='abcdefghijklmnopqrstuvwxyz';
+o.alternatives=length(o.alphabet); % number of letters to use from o.alphabet
 o.targetHeightDeg=7.64; % Target size, range 0 to inf. If you ask for too much, it gives you the max possible.
 o.noiseType='binary'; % 'gaussian' or 'uniform' or 'binary'
 o.noiseSpectrum='white'; % pink or white
@@ -30,13 +30,13 @@ o.eccentricityDeg=0; % eccentricity [0 8 16 32]
 o.noiseEnvelopeSpaceConstantDeg=128; % always Inf for hard edge top-hat noise
 o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
 
-%For noise with Gaussian envelope (soft)
-%o.noiseRadiusDeg=inf;
-%noiseEnvelopeSpaceConstantDeg: 1
-
-%For noise with tophat envelope (sharp cut off beyond disk with radius 1)
-%o.noiseRadiusDeg=1;
-%noiseEnvelopeSpaceConstantDeg: Inf
+% For noise with Gaussian envelope (soft)
+% o.noiseRadiusDeg=inf;
+% noiseEnvelopeSpaceConstantDeg: 1
+% 
+% For noise with tophat envelope (sharp cut off beyond disk with radius 1)
+% o.noiseRadiusDeg=1;
+% noiseEnvelopeSpaceConstantDeg: Inf
 
 o.targetKind='letter';
 o.targetCross=1;
