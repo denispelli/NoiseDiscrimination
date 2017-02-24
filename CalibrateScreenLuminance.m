@@ -412,6 +412,11 @@ try
     cal.LFirst=min(cal.old.L);
     cal.LLast=max(cal.old.L);
     cal=LinearizeClut(cal);
+    plot(cal.old.G,cal.old.L);
+    xlabel('Gamma value');
+    ylabel('Luminance (cd/m^2)');
+    title('Gamma function');
+    Speak('Figure 1 shows a raw plot of the gamma function that you just measured.');
     fprintf('Congratulations. You''re done.\n');
     Speak('Congratulations. You are done.');
 catch
