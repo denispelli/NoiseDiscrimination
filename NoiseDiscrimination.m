@@ -787,29 +787,21 @@ try
       if o.flipClick; Speak(['before OpenWindow ' num2str(MFileLineNr)]);GetClicks; end
       
       loadOnNextFlip=2; % REQUIRED for reliable LoadNormalizedGammaTable.
-      if 1
-         PsychDefaultSetup(0);
-         PsychImaging('PrepareConfiguration');
-         if o.flipScreenHorizontally
-            PsychImaging('AddTask','AllViews','FlipHorizontal');
-         end
-         if cal.hiDPIMultiple~=1
-            PsychImaging('AddTask','General','UseRetinaResolution');
-         end
-         if o.EnableCLUTMapping
-            % Mario says this is the ONLY way to get reliable color
-            % mapping behavior.
-            % REQUIRED for reliable LoadNormalizedGammaTable.
-            PsychImaging('AddTask','AllViews','EnableCLUTMapping',256,1); % clutSize, high res
-         end
-         if ~o.useFractionOfScreen
-            [window,r]=PsychImaging('OpenWindow',cal.screen,255);
-         else
-            [window,r]=PsychImaging('OpenWindow',cal.screen,255,round(o.useFractionOfScreen*screenBufferRect));
-         end
-         %[windowPtr,rect]=Screen('OpenWindow',windowPtrOrScreenNumber [,color] [,rect][,pixelSize][,numberOfBuffers][,stereomode][,multisample][,imagingmode][,specialFlags][,clientRect]);
+      PsychImaging('PrepareConfiguration');
+      if o.flipScreenHorizontally
+         PsychImaging('AddTask','AllViews','FlipHorizontal');
+      end
+      if cal.hiDPIMultiple~=1
+         PsychImaging('AddTask','General','UseRetinaResolution');
+      end
+      if o.EnableCLUTMapping
+         % REQUIRED for reliable LoadNormalizedGammaTable.
+         PsychImaging('AddTask','AllViews','EnableCLUTMapping',256,1); % clutSize, high res
+      end
+      if ~o.useFractionOfScreen
+         [window,r]=PsychImaging('OpenWindow',cal.screen,255);
       else
-         [window,r]=Screen('OpenWindow',cal.screen,255,screenRect);
+         [window,r]=PsychImaging('OpenWindow',cal.screen,255,round(o.useFractionOfScreen*screenBufferRect));
       end
       assert(all(r==screenRect));
       
