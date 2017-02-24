@@ -26,9 +26,15 @@ try
     cal.LLast=max(cal.old.L);
     cal.margin=1; % CLUT margin to work around CLUT smoothing.
     cal=LinearizeClut(cal);
-    Screen('LoadNormalizedGammaTable',0,cal.gamma);
+    loadOnNextFlip=2; % REQUIRED for reliable LoadNormalizedGammaTable.
+    PsychImaging('PrepareConfiguration');
+    PsychImaging('AddTask','General','UseRetinaResolution');
+    % REQUIRED for reliable LoadNormalizedGammaTable.
+    PsychImaging('AddTask','AllViews','EnableCLUTMapping',256,1); % clutSize, high res
+    [window,screenRect]=PsychImaging('OpenWindow',cal.screen,255);
+    Screen('LoadNormalizedGammaTable',window,cal.gamma,2);
+    Screen('Flip',window);
     WaitSecs(0.1);
-    [cal.loadedGamma,dacBits,realLUTSize] = Screen('ReadNormalizedGammaTable',0);
     LMean=(cal.LFirst+cal.LLast)/2;
     width=RectWidth(screenRect);
     height=RectHeight(screenRect);
@@ -38,9 +44,8 @@ try
     image=repmat(imageI,ceil(height/2/periodPix),ceil(width/2));
     image=Expand(image,1,periodPix);
     image=image(1:height,1:width);
-    [w,screenRect]=Screen('OpenWindow',screen,255,[],[],[],[],[],kPsychNeedRetinaResolution);
-    texture=Screen('MakeTexture',w,image);
-    Screen('DrawTexture',w,texture);
+    texture=Screen('MakeTexture',window,image);
+    Screen('DrawTexture',window,texture);
     Screen('Close',texture);
     nSteps = 8;
     rampHeight = ceil(height*2/3);
@@ -48,10 +53,10 @@ try
     ramp = reshape(repmat(rampL, [width/nSteps 1]), 1, []);
     ramp = repmat(ramp, [rampHeight 1]);
     ramp = IndexOfLuminance(cal, ramp);
-    texture=Screen('MakeTexture',w,ramp);
+    texture=Screen('MakeTexture',window,ramp);
     rampRect = screenRect;
     rampRect(2) = rampRect(4)-rampHeight;
-    Screen('DrawTexture',w,texture,RectOfMatrix(ramp),rampRect);
+    Screen('DrawTexture',window,texture,RectOfMatrix(ramp),rampRect);
     Screen('Close',texture);
     for i=1:nSteps
         if i==1
@@ -59,9 +64,9 @@ try
         else
             color=0;
         end
-        Screen('DrawText',w,sprintf('%.1f cd/m^2',rampL(i)),(-0.8+i)*width/nSteps, height-40,color);
+        Screen('DrawText',window,sprintf('%.1f cd/m^2',rampL(i)),(-0.8+i)*width/nSteps, height-40,color);
     end
-    Screen('Flip',w);
+    Screen('Flip',window);
     Speak('Click to quit');
     GetClicks;
     sca;
