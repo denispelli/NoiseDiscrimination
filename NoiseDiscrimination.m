@@ -873,7 +873,6 @@ try
             ffprintf(ff,'Line %d: o.contrast %.3f, LoadNormalizedGammaTable 0.5*range/mean=%.3f\n',...
                MFileLineNr,o.contrast,(cal.LLast-cal.LFirst)/(cal.LLast+cal.LFirst));
          end
-         saveGamma=cal.gamma; % Used in line 1387.
          Screen('FillRect',window,gray1);
          Screen('FillRect',window,gray,o.stimulusRect);
       else
