@@ -89,7 +89,7 @@ function o=NoiseDiscrimination(oIn)
 % testLuminanceCalibration, testGammaNull, IndexOfLuminance,
 % LuminanceOfIndex.
 
-% Dear Mario 
+% Dear Mario
 % I figured out what's wrong. The sequence of luminances displayed on my
 % MacBook Pro 15" is smoother than the values I loaded into the CLUT. The
 % white (1.0) that I requested was coming out darker because the subsequent
@@ -100,22 +100,22 @@ function o=NoiseDiscrimination(oIn)
 % Best Denis
 %
 % Hi Denis,
-% 
+%
 % no there isn't anything we could do.
-% 
+%
 % In general it's not a good idea anymore to use gamma tables for anything
 % but gamma correction.
-% 
+%
 % On MS-Windows, gamma tables like yours won't work at all. They get
 % rejected by the OS as invalid if they don't have the general shape of a
 % gamma table.
-% 
+%
 % More recent generations of at least Intel and AMD hardware, possibly
 % NVidia as well, do support a new type of gamma tables in their hardware
 % in addition to old style discrete lookup tables, and it is at the
 % discretion of the display driver (writer) if those new tables are used
 % instead of the old ones.
-% 
+%
 % The new tables often have less slots than the framebuffer has bits per
 % color. E.g., you can have > 8 bpc framebuffers but the hardware tables
 % may only have 256 slots or maybe 512 slots. So the tables no longer store
@@ -123,31 +123,31 @@ function o=NoiseDiscrimination(oIn)
 % 256 or 512 reference values. For given framebuffer input color values the
 % hardware interpolates between those reference values, could be piece-wise
 % linear interpolation or something more higher order.
-% 
+%
 % Implementation details between hardware manufacturers and different
 % models from the same manufacturer differ, so the only safe assumption is
 % that you will screw up and/or make your code highly non-portable across
 % operating systems or different computers if you use gamma tables for
 % anything but gamma correction.
-% 
+%
 % This could be an operating system bug for your gpu, or it could simply be
 % that Apples AMD display drivers now have switched to those new
 % interpolated gamma tables.
-% 
+%
 % The only somewhat safe and sane way forward for > 8 bpc precision is to
 % use > 8 bpc framebuffers on suitable hardware.
-% 
+%
 % Linux on AMD hardware would obviously provide that. On a 8 bpc panel it
 % could use 2 bit spatial dithering to simulate 10 bpc. That's what you got
 % so far on your OSX setup by twiddling the 9th and 10 th gamma table bits.
 % On 10 bpc panels via HDMI and DisplayPort it can do native 10 bits,
 % dithered 11 bits and for some special AMD gpu's up to dithered 12 bits if
 % Hormets results check out in the end.
-% 
+%
 % On OSX with AMD hardware you could downgrade to the now unsupported OSX
 % 10.10 + PTB 3.0.13 + PsychtoolboxKernelDriver to get dithered 10 bits on
 % digital displays.
-% 
+%
 % On OSX 10.12 + PTB 3.0.14 with AMD hardware you could give that iMac 5k
 % of yours a try, the one that presumably has a 10 bit panel? Apple claims
 % 10 bit should work on "the late 2014 and late 2015 iMac 27 inch Retina 5k
@@ -155,7 +155,7 @@ function o=NoiseDiscrimination(oIn)
 % 'EnableNative10BitFramebuffer' task, based on the sparse documentation by
 % Apple. However this is completely untested on real hardware, as none of
 % the people who promised me to test this did.
-% 
+%
 % -mario
 % February 24, 2017
 %
@@ -168,7 +168,7 @@ function o=NoiseDiscrimination(oIn)
 %
 % Dear Mario
 %
-% Thanks for the long, full, explanation. I agree that Hörmet's success
+% Thanks for the long, full, explanation. I agree that Hï¿½rmet's success
 % (with your help) in getting 12-bit channels working (on my new linux hp
 % laptop) is terrific. However, that currently requires linux, and for most
 % people, buying a new computer. To measure threshold, I remain very happy
@@ -182,13 +182,13 @@ function o=NoiseDiscrimination(oIn)
 % precision for some purposes. Being limited to only 256 elements in the
 % gamma table is fine when working with 8-bit images. Some computers, like
 % my MacBook Pro 15" achieve more than 11-bit precision.
-% 
+%
 % Going forward, many people will want to follow the lead set by you and
 % Hormet achieving 12-bits per channel on my linux hp laptop. However, for
 % threshold studies,  8-bit channels with high precision gamma tables
 % remain an excellent way to go, and compatible with ordinary macOS
 % computers.
-% 
+%
 % Thanks!
 % Best
 % Denis
@@ -551,7 +551,6 @@ if o.isWin
          cal=LinearizeClut(cal);
          cal.gamma(2,:)=0.5*(cal.gamma(1,:)+cal.gamma(3,:)); % for Windows
          assert(all(all(diff(cal.gamma)>=0))); % monotonic for Windows
-         %          gammaLong=Expand(cal.gamma,1,size(cal.old.gamma,1)/size(cal.gamma,1));
          gamma=cal.old.gamma(round(1+(0:255)*(size(cal.old.gamma,1)-1)/255),:); % Down sample to 256.
          Screen('LoadNormalizedGammaTable',o.screen,gamma,loadOnNextFlip);
          if o.assessLoadGamma
@@ -869,7 +868,6 @@ try
          ffprintf(ff,'%.1f cd/m^2 at %d\n',LuminanceOfIndex(cal,gray1),gray1);
          ffprintf(ff,'%.3f dac at %d; %.3f dac at %d\n',cal.gamma(gray1+1,2),gray1,cal.gamma(gray+1,2),gray);
          o.contrast=nan;
-         %          gammaLong=Expand(cal.gamma,1,size(cal.old.gamma,1)/size(cal.gamma,1));
          Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
          if o.assessLoadGamma
             ffprintf(ff,'Line %d: o.contrast %.3f, LoadNormalizedGammaTable 0.5*range/mean=%.3f\n',...
@@ -2103,7 +2101,6 @@ try
                img=cal.nFirst:cal.nLast;
                n=floor(RectWidth(screenRect)/length(img));
                r=[0 0 n*length(img) RectHeight(screenRect)];
-               %                gammaLong=Expand(cal.gamma,1,size(cal.old.gamma,1)/size(cal.gamma,1));
                Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
                if o.assessLoadGamma
                   ffprintf(ff,'Line %d: o.contrast %.3f, LoadNormalizedGammaTable 0.5*range/mean=%.3f\n',...
@@ -2125,7 +2122,6 @@ try
                   while CharAvail
                      GetChar;
                   end
-                  %                   gammaLong=Expand(cal.gamma,1,size(cal.old.gamma,1)/size(cal.gamma,1));
                   while ~CharAvail
                      Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
                      Screen('Flip',window);
@@ -2448,7 +2444,6 @@ try
                   leftEdgeOfResponse=rect(1);
             end % switch o.task
             if o.flipClick; Speak(['before LoadNormalizedGammaTable ' num2str(MFileLineNr)]);GetClicks; end
-            %             gammaLong=Expand(cal.gamma,1,size(cal.old.gamma,1)/size(cal.gamma,1));
             Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
             if o.assessLoadGamma
                ffprintf(ff,'Line %d: o.contrast %.3f, LoadNormalizedGammaTable 0.5*range/mean=%.3f\n',...
