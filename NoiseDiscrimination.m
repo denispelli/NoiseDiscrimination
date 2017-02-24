@@ -165,6 +165,33 @@ function o=NoiseDiscrimination(oIn)
 % requires a bit of care (in this program) in loading the CLUT, but
 % everything else is plain vanilla 8-bit per channel imaging, which works
 % on every computer.
+%
+% Dear Mario
+%
+% Thanks for the long, full, explanation. I agree that Hörmet's success
+% (with your help) in getting 12-bit channels working (on my new linux hp
+% laptop) is terrific. However, that currently requires linux, and for most
+% people, buying a new computer. To measure threshold, I remain very happy
+% to achieve 10+ bit precision from 8-bit channels on many Macs running
+% under macOS, by following your advice to use LoadNormalizedGammaTable
+% with EnableCLUTMapping. To measure contrast threshold, i don't mind
+% setting up the CLUT to use the whole 0:255 range of the pixel to
+% represent only a limited luminance range near the desired mean luminance.
+% Each of the 256 clut entries is specified (as a float) with more than 8
+% bits. As you note, 8 bits plus dithering performs comparably to 10-bit
+% precision for some purposes. Being limited to only 256 elements in the
+% gamma table is fine when working with 8-bit images. Some computers, like
+% my MacBook Pro 15" achieve more than 11-bit precision.
+% 
+% Going forward, many people will want to follow the lead set by you and
+% Hormet achieving 12-bits per channel on my linux hp laptop. However, for
+% threshold studies,  8-bit channels with high precision gamma tables
+% remain an excellent way to go, and compatible with ordinary macOS
+% computers.
+% 
+% Thanks!
+% Best
+% Denis
 
 addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder in same directory as this M file
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
