@@ -30,7 +30,8 @@ try
       cal.nFirst=2;
       cal.nLast=8;
       cal=LinearizeClut(cal);
-      Screen('LoadNormalizedGammaTable',0,cal.gamma);
+      Screen('LoadNormalizedGammaTable',window,cal.gamma,2);
+      Screen('Flip',window);
       nL=8;
       for i=1:nL
          L=(cal.LLast-cal.LFirst)*(i-1)/(nL-1)+cal.LFirst;
@@ -54,6 +55,8 @@ try
    Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
 catch
    sca;
-   Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
+   if exist('cal','var') && isfield(cal,'old') && isfield(cal.old,'gamma')
+      Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
+   end
    psychrethrow(psychlasterror);
 end
