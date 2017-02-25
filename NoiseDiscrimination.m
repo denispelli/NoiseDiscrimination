@@ -1184,11 +1184,11 @@ try
    else
       ffprintf(ff,'Eccentricity %.1f deg. No fixation mark.\n',0);
    end
-   signalDuration = 1;
+   checkSec = 1;
    if o.dynamicSignalPoolSize > 1 % expected duration, not actual one
-     signalDuration = o.dynamicSignalPoolSize / frameRate;
+     checkSec = 1 / frameRate;
    end
-   N=o.noiseCheckPix^2*o.pixPerDeg^-2*o.noiseSD^2*signalDuration;
+   N=o.noiseCheckPix^2*o.pixPerDeg^-2*o.noiseSD^2*checkSec;
    o.N = N;
    ffprintf(ff,'Expected log N/deg^2 %.2f, where N is power spectral density\n',log10(N));
    ffprintf(ff,'pThreshold %.2f, beta %.1f\n',o.pThreshold,o.beta);
@@ -2805,9 +2805,7 @@ try
    if o.dynamicSignalPoolSize > 1 % actual duration, differs from requested duration due to discrete frame refresh duration
      signalDuration = o.dynamicSignalPoolSize * mode(o.dynamicFrameDrawInterval(:));
    end
-   N=o.noiseCheckPix^2*o.pixPerDeg^-2*o.noiseSD^2*signalDuration;
-   o.N = N;
-   ffprintf(ff,'Expected log N/deg^2 %.2f, where N is power spectral density\n',log10(N));
+   o.signalDuration = signalDuration;
 
    o.E = 10^(2*o.questMean)*o.E1;
    if streq(o.targetModulates,'luminance')
