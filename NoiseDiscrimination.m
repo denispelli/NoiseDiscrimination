@@ -1163,7 +1163,11 @@ try
    end
    checks=(o.targetHeightPix/o.noiseCheckPix);
    ffprintf(ff,'Target height is %.1f checks, %.1f deg.\n',checks,o.targetHeightDeg);
-   ffprintf(ff,'%s size %.2f deg, central check size %.3f deg.\n',object,2*atand(0.5*o.targetHeightPix/o.pixPerDeg*pi/180),2*atand(0.5*o.noiseCheckPix/o.pixPerDeg*pi/180));
+   ffprintf(ff,'%s size %.2f deg, central check size %.3f deg (corrected for perspective).\n',...
+      object,2*atand(0.5*o.targetHeightPix/o.pixPerDeg*pi/180),2*atand(0.5*o.noiseCheckPix/o.pixPerDeg*pi/180));
+   if streq(object,'Letter')
+      ffprintf(ff,'Nominal letter size is %.2f deg. See o.alphabetHeightDeg below for actual size. \n',o.targetHeightDeg);
+   end
    if streq(o.task,'4afc')
       ffprintf(ff,'o.gapFraction4afc %.2f, gap %.2f deg\n',o.gapFraction4afc,gap/o.pixPerDeg);
    end
@@ -1235,11 +1239,11 @@ try
                r=TextBounds(scratchWindow,'H',1);
                o.HHeightPix=RectHeight(r)*o.noiseCheckPix;
                o.HHeightDeg=o.HHeightPix/o.pixPerDeg;
-               ffprintf(ff,'o.xHeightDeg %.2f deg\n',o.xHeightDeg);
-               ffprintf(ff,'o.HHeightDeg %.2f deg\n',o.HHeightDeg);
+               ffprintf(ff,'o.xHeightDeg %.2f deg (traditional typographer''s x-height)\n',o.xHeightDeg);
+               ffprintf(ff,'o.HHeightDeg %.2f deg (capital H ascender height)\n',o.HHeightDeg);
                alphabetHeightPix=RectHeight(o.targetRectLocal)*o.noiseCheckPix;
                o.alphabetHeightDeg=alphabetHeightPix/o.pixPerDeg;
-               ffprintf(ff,'o.alphabetHeightDeg %.2f deg\n',o.alphabetHeightDeg);
+               ffprintf(ff,'o.alphabetHeightDeg %.2f deg (bounding box for letters used, including any ascenders and descenders)\n',o.alphabetHeightDeg);
               if o.printTargetBounds
                   fprintf('o.targetRectLocal [%d %d %d %d]\n',o.targetRectLocal);
                end
