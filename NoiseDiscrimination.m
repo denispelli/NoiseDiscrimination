@@ -2319,6 +2319,10 @@ try
                o.dynamicFrameDrawInterval(iDynamicPool,trial) = GetSecs - tFlip0;
             end
 
+            if o.dynamicSignalPoolSize == 1
+                   WaitSecs(o.durationSec);
+            end
+
             for iDynamicPool=1:o.dynamicPoolSize
                Screen('Close',texture(iDynamicPool));
             end
@@ -2654,7 +2658,7 @@ try
                   %                         Screen('Flip',window,signalOnset+o.durationSec-1/frameRate,1); % Duration is over. Erase target.
                   Screen('Flip',window,0,1); % immediate flip (no sticky)
                   % THS CODE IS BROKEN!
-                  WaitSecs(o.durationSec);
+                  % WaitSecs(o.durationSec);
                end
 
                if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
