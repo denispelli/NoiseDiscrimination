@@ -1186,7 +1186,7 @@ try
    end
    signalDuration = 1;
    if o.dynamicSignalPoolSize > 1 % expected duration, not actual one
-     signalDuration = o.dynamicSignalPoolSize / frameRate);
+     signalDuration = o.dynamicSignalPoolSize / frameRate;
    end
    N=o.noiseCheckPix^2*o.pixPerDeg^-2*o.noiseSD^2*signalDuration;
    o.N = N;
