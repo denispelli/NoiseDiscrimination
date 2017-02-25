@@ -1184,9 +1184,13 @@ try
    else
       ffprintf(ff,'Eccentricity %.1f deg. No fixation mark.\n',0);
    end
-   N=o.noiseCheckPix^2*o.pixPerDeg^-2*o.noiseSD^2;
+   signalDuration = 1;
+   if o.dynamicSignalPoolSize > 1 % expected duration, not actual one
+     signalDuration = o.dynamicSignalPoolSize / frameRate);
+   end
+   N=o.noiseCheckPix^2*o.pixPerDeg^-2*o.noiseSD^2*signalDuration;
    o.N = N;
-   ffprintf(ff,'log N/deg^2 %.2f, where N is power spectral density\n',log10(N));
+   ffprintf(ff,'Expected log N/deg^2 %.2f, where N is power spectral density\n',log10(N));
    ffprintf(ff,'pThreshold %.2f, beta %.1f\n',o.pThreshold,o.beta);
    ffprintf(ff,'Your (log) guess is %.2f +/- %.2f\n',o.tGuess,o.tGuessSd);
    ffprintf(ff,'o.trialsPerRun %.0f\n',o.trialsPerRun);
@@ -2793,6 +2797,14 @@ try
    o.contrast=-10^o.questMean;
    o.EOverN=10^(2*o.questMean)*o.E1/N;
    o.efficiency = o.idealEOverNThreshold/o.EOverN;
+   signalDuration = 1;
+   if o.dynamicSignalPoolSize > 1 % actual duration, differs from requested duration due to discrete frame refresh duration
+     signalDuration = o.dynamicSignalPoolSize * mode(o.dynamicFrameDrawInterval(:));
+   end
+   N=o.noiseCheckPix^2*o.pixPerDeg^-2*o.noiseSD^2*signalDuration;
+   o.N = N;
+   ffprintf(ff,'Expected log N/deg^2 %.2f, where N is power spectral density\n',log10(N));
+
    o.E = 10^(2*o.questMean)*o.E1;
    if streq(o.targetModulates,'luminance')
       ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold+/-sd log(contrast) %.2f+/-%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
