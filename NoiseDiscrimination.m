@@ -327,7 +327,7 @@ o.fixationCrossDeg=inf; % Typically 1 or inf. Make this at least 4 deg for scoto
 o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
 o.fixationCrossBlankedNearTarget=1; % 0 or 1.
 o.fixationCrossBlankedUntilSecsAfterTarget=0.6; % Pause after stimulus before display of fixation. Skipped when fixationCrossBlankedNearTarget. Not needed when eccentricity is bigger than the target.
-o.textSizeDeg=0.6;;
+o.textSizeDeg=0.6;
 o.saveSnapshot=0; % 0 or 1.  If true (1), take snapshot for public presentation.;
 o.snapshotLetterContrast=0.2; % nan to request program default. If set, this determines o.tSnapshot.;
 o.tSnapshot=nan; % nan to request program defaults.;
@@ -1000,7 +1000,7 @@ try
    if streq(o.task,'identify')
       ffprintf(ff,'Minimum letter resolution is %.0f checks.\n',o.minimumTargetHeightChecks);
    end
-   %     ffprintf(ff,'%s font\n',targetFont);
+   ffprintf(ff,'o.font %s\n',o.font);
    ffprintf(ff,'o.targetHeightPix %.0f, o.noiseCheckPix %.0f, o.durationSec %.2f s\n',o.targetHeightPix,o.noiseCheckPix,o.durationSec);
    ffprintf(ff,'o.targetModulates %s\n',o.targetModulates);
    if streq(o.targetModulates,'entropy')
@@ -1217,7 +1217,6 @@ try
                if ~streq(font,o.font);
                   error('Can''t find requested font. Desired vs. actual font: "%s", "%s"\n',o.font,font);
                end
-               assert(streq(font,o.font));
                oldSize=Screen('TextSize',scratchWindow,round(o.targetHeightPix/o.noiseCheckPix));
                oldStyle=Screen('TextStyle',scratchWindow,0);
                canvasRect=[0 0 o.canvasSize];
@@ -1230,7 +1229,18 @@ try
                else
                   o.targetRectLocal=round([0 0 o.targetHeightPix o.targetHeightPix]/o.noiseCheckPix);
                end
-               if o.printTargetBounds
+               r=TextBounds(scratchWindow,'x',1);
+               o.xHeightPix=RectHeight(r)*o.noiseCheckPix;
+               o.xHeightDeg=o.xHeightPix/o.pixPerDeg;
+               r=TextBounds(scratchWindow,'H',1);
+               o.HHeightPix=RectHeight(r)*o.noiseCheckPix;
+               o.HHeightDeg=o.HHeightPix/o.pixPerDeg;
+               ffprintf(ff,'o.xHeightDeg %.2f deg\n',o.xHeightDeg);
+               ffprintf(ff,'o.HHeightDeg %.2f deg\n',o.HHeightDeg);
+               alphabetHeightPix=RectHeight(o.targetRectLocal)*o.noiseCheckPix;
+               o.alphabetHeightDeg=alphabetHeightPix/o.pixPerDeg;
+               ffprintf(ff,'o.alphabetHeightDeg %.2f deg\n',o.alphabetHeightDeg);
+              if o.printTargetBounds
                   fprintf('o.targetRectLocal [%d %d %d %d]\n',o.targetRectLocal);
                end
                for i=1:o.alternatives
