@@ -1,5 +1,3 @@
-fix o.N computation
-
 Now only o.task: identify is supported with dynamic noise
 Support 4AFC etc. tasks
 
