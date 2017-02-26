@@ -1,3 +1,8 @@
+run test scripts for various tasks, various conditions and different
+modes (human observer and algorithm, snapshot, bit depth, assess
+linearity) etc. on different platforms after the subroutine refactoring
+is finished. 
+
 Now only o.task: identify is supported with dynamic noise
 Support 4AFC etc. tasks
 
