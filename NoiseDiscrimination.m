@@ -1241,8 +1241,13 @@ try
    o.N=o.noiseCheckPix^2*o.pixPerDeg^-2*o.noiseSD^2;
    if o.useDynamicNoiseMovie
       o.N=o.N*o.checkSec;
+      o.NUnits='s deg^2';
+      temporal='Dynamice';
+   else
+      o.NUnits='deg^2';
+      temporal='Static';
    end
-   ffprintf(ff,'Expected log N/deg^2 %.2f, where N is power spectral density\n',log10(o.N));
+   ffprintf(ff,'%s noise log N/(%s)=%.2f, where N is power spectral density in %s.\n',temporal,o.NUnits,log10(o.N),o.NUnits);
    ffprintf(ff,'pThreshold %.2f, beta %.1f\n',o.pThreshold,o.beta);
    ffprintf(ff,'Your (log) guess is %.2f +/- %.2f\n',o.tGuess,o.tGuessSd);
    ffprintf(ff,'o.trialsPerRun %.0f\n',o.trialsPerRun);
