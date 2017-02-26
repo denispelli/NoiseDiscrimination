@@ -6,6 +6,39 @@ function cal=OurScreenCalibrations(screen)
 % OurScreenCalibrations.m, so you can use the master copy of the software.
 % Denis Pelli, March 24, 2015, July 28, 2015.
 %
+% 1. WE SAVE THE GAMMA TABLE TO RESTORE THE CLUT. Apple offers no easy way
+% to grab the default screen profile; for Mac users, it's called a color
+% profile; for programmers it's called a gamma table. It's meant to be
+% loaded into your screen's color lookup table (CLUT).
+% CalibrateScreenLuminance uses AppleScript to control System
+% Preferences:Displays:Color to load the default gamma table into your
+% CLUT, and then we save it here in cal.old.gamma. This is much more
+% convenient than using AppleScript to get it yourself because running
+% AppleScript is slow (many seconds if Screen Preference is not already
+% open) and fragile, requiring special permissions. It is useful to have
+% this table handy. Most users of OurScreenCalibrations will modify the
+% CLUT. Once you've modified the CLUT, neither macOS nor Psychtoolbox
+% automatically restore the default CLUT. It is automatically restored only
+% when you reboot the computer. It turns out to be hard to reliably save
+% and restore the CLUT because, during development, it's common for a
+% program to terminate prematurely without having restored the original
+% CLUT. The next program you run then risks saving and restoring the
+% modified CLUT. Thus it's more reliable to have a known good copy here, in
+% cal.old.gamma, that you can use to restore the CLUT when your program is
+% done. Just call Screen('LoadNormalizedGammaTable',0,cal.old.gamma). For
+% general use of LoadNormalizedGammaTable, you would normally worry about
+% the deferLoading argument and use PsychImaging to EnableCLUTMapping, but
+% for just restoring the default, I've had good luck with this basic call.
+%
+% 2. WE SAVE THE GAMMA TABLE TO GET WHITE RIGHT. On most displays, the
+% default gamma table adjusts the values of the blue and red channels to
+% achieve a consistent chroma at every luminance. My program LinearizeClut
+% uses that, once it's picked the luminance by the associated green channel
+% gamma value by doing a table lookup into cal.old.gamma to find the
+% appropriate values for red and blue gamma. Thus all the displays produced
+% by LinearClut will have the same chroma as the white in the color table
+% that you saved in cal.old.gamma.
+%
 % See also LinearizeClut, CalibrateScreenLuminance,
 % testLuminanceCalibration, testGammaNull, IndexOfLuminance,
 % LuminanceOfIndex.
