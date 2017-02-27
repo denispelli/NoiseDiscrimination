@@ -427,6 +427,10 @@ plusMinusASCIIChar = char(177); % use this instead of literal plus minus sign to
 o.useDynamicNoiseMovie=0; % 0 for static noise
 o.moviePreSec = 0;
 o.moviePostSec = 0;
+o.likelyDurationSec=[];
+o.measuredDurationSec=[];
+o.movieFrameFlipSec=[];
+o.printDurations=0;
 
 [screenWidthMm,screenHeightMm]=Screen('DisplaySize',o.screen);
 screenBufferRect=Screen('Rect',o.screen);
@@ -2103,7 +2107,7 @@ try
             o.measuredDurationSec(trial)=o.movieFrameFlipSec(movieLastSignalFrame+1,trial) - ...
                o.movieFrameFlipSec(movieFirstSignalFrame,trial);
             o.likelyDurationSec(trial)=round(o.measuredDurationSec(trial)*frameRate)/frameRate;
-            s=sprintf('Signal duration requested %.3f s, measured %.3f s, and likely %.3f s, %.1f frames long.\n',...
+            s=sprintf('Signal duration requested %.3f s, measured %.3f s, and likely %.3f s, an excess of %.0f frames.\n',...
                o.durationSec,o.measuredDurationSec(trial),o.likelyDurationSec(trial),...
                (o.likelyDurationSec(trial)-o.durationSec)*frameRate);
             if abs(o.measuredDurationSec(trial)-o.durationSec)>0.010
@@ -2365,12 +2369,11 @@ try
    o.contrast=-10^o.questMean;
    o.EOverN=10^(2*o.questMean)*o.E1/o.N;
    o.efficiency = o.idealEOverNThreshold/o.EOverN;
-   signalDuration = 1;
-   if o.movieFrames > 1 % actual duration, differs from requested duration due to discrete frame refresh duration
-      frameSec=diff(o.movieFrameFlipSec);
-      signalDuration = o.movieFrames * mode(frameSec);
-   end
-   o.signalDuration = signalDuration;
+
+   o.signalDurationSecMean=mean(o.likelyDurationSec);
+   o.signalDurationSecSD=std(o.likelyDurationSec);
+   ffprintf(ff,'Mean duration %.3f +/- %.3f s (sd over %d trials).\n',o.signalDurationSecMean,o.signalDurationSecSD,length(o.likelyDurationSec));
+   ffprintf(ff,'Mean luminance %.1f cd/m^2\n',LMean);
    
    o.E = 10^(2*o.questMean)*o.E1;
    if streq(o.targetModulates,'luminance')
