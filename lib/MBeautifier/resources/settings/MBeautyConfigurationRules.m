@@ -94,7 +94,7 @@ this.OperatorRules.Not.ValueTo = ' ~';
 
 this.OperatorRules.Comma = struct();
 this.OperatorRules.Comma.ValueFrom = ',';
-this.OperatorRules.Comma.ValueTo = ', ';
+this.OperatorRules.Comma.ValueTo = ',';
 
 this.OperatorRules.SemiColon = struct();
 this.OperatorRules.SemiColon.ValueFrom = ';';
