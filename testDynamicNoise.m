@@ -59,10 +59,11 @@ o.snapshotShowsFixationAfter=0;
 o.speakInstructions=0;
 
 % DEBUGGING
-% o.useFractionOfScreen=0.3; % 0: normal, 0.5: small for debugging.
+o.useFractionOfScreen=0.3; % 0: normal, 0.5: small for debugging.
 o.flipClick=0;
 o.assessContrast=0;
 o.assessLoadGamma=0;
 % o.showCropMarks=1; % mark the bounding box of the target
+o.printDurations=1;
 
 o=NoiseDiscrimination(o);

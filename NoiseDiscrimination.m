@@ -1040,6 +1040,7 @@ try
       frameRate=60;
    end
    ffprintf(ff,'Frame rate %.1f Hz.\n',frameRate);
+   o.durationSec=max(1,round(o.durationSec*frameRate))/frameRate;
    if o.useDynamicNoiseMovie
       o.checkSec = 1/frameRate;
    else
@@ -2037,6 +2038,7 @@ try
       %% PLAY THE MOVIE
       if ~ismember(o.observer,algorithmicObservers)
          Snd('Play',purr); % Pre-announce that image is up, awaiting response.
+         o.movieFrameFlipSec(1:o.movieFrames+1,trial)=nan;
          for iMovieFrame=1:o.movieFrames
 %             Screen('FillRect',window,[255,0,0]); % Red background for
 %             debugging.
@@ -2072,43 +2074,52 @@ try
                   Screen('CopyWindow',movieTexture(iMovieFrame),snapshotTexture);
                end
             end
-            Screen('Flip',window,0,1); % Display movie frame. SHOULD NOT ERASE INSTRUCTIONS!
-            o.movieFrameFlipSec(iMovieFrame,trial) = GetSecs;
+            Screen('Flip',window,0,1); % Display movie frame. 
+            o.movieFrameFlipSec(iMovieFrame,trial)=GetSecs;
          end
          if o.saveSnapshot
             SaveSnapshot(o);
          end
-         if isfinite(o.durationSec) % wait duration
-            signalOnsetSec=GetSecs;
+         if isfinite(o.durationSec) % End the movie
             Screen('FillRect',window,gray,o.stimulusRect);
             if o.flipClick; Speak(['before Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
             if o.useDynamicNoiseMovie
-               Screen('Flip',window,0,1); % Clear stimulus immediately.
+               Screen('Flip',window,0,1); % Clear stimulus at next frame.
             else
-               % Wait for end of specified duration, then clear stimulus.
-               Screen('Flip',window,signalOnsetSec+o.durationSec-1/frameRate,1);
+               % Clear stimulus at next frame after specified duration. 
+               Screen('Flip',window,o.movieFrameFlipSec(1,trial)+o.durationSec-0.5/frameRate,1);
             end
+            o.movieFrameFlipSec(iMovieFrame+1,trial) = GetSecs;
             if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
             
             % Check duration.
-            signalOffsetSec=GetSecs;
-            actualDurationSec=GetSecs-signalOnsetSec;
-            if ~o.useDynamicNoiseMovie
-               if abs(actualDurationSec-o.durationSec)>0.05
-                  ffprintf(ff,'WARNING: Duration requested %.2f, actual %.2f\n',o.durationSec,actualDurationSec);
-               else
-                  if o.printSignalDuration
-                     ffprintf(ff,'Duration requested %.2f, actual %.2f\n',o.durationSec,actualDurationSec);
-                  end
+            if o.useDynamicNoiseMovie
+               movieFirstSignalFrame=o.moviePreFrames+1;
+               movieLastSignalFrame=o.movieFrames-o.moviePostFrames;
+            else
+               movieFirstSignalFrame=1;
+               movieLastSignalFrame=1;
+            end
+            o.measuredDurationSec(trial)=o.movieFrameFlipSec(movieLastSignalFrame+1,trial) - ...
+               o.movieFrameFlipSec(movieFirstSignalFrame,trial);
+            o.likelyDurationSec(trial)=round(o.measuredDurationSec(trial)*frameRate)/frameRate;
+            s=sprintf('Signal duration requested %.3f s, measured %.3f s, and likely %.3f s, %.1f frames long.\n',...
+               o.durationSec,o.measuredDurationSec(trial),o.likelyDurationSec(trial),...
+               (o.likelyDurationSec(trial)-o.durationSec)*frameRate);
+            if abs(o.measuredDurationSec(trial)-o.durationSec)>0.010
+               ffprintf(ff,'WARNING: %s',s);
+            else
+               if o.printDurations
+                  ffprintf(ff,'%s',s);
                end
             end
-            
             if ~o.fixationCrossBlankedNearTarget
                WaitSecs(o.fixationCrossBlankedUntilSecAfterTarget);
             end
             Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,black); % fixation
             if o.flipClick; Speak(['before Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
-            Screen('Flip',window,signalOffsetSec+0.3,1,1); % After o.fixationCrossBlankedUntilSecAfterTarget, display new fixation.
+            Screen('Flip',window,o.movieFrameFlipSec(iMovieFrame+1,trial)+0.3,1,1); ...
+               % After o.fixationCrossBlankedUntilSecAfterTarget, display new fixation.
             if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]);GetClicks; end
          end % if isfinite(o.durationSec)
          for iMovieFrame=1:o.movieFrames
