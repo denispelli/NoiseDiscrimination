@@ -5,6 +5,23 @@ MBeautifier is a lightweight M-Script based Matlab source code formatter usable 
 ![Basic working](https://cloud.githubusercontent.com/assets/12681120/20592407/904cb1d6-b22d-11e6-93dd-1637c3738e50.png)
 
 
+Quick HOWTO Guide
+----------
+
+This is safe to use especially along with Git, since even if it accidentally breaks the code, we can always revert back the changes.
+
+```{MATLAB}
+addpath('./lib/MBeautifier');
+MBeautify.setup();
+
+% 3 alternative ways to use it
+MBeautify.formatCurrentEditorPage(); % to format currently active file in the MATLAB Editor
+MBeautify.formatEditorSelection(); % to format currently active selection in the MATLAB Editor
+MBeautify.formatFile(file [, outfile]); % to format any file using filename; replaces file with styled one when outfile is omitted
+```
+
+
+
 Main features
 -------------
 
