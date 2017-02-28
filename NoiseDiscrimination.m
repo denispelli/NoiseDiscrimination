@@ -296,7 +296,8 @@ end
 
 rng('default');
 if ismac && ~ScriptingOkShowPermission
-   error('Please give MATLAB permission to control the computer. You''ll need admin privileges to do this.');
+   error(['Please give MATLAB permission to control the computer. ',...
+      'You''ll need admin privileges to do this.']);
 end
 if nargin < 1 || ~exist('oIn','var')
    oIn.noInputArgument = 1;
@@ -2282,29 +2283,31 @@ try
                   end
                end % while ~ismember
          end % switch o.task
-         if ~isfinite(o.durationSec)
-            % Signal persists until response, so we measure response time.
-            o.movieFrameFlipSec(iMovieFrame+1,trial) = GetSecs;
-         end
-         % CHECK DURATION
-         if o.useDynamicNoiseMovie
-            movieFirstSignalFrame = o.moviePreFrames + 1;
-            movieLastSignalFrame = o.movieFrames - o.moviePostFrames;
-         else
-            movieFirstSignalFrame = 1;
-            movieLastSignalFrame = 1;
-         end
-         o.measuredDurationSec(trial) = o.movieFrameFlipSec(movieLastSignalFrame+1,trial) - ...
-            o.movieFrameFlipSec(movieFirstSignalFrame,trial);
-         o.likelyDurationSec(trial) = round(o.measuredDurationSec(trial)*frameRate)/frameRate;
-         s = sprintf('Signal duration requested %.3f s, measured %.3f s, and likely %.3f s, an excess of %.0f frames.\n', ...
-            o.durationSec,o.measuredDurationSec(trial),o.likelyDurationSec(trial), ...
-            (o.likelyDurationSec(trial) - o.durationSec)*frameRate);
-         if abs(o.measuredDurationSec(trial)-o.durationSec) > 0.010
-            ffprintf(ff,'WARNING: %s',s);
-         else
-            if o.printDurations
-               ffprintf(ff,'%s',s);
+         if ~o.runAborted
+            if ~isfinite(o.durationSec)
+               % Signal persists until response, so we measure response time.
+               o.movieFrameFlipSec(iMovieFrame+1,trial) = GetSecs;
+            end
+            % CHECK DURATION
+            if o.useDynamicNoiseMovie
+               movieFirstSignalFrame = o.moviePreFrames + 1;
+               movieLastSignalFrame = o.movieFrames - o.moviePostFrames;
+            else
+               movieFirstSignalFrame = 1;
+               movieLastSignalFrame = 1;
+            end
+            o.measuredDurationSec(trial) = o.movieFrameFlipSec(movieLastSignalFrame+1,trial) - ...
+               o.movieFrameFlipSec(movieFirstSignalFrame,trial);
+            o.likelyDurationSec(trial) = round(o.measuredDurationSec(trial)*frameRate)/frameRate;
+            s = sprintf('Signal duration requested %.3f s, measured %.3f s, and likely %.3f s, an excess of %.0f frames.\n', ...
+               o.durationSec,o.measuredDurationSec(trial),o.likelyDurationSec(trial), ...
+               (o.likelyDurationSec(trial) - o.durationSec)*frameRate);
+            if abs(o.measuredDurationSec(trial)-o.durationSec) > 0.010
+               ffprintf(ff,'WARNING: %s',s);
+            else
+               if o.printDurations
+                  ffprintf(ff,'%s',s);
+               end
             end
          end
       end % if ~ismember(o.observer,algorithmicObservers)
@@ -2496,7 +2499,7 @@ try
       end
    end
    if o.runNumber == o.runsDesired && o.congratulateWhenDone && ~ismember(o.observer,algorithmicObservers)
-      Speak('Congratulations. You are done.');
+      Speak('Congratulations. End of run.');
    end
    if Screen(window,'WindowKind') == 1
       % Screen takes many seconds to close. This gives us a white screen
