@@ -77,13 +77,13 @@ function o = NoiseDiscrimination(oIn)
 % presentation and until o.fixationCrossBlankedUntilSecAfterTarget.
 %
 % Annular Gaussian noise envelope.
-% Use these three parameters to specify an annular gaussian envelope.
-% The amplitude is a Gaussian of R-Ra where R is the distance from letter
-% center and Ra is o.annularNoiseEnvelopeRadiusDeg. When Ra is zero, this reduces to a
-% normal gaussian centered on the letter. The code now computes a new
-% summary of the "area" of the envelope: o.centralNoiseEnvelopeE1DegDeg
-% We should equate this when we compare hard edge annulus with gaussian
-% envelope.
+% Use these three parameters to specify an annular gaussian envelope. The
+% amplitude is a Gaussian of R-Ra where R is the distance from letter
+% center and Ra is o.annularNoiseEnvelopeRadiusDeg. When Ra is zero, this
+% reduces to a normal gaussian centered on the letter. The code now
+% computes a new summary of the "area" of the envelope:
+% o.centralNoiseEnvelopeE1DegDeg We should equate this when we compare hard
+% edge annulus with gaussian envelope.
 %
 % See also LinearizeClut, CalibrateScreenLuminance, OurScreenCalibrations,
 % testLuminanceCalibration, testGammaNull, IndexOfLuminance,
@@ -1040,6 +1040,7 @@ try
    o.targetWidthPix = o.noiseCheckPix * round(o.targetWidthPix/o.noiseCheckPix);
    
    %% SET UP NOISE
+   MAX_FRAMES=100; % Better to limit than crash the GPU.
    if window ~= -1
       frameRate = 1/Screen('GetFlipInterval',window);
    else
@@ -1063,8 +1064,18 @@ try
          o.movieSignalFrames = 1;
       end
       o.moviePostFrames = round(o.moviePostSec*frameRate);
+      if o.moviePreFrames+o.moviePostFrames>=MAX_FRAMES
+         error('o.moviePreSec+o.moviePostSec=%.1f s too long for movie with MAX_FRAMES %d.\n',...
+            o.moviePreSec+o.moviePostSec,MAX_FRAMES);
+      end
    end
    o.movieFrames = o.moviePreFrames + o.movieSignalFrames + o.moviePostFrames;
+   if o.movieFrames>MAX_FRAMES
+      o.movieFrames=MAX_FRAMES;
+      o.movieSignalFrames=o.movieFrames-o.moviePreFrames-o.moviePostFrames;
+      o.durationSec=o.movieSignalFrames/frameRate;
+      ffprintf(ff,'Constrained by MAX_FRAMES %d, reducing duration to %.3f s\n',MAX_FRAMES,o.durationSec);
+   end
    
    ffprintf(ff,'o.pixPerDeg %.1f, o.distanceCm %.1f\n',o.pixPerDeg,o.distanceCm);
    if streq(o.task,'identify')
@@ -2098,28 +2109,7 @@ try
             o.movieFrameFlipSec(iMovieFrame+1,trial) = GetSecs;
             if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]); GetClicks; end
             
-            % Check duration.
-            if o.useDynamicNoiseMovie
-               movieFirstSignalFrame = o.moviePreFrames + 1;
-               movieLastSignalFrame = o.movieFrames - o.moviePostFrames;
-            else
-               movieFirstSignalFrame = 1;
-               movieLastSignalFrame = 1;
-            end
-            o.measuredDurationSec(trial) = o.movieFrameFlipSec(movieLastSignalFrame+1,trial) - ...
-               o.movieFrameFlipSec(movieFirstSignalFrame,trial);
-            o.likelyDurationSec(trial) = round(o.measuredDurationSec(trial)*frameRate)/frameRate;
-            s = sprintf('Signal duration requested %.3f s, measured %.3f s, and likely %.3f s, an excess of %.0f frames.\n', ...
-               o.durationSec,o.measuredDurationSec(trial),o.likelyDurationSec(trial), ...
-               (o.likelyDurationSec(trial) - o.durationSec)*frameRate);
-            if abs(o.measuredDurationSec(trial)-o.durationSec) > 0.010
-               ffprintf(ff,'WARNING: %s',s);
-            else
-               if o.printDurations
-                  ffprintf(ff,'%s',s);
-               end
-            end
-            if ~o.fixationCrossBlankedNearTarget
+           if ~o.fixationCrossBlankedNearTarget
                WaitSecs(o.fixationCrossBlankedUntilSecAfterTarget);
             end
             Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,black); % fixation
@@ -2292,6 +2282,31 @@ try
                   end
                end % while ~ismember
          end % switch o.task
+         if ~isfinite(o.durationSec)
+            % Signal persists until response, so we measure response time.
+            o.movieFrameFlipSec(iMovieFrame+1,trial) = GetSecs;
+         end
+         % CHECK DURATION
+         if o.useDynamicNoiseMovie
+            movieFirstSignalFrame = o.moviePreFrames + 1;
+            movieLastSignalFrame = o.movieFrames - o.moviePostFrames;
+         else
+            movieFirstSignalFrame = 1;
+            movieLastSignalFrame = 1;
+         end
+         o.measuredDurationSec(trial) = o.movieFrameFlipSec(movieLastSignalFrame+1,trial) - ...
+            o.movieFrameFlipSec(movieFirstSignalFrame,trial);
+         o.likelyDurationSec(trial) = round(o.measuredDurationSec(trial)*frameRate)/frameRate;
+         s = sprintf('Signal duration requested %.3f s, measured %.3f s, and likely %.3f s, an excess of %.0f frames.\n', ...
+            o.durationSec,o.measuredDurationSec(trial),o.likelyDurationSec(trial), ...
+            (o.likelyDurationSec(trial) - o.durationSec)*frameRate);
+         if abs(o.measuredDurationSec(trial)-o.durationSec) > 0.010
+            ffprintf(ff,'WARNING: %s',s);
+         else
+            if o.printDurations
+               ffprintf(ff,'%s',s);
+            end
+         end
       end % if ~ismember(o.observer,algorithmicObservers)
       if o.runAborted
          break;
@@ -2372,8 +2387,8 @@ try
    o.EOverN = 10^(2 * o.questMean) * o.E1/o.N;
    o.efficiency = o.idealEOverNThreshold/o.EOverN;
    
-   o.signalDurationSecMean = mean(o.likelyDurationSec);
-   o.signalDurationSecSD = std(o.likelyDurationSec);
+   o.signalDurationSecMean = mean(o.likelyDurationSec,'omitnan');
+   o.signalDurationSecSD = std(o.likelyDurationSec,'omitnan');
    ffprintf(ff,'Mean duration %.3f +/- %.3f s (sd over %d trials).\n',o.signalDurationSecMean,o.signalDurationSecSD,length(o.likelyDurationSec));
    ffprintf(ff,'Mean luminance %.1f cd/m^2\n',LMean);
    

@@ -1,11 +1,11 @@
 clear o
 o.observer='denis'; % use your name
 o.distanceCm=60; % viewing distance
-o.durationSec=0.5; % signal duration. [0.05, 0.5] for 50 ms and 500 ms 
+o.durationSec=inf; % signal duration. [0.05, 0.5] for 50 ms and 500 ms 
 o.trialsPerRun=40;
 
 % NOISE
-o.useDynamicNoiseMovie = 1; % 0 for static noise
+o.useDynamicNoiseMovie = 0; % 0 for static noise
 o.moviePreSec = 0.2; % ignored for static noise
 o.moviePostSec = 0.2; % ignored for static noise
 o.noiseType='binary'; % 'gaussian' or 'uniform' or 'binary'
