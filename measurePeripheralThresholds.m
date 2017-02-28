@@ -65,21 +65,21 @@ o.assessLoadGamma=0;
 o.showCropMarks=0; % mark the bounding box of the target
 o.printDurations=0;
 
-for ecc=[0 16]
-   o.eccentricityDeg=ecc;
-   o=NoiseDiscrimination(o);
-end
-
 % for ecc=[0 16]
-%    for dur=[0.05 0.5]
-%       for height=[2 8]
-%          for nSD=[0 0.5]
-%             o.eccentricityDeg=ecc;
-%             o.durationSec=dur;
-%             o.targetHeightDeg=height;
-%             o.noiseSD=nSD;
-%             o=NoiseDiscrimination(o);
-%          end
-%       end
-%    end
+%    o.eccentricityDeg=ecc;
+%    o=NoiseDiscrimination(o);
 % end
+
+for ecc=[0 16]
+   for dur=[0.05 0.5]
+      for height=[2 8]
+         for nSD=[0 0.5]
+            o.eccentricityDeg=ecc;
+            o.durationSec=dur;
+            o.targetHeightDeg=height;
+            o.noiseSD=nSD;
+            o=NoiseDiscrimination(o);
+         end
+      end
+   end
+end
