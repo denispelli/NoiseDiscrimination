@@ -1,6 +1,6 @@
 ## Noise Discrimination Software Github Repository
 
-This is a *private* repository for the Object Recognition Project at the Pelli Lab. All files under this repository is **NOT** public, and will remain so until stated otherwise. Please do not distribute.
+This is a *public* repository for the Object Recognition Project at the Pelli Lab. All files under this repository is **now** public.
 
 ## How to use
 
