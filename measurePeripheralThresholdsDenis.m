@@ -228,7 +228,8 @@ if 0
     end
 end
 
-o.useFractionOfScreen=.3;
+% o.useFractionOfScreen=.3;
+o.useDynamicNoiseMovie = 0; % 0 for static noise
 o.durationSec = 2;
 o.observer='denis';
 o.assessContrast=1;
