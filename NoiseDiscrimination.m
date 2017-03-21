@@ -2055,6 +2055,7 @@ try
       end % if ~ismember(o.observer,algorithmicObservers)
       
       %% PLAY THE MOVIE
+      Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
       if ~ismember(o.observer,algorithmicObservers)
          Snd('Play',purr); % Pre-announce that image is up, awaiting response.
          o.movieFrameFlipSec(1:o.movieFrames+1,trial) = nan;
@@ -2095,7 +2096,7 @@ try
             end
             Screen('Flip',window,0,1); % Display movie frame.
             o.movieFrameFlipSec(iMovieFrame,trial) = GetSecs;
-         end
+         end % for iMovieFrame=1:o.movieFrames
          if o.saveSnapshot
             SaveSnapshot(o); % Closes window when done.
             return
