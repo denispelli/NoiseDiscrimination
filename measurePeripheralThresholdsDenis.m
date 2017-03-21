@@ -58,8 +58,8 @@ o.speakInstructions=0;
 % DEBUGGING
 o.useFractionOfScreen=0; % 0: normal, 0.5: small for debugging.
 o.flipClick=0;
-o.assessContrast=1;
-o.assessLoadGamma=1;
+o.assessContrast=0;
+o.assessLoadGamma=0;
 o.showCropMarks=0; % mark the bounding box of the target
 o.printDurations=0;
 
@@ -72,7 +72,7 @@ o.printDurations=0;
 % WITH AND WITHOUT NOISE
 % gaussian
 % noiseSD = 0.16
-% checkHeightDeg = targetHeightDeg/20 
+% checkHeightDeg = targetHeightDeg/20
 % checkSec = 1/60 s.
 % PreSecs = 0.1 s.
 % PostSecs = 0.2 s.
@@ -137,7 +137,7 @@ if 0
     end
 end
 
-% DO THIS FIRST: 
+% DO THIS FIRST:
 % Before collecting a lot of data we need to be sure that this noise is
 % strong enough to always elevate threshold, so we should FIRST try the
 % toughest threshold:
@@ -147,15 +147,15 @@ end
 % checkHeightDeg = targetHeightDeg/20 =  0.8 deg
 % With and without noise
 if 0
-   for nSD=[0 0.16]
-      o.eccentricityDeg=30;
-      o.durationSec=0.5;
-      o.targetHeightDeg=16;
-      o.noiseCheckDeg=o.targetHeightDeg/20;
-      o.noiseSD=nSD;
-      o=NoiseDiscrimination(o);
-      o=NoiseDiscrimination(o); % REPEAT
-   end
+    for nSD=[0 0.16]
+        o.eccentricityDeg=30;
+        o.durationSec=0.5;
+        o.targetHeightDeg=16;
+        o.noiseCheckDeg=o.targetHeightDeg/20;
+        o.noiseSD=nSD;
+        o=NoiseDiscrimination(o);
+        o=NoiseDiscrimination(o); % REPEAT
+    end
 end
 
 
@@ -170,21 +170,21 @@ end
 % Eccentricities = 0, 3, 10, 30 deg
 % WITH AND WITHOUT NOISE
 if 0
-   for ecc=[0, 3, 10, 30]
-      for dur=0.5
-         for height=1
-            for nSD=[0 0.16]
-               o.eccentricityDeg=ecc;
-               o.durationSec=dur;
-               o.targetHeightDeg=height;
-               o.noiseCheckDeg=height/20;
-               o.noiseSD=nSD;
-               o=NoiseDiscrimination(o);
-               o=NoiseDiscrimination(o); % REPEAT
+    for ecc=[0, 3, 10, 30]
+        for dur=0.5
+            for height=1
+                for nSD=[0 0.16]
+                    o.eccentricityDeg=ecc;
+                    o.durationSec=dur;
+                    o.targetHeightDeg=height;
+                    o.noiseCheckDeg=height/20;
+                    o.noiseSD=nSD;
+                    o=NoiseDiscrimination(o);
+                    o=NoiseDiscrimination(o); % REPEAT
+                end
             end
-         end
-      end
-   end
+        end
+    end
 end
 
 % new collecting data
@@ -198,18 +198,18 @@ sizes = [2 4 8 16];
 eccenticityDeg = [0 3 10 30];
 noiseSD = [0];
 if 0
-for ecc = eccenticityDeg
-    o.observer='ning';
-    for LetterSize = sizes
-        for noise = noiseSD
-            o.eccentricityDeg=ecc;
-            o.targetHeightDeg=LetterSize;
-            o.noiseCheckDeg=o.targetHeightDeg/20;
-            o.noiseSD=noise;
-            o=NoiseDiscrimination(o);
+    for ecc = eccenticityDeg
+        o.observer='ning';
+        for LetterSize = sizes
+            for noise = noiseSD
+                o.eccentricityDeg=ecc;
+                o.targetHeightDeg=LetterSize;
+                o.noiseCheckDeg=o.targetHeightDeg/20;
+                o.noiseSD=noise;
+                o=NoiseDiscrimination(o);
+            end
         end
     end
-end
 end
 
 
@@ -227,16 +227,18 @@ if 0
         end
     end
 end
-for ecc = 0
-    o.observer='denis';
-    for LetterSize = 8
-        for noise = 0
-            o.tGuess=log10(0.01);
-            o.eccentricityDeg=ecc;
-            o.targetHeightDeg=LetterSize;
-            o.noiseCheckDeg=o.targetHeightDeg/20;
-            o.noiseSD=noise;
-            o=NoiseDiscrimination(o);
-        end
-    end
-end
+
+o.useFractionOfScreen=.3;
+o.durationSec = 2;
+o.observer='denis';
+o.assessContrast=1;
+o.assessLoadGamma=1;
+o.assessGray=1;
+o.assessTargetLuminance=1;
+o.tGuess=log10(0.01);
+o.eccentricityDeg=0;
+o.targetHeightDeg=8;
+o.noiseCheckDeg=o.targetHeightDeg/20;
+o.noiseSD=0;
+o=NoiseDiscrimination(o);
+imshow(o.actualStimulus);
