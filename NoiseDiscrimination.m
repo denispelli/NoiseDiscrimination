@@ -318,6 +318,7 @@ o.observer = 'junk'; % Name of person or existing algorithm.
 % o.observer='blackshot'; % Existing algorithm instead of person.
 % o.observer='maximum'; % Existing algorithm instead of person.
 % o.observer='ideal'; % Existing algorithm instead of person.
+o.luminanceTransmission=1; % Less than one for dark glasses or neutral density filter.
 algorithmicObservers = {'ideal', 'brightnessSeeker', 'blackshot', 'maximum'};
 o.trialsPerRun = 40; % Typically 40.
 o.runNumber = 1; % For display only, indicate the run number. When o.runNumber==runsDesired this program says "Congratulations" before returning.
