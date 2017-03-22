@@ -16,9 +16,9 @@
 clear all;
 dataFolder = fullfile(fileparts(fileparts(mfilename('fullpath'))),'data');
 cd(dataFolder);
-MAT_files = dir('*.mat');
-for iFile = 1:length(MAT_files)
-   a=load(MAT_files(iFile).name);
+matFiles = dir('*.mat');
+for iFile = 1:length(matFiles)
+   a=load(matFiles(iFile).name);
    o=a.o;
    data = o.data;
    if length(data)<40
