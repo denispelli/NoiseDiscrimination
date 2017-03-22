@@ -22,6 +22,7 @@ for iFile = 1:length(matFiles)
    o=a.o;
    data = o.data;
    if length(data)<40
+      % Skip runs with less than 40 trials.
       continue;
    end
    % For each contrast (column 1), the response (column 2) is in the next
