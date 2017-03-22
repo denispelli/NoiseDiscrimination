@@ -3,8 +3,6 @@
 % Script for Ning and Chen to measure equivalent noise in the periphery.
 
 clear o
-o.observer='denis'; % use your name
-o.distanceCm=60; % viewing distance
 o.durationSec=0.5; % signal duration. [0.05, 0.5]
 o.trialsPerRun=40;
 
@@ -65,21 +63,96 @@ o.assessLoadGamma=0;
 o.showCropMarks=0; % mark the bounding box of the target
 o.printDurations=0;
 
-% for ecc=[0 16]
-%    o.eccentricityDeg=ecc;
-%    o=NoiseDiscrimination(o);
-% end
+% Please measure:
+% Sloan
+% Eccentricities = 0, 3, 10, 30 deg
+% Duration = 0.05, 0.5 s
+% targetHeightDeg = 1, 4, 16 deg
+% ?(Note: at 30 deg ecc, omit 1 deg. Substitute 2 deg.)?
+% WITH AND WITHOUT NOISE
+% gaussian
+% noiseSD = 0.16
+% checkHeightDeg = targetHeightDeg/20 
+% checkSec = 1/60 s.
+% PreSecs = 0.1 s.
+% PostSecs = 0.2 s.
+% REPEAT
+% If the two threshold contrasts, after repetition, differ by 2x or more,
+% then please collect a third point.
 
-for ecc=[0 16]
-   for dur=[0.05 0.5]
-      for height=[2 8]
-         for nSD=[0 0.5]
-            o.eccentricityDeg=ecc;
-            o.durationSec=dur;
-            o.targetHeightDeg=height;
-            o.noiseSD=nSD;
-            o=NoiseDiscrimination(o);
+% IMPORTANT: Use a tape measure or meter stick to measure the distance from
+% your eye to the screen. The number below must be accurate.
+o.observer='denis'; % use your name
+o.distanceCm=60; % viewing distance
+o.font='Sloan';
+o.alphabet='DHKNORSVZ';
+o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
+if 0
+   for ecc=[0, 3, 10, 30]
+      for dur=[0.05 0.5]
+         for height=[1 4 16]
+            for nSD=[0 0.16]
+               o.eccentricityDeg=ecc;
+               o.durationSec=dur;
+               o.targetHeightDeg=height;
+               o.noiseCheckDeg=height/20;
+               o.noiseSD=nSD;
+               o=NoiseDiscrimination(o);
+               o=NoiseDiscrimination(o); % REPEAT
+            end
          end
       end
    end
 end
+
+
+% DO THIS FIRST: 
+% Before collecting a lot of data we need to be sure that this noise is
+% strong enough to always elevate threshold, so we should FIRST try the
+% toughest threshold:
+% Eccentricity = 30 deg
+% Duration = 0.5 s
+% targetHeightDeg = 16 deg
+% checkHeightDeg = targetHeightDeg/20 =  0.8 deg
+% With and without noise
+if 0
+   for nSD=[0 0.16]
+      o.eccentricityDeg=30;
+      o.durationSec=0.5;
+      o.targetHeightDeg=16;
+      o.noiseCheckDeg=height/20;
+      o.noiseSD=nSD;
+      o=NoiseDiscrimination(o);
+      o=NoiseDiscrimination(o); % REPEAT
+   end
+end
+
+
+% We want threshold with noise at least twice threshold without noise. If
+% not, we may need to increase the check size or switch to binary noise.
+% Please let us know!
+
+% The dark filter is important, but will play only a small role, so we only
+% need a bit of data with it.
+% WITH DARK FILTER
+% targetHeightDeg = 1 deg
+% Eccentricities = 0, 3, 10, 30 deg
+% WITH AND WITHOUT NOISE
+if 1
+   for ecc=[0, 3, 10, 30]
+      for dur=0.5
+         for height=1
+            for nSD=[0 0.16]
+               o.eccentricityDeg=ecc;
+               o.durationSec=dur;
+               o.targetHeightDeg=height;
+               o.noiseCheckDeg=height/20;
+               o.noiseSD=nSD;
+               o=NoiseDiscrimination(o);
+               o=NoiseDiscrimination(o); % REPEAT
+            end
+         end
+      end
+   end
+end
+
