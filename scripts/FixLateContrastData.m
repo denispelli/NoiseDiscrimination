@@ -18,6 +18,11 @@ dataFolder = fullfile(fileparts(fileparts(mfilename('fullpath'))),'data');
 cd(dataFolder);
 matFiles = dir('*.mat');
 for iFile = 1:length(matFiles)
+   name='measurePeripheralThresholds';
+   n=length(name);
+   if ~strncmp(name,matFiles(iFile).name,n)
+       continue
+   end
    a=load(matFiles(iFile).name);
    o=a.o;
    data = o.data;
@@ -45,7 +50,7 @@ for iFile = 1:length(matFiles)
    end
    %    o.questMean = QuestMean(q);
    %    o.questSd = QuestSd(q);
-   fprintf(['%12s%7s %2.0f deg ecc,%2.0f deg,%4.1f s,%6.2f log N,%5d trials, '...
+   fprintf(['%12s, %9s, %2.0f deg ecc,%2.0f deg,%4.1f s,%6.2f log N,%5d trials, '...
       'file %5.2f±%4.2f, old %5.2f±%4.2f, new %5.2f±%4.2f, err %5.2f, change %5.2f\n'],...
       datestr(o.beginningTime,1),o.observer,o.eccentricityDeg,o.targetHeightDeg,o.durationSec,log10(o.N),o.trials,...
       o.questMean,o.questSd,QuestMean(q),QuestSd(q),QuestMean(qX),QuestSd(qX),o.questMean-QuestMean(q),QuestMean(q)-QuestMean(qX));
