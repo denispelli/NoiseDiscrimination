@@ -4,6 +4,17 @@
 % from prior photometry, to have a luminance equal to the average of white
 % and black.
 % Denis Pelli, July 2015.
+
+% DITHERING
+% I have the impression that, by default, macOS uses dithering on all
+% devices. On each RGB channel, that may yield 10-bit visual performance
+% from 8-bit display devices.
+% Psychtoolbox documentation suggests that these commands to turn dithering
+% on and off work only on AMD devices.
+% err = PsychGPUControl('SetDitheringEnabled',enableFlag);
+% http://docs.psychtoolbox.org/PsychGPUControl
+% Screen('ConfigureDisplay','Dithering',screenNumber,ditherEnable);
+% http://docs.psychtoolbox.org/ConfigureDisplay
 try
    distanceCm=50;
    screen=0;
