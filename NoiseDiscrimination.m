@@ -307,6 +307,7 @@ if nargin < 1 || ~exist('oIn','var')
 end
 o = [];
 o.EnableCLUTMapping = 1; % Needed for reliable CLUT control.
+o.desiredClutMargin=1; % 0 for none. 1 to work around CLUT smoothing in some video cards.
 o.testBitDepth = 0;
 o.useFractionOfScreen = 0; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 o.distanceCm = 50; % viewing distance
@@ -608,9 +609,10 @@ o.maxLRange = 2*min(max(cal.old.L)-LMean,LMean-min(cal.old.L));
 % We reserve 0 and 255 for black and white. Unless this is Windows, we
 % reserve clut entry 1 (called gray1) for the screen background used in
 % non-stimulus parts of the display, e.g. top margin.
-firstGrayClutEntry = 6; % Allows for cal.clutMargin of 1 or 2.
-lastGrayClutEntry = 252;% Allows for cal.clutMargin of 1 or 2.
-desiredClutMargin=1;
+firstGrayClutEntry = 6; % Allows for cal.clutMargin of 0 or 1.
+lastGrayClutEntry = 252;% Allows for cal.clutMargin of 0 or 1.
+assert(lastGrayClutEntry+2*o.desiredClutMargin<255);
+assert(firstGrayClutEntry-2*o.desiredClutMargin>1);
 assert(mod(firstGrayClutEntry+lastGrayClutEntry,2) == 0) % Must be even, so middle is an integer.
 if o.isWin
     LRange = o.maxLRange;
@@ -621,7 +623,7 @@ if o.isWin
             cal.LLast = LMean+LRange/2;
             cal.nFirst = firstGrayClutEntry;
             cal.nLast = lastGrayClutEntry;
-            cal.clutMargin = desiredClutMargin;
+            cal.clutMargin = o.desiredClutMargin;
             cal = LinearizeClut(cal);
             cal.gamma(2,:) = 0.5*(cal.gamma(1,:)+cal.gamma(3,:)); % for Windows
             assert(all(all(diff(cal.gamma) >= 0))); % monotonic for Windows
@@ -892,7 +894,7 @@ try
             cal.LLast = LMean+(LMean-LMin); % Symmetric about LMean.
             cal.nFirst = firstGrayClutEntry;
             cal.nLast = lastGrayClutEntry;
-            cal.clutMargin = desiredClutMargin;
+            cal.clutMargin = o.desiredClutMargin;
             cal = LinearizeClut(cal);
             if o.isWin
                 % Windows insists on a monotonic CLUT. So we linearize
@@ -971,7 +973,7 @@ try
     degPerCm = 57/o.distanceCm;
     o.pixPerDeg = pixPerCm/degPerCm;
     
-    %% SET UP FIXATION AND ECCENTRICITY OF TARGET
+    %% SET FIXATION AND ECCENTRICITY OF TARGET
     eccentricityPix = round(pixPerCm*o.distanceCm*tand(o.eccentricityDeg));
     eccentricityCm = o.distanceCm*tand(o.eccentricityDeg);
     if ~isfinite(o.eccentricityDeg)
@@ -1051,7 +1053,7 @@ try
     o.targetHeightPix = o.noiseCheckPix*round(o.targetHeightPix/o.noiseCheckPix);
     o.targetWidthPix = o.noiseCheckPix*round(o.targetWidthPix/o.noiseCheckPix);
     
-    %% SET UP NOISE
+    %% SET NOISE PARAMETERS
     MAX_FRAMES=100; % Better to limit than crash the GPU.
     if window ~= -1
         frameRate = 1/Screen('GetFlipInterval',window);
@@ -1619,7 +1621,7 @@ try
         end
     end
     
-    %% DEFAULT PARAMETERS FOR QUEST
+    %% SET PARAMETERS FOR QUEST
     delta = 0.02;
     switch o.task
         case '4afc',
@@ -1912,7 +1914,7 @@ try
                 cal.LLast = LMean+LRange/2;
                 cal.nFirst = firstGrayClutEntry;
                 cal.nLast = lastGrayClutEntry;
-                cal.clutMargin=desiredClutMargin; % Needed on some video displays.
+                cal.clutMargin=o.desiredClutMargin; % Needed on some video displays.
                 if o.saveSnapshot
                     cal.LFirst = min(cal.old.L);
                     cal.LLast = max(cal.old.L);
@@ -2069,12 +2071,7 @@ try
             Snd('Play',purr); % Pre-announce that image is up, awaiting response.
             o.movieFrameFlipSec(1:o.movieFrames+1,trial) = nan;
             for iMovieFrame = 1:o.movieFrames
-                %             Screen('FillRect',window,[255,0,0]); % Red background for
-                %             debugging.
                 Screen('DrawTexture',window,movieTexture(iMovieFrame),srcRect,dstRect);
-                % Screen('DrawText',window, sprintf('%.2f', o.contrast), 20,100); % used for DEBUG sessions
-                % Screen('DrawTexture',window,movieTexture(iMovieFrame),RectOfMatrix(img),location(i).rect); % 4AFC
-                %             location(1).image = movieImage{iMovieFrame}; % NOT TRUE ??? Used in SaveStimulus
                 if o.showBlackAnnulus
                     radius = round(o.blackAnnulusSmallRadiusDeg*o.pixPerDeg);
                     o.blackAnnulusSmallRadiusDeg = radius/o.pixPerDeg;
@@ -2143,7 +2140,6 @@ try
             for iMovieFrame = 1:o.movieFrames
                 Screen('Close',movieTexture(iMovieFrame));
             end
-            
             eraseRect = ClipRect(eraseRect,o.stimulusRect);
             
             % Print instruction in upper left corner.
