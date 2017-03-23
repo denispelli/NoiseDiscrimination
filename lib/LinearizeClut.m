@@ -18,15 +18,15 @@ function newCal=LinearizeClut(cal)
 % cal.LLast is the desired luminance for pixel value nLast.
 % The only constraint on LFirst and LLast is that both must be in the
 % measured range min(cal.old.L) to max(cal.old.L).
-% cal.clutMargin is the number of extra entries to add at each end,
-% repeating the end value. Enter 0 or leave it undefined for no CLUT
-% margin. This margin is a work around for a bug I just discovered in my
-% MacBook Pro 15". Apparently the driver internally smooths the CLUT, so
-% that the luminance produced by a CLUT value is somewhat affected by its
-% neighbors. To get a 100% white you need similar values on both sides.
-% You'll need to keep this in mind when setting values for nFirst and nLast
-% to avoid clobbering important CLUT values beyond the nominal range nFirst
-% to nLast.
+% cal.clutMargin is the number of extra entries to add at each end (beyond
+% cal.nFirst and cal.nLast), repeating the end value. Enter 0 or leave it
+% undefined for no CLUT margin. This margin is a work around for a bug I
+% just discovered in my MacBook Pro 15". Apparently the driver internally
+% smooths the CLUT, so that the luminance produced by a CLUT value is
+% somewhat affected by its neighbors. To get a 100% white you need similar
+% values on both sides. You'll need to keep this in mind when setting
+% values for nFirst and nLast to avoid clobbering important CLUT values
+% beyond the nominal range nFirst to nLast.
 %
 % OUTPUT FIELDS, IN ADDITION TO THE INPUT FIELDS
 % cal.n are the pixel values, nFirst:nLast, for which new gamma table
