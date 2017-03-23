@@ -18,14 +18,15 @@ function newCal=LinearizeClut(cal)
 % cal.LLast is the desired luminance for pixel value nLast.
 % The only constraint on LFirst and LLast is that both must be in the
 % measured range min(cal.old.L) to max(cal.old.L).
-% cal.margin is the number of extra entries to add at each end, repeating
-% the end value. Enter 0 or leave it undefined for no margin. This margin
-% is a work around for a bug I just discovered in my MacBook Pro 15".
-% Apparently the driver internally smooths the CLUT, so that the luminance
-% produced by a CLUT value is somewhat affected by its neighbors. To get a
-% 100% white you need similar values on both sides. You'll need to keep
-% this in mind when setting values for nFirst and nLast to avoid clobbering
-% important CLUT values beyond the nominal range nFirst to nLast.
+% cal.clutMargin is the number of extra entries to add at each end,
+% repeating the end value. Enter 0 or leave it undefined for no CLUT
+% margin. This margin is a work around for a bug I just discovered in my
+% MacBook Pro 15". Apparently the driver internally smooths the CLUT, so
+% that the luminance produced by a CLUT value is somewhat affected by its
+% neighbors. To get a 100% white you need similar values on both sides.
+% You'll need to keep this in mind when setting values for nFirst and nLast
+% to avoid clobbering important CLUT values beyond the nominal range nFirst
+% to nLast.
 %
 % OUTPUT FIELDS, IN ADDITION TO THE INPUT FIELDS
 % cal.n are the pixel values, nFirst:nLast, for which new gamma table
@@ -142,8 +143,8 @@ if ~isfield(cal,'gamma')
    %     cal.gamma=interp1(cal.old.gamma,1+cal.old.gammaIndexMax*(0:255)/255),'pchip');
 end
 cal.gamma(1+cal.n,1:3)=linearizedGamma;
-if isfield(cal,'margin') && cal.margin>0
-   for i=1:cal.margin
+if isfield(cal,'clutMargin') && cal.clutMargin>0
+   for i=1:cal.clutMargin
       margin=1+cal.n(1)-i;
       if margin>=1
          cal.gamma(margin,1:3)=cal.gamma(1+cal.n(1),1:3);

@@ -1,7 +1,6 @@
 function o = NoiseDiscrimination(oIn)
 % o=NoiseDiscrimination(o);
 %
-%% DOCUMENTATION
 % Pass all your parameters in the "o" struct, which will be returned with
 % all the results as additional fields. NoiseDiscrimination may adjust some
 % of your parameters to satisfy physical constraints. Constraints include
@@ -146,16 +145,16 @@ function o = NoiseDiscrimination(oIn)
 % Hormets results check out in the end.
 %
 % On OSX with AMD hardware you could downgrade to the now unsupported OSX
-% 10.10 + PTB 3.0.13 + PsychtoolboxKernelDriver to get dithered 10 bits on
+% 10.10+PTB 3.0.13+PsychtoolboxKernelDriver to get dithered 10 bits on
 % digital displays.
 %
-% On OSX 10.12 + PTB 3.0.14 with AMD hardware you could give that iMac 5k
-% of yours a try, the one that presumably has a 10 bit panel? Apple claims
-% 10 bit should work on "the late 2014 and late 2015 iMac 27 inch Retina 5k
-% models." Psychtoolbox implements native 10 bit framebuffer mode via the
-% 'EnableNative10BitFramebuffer' task, based on the sparse documentation by
-% Apple. However this is completely untested on real hardware, as none of
-% the people who promised me to test this did.
+% On OSX 10.12 with PTB 3.0.14 with AMD hardware you could give that iMac
+% 5k of yours a try, the one that presumably has a 10 bit panel? Apple
+% claims 10 bit should work on "the late 2014 and late 2015 iMac 27 inch
+% Retina 5k models." Psychtoolbox implements native 10 bit framebuffer mode
+% via the 'EnableNative10BitFramebuffer' task, based on the sparse
+% documentation by Apple. However this is completely untested on real
+% hardware, as none of the people who promised me to test this did.
 %
 % -mario
 % February 24, 2017
@@ -292,7 +291,7 @@ addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same dire
 % echo_executing_commands(2, 'local');
 % diary ./diary.log
 [~, vStruct] = PsychtoolboxVersion;
-if IsOSX && vStruct.major*1000 + vStruct.minor*100 + vStruct.point <= 3013
+if IsOSX && vStruct.major*1000+vStruct.minor*100+vStruct.point <= 3013
     error('Version 3.0.13 of Mac OSX Psychtoolbox had a gamma table bug. Please update to the latest version: UpdatePsychtoolbox');
 end
 rng('default'); % Initialize random number generator with fresh seed.
@@ -320,8 +319,8 @@ o.observer = 'junk'; % Name of person or existing algorithm.
 % o.observer='blackshot'; % Existing algorithm instead of person.
 % o.observer='maximum'; % Existing algorithm instead of person.
 % o.observer='ideal'; % Existing algorithm instead of person.
-o.luminanceTransmission=1; % Less than one for dark glasses or neutral density filter.
 algorithmicObservers = {'ideal', 'brightnessSeeker', 'blackshot', 'maximum'};
+o.luminanceTransmission=1; % Less than one for dark glasses or neutral density filter.
 o.trialsPerRun = 40; % Typically 40.
 o.runNumber = 1; % For display only, indicate the run number. When o.runNumber==runsDesired this program says "Congratulations" before returning.
 o.runsDesired = 1; % How many runs you to plan to do, used solely for display (and congratulations).
@@ -329,13 +328,13 @@ o.speakInstructions = 0;
 o.congratulateWhenDone = 1; % 0 or 1. Spoken after last run (i.e. when o.runNumber==o.runsDesired). You can turn this off.
 o.runAborted = 0; % 0 or 1. Returned value is 1 if the user aborts this run (i.e. threshold).
 o.quitNow = 0; % 0 or 1. Returned value is 1 if the observer wants to quit now; no more runs.
-% o.targetModulates='noise';  % Display a noise increment.
 o.targetKind = 'letter';
 % o.targetKind='gabor'; % one cycle within targetSize
 o.font = 'Sloan';
 % o.font='Bookman';
 % o.allowAnyFont=0; % Old code assumes Sloan font.
 o.allowAnyFont = 1; % New code supports any font.
+o.alphabet = 'DHKNORSVZ';
 o.printTargetBounds = 0;
 o.targetGaborPhaseDeg = 0; % Phase offset of sinewave in deg at center of gabor.
 o.targetGaborSpaceConstantCycles = 0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
@@ -344,6 +343,7 @@ o.targetGaborOrientationsDeg = [0 90]; % Orientations relative to vertical.
 o.targetGaborNames = 'VH';
 o.targetModulates = 'luminance'; % Display a luminance decrement.
 % o.targetModulates='entropy'; % Display an entropy increment.
+% o.targetModulates='noise';  % Display a noise increment.
 o.task = 'identify'; % 'identify' or '4afc'
 % o.thresholdParameter='size';
 % o.thresholdParameter='spacing';
@@ -355,7 +355,7 @@ o.tGuessSd = nan; % Specify a finite value for Quest, or nan for default.
 o.pThreshold = 0.75;
 o.beta = nan; % Typically 1.7, 3.5, or Nan. Nan asks NoiseDiscrimination to set this at runtime.
 o.measureBeta = 0;
-o.eccentricityDeg = 0; % + for right,-for left, "nan" for no fixation.
+o.eccentricityDeg = 0; %+for right,-for left, "nan" for no fixation.
 o.targetHeightDeg = 2; % Target size, range 0 to inf. If you ask for too
 % much, it gives you the max possible.
 % o.targetHeightDeg=30*o.noiseCheckDeg; % standard for counting neurons
@@ -422,7 +422,6 @@ o.backgroundEntropyLevels = 2; % Value used only if o.targetModulates is 'entrop
 o.idealEOverNThreshold = nan; % You can run the ideal first, and then provide its threshold as a reference when testing human observers.
 o.screen = 0;
 o.screen = max(Screen('Screens'));
-o.alphabet = 'DHKNORSVZ';
 o.alphabetPlacement = 'top'; % 'top' or 'right';
 o.replicatePelli2006 = 0;
 o.isWin = IsWin; % override this to simulate Windows on a Mac.
@@ -597,20 +596,21 @@ switch o.task
     case 'identify',
         o.noiseCheckPix = min(o.noiseCheckPix,RectHeight(o.stimulusRect));
     case '4afc',
-        o.noiseCheckPix = min(o.noiseCheckPix,floor(RectHeight(o.stimulusRect)/(2 + o.gapFraction4afc)));
+        o.noiseCheckPix = min(o.noiseCheckPix,floor(RectHeight(o.stimulusRect)/(2+o.gapFraction4afc)));
         o.noiseRadiusDeg = o.targetHeightDeg/2;
 end
 o.noiseCheckPix = max(o.noiseCheckPix,1);
 o.noiseCheckDeg = o.noiseCheckPix/o.pixPerDeg;
 BackupCluts(o.screen);
-LMean = (max(cal.old.L) + min(cal.old.L))/2;
+LMean = (max(cal.old.L)+min(cal.old.L))/2;
 o.maxLRange = 2*min(max(cal.old.L)-LMean,LMean-min(cal.old.L));
 % We use nearly the whole clut (entries 2 to 254) for stimulus generation.
 % We reserve 0 and 255 for black and white. Unless this is Windows, we
 % reserve clut entry 1 (called gray1) for the screen background used in
 % non-stimulus parts of the display, e.g. top margin.
-firstGrayClutEntry = 6;
-lastGrayClutEntry = 252;
+firstGrayClutEntry = 6; % Allows for cal.clutMargin of 1 or 2.
+lastGrayClutEntry = 252;% Allows for cal.clutMargin of 1 or 2.
+desiredClutMargin=1;
 assert(mod(firstGrayClutEntry+lastGrayClutEntry,2) == 0) % Must be even, so middle is an integer.
 if o.isWin
     LRange = o.maxLRange;
@@ -618,18 +618,18 @@ if o.isWin
     for i = 1:100
         try
             cal.LFirst = LMean-LRange/2;
-            cal.LLast = LMean + LRange/2;
+            cal.LLast = LMean+LRange/2;
             cal.nFirst = firstGrayClutEntry;
             cal.nLast = lastGrayClutEntry;
-            cal.margin = 1;
+            cal.clutMargin = desiredClutMargin;
             cal = LinearizeClut(cal);
-            cal.gamma(2,:) = 0.5*(cal.gamma(1,:) + cal.gamma(3,:)); % for Windows
+            cal.gamma(2,:) = 0.5*(cal.gamma(1,:)+cal.gamma(3,:)); % for Windows
             assert(all(all(diff(cal.gamma) >= 0))); % monotonic for Windows
             gamma = cal.old.gamma(round(1+(0:255)*(size(cal.old.gamma,1)-1)/255),:); % Down sample to 256.
             Screen('LoadNormalizedGammaTable',o.screen,gamma,loadOnNextFlip);
             if o.assessLoadGamma
                 ffprintf(ff,'Line %d: o.contrast %.3f, LoadNormalizedGammaTable 0.5*range/mean=%.3f\n', ...
-                    MFileLineNr,o.contrast,(cal.LLast-cal.LFirst)/(cal.LLast + cal.LFirst));
+                    MFileLineNr,o.contrast,(cal.LLast-cal.LFirst)/(cal.LLast+cal.LFirst));
             end
             o.minLRange = LRange;
             LRange = LRange*0.9;
@@ -675,7 +675,7 @@ switch o.task
     case 'identify'
         maxTargetHeight = RectHeight(o.stimulusRect);
     case '4afc'
-        maxTargetHeight = RectHeight(o.stimulusRect)/(2 + o.gapFraction4afc);
+        maxTargetHeight = RectHeight(o.stimulusRect)/(2+o.gapFraction4afc);
         maxTargetHeight = floor(maxTargetHeight);
     otherwise
         error('Unknown o.task "%s".',o.task);
@@ -886,13 +886,13 @@ try
             LMax = max(cal.old.L);
             LMean = mean([LMin, LMax]); % Desired background luminance.
             if o.assessLowLuminance
-                LMean = 0.8*LMin + 0.2*LMax;
+                LMean = 0.8*LMin+0.2*LMax;
             end
             cal.LFirst = LMin;
-            cal.LLast = LMean + (LMean-LMin); % Symmetric about LMean.
+            cal.LLast = LMean+(LMean-LMin); % Symmetric about LMean.
             cal.nFirst = firstGrayClutEntry;
             cal.nLast = lastGrayClutEntry;
-            cal.margin = 1;
+            cal.clutMargin = desiredClutMargin;
             cal = LinearizeClut(cal);
             if o.isWin
                 % Windows insists on a monotonic CLUT. So we linearize
@@ -908,14 +908,14 @@ try
                 gray1 = gray;
                 % We don't use entry 1, but Windows insists on a monotonic
                 % clut. Set entry 1 to be average of entries 0 and 2.
-                cal.gamma(2,:) = (cal.gamma(1,:) + cal.gamma(3,:))/2;
+                cal.gamma(2,:) = (cal.gamma(1,:)+cal.gamma(3,:))/2;
                 assert(all(all(diff(cal.gamma) >= 0))); % monotonic for Windows
             else
-                % Otherwise (OS other than Windows) we have two clut entries
-                % that prduce the same gray. One (gray) is in the middle of the
-                % CLUT and one is at entry 1 (gray1). The benefit of having
-                % gray1==1 is that we get better blending of letters written
-                % (as black=0) on that background.
+                % Otherwise (using OS other than Windows) we have two clut
+                % entries that prduce the same gray. One (gray) is in the
+                % middle of the CLUT and one is at entry 1 (gray1). The
+                % benefit of having gray1==1 is that we get better blending
+                % of letters written (as black=0) on that background.
                 gray1 = 1;
                 % Allow for margins
                 assert(gray1+1 < firstGrayClutEntry-1);
@@ -924,8 +924,8 @@ try
                 cal.LFirst = LMean;
                 cal.LLast = max(cal.old.L);
                 cal.nFirst = gray1;
-                cal.nLast = gray1 + 1;
-                cal.margin = 0;
+                cal.nLast = gray1+1;
+                cal.clutMargin = 0; % IMPORTANT: must be zero.
                 cal = LinearizeClut(cal);
             end % if o.isWin
             ffprintf(ff,'Size of cal.gamma %d %d\n',size(cal.gamma));
@@ -936,7 +936,7 @@ try
             Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
             if o.assessLoadGamma
                 ffprintf(ff,'Line %d: o.contrast %.3f, LoadNormalizedGammaTable 0.5*range/mean=%.3f\n', ...
-                    MFileLineNr,o.contrast,(cal.LLast-cal.LFirst)/(cal.LLast + cal.LFirst));
+                    MFileLineNr,o.contrast,(cal.LLast-cal.LFirst)/(cal.LLast+cal.LFirst));
             end
             Screen('FillRect',window,gray1);
             Screen('FillRect',window,gray,o.stimulusRect);
@@ -980,7 +980,7 @@ try
         fixationOffsetPix = inf;
         targetOffsetPix = 0;
     else
-        if abs(eccentricityPix) > maxOnscreenFixationOffsetPix + maxTargetOffsetPix
+        if abs(eccentricityPix) > maxOnscreenFixationOffsetPix+maxTargetOffsetPix
             fixationOffscreenCm = round((abs(eccentricityPix)-RectWidth(o.stimulusRect)/2)/pixPerCm);
             fixationOffscreenCm = -sign(eccentricityPix)*max(fixationOffscreenCm,4); % ?4 cm, to avoid collision with the display.
             if fixationOffscreenCm < 0
@@ -1020,7 +1020,7 @@ try
                     else
                         ffprintf(ff,'Offscreen fixation mark is %.0f cm right of the right edge of the stimulusRect.\n',fixationOffscreenCm);
                     end
-                    fixationOffsetPix = sign(fixationOffscreenCm)*(abs(fixationOffscreenCm)*pixPerCm + RectWidth(o.stimulusRect)/2);
+                    fixationOffsetPix = sign(fixationOffscreenCm)*(abs(fixationOffscreenCm)*pixPerCm+RectWidth(o.stimulusRect)/2);
                 otherwise,
                     fixationIsOffscreen = 0;
                     fixationOffscreenCm = 0;
@@ -1037,7 +1037,7 @@ try
             fixationIsOffscreen = 0;
             fixationOffsetPix = -sign(eccentricityPix)*min(abs(eccentricityPix),maxOnscreenFixationOffsetPix);
         end
-        targetOffsetPix = eccentricityPix + fixationOffsetPix;
+        targetOffsetPix = eccentricityPix+fixationOffsetPix;
         assert(abs(targetOffsetPix) <= maxTargetOffsetPix);
     end
     
@@ -1081,7 +1081,7 @@ try
                 o.moviePreSec+o.moviePostSec,MAX_FRAMES);
         end
     end
-    o.movieFrames = o.moviePreFrames + o.movieSignalFrames + o.moviePostFrames;
+    o.movieFrames = o.moviePreFrames+o.movieSignalFrames+o.moviePostFrames;
     if o.movieFrames>MAX_FRAMES
         o.movieFrames=MAX_FRAMES;
         o.movieSignalFrames=o.movieFrames-o.moviePreFrames-o.moviePostFrames;
@@ -1120,7 +1120,7 @@ try
     end
     o.noiseRadiusDeg = 0.5*o.noiseSize(1)*o.noiseCheckPix/o.pixPerDeg;
     noiseBorder = ceil(0.5*o.noiseRaisedCosineEdgeThicknessDeg*o.pixPerDeg/o.noiseCheckPix);
-    o.noiseSize = o.noiseSize + 2*noiseBorder;
+    o.noiseSize = o.noiseSize+2*noiseBorder;
     o.annularNoiseSmallSize = 2*o.annularNoiseSmallRadiusDeg*[1, 1]*o.pixPerDeg/o.noiseCheckPix;
     o.annularNoiseSmallSize(2) = min(o.annularNoiseSmallSize(2),RectHeight(o.stimulusRect)/o.noiseCheckPix);
     o.annularNoiseSmallSize = 2*round(o.annularNoiseSmallSize/2); % An even number, so we can center it on center of letter.
@@ -1158,7 +1158,7 @@ try
     %     if isfinite(o.eccentricityDeg)
     fix.blankingRadiusReTargetHeight = o.blankingRadiusReTargetHeight;
     fix.targetCross = o.targetCross;
-    fix.x = x + targetOffsetPix-eccentricityPix; % x location of fixation
+    fix.x = x+targetOffsetPix-eccentricityPix; % x location of fixation
     fix.y = y; % y location of fixation
     fix.eccentricityPix = eccentricityPix;
     fix.clipRect = o.stimulusRect;
@@ -1172,7 +1172,7 @@ try
     end
     clear tSample
     
-    %% BEGINNING OF NOISE COMPUTATION
+    %% COMPUTE noiseList
     switch o.noiseType % Fill noiseList with desired kind of noise.
         case 'gaussian',
             o.noiseListBound = 2;
@@ -1286,7 +1286,7 @@ try
     switch o.task % Compute masks and envelopes
         case '4afc'
             % boundsRect contains all 4 positions.
-            boundsRect = [-o.targetWidthPix, -o.targetHeightPix, o.targetWidthPix + gap, o.targetHeightPix + gap];
+            boundsRect = [-o.targetWidthPix, -o.targetHeightPix, o.targetWidthPix+gap, o.targetHeightPix+gap];
             boundsRect = CenterRect(boundsRect,o.stimulusRect);
             boundsRect = OffsetRect(boundsRect,targetOffsetPix,0);
             targetRect = round([0 0 o.targetHeightPix o.targetHeightPix]/o.noiseCheckPix);
@@ -1347,7 +1347,7 @@ try
                             % direction.
                             % targetRect=round([a b c d]*o.targetHeightPix/o.noiseCheckPix), where a
                             % b c and d depend on the font.
-                            x = (targetRect(1) + targetRect(3))/2; % horizontal middle
+                            x = (targetRect(1)+targetRect(3))/2; % horizontal middle
                             y = targetRect(4)-o.targetRectLocal(4); % baseline
                             % DrawText draws from left, so shift left by half letter width, to center letter at desired draw
                             % position.
@@ -1389,7 +1389,7 @@ try
                         
                         Screen('FillRect',scratchWindow);
                         letter = letter(:,:,1);
-                        signal(i).image = letter < (white1 + black0)/2;
+                        signal(i).image = letter < (white1+black0)/2;
                         % We have now drawn letter(i) into signal(i).image. The target
                         % size is always given by o.targetRectLocal. This is a square
                         % [0 0 1 1]*o.targetHeightPix/o.noiseCheckPix only if
@@ -1419,7 +1419,7 @@ try
                     for i = 1:o.alternatives
                         a = cos(o.targetGaborOrientationsDeg(i)*pi/180)*2*pi*cyclesPerCheck;
                         b = sin(o.targetGaborOrientationsDeg(i)*pi/180)*2*pi*cyclesPerCheck;
-                        signal(i).image = sin(a*x+b*y+o.targetGaborPhaseDeg*pi/180).*exp(-(x.^2 + y.^2)/spaceConstantChecks^2);
+                        signal(i).image = sin(a*x+b*y+o.targetGaborPhaseDeg*pi/180).*exp(-(x.^2+y.^2)/spaceConstantChecks^2);
                     end
                 otherwise
                     error('Unknown o.targetKind');
@@ -1501,10 +1501,10 @@ try
         y = y-mean(y(:));
         thickness = o.noiseRaisedCosineEdgeThicknessDeg*o.pixPerDeg/o.noiseCheckPix;
         radius = o.noiseRadiusDeg*o.pixPerDeg/o.noiseCheckPix;
-        a = 90 + 180*(sqrt(x.^2+y.^2)-radius)/thickness;
+        a = 90+180*(sqrt(x.^2+y.^2)-radius)/thickness;
         a = min(180,a);
         a = max(0,a);
-        centralNoiseEnvelope = 0.5 + 0.5*cosd(a);
+        centralNoiseEnvelope = 0.5+0.5*cosd(a);
     else
         centralNoiseEnvelope = ones(o.canvasSize);
     end
@@ -1637,10 +1637,10 @@ try
     end
     switch o.thresholdParameter
         case 'spacing',
-            nominalCriticalSpacingDeg = 0.3*(o.eccentricityDeg + 0.45); % Eq. 14 from Song, Levi, and Pelli (2014).
+            nominalCriticalSpacingDeg = 0.3*(o.eccentricityDeg+0.45); % Eq. 14 from Song, Levi, and Pelli (2014).
             tGuess = log10(2*nominalCriticalSpacingDeg);
         case 'size',
-            nominalAcuityDeg = 0.029*(o.eccentricityDeg + 2.72); % Eq. 13 from Song, Levi, and Pelli (2014).
+            nominalAcuityDeg = 0.029*(o.eccentricityDeg+2.72); % Eq. 13 from Song, Levi, and Pelli (2014).
             tGuess = log10(2*nominalAcuityDeg);
         case 'contrast',
         otherwise
@@ -1663,11 +1663,11 @@ try
     rWarningCount = 0;
     runStart = GetSecs;
     for trial = 1:o.trialsPerRun
-        %% SELECT TARGET LOG CONTRAST tTest
+        %% SET TARGET LOG CONTRAST: tTest
         tTest = QuestQuantile(q);
         if o.measureBeta
             offsetToMeasureBeta = Shuffle(offsetToMeasureBeta);
-            tTest = tTest + offsetToMeasureBeta(1);
+            tTest = tTest+offsetToMeasureBeta(1);
         end
         if ~isfinite(tTest)
             ffprintf(ff,'WARNING: trial %d: tTest %f not finite. Setting to QuestMean.\n',trial,tTest);
@@ -1694,7 +1694,7 @@ try
                         o.contrast = -o.snapshotLetterContrast;
                     end
                 else
-                    r = 1 + 10^tTest;
+                    r = 1+10^tTest;
                     o.contrast = 0;
                 end
         end
@@ -1715,12 +1715,12 @@ try
                     if ~exist('rWarningCount','var') || rWarningCount == 0
                         ffprintf(ff,'WARNING: Limiting r ratio of %s noises to upper bound %.2f to stay within luminance range.\n',o.noiseType,r);
                     end
-                    rWarningCount = rWarningCount + 1;
+                    rWarningCount = rWarningCount+1;
                 end
                 tTest = log10(r-1);
             case 'luminance',
                 a = (min(cal.old.L)-LMean)/LMean;
-                a = a + o.noiseListBound*o.noiseSD/o.noiseListSd;
+                a = a+o.noiseListBound*o.noiseSD/o.noiseListSd;
                 assert(a < 0,'Need range for signal.');
                 if o.contrast < a
                     o.contrast = a;
@@ -1733,7 +1733,7 @@ try
                     if ~exist('rWarningCount','var') || rWarningCount == 0
                         ffprintf(ff,'WARNING: Limiting entropy of %s noise to upper bound %.1f bits.\n',o.noiseType,log2(r*o.backgroundEntropyLevels));
                     end
-                    rWarningCount = rWarningCount + 1;
+                    rWarningCount = rWarningCount+1;
                 end
                 signalEntropyLevels = round(r*o.backgroundEntropyLevels);
                 r = signalEntropyLevels/o.backgroundEntropyLevels; % define r as ratio of number of levels
@@ -1801,22 +1801,22 @@ try
                         if i == signalLocation
                             switch o.targetModulates
                                 case 'noise',
-                                    location(i).image = 1 + r*(o.noiseSD/o.noiseListSd)*noise;
+                                    location(i).image = 1+r*(o.noiseSD/o.noiseListSd)*noise;
                                 case 'luminance',
-                                    location(i).image = 1 + (o.noiseSD/o.noiseListSd)*noise + o.contrast;
+                                    location(i).image = 1+(o.noiseSD/o.noiseListSd)*noise+o.contrast;
                                 case 'entropy',
-                                    q.noiseList = (0.5 + floor(noiseList*0.499999*signalEntropyLevels))/(0.5*signalEntropyLevels);
+                                    q.noiseList = (0.5+floor(noiseList*0.499999*signalEntropyLevels))/(0.5*signalEntropyLevels);
                                     q.sd = std(q.noiseList);
-                                    location(i).image = 1 + (o.noiseSD/q.sd)*(0.5 + floor(noise*0.499999*signalEntropyLevels))/(0.5*signalEntropyLevels);
+                                    location(i).image = 1+(o.noiseSD/q.sd)*(0.5+floor(noise*0.499999*signalEntropyLevels))/(0.5*signalEntropyLevels);
                             end
                         else
                             switch o.targetModulates
                                 case 'entropy',
-                                    q.noiseList = (0.5 + floor(noiseList*0.499999*o.backgroundEntropyLevels))/(0.5*o.backgroundEntropyLevels);
+                                    q.noiseList = (0.5+floor(noiseList*0.499999*o.backgroundEntropyLevels))/(0.5*o.backgroundEntropyLevels);
                                     q.sd = std(q.noiseList);
-                                    location(i).image = 1 + (o.noiseSD/q.sd)*(0.5 + floor(noise*0.499999*o.backgroundEntropyLevels))/(0.5*o.backgroundEntropyLevels);
+                                    location(i).image = 1+(o.noiseSD/q.sd)*(0.5+floor(noise*0.499999*o.backgroundEntropyLevels))/(0.5*o.backgroundEntropyLevels);
                                 otherwise
-                                    location(i).image = 1 + (o.noiseSD/o.noiseListSd)*noise;
+                                    location(i).image = 1+(o.noiseSD/o.noiseListSd)*noise;
                             end
                         end
                     end
@@ -1846,7 +1846,7 @@ try
                     % figure(1);imshow(signalImageIndex);
                     signalImage = zeros(o.canvasSize);
                     if (iMovieFrame > o.moviePreFrames ...
-                            && iMovieFrame <= o.moviePreFrames + o.movieSignalFrames)
+                            && iMovieFrame <= o.moviePreFrames+o.movieSignalFrames)
                         % Add in signal only during the signal interval.
                         signalImage(signalImageIndex) = signal(whichSignal).image(:);
                     end
@@ -1855,19 +1855,19 @@ try
                     switch o.targetModulates
                         case 'luminance',
                             location(1).image = ones(o.canvasSize);
-                            location(1).image(centralNoiseMask) = 1 + (o.noiseSD/o.noiseListSd)*noise(centralNoiseMask);
-                            location(1).image(annularNoiseMask) = 1 + (o.annularNoiseSD/o.noiseListSd)*noise(annularNoiseMask);
-                            location(1).image = location(1).image + o.contrast*signalImage; % NOTE: noise and signal added here
+                            location(1).image(centralNoiseMask) = 1+(o.noiseSD/o.noiseListSd)*noise(centralNoiseMask);
+                            location(1).image(annularNoiseMask) = 1+(o.annularNoiseSD/o.noiseListSd)*noise(annularNoiseMask);
+                            location(1).image = location(1).image+o.contrast*signalImage; % NOTE: noise and signal added here
                         case 'noise'
                             noise(signalMask) = r*noise(signalMask);
                             location(1).image = ones(o.canvasSize);
-                            location(1).image(centralNoiseMask) = 1 + (o.noiseSD/o.noiseListSd)*noise(centralNoiseMask);
-                            location(1).image(annularNoiseMask) = 1 + (o.annularNoiseSD/o.noiseListSd)*noise(annularNoiseMask);
+                            location(1).image(centralNoiseMask) = 1+(o.noiseSD/o.noiseListSd)*noise(centralNoiseMask);
+                            location(1).image(annularNoiseMask) = 1+(o.annularNoiseSD/o.noiseListSd)*noise(annularNoiseMask);
                         case 'entropy',
                             noise(~centralNoiseMask) = 0;
-                            noise(signalMask) = (0.5 + floor(noise(signalMask)*0.499999*signalEntropyLevels))/(0.5*signalEntropyLevels);
-                            noise(~signalMask) = (0.5 + floor(noise(~signalMask)*0.499999*o.backgroundEntropyLevels))/(0.5*o.backgroundEntropyLevels);
-                            location(1).image = 1 + (o.noiseSD/o.noiseListSd)*noise;
+                            noise(signalMask) = (0.5+floor(noise(signalMask)*0.499999*signalEntropyLevels))/(0.5*signalEntropyLevels);
+                            noise(~signalMask) = (0.5+floor(noise(~signalMask)*0.499999*o.backgroundEntropyLevels))/(0.5*o.backgroundEntropyLevels);
+                            location(1).image = 1+(o.noiseSD/o.noiseListSd)*noise;
                     end
                 otherwise
                     error('Unknown o.task "%s"',o.task);
@@ -1881,25 +1881,25 @@ try
             Screen('FillRect',window,gray,o.stimulusRect);
             Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
             rect = [0, 0, 1, 1]*2*o.annularNoiseBigRadiusDeg*o.pixPerDeg/o.noiseCheckPix;
-            if o.newClutForEachImage
-                % Compute clut for all possible images. Note: Except
-                % under Windows, the gray screen in the non-stimulus
-                % areas is drawn with CLUT index n=1.
+            if o.newClutForEachImage % Usually enabled
+                % Compute clut for all possible noises and given signal and
+                % contrast. Note: Except under Windows, the gray screen in
+                % the non-stimulus areas is drawn with CLUT index n=1.
                 %
                 % Noise
                 cal.LFirst = LMean*(1-o.noiseListBound*r*o.noiseSD/o.noiseListSd);
                 cal.LLast = LMean*(1+o.noiseListBound*r*o.noiseSD/o.noiseListSd);
                 if streq(o.targetModulates,'luminance')
-                    cal.LFirst = cal.LFirst + min(0,LMean*o.contrast);
-                    cal.LLast = cal.LLast + max(0,LMean*o.contrast);
+                    cal.LFirst = cal.LFirst+min(0,LMean*o.contrast);
+                    cal.LLast = cal.LLast+max(0,LMean*o.contrast);
                 end
                 if o.useFlankers && isfinite(o.flankerContrast)
-                    cal.LFirst = min(cal.LFirst,LMean*(1 + o.flankerContrast));
-                    cal.LLast = max(cal.LLast,LMean*(1 + o.flankerContrast));
+                    cal.LFirst = min(cal.LFirst,LMean*(1+o.flankerContrast));
+                    cal.LLast = max(cal.LLast,LMean*(1+o.flankerContrast));
                 end
                 if o.annularNoiseBigRadiusDeg > o.annularNoiseSmallRadiusDeg
                     cal.LFirst = min(cal.LFirst,LMean*(1-o.noiseListBound*r*o.annularNoiseSD/o.noiseListSd));
-                    cal.LLast = max(cal.LLast,LMean*(1 + o.noiseListBound*r*o.annularNoiseSD/o.noiseListSd));
+                    cal.LLast = max(cal.LLast,LMean*(1+o.noiseListBound*r*o.annularNoiseSD/o.noiseListSd));
                 end
                 % Range is centered on LMean and includes LFirst and LLast.
                 % Having a fixed index for "gray" (LMean) assures us that
@@ -1909,14 +1909,16 @@ try
                 LRange = max(LRange,o.minLRange); % Needed for Windows.
                 LRange = min(LRange,o.maxLRange);
                 cal.LFirst = LMean-LRange/2;
-                cal.LLast = LMean + LRange/2;
+                cal.LLast = LMean+LRange/2;
                 cal.nFirst = firstGrayClutEntry;
                 cal.nLast = lastGrayClutEntry;
+                cal.clutMargin=desiredClutMargin; % Needed on some video displays.
                 if o.saveSnapshot
                     cal.LFirst = min(cal.old.L);
                     cal.LLast = max(cal.old.L);
                     cal.nFirst = 1;
                     cal.nLast = 255;
+                    cal.clutMargin = 0; % Not needed for snapshot.
                 end
                 if 0 % Compute clut for the specific image
                     L = [];
@@ -1926,7 +1928,6 @@ try
                     cal.LFirst = min(L);
                     cal.LLast = max(L);
                 end
-                cal.margin = 0; % Not needed for data snapshot
                 cal = LinearizeClut(cal);
                 grayCheck = IndexOfLuminance(cal,LMean);
                 if ~o.saveSnapshot && grayCheck ~= gray
@@ -1989,9 +1990,9 @@ try
                                 r = OffsetRect(rect,dx,dy);
                                 i = randi(o.alternatives);
                                 if isfinite(o.flankerContrast)
-                                    img = 1 + o.flankerContrast*signal(i).image;
+                                    img = 1+o.flankerContrast*signal(i).image;
                                 else
-                                    img = 1 + o.contrast*signal(i).image;
+                                    img = 1+o.contrast*signal(i).image;
                                 end
                                 img = Expand(img,o.noiseCheckPix);
                                 buffer = Screen('GetImage',window,r,'drawBuffer');
@@ -2085,14 +2086,14 @@ try
                     if o.blackAnnulusContrast == -1
                         color = 0;
                     else
-                        luminance = (1 + o.blackAnnulusContrast)*LMean;
+                        luminance = (1+o.blackAnnulusContrast)*LMean;
                         luminance = max(min(luminance,cal.LLast),cal.LFirst);
                         color = IndexOfLuminance(cal,luminance);
                         o.blackAnnulusContrast = LuminanceOfIndex(cal,color)/LMean-1;
                     end
                     Screen('FrameRect',window,color,annulusRect,thickness);
                 end % if o.showBlackAnnulus
-                if o.saveStimulus && iMovieFrame == o.moviePreFrames + 1
+                if o.saveStimulus && iMovieFrame == o.moviePreFrames+1
                     o.savedStimulus = Screen('GetImage',window,o.stimulusRect,'drawBuffer');
                     fprintf('o.savedStimulus at contrast %.3f\n',o.contrast);
                     Screen('DrawText',window,sprintf('o.contrast %.3f',o.contrast),20,150);
@@ -2113,7 +2114,7 @@ try
                 pp = Screen('GetImage',window,dstRect);
                 o.actualStimulus=pp;
                 pp=unique(pp(:));
-                ffprintf(ff,'Line %d: Target index (cd/m^2): ',MFileLineNr);
+                ffprintf(ff,'Line %d: assessTargetLuminanceTarget: index (cd/m^2): ',MFileLineNr);
                 for i=1:length(pp)
                     ffprintf(ff,'%d (%.1f), ',pp(i),LuminanceOfIndex(cal,pp(i)));
                 end
@@ -2194,12 +2195,12 @@ try
                     if o.alternatives < 6
                         desiredLengthPix = desiredLengthPix*o.alternatives/6;
                     end
-                    alphaSpaces = o.alternatives + spacingFraction*(o.alternatives + 1);
+                    alphaSpaces = o.alternatives+spacingFraction*(o.alternatives+1);
                     alphaPix = desiredLengthPix/alphaSpaces;
                     %                         alphaCheckPix=alphaPix/(signalChecks/o.noiseCheckPix);
                     alphaCheckPix = alphaPix/signalChecks;
-                    alphaGapPixCeil = (desiredLengthPix-o.alternatives*ceil(alphaCheckPix)*signalChecks)/(o.alternatives + 1);
-                    alphaGapPixFloor = (desiredLengthPix-o.alternatives*floor(alphaCheckPix)*signalChecks)/(o.alternatives + 1);
+                    alphaGapPixCeil = (desiredLengthPix-o.alternatives*ceil(alphaCheckPix)*signalChecks)/(o.alternatives+1);
+                    alphaGapPixFloor = (desiredLengthPix-o.alternatives*floor(alphaCheckPix)*signalChecks)/(o.alternatives+1);
                     ceilError = log(alphaGapPixCeil/(ceil(alphaCheckPix)*signalChecks))-log(spacingFraction);
                     floorError = log(alphaGapPixFloor/(floor(alphaCheckPix)*signalChecks))-log(spacingFraction);
                     if min(abs(ceilError),abs(floorError)) < log(3)
@@ -2209,7 +2210,7 @@ try
                             alphaCheckPix = ceil(alphaCheckPix);
                         end
                     end
-                    alphaGapPix = (desiredLengthPix-o.alternatives*signalChecks*alphaCheckPix)/(o.alternatives + 1);
+                    alphaGapPix = (desiredLengthPix-o.alternatives*signalChecks*alphaCheckPix)/(o.alternatives+1);
                     useExpand = alphaCheckPix == round(alphaCheckPix);
                     rect = [0 0 o.targetWidthPix o.targetHeightPix]/o.noiseCheckPix; % size of signal(1).image
                     rect = round(rect*alphaCheckPix);
@@ -2218,9 +2219,9 @@ try
                     rect = round(rect);
                     switch o.alphabetPlacement
                         case 'right',
-                            step = [0 RectHeight(rect) + alphaGapPix];
+                            step = [0 RectHeight(rect)+alphaGapPix];
                         case 'top',
-                            step = [RectWidth(rect) + alphaGapPix 0];
+                            step = [RectWidth(rect)+alphaGapPix 0];
                             rect = OffsetRect(rect,-(o.alternatives-1)*step(1),0);
                     end
                     for i = 1:o.alternatives
@@ -2254,7 +2255,7 @@ try
 %             Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
             if o.assessLoadGamma
                 ffprintf(ff,'Line %d: o.contrast %.3f, LoadNormalizedGammaTable 0.5*range/mean=%.3f\n', ...
-                    MFileLineNr,o.contrast,(cal.LLast-cal.LFirst)/(cal.LLast + cal.LFirst));
+                    MFileLineNr,o.contrast,(cal.LLast-cal.LFirst)/(cal.LLast+cal.LFirst));
             end
             if o.assessGray
                 pp = Screen('GetImage',window,[20 20 21 21]);
@@ -2314,7 +2315,7 @@ try
                 end
                 % CHECK DURATION
                 if o.useDynamicNoiseMovie
-                    movieFirstSignalFrame = o.moviePreFrames + 1;
+                    movieFirstSignalFrame = o.moviePreFrames+1;
                     movieLastSignalFrame = o.movieFrames-o.moviePostFrames;
                 else
                     movieFirstSignalFrame = 1;
@@ -2369,7 +2370,7 @@ try
                 %                     results(n,2)=response;
                 %                     n=n+1;
         end
-        trialsRight = trialsRight + response;
+        trialsRight = trialsRight+response;
         q = QuestUpdate(q,tTest,response); % Add the new datum (actual test intensity and o.observer response) to the database.
         o.data(trial,1:2) = [tTest response];
         if cal.ScreenConfigureDisplayBrightnessWorks
@@ -2386,7 +2387,7 @@ try
     %% DONE. REPORT THRESHOLD FOR THIS RUN.
     if ~isempty(o.data)
         psych.t = unique(o.data(:,1));
-        psych.r = 1 + 10.^psych.t;
+        psych.r = 1+10.^psych.t;
         for i = 1:length(psych.t)
             dataAtT = o.data(:,1) == psych.t(i);
             psych.trials(i) = sum(dataAtT);
@@ -2438,7 +2439,7 @@ try
         ffprintf(ff,'dt    P\n');
         tt = QuestMean(qq);
         for offset = sort(offsetToMeasureBeta)
-            t = tt + offset;
+            t = tt+offset;
             ffprintf(ff,'%5.2f %.2f\n',offset,QuestP(qq,offset));
         end
     end
@@ -2480,7 +2481,7 @@ try
     switch o.targetModulates
         case 'noise',
             t = o.questMean;
-            o.r = 10^t + 1;
+            o.r = 10^t+1;
             o.approxRequiredNumber = 64./10.^((t-idealT64)/0.55);
             o.logApproxRequiredNumber = log10(o.approxRequiredNumber);
             ffprintf(ff,'r %.3f, approx required number %.0f\n',o.r,o.approxRequiredNumber);
@@ -2488,7 +2489,7 @@ try
             %              ffprintf(ff,'SUMMARY: %s %d runs mean+/-se: log(r-1) %.2f+/-%.2f, log(approx required n) %.2f+/-%.2f\n',o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
         case 'entropy',
             t = o.questMean;
-            o.r = 10^t + 1;
+            o.r = 10^t+1;
             signalEntropyLevels = o.r*o.backgroundEntropyLevels;
             ffprintf(ff,'Entropy levels: r %.2f, background levels %d, signal levels %.1f\n',o.r,o.backgroundEntropyLevels,signalEntropyLevels);
     end
@@ -2748,22 +2749,23 @@ return;
 end % function SaveSnapshot
 %% FUNCTION TestBitDepth
 function TestBitDepth(o)
-% Display a linear luminance ramp. Alternate at 1 Hz, with something that is bit-limited.
-% Hasn't been tested since it became a subroutine. It may need more of its
-% variables to be declared "global". A more elegant solution, more
-% transparent that "global" would be to put all the currently global
-% variables into a new struct called "my". It would be received as an
-% argument and might need to be returned as an output. Note that if "o" is
-% modified here, it too may need to be returned as an output argument, or
-% made global.% n=o.testBitDepth.
+% Display a linear luminance ramp. Alternate at 1 Hz, with something that
+% is bit-limited. Hasn't been tested since it became a subroutine. It may
+% need more of its variables to be declared "global". A more elegant
+% solution, more transparent than "global", would be to put all the
+% currently global variables into a new struct called "my". It would be
+% received as an argument and might need to be returned as an output. Note
+% that if "o" is modified here, it too may need to be returned as an output
+% argument, or made global.
+% n=o.testBitDepth.
 LMin = min(cal.old.L);
 LMax = max(cal.old.L);
-LMean = (LMax + LMin)/2;
+LMean = (LMax+LMin)/2;
 cal.LFirst = LMin;
-cal.LLast = LMean + (LMean-LMin); % Symmetric about LMean.
+cal.LLast = LMean+(LMean-LMin); % Symmetric about LMean.
 cal.nFirst = firstGrayClutEntry;
 cal.nLast = lastGrayClutEntry;
-cal.margin = 1;
+cal.clutMargin = 1;
 cal = LinearizeClut(cal);
 img = cal.nFirst:cal.nLast;
 n = floor(RectWidth(screenRect)/length(img));
@@ -2771,7 +2773,7 @@ r = [0 0 n*length(img) RectHeight(screenRect)];
 Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
 if o.assessLoadGamma
     ffprintf(ff,'Line %d: o.contrast %.3f, LoadNormalizedGammaTable 0.5*range/mean=%.3f\n', ...
-        MFileLineNr,o.contrast,(cal.LLast-cal.LFirst)/(cal.LLast + cal.LFirst));
+        MFileLineNr,o.contrast,(cal.LLast-cal.LFirst)/(cal.LLast+cal.LFirst));
 end
 Screen('TextFont',window,'Verdana');
 Screen('TextSize',window,24);
@@ -2809,7 +2811,7 @@ function AssessContrast(o)
 % Reports by ffprintf. Returns nothing.
 global window fixationLines fixationCrossWeightPix labelBounds location screenRect ...
     tTest idealT64 leftEdgeOfResponse textSize checks img cal ff
-LMean = (cal.LFirst + cal.LLast)/2;
+LMean = (cal.LFirst+cal.LLast)/2;
 img = IndexOfLuminance(cal,LMean);
 img = img:255;
 L = EstimateLuminance(cal,img);
@@ -2822,10 +2824,10 @@ else
 end
 switch o.targetModulates
     case 'luminance',
-        img = [1 1 + o.contrast];
+        img = [1 1+o.contrast];
     otherwise
         noise = PsychRandSample(noiseList,o.canvasSize);
-        img = 1 + noise*o.noiseSD/o.noiseListSd;
+        img = 1+noise*o.noiseSD/o.noiseListSd;
 end
 index = IndexOfLuminance(cal,img*LMean);
 imgEstimate = EstimateLuminance(cal,index)/LMean;
@@ -2833,13 +2835,13 @@ rmsContrastError = rms(img(:)-imgEstimate(:));
 % ffprintf(ff,'Assess contrast: At LMean, the minimum contrast step is %.4f, with rmsContrastError %.3f\n',contrastEstimate,rmsContrastError);
 switch o.targetModulates
     case 'luminance',
-        img = [1, 1 + o.contrast];
+        img = [1, 1+o.contrast];
         img = IndexOfLuminance(cal,img*LMean);
         L = EstimateLuminance(cal,img);
         ffprintf(ff,'Assess contrast: Desired o.contrast of %.3f will be rendered as %.3f (estimated).\n',o.contrast,diff(L)/L(1));
     otherwise
         noiseSDEstimate = std(imgEstimate(:))*o.noiseListSd/std(noise(:));
-        img = 1 + r*(o.noiseSD/o.noiseListSd)*noise;
+        img = 1+r*(o.noiseSD/o.noiseListSd)*noise;
         img = IndexOfLuminance(cal,img*LMean);
         imgEstimate = EstimateLuminance(cal,img)/LMean;
         rEstimate = std(imgEstimate(:))*o.noiseListSd/std(noise(:))/noiseSDEstimate;
@@ -2966,7 +2968,7 @@ switch o.observer
                 for i = 1:locations
                     im = location(i).image(signalImageIndex);
                     im = im(:)-1;
-                    brightness = im + o.observerQuadratic*im.^2;
+                    brightness = im+o.observerQuadratic*im.^2;
                     likely(i) = sign(o.observerQuadratic)*mean(brightness(:));
                 end
             case 'identify',
@@ -2978,7 +2980,7 @@ switch o.observer
                     im = im(:)-1;
                     % Set o.observerQuadratic  to 0 for linear. 1 for square law. 0.2 for
                     % 0.8 linear and 0.2 square.
-                    brightness = im + o.observerQuadratic*im.^2;
+                    brightness = im+o.observerQuadratic*im.^2;
                     ink = brightness(signalMask);
                     paper = brightness(~signalMask);
                     likely(i) = sign(o.observerQuadratic)*(mean(ink(:))-mean(paper(:)));
@@ -3022,7 +3024,7 @@ switch o.observer
                     blackshot = interp1(c,b,im);
                     ink = blackshot(signalMask);
                     paper = blackshot(~signalMask);
-                    likely(i) =-mean(ink(:)) + mean(paper(:));
+                    likely(i) =-mean(ink(:))+mean(paper(:));
                 end
         end
         [junk, response] = max(likely);
@@ -3049,8 +3051,8 @@ switch o.observer
                     im(:) = location(1).image(signalImageIndex);
                     im = im(:)-1;
                     % Set o.observerQuadratic to 0 for linear; 1 for square
-                    % law; 0.2 for 0.8 linear + 0.2 square.
-                    brightness = im + o.observerQuadratic*im.^2;
+                    % law; 0.2 for 0.8 linear+0.2 square.
+                    brightness = im+o.observerQuadratic*im.^2;
                     ink = brightness(signalMask);
                     paper = brightness(~signalMask);
                     likely(i) = sign(o.observerQuadratic)*(mean(ink(:))-mean(paper(:)));
