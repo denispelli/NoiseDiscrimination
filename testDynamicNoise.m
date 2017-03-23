@@ -1,7 +1,7 @@
 clear o
 % o.observer='denis'; % use your name
 % o.distanceCm=60; % viewing distance
-% o.durationSec=0.5; % signal duration. [0.05, 0.5] for 50 ms and 500 ms 
+% o.durationSec=0.5; % signal duration. [0.05, 0.5] for 50 ms and 500 ms
 % o.trialsPerRun=40;
 
 % NOISE
@@ -10,23 +10,14 @@ o.moviePreSec = 0; % ignored for static noise
 o.moviePostSec = 0; % ignored for static noise
 
 % o.showCropMarks=1; % mark the bounding box of the target
-% o.observer='denis'; % use your name
-o.observer='Chen';
+o.observer='denis'; % use your name
+% o.observer='Chen';
 o.weightIdealWithNoise=0;
 o.distanceCm=70; % viewing distance
-o.durationSec=0.2; % [0.05, 0.5] for 50 ms and 500 ms 
+o.durationSec=0.2; % [0.05, 0.5] for 50 ms and 500 ms
 o.trialsPerRun=40;
 o.assessContrast=0;
 o.assessLoadGamma=0;
-
-% A value of 1 will cancel dynamic noise (only 1 flip of noise will be
-% generated) Actual value will depend on frame rate and stimulus
-% presentation duration, thus will be ALWAYS overwritten later for any
-% value other than 1
-o.dynamicSignalPoolSize = 10; % or 1 for static noise
-o.dynamicPreSignalNoisePoolDur = 0;
-o.dynamicPostSignalNoisePoolDur = 0;
-
 
 % o.font='Sloan';
 % o.alphabet = 'DHKNORSVZ';
@@ -52,13 +43,13 @@ o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
 % For noise with Gaussian envelope (soft)
 % o.noiseRadiusDeg=inf;
 % noiseEnvelopeSpaceConstantDeg: 1
-% 
+%
 % For noise with tophat envelope (sharp cut off beyond disk with radius 1)
 % o.noiseRadiusDeg=1;
 % noiseEnvelopeSpaceConstantDeg: Inf
 
 % LETTER
-% o.targetHeightDeg=7.64; % Target size, range 0 to inf. 
+% o.targetHeightDeg=7.64; % Target size, range 0 to inf.
 % o.eccentricityDeg=0; % eccentricity [0 8 16 32]
 % o.targetKind='letter';
 % o.font='Sloan';
@@ -69,7 +60,7 @@ o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
 % o.font='ITC Bookman Std';
 % o.alphabet='abcdefghijklmnopqrstuvwxyz';
 % o.alternatives=length(o.alphabet); % number of letters to use from o.alphabet
-% o.targetHeightDeg=2*7.64; % Manoj used xHeight of 7.64 deg. 
+% o.targetHeightDeg=2*7.64; % Manoj used xHeight of 7.64 deg.
 
 % FIXATION & USER INTERFACE
 o.targetCross=1;
@@ -107,7 +98,7 @@ o.printDurations=1;
 % for ii = 1:length(exp_value)
 %     o.durationSec = exp_value(ii,1);
 %     o.noiseSD = exp_value(ii,2);
-    running_trials = 1;
-    o = NoiseDiscrimination(o);
-sca;
+running_trials = 1;
+o = NoiseDiscrimination(o);
+
 
