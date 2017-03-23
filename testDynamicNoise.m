@@ -1,16 +1,4 @@
 clear o
-<<<<<<< Updated upstream
-o.observer='denis'; % use your name
-o.distanceCm=60; % viewing distance
-o.durationSec=inf; % signal duration. [0.05, 0.5] for 50 ms and 500 ms 
-o.trialsPerRun=40;
-
-% NOISE
-o.useDynamicNoiseMovie = 0; % 0 for static noise
-o.moviePreSec = 0.2; % ignored for static noise
-o.moviePostSec = 0.2; % ignored for static noise
-=======
-% <<<<<<< Updated upstream
 % o.observer='denis'; % use your name
 % o.distanceCm=60; % viewing distance
 % o.durationSec=0.5; % signal duration. [0.05, 0.5] for 50 ms and 500 ms 
@@ -48,7 +36,6 @@ o.alternatives=length(o.alphabet); % number of letters to use from o.alphabet
 o.targetHeightDeg=7.64; % Target size, range 0 to inf. If you ask for too much, it gives you the max possible.
 % o.targetHeightDeg=7.64*2;
 
->>>>>>> Stashed changes
 o.noiseType='binary'; % 'gaussian' or 'uniform' or 'binary'
 % o.noiseType='gaussian';
 o.noiseSpectrum='white'; % pink or white
