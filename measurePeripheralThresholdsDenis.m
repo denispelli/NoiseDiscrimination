@@ -230,12 +230,12 @@ end
 
 % o.useFractionOfScreen=.3;
 o.useDynamicNoiseMovie = 1; % 0 for static noise
-o.durationSec = 2;
+o.durationSec = 1;
 o.observer='denis';
-o.assessContrast=1;
-o.assessLoadGamma=1;
-o.assessGray=1;
-o.assessTargetLuminance=1;
+o.assessContrast=0;
+o.assessLoadGamma=0;
+o.assessGray=0;
+o.assessTargetLuminance=0;
 o.tGuess=log10(0.01);
 o.eccentricityDeg=0;
 o.targetHeightDeg=8;
