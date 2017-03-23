@@ -242,4 +242,4 @@ o.targetHeightDeg=8;
 o.noiseCheckDeg=o.targetHeightDeg/20;
 o.noiseSD=0;
 o=NoiseDiscrimination(o);
-imshow(o.actualStimulus);
+% imshow(o.actualStimulus);
