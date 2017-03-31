@@ -19,10 +19,10 @@ o.trialsPerRun=40;
 o.assessContrast=0;
 o.assessLoadGamma=0;
 
-% o.font='Sloan';
-% o.alphabet = 'DHKNORSVZ';
-o.font='ITC Bookman Std';
-o.alphabet='abcdefghijklmnopqrstuvwxyz';
+o.font='Sloan';
+o.alphabet = 'DHKNORSVZ';
+% o.font='ITC Bookman Std';
+% o.alphabet='abcdefghijklmnopqrstuvwxyz';
 o.alternatives=length(o.alphabet); % number of letters to use from o.alphabet
 o.targetHeightDeg=7.64; % Target size, range 0 to inf. If you ask for too much, it gives you the max possible.
 % o.targetHeightDeg=7.64*2;
@@ -87,7 +87,7 @@ o.speakInstructions=0;
 % DEBUGGING
 o.useFractionOfScreen=0; % 0: normal, 0.5: small for debugging.
 o.flipClick=0;
-o.assessContrast=0;
+o.assessContrast=1;
 o.assessLoadGamma=0;
 % o.showCropMarks=1; % mark the bounding box of the target
 o.printDurations=1;
@@ -98,7 +98,6 @@ o.printDurations=1;
 % for ii = 1:length(exp_value)
 %     o.durationSec = exp_value(ii,1);
 %     o.noiseSD = exp_value(ii,2);
-running_trials = 1;
-o = NoiseDiscrimination(o);
 
+o = NoiseDiscrimination(o);
 
