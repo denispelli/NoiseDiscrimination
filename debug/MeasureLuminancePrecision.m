@@ -57,16 +57,16 @@ function data=MeasureLuminancePrecision
 % Denis Pelli, April 2, 2017
 
 clear all
-points=64;
+points=64*4*4;
 wigglePixelNotCLUT=1;
 loadIdentityCLUT=1;
 ditherCLUT=61696; % Enable dither on my iMac and PowerBook Pro.
 % ditherCLUT=0; % Disable dither.
 useNative10Bit=1;
-enableCLUTMapping=1;
+enableCLUTMapping=0;
 CLUTMapSize=4096;
 usePhotometer=1; % 1 use ColorCAL II XYZ; 0 simulate 8-bit rendering.
-reciprocalOfFraction=[256]; % List one or more, e.g. 1, 64, 128, 256.
+reciprocalOfFraction=[1 256 1024]; % List one or more, e.g. 1, 64, 128, 256.
 useFractionOfScreen=0; % Reduce our window to expose Command Window.
 BackupCluts;
 Screen('Preference','SkipSyncTests',2);
@@ -100,7 +100,7 @@ try
       gammaRead=Screen('ReadNormalizedGammaTable',window);
       assert(length(gamma)==length(gammaRead))
       delta=gammaRead(:,2)-gamma(:,2);
-      fprintf('Difference between identity and read-back of default CLUT: mean %.6f, sd %.6f\n',mean(delta),std(delta));
+      fprintf('Difference between identity and read-back of default CLUT: mean %.9f, sd %.9f\n',mean(delta),std(delta));
    end
    if enableCLUTMapping
       % Check whether loading identity as a CLUT map is innocuous.
@@ -158,7 +158,7 @@ try
          if loadIdentityCLUT
             gammaRead=Screen('ReadNormalizedGammaTable',window);
             delta=gammaRead(:,2)-gamma(:,2);
-            fprintf('Error in read-back of identity CLUT: mean %.6f, sd %.6f\n',mean(delta),std(delta));
+            fprintf('Difference in read-back of identity CLUT: mean %.9f, sd %.9f\n',mean(delta),std(delta));
             if 0
                % Report all errors in identity CLUT.
                list=gamma(:,2)~=gammaRead(:,2);
@@ -166,7 +166,7 @@ try
                n=1:1024;
                fprintf('Subs.\tEntry\tLoad\tRead\tDiff\n');
                for j=n(list)
-                  fprintf('%d\t%d\t%.3f\t%.3f\t%.6f\n',j,j-1,gamma(j,2),gammaRead(j,2),gammaRead(j,2)-gamma(j,2));
+                  fprintf('%d\t%d\t%.3f\t%.3f\t%.9f\n',j,j-1,gamma(j,2),gammaRead(j,2),gammaRead(j,2)-gamma(j,2));
                end
             end
          end
@@ -190,6 +190,7 @@ for iData=1:length(data)
    d=data(iData);
    subplot(1,length(data),iData)
    plot(d.v,d.L);
+   pbaspect([1 1 1]);
    title(sprintf('Range/%d',1/d.fraction));
    if wigglePixelNotCLUT
       xlabel('Pixel value');
@@ -199,27 +200,39 @@ for iData=1:length(data)
    ylabel('Luminance (cd/m^2)');
    xlim([d.v(1) d.v(end)]);
    computer=Screen('Computer');
-   name=computer.machineName;
-   if exist('ditherCLUT','var')
-      name=sprintf('%s, dither %d',name,ditherCLUT);
-   end
-   if useNative10Bit
-      name=sprintf('%s, useNative10Bit',name);
-   end
-   if loadIdentityCLUT
-      name=[name ', loadIdentityCLUT'];
-   end
-   if enableCLUTMapping
-      name=sprintf('%s, CLUTMapSize=%d',name,CLUTMapSize);
-   end
-   if ~usePhotometer
-      name=[name ',simulating 8 bits'];
-   end
+   name=[computer.machineName ', '];
    yLim=ylim;
-   y=yLim(1)+0.97*diff(yLim);
+   dy=-0.03*diff(yLim);
+   y=yLim(2)+dy;
    xLim=xlim;
    x=xLim(1)+0.03*diff(xLim);
    text(x,y,name);
+   name='';
+  if exist('ditherCLUT','var')
+      name=sprintf('%sdither %d, ',name,ditherCLUT);
+   end
+   if useNative10Bit
+      name=sprintf('%suseNative10Bit, ',name);
+   end
+   y=y+dy;
+   text(x,y,name);
+   name='';
+   if loadIdentityCLUT
+      name=[name 'loadIdentityCLUT, '];
+   end
+   if enableCLUTMapping
+      name=sprintf('%s CLUTMapSize=%d, ',name,CLUTMapSize);
+   end
+   if ~usePhotometer
+      name=[name 'simulating 8 bits, '];
+   end
+   y=y+dy;
+   text(x,y,name);
+   name='';
+   name=sprintf('%spoints%d',name,points);
+   y=y+dy;
+   text(x,y,name);
+   name='';
 end
 folder=fileparts(mfilename('fullpath'));
 cd(folder);
@@ -239,8 +252,9 @@ end
 if ~usePhotometer
    name=[name 'Simulating8Bits'];
 end
+name=sprintf('%sPoints%d',name,points);
 name=strrep(name,'''',''); % Remove quote marks.
-savefig(name,'compact'); % Save figure as figure file.
+savefig(gcf,name,'compact'); % Save figure as figure file.
 print(gcf,'-dpng',name); % Save figure as png file.
 save(name,'data'); % Save data as MAT file.
 end
