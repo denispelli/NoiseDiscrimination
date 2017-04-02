@@ -56,8 +56,7 @@ function data=MeasureLuminancePrecision
 %
 % Denis Pelli, April 2, 2017
 
-clear all
-points=64*4*4;
+points=64;
 wigglePixelNotCLUT=1;
 loadIdentityCLUT=1;
 ditherCLUT=61696; % Enable dither on my iMac and PowerBook Pro.
@@ -65,8 +64,8 @@ ditherCLUT=61696; % Enable dither on my iMac and PowerBook Pro.
 useNative10Bit=1;
 enableCLUTMapping=0;
 CLUTMapSize=4096;
-usePhotometer=1; % 1 use ColorCAL II XYZ; 0 simulate 8-bit rendering.
-reciprocalOfFraction=[1 256 1024]; % List one or more, e.g. 1, 64, 128, 256.
+usePhotometer=0; % 1 use ColorCAL II XYZ; 0 simulate 8-bit rendering.
+reciprocalOfFraction=[1 128]; %256 1024 % List one or more, e.g. 1, 64, 128, 256.
 useFractionOfScreen=0; % Reduce our window to expose Command Window.
 BackupCluts;
 Screen('Preference','SkipSyncTests',2);
@@ -110,7 +109,7 @@ try
       Screen('LoadNormalizedGammaTable',window,gamma,loadOnNextFlip);
       Screen('Flip',window);
    end
-   %% MEASURE LUMINANCE AT EACH VALUE OF GAMMA OR PIXEL
+   %% MEASURE LUMINANCE AT EACH VALUE OF CLUT OR PIXEL
    % Each measurement takes several seconds.
    clear data d
    t=GetSecs;
@@ -176,6 +175,7 @@ try
    t=(GetSecs-t)/length(data)/points;
 catch
    sca
+   RestoreCluts
    psychrethrow(psychlasterror);
 end
 Screen('Close',window);
@@ -185,13 +185,18 @@ sca
 
 %% PLOT RESULTS
 fprintf('Photometer took %.1f s/luminance.\n',t);
-figure
+figure;
+set(gcf,'PaperPositionMode','auto');
+set(gcf,'Position',[0 300 320*length(data) 320]);
+
 for iData=1:length(data)
    d=data(iData);
    subplot(1,length(data),iData)
    plot(d.v,d.L);
+   ha=gca;
+   ha.TickLength(1)=0.02;
    pbaspect([1 1 1]);
-   title(sprintf('Range/%d',1/d.fraction));
+   title(sprintf('Range / %d',1/d.fraction));
    if wigglePixelNotCLUT
       xlabel('Pixel value');
    else
@@ -202,13 +207,13 @@ for iData=1:length(data)
    computer=Screen('Computer');
    name=[computer.machineName ', '];
    yLim=ylim;
-   dy=-0.03*diff(yLim);
+   dy=-0.06*diff(yLim);
    y=yLim(2)+dy;
    xLim=xlim;
    x=xLim(1)+0.03*diff(xLim);
    text(x,y,name);
    name='';
-  if exist('ditherCLUT','var')
+   if exist('ditherCLUT','var')
       name=sprintf('%sdither %d, ',name,ditherCLUT);
    end
    if useNative10Bit
@@ -229,7 +234,7 @@ for iData=1:length(data)
    y=y+dy;
    text(x,y,name);
    name='';
-   name=sprintf('%spoints%d',name,points);
+   name=sprintf('%spoints %d',name,points);
    y=y+dy;
    text(x,y,name);
    name='';
@@ -254,6 +259,7 @@ if ~usePhotometer
 end
 name=sprintf('%sPoints%d',name,points);
 name=strrep(name,'''',''); % Remove quote marks.
+name=strrep(name,' ',''); % Remove spaces.
 savefig(gcf,name,'compact'); % Save figure as figure file.
 print(gcf,'-dpng',name); % Save figure as png file.
 save(name,'data'); % Save data as MAT file.
