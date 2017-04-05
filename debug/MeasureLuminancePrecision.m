@@ -56,7 +56,7 @@ function data=MeasureLuminancePrecision
 %
 % Denis Pelli, April 2, 2017
 
-points=64;
+points=32;
 wigglePixelNotCLUT=1;
 loadIdentityCLUT=1;
 ditherCLUT=61696; % Enable dither on my iMac and PowerBook Pro.
@@ -64,119 +64,119 @@ ditherCLUT=61696; % Enable dither on my iMac and PowerBook Pro.
 useNative10Bit=1;
 enableCLUTMapping=0;
 CLUTMapSize=4096;
-usePhotometer=0; % 1 use ColorCAL II XYZ; 0 simulate 8-bit rendering.
-reciprocalOfFraction=[1 128]; %256 1024 % List one or more, e.g. 1, 64, 128, 256.
+usePhotometer=1; % 1 use ColorCAL II XYZ; 0 simulate 8-bit rendering.
+reciprocalOfFraction=[512]; %256 1024 % List one or more, e.g. 1, 64, 128, 256.
 useFractionOfScreen=0; % Reduce our window to expose Command Window.
 BackupCluts;
 Screen('Preference','SkipSyncTests',2);
 % Screen('Preference','SkipSyncTests',1); %  For Mario.
 % Screen('Preference','Verbosity',10); % For Mario.
 try
-   %% OPEN WINDOW
-   screen = 0;
-   screenBufferRect = Screen('Rect',screen);
-   PsychImaging('PrepareConfiguration');
-   PsychImaging('AddTask','General','UseRetinaResolution');
-   if useNative10Bit
-      PsychImaging('AddTask','General','EnableNative10BitFramebuffer');
-   end
-   PsychImaging('AddTask','General','NormalizedHighresColorRange',1);
-   if enableCLUTMapping
-      % EnableCLUTMapping does not load hardware CLUT, and won't help precision.
-      PsychImaging('AddTask','AllViews','EnableCLUTMapping',CLUTMapSize,1); % clutSize, high res
-   end
-   if ~useFractionOfScreen
-      [window,screenRect] = PsychImaging('OpenWindow',screen,[1 1 1]);
-   else
-      [window,screenRect] = PsychImaging('OpenWindow',screen,[1 1 1],round(useFractionOfScreen*screenBufferRect));
-   end
-   if exist('ditherCLUT','var')
-      Screen('ConfigureDisplay','Dithering',screen,ditherCLUT);
-   end
-   if wigglePixelNotCLUT
-      % Compare default CLUT with identity.
-      gamma=repmat(((0:1023)/1023)',1,3);
-      gammaRead=Screen('ReadNormalizedGammaTable',window);
-      assert(length(gamma)==length(gammaRead))
-      delta=gammaRead(:,2)-gamma(:,2);
-      fprintf('Difference between identity and read-back of default CLUT: mean %.9f, sd %.9f\n',mean(delta),std(delta));
-   end
-   if enableCLUTMapping
-      % Check whether loading identity as a CLUT map is innocuous.
-      % CLUTMapSize=4096 affords 12-bit precision.
-      gamma=repmat(((0:CLUTMapSize-1)/(CLUTMapSize-1))',1,3);
-      loadOnNextFlip=2;
-      Screen('LoadNormalizedGammaTable',window,gamma,loadOnNextFlip);
-      Screen('Flip',window);
-   end
-   %% MEASURE LUMINANCE AT EACH VALUE OF CLUT OR PIXEL
-   % Each measurement takes several seconds.
-   clear data d
-   t=GetSecs;
-   nData=length(reciprocalOfFraction);
-   for iData=1:nData
-      d.fraction=1/reciprocalOfFraction(iData);
-      for i=1:points
-         if d.fraction<1
-            g=0.5;
-         else
-            g=0;
-         end
-         g=g+d.fraction*(i-1)/(points-1);
-         assert(g<=1)
-         d.v(i)=g;
-         if wigglePixelNotCLUT
-            if loadIdentityCLUT
-               gamma=repmat(((0:1023)/1023)',1,3);
-               loadOnNextFlip=1;
-               Screen('LoadNormalizedGammaTable',window,gamma,loadOnNextFlip);
-            end
-            Screen('FillRect',window,g);
-         else
-            gamma=[0:255;0:255;0:255]'/255;
-            iPixel=126;
-            for j=-4:4
-               gamma(1+iPixel+j,1:3)=[g g g];
-            end
-            if enableCLUTMapping
-               loadOnNextFlip=2;
+    %% OPEN WINDOW
+    screen = 0;
+    screenBufferRect = Screen('Rect',screen);
+    PsychImaging('PrepareConfiguration');
+    PsychImaging('AddTask','General','UseRetinaResolution');
+    if useNative10Bit
+        PsychImaging('AddTask','General','EnableNative10BitFramebuffer');
+    end
+    PsychImaging('AddTask','General','NormalizedHighresColorRange',1);
+    if enableCLUTMapping
+        % EnableCLUTMapping loads the software CLUT, not the hardware CLUT.
+        PsychImaging('AddTask','AllViews','EnableCLUTMapping',CLUTMapSize,1); % clutSize, high res
+    end
+    if ~useFractionOfScreen
+        [window,screenRect] = PsychImaging('OpenWindow',screen,[1 1 1]);
+    else
+        [window,screenRect] = PsychImaging('OpenWindow',screen,[1 1 1],round(useFractionOfScreen*screenBufferRect));
+    end
+    if exist('ditherCLUT','var')
+        Screen('ConfigureDisplay','Dithering',screen,ditherCLUT);
+    end
+    if wigglePixelNotCLUT
+        % Compare default CLUT with identity.
+        gammaRead=Screen('ReadNormalizedGammaTable',window);
+        maxEntry=size(gammaRead,1)-1;
+        gamma=repmat(((0:maxEntry)/maxEntry)',1,3);
+        delta=gammaRead(:,2)-gamma(:,2);
+        fprintf('Difference between identity and read-back of default CLUT: mean %.9f, sd %.9f\n',mean(delta),std(delta));
+    end
+    if enableCLUTMapping
+        % Check whether loading identity as a CLUT map is innocuous.
+        % Setting CLUTMapSize=4096 affords 12-bit precision.
+        gamma=repmat(((0:CLUTMapSize-1)/(CLUTMapSize-1))',1,3);
+        loadOnNextFlip=0;
+        Screen('LoadNormalizedGammaTable',window,gamma,loadOnNextFlip);
+        Screen('Flip',window);
+    end
+    %% MEASURE LUMINANCE AT EACH VALUE OF CLUT OR PIXEL
+    % Each measurement takes several seconds.
+    clear data d
+    t=GetSecs;
+    nData=length(reciprocalOfFraction);
+    for iData=1:nData
+        d.fraction=1/reciprocalOfFraction(iData);
+        for i=1:points
+            if d.fraction<1
+                g=0.5;
             else
-               loadOnNextFlip=1;
+                g=0;
             end
-            Screen('LoadNormalizedGammaTable',window,gamma,loadOnNextFlip);
-            Screen('FillRect',window,[iPixel/255 iPixel/255 iPixel/255]);
-         end
-         Screen('Flip',window);
-         if usePhotometer
-            L=GetLuminance; % Read photometer
-         else
-            % No photometer. Simulate 8-bit performance.
-            L=200*round(g*255)/255;
-         end
-         d.L(i)=L;
-         if loadIdentityCLUT
-            gammaRead=Screen('ReadNormalizedGammaTable',window);
-            delta=gammaRead(:,2)-gamma(:,2);
-            fprintf('Difference in read-back of identity CLUT: mean %.9f, sd %.9f\n',mean(delta),std(delta));
-            if 0
-               % Report all errors in identity CLUT.
-               list=gamma(:,2)~=gammaRead(:,2);
-               fprintf('%d differences between gamma table loaded vs. read. Checking only green channel.\n',sum(list));
-               n=1:1024;
-               fprintf('Subs.\tEntry\tLoad\tRead\tDiff\n');
-               for j=n(list)
-                  fprintf('%d\t%d\t%.3f\t%.3f\t%.9f\n',j,j-1,gamma(j,2),gammaRead(j,2),gammaRead(j,2)-gamma(j,2));
-               end
+            g=g+d.fraction*(i-1)/(points-1);
+            assert(g<=1)
+            d.v(i)=g;
+            gamma=repmat(((0:CLUTMapSize-1)/(CLUTMapSize-1))',1,3);
+            if wigglePixelNotCLUT
+                if loadIdentityCLUT
+                    loadOnNextFlip=1;
+                    Screen('LoadNormalizedGammaTable',window,gamma,loadOnNextFlip);
+                end
+                Screen('FillRect',window,g);
+            else
+                iPixel=126;
+                for j=-4:4
+                    gamma(1+iPixel+j,1:3)=[g g g];
+                end
+                if enableCLUTMapping
+                    loadOnNextFlip=2;
+                else
+                    loadOnNextFlip=1;
+                end
+                Screen('LoadNormalizedGammaTable',window,gamma,loadOnNextFlip);
+                Screen('FillRect',window,iPixel/(CLUTMapSize-1));
             end
-         end
-      end
-      data(iData)=d;
-   end
-   t=(GetSecs-t)/length(data)/points;
+            Screen('Flip',window);
+            if usePhotometer
+                L=GetLuminance; % Read photometer
+            else
+                % No photometer. Simulate 8-bit performance.
+                L=200*round(g*255)/255;
+            end
+            d.L(i)=L;
+            if loadIdentityCLUT
+                gammaRead=Screen('ReadNormalizedGammaTable',window);
+                gamma=repmat(((0:size(gammaRead,1)-1)/(size(gammaRead,1)-1))',1,3);
+                delta=gammaRead(:,2)-gamma(:,2);
+                fprintf('Difference in read-back of identity CLUT: mean %.9f, sd %.9f\n',mean(delta),std(delta));
+                if 0
+                    % Report all errors in identity CLUT.
+                    list=gamma(:,2)~=gammaRead(:,2);
+                    fprintf('%d differences between gamma table loaded vs. read. Checking only green channel.\n',sum(list));
+                    n=1:1024;
+                    fprintf('Subs.\tEntry\tLoad\tRead\tDiff\n');
+                    for j=n(list)
+                        fprintf('%d\t%d\t%.3f\t%.3f\t%.9f\n',j,j-1,gamma(j,2),gammaRead(j,2),gammaRead(j,2)-gamma(j,2));
+                    end
+                end
+            end
+        end
+        data(iData)=d;
+    end
+    t=(GetSecs-t)/length(data)/points;
 catch
-   sca
-   RestoreCluts
-   psychrethrow(psychlasterror);
+    sca
+    RestoreCluts
+    psychrethrow(psychlasterror);
 end
 Screen('Close',window);
 close all
@@ -190,72 +190,72 @@ set(gcf,'PaperPositionMode','auto');
 set(gcf,'Position',[0 300 320*length(data) 320]);
 
 for iData=1:length(data)
-   d=data(iData);
-   subplot(1,length(data),iData)
-   plot(d.v,d.L);
-   ha=gca;
-   ha.TickLength(1)=0.02;
-   pbaspect([1 1 1]);
-   title(sprintf('Range / %d',1/d.fraction));
-   if wigglePixelNotCLUT
-      xlabel('Pixel value');
-   else
-      xlabel('CLUT');
-   end
-   ylabel('Luminance (cd/m^2)');
-   xlim([d.v(1) d.v(end)]);
-   computer=Screen('Computer');
-   name=[computer.machineName ', '];
-   yLim=ylim;
-   dy=-0.06*diff(yLim);
-   y=yLim(2)+dy;
-   xLim=xlim;
-   x=xLim(1)+0.03*diff(xLim);
-   text(x,y,name);
-   name='';
-   if exist('ditherCLUT','var')
-      name=sprintf('%sdither %d, ',name,ditherCLUT);
-   end
-   if useNative10Bit
-      name=sprintf('%suseNative10Bit, ',name);
-   end
-   y=y+dy;
-   text(x,y,name);
-   name='';
-   if loadIdentityCLUT
-      name=[name 'loadIdentityCLUT, '];
-   end
-   if enableCLUTMapping
-      name=sprintf('%s CLUTMapSize=%d, ',name,CLUTMapSize);
-   end
-   if ~usePhotometer
-      name=[name 'simulating 8 bits, '];
-   end
-   y=y+dy;
-   text(x,y,name);
-   name='';
-   name=sprintf('%spoints %d',name,points);
-   y=y+dy;
-   text(x,y,name);
-   name='';
+    d=data(iData);
+    subplot(1,length(data),iData)
+    plot(d.v,d.L);
+    ha=gca;
+    ha.TickLength(1)=0.02;
+    pbaspect([1 1 1]);
+    title(sprintf('Range / %d',1/d.fraction));
+    if wigglePixelNotCLUT
+        xlabel('Pixel value');
+    else
+        xlabel('CLUT');
+    end
+    ylabel('Luminance (cd/m^2)');
+    xlim([d.v(1) d.v(end)]);
+    computer=Screen('Computer');
+    name=[computer.machineName ', '];
+    yLim=ylim;
+    dy=-0.06*diff(yLim);
+    y=yLim(2)+dy;
+    xLim=xlim;
+    x=xLim(1)+0.03*diff(xLim);
+    text(x,y,name);
+    name='';
+    if exist('ditherCLUT','var')
+        name=sprintf('%sdither %d, ',name,ditherCLUT);
+    end
+    if useNative10Bit
+        name=sprintf('%suseNative10Bit, ',name);
+    end
+    y=y+dy;
+    text(x,y,name);
+    name='';
+    if loadIdentityCLUT
+        name=[name 'loadIdentityCLUT, '];
+    end
+    if enableCLUTMapping
+        name=sprintf('%s CLUTMapSize=%d, ',name,CLUTMapSize);
+    end
+    if ~usePhotometer
+        name=[name 'simulating 8 bits, '];
+    end
+    y=y+dy;
+    text(x,y,name);
+    name='';
+    name=sprintf('%spoints %d',name,points);
+    y=y+dy;
+    text(x,y,name);
+    name='';
 end
 folder=fileparts(mfilename('fullpath'));
 cd(folder);
 name=computer.machineName;
 if exist('ditherCLUT','var')
-   name=sprintf('%sDither%d',name,ditherCLUT);
+    name=sprintf('%sDither%d',name,ditherCLUT);
 end
 if useNative10Bit
-   name=sprintf('%sUseNative10Bit',name);
+    name=sprintf('%sUseNative10Bit',name);
 end
 if loadIdentityCLUT
-   name=[name 'LoadIdentityCLUT'];
+    name=[name 'LoadIdentityCLUT'];
 end
 if enableCLUTMapping
-   name=sprintf('%sCLUTMapSize%d',name,CLUTMapSize);
+    name=sprintf('%sCLUTMapSize%d',name,CLUTMapSize);
 end
 if ~usePhotometer
-   name=[name 'Simulating8Bits'];
+    name=[name 'Simulating8Bits'];
 end
 name=sprintf('%sPoints%d',name,points);
 name=strrep(name,'''',''); % Remove quote marks.
@@ -271,11 +271,11 @@ function L=GetLuminance
 % Cambridge Research Systems ColorCAL II XYZ Colorimeter.
 persistent CORRMAT
 if nargin<1
-   usePhotometer=1;
+    usePhotometer=1;
 end
 if isempty(CORRMAT)
-   % Get ColorCAL II XYZ correction matrix (CRT=1; WLED LCD=2; OLED=3):
-   CORRMAT=ColorCal2('ReadColorMatrix');
+    % Get ColorCAL II XYZ correction matrix (CRT=1; WLED LCD=2; OLED=3):
+    CORRMAT=ColorCal2('ReadColorMatrix');
 end
 s = ColorCal2('MeasureXYZ');
 XYZ = CORRMAT(4:6,:) * [s.x s.y s.z]';

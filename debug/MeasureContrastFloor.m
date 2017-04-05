@@ -85,48 +85,99 @@ o.snapshotShowsFixationAfter=0;
 o.speakInstructions=0;
 
 % DEBUGGING
-o.useFractionOfScreen=0.2; % 0: normal, 0.5: small for debugging.
+o.useFractionOfScreen=0; % 0: normal, 0.5: small for debugging.
 o.flipClick=0;
 o.assessContrast=0;
 o.assessLoadGamma=0;
 % o.showCropMarks=1; % mark the bounding box of the target
 o.printDurations=0;
-
 o.measureContrast=1;
-o.crsColorimeter=1; % colorimeter attached?
+o.assessTargetLuminance=1;
+o.usePhotometer=1; 
 running_trials = 1;
 o = NoiseDiscrimination(o);
-if length(o.nominalContrast)>1
+if isfield(o,'nominalContrast') && length(o.nominalContrast)>1
     folder=fileparts(mfilename('fullpath'));
-    folder='';
     [nominal,i]=sort(o.nominalContrast);
     actual=o.actualContrast(i);
+    change=actual-nominal;
+    fprintf('nominal\tactual\tdiff\n');
+    for i=1:length(actual)
+       fprintf('%.4f\t%.4f\t%.4f\n',nominal(i),actual(i),change(i));
+    end
+    ii=abs(nominal)<0.1;
+    fprintf('%d contrasts <0.1; diff mean %.4f, sd %.4f\n',sum(ii),mean(change(ii)),std(change(ii)));
     step=unique(sort(abs(actual)));
     step=step(2);
-    model=round(actual/step)*step;
+    
+    figure(1);
+    clf
     nominalRange=-10.^(-3:0.001:0);
     model=round(nominalRange/step)*step;
-    loglog(-nominal,-actual,'o',-nominalRange,-model,'-');
-    daspect([1 1 1]);
+    model=min(model,-0.0003);
+    loglog(-nominal,-actual,'o',-nominalRange,-model,'r-');
+    xlim([0.001 1]);
+    ylim([0.001 1]);
+    DecadesEqual(gca);
     hold on
     loglog([.001 1],[.001 1],'-g');
     xlabel('Nominal contrast');
     ylabel('Actual contrast');
-    text(0.002,0.5,sprintf('Red line is %.4f*round(contrast/%.4f)',step,step));
-    text(0.002,0.25,o.cal.machineName);
-    savefig(fullfile(folder,[o.cal.machineName 'loglog' 'ContrastFloor']));
+    s1=sprintf('Red line is %.4f*round(contrast/%.4f)',step,step);
+    x=0.0011;
+    y=0.7;
+    text(x,y,s1);    
+    xlabel('Pixel value');
+    ylabel('Luminance (cd/m^2)');
+    computer=Screen('Computer');
+    s2=[computer.machineName ', '];
+    yLim=ylim;
+    yMul=0.8;
+    y=y*yMul;
+    y=y*yMul;
+    text(x,y,s2);
+    s3='';
+    if o.ditherCLUT
+        s3=sprintf('%sdither %d, ',s3,o.ditherCLUT);
+    end
+    if o.useNative10Bit
+        s3=[s3 'useNative10Bit, '];
+    end
+    y=y*yMul;
+    text(x,y,s3);
+    s4=sprintf('CLUTMapLength=%d, ',o.CLUTMapLength);
+    if ~o.usePhotometer
+        s4=[s4 'simulating 8 bits, '];
+    end
+    y=y*yMul;
+    text(x,y,s4);
+    name='';
+    name=[o.cal.machineName 'loglog' 'ContrastFloor'];
+    name=strrep(name,'''',''); % Remove quote marks.
+    name=strrep(name,' ',''); % Remove spaces.
+    savefig(fullfile(folder,name));
     hold off
+
     figure(2)
+    clf;
     plot(-nominal,-actual,'o',-nominalRange,-model,'-');
-    daspect([1 1 1]);
-    hold on
-    loglog([0 1],[0 1],'-g');
-    xlabel('Nominal contrast');
-    ylabel('Actual contrast');
-    text(0.001,.018,sprintf('Red line is %.4f*round(contrast/%.4f)',step,step));
-    text(0.001,0.016,o.cal.machineName);
     xlim([0 0.02]);
     ylim([0 0.02]);
+    daspect([1 1 1]);
+    hold on
+    plot([0 1],[0 1],'-g');
+    xlabel('Nominal contrast');
+    ylabel('Actual contrast');
+    x=0.0005;
+    y=0.019;
+    text(x,y,s1);
+    y=y-0.0007;
+    y=y-0.0007;
+    text(x,y,s2);
+    y=y-0.0007;
+    text(x,y,s3);
+    y=y-0.0007;
+    text(x,y,s4);
     hold off
     savefig(fullfile(folder,[o.cal.machineName 'ContrastFloor']));
     save(fullfile(folder,[o.cal.machineName 'ContrastFloor']),'o');
