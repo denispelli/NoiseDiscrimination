@@ -45,8 +45,8 @@ function o = NoiseDiscrimination(oIn)
 % It wasn't easy to get the instructional text to image well. It's black,
 % on a gray background, but the antialiasing in the font rendering
 % surrounded each letter with with intermediate levels of gray. The
-% intermediate values were problematic. In my CLUT the intermediate values
-% between gray (128/255) and black (0) were much closer in luminance to the
+% intermediate values were problematic. In my CLUT, the intermediate values
+% between gray (roughly 0.5) and black (0) were much closer in luminance to the
 % gray, making the letter seem too thin. Worse, I am computing a new color
 % table (CLUT) for each trial, so this made the halo around the
 % instructions flicker every time the CLUT changed. Eventually I realized
@@ -90,109 +90,6 @@ function o = NoiseDiscrimination(oIn)
 % LuminanceOfIndex.
 
 %% EXTRA DOCUMENTATION
-% Dear Mario
-% I figured out what's wrong. The sequence of luminances displayed on my
-% MacBook Pro 15" is smoother than the values I loaded into the CLUT. The
-% white (1.0) that I requested was coming out darker because the subsequent
-% values in the lookup table are darker. When I replace the neighboring
-% CLUT elements with white, then I get a good white. I suppose an Apple or
-% AMD engineer thought it would be helpful to smooth the CLUT. (The error
-% is not visible to ReadNormalizedGammaTable.) Can we prevent that?
-% Best Denis
-%
-% Hi Denis,
-%
-% no there isn't anything we could do.
-%
-% In general it's not a good idea anymore to use gamma tables for anything
-% but gamma correction.
-%
-% On MS-Windows, gamma tables like yours won't work at all. They get
-% rejected by the OS as invalid if they don't have the general shape of a
-% gamma table.
-%
-% More recent generations of at least Intel and AMD hardware, possibly
-% NVidia as well, do support a new type of gamma tables in their hardware
-% in addition to old style discrete lookup tables, and it is at the
-% discretion of the display driver (writer) if those new tables are used
-% instead of the old ones.
-%
-% The new tables often have less slots than the framebuffer has bits per
-% color. E.g., you can have > 8 bpc framebuffers but the hardware tables
-% may only have 256 slots or maybe 512 slots. So the tables no longer store
-% one output value per framebuffer input value, but the slots store, e.g.,
-% 256 or 512 reference values. For given framebuffer input color values the
-% hardware interpolates between those reference values, could be piece-wise
-% linear interpolation or something more higher order.
-%
-% Implementation details between hardware manufacturers and different
-% models from the same manufacturer differ, so the only safe assumption is
-% that you will screw up and/or make your code highly non-portable across
-% operating systems or different computers if you use gamma tables for
-% anything but gamma correction.
-%
-% This could be an operating system bug for your gpu, or it could simply be
-% that Apples AMD display drivers now have switched to those new
-% interpolated gamma tables.
-%
-% The only somewhat safe and sane way forward for > 8 bpc precision is to
-% use > 8 bpc framebuffers on suitable hardware.
-%
-% Linux on AMD hardware would obviously provide that. On a 8 bpc panel it
-% could use 2 bit spatial dithering to simulate 10 bpc. That's what you got
-% so far on your OSX setup by twiddling the 9th and 10 th gamma table bits.
-% On 10 bpc panels via HDMI and DisplayPort it can do native 10 bits,
-% dithered 11 bits and for some special AMD gpu's up to dithered 12 bits if
-% Hormets results check out in the end.
-%
-% On OSX with AMD hardware you could downgrade to the now unsupported OSX
-% 10.10+PTB 3.0.13+PsychtoolboxKernelDriver to get dithered 10 bits on
-% digital displays.
-%
-% On OSX 10.12 with PTB 3.0.14 with AMD hardware you could give that iMac
-% 5k of yours a try, the one that presumably has a 10 bit panel? Apple
-% claims 10 bit should work on "the late 2014 and late 2015 iMac 27 inch
-% Retina 5k models." Psychtoolbox implements native 10 bit framebuffer mode
-% via the 'EnableNative10BitFramebuffer' task, based on the sparse
-% documentation by Apple. However this is completely untested on real
-% hardware, as none of the people who promised me to test this did.
-%
-% -mario
-% February 24, 2017
-%
-% NOTE: Mario is discouraged, above, but in fact the limitations he
-% describes are acceptable. I am using 8-bit images, which have only 256
-% values per channel, so using a 256-element gamma table is fine. This
-% requires a bit of care (in this program) in loading the CLUT, but
-% everything else is plain vanilla 8-bit per channel imaging, which works
-% on every computer.
-%
-% Dear Mario
-%
-% Thanks for the long, full, explanation. I agree that H�rmet's success
-% (with your help) in getting 12-bit channels working (on my new linux hp
-% laptop) is terrific. However, that currently requires linux, and for most
-% people, buying a new computer. To measure threshold, I remain very happy
-% to achieve 10+ bit precision from 8-bit channels on many Macs running
-% under macOS, by following your advice to use LoadNormalizedGammaTable
-% with EnableCLUTMapping. To measure contrast threshold, i don't mind
-% setting up the CLUT to use the whole 0:255 range of the pixel to
-% represent only a limited luminance range near the desired mean luminance.
-% Each of the 256 clut entries is specified (as a float) with more than 8
-% bits. As you note, 8 bits plus dithering performs comparably to 10-bit
-% precision for some purposes. Being limited to only 256 elements in the
-% gamma table is fine when working with 8-bit images. Some computers, like
-% my MacBook Pro 15" achieve more than 11-bit precision.
-%
-% Going forward, many people will want to follow the lead set by you and
-% Hormet achieving 12-bits per channel on my linux hp laptop. However, for
-% threshold studies,  8-bit channels with high precision gamma tables
-% remain an excellent way to go, and compatible with ordinary macOS
-% computers.
-%
-% Thanks!
-% Best
-% Denis
 
 % On Feb 25, 2017 13:25, "Denis Pelli" <denis.pelli@nyu.edu> wrote:
 % REPLICATING MANOJ'S NEQ MEASUREMENTS
@@ -309,9 +206,10 @@ if nargin < 1 || ~exist('oIn','var')
 end
 o = [];
 o.replicatePelli2006=0;
+o.CLUTMapLength=2048; % enough for 11-bit precision.
+o.useNative10Bit=1;
 o.ditherCLUT=61696; % Use this only on Denis's PowerBook Pro and iMac 5k.
-o.enableCLUTMapping = 0; % OBSOLETE. Only to reproduce old behavior.
-o.desiredClutMargin=1; % 0 for none. 1 to work around CLUT smoothing in some video cards.
+o.enableCLUTMapping = 1; % Required. Using software CLUT.
 o.testBitDepth = 0;
 o.useFractionOfScreen = 0; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 o.distanceCm = 50; % viewing distance
@@ -415,8 +313,8 @@ o.printCrossCorrelation = 0;
 o.printLikelihood = 0;
 o.assessLinearity = 0;
 o.assessContrast = 0; % diagnostic information
-o.measureContrast=0; % use photometer
-o.usePhotometer=1; 
+o.measureContrast=0; 
+o.usePhotometer=1; % use photometer or 8-bit model
 o.assessLoadGamma = 0; % diagnostic information
 o.assessLowLuminance = 0;
 o.flipClick = 0; % For debugging, speak and wait for click before and after each flip.
@@ -613,6 +511,10 @@ if cal.screen > 0
    fprintf('Using external monitor.\n');
 end
 cal = OurScreenCalibrations(cal.screen);
+if isfield(cal,'gamma')
+   rmfield(cal,'gamma');
+end
+cal.CLUTMapLength=o.CLUTMapLength;
 o.cal = cal;
 if ~isfield(cal,'old') || ~isfield(cal.old,'L')
    fprintf('This screen has not yet been calibrated. Please use CalibrateScreenLuminance to calibrate it.\n');
@@ -655,56 +557,17 @@ end
 o.noiseCheckPix = max(o.noiseCheckPix,1);
 o.noiseCheckDeg = o.noiseCheckPix/o.pixPerDeg;
 BackupCluts(o.screen);
+o.maxEntry=o.CLUTMapLength-1;
 LMean = (max(cal.old.L)+min(cal.old.L))/2;
 o.maxLRange = 2*min(max(cal.old.L)-LMean,LMean-min(cal.old.L));
 % We use nearly the whole clut (entries 2 to 254) for stimulus generation.
-% We reserve 0 and 255 for black and white. Unless this is Windows, we
-% reserve a low clut entry (gray1*255) for the screen background used in
-% non-stimulus parts of the display, e.g. top margin.
-firstGrayClutEntry = 8; % Allows for cal.clutMargin of 0 or 1.
-lastGrayClutEntry = 252;% Allows for cal.clutMargin of 0 or 1.
-assert(lastGrayClutEntry+2*o.desiredClutMargin<255);
-assert(firstGrayClutEntry-2*o.desiredClutMargin>1);
+% We reserve first and last (0 and o.maxEntry), for black and white.
+firstGrayClutEntry = 2; 
+lastGrayClutEntry = o.CLUTMapLength-2;
+assert(lastGrayClutEntry<o.maxEntry);
+assert(firstGrayClutEntry>1);
 assert(mod(firstGrayClutEntry+lastGrayClutEntry,2) == 0) % Must be even, so middle is an integer.
-if o.isWin
-    if o.enableCLUTMapping
-        loadOnNextFlip = 2; % OBSOLETE. LoadNormalizedGammaTable
-    else
-        loadOnNextFlip = 1; % use 0 for immediate LoadNormalizedGammaTable.
-    end
-    LRange = o.maxLRange;
-    o.minLRange = inf;
-    for i = 1:100
-      try
-         cal.LFirst = LMean-LRange/2;
-         cal.LLast = LMean+LRange/2;
-         cal.nFirst = firstGrayClutEntry;
-         cal.nLast = lastGrayClutEntry;
-         cal.clutMargin = o.desiredClutMargin;
-         cal = LinearizeClut(cal);
-         cal.gamma(2,:) = 0.5*(cal.gamma(1,:)+cal.gamma(3,:)); % for Windows
-         assert(all(all(diff(cal.gamma) >= 0))); % monotonic for Windows
-         gamma = cal.old.gamma(round(1+(0:255)*(size(cal.old.gamma,1)-1)/255),:); % Down sample to 256.
-         Screen('LoadNormalizedGammaTable',o.screen,gamma,loadOnNextFlip);
-         if o.assessLoadGamma
-            ffprintf(ff,'Line %d: o.contrast %.3f, LoadNormalizedGammaTable 0.5*range/mean=%.3f\n', ...
-               MFileLineNr,o.contrast,(cal.LLast-cal.LFirst)/(cal.LLast+cal.LFirst));
-         end
-         o.minLRange = LRange;
-         LRange = LRange*0.9;
-      catch
-         % Failed.
-         break;
-      end
-   end
-   RestoreCluts;
-   if ~isfinite(o.minLRange)
-      error('Couldn''t fix the gamma table. Alas. 0.5*range/mean=%.3f',0.5*range/mean);
-   end
-   fprintf('o.minLRange %.1f cd/m^2, 0.minLRange/mean %.3f\n',o.minLRange,o.minLRange/mean);
-else
-   o.minLRange = 0;
-end % if o.isWin
+o.minLRange = 0;
 
 %% SET SIZES OF SCREEN ELEMENTS: text, stimulusRect, etc.
 Screen('Preference','TextAntiAliasing',0);
@@ -926,80 +789,79 @@ try
          PsychImaging('AddTask','General','UseRetinaResolution');
       end
       PsychImaging('AddTask','General','NormalizedHighresColorRange',1);
-      if o.enableCLUTMapping
-         warning('Using EnableCLUTMapping prevents precise luminance control.');
-         PsychImaging('AddTask','AllViews','EnableCLUTMapping',256,1); % clutSize, high res
+      if o.useNative10Bit
+         PsychImaging('AddTask','General','EnableNative10BitFramebuffer');
       end
-      if o.enableCLUTMapping % How we use of LoadNormalizedGammaTable
-          loadOnNextFlip = 2; % OBSOLETE. Don't use hardware CLUT.
+      PsychImaging('AddTask','General','NormalizedHighresColorRange',1);
+      if o.enableCLUTMapping
+         PsychImaging('AddTask','AllViews','EnableCLUTMapping',o.CLUTMapLength,1); % clutSize, high res
+         cal.gamma=repmat((0:o.maxEntry)'/o.maxEntry,1,3); % Identity
+         Screen('LoadNormalizedGammaTable',0,cal.gamma,0); % set hardware CLUT to identity.
       else
-          loadOnNextFlip = 1; % Load hardware CLUT now (0) or on flip (1).
+         warning('You need EnableCLUTMapping to control contrast.');
+      end
+      if o.enableCLUTMapping % How we use LoadNormalizedGammaTable
+          loadOnNextFlip = 2; % Load software CLUT at flip.
+      else
+          loadOnNextFlip = 1; % Load hardware CLUT: 0. now; 1. on flip.
       end
       if ~o.useFractionOfScreen
-         [window, r] = PsychImaging('OpenWindow',cal.screen,1.0);
+         window=PsychImaging('OpenWindow',cal.screen,1.0);
       else
           r=round(o.useFractionOfScreen*screenBufferRect);
           r=AlignRect(r,screenBufferRect,'right','bottom');
-          [window, r] = PsychImaging('OpenWindow',cal.screen,1.0,r);
+          window=PsychImaging('OpenWindow',cal.screen,1.0,r);
       end
-      assert(all(r == screenRect));
       
+      % Compare hardware CLUT with identity.
+      gammaRead=Screen('ReadNormalizedGammaTable',window);
+      maxEntry=size(gammaRead,1)-1;
+      gamma=repmat(((0:maxEntry)/maxEntry)',1,3);
+      delta=gammaRead(:,2)-gamma(:,2);
+      ffprintf(ff,'Difference between identity and read-back of hardware CLUT (%dx%d): mean %.9f, sd %.9f\n',...
+         size(gammaRead),mean(delta),std(delta));
+
       if o.flipClick; Speak(['after OpenWindow ' num2str(MFileLineNr)]); GetClicks; end
       if exist('cal')
-         gray = mean([firstGrayClutEntry lastGrayClutEntry])/255; % CLUT color code for gray.
-         assert(gray*255 == round(gray*255)); % Sum of first and last is even, so gray is integer.
+         gray = mean([firstGrayClutEntry lastGrayClutEntry])/o.maxEntry; % CLUT color code for gray.
+         assert(gray*o.maxEntry == round(gray*o.maxEntry)); % Sum of first and last is even, so gray is integer.
          LMin = min(cal.old.L);
          LMax = max(cal.old.L);
          LMean = mean([LMin, LMax]); % Desired background luminance.
+         LMean=LMean*(1+(rand-0.5)/32); % Tiny jitter.
          if o.assessLowLuminance
             LMean = 0.8*LMin+0.2*LMax;
          end
+         % CLUT entry 1: gray1
+         % First entry is black. Second entry is gray1. We have
+         % two clut entries that produce the same gray. One (gray) is in
+         % the middle of the CLUT and the other is at a low entry, near
+         % black. The benefit of having small gray1 is that we get better
+         % blending of letters written (as black=0) on that background by
+         % Screen DrawText.
+         gray1 = 1/o.maxEntry;
+         assert(gray1*o.maxEntry <= firstGrayClutEntry-1);
+         % gray1 is between black and the darkest stimulus luminance.
+         cal.gamma(1,1:3)=0; % Black.
+         cal.LFirst = LMean;
+         cal.LLast = LMean;
+         cal.nFirst = gray1*o.maxEntry;
+         cal.nLast = gray1*o.maxEntry;
+         cal = LinearizeClut(cal);
+         
+         % CLUT entries for stimulus.
          cal.LFirst = LMin;
          cal.LLast = LMean+(LMean-LMin); % Symmetric about LMean.
          cal.nFirst = firstGrayClutEntry;
          cal.nLast = lastGrayClutEntry;
-         cal.clutMargin = o.desiredClutMargin;
          cal = LinearizeClut(cal);
-         if o.isWin
-            % Windows insists on a monotonic CLUT. So we linearize
-            % practically the whole CLUT, and use the middle entry for
-            % gray. We spare entries 0 and 255, which are used by the
-            % OS for black and white. Thus any screens using only those
-            % colors won't be affected by our clut changes. We don't
-            % explicitly use clut entry 1. Both firstGrayClutEntry and
-            % lastGrayClutEntry are even, so the range
-            % firstGrayClutEntry to lastGrayClutEntry is odd in length,
-            % so it will have a middle entry, which we use for a stable
-            % gray, across trials.
-            gray1 = gray;
-            % We don't use entry 1, but Windows insists on a monotonic
-            % clut. Set entry 1 to be average of entries 0 and 2.
-            cal.gamma(2,:) = (cal.gamma(1,:)+cal.gamma(3,:))/2;
-            assert(all(all(diff(cal.gamma) >= 0))); % monotonic for Windows
-         else
-            % Use first two entries for black, plus margin. Use next three
-            % entries for gray1, with margins. Using OS other than Windows,
-            % we have two clut entries that prduce the same gray. One
-            % (gray) is in the middle of the CLUT and one is at a low
-            % entry, near black. The benefit of having small gray1 is that
-            % we get better blending of letters written (as black=0) on
-            % that background.
-            gray1 = 4/255;
-            % Allow for margins
-            cal.clutMargin = 1;
-            assert(gray1*255+cal.clutMargin < firstGrayClutEntry-1);
-            % gray1 is alone, surrounded by margin.
-            cal.gamma(1:2,1:3)=0; % Black with margin.
-            cal.LFirst = LMean;
-            cal.LLast = LMean;
-            cal.nFirst = gray1*255;
-            cal.nLast = gray1*255;
-            cal = LinearizeClut(cal);
-         end % if o.isWin
          ffprintf(ff,'Size of cal.gamma %d %d\n',size(cal.gamma));
-%          ffprintf(ff,'Non-stimulus background is %.1f cd/m^2 at CLUT entry %d (and %d).\n',LMean,gray1*255,gray*255);
-%          ffprintf(ff,'%.1f cd/m^2 at %d\n',LuminanceOfIndex(cal,gray1*255),gray1*255);
-%          ffprintf(ff,'%.3f dac at %d; %.3f dac at %d\n',cal.gamma(gray1*255+1,2),gray1*255,cal.gamma(gray*255+1,2),gray*255);
+         
+         % XXX
+         ffprintf(ff,'Non-stimulus background is %.1f cd/m^2 at CLUT entry %d (and %d).\n',LMean,gray1*o.maxEntry,gray*o.maxEntry);
+         ffprintf(ff,'%.1f cd/m^2 at %d\n',LuminanceOfIndex(cal,gray*o.maxEntry),gray1*o.maxEntry);
+         ffprintf(ff,'%.3f dac at %d; %.3f dac at %d\n',cal.gamma(gray1*o.maxEntry+1,2),gray1*o.maxEntry,cal.gamma(gray*o.maxEntry+1,2),gray*o.maxEntry);
+
          o.contrast = nan;
          Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
          if o.assessLoadGamma
@@ -1020,7 +882,7 @@ try
       end
       black = 0; % Retrieves the CLUT color code for black.
       white = 1; % Retrieves the CLUT color code for white.
-      gray = mean([firstGrayClutEntry lastGrayClutEntry])/255; % Will be a CLUT color code for gray.
+      gray = mean([firstGrayClutEntry lastGrayClutEntry])/o.maxEntry; % Will be a CLUT color code for gray.
       Screen('FillRect',window,gray1);
       Screen('FillRect',window,gray,o.stimulusRect);
       if o.flipClick; Speak(['before Flip ' num2str(MFileLineNr)]); GetClicks; end
@@ -1617,13 +1479,12 @@ try
       end
       Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
       %       if o.flipClick; Speak(['before LoadNormalizedGammaTable delayed ' num2str(MFileLineNr)]);GetClicks; end
-      %       if o.isWin; assert(all(all(diff(cal.gamma)>=0))); end; % monotonic for Windows
       %       Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);% LOAD NOW. BUT PROBABLY NOT NEEDED! % Wait for Flip.
       %       if o.assessLoadGamma
       %            ffprintf(ff,'Line %d: o.contrast %.3f, LoadNormalizedGammaTable 0.5*range/mean=%.3f\n',...
       %             MFileLineNr,o.contrast,(cal.LLast-cal.LFirst)/(cal.LLast+cal.LFirst));
       %       end
-      %       if o.assessGray; pp=Screen('GetImage',window,[20 20 21 21]);ffprintf(ff,'line 712: Gray index is %d (%.1f cd/m^2). Corner is %d.\n',gray*255,LuminanceOfIndex(cal,gray*255),pp(1)); end
+      %       if o.assessGray; pp=Screen('GetImage',window,[20 20 21 21]);ffprintf(ff,'line 712: Gray index is %d (%.1f cd/m^2). Corner is %d.\n',gray*o.maxEntry,LuminanceOfIndex(cal,gray*o.maxEntry),pp(1)); end
       if o.flipClick; Speak(['before Flip ' num2str(MFileLineNr)]); GetClicks; end
       Screen('Flip',window,0,1); % Show gray screen at LMean with fixation and crop marks. Don't clear buffer.
       if o.flipClick; Speak(['after Flip ' num2str(MFileLineNr)]); GetClicks; end
@@ -1947,17 +1808,22 @@ try
          movieImage{iMovieFrame} = location;
       end % for iMovieFrame = 1:o.movieFrames
       
+      if o.measureContrast
+         fprintf('%d: unique(signalImage(:)) ',MFileLineNr);
+         fprintf('%g ',unique(signalImage(:)));
+         fprintf('\n');
+      end
       %% COMPUTE CLUT
       if ~ismember(o.observer,algorithmicObservers)
          Screen('FillRect',window,gray1);
          Screen('FillRect',window,gray,o.stimulusRect);
          Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
          rect = [0, 0, 1, 1]*2*o.annularNoiseBigRadiusDeg*o.pixPerDeg/o.noiseCheckPix;
-         if o.newClutForEachImage % Usually enabled
-            % Compute clut for all possible noises and given signal and
-            % contrast. Note: Except under Windows, the gray screen in
-            % the non-stimulus areas is drawn with CLUT index n=1.
-            %
+         if o.newClutForEachImage % Usually enabled.
+            % Compute CLUT for all possible noises and the given signal and
+            % contrast. Note: The gray screen in the non-stimulus areas is
+            % drawn with CLUT index n=1.
+            
             % Noise
             cal.LFirst = LMean*(1-o.noiseListBound*r*o.noiseSD/o.noiseListSd);
             cal.LLast = LMean*(1+o.noiseListBound*r*o.noiseSD/o.noiseListSd);
@@ -1977,20 +1843,17 @@ try
             % Having a fixed index for "gray" (LMean) assures us that
             % the gray areas (most of the screen) won't change when the
             % CLUT is updated.
-            LRange = 2*max(cal.LLast-LMean,LMean-cal.LFirst);
-            LRange = max(LRange,o.minLRange); % Needed for Windows.
+            LRange = 2*max(abs([cal.LLast-LMean LMean-cal.LFirst]));
             LRange = min(LRange,o.maxLRange);
             cal.LFirst = LMean-LRange/2;
             cal.LLast = LMean+LRange/2;
             cal.nFirst = firstGrayClutEntry;
             cal.nLast = lastGrayClutEntry;
-            cal.clutMargin=o.desiredClutMargin; % Needed on some video displays.
             if o.saveSnapshot
                cal.LFirst = min(cal.old.L);
                cal.LLast = max(cal.old.L);
                cal.nFirst = 1;
-               cal.nLast = 255;
-               cal.clutMargin = 0; % Not needed for snapshot.
+               cal.nLast = o.maxEntry;
             end
             if 0 % Compute clut for the specific image
                L = [];
@@ -2001,9 +1864,10 @@ try
                cal.LLast = max(L);
             end
             cal = LinearizeClut(cal);
-            grayCheck = IndexOfLuminance(cal,LMean)/255;
-            if ~o.saveSnapshot && grayCheck ~= gray
-               ffprintf(ff,'The estimated gray index is %d (%.1f cd/m^2), not %d (%.1f cd/m^2).\n',grayCheck,LuminanceOfIndex(cal,grayCheck),gray*255,LuminanceOfIndex(cal,gray*255));
+            grayCheck = IndexOfLuminance(cal,LMean)/o.maxEntry;
+            if ~o.saveSnapshot && abs(grayCheck-gray)>0.001
+               ffprintf(ff,'The estimated gray index is %.4f (%.1f cd/m^2), not %.4f (%.1f cd/m^2).\n',...
+                  grayCheck,LuminanceOfIndex(cal,grayCheck*o.maxEntry),gray,LuminanceOfIndex(cal,gray*o.maxEntry));
                warning('The gray index changed!');
             end
             assert(isfinite(gray));
@@ -2012,8 +1876,10 @@ try
             AssessContrast(o);
          end
          if o.measureContrast
-%              fprintf('gray*255 %d gamma %.3f, gray1*255 %d gamma %.3f\n',gray*255,cal.gamma(gray*255+1,2),gray1*255,cal.gamma(gray1*255+1,2));
-            o=MeasureContrast(o);
+            % fprintf('gray*o.maxEntry %d gamma %.3f, gray1*o.maxEntry %d gamma %.3f\n',gray*o.maxEntry,cal.gamma(gray*o.maxEntry+1,2),gray1*o.maxEntry,cal.gamma(gray1*o.maxEntry+1,2));
+            Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
+            Screen('Flip',window,0,1);
+            o=MeasureContrast(o,MFileLineNr);
          end
          if o.testBitDepth
             TestBitDepth(o);
@@ -2026,7 +1892,43 @@ try
             Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
          end
       end % if ~ismember(o.observer,algorithmicObservers)
-      
+
+      if o.measureContrast
+         location = movieImage{1};
+         fprintf('%d: luminance/LMean',MFileLineNr);
+         fprintf(' %.4f',unique(location(1).image(:)));
+         fprintf('\n');
+         img = IndexOfLuminance(cal,location(1).image*LMean)/o.maxEntry;
+         index=unique(img(:));
+         LL=LuminanceOfIndex(cal,index*o.maxEntry);
+         fprintf('%d: index',MFileLineNr);
+         fprintf(' %.4f',index);
+         fprintf(', G');
+         fprintf(' %.4f',cal.gamma(round(1+index*o.maxEntry),2));
+         fprintf(', luminance');
+         fprintf(' %.1f',LL);
+         if o.contrast<0
+            fprintf(', contrast %.4f\n',(LL(1)-LL(2))/LL(2));
+         else
+            fprintf(', contrast %.4f\n',(LL(2)-LL(1))/LL(1));
+         end
+         movieTexture(iMovieFrame) = Screen('MakeTexture',window,img,0,0,1);
+         rect=Screen('Rect',movieTexture(iMovieFrame));
+         img=Screen('GetImage',movieTexture(iMovieFrame),rect,'frontBuffer',1);
+         index=unique(img(:));
+         LL=LuminanceOfIndex(cal,index*o.maxEntry);
+         fprintf('%d: texture index',MFileLineNr);
+         fprintf(' %.4f',index);
+         fprintf(', G');
+         fprintf(' %.4f',cal.gamma(round(1+index*o.maxEntry),2));
+         fprintf(', luminance');
+         fprintf(' %.1f',LL);
+         if o.contrast<0
+            fprintf(', contrast %.4f\n',(LL(1)-LL(2))/LL(2));
+         else
+            fprintf(', contrast %.4f\n',(LL(2)-LL(1))/LL(1));
+         end
+      end
       %% CONVERT IMAGE MOVIE TO TEXTURE MOVIE
       if ~ismember(o.observer,algorithmicObservers)
          for iMovieFrame = 1:o.movieFrames
@@ -2034,11 +1936,11 @@ try
             switch o.task
                case 'identify'
                   locations = 1;
-                  % Convert to integer pixels.
+                  % Convert to pixel values.
                   % PREPARE IMAGE DATA
                   img = location(1).image;
                   % ffprintf(ff,'signal rect height %.1f, image height %.0f, dst rect %d %d %d %d\n',RectHeight(rect),size(img,1),rect);
-                  img = IndexOfLuminance(cal,img*LMean);
+                  img = IndexOfLuminance(cal,img*LMean)/o.maxEntry;
                   img = Expand(img,o.noiseCheckPix);
                   if o.assessLinearity
                      AssessLinearity(o);
@@ -2048,7 +1950,7 @@ try
                   rect = OffsetRect(rect,targetOffsetPix,0);
                   rect = round(rect); % rect that will receive the stimulus (target and noises)
                   location(1).rect = rect;
-                  movieTexture(iMovieFrame) = Screen('MakeTexture',window,uint8(img)); % SAVE MOVIE FRAME
+                  movieTexture(iMovieFrame) = Screen('MakeTexture',window,img,0,0,1); % SAVE MOVIE FRAME
                   srcRect = RectOfMatrix(img);
                   dstRect = rect;
                   offset = dstRect(1:2)-srcRect(1:2);
@@ -2077,7 +1979,7 @@ try
                         bufferL = LuminanceOfIndex(cal,buffer(:,:,1));
                         bufferTest = IndexOfLuminance(cal,bufferL);
                         img = IndexOfLuminance(cal,bufferL+img*LMean-LMean);
-                        texture = Screen('MakeTexture',window,uint8(img));
+                        texture = Screen('MakeTexture',window,img/o.maxEntry,0,0,1);
                         srcRect = RectOfMatrix(img);
                         dstRect = r;
                         offset = dstRect(1:2)-srcRect(1:2);
@@ -2099,7 +2001,7 @@ try
                      img = location(i).image;
                      img = IndexOfLuminance(cal,img*LMean);
                      img = Expand(img,o.noiseCheckPix);
-                     texture = Screen('MakeTexture',window,uint8(img)); % FIXME: use one texture instead of 4
+                     texture = Screen('MakeTexture',window,img/o.maxEntry,0,0,1); % FIXME: use one texture instead of 4
                      
                      eraseRect = UnionRect(eraseRect,location(i).rect);
                   end
@@ -2132,12 +2034,38 @@ try
                      location(4).labelRect = AlignRect(r,labelBounds,'right','bottom');
                      for i = 1:locations
                         [x, y] = RectCenter(location(i).labelRect);
-                        Screen('DrawText',window,sprintf('%d',i),x-textSize/2,y+0.4*textSize,black,0,1);
+                        Screen('DrawText',window,sprintf('%d',i),x-textSize/2,y+0.4*textSize,black,gray1,1);
                      end
                   end
             end % switch o.task
          end % for iMovieFrame=1:o.movieFrames
       end % if ~ismember(o.observer,algorithmicObservers)
+      if o.measureContrast
+         rect=Screen('Rect',movieTexture(1));
+         img=Screen('GetImage',movieTexture(1),rect,'frontBuffer',1); % 1 for float, not int, colors.
+         img=img(:,:,2);
+         img=unique(img(:));
+         G=cal.gamma(round(1+img*o.maxEntry),2);
+         LL=LuminanceOfIndex(cal,img*o.maxEntry);
+         fprintf('%d: texture index',MFileLineNr);
+         fprintf(' %.4f',img);
+         fprintf(', G');
+         fprintf(' %.4f',G);
+         fprintf(', luminance');
+         fprintf(' %.1f',LL);
+         if o.contrast<0
+            fprintf(', contrast %.4f\n',(LL(1)-LL(2))/LL(2));
+         else
+            fprintf(', contrast %.4f\n',(LL(2)-LL(1))/LL(1));
+         end
+         % Compare hardware CLUT with identity.
+         gammaRead=Screen('ReadNormalizedGammaTable',window);
+         maxEntry=size(gammaRead,1)-1;
+         gamma=repmat(((0:maxEntry)/maxEntry)',1,3);
+         delta=gammaRead(:,2)-gamma(:,2);
+         ffprintf(ff,'Difference between identity and read-back of hardware CLUT (%dx%d): mean %.9f, sd %.9f\n',...
+            size(gammaRead),mean(delta),std(delta));
+      end
       
       %% PLAY MOVIE
       Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
@@ -2182,14 +2110,32 @@ try
             return
          end
          if o.assessTargetLuminance
-            pp = Screen('GetImage',window,dstRect);
-            o.actualStimulus=pp;
-            pp=unique(pp(:));
-            ffprintf(ff,'Line %d: assessTargetLuminanceTarget: index (cd/m^2): ',MFileLineNr);
-            for i=1:length(pp)
-               ffprintf(ff,'%d (%.1f), ',pp(i),LuminanceOfIndex(cal,pp(i)));
+            % Reading from the buffer, the image has already been converted
+            % from index to RGB. We use our calibration to estimate
+            % luminance from G.
+            rect=CenterRect(o.noiseCheckPix*o.targetRectLocal,o.stimulusRect);
+            o.actualStimulus = Screen('GetImage',window,rect,'frontBuffer',1);
+            % Get the mode and mode of rest.
+            p=o.actualStimulus(:,:,2);
+            p=p(:);
+            pp=mode(p);
+            pp(2)=mode(p(p~=pp));
+            pp=sort(pp);
+            imageLuminance=interp1(cal.old.G,cal.old.L,pp,'pchip');
+            ffprintf(ff,'%d: assessTargetLuminance: G',MFileLineNr);
+            ffprintf(ff,' %.4f',pp);
+            ffprintf(ff,', luminance');
+            ffprintf(ff,' %.1f',LL);
+            if o.contrast<0
+               fprintf(', contrast %.4f\n',(LL(1)-LL(2))/LL(2));
+            else
+               fprintf(', contrast %.4f\n',(LL(2)-LL(1))/LL(1));
             end
             ffprintf(ff,'\n');
+%             print stimulus as table of numbers
+%             dx=round(size(o.actualStimulus,2)/10);
+%             dy=round(dx*0.7);
+%             o.actualStimulus(1:dy:end,1:dx:end,2)
          end
          if isfinite(o.durationSec) % End the movie
             Screen('FillRect',window,gray,o.stimulusRect);
@@ -2208,7 +2154,7 @@ try
             Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,black); % fixation
             if o.flipClick; Speak(['before Flip dontclear ' num2str(MFileLineNr)]); GetClicks; end
             % After o.fixationCrossBlankedUntilSecAfterTarget, display new fixation.
-            Screen('Flip',window,o.movieFrameFlipSec(iMovieFrame+1,trial)+0.3,1,1); ...
+            Screen('Flip',window,o.movieFrameFlipSec(iMovieFrame+1,trial)+0.3,1); ...
                if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]); GetClicks; end
          end % if isfinite(o.durationSec)
          for iMovieFrame = 1:o.movieFrames
@@ -2309,7 +2255,7 @@ try
                      end
                   end
                   % NOTE: alphabet placement on top right
-                  texture = Screen('MakeTexture',window,(1-img)*gray);
+                  texture = Screen('MakeTexture',window,(1-img)*gray,0,0,1);
                   Screen('DrawTexture',window,texture,RectOfMatrix(img),rect);
                   Screen('Close',texture);
                   if o.labelAlternatives
@@ -2330,7 +2276,7 @@ try
          if o.assessGray
             pp = Screen('GetImage',window,[20 20 21 21]);
             ffprintf(ff,'Line %d: Gray index is %d (%.1f cd/m^2). Corner is %d.\n',...
-               MFileLineNr,gray*255,LuminanceOfIndex(cal,gray*255),pp(1));
+               MFileLineNr,gray*o.maxEntry,LuminanceOfIndex(cal,gray*o.maxEntry),pp(1));
          end
          if trial == 1
             WaitSecs(1); % First time is slow. Mario suggested a work around, explained at beginning of this file.
@@ -2837,7 +2783,6 @@ cal.LFirst = LMin;
 cal.LLast = LMean+(LMean-LMin); % Symmetric about LMean.
 cal.nFirst = firstGrayClutEntry;
 cal.nLast = lastGrayClutEntry;
-cal.clutMargin = 1;
 cal = LinearizeClut(cal);
 img = cal.nFirst:cal.nLast;
 n = floor(RectWidth(screenRect)/length(img));
@@ -2855,8 +2800,8 @@ for bits = 1:11
    %               newGamma=floor(cal.gamma*(2^bits-1))/(2^bits-1);
    msg = sprintf(' Now alternately clearing video DAC bit %d. Hit space bar to continue. ',bits);
    newGamma = bitset(round(cal.gamma*(2^17-1)),17-bits,0)/(2^17-1);
-   Screen('DrawText',window,' o.testBitDepth: Testing bits 1 to 11. ',100,100,0,255,1);
-   Screen('DrawText',window,msg,100,136,0,255,1);
+   Screen('DrawText',window,' o.testBitDepth: Testing bits 1 to 11. ',100,100,0,1,1);
+   Screen('DrawText',window,msg,100,136,0,1,1);
    Screen('Flip',window);
    ListenChar(0); % flush. May not be needed.
    ListenChar(2); % no echo. Needed.
@@ -2878,41 +2823,33 @@ end
 Speak('Done');
 end % function TestBitDepth
 %% FUNCTION MeasureContrast
-function oOut=MeasureContrast(o)
+function oOut=MeasureContrast(o,line)
 global window cal ff trial
-loadOnNextFlip=0;
-% Measure signal luminance L
 LMean=(cal.LLast+cal.LFirst)/2;
+fprintf('%d: LFirst %.1f, LMean %.1f, LLast %.1f cd/m^2\n',line,cal.LFirst,LMean,cal.LLast);
+% Measure signal luminance L
 index=IndexOfLuminance(cal,(1+o.contrast)*LMean);
-gamma=repmat((0:255)',1,3)/255;
-gamma(90:104,1:3)=repmat(cal.gamma(1+index,1:3),15,1);
-Screen('FillRect',window,100/255,o.stimulusRect);
-Screen('LoadNormalizedGammaTable',window,gamma,loadOnNextFlip);
-Screen('Flip',window,[],1);
+Screen('FillRect',window,index/o.maxEntry,o.stimulusRect);
+Screen('Flip',window,0,1);
 if o.usePhotometer
    L=GetLuminance;
 else
-   L=LMean*2*round(255*(1+o.contrast)/2)/255;
+   L=LMean*2*round(o.maxEntry*(1+o.contrast)/2)/o.maxEntry;
 end
 % Measure background luminance L0
 index0=IndexOfLuminance(cal,LMean);
-gamma(90:104,1:3)=repmat(cal.gamma(1+index0,1:3),15,1);
-Screen('FillRect',window,100/255,o.stimulusRect);
-Screen('LoadNormalizedGammaTable',window,gamma,loadOnNextFlip);
-Screen('Flip',window,[],1);
+Screen('FillRect',window,index0/o.maxEntry,o.stimulusRect);
+Screen('Flip',window,0,1);
 if o.usePhotometer
    L0=GetLuminance;
 else
    L0=LMean;
 end
-% Restore
-Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
-Screen('Flip',window);
 % Compute contrast
 actualContrast=(L-L0)/L0;
-estimatedContrast=(EstimateLuminance(cal,index)-EstimateLuminance(cal,index0))/EstimateLuminance(cal,index0);
-ffprintf(ff,'Luminance %.2f %.2f; Contrast nominal %.4f, est. %.4f, actual %.4f; gamma %.3f %.3f\n',...
-   L,L0,o.contrast,estimatedContrast,actualContrast,cal.gamma(index+1,2),cal.gamma(index0+1,2));
+estimatedContrast=(LuminanceOfIndex(cal,index)-LuminanceOfIndex(cal,index0))/LuminanceOfIndex(cal,index0);
+ffprintf(ff,'%d: Contrast nominal %.4f, est. %.4f, actual %.4f; Luminance %.2f %.2f; G %.4f %.4f\n',...
+   line,o.contrast,estimatedContrast,actualContrast,L,L0,cal.gamma(round(index)+1,2),cal.gamma(round(index0)+1,2));
 o.nominalContrast(trial)=o.contrast;
 o.actualContrast(trial)=actualContrast;
 oOut=o;
@@ -2924,7 +2861,7 @@ function AssessContrast(o)
 global img cal ff
 LMean = (cal.LFirst+cal.LLast)/2;
 img = IndexOfLuminance(cal,LMean);
-img = img:255;
+img = img:o.maxEntry;
 L = EstimateLuminance(cal,img);
 dL = diff(L);
 i = find(dL,1); % index of first non-zero element in dL
@@ -2973,7 +2910,7 @@ function AssessLinearity(o)
 % made global.fprintf('Assess linearity.\n');
 gratingL = LMean*repmat([0.2 1.8],400,200); % 400x400 grating
 gratingImg = IndexOfLuminance(cal,gratingL);
-texture = Screen('MakeTexture',window,uint8(gratingImg));
+texture = Screen('MakeTexture',window,gratingImg/o.maxEntry,0,0,1);
 r = RectOfMatrix(gratingImg);
 r = CenterRect(r,o.stimulusRect);
 Screen('DrawTexture',window,texture,RectOfMatrix(gratingImg),r);
