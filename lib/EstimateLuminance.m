@@ -1,5 +1,6 @@
 function imageLuminance=EstimateLuminance(cal,image)
-% EsimateLuminance use existing luminance measurements to estimate the
+% luminance=EstimateLuminance(cal,image)
+% EstimateLuminance uses existing luminance measurements to estimate the
 % luminance image that will result from displaying a given integer image.
 % The estimation includes the effect of quantization by the video DAC,
 % which has an integer range from 0 to cal.dacMax.
@@ -11,7 +12,7 @@ function imageLuminance=EstimateLuminance(cal,image)
 % cal.gamma is the new gamma table ready for loading into the CLUT.
 imageG=ones(size(image));
 image=round(image);
-bad=~isfinite(image)| image>255 |  image<0;
+bad=~isfinite(image)| round(image)>size(cal.gamma,1)-1 |  round(image)<0;
 image(bad)=0;
 imageG(:)=cal.gamma(1+image(:),2);
 dacMax=2^cal.dacBits-1;

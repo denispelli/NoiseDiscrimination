@@ -1,13 +1,28 @@
 function newCal=LinearizeClut(cal)
 % cal=LinearizeClut(cal);
 % LINEARCLUT uses existing luminance measurements (made by
-% CalibrateLuminance.m) to compute a gamma table that will linearize the
-% display's luminance for a specified range of image pixel values. To load
-% the gamma table call:
-% Screen('LoadNormalizedGammaTable',screen,cal.gamma)
-% Denis Pelli, NYU, July 5, 2014; February 21, 2017.
+% CalibrateLuminance.m) to compute a CLUT "cal.gamma" that will linearize
+% the display's luminance for a specified range of image pixel values. It's
+% important to know each display has a hardware CLUT, and optionally, a
+% software CLUT. When both are present your pixel value passes first
+% through the software CLUT and then through the harware CLUT. You should
+% load identity into the hardware CLUT and load the returned cal.gamma into
+% the software CLUT. Your request the software CLUT by requesting
+% EnableCLUTMapping when you open your window, and setting loadOnNextFlip=2
+% in your request to LoadNormalizedGammaTable, to indicate that you're
+% loading the software CLUT:
+% Screen('LoadNormalizedGammaTable',screen,cal.gamma,loadOnNextFlip) In
+% using the computed CLUT cal.gamma, you should not try to load it directly
+% into your hardward CLUT, because most driver enforce smoothness of the
+% hardware CLUT. (They save only the parameters of a smooth function fit to
+% the CLUT table you provide). Instead you should load identity (which is
+% smooth) into the hardware CLUT and load cal.gamma into the the software
+% CLUT.
+% Denis Pelli, NYU, July 5, 2014; February 21, 2017, April 2, 2017.
 %
 % INPUT FIELDS
+% cal.CLUTMapLength is the desired length of the gamma table. This will
+% typically be 1024 or 4096, to allow 10- or 12-bit precision.
 % cal.old.gamma is the gamma table (i.e. color lookup table or CLUT, also
 %      called color profile) when the luminance was calibrated.
 % cal.old.G is the green DAC value used for luminance calibration
@@ -18,15 +33,12 @@ function newCal=LinearizeClut(cal)
 % cal.LLast is the desired luminance for pixel value nLast.
 % The only constraint on LFirst and LLast is that both must be in the
 % measured range min(cal.old.L) to max(cal.old.L).
-% cal.clutMargin is the number of extra entries to add at each end (beyond
-% cal.nFirst and cal.nLast), repeating the end value. Enter 0 or leave it
-% undefined for no CLUT margin. This margin is a work around for a bug I
-% just discovered in my MacBook Pro 15". Apparently the driver internally
-% smooths the CLUT, so that the luminance produced by a CLUT value is
-% somewhat affected by its neighbors. To get a 100% white you need similar
-% values on both sides. You'll need to keep this in mind when setting
-% values for nFirst and nLast to avoid clobbering important CLUT values
-% beyond the nominal range nFirst to nLast.
+%
+% Attempting to load a non-smooth function into the hardware CLUT is not
+% recommended because the resulting CLUT table will be a smooth function,
+% even if your request isn't. Our new approach is set the hardware CLUT to
+% identify, and load cal.gamma into the software CLUT, which has no such
+% restriction.
 %
 % OUTPUT FIELDS, IN ADDITION TO THE INPUT FIELDS
 % cal.n are the pixel values, nFirst:nLast, for which new gamma table
@@ -49,6 +61,9 @@ function newCal=LinearizeClut(cal)
 
 checkLuminance=0; % optional diagnostic print out
 checkLinearization=0; % optional diagnostic print out
+if isfield(cal,'gamma')
+   assert(size(cal.gamma,1)==cal.CLUTMapLength)
+end
 % If not strictly monotonic.
 if ~all(diff(cal.old.L)>0)
    L=cal.old.L;
@@ -127,34 +142,25 @@ if checkLuminance
    dL=diff(L);
    fprintf('Luminance increment mean±sd %.4f±%.4f\n',mean(dL),std(dL));
 end
-% Interpolate index in cal.old.gamma of the green value G
+% Interpolate index into cal.old.gamma of the green value G
 index=interp1(cal.old.gamma(:,2),1:length(cal.old.gamma),cal.G,'pchip'); % (takes few ms)
 % Interpolate RGB color (a white triplet) at the index of the luminance we want.
 linearizedGamma=interp1(cal.old.gamma,index,'pchip'); % (takes few ms)
 linearizedGamma=min(linearizedGamma,1);
 linearizedGamma=max(linearizedGamma,0);
 if ~isfield(cal,'gamma')
-   % If new gamma not provided, take old gamma table as default, scrunched
-   % down to 256 entries. This mapping conserves black (first) and white
-   % (last), and interpolates the rest. It can be done quickly, using
-   % ROUND, or precisely, using INTERP1, which takes a few ms.
-   cal.gamma=ones(256,3);
-   cal.gamma=cal.old.gamma(round(1+cal.old.gammaIndexMax*(0:255)/255),1:3);
-   %     cal.gamma=interp1(cal.old.gamma,1+cal.old.gammaIndexMax*(0:255)/255),'pchip');
+   % If new gamma not provided, take old gamma table as default,
+   % interpolated to cal.CLUTMapLength entries. This mapping conserves black
+   % (first) and white (last), and interpolates the rest. It can be done
+   % quickly, using ROUND, or precisely, using INTERP1, which takes a few
+   % ms.
+   cal.gamma=ones(cal.CLUTMapLength,3);
+   oldMaxIndex=size(cal.old.gamma,1)-1;
+   maxIndex=cal.CLUTMapLength-1;
+   cal.gamma=cal.old.gamma(round(1+oldMaxIndex*(0:maxIndex)/maxIndex),1:3);
+   %     cal.gamma=interp1(cal.old.gamma,1+oldMaxIndex*(0:maxIndex)/maxIndex),'pchip');
 end
 cal.gamma(1+cal.n,1:3)=linearizedGamma;
-if isfield(cal,'clutMargin') && cal.clutMargin>0
-   for i=1:cal.clutMargin
-      margin=1+cal.n(1)-i;
-      if margin>=1
-         cal.gamma(margin,1:3)=cal.gamma(1+cal.n(1),1:3);
-      end
-      margin=1+cal.n(end)+i;
-      if margin<=size(cal.gamma,1)
-         cal.gamma(margin,1:3)=cal.gamma(1+cal.n(end),1:3);
-      end
-   end
-end
 newCal=cal;
 if checkLinearization
    err=rms(linearizedGamma(:,2)'-cal.G);
@@ -163,10 +169,7 @@ if checkLinearization
    fprintf('gamma-G rms error %.3f\n',err);
    err=rms(cal.gamma(1+cal.n,2)'-cal.G);
    fprintf('cal.gamma-G %.3f to %.3f. rms error %.3f\n',cal.gamma(1+cal.n([1,end])),err);
-   gamma8=cal.gamma(1+round((length(cal.gamma)-1)*(0:255)/255),2);
-   err=rms(cal.gamma(1+cal.n,2)-gamma8(1+cal.n));
-   fprintf('gamma %.3f to %.3f. rms error %.3f\n',cal.gamma(1+cal.n([1,end])),err);
-   G=gamma8(1+cal.n)';
+   G=cal.gamma(1+cal.n,2)';
    err=rms(G-cal.G);
    fprintf('DAC value %.3f to %.3f. rms error %.3f\n',cal.G(1),cal.G(end),err);
    L=interp1(cal.old.G,cal.old.L,G,'pchip');

@@ -7,7 +7,7 @@ function imageLuminance = LuminanceOfIndex(cal,image)
 image=round(image);
 ii=image(:)<cal.nFirst | image(:)>cal.nLast;
 if any(ii)
-    msg1=sprintf('%d out-of-range pixels, with values [',sum(ii));
+    msg1=sprintf('%d out-of-range pixels (out of %dx%d), with values [',sum(ii),size(image,1),size(image,2));
     msg2=sprintf(' %.0f',unique(image(ii)));
     msg3=sprintf('], were bounded to the range %d to %d.',cal.nFirst,cal.nLast);
     warning('%s%s%s',msg1,msg2,msg3);
