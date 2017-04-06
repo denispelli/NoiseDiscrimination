@@ -781,6 +781,23 @@ try
       end
       if o.flipClick; Speak(['before OpenWindow ' num2str(MFileLineNr)]); GetClicks; end
       Screen('ConfigureDisplay','Dithering',cal.screen,o.ditherCLUT);
+      wInfo=Screen('GetWindowInfo',window);
+      switch(wInfo.DisplayCoreId)
+         case 'AMD',
+            DCEDisplayEngineVersion=wInfo.GPUMinorType/10;
+            switch(round(DCEDisplayEngineVersion))
+               case 6,
+                  displayGPUFamily='Southern Islands';
+                  % Examples:
+                  % AMD Radeon R9 M290X used in MacBook Pro (Retina, 15-inch, Mid 2015)
+                  % AMD Radeon R9 M370X used in iMac (Retina 5K, 27-inch, Late 2014)
+                  ditherCLUT=61696;
+               case 8,
+                  displayGPUFamily='Sea Islands';
+                  % Used in hp Z Book laptop.
+                  ditherCLUT=xxx;
+            end
+      end
       PsychImaging('PrepareConfiguration');
       if o.flipScreenHorizontally
          PsychImaging('AddTask','AllViews','FlipHorizontal');
