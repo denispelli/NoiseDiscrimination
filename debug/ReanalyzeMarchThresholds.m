@@ -1,4 +1,19 @@
-% Fix late-contrast data.
+% Fix threshold contrasts measured in January-March 2017. We got great Neq
+% data from Chen and Ning. We included Chen's data in my NIH grant proposal
+% sent mid March. Ning's data agree with Chen's at high contrast, but was
+% crazy at low contrast. Eventually I discovered two bugs. Firstly CLUT was
+% loaded AFTER the trial, so each trial ran at the nominal contrast of the
+% previous trial. This can be overcome by reanalyzing the data, with the
+% correct association of response and trial. More important, I discovered
+% that we were attaining only 8 bits of luminance precision. As a
+% consequence all nominal contrasts of 0.78% or above were correct (with
+% negligible rounding error) and all contrasts below that were rounded to
+% 0.78% or zero. That discrepancy between actual and nominal contrast led
+% Quest to estimate absurdly low thresholds for Ning. Again, we can
+% overcome the bug by reanalyzing the data with the actual contrast.
+%
+% actualC=0.0078*round(nominalC/0.0078);
+%
 % When we enhanced NoiseDiscrimination to show dynamic noise, the single
 % image presentation was expanced to be a movie. In this program contrast
 % is controlled by loading the CLUT (color lookup table). Formerly the CLUT
@@ -12,6 +27,7 @@
 % to replace the old invalid one. Chen provided MATLAB code to cycle
 % through our MAT files. I added code to run Quest and save the results.
 % denis.pelli@nyu.edu March 21, 2017.
+
 
 clear all;
 name='measurePeripheralThresholds';
@@ -40,6 +56,10 @@ for iFile = 1:length(matFiles)
     % last contrast (untested).
     dataX=data(1:end-1,:); % Get log contrast (column 1).
     dataX(:,2)=data(2:end,2); % Get response (column 2).
+    % actualC=0.0078*round(nominalC/0.0078);
+    dataX(:,1)=log10(0.0078*round(10.^dataX(:,1)/0.0078));
+    good=isfinite(dataX(:,1));
+    dataX=dataX(good,1:2);
     delta = 0.02;
     gamma = 1/o.alternatives;
     tGuess = -0.5;
