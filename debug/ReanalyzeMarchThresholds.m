@@ -36,7 +36,7 @@ cd(dataFolder);
 matFiles=dir('*.mat');
 fprintf('Saving results in "fixed data summary.txt", which you can read into Excel.\n');
 fprintf('Analyzing only files whose names begin with "%s"\n',name);
-fi=fopen('fixed data summary.txt','w');
+fi=fopen('reanalyzedMarchThresholds.txt','w');
 fprintf(fi,['secs\tdate\tname\tecc deg\theight deg\tdur s\tN\ttrials\t'...
     'file mean\tsd\told mean\tsd\tnew mean\tsd\terr\tchange\n']);
 for iFile = 1:length(matFiles)
