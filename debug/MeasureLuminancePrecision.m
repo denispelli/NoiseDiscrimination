@@ -77,6 +77,21 @@ try
     screenBufferRect = Screen('Rect',screen);
     PsychImaging('PrepareConfiguration');
     PsychImaging('AddTask','General','UseRetinaResolution');
+    if 0
+       % CODE FROM MARIO & HORMET FOR LINUX HP Z BOOK
+       switch nBits
+          case 8; % do nothing
+          case 10; PsychImaging('AddTask', 'General', 'EnableNative10BitFramebuffer');
+          case 11; PsychImaging('AddTask', 'General', 'EnableNative11BitFramebuffer');
+          case 12; PsychImaging('AddTask', 'General', 'EnableNative16BitFramebuffer', [], 16);
+       end
+       PsychImaging('AddTask', 'FinalFormatting', 'DisplayColorCorrection', 'SimpleGamma');
+       % Uncomment this line when using 11 bpc for the first time.
+       % delete([PsychtoolboxConfigDir 'rgb111110remaplut.mat']); % clear cache
+       if nBits >= 11; Screen('ConfigureDisplay', 'Dithering', screenNumber, 61696); end % 11 bpc via Bit-stealing
+       PsychColorCorrection('SetEncodingGamma', w, 1/2.50); % your display might have a different gamma
+       Screen('Flip', w);
+    end
     if useNative10Bit
         PsychImaging('AddTask','General','EnableNative10BitFramebuffer');
     end
