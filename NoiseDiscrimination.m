@@ -795,7 +795,7 @@ try
                case 8,
                   displayGPUFamily='Sea Islands';
                   % Used in hp Z Book laptop.
-                  ditherCLUT=xxx;
+%                   ditherCLUT=xxx;
             end
       end
       PsychImaging('PrepareConfiguration');
