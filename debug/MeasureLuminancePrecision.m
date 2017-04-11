@@ -56,6 +56,77 @@ function data=MeasureLuminancePrecision
 %
 % Denis Pelli, April 2, 2017
 
+% REFERENCE FOR HP  ZBook "Sea Islands" GPU
+% 10 bpc panel dither setup code for the zBooks "Sea Islands" (CIK) gpu:
+% http://lxr.free-electrons.com/source/drivers/gpu/drm/radeon/cik.c#L8814
+% The constants which are or'ed / added together in that code are defined
+% here:
+% http://lxr.free-electrons.com/source/drivers/gpu/drm/radeon/cikd.h#L989
+% I simply or'ed the proper constants to get the numbers i told you, so PTB
+% replicates the Linux display drivers behaviour. As you can see there are
+% many parameters one could tweak for any given display. E.g., add/drop
+% FMT_FRAME_RANDOM_ENABLE, FMT_HIGHPASS_RANDOM_ENABLE, or
+% FMT_RGB_RANDOM_ENABLE for extra entertainment value. It's somewhat of a
+% black art. The gpu also has various temporal dithering modes with even
+% more parameters, or combined spatio-temporal modes. Most of these are
+% never used or even validated by gpu hardware vendors to do the right
+% thing. All the variations will have different effects on different types
+% of display panels, at different refresh rates and pixel densities, for
+% different types of still images or animations, so a panel with a true
+% native high bit depths is still a more deterministic thing that simulated
+% high bit depths. I would use dithering only for high level stimuli with
+% low spatial frequencies for that reason.
+
+% 2. Must we call "PsychColorCorrection"? I'm already doing correction
+% based on my photometry.
+
+% -> No. But it's certainly more convenient and faster, and very accurate.
+% That's the recommended way to do gamma correction on > 8 bpc
+% framebuffers. For testing it would be better to leave it out, so you use
+% a identity mapping like when testing on the Macs.
+
+% 3. Must we call "FinalFormatting"? Is the call to "FinalFormatting" just
+% loading an identity ga! mma? Can I, instead, just use
+% LoadFormattedGammaTable to load identity?
+
+% -> No, only if you want PTB to do high precision color/gamma correction
+% via the modes and settings supported by PsychColorCorrection(). The call
+% itself would simply establish an identity gamma "curve", however
+% operating at ~ 23 bpc linear precision (32 bit floating point precision
+% is about ~ 23 bit linear precision in the displayable color range of 0.0
+% - 1.0).
+
+% -> Another thing you could test is if that laptop can drive a
+% conventional 8 bit external panel with 12 or more bits via dithering. The
+% gpu can do 12 bits in the 'EnableNative16BitFramebuffer' mode. So far i
+% thought +2 extra bits would be all you could get via dithering, but after
+% your surprising 11 bit result on your MacBookPro, with +3 extra bits, who
+% knows if there's room for more?
+
+% -> Yet another interesting option would be booting Linux on your iMac
+% 2014 Retina 5k, again with the dither settings that gave you 11 bpc under
+% macOS, and see if Linux in EnableNative16BitFramebuffer mode ! can
+% squeeze out more than 11 bpc.
+
+% -mario
+
+% I was surprised by a limitation. On macOS I enable Clut mapping with
+% 4096 Clut size. Works fine. In Linux if the requested Clut size is
+% larger than 256 the call to loadnormalizedgammatable with load=2
+% gives a fatal error complaining that my Clut is bigger than 256.
+% Seems weird since it was already told when I enabled that I'd be
+% using a 256 element soft Clut.
+
+
+% I don't understand that? What kind of clut mapping with load=2? On Linux
+% the driver uses the discrete 256 slot hardware gamma table, instead of
+% the non-linear gamma mapping that macOS now uses. Also PTB on Linux
+% completely disables hw gamma tables in >= 10 bit modes, so all gamma
+% correction is done via PsychColorCorrection(). You start off with a
+% identity gamma table.
+
+
+
 points=32;
 wigglePixelNotCLUT=1;
 loadIdentityCLUT=1;
@@ -77,6 +148,7 @@ try
     screenBufferRect = Screen('Rect',screen);
     PsychImaging('PrepareConfiguration');
     PsychImaging('AddTask','General','UseRetinaResolution');
+    Screen('ConfigureDisplay', 'Dithering', screen, ditherCLUT);
     if 0
        % CODE FROM MARIO & HORMET FOR LINUX HP Z BOOK
        switch nBits
@@ -85,11 +157,9 @@ try
           case 11; PsychImaging('AddTask', 'General', 'EnableNative11BitFramebuffer');
           case 12; PsychImaging('AddTask', 'General', 'EnableNative16BitFramebuffer', [], 16);
        end
-       PsychImaging('AddTask', 'FinalFormatting', 'DisplayColorCorrection', 'SimpleGamma');
-       % Uncomment this line when using 11 bpc for the first time.
-       % delete([PsychtoolboxConfigDir 'rgb111110remaplut.mat']); % clear cache
+       PsychImaging('AddTask', 'FinalFormatting', 'DisplayColorCorrection', 'SimpleGamma'); % Load identity gamma.
        if nBits >= 11; Screen('ConfigureDisplay', 'Dithering', screenNumber, 61696); end % 11 bpc via Bit-stealing
-       PsychColorCorrection('SetEncodingGamma', w, 1/2.50); % your display might have a different gamma
+%        PsychColorCorrection('SetEncodingGamma', w, 1/2.50); % your display might have a different gamma
        Screen('Flip', w);
     end
     if useNative10Bit
@@ -105,8 +175,36 @@ try
     else
         [window,screenRect] = PsychImaging('OpenWindow',screen,[1 1 1],round(useFractionOfScreen*screenBufferRect));
     end
+    windowInfo=Screen('GetWindowInfo',window);
+    switch(windowInfo.DisplayCoreId)
+       % FIGURE OUT MAGIC DITHER NUMBER FOR THIS VIDEO DRIVER.
+       case 'AMD',
+          displayEngineVersion=windowInfo.GPUMinorType/10;
+          switch(round(displayEngineVersion))
+             case 6,
+                displayGPUFamily='Southern Islands';
+                % Examples:
+                % AMD Radeon R9 M290X used in MacBook Pro (Retina, 15-inch, Mid 2015)
+                % AMD Radeon R9 M370X used in iMac (Retina 5K, 27-inch, Late 2014)
+                ditherCLUT=61696;
+             case 8,
+                displayGPUFamily='Sea Islands';
+                % Used in hp Z Book laptop.
+                ditherCLUT= 61696;
+                ditherCLUT= 59648;
+                % Another number you could try is 59648. This would enable
+                % dithering for a native 8 bit panel, which is the wrong
+                % thing to do for the laptops 10 bit panel, assuming the
+                % driver docs are correct. But then, who knows?
+             otherwise,
+                displayGPUFamily='unkown';
+          end
+          fprintf('Display driver: %s version %.1f, "%s"\n',...
+             windowInfo.DisplayCoreId,displayEngineVersion,displayGPUFamily);
+    end
     if exist('ditherCLUT','var')
-        Screen('ConfigureDisplay','Dithering',screen,ditherCLUT);
+       fprintf('ConfigureDisplay Dithering %.0f\n',ditherCLUT);
+       Screen('ConfigureDisplay','Dithering',screen,ditherCLUT);
     end
     if wigglePixelNotCLUT
         % Compare default CLUT with identity.
