@@ -56,7 +56,7 @@ function data=MeasureLuminancePrecision
 %
 % Denis Pelli, April 2, 2017
 
-% REFERENCE FOR HP  ZBook "Sea Islands" GPU
+% REFERENCE (FROM MARIO) FOR HP Z Book "Sea Islands" GPU:
 % 10 bpc panel dither setup code for the zBooks "Sea Islands" (CIK) gpu:
 % http://lxr.free-electrons.com/source/drivers/gpu/drm/radeon/cik.c#L8814
 % The constants which are or'ed / added together in that code are defined
@@ -77,24 +77,24 @@ function data=MeasureLuminancePrecision
 % high bit depths. I would use dithering only for high level stimuli with
 % low spatial frequencies for that reason.
 
-% 2. Must we call "PsychColorCorrection"? I'm already doing correction
+% DENIS: Must we call "PsychColorCorrection"? I'm already doing correction
 % based on my photometry.
 
-% -> No. But it's certainly more convenient and faster, and very accurate.
-% That's the recommended way to do gamma correction on > 8 bpc
+% MARIO: No. But it's certainly more convenient and faster, and very
+% accurate. That's the recommended way to do gamma correction on > 8 bpc
 % framebuffers. For testing it would be better to leave it out, so you use
 % a identity mapping like when testing on the Macs.
 
-% 3. Must we call "FinalFormatting"? Is the call to "FinalFormatting" just
-% loading an identity ga! mma? Can I, instead, just use
+% DENIS: Must we call "FinalFormatting"? Is the call to "FinalFormatting"
+% just loading an identity ga! mma? Can I, instead, just use
 % LoadFormattedGammaTable to load identity?
 
-% -> No, only if you want PTB to do high precision color/gamma correction
-% via the modes and settings supported by PsychColorCorrection(). The call
-% itself would simply establish an identity gamma "curve", however
-% operating at ~ 23 bpc linear precision (32 bit floating point precision
-% is about ~ 23 bit linear precision in the displayable color range of 0.0
-% - 1.0).
+% MARIO: No, only if you want PTB to do high precision color/gamma
+% correction via the modes and settings supported by
+% PsychColorCorrection(). The call itself would simply establish an
+% identity gamma "curve", however operating at ~ 23 bpc linear precision
+% (32 bit floating point precision is about ~ 23 bit linear precision in
+% the displayable color range of 0.0 - 1.0).
 
 % -> Another thing you could test is if that laptop can drive a
 % conventional 8 bit external panel with 12 or more bits via dithering. The
@@ -108,24 +108,19 @@ function data=MeasureLuminancePrecision
 % macOS, and see if Linux in EnableNative16BitFramebuffer mode ! can
 % squeeze out more than 11 bpc.
 
-% -mario
+% DENIS: I was surprised by a limitation. On macOS I enable Clut mapping
+% with 4096 Clut size. Works fine. In Linux if the requested Clut size is
+% larger than 256 the call to loadnormalizedgammatable with load=2 gives a
+% fatal error complaining that my Clut is bigger than 256. Seems weird
+% since it was already told when I enabled that I'd be using a 256 element
+% soft Clut.
 
-% I was surprised by a limitation. On macOS I enable Clut mapping with
-% 4096 Clut size. Works fine. In Linux if the requested Clut size is
-% larger than 256 the call to loadnormalizedgammatable with load=2
-% gives a fatal error complaining that my Clut is bigger than 256.
-% Seems weird since it was already told when I enabled that I'd be
-% using a 256 element soft Clut.
-
-
-% I don't understand that? What kind of clut mapping with load=2? On Linux
-% the driver uses the discrete 256 slot hardware gamma table, instead of
-% the non-linear gamma mapping that macOS now uses. Also PTB on Linux
+% MARIO: I don't understand that? What kind of clut mapping with load=2? On
+% Linux the driver uses the discrete 256 slot hardware gamma table, instead
+% of the non-linear gamma mapping that macOS now uses. Also PTB on Linux
 % completely disables hw gamma tables in >= 10 bit modes, so all gamma
 % correction is done via PsychColorCorrection(). You start off with a
 % identity gamma table.
-
-
 
 points=32;
 wigglePixelNotCLUT=1;
