@@ -28,6 +28,17 @@
 % through our MAT files. I added code to run Quest and save the results.
 % denis.pelli@nyu.edu March 21, 2017.
 
+% Actual N at each eccentricity. The program's computation of power
+% spectral density assumes display at site of target is orthogonal to line
+% of sight (from eye) and at specified viewing distance. In fact the
+% display was orthogonal to line of sight at fixation point, and thus
+% tilted at the target site. The target site is further than the nominal
+% viewing distance. Our target is along the horizontal meridian so the tilt
+% compressed along the x axis without affecting the y axis. This reduces
+% power spectral density N by a factor of cos(phi), where phi is
+% eccentricity. The ratio of nominal to actual distance is cos(phi). This
+% scales both x and y, so it reduces N by a factor of cos(phi)^2. Thus the
+% actual N(phi) is cos(phi)^3*N.
 
 clear all;
 name='measurePeripheralThresholds';
@@ -37,7 +48,7 @@ matFiles=dir('*.mat');
 fprintf('Saving results in "fixed data summary.txt", which you can read into Excel.\n');
 fprintf('Analyzing only files whose names begin with "%s"\n',name);
 fi=fopen('reanalyzedMarchThresholds.txt','w');
-fprintf(fi,['secs\tdate\tname\tecc deg\theight deg\tdur s\tN\ttrials\t'...
+fprintf(fi,['secs\tdate\tname\tecc deg\theight deg\tdur s\tNNominal\tN\ttrials\t'...
     'file mean\tsd\told mean\tsd\tnew mean\tsd\terr\tchange\n']);
 for iFile = 1:length(matFiles)
     n=length(name);
@@ -73,13 +84,13 @@ for iFile = 1:length(matFiles)
     for i=1:length(dataX)
         qX = QuestUpdate(qX,dataX(i,1),dataX(i,2)); % Add the new datum (actual test intensity and o.observer response) to the database.
     end
-    fprintf(['%12s, %9s, %2.0f deg ecc,%2.0f deg,%4.1f s,%6.2f log N,%5d trials, '...
+    fprintf(['%12s, %9s, %2.0f deg ecc,%2.0f deg,%4.1f s,%6.2f log NNominal,%6.2f log N,%5d trials, '...
         'file %5.2f±%4.2f, old %5.2f±%4.2f, new %5.2f±%4.2f, err %5.2f, change %5.2f\n'],...
-        datestr(o.beginningTime,1),o.observer,o.eccentricityDeg,o.targetHeightDeg,o.durationSec,log10(o.N),o.trials,...
+        datestr(o.beginningTime,1),o.observer,o.eccentricityDeg,o.targetHeightDeg,o.durationSec,log10(o.N),log10(o.N*cosd(o.eccentricityDeg).^3),o.trials,...
         o.questMean,o.questSd,QuestMean(q),QuestSd(q),QuestMean(qX),QuestSd(qX),o.questMean-QuestMean(q),QuestMean(q)-QuestMean(qX));
     fprintf(fi,['%d\t%s\t%s\t%.0f\t%.0f\t%.1f\t%.2g\t%5d\t'...
         '%5.2f\t%4.2f\t%5.2f\t%4.2f\t%5.2f\t%4.2f\t%5.2f\t%5.2f\n'],...
-        o.beginningTime,datestr(o.beginningTime,1),o.observer,o.eccentricityDeg,o.targetHeightDeg,o.durationSec,o.N,o.trials,...
+        o.beginningTime,datestr(o.beginningTime,1),o.observer,o.eccentricityDeg,o.targetHeightDeg,o.durationSec,o.N,o.N*cosd(o.eccentricityDeg).^3,o.trials,...
         o.questMean,o.questSd,QuestMean(q),QuestSd(q),QuestMean(qX),QuestSd(qX),o.questMean-QuestMean(q),QuestMean(q)-QuestMean(qX));   
 end
 fclose(fi);
