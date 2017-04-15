@@ -185,7 +185,7 @@ try
              case 8,
                 displayGPUFamily='Sea Islands';
                 % Used in hp Z Book laptop.
-                ditherCLUT= 61696;
+%                 ditherCLUT= 61696;
                 ditherCLUT= 59648;
                 % Another number you could try is 59648. This would enable
                 % dithering for a native 8 bit panel, which is the wrong
