@@ -89,7 +89,7 @@ function o = NoiseDiscrimination(oIn)
 %
 % See also LinearizeClut, CalibrateScreenLuminance, OurScreenCalibrations,
 % testLuminanceCalibration, testGammaNull, IndexOfLuminance,
-% LuminanceOfIndex.
+% LuminanceOfIndex, MeasureLuminancePrecision.
 
 %% EXTRA DOCUMENTATION
 
@@ -191,10 +191,10 @@ addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder i
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
 % echo_executing_commands(2, 'local');
 % diary ./diary.log
-[~, vStruct] = PsychtoolboxVersion;
-if IsOSX && vStruct.major*1000+vStruct.minor*100+vStruct.point <= 3013
-   error('Version 3.0.13 of Mac OSX Psychtoolbox had a gamma table bug. Please update to the latest version: UpdatePsychtoolbox');
-end
+% [~, vStruct] = PsychtoolboxVersion;
+% if IsOSX && vStruct.major*1000+vStruct.minor*100+vStruct.point < 3013
+%    error('Your Mac OSX Psychtoolbox is too old. We need at least Version 3.0.13. Please run: UpdatePsychtoolbox');
+% end
 rng('default'); % Initialize random number generator with fresh seed.
 if ismac && ~ScriptingOkShowPermission
    error(['Please give MATLAB permission to control the computer. ',...
@@ -782,24 +782,6 @@ try
          ffprintf(ff,'Using tiny window for debugging.\n');
       end
       if o.flipClick; Speak(['before OpenWindow ' num2str(MFileLineNr)]); GetClicks; end
-      Screen('ConfigureDisplay','Dithering',cal.screen,o.ditherCLUT);
-      wInfo=Screen('GetWindowInfo',window);
-      switch(wInfo.DisplayCoreId)
-         case 'AMD',
-            DCEDisplayEngineVersion=wInfo.GPUMinorType/10;
-            switch(round(DCEDisplayEngineVersion))
-               case 6,
-                  displayGPUFamily='Southern Islands';
-                  % Examples:
-                  % AMD Radeon R9 M290X used in MacBook Pro (Retina, 15-inch, Mid 2015)
-                  % AMD Radeon R9 M370X used in iMac (Retina 5K, 27-inch, Late 2014)
-                  ditherCLUT=61696;
-               case 8,
-                  displayGPUFamily='Sea Islands';
-                  % Used in hp Z Book laptop.
-%                   ditherCLUT=xxx;
-            end
-      end
       PsychImaging('PrepareConfiguration');
       if o.flipScreenHorizontally
          PsychImaging('AddTask','AllViews','FlipHorizontal');
@@ -831,6 +813,31 @@ try
           r=AlignRect(r,screenBufferRect,'right','bottom');
           window=PsychImaging('OpenWindow',cal.screen,1.0,r);
       end
+      
+      windowInfo=Screen('GetWindowInfo',window);
+      o.displayCoreId=windowInfo.DisplayCoreId;
+      switch(o.displayCoreId)
+         case 'AMD',
+            o.displayEngineVersion=windowInfo.GPUMinorType/10;
+            switch(round(o.displayEngineVersion))
+               case 6,
+                  o.displayGPUFamily='Southern Islands';
+                  % Examples:
+                  % AMD Radeon R9 M290X in MacBook Pro (Retina, 15-inch, Mid 2015)
+                  % AMD Radeon R9 M370X in iMac (Retina 5K, 27-inch, Late 2014)
+                  o.ditherCLUT=61696;
+               case 8,
+                  o.displayGPUFamily='Sea Islands';
+                  % Used in hp Z Book laptop.
+                  o.ditherCLUT=59648; % Untested.
+                  % MARIO: Another number you could try is 59648. This
+                  % would enable dithering for a native 8 bit panel, which
+                  % is the wrong thing to do for the laptops 10 bit panel,
+                  % assuming the driver docs are correct. But then, who
+                  % knows?
+            end
+      end
+      Screen('ConfigureDisplay','Dithering',cal.screen,o.ditherCLUT);
       
       % Compare hardware CLUT with identity.
       gammaRead=Screen('ReadNormalizedGammaTable',window);
