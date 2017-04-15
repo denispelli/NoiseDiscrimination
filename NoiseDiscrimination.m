@@ -7,16 +7,17 @@ function o = NoiseDiscrimination(oIn)
 % the screen size, resolution, and maximum possible contrast.
 %
 % You should write a short script that loads all your parameters into an
-% "o" struct and calls o=NoiseDiscrimination(o). I recommend beginning your
-% script with "clear o" to make sure that you don't carry over any values
-% from the last session.
+% "o" struct and calls o=NoiseDiscrimination(o). Within your script it's
+% fine to keep reusing o, with little or no change. However, at the
+% beginning of your script, I recommend calling "clear o" to make sure that
+% you don't carry over any values from a prior session.
 %
 % OFF THE NYU CAMPUS: If you have an NYU netid and you're using the NYU
 % MATLAB license server then you can work from off campus if you install
 % NYU's free VPN software on your computer:
 % http://www.nyu.edu/its/nyunet/offcampus/vpn/#services
 %
-% SNAPSHOT: It is useful to take snapshots of the stimulus produced by
+% SNAPSHOT. It is useful to take snapshots of the stimulus produced by
 % NoiseDiscrimination. Such snapshots can be used in papers and talks to
 % show our stimuli. If you request a snapshot then NoiseDiscrimination
 % saves the first stimulus to a PNG image file and then quits with a fake
@@ -33,29 +34,30 @@ function o = NoiseDiscrimination(oIn)
 % Standard condition for counting V1 neurons: o.noiseCheckPix=13;
 % height=30*o.noiseCheckPix; o.distanceCm=45; SD=0.2, o.durationSec=0.2 s.
 %
-% Observer 'brightnessSeeker' is a model of the human observer with a
-% saturation of brightness, based on an old research project of mine. As
-% the noise gets stronger, this artificial o.observer "sees" it as dimmer
-% and will identify the dim letter or choose the dimmest square. The
-% strength of the saturation is set by "o.observerQuadratic=-1.2;" There's
-% no need to adjust that. If we make that number big, like -10, this
-% o.observer performs much like the ideal. If the number is zero, it'll be
-% just guessing. I'm pretty sure -1.2 is the right setting.
+% BRIGHTNESS SEEKER. Observer 'brightnessSeeker' is a model of the human
+% observer with a saturation of brightness, based on an old research
+% project of mine. As the noise gets stronger, this artificial o.observer
+% "sees" it as dimmer and will identify the dim letter or choose the
+% dimmest square. The strength of the saturation is set by
+% "o.observerQuadratic=-1.2;" There's no need to adjust that. If we make
+% that number big, like -10, this o.observer performs much like the ideal.
+% If the number is zero, it'll be just guessing. I'm pretty sure -1.2 is
+% the right setting.
 %
-% It wasn't easy to get the instructional text to image well. It's black,
-% on a gray background, but the antialiasing in the font rendering
-% surrounded each letter with with intermediate levels of gray. The
-% intermediate values were problematic. In my CLUT, the intermediate values
-% between gray (roughly 0.5) and black (0) were much closer in luminance to the
-% gray, making the letter seem too thin. Worse, I am computing a new color
-% table (CLUT) for each trial, so this made the halo around the
-% instructions flicker every time the CLUT changed. Eventually I realized
-% that black is zero and that by making the gray background have an index
-% of 1, the letters are indeed binary, since the font rendering software
-% emits only integers and there are no integers between 0 and 1. This
-% leaves me free to do whatever I want with the rest of the color table.
-% The letters are imaged well, because the antialiasing software is
-% allowed to do its best with the binary gamut.
+% ANTIALIASING ARTIFACTS. It wasn't easy to get the instructional text to
+% image well. It's black, on a gray background, but the antialiasing in the
+% font rendering surrounded each letter with with intermediate levels of
+% gray. The intermediate values were problematic. In my CLUT, the
+% intermediate values between gray (roughly 0.5) and black (0) were much
+% closer in luminance to the gray, making the letter seem too thin. Worse,
+% I am computing a new color table (CLUT) for each trial, so this made the
+% halo around the instructions flicker every time the CLUT changed.
+% Eventually I realized that black is zero and that by making the gray
+% background have an index of 1, the letters are indeed binary, since the
+% font rendering software emits only integers and there are no integers
+% between 0 and 1. This leaves me free to do whatever I want with the rest
+% of the color table. The letters are imaged well, because the antialiasing
+% software is allowed to do its best with the binary gamut.
 %
 % Similarly, it wasn't easy to put the signal on the screen without getting
 % a dark halo on the MacBookPro Retina display. That display, like other
@@ -76,14 +78,14 @@ function o = NoiseDiscrimination(oIn)
 % crowding). Otherwise the fixation cross is blanked during target
 % presentation and until o.fixationCrossBlankedUntilSecAfterTarget.
 %
-% Annular Gaussian noise envelope.
-% Use these three parameters to specify an annular gaussian envelope. The
-% amplitude is a Gaussian of R-Ra where R is the distance from letter
-% center and Ra is o.annularNoiseEnvelopeRadiusDeg. When Ra is zero, this
-% reduces to a normal gaussian centered on the letter. The code now
-% computes a new summary of the "area" of the envelope:
-% o.centralNoiseEnvelopeE1DegDeg We should equate this when we compare hard
-% edge annulus with gaussian envelope.
+% ANNULAR GAUSSIAN NOISE ENVELOPE. Use these three parameters to specify an
+% annular gaussian envelope. The amplitude is a Gaussian of R-Ra where R is
+% the distance from letter center and Ra is
+% o.annularNoiseEnvelopeRadiusDeg. When Ra is zero, this reduces to a
+% normal gaussian centered on the letter. The code now computes a new
+% summary of the "area" of the envelope: o.centralNoiseEnvelopeE1DegDeg We
+% should equate this when we compare hard edge annulus with gaussian
+% envelope.
 %
 % See also LinearizeClut, CalibrateScreenLuminance, OurScreenCalibrations,
 % testLuminanceCalibration, testGammaNull, IndexOfLuminance,
@@ -258,7 +260,7 @@ o.tGuessSd = nan; % Specify a finite value for Quest, or nan for default.
 o.pThreshold = 0.75;
 o.beta = nan; % Typically 1.7, 3.5, or Nan. Nan asks NoiseDiscrimination to set this at runtime.
 o.measureBeta = 0;
-o.eccentricityDeg = 0; %+for right,-for left, "nan" for no fixation.
+o.eccentricityDeg = 0; % + for right, - for left, nan for no fixation.
 o.targetHeightDeg = 2; % Target size, range 0 to inf. If you ask for too
 % much, it gives you the max possible.
 % o.targetHeightDeg=30*o.noiseCheckDeg; % standard for counting neurons
