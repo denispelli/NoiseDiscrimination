@@ -19,7 +19,7 @@ o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
 
 % LETTER
 o.targetHeightDeg=7.64; % Target size, range 0 to inf.
-o.eccentricityDeg=0; % eccentricity [0 8 16 32]
+eccentricityDeg=0; % eccentricity [0 8 16 32]
 o.targetKind='letter';
 o.font='Sloan';
 o.alphabet='DHKNORSVZ';
@@ -90,14 +90,14 @@ o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
 % o.durationSec=0.5;
 % o.noiseSD=0.0;
 % o.targetHeightDeg=16;
-% o.eccentricityDeg=10;
+% eccentricityDeg=10;
 if 0
     cnt = 0;
     for ecc=[0, 3, 10]
         for dur=[0.05 0.5]
             for height=[1 4 16]
                 for nSD=[0 0.16]
-                    o.eccentricityDeg=ecc;
+                    eccentricityDeg=ecc;
                     o.durationSec=dur;
                     o.targetHeightDeg=height;
                     o.noiseCheckDeg=height/20;
@@ -120,7 +120,7 @@ if 0
         for dur=[0.05 0.5]
             for height=[2 4 16]
                 for nSD=[0 0.16]
-                    o.eccentricityDeg=ecc;
+                    eccentricityDeg=ecc;
                     o.durationSec=dur;
                     o.targetHeightDeg=height;
                     o.noiseCheckDeg=height/20;
@@ -148,7 +148,7 @@ end
 % With and without noise
 if 0
     for nSD=[0 0.16]
-        o.eccentricityDeg=30;
+        eccentricityDeg=30;
         o.durationSec=0.5;
         o.targetHeightDeg=16;
         o.noiseCheckDeg=o.targetHeightDeg/20;
@@ -174,7 +174,7 @@ if 0
         for dur=0.5
             for height=1
                 for nSD=[0 0.16]
-                    o.eccentricityDeg=ecc;
+                    eccentricityDeg=ecc;
                     o.durationSec=dur;
                     o.targetHeightDeg=height;
                     o.noiseCheckDeg=height/20;
@@ -202,7 +202,7 @@ if 0
         o.observer='ning';
         for LetterSize = sizes
             for noise = noiseSD
-                o.eccentricityDeg=ecc;
+                eccentricityDeg=ecc;
                 o.targetHeightDeg=LetterSize;
                 o.noiseCheckDeg=o.targetHeightDeg/20;
                 o.noiseSD=noise;
@@ -220,7 +220,7 @@ if 0
     for letter_size = lettersize
         for noise = noiseSD
             o.targetHeightDeg= letter_size;
-            o.eccentricityDeg = 10;
+            eccentricityDeg = 10;
             o.noiseSD=noise;
             o.noiseCheckDeg=o.targetHeightDeg/20;
             o=NoiseDiscrimination(o);
@@ -228,7 +228,7 @@ if 0
     end
 end
 
-% o.useFractionOfScreen=.3;
+o.useFractionOfScreen=.3;
 o.useDynamicNoiseMovie = 1; % 0 for static noise
 o.durationSec = 1;
 o.observer='denis';
@@ -237,9 +237,12 @@ o.assessLoadGamma=0;
 o.assessGray=0;
 o.assessTargetLuminance=0;
 o.tGuess=log10(0.01);
-o.eccentricityDeg=60;
+eccentricityDeg=16;
 o.targetHeightDeg=8;
 o.noiseCheckDeg=o.targetHeightDeg/20;
 o.noiseSD=0;
+o.targetXYDeg=[4 4];
+o.nearPointXYInUnitSquare=[.8 .8];
+o.isKbLegacy=0;
 o=NoiseDiscrimination(o);
 % imshow(o.actualStimulus);
