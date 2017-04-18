@@ -228,7 +228,7 @@ if 0
     end
 end
 
-o.useFractionOfScreen=.3;
+% o.useFractionOfScreen=.3;
 o.useDynamicNoiseMovie = 1; % 0 for static noise
 o.durationSec = 1;
 o.observer='denis';
@@ -240,7 +240,7 @@ o.tGuess=log10(0.01);
 eccentricityDeg=16;
 o.targetHeightDeg=8;
 o.noiseCheckDeg=o.targetHeightDeg/20;
-o.noiseSD=0;
+o.noiseSD=.15;
 o.targetXYDeg=[16 0];
 o.nearPointXYInUnitSquare=[.8 .5];
 o.fixationCrossBlankedUntilSecAfterTarget=0;
