@@ -983,7 +983,7 @@ try
    end
    GetKeypress(o.isKbLegacy);
    Screen('FillRect',window,white);
-   Screen('Flip',window); % Blank.
+   Screen('Flip',window); % Blank, to acknowledge response.
 
    %% SET UP FIXATION
    o.fixationXYPix=XYPixOfXYDeg(o,[0 0]);
@@ -1049,7 +1049,7 @@ try
             ListenChar(2); % go back to orig status; no echo
          end
          Screen('FillRect',window,white);
-         Screen('Flip',window); % Blank.
+         Screen('Flip',window); % Blank, to acknowledge response.
          
          switch answer
             case 'Ok',
@@ -1198,7 +1198,7 @@ try
    end
    clear tSample
    
-   %% COMPUTE noiseList
+   % COMPUTE noiseList
    switch o.noiseType % Fill noiseList with desired kind of noise.
       case 'gaussian',
          o.noiseListBound = 2;
