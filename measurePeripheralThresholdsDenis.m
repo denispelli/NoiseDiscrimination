@@ -18,7 +18,7 @@ o.noiseEnvelopeSpaceConstantDeg=128; % always Inf for hard edge top-hat noise
 o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
 
 % LETTER
-o.targetHeightDeg=7.64; % Target size, range 0 to inf.
+o.targetHeightDeg=8; % Target size, range 0 to inf.
 eccentricityDeg=0; % eccentricity [0 8 16 32]
 o.targetKind='letter';
 o.font='Sloan';
@@ -238,12 +238,14 @@ o.assessGray=0;
 o.assessTargetLuminance=0;
 o.tGuess=log10(0.01);
 eccentricityDeg=16;
-o.targetHeightDeg=8;
+o.targetHeightDeg=80;
 o.noiseCheckDeg=o.targetHeightDeg/20;
 o.noiseSD=.15;
-o.targetXYDeg=[16 0];
-o.nearPointXYInUnitSquare=[.8 .5];
+o.targetXYDeg=[25 0];
+o.nearPointXYInUnitSquare=[.95 .5];
 o.fixationCrossBlankedUntilSecAfterTarget=0;
 o.isKbLegacy=0;
+o.distanceCm=40; % viewing distance
+
 o=NoiseDiscrimination(o);
 % imshow(o.actualStimulus);
