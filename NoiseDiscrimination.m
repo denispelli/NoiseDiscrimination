@@ -93,8 +93,8 @@ function o = NoiseDiscrimination(oIn)
 
 % VIEWING GEOMETRY
 % o.distanceCm % Distance from eye to near point.
-% o.nearPointXYInUnitSquare=[0.8 0.5]; % Location of near point in o.stimlusRect. Origin lower left.
-% o.nearPointXYPix % screen coordinate of point closest to viewer's eye.
+% o.nearPointXYInUnitSquare=[0.8 0.5]; % Rough location of near point in o.stimlusRect re lower left corner.
+% o.nearPointXYPix % screen coordinate of point on screen closest to viewer's eye.
 % o.nearPointXYDeg % eccentricity of near point re fixation. Right & up are +.
 % 1. Set displayNearPointXYDeg to targetXYDeg, roughly.
 % 2. Set displayNearPointXYPix according to o.nearPointXYInUnitSquare.
@@ -277,12 +277,13 @@ o.tGuessSd = nan; % Specify a finite value for Quest, or nan for default.
 o.pThreshold = 0.75;
 o.beta = nan; % Typically 1.7, 3.5, or Nan. Nan asks NoiseDiscrimination to set this at runtime.
 o.measureBeta = 0;
-o.targetXYDeg = [0 0]; % eccentricity re fixation, + for right & up.
+o.targetXYDeg = [0 0]; % eccentricity of target center re fixation, + for right & up.
 o.targetHeightDeg = 2; % Target size, range 0 to inf. If you ask for too
 % much, it gives you the max possible.
 % o.targetHeightDeg=30*o.noiseCheckDeg; % standard for counting neurons
 % project
 o.minimumTargetHeightChecks = 8; % Minimum target resolution, in units of the check size.
+o.targetMargin = 0.25; % Minimum from edge of target to edge of o.stimulusRect, as fraction of targetHeightDeg.
 o.durationSec = 0.2; % Typically 0.2 or inf (wait indefinitely for response).
 o.useFlankers = 0; % 0 or 1. Enable for crowding experiments.
 o.flankerContrast = -0.85; % Negative for dark letters.
@@ -615,25 +616,26 @@ else
 end
 switch o.task
    case 'identify'
-      maxTargetHeight = RectHeight(o.stimulusRect);
+      maxStimulusHeight = RectHeight(o.stimulusRect);
    case '4afc'
-      maxTargetHeight = RectHeight(o.stimulusRect)/(2+o.gapFraction4afc);
-      maxTargetHeight = floor(maxTargetHeight);
+      maxStimulusHeight = RectHeight(o.stimulusRect)/(2+o.gapFraction4afc);
+      maxStimulusHeight = floor(maxStimulusHeight);
    otherwise
       error('Unknown o.task "%s".',o.task);
 end
-if o.targetHeightPix > maxTargetHeight
-   ffprintf(ff,'Reducing requested o.targetHeightDeg (%.1f deg) to %.1f deg, the max possible.\n',...
-      o.targetHeightDeg,0.95*maxTargetHeight/o.pixPerDeg);
-   o.targetHeightPix = 0.95*maxTargetHeight;
-   % 95% because font rendering may yield a target slightly larger than the
-   % size requested.
-end
+% maxTargetHeight=maxStimulusHeight/(1+2*o.targetMargin); % Allow for margin.
+% if o.targetHeightPix > maxTargetHeight
+%    msg=sprintf('Reducing requested o.targetHeightDeg (%.1f deg) to %.1f deg, the max possible with %.2f margin.\n',...
+%       o.targetHeightDeg,maxTargetHeight/o.pixPerDeg,o.targetMargin);
+%    fprintf(ff(2),msg);
+%    warning(msg);
+%    o.targetHeightPix = maxTargetHeight;
+% end
 o.targetHeightDeg = o.targetHeightPix/o.pixPerDeg;
-if o.noiseRadiusDeg > maxTargetHeight/o.pixPerDeg
+if o.noiseRadiusDeg > maxStimulusHeight/o.pixPerDeg
    ffprintf(ff,'Reducing requested o.noiseRadiusDeg (%.1f deg) to %.1f deg, the max possible.\n',...
-      o.noiseRadiusDeg,maxTargetHeight/o.pixPerDeg);
-   o.noiseRadiusDeg = maxTargetHeight/o.pixPerDeg;
+      o.noiseRadiusDeg,maxStimulusHeight/o.pixPerDeg);
+   o.noiseRadiusDeg = maxStimulusHeight/o.pixPerDeg;
 end
 if o.useFlankers
    flankerSpacingPix = round(o.flankerSpacingDeg*o.pixPerDeg);
@@ -943,8 +945,7 @@ try
    %% PLACE FIXATION AND NEAR-POINT OF DISPLAY
    % DISPLAY NEAR POINT
    % VIEWING GEOMETRY
-   % o.nearPointXYInUnitSquare % (0,0) is loweft left corner. (1,1) is
-   % upper right corner of o.stimulusRect.
+   % o.nearPointXYInUnitSquare % roughly where in o.stimulusRect re lower-left corner.
    % o.nearPointXYPix % Screen x,y point closest to viewer's eye.
    % o.distanceCm % Distance from eye to near point.
    % o.nearPointXYDeg % (x,y) eccentricity of near point.
@@ -959,13 +960,34 @@ try
          o.targetXYDeg,o.useFixation);
    end
    o.nearPointXYDeg=o.targetXYDeg;
-   if ~IsInRect(o.nearPointXYInUnitSquare(1),o.nearPointXYInUnitSquare(2),[0 0 1 1])
+   if ~IsXYInRect(o.nearPointXYInUnitSquare,[0 0 1 1])
       error('o.nearPointXYInUnitSquare (%.2f %.2f) must be in unit square [0 0 1 1].',o.nearPointXYInUnitSquare);
    end
    xy=o.nearPointXYInUnitSquare;
    xy(2)=1-xy(2); % Move origin from lower left to upper left.
    o.nearPointXYPix=xy.*[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)];
    o.nearPointXYPix=o.nearPointXYPix+o.stimulusRect(1:2);
+   % o.nearPointXYPix is screen coordinate.
+   % Require margin between target and edge of stimulusRect.
+   r=InsetRect(o.stimulusRect,(0.5+o.targetMargin)*o.targetHeightDeg*o.pixPerDeg,0.6*o.targetHeightDeg*o.pixPerDeg);
+   if ~all(r(1:2)<=r(3:4))
+      error('%.1f o.targetHeightDeg too big to fit (with %.2f o.targetMargin) in %.1f x %.1f deg screen. Reduce viewing distance or target size.',...
+         o.targetHeightDeg,o.targetMargin,[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)]/o.pixPerDeg);
+   end
+   if ~IsXYInRect(o.nearPointXYPix,r)
+      % Adjust position of near point so target fits on screen.
+      o.nearPointXYPix=LimitXYToRect(o.nearPointXYPix,r);
+      % Update o.nearPointXYInUnitSquare.
+      xy=o.nearPointXYPix;
+      xy=xy-o.stimulusRect(1:2);
+      xy=xy./[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)];
+      xy(2)=1-xy(2);
+      msg=sprintf('Adjusting o.nearPointXYInUnitSquare from [%.2f %.2f] to [%.2f %.2f] to fit %.1f deg target (with %.2f o.targetMargin) on screen.',...
+         o.nearPointXYInUnitSquare,xy,o.targetHeightDeg,o.targetMargin);
+      warning(msg);
+      fprintf(ff(2),'WARNING: %s',msg);
+      o.nearPointXYInUnitSquare=xy;
+   end
    string = sprintf('Please adjust the viewing distance so the cross is %.1f cm from the observer''s eye. ',o.distanceCm);
    string = [string 'Tilt and swivel the display so the cross is orthogonal to the line of sight. Then hit RETURN to continue.\n'];
    Screen('TextSize',window,textSize);
@@ -990,7 +1012,7 @@ try
    if ~o.useFixation
       o.fixationIsOffscreen = 0;
    else
-      if ~IsInRect(o.fixationXYPix(1),o.fixationXYPix(2),o.stimulusRect)
+      if ~IsXYInRect(o.fixationXYPix,o.stimulusRect)
          o.fixationIsOffscreen = 1;
          % o.fixationXYPix is in plane of display. Off-screen fixation is
          % not! It is the same distance from the eye as the near point.
@@ -1168,7 +1190,7 @@ try
          o.canvasSize = min(o.canvasSize,floor(RectHeight(o.stimulusRect)/o.noiseCheckPix));
          o.canvasSize = 2*round(o.canvasSize/2); % Even number of checks, so we can center it on letter.
       case '4afc',
-         o.canvasSize = min(o.canvasSize,floor(maxTargetHeight/o.noiseCheckPix));
+         o.canvasSize = min(o.canvasSize,floor(maxStimulusHeight/o.noiseCheckPix));
          o.canvasSize = round(o.canvasSize);
    end
    ffprintf(ff,'Noise height %.2f deg. Noise hole %.2f deg. Height is %.2fT and hole is %.2fT, where T is target height.\n', ...
@@ -3237,4 +3259,21 @@ else
    xyDeg=[0 0];
 end
 xyDeg=xyDeg+o.nearPointXYDeg;
+end
+
+function isTrue=IsXYInRect(xy,rect)
+if nargin~=2
+   error('Need two args for function isTrue=IsXYInRect(xy,rect)');
+end
+if size(xy)~=[1 2]
+   error('First arg to IsXYInRect(xy,rect) must be [x y] pair.');
+end
+isTrue=IsInRect(xy(1),xy(2),rect);
+end
+
+function xy=LimitXYToRect(xy,rect)
+% Restrict x and y to lie inside rect.
+assert(all(rect(1:2)<=rect(3:4)));
+xy=max(xy,rect(1:2));
+xy=min(xy,rect(3:4));
 end
