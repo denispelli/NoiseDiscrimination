@@ -242,6 +242,7 @@ o.observer = 'junk'; % Name of person or existing algorithm.
 % o.observer='maximum'; % Existing algorithm instead of person.
 % o.observer='ideal'; % Existing algorithm instead of person.
 algorithmicObservers = {'ideal', 'brightnessSeeker', 'blackshot', 'maximum'};
+o.eyes='both'; % 'left', 'right', 'both', or 'one', which asks user to specify at runtime.
 o.luminanceTransmission=1; % Less than one for dark glasses or neutral density filter.
 o.trialsPerRun = 40; % Typically 40.
 o.runNumber = 1; % For display only, indicate the run number. When o.runNumber==runsDesired this program says "Congratulations" before returning.
@@ -565,6 +566,7 @@ degPerCm = 57/o.distanceCm;
 o.pixPerDeg = o.pixPerCm/degPerCm;
 textSize = round(o.textSizeDeg*o.pixPerDeg);
 o.textSizeDeg = textSize/o.pixPerDeg;
+textLineLength=floor(1.9*RectWidth(screenRect)/textSize);
 o.lineSpacing = 1.5;
 o.stimulusRect = InsetRect(screenRect,0,o.lineSpacing*1.2*textSize);
 o.noiseCheckPix = round(o.noiseCheckDeg*o.pixPerDeg);
@@ -623,14 +625,6 @@ switch o.task
    otherwise
       error('Unknown o.task "%s".',o.task);
 end
-% maxTargetHeight=maxStimulusHeight/(1+2*o.targetMargin); % Allow for margin.
-% if o.targetHeightPix > maxTargetHeight
-%    msg=sprintf('Reducing requested o.targetHeightDeg (%.1f deg) to %.1f deg, the max possible with %.2f margin.\n',...
-%       o.targetHeightDeg,maxTargetHeight/o.pixPerDeg,o.targetMargin);
-%    fprintf(ff(2),msg);
-%    warning(msg);
-%    o.targetHeightPix = maxTargetHeight;
-% end
 o.targetHeightDeg = o.targetHeightPix/o.pixPerDeg;
 if o.noiseRadiusDeg > maxStimulusHeight/o.pixPerDeg
    ffprintf(ff,'Reducing requested o.noiseRadiusDeg (%.1f deg) to %.1f deg, the max possible.\n',...
@@ -861,7 +855,6 @@ try
       delta=gammaRead(:,2)-gamma(:,2);
       ffprintf(ff,'Difference between identity and read-back of hardware CLUT (%dx%d): mean %.9f, sd %.9f\n',...
          size(gammaRead),mean(delta),std(delta));
-      
       if o.flipClick; Speak(['after OpenWindow ' num2str(MFileLineNr)]); GetClicks; end
       if exist('cal')
          gray = mean([firstGrayClutEntry lastGrayClutEntry])/o.maxEntry; % CLUT color code for gray.
@@ -898,10 +891,9 @@ try
          cal = LinearizeClut(cal);
          ffprintf(ff,'Size of cal.gamma %d %d\n',size(cal.gamma));
          
-         % XXX
-         ffprintf(ff,'Non-stimulus background is %.1f cd/m^2 at CLUT entry %d (and %d).\n',LMean,gray1*o.maxEntry,gray*o.maxEntry);
-         ffprintf(ff,'%.1f cd/m^2 at %d\n',LuminanceOfIndex(cal,gray*o.maxEntry),gray1*o.maxEntry);
-         ffprintf(ff,'%.3f dac at %d; %.3f dac at %d\n',cal.gamma(gray1*o.maxEntry+1,2),gray1*o.maxEntry,cal.gamma(gray*o.maxEntry+1,2),gray*o.maxEntry);
+%          ffprintf(ff,'Non-stimulus background is %.1f cd/m^2 at CLUT entry %d (and %d).\n',LMean,gray1*o.maxEntry,gray*o.maxEntry);
+%          ffprintf(ff,'%.1f cd/m^2 at %d\n',LuminanceOfIndex(cal,gray*o.maxEntry),gray1*o.maxEntry);
+%          ffprintf(ff,'%.3f dac at %d; %.3f dac at %d\n',cal.gamma(gray1*o.maxEntry+1,2),gray1*o.maxEntry,cal.gamma(gray*o.maxEntry+1,2),gray*o.maxEntry);
          
          o.contrast = nan;
          Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
@@ -941,6 +933,51 @@ try
    o.pixPerCm = screenWidthPix/cal.screenWidthCm;
    degPerCm = 57/o.distanceCm;
    o.pixPerDeg = o.pixPerCm/degPerCm;
+   
+   %% MONOCULAR?
+   if ~isfield(o,'eyes')
+      error('Please set o.eyes to ''left'',''right'',''one'', or ''both''.');
+   end
+   if ~streq(o.eyes,'both')
+      if ~ismember(o.eyes,{'left','right','one','both'})
+            error('o.eyes=''%s'' is not allowed. It must be ''left'',''right'',''one'', or ''both''.',o.eyes);
+      end
+      Screen('TextSize',window,textSize);
+      Screen('TextFont',window,'Verdana');
+      Screen('FillRect',window,white);
+      string='';
+      if ismember(o.eyes,{'left','right'})
+         string=sprintf('Please use just your %s eye. Cover your other eye. Hit RETURN to continue.',o.eyes);
+         DrawFormattedText(window,string,textSize,1.5*textSize,black,textLineLength,[],[],1.3);
+         if o.speakInstructions
+            Speak(string);
+         end
+         GetKeypress(o.isKbLegacy);
+      end
+      while streq(o.eyes,'one')
+         string = [string 'Which eye will you use, left or right? Please type L or R:'];
+         DrawFormattedText(window,string,textSize,1.5*textSize,black,textLineLength,[],[],1.3);
+         Screen('Flip',window); % Display request.
+         if o.speakInstructions
+            Speak(string);
+         end
+         response=GetKeypress(o.isKbLegacy);
+         response=upper(response);
+         switch(response)
+            case 'L',
+               o.eyes='left';
+            case 'R',
+               o.eyes='right';
+            otherwise
+               string=sprintf('Illegal response ''%s''. ',response);
+         end
+      end
+      Screen('FillRect',window,white);
+      Screen('Flip',window); % Blank to acknowledge response.
+   else
+      ffprintf(ff,'Observer is using %s eye.\n',o.eyes);
+   end
+   ffprintf(ff,'Observer is using %s eyes.\n',o.eyes);
    
    %% PLACE FIXATION AND NEAR-POINT OF DISPLAY
    % DISPLAY NEAR POINT
@@ -982,10 +1019,8 @@ try
       xy=xy-o.stimulusRect(1:2);
       xy=xy./[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)];
       xy(2)=1-xy(2);
-      msg=sprintf('Adjusting o.nearPointXYInUnitSquare from [%.2f %.2f] to [%.2f %.2f] to fit %.1f deg target (with %.2f o.targetMargin) on screen.',...
+      ffprintf(ff,'NOTE: Adjusting o.nearPointXYInUnitSquare from [%.2f %.2f] to [%.2f %.2f] to fit %.1f deg target (with %.2f o.targetMargin) on screen.',...
          o.nearPointXYInUnitSquare,xy,o.targetHeightDeg,o.targetMargin);
-      warning(msg);
-      fprintf(ff(2),'WARNING: %s',msg);
       o.nearPointXYInUnitSquare=xy;
    end
    string = sprintf('Please adjust the viewing distance so the cross is %.1f cm from the observer''s eye. ',o.distanceCm);
@@ -993,7 +1028,7 @@ try
    Screen('TextSize',window,textSize);
    Screen('TextFont',window,'Verdana');
    Screen('FillRect',window,white);
-   DrawFormattedText(window,string,textSize,1.5*textSize,black,80,[],[],1.3);
+   DrawFormattedText(window,string,textSize,1.5*textSize,black,textLineLength,[],[],1.3);
    x=o.nearPointXYPix(1);
    y=o.nearPointXYPix(2);
    a=0.1*RectHeight(o.stimulusRect);
@@ -1053,7 +1088,7 @@ try
          Screen('TextSize',window,textSize);
          Screen('TextFont',window,'Verdana');
          Screen('FillRect',window,white);
-         DrawFormattedText(window,string,textSize,1.5*textSize,black,80,[],[],1.3);
+         DrawFormattedText(window,string,textSize,1.5*textSize,black,textLineLength,[],[],1.3);
          x=o.nearPointXYPix(1);
          y=o.nearPointXYPix(2);
          a=0.1*RectHeight(o.stimulusRect);
@@ -1630,7 +1665,7 @@ try
             msg=[msg word ' press the space bar when ready to begin.'];
             fprintf('Please press the space bar when ready to begin.\n');
       end
-      DrawFormattedText(window,msg,0.5*textSize,1.5*textSize,black,80,[],[],1.3);
+      DrawFormattedText(window,msg,0.5*textSize,1.5*textSize,black,textLineLength,[],[],1.3);
       Screen('Flip',window,0,1); % "Starting new run ..."
       if o.speakInstructions
          if ismac
