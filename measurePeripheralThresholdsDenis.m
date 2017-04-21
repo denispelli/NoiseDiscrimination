@@ -63,189 +63,40 @@ o.assessLoadGamma=0;
 o.showCropMarks=0; % mark the bounding box of the target
 o.printDurations=0;
 
-% Please measure:
-% Sloan
-% Eccentricities = 0, 3, 10, 30 deg
-% Duration = 0.05, 0.5 s
-% targetHeightDeg = 1, 4, 16 deg
-% ?(Note: at 30 deg ecc, omit 1 deg. Substitute 2 deg.)?
-% WITH AND WITHOUT NOISE
-% gaussian
-% noiseSD = 0.16
-% checkHeightDeg = targetHeightDeg/20
-% checkSec = 1/60 s.
-% PreSecs = 0.1 s.
-% PostSecs = 0.2 s.
-% REPEAT
-% If the two threshold contrasts, after repetition, differ by 2x or more,
-% then please collect a third point.
-
+if 1
+% NEW DATA COLLECTION, APRIL 21, 2017
+o.observer='ning';
+% o.observer='chen';
 % IMPORTANT: Use a tape measure or meter stick to measure the distance from
 % your eye to the screen. The number below must be accurate.
-o.observer='Chen'; % use your name
 o.distanceCm=70; % viewing distance
 o.font='Sloan';
 o.alphabet='DHKNORSVZ';
 o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
-% o.durationSec=0.5;
-% o.noiseSD=0.0;
-% o.targetHeightDeg=16;
-% eccentricityDeg=10;
-if 0
-    cnt = 0;
-    for ecc=[0, 3, 10]
-        for dur=[0.05 0.5]
-            for height=[1 4 16]
-                for nSD=[0 0.16]
-                    eccentricityDeg=ecc;
-                    o.durationSec=dur;
-                    o.targetHeightDeg=height;
-                    o.noiseCheckDeg=height/20;
-                    o.noiseSD=nSD;
-                    for a = 1:2
-                        o=NoiseDiscrimination(o);
-                        cnt = cnt + 1;
-                        Data{cnt}=o;
-                        %o=NoiseDiscrimination(o); % REPEAT
-                    end
-                end
-            end
-        end
-    end
-end
-% letter size at eccentricity of 30 too small if it is 1
-if 0
-    cnt = 72;
-    for ecc=[30]
-        for dur=[0.05 0.5]
-            for height=[2 4 16]
-                for nSD=[0 0.16]
-                    eccentricityDeg=ecc;
-                    o.durationSec=dur;
-                    o.targetHeightDeg=height;
-                    o.noiseCheckDeg=height/20;
-                    o.noiseSD=nSD;
-                    for a = 1:2
-                        o=NoiseDiscrimination(o);
-                        cnt = cnt + 1;
-                        Data{cnt}=o;
-                        %o=NoiseDiscrimination(o); % REPEAT
-                    end
-                end
-            end
-        end
-    end
-end
-
-% DO THIS FIRST:
-% Before collecting a lot of data we need to be sure that this noise is
-% strong enough to always elevate threshold, so we should FIRST try the
-% toughest threshold:
-% Eccentricity = 30 deg
-% Duration = 0.5 s
-% targetHeightDeg = 16 deg
-% checkHeightDeg = targetHeightDeg/20 =  0.8 deg
-% With and without noise
-if 0
-    for nSD=[0 0.16]
-        eccentricityDeg=30;
-        o.durationSec=0.5;
-        o.targetHeightDeg=16;
-        o.noiseCheckDeg=o.targetHeightDeg/20;
-        o.noiseSD=nSD;
-        o=NoiseDiscrimination(o);
-        o=NoiseDiscrimination(o); % REPEAT
-    end
-end
-
-
-% We want threshold with noise at least twice threshold without noise. If
-% not, we may need to increase the check size or switch to binary noise.
-% Please let us know!
-
-% The dark filter is important, but will play only a small role, so we only
-% need a bit of data with it.
-% WITH DARK FILTER
-% targetHeightDeg = 1 deg
-% Eccentricities = 0, 3, 10, 30 deg
-% WITH AND WITHOUT NOISE
-if 0
-    for ecc=[0, 3, 10, 30]
-        for dur=0.5
-            for height=1
-                for nSD=[0 0.16]
-                    eccentricityDeg=ecc;
-                    o.durationSec=dur;
-                    o.targetHeightDeg=height;
-                    o.noiseCheckDeg=height/20;
-                    o.noiseSD=nSD;
-                    o=NoiseDiscrimination(o);
-                    o=NoiseDiscrimination(o); % REPEAT
-                end
-            end
-        end
-    end
-end
-
-% new collecting data
-% duration .2s
-% size 2 4 7 16
-% eccentricity 0 3 10 30
-% noiseSD 0 and 016
-% gaissian noise
 o.durationSec = 0.2;
-sizes = [2 4 8 16];
-eccenticityDeg = [0 3 10 30];
-noiseSD = [0];
-if 0
-    for ecc = eccenticityDeg
-        o.observer='ning';
-        for LetterSize = sizes
-            for noise = noiseSD
-                eccentricityDeg=ecc;
-                o.targetHeightDeg=LetterSize;
-                o.noiseCheckDeg=o.targetHeightDeg/20;
-                o.noiseSD=noise;
-                o=NoiseDiscrimination(o);
-            end
-        end
-    end
+for ecc = [60 -60 30 -30 3 10 0];
+   o.nearPointXYInUnitSquare=[.5 .5];
+   if ecc>10
+      o.nearPointXYInUnitSquare=[.95 .5];
+      if ecc<-10
+         o.nearPointXYInUnitSquare=[.05 .5];
+      end
+   sizes = [2 4 8 16];
+   switch(ecc)
+      case(30),
+         sizes = [4 8 16];
+      case(6),
+         sizes= [8 16];
+   end
+   for LetterSize = sizes
+      for noiseSD = [0 0.16]
+         o.targetXYDeg=[ecc 0];
+         o.targetHeightDeg=LetterSize;
+         o.noiseCheckDeg=o.targetHeightDeg/20;
+         o.noiseSD=noise;
+         o=NoiseDiscrimination(o);
+      end
+   end
+end
 end
 
-
-if 0
-    noiseSD=[0];
-    lettersize = [16];
-    o.observer='ning';
-    for letter_size = lettersize
-        for noise = noiseSD
-            o.targetHeightDeg= letter_size;
-            eccentricityDeg = 10;
-            o.noiseSD=noise;
-            o.noiseCheckDeg=o.targetHeightDeg/20;
-            o=NoiseDiscrimination(o);
-        end
-    end
-end
-
-% o.useFractionOfScreen=.3;
-o.useDynamicNoiseMovie = 1; % 0 for static noise
-o.durationSec = 1;
-o.observer='denis';
-o.assessContrast=0;
-o.assessLoadGamma=0;
-o.assessGray=0;
-o.assessTargetLuminance=0;
-o.tGuess=log10(0.01);
-eccentricityDeg=16;
-o.targetHeightDeg=80;
-o.noiseCheckDeg=o.targetHeightDeg/20;
-o.noiseSD=.15;
-o.targetXYDeg=[25 0];
-o.nearPointXYInUnitSquare=[.95 .5];
-o.fixationCrossBlankedUntilSecAfterTarget=0;
-o.isKbLegacy=0;
-o.distanceCm=40; % viewing distance
-
-o=NoiseDiscrimination(o);
-% imshow(o.actualStimulus);
