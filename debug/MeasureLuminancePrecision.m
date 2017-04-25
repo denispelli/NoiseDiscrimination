@@ -1,62 +1,79 @@
 function data=MeasureLuminancePrecision
-% MeasureLuminancePrecision
-% Measure the luminance produced by each value loaded into the pixel or
-% Color Lookup Table (CLUT), to discover how precisely we can control
-% luminance. This includes precision achieved through dither by the video
-% driver.
+% data=MeasureLuminancePrecision
+% Measures how precisely we can control display luminance. Loads identity
+% into the Color Lookup Table (CLUT) and measures the luminance produced by
+% each value loaded into a large identical patch of image pixels. (This
+% program varies only luminance, not hue, always varying the three RGB
+% channels together, but the conclusion about bits of precision per channel
+% almost certainly applies to general-purpose presentation of arbitrary RGB
+% colors.) The attained precision will be achieved mostly by the
+% digital-to-analog converter and, perhaps, partly through dither by the
+% video driver. Since the 1980's most digital computer displays allocate 8
+% bits per color channel (R, G, B). In the past few years, some displays
+% now accept 10 bits for each channel and pass that through from the pixel
+% in memory through the color lookup table (CLUT) to the digital to analog
+% converter that controls light output. In 2016-2017,  Mario Kleiner
+% enhanced The Psychtoolbox SCREEN function to allow specification of each
+% color component (R G B) as a floating point number, where 0 is black and
+% 1 is maximum output, so that your software, without change, will drive
+% any display and benefit from as much precision as the display hardward
+% and driver provide.
 %
-% My experiments with LoadNormalizedGammaTable indicate that it is accurate
-% only for very smooth gamma functions. (Mario says this is because it
-% stores only a functional approximation, not the requested values.) Thus
-% fiddling with the CLUT is not a recommended way to achieve fine steps in
-% luminance. It is generally better to leave the CLUT alone and adjust the
-% pixel values.
+% Typically you'll run MeasureLuminancePrecision from the command line. It
+% will make all the requested measurements and plot the results. Each
+% figure is saved as both a FIG and PNG file, and the data are saved as a
+% MAT file. The data are also returned as the output argument: luminance
+% out "L" vs floating point color value "v" in.
 %
-% Happily, the AMD drivers on the MacBook Pro (Retina, 15-inch, Mid 2015)
-% and the iMac (Retina 5K, 27-inch, Late 2014) both provide a 10-bit
-% pathway from pixel to display. On my PowerBook Pro, enabling both
-% useNative10Bit and dither, I get 11-bit luminance precision.
+% To use this program to measure the precision of your computer display you
+% need three things:
+% 1. MATLAB or Octave. http://mathworks.com
+% 2. The Psychtoolbox, free from http://psychtoolbox.org.
+% 3. A Cambridge Research Systems photometer or colorimeter.
+% http://www.crsltd.com/tools-for-vision-science/light-measurement-display-calibation/colorcal-mkii-colorimeter/
+% It's plug and play, taking power through its USB cable.
+% It would be very easy to modify this program to work with any other
+% photometer.
+%
+% As of April 2017, Apple documents indicate that only two products in
+% their current macOS offerings attain 10-bit precision from pixel to
+% display (in each of the three RGB channels): Apple's high-end MacBook Pro
+% 15" retina laptop and iMac 27" retina desktop. I tested my MacBook Pro
+% (Retina, 15-inch, Mid 2015) and iMac (Retina 5K, 27-inch, Late 2014).
+% Both use AMD drivers. Using MeasureLuminancePrecision, I have documented
+% 11-bit luminance precision on both of these displays, enabling both
+% useNative10Bit and dither,
+% https://www.macrumors.com/2015/10/30/4k-5k-imacs-10-bit-color-depth-osx-el-capitan/
+% https://developer.apple.com/library/content/samplecode/DeepImageDisplayWithOpenGL/Introduction/Intro.html#//apple_ref/doc/uid/TP40016622
+% https://developer.apple.com/library/content/releasenotes/MacOSX/WhatsNewInOSX/Articles/MacOSX10_11_2.html#//apple_ref/doc/uid/TP40016630-SW1
+
+% My Linux Hewlett-Packard Z Book laptop attains 10-bit luminance
+% precision. I have not yet succeeded in getting dither to work on the Z
+% Book. Thanks to my former student, Hörmet Yiltiz, for setting up the Z
+% Book and getting 10-bit imaging to work, with help from Mario Kleiner.
+%
+% MacBook Pro driving NEC PA244UHD 4K display 
+% https://macperformanceguide.com/blog/2016/20161127_1422-Apple2016MacBookPro-10-bit-color.html
 %
 % PARAMETERS:
-% wigglePixelNotCLUT = whether to vary the value of the pixel or CLUT.
 % points = number of luminances to measure, 3 s each.
-% loadIdentityCLUT = whether to load an identity into CLUT.
-% useNative10Bit = whether to enable the driver's 10-bit mode. Recommended.
-% enableCLUTMapping = whether to use software table lookup. See below.
-% CLUTMapSize = power of 2. CLUTMapping limits resolution to log2(CLUTMapSize).
-% usePhotometer = 1 use ColorCAL II XYZ; 0 simulate 8-bit rendering.
 % reciprocalOfFraction = list desired values, e.g. 1, 64, 128, 256.
-% useFractionOfScreen = 0 normal; f<1 reduce our window *f to expose Command Window.
-% ditherCLUT = 61696; Required for dither on my iMac and MacBook Pro. Recommended.
+% useNative10Bit = whether to enable the driver's 10-bit mode. Recommended.
+% usePhotometer = 1 use ColorCAL II XYZ; 0 simulate 8-bit rendering.
+% ditherCLUT = 61696; Required for dither on my iMac and MacBook Pro. 
 %
-% For dither, the magic number 61696 is appropriate for graphics chips in
-% the AMD Radeon "Southern Islands" gpu family. Such chips are used in the
-% MacBook Pro (Retina, 15-inch, Mid 2015) (AMD Radeon R9 M290X) and the
-% iMac (Retina 5K, 27-inch, Late 2014) (AMD Radeon R9 M370X). As far as I
-% know, in April 2017, those are the only Apple Macs with AMD drivers, and
-% may be the only Macs that support more-than-8-bit luminance precision.
+% For dither, the magic number 61696 is appropriate for the graphics chips
+% belonging to the AMD Radeon "Southern Islands" gpu family. Such chips are
+% used in the MacBook Pro (Retina, 15-inch, Mid 2015) (AMD Radeon R9 M290X)
+% and the iMac (Retina 5K, 27-inch, Late 2014) (AMD Radeon R9 M370X). As
+% far as I know, in April 2017, those are the only Apple Macs with AMD
+% drivers, and may be the only Macs that support more-than-8-bit luminance
+% precision.
 %
-% enableCLUTMapping is easily misunderstood. It does NOT modify the
-% hardware CLUT through which each pixel is processed. CLUTMapping is an
-% extra transformation that occurs BEFORE the hardware CLUT. One could be
-% confused by the fact that the same command,
-% Screen('LoadNormalizedGammaTable',window,loadAtFlip) either loads the
-% CLUT or the CLUTMap. The last argument is set to 0 or 1 to load the CLUT,
-% and 2 to load the CLUTMap. If you'll be loading the CLUTMap, you must
-% declare that intention in advance by calling
-% PsychImaging('AddTask','AllViews','EnableCLUTMapping',CLUTMapSize,1);
-% when you're getting ready to open your window. In that call, you specify
-% the CLUTMapSize, and this puts a ceiling of log2(CLUTMapSize) bits on your
-% luminance resolution. The best resolution on my PowerBook Pro is 11
-% bits, so I set the CLUTMapSize to 4096, corresponding to 12-bit
-% precision, more than I need. If you use CLUTMapping, then you will
-% typically want to make the table length (a power of 2) long enough to not
-% limit your luminance resolution. You can use enableCLUTMapping to turn
-% CLUTMapping on and off and thus see whether it's limiting resolution.
-%
-% Denis Pelli, April 2, 2017
+% Denis Pelli, April 24, 2017
 
-% REFERENCE (FROM MARIO) FOR HP Z Book "Sea Islands" GPU:
+%% NOTES
+% (FROM MARIO) FOR HP Z Book "Sea Islands" GPU:
 % 10 bpc panel dither setup code for the zBooks "Sea Islands" (CIK) gpu:
 % http://lxr.free-electrons.com/source/drivers/gpu/drm/radeon/cik.c#L8814
 % The constants which are or'ed / added together in that code are defined
@@ -86,7 +103,7 @@ function data=MeasureLuminancePrecision
 % a identity mapping like when testing on the Macs.
 
 % DENIS: Must we call "FinalFormatting"? Is the call to "FinalFormatting"
-% just loading an identity ga! mma? Can I, instead, just use
+% just loading an identity gamma? Can I, instead, just use
 % LoadFormattedGammaTable to load identity?
 
 % MARIO: No, only if you want PTB to do high precision color/gamma
@@ -108,6 +125,58 @@ function data=MeasureLuminancePrecision
 % macOS, and see if Linux in EnableNative16BitFramebuffer mode ! can
 % squeeze out more than 11 bpc.
 
+%% PARAMETERS
+% Set "points" to determine how many points are measured to produce your
+% final graph. 32 is typically enough, and the CRS photometer takes 3
+% s/point.
+% Set "reciprocalOfFraction" to specify what fraction of the full luminance
+% range you want to explore. Setting it to 1 will explore the whole range.
+% To demonstrate 10-bit precision over the whole range you'd need 2^10=1024
+% steps, which will take a long time, 3,000 s, nearly an hour. Setting
+% reciprocalOfFraction=256 will test only 1/256 of the range, which is
+% enough to reveal whether there are any steps finer than 8-bit precision.
+% You can request several ranges by listing them, e.g. [1 128]. You'll get
+% a graph for each. Each graph will use the specified number of points.
+
+points=32; % Photometer takes 3 s/point. 32 points is enough for a pretty graph.
+reciprocalOfFraction=[128]; %256 1024 % List one or more, e.g. 1, 64, 128, 256.
+ditherCLUT=61696; % Magic number to request video dither on my iMac and PowerBook Pro.
+% ditherCLUT=0; % Disable dither.
+useNative10Bit=1; % Enable this to get 10-bit (or better) performance.
+usePhotometer=1; % 1 use ColorCAL II XYZ; 0 simulate 8-bit rendering.
+
+useFractionOfScreen=0; % For debugging, reduce our window to expose Command Window.
+
+%% SOFTWARE CLUT
+% The following 4 parameters allow testing of the software CLUT, but that's
+% a relatively unimportant option and not usable on the Z Book (restricted
+% to 8 bit table), so you might as well not bother testing the software
+% CLUT.
+% My experiments with LoadNormalizedGammaTable indicate that it is accurate
+% only for very smooth gamma functions. (Mario says this is because it
+% stores only a functional approximation, not the requested values.) Thus
+% fiddling with the CLUT is not a recommended way to achieve fine steps in
+% luminance. It is generally better to leave the CLUT alone and adjust the
+% pixel values.
+%
+% enableCLUTMapping is easily misunderstood. It does NOT modify the
+% hardware CLUT through which each pixel is processed. CLUTMapping is an
+% extra transformation that occurs BEFORE the hardware CLUT. One could be
+% confused by the fact that the same command,
+% Screen('LoadNormalizedGammaTable',window,loadAtFlip) either loads the
+% CLUT or the CLUTMap. The last argument is set to 0 or 1 to load the CLUT,
+% and 2 to load the CLUTMap. If you'll be loading the CLUTMap, you must
+% declare that intention in advance by calling
+% PsychImaging('AddTask','AllViews','EnableCLUTMapping',CLUTMapSize,1);
+% when you're getting ready to open your window. In that call, you specify
+% the CLUTMapSize, and this puts a ceiling of log2(CLUTMapSize) bits on your
+% luminance resolution. The best resolution on my PowerBook Pro is 11
+% bits, so I set the CLUTMapSize to 4096, corresponding to 12-bit
+% precision, more than I need. If you use CLUTMapping, then you will
+% typically want to make the table length (a power of 2) long enough to not
+% limit your luminance resolution. You can use enableCLUTMapping to turn
+% CLUTMapping on and off and thus see whether it's limiting resolution.
+%
 % DENIS: I was surprised by a limitation. On macOS I enable Clut mapping
 % with 4096 Clut size. Works fine. In Linux if the requested Clut size is
 % larger than 256 the call to loadnormalizedgammatable with load=2 gives a
@@ -121,18 +190,17 @@ function data=MeasureLuminancePrecision
 % completely disables hw gamma tables in >= 10 bit modes, so all gamma
 % correction is done via PsychColorCorrection(). You start off with a
 % identity gamma table.
+%
+% enableCLUTMapping = whether to use software table lookup. See below.
+% wigglePixelNotCLUT = whether to vary the value of the pixel or CLUT.
+% loadIdentityCLUT = whether to load an identity into CLUT.
+% CLUTMapSize = power of 2. CLUTMapping limits resolution to log2(CLUTMapSize).
+enableCLUTMapping=0; % 0 is fine. The software CLUT.
+wigglePixelNotCLUT=1; % 1 is fine. The software CLUT is not important.
+loadIdentityCLUT=1; % 1 is fine.
+CLUTMapSize=4096; % Size of software CLUT. Limits resolution to log2(CLUTMapSize) bits.
 
-points=32;
-wigglePixelNotCLUT=1;
-loadIdentityCLUT=1;
-ditherCLUT=61696; % Enable dither on my iMac and PowerBook Pro.
-% ditherCLUT=0; % Disable dither.
-useNative10Bit=1;
-enableCLUTMapping=0;
-CLUTMapSize=4096;
-usePhotometer=1; % 1 use ColorCAL II XYZ; 0 simulate 8-bit rendering.
-reciprocalOfFraction=[512]; %256 1024 % List one or more, e.g. 1, 64, 128, 256.
-useFractionOfScreen=0; % Reduce our window to expose Command Window.
+%% BEGIN
 BackupCluts;
 Screen('Preference','SkipSyncTests',2);
 % Screen('Preference','SkipSyncTests',1); %  For Mario.
@@ -185,12 +253,12 @@ try
              case 8,
                 displayGPUFamily='Sea Islands';
                 % Used in hp Z Book laptop.
-%                 ditherCLUT= 61696;
+                %                 ditherCLUT= 61696;
                 ditherCLUT= 59648;
-                % Another number you could try is 59648. This would enable
-                % dithering for a native 8 bit panel, which is the wrong
-                % thing to do for the laptops 10 bit panel, assuming the
-                % driver docs are correct. But then, who knows?
+                % MARIO: Another number you could try is 59648. This would
+                % enable dithering for a native 8-bit panel, which is the
+                % wrong thing to do for the laptop's 10-bit panel, assuming
+                % the driver docs are correct. But then, who knows?
              otherwise,
                 displayGPUFamily='unkown';
           end
@@ -217,7 +285,7 @@ try
         Screen('LoadNormalizedGammaTable',window,gamma,loadOnNextFlip);
         Screen('Flip',window);
     end
-    %% MEASURE LUMINANCE AT EACH VALUE OF CLUT OR PIXEL
+    %% MEASURE LUMINANCE AT EACH VALUE
     % Each measurement takes several seconds.
     clear data d
     t=GetSecs;
@@ -368,7 +436,7 @@ end
 name=sprintf('%sPoints%d',name,points);
 name=strrep(name,'''',''); % Remove quote marks.
 name=strrep(name,' ',''); % Remove spaces.
-savefig(gcf,name,'compact'); % Save figure as figure file.
+savefig(gcf,name,'compact'); % Save figure as fig file.
 print(gcf,'-dpng',name); % Save figure as png file.
 save(name,'data'); % Save data as MAT file.
 end
@@ -377,6 +445,7 @@ function L=GetLuminance
 % L=GetLuminance(usePhotometer)
 % Measure luminance (cd/m^2).
 % Cambridge Research Systems ColorCAL II XYZ Colorimeter.
+% http://www.crsltd.com/tools-for-vision-science/light-measurement-display-calibation/colorcal-mkii-colorimeter/nest/product-support
 persistent CORRMAT
 if nargin<1
     usePhotometer=1;
