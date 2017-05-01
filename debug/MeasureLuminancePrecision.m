@@ -1,13 +1,14 @@
 function data=MeasureLuminancePrecision
 % data=MeasureLuminancePrecision
-% INSTRUCTIONS: Currently this program requires a Cambridge Research
-% Systems photometer. You could easily adapt it to another photometer. Plug
-% your photometer's USB cable into your computer, carefully place your
-% photometer stably against your computer's screen, set PARAMETERS (below),
-% then run. The results will be displayed as a graph in a MATLAB figure
+% INSTRUCTIONS: [Currently this program requires a Cambridge Research
+% Systems photometer, but you could easily adapt it to use another
+% photometer.] Plug your photometer's USB cable into your computer,
+% carefully place your photometer stably against your computer's screen,
+% set PARAMETERS (below), then run. The results (including the best-fitting
+% n-bit-precision model) will be displayed as a graph in a MATLAB figure
 % window, and also saved in three files (in the same folder as this file)
-% with filename extensions: png, fig, and mat. The main part of the
-% filename describes the testing conditions, e.g.
+% with filename extensions: png, fig, and mat. The filename describes the
+% testing conditions, e.g.
 % DenissMacBookPro5K-Dithering61696-o.use10Bits-LoadIdentityCLUT-Luminances8.fig
 %
 % EXPLANATION: Using Psychtoolbox SCREEN imaging, measures how precisely we
@@ -42,14 +43,13 @@ function data=MeasureLuminancePrecision
 % 2. The Psychtoolbox, free from http://psychtoolbox.org.
 % 3. A Cambridge Research Systems photometer or colorimeter.
 % http://www.crsltd.com/tools-for-vision-science/light-measurement-display-calibation/colorcal-mkii-colorimeter/
-% It's plug and play, taking power through its USB cable.
-% It would be very easy to modify this program to work with any other
-% photometer.
+% It's plug and play, taking power through its USB cable. You could easily
+% modify this program to work with any other photometer.
 %
-% As of April 2017, Apple documents indicate that only two products in
-% their current macOS offerings attain 10-bit precision from pixel to
-% display (in each of the three RGB channels): Apple's high-end MacBook Pro
-% 15" retina laptop and iMac 27" retina desktop. I tested my MacBook Pro
+% As of April 2017, Apple documents indicate that only two currently
+% available macOS computers attain 10-bit precision from pixel to display
+% (in each of the three RGB channels): Apple's high-end MacBook Pro 15"
+% retina laptop and iMac 27" retina desktop. I tested my MacBook Pro
 % (Retina, 15-inch, Mid 2015) and iMac (Retina 5K, 27-inch, Late 2014).
 % Both use AMD drivers. Using MeasureLuminancePrecision, I have documented
 % 11-bit luminance precision on both of these displays, enabling both
@@ -71,8 +71,9 @@ function data=MeasureLuminancePrecision
 % o.reciprocalOfFraction = list desired values, e.g. 1, 64, 128, 256.
 % o.use10Bits = whether to enable the driver's 10-bit mode. Recommended.
 % o.usePhotometer = 1 use ColorCAL II XYZ; 0 simulate 8-bit rendering.
-% ditherCLUT = 61696; Required for dither on my iMac and MacBook Pro.
+% See SET PARAMETERS below.
 %
+% o.ditheringCode = 61696; Required for dither on my iMac and MacBook Pro.'
 % For dither, the magic number 61696 is appropriate for the graphics chips
 % belonging to the AMD Radeon "Southern Islands" gpu family. Such chips are
 % used in the MacBook Pro (Retina, 15-inch, Mid 2015) (AMD Radeon R9 M290X)
@@ -143,6 +144,7 @@ function data=MeasureLuminancePrecision
 % *without* any of the special dither settings - after a machine reboot -
 % would be good. I'd like to know how it behaves at Apples factory settings
 % without our PTB specific hacks, as those are so machine specific.
+% DONE: for MacBook Pro.
 
 % Btw., so far i still didn't manage to replicate your 11 bpc with
 % dithering finding on any AMD hardware + 8 bit display here, even with
@@ -195,7 +197,7 @@ function data=MeasureLuminancePrecision
 % correction is done via PsychColorCorrection(). You start off with a
 % identity gamma table.
 %
-%% PARAMETERS
+%% SET PARAMETERS
 % o.luminances = how many luminances are measured to produce your
 % final graph. 32 is typically enough. The CRS photometer takes 3
 % s/point.
@@ -229,7 +231,7 @@ o.useFractionOfScreen=0; % For debugging, reduce our window to expose Command Wi
 BackupCluts;
 Screen('Preference','SkipSyncTests',2);
 if 0
-   % Get full report for Mario
+   % Print full report for Mario
    Screen('Preference','SkipSyncTests',1);
    Screen('Preference','Verbosity',10);
 end
