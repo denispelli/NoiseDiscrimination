@@ -14,17 +14,17 @@ function data=MeasureLuminancePrecision
 % EXPLANATION: Using Psychtoolbox SCREEN imaging, measures how precisely we
 % can control display luminance. Loads identity into the Color Lookup Table
 % (CLUT) and measures the luminance produced by each value loaded into a
-% large identical patch of image pixels. (This program varies only
+% large identical patch of image pixels. (This program varies only the
 % luminance, not hue, always varying the three RGB channels together, but
 % the conclusion about bits of precision per channel almost certainly
 % applies to general-purpose presentation of arbitrary RGB colors.) The
 % attained precision will be achieved mostly by the digital-to-analog
 % converter and, perhaps, partly through dither by the video driver. Since
 % the 1980's most digital computer displays allocate 8 bits per color
-% channel (R, G, B). In the past few years, some displays now accept 10
-% bits for each channel and pass that through from the pixel in memory
+% channel (R, G, B). In the past few years, some displays now accept 10 or
+% more bits for each channel and pass that through from the pixel in memory
 % through the color lookup table (CLUT) to the digital to analog converter
-% that controls light output. In 2016-2017,  Mario Kleiner enhanced The
+% that controls light output. In 2016-2017, Mario Kleiner enhanced The
 % Psychtoolbox SCREEN function to allow specification of each color
 % component (R G B) as a floating point number, where 0 is black and 1 is
 % maximum output, so that your software, without change, will drive any
@@ -32,10 +32,11 @@ function data=MeasureLuminancePrecision
 % driver provide.
 %
 % Typically you'll run MeasureLuminancePrecision from the command line. It
-% will make all the requested measurements and plot the results. Each
-% figure is saved as both a FIG and PNG file, and the data are saved as a
-% MAT file. The data are also returned as the output argument: luminance
-% out "L" vs floating point color value "v" in.
+% will make all the requested measurements and plot the results, including
+% the best-fitting n-bit-precision model. Each figure is saved as both a
+% FIG and PNG file, and the data are saved as a MAT file. The data are also
+% returned as the output argument. It has luminance out "data.L" vs
+% floating point color value "data.v".
 %
 % To use this program to measure the precision of your computer display you
 % need three things:
@@ -46,22 +47,25 @@ function data=MeasureLuminancePrecision
 % It's plug and play, taking power through its USB cable. You could easily
 % modify this program to work with any other photometer.
 %
-% As of April 2017, Apple documents indicate that only two currently
+% As of April 2017, Apple documents (below) indicate that two currently
 % available macOS computers attain 10-bit precision from pixel to display
-% (in each of the three RGB channels): Apple's high-end MacBook Pro 15"
-% retina laptop and iMac 27" retina desktop. I tested my MacBook Pro
-% (Retina, 15-inch, Mid 2015) and iMac (Retina 5K, 27-inch, Late 2014).
-% Both use AMD drivers. Using MeasureLuminancePrecision, I have documented
-% 11-bit luminance precision on both of these displays, enabling both
-% o.use10Bits and o.useDithering,
+% (in each of the three RGB channels): the Mac Pro and the iMac 27" retina
+% desktop. From my testing, I add the Apple's high-end MacBook Pro laptop
+% (Retina, 15-inch, Mid 2015). I tested my MacBook Pro (Retina, 15-inch,
+% Mid 2015) and iMac (Retina 5K, 27-inch, Late 2014). Both use AMD drivers.
+% Using MeasureLuminancePrecision, I have documented 11-bit luminance
+% precision on both of these displays, enabling both o.use10Bits and
+% o.useDithering,
 % https://www.macrumors.com/2015/10/30/4k-5k-imacs-10-bit-color-depth-osx-el-capitan/
 % https://developer.apple.com/library/content/samplecode/DeepImageDisplayWithOpenGL/Introduction/Intro.html#//apple_ref/doc/uid/TP40016622
-% https://developer.apple.com/library/content/releasenotes/MacOSX/WhatsNewInOSX/Articles/MacOSX10_11_2.html#//apple_ref/doc/uid/TP40016630-SW1
+% https://developer.apple.com/library/content/samplecode/DeepImageDisplayWithOpenGL/Introduction/Intro.html#//apple_ref/doc/uid/TP40016622
+% https://macperformanceguide.com/blog/2016/20161127_1422-Apple2016MacBookPro-10-bit-color.html
 
-% My Linux Hewlett-Packard Z Book laptop attains 10-bit luminance
-% precision. I have not yet succeeded in getting dither to work on the Z
-% Book. Thanks to my former student, Hörmet Yiltiz, for setting up the Z
-% Book and getting 10-bit imaging to work, with help from Mario Kleiner.
+% My Hewlett-Packard Z Book laptop running Linux also attains 10-bit
+% luminance precision. I have not yet succeeded in getting dither to work
+% on the Z Book. Thanks to my former student, Hörmet Yiltiz, for setting up
+% the Z Book and getting 10-bit imaging to work, with help from Mario
+% Kleiner.
 %
 % MacBook Pro driving NEC PA244UHD 4K display
 % https://macperformanceguide.com/blog/2016/20161127_1422-Apple2016MacBookPro-10-bit-color.html
@@ -331,7 +335,7 @@ try
    nData=length(o.reciprocalOfFraction);
    for iData=1:nData
       d.fraction=1/o.reciprocalOfFraction(iData);
-      v=o.vBase;
+      v=max(0,o.vBase);
       if v+d.fraction>=1
          v=1-d.fraction;
       end
@@ -365,6 +369,7 @@ try
          msg=sprintf('%d luminances spanning 1/%.0f of digital range at %.2f.',o.luminances,1/d.fraction,d.v(1));
          Screen('DrawText',window,msg,100,200,0);
          Screen('DrawText',window,sprintf('Luminance %d of %d.',i,o.luminances),100,300,0);
+         Screen('DrawText',window,'Now measuring luminances. Then I''ll analyze and plot the results.',100,400,0);
          Screen('Flip',window);
          if o.usePhotometer
             L=GetLuminance; % Read photometer
