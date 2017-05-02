@@ -243,5 +243,6 @@ o.noiseCheckDeg=o.targetHeightDeg/20;
 o.noiseType='binary'; % 'gaussian' or 'uniform' or 'binary'
 o.noiseSD=0.5;
 o.screen=0;
+o.nearPointXYInUnitSquare=[0.5 0.5];
 o=NoiseDiscrimination(o);
 % imshow(o.actualStimulus);
