@@ -220,11 +220,13 @@ function data=MeasureLuminancePrecision
 % o.CLUTMapSize = power of 2. CLUTMapping limits resolution to log2(o.CLUTMapSize).
 
 o.luminances=32; % Photometer takes 3 s/luminance. 32 luminances is enough for a pretty graph.
-o.reciprocalOfFraction=[1024]; % List one or more, e.g. 1, 128, 256.
-o.vBase=.5;
+o.reciprocalOfFraction=[512]; % List one or more, e.g. 1, 128, 256.
+o.vBase=.8;
 o.useDithering=1; % 1 enable. [] default. 0 disable.
 o.use10Bits=1; % Enable this to get 10-bit (and better with dithering) performance.
 o.usePhotometer=1; % 1 use ColorCAL II XYZ; 0 simulate 8-bit rendering.
+o.useShuffle=0; % Randomize order of luminances to prevent systematic effect of changing background.
+o.removeDaylight=0; % Use this if your room has slowly changing daylight.
 o.wigglePixelNotCLUT=1; % 1 is fine. The software CLUT is not important.
 o.loadIdentityCLUT=1; % 1 is fine. This nullifies the CLUT.
 o.enableCLUTMapping=0; % 1 use software CLUT; 0 don't. 0 is fine.
@@ -339,7 +341,17 @@ try
       if v+d.fraction>=1
          v=1-d.fraction;
       end
-      for i=1:o.luminances
+      newOrder=1:o.luminances;
+      if o.useShuffle
+         % Random order to prevent systematic effect of changing background.
+         newOrder=Shuffle(newOrder);
+      end
+      if o.removeDaylight
+         % Repeat first measurement at end to estimate background drift.
+         newOrder(end+1)=newOrder(1);
+      end
+      for ii=1:length(newOrder)
+         i=newOrder(ii);
          g=v+d.fraction*(i-1)/(o.luminances-1);
          assert(g<=1+eps)
          d.v(i)=g;
@@ -364,25 +376,47 @@ try
             Screen('FillRect',window,iPixel/(o.CLUTMapSize-1));
          end
          Screen('TextSize',window,64);
+         Screen('DrawText',window,'MeasureLuminancePrecision by Denis Pelli, 2017',100,100,0);
          msg=sprintf('Series %d of %d.\n',iData,nData);
-         Screen('DrawText',window,msg,100,100,0);
-         msg=sprintf('%d luminances spanning 1/%.0f of digital range at %.2f.',o.luminances,1/d.fraction,d.v(1));
          Screen('DrawText',window,msg,100,200,0);
-         Screen('DrawText',window,sprintf('Luminance %d of %d.',i,o.luminances),100,300,0);
-         Screen('DrawText',window,'Now measuring luminances. Then I''ll analyze and plot the results.',100,400,0);
+         msg=sprintf('%d luminances spanning 1/%.0f of digital range at %.2f.',o.luminances,1/d.fraction,d.v(1));
+         Screen('DrawText',window,msg,100,300,0);
+         Screen('DrawText',window,sprintf('Luminance %d of %d.',ii,length(newOrder)),100,400,0);
+         Screen('DrawText',window,'Now measuring luminances. Will then analyze and plot the results.',100,500,0);
          Screen('Flip',window);
          if o.usePhotometer
+            if ii==1
+               % Give the photometer time to react to new luminance.
+               WaitSecs(8);
+            else
+                if o.useShuffle
+                    WaitSecs(8);
+                else
+                    WaitSecs(2);
+                end
+            end
             L=GetLuminance; % Read photometer
          else
             % No photometer. Simulate 8-bit performance.
             L=200*round(g*255)/255;
+            L=L-20*ii/512; % Simulate background drift.
          end
-         d.L(i)=L;
+         if ii<length(newOrder)
+            d.L(i)=L;
+         else
+            if o.removeDaylight
+               % Last iteration: Estimate and remove background drift.
+               d.deltaL=L-d.L(newOrder(1));
+               nn=newOrder(1:o.luminances);
+               d.L(nn)=d.L(nn)-d.deltaL*(0:o.luminances-1)/o.luminances;
+               fprintf('Corrected for luminance drift of %.2f%% during measurement.\n',100*d.deltaL/d.L(1));
+            end
+         end
          if o.loadIdentityCLUT
             gammaRead=Screen('ReadNormalizedGammaTable',window);
             gamma=repmat(((0:size(gammaRead,1)-1)/(size(gammaRead,1)-1))',1,3);
             delta=gammaRead(:,2)-gamma(:,2);
-            %                 fprintf('Difference in read-back of identity CLUT: mean %.9f, sd %.9f\n',mean(delta),std(delta));
+            % fprintf('Difference in read-back of identity CLUT: mean %.9f, sd %.9f\n',mean(delta),std(delta));
             if 0
                % Report all errors in identity CLUT.
                list=gamma(:,2)~=gammaRead(:,2);
@@ -411,27 +445,38 @@ sca
 %% ANALYZE RESULTS
 % We compare our data with the prediction for n-bit precision, and choose
 % the best fit.
+clear sd
 for iData=1:length(data)
    d=data(iData);
    nMin=log2(1/d.fraction);
-   sd=(1:16)*nan;
+   vShift=-1:0.01:1;
+   sd=ones(16,length(vShift))*nan;
    for bits=nMin:16
-      white=2^bits;
-      q=floor(d.v*white)/white;
-      x=[ones(size(d.v))' q'];
-      [~, ~, ~, ~, stats]=regress(d.L',x);
-      sd(bits)=sqrt(stats(4));
+       for j=1:length(vShift)
+           white=2^bits-1;
+           v=d.v+vShift(j)*2^-bits;
+           q=floor(v*white)/white;
+           x=[ones(size(d.v))' q'];
+           [~, ~, ~, ~, stats]=regress(d.L',x);
+           sd(bits,j)=sqrt(stats(4));
+       end
    end
-   [~,bits]=min(sd);
+   minsd=min(min(sd));
+   [bits jShift]=find(sd==minsd,1);
+   j=round((length(vShift)+1)/2);
+   fprintf('min sd %.2f at %d bits %.4f shift; sd %.2f at 11 bits %.4f shift\n',minsd,bits,vShift(jShift),sd(11,j),vShift(j));
    data(iData).model.bits=bits;
-   data(iData).model.sd=sd(bits);
-   white=2^bits;
-   q=floor(d.v*white)/white;
+   data(iData).model.vShift=vShift(jShift);
+   data(iData).model.sd=sd(bits,jShift);
+   white=2^bits-1;
+   v=d.v+vShift(jShift)*2^-bits;
+   q=floor(v*white)/white;
    x=[ones(size(d.v')) q'];
    b=regress(d.L',x);
    data(iData).model.b=b;
    data(iData).model.v=linspace(d.v(1),d.v(end),1000);
-   q=floor(data(iData).model.v*white)/white;
+   v=data(iData).model.v+vShift(jShift)*2^-bits;
+   q=floor(v*white)/white;
    data(iData).model.L=b(1)+b(2)*q;
 end
 
@@ -483,7 +528,7 @@ for iData=1:length(data)
    text(x,y,name);
    name='';
    if o.loadIdentityCLUT
-      name=[name 'o.loadIdentityCLUT, '];
+      name=[name 'loadIdentityCLUT, '];
    end
    if o.enableCLUTMapping
       name=sprintf('%sCLUTMapSize=%d, ',name,o.CLUTMapSize);
@@ -491,6 +536,8 @@ for iData=1:length(data)
    if ~o.usePhotometer
       name=[name 'simulating 8 bits, '];
    end
+   name=sprintf('%sshift %.2f, ',name,d.model.vShift);
+   name=sprintf('%smodel sd %.2f%%, ',name,100*d.model.sd/d.L(1));
    y=y+dy;
    text(x,y,name);
    name='';
@@ -509,7 +556,7 @@ if o.use10Bits
    name=sprintf('%s-Use10Bits',name);
 end
 if o.loadIdentityCLUT
-%    name=[name '-LoadIdentityCLUT'];
+   %    name=[name '-LoadIdentityCLUT'];
 end
 if o.enableCLUTMapping
    name=sprintf('%s-o.CLUTMapSize%d',name,o.CLUTMapSize);
@@ -517,6 +564,9 @@ end
 if ~o.usePhotometer
    name=[name '-Simulating8Bits'];
 end
+if o.useShuffle
+  name=[name '-Shuffled'];
+end  
 name=sprintf('%s-Luminances%d',name,o.luminances);
 name=sprintf('%s-Span%.0fBitStep',name,log2(1/d.fraction));
 name=sprintf('%s-At%.3f',name,d.v(1));
