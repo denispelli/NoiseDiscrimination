@@ -163,6 +163,10 @@ function o = NoiseDiscrimination(oIn)
 % N 3.59E-05
 % Luminance ?? cd/m^2, pupilDiameterMm 3.5
 %
+if exist('oIn','var') && isfield(oIn,'quitNow') && oIn.quitNow
+   o=oIn;
+   return
+end
 %% SUGGESTED VALUES FOR ANNULUS
 if 0
    % Copy this to produce a Gaussian annulus:
@@ -279,6 +283,7 @@ o.pThreshold = 0.75;
 o.beta = nan; % Typically 1.7, 3.5, or Nan. Nan asks NoiseDiscrimination to set this at runtime.
 o.measureBeta = 0;
 o.targetXYDeg = [0 0]; % eccentricity of target center re fixation, + for right & up.
+nearPointXYInUnitSquare=[0.5 0.5];
 o.targetHeightDeg = 2; % Target size, range 0 to inf. If you ask for too
 % much, it gives you the max possible.
 % o.targetHeightDeg=30*o.noiseCheckDeg; % standard for counting neurons
@@ -934,6 +939,22 @@ try
    degPerCm = 57/o.distanceCm;
    o.pixPerDeg = o.pixPerCm/degPerCm;
    
+   %% OBSERVER
+   Screen('FillRect',window);
+   string=sprintf('Experimenter %s and observer %s. Right? Hit RETURN to continue, or period "." to quit.',o.experimenter,o.observer);
+   DrawFormattedText(window,string,textSize,1.5*textSize,black,textLineLength,[],[],1.3);
+   Screen('Flip',window); % Display request.
+   if o.speakInstructions
+      Speak('Observer %s, right? Hit RETURN to continue, or period "." to quit.');
+   end
+   response=GetKeypress(o.isKbLegacy);
+   if ismember(response,{'.','escape'})
+      Speak('Quitting.');
+      o.abortRun=1;
+      o.quitNow=1;
+      sca;
+      return
+   end
    %% MONOCULAR?
    if ~isfield(o,'eyes')
       error('Please set o.eyes to ''left'',''right'',''one'', or ''both''.');
@@ -947,12 +968,20 @@ try
       Screen('FillRect',window,white);
       string='';
       if ismember(o.eyes,{'left','right'})
-         string=sprintf('Please use just your %s eye. Cover your other eye. Hit RETURN to continue.',o.eyes);
+         string=sprintf('Please use just your %s eye. Cover your other eye. Hit RETURN to continue, or period "." to quit.',o.eyes);
          DrawFormattedText(window,string,textSize,1.5*textSize,black,textLineLength,[],[],1.3);
+         Screen('Flip',window); % Display request.
          if o.speakInstructions
             Speak(string);
          end
-         GetKeypress(o.isKbLegacy);
+         response=GetKeypress(o.isKbLegacy);
+         if ismember(response,{'.','escape'})
+            Speak('Quitting.');
+            o.abortRun=1;
+            o.quitNow=1;
+            sca;
+            return
+         end
       end
       while streq(o.eyes,'one')
          string = [string 'Which eye will you use, left or right? Please type L or R:'];
@@ -974,10 +1003,12 @@ try
       end
       Screen('FillRect',window,white);
       Screen('Flip',window); % Blank to acknowledge response.
+   end
+   if streq(o.eyes,'both')
+      ffprintf(ff,'Observer is using %s eyes.\n',o.eyes);
    else
       ffprintf(ff,'Observer is using %s eye.\n',o.eyes);
    end
-   ffprintf(ff,'Observer is using %s eyes.\n',o.eyes);
    
    %% PLACE FIXATION AND NEAR-POINT OF DISPLAY
    % DISPLAY NEAR POINT
@@ -2535,7 +2566,35 @@ try
          end
       end
    end % for trial=1:o.trialsPerRun
-   %% DONE. REPORT THRESHOLD FOR THIS RUN.
+   
+   if o.runAborted
+      %% ASK WHETHER TO QUIT THE WHOLE SESSION
+      escapeKeyCode=KbName('escape');
+      spaceKeyCode=KbName('space');
+      returnKeyCode=KbName('return');
+      Screen('FillRect',window);
+      Screen('TextFont',window,'Verdana',0);
+      string='Quitting the run. Hit PERIOD again to quit the whole session. To proceed with the next run, hit SPACE or RETURN.';
+      black=0;
+      instructionalMargin=100;
+      DrawFormattedText(window,string,instructionalMargin,instructionalMargin-0.5*textSize,black,65,[],[],1.1);
+      Screen('TextSize',window,textSize);
+      Screen('Flip',window); % Pose the question.
+      Speak('Hit PERIOD again to quit the whole session. To proceed with the next run, hit SPACE or RETURN.');
+      answer=GetKeypress([returnKeyCode spaceKeyCode escapeKeyCode '.']);
+      o.quitNow=ismember(answer,{'.','ESCAPE'});
+%       if o.useSpeech
+         if o.quitNow
+            Speak('Period.');
+         else
+            Speak('Proceeding to next run.');
+         end
+%       end
+      Screen('FillRect',window);
+   end
+
+
+%% DONE. REPORT THRESHOLD FOR THIS RUN.
    if ~isempty(o.data)
       psych.t = unique(o.data(:,1));
       psych.r = 1+10.^psych.t;
@@ -2655,29 +2714,33 @@ try
             end
          end
    end
-   if o.runAborted && o.runNumber < o.runsDesired
-      Speak('Please type period to skip the rest and quit now, or space to continue with next run.');
-      response = 0;
-      while 1
-         response = GetKeypress(o.isKbLegacy);
-         switch response
-            case '.',
-               ffprintf(ff,'*** ''.'' response. Quitting now.\n');
-               Speak('Quitting now.');
-               o.quitNow = 1;
-               break;
-            case ' ',
-               Speak('Continuing.');
-               o.quitNow = 0;
-               break;
-            otherwise
-               Speak('Try again. Type space to continue, or period to quit.');
-         end
-      end
-   end
-   if o.runNumber == o.runsDesired && o.congratulateWhenDone && ~ismember(o.observer,algorithmicObservers)
+%    if o.runAborted && o.runNumber < o.runsDesired
+%       Speak('Please type period to skip the rest and quit now, or space to continue with next run.');
+%       response = 0;
+%       while 1
+%          response = GetKeypress(o.isKbLegacy);
+%          switch response
+%             case '.',
+%                ffprintf(ff,'*** ''.'' response. Quitting now.\n');
+%                Speak('Quitting now.');
+%                o.quitNow = 1;
+%                break;
+%             case ' ',
+%                Speak('Continuing.');
+%                o.quitNow = 0;
+%                break;
+%             otherwise
+%                Speak('Try again. Type space to continue, or period to quit.');
+%          end
+%       end
+%    end
+if o.quitNow && ~ismember(o.observer,algorithmicObservers)
+   Speak('QUITTING now. Done.');
+else
+   if ~o.runAborted && o.runNumber == o.runsDesired && o.congratulateWhenDone && ~ismember(o.observer,algorithmicObservers)
       Speak('Congratulations. End of run.');
    end
+end
    if Screen(window,'WindowKind') == 1
       % Screen takes many seconds to close. This gives us a white screen
       % while we wait.
