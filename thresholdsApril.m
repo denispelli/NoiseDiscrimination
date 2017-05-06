@@ -65,8 +65,11 @@ o.printDurations=0;
 
 if 1
    % NEW DATA COLLECTION, APRIL 21, 2017
-   o.observer='ning';
+o.useFractionOfScreen=.3; % 0: normal, 0.5: small for debugging.
+o.isKbLegacy=1;
+o.observer='ning';
    % o.observer='chen';
+   o.observer='satrianna';
    o.eyes='left'; % 'left', 'right', 'both'.
    % IMPORTANT: Use a tape measure or meter stick to measure the distance
    % from your eye to the screen. The number below must be accurate.
@@ -76,7 +79,7 @@ if 1
    o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
    o.durationSec = 0.2;
    eccs=[-60 60 -30 30 -10 10 3 0];
-   if streq(o.eye,'left')
+   if streq(o.eyes,'left')
       eccs=-eccs;
    end
    for ecc = eccs;
