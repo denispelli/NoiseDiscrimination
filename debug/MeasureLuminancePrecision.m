@@ -54,12 +54,16 @@ function o=MeasureLuminancePrecision(o)
 % FIG and PNG file, and the data are saved as a MAT file. 
 % 
 %% OUTPUT ARGUMENT:
-% The data are also returned as a field in the output argument "o" struct.
-% o.data has a vector o.data.L of luminance readings and a corresponding
-% vector o.data.v of floating point color values. o.data.model describes
-% the best-fitting n-bit model.
+% Returns the "o" struct with all the parameters that controlled this run.
+% The data (saved in MAT file) are also returned as a field in the "o"
+% struct. o.data has a vector o.data.L of luminance readings and a
+% corresponding vector o.data.v of floating point color values.
+% o.data.model describes the best-fitting n-bit model.
 % 
-%% Input argument:
+%% INPUT ARGUMENT:
+% You must define all the necessary fields in the "o" struct. You may wish
+% to initially call o=MeasureLuminancePrecision without an argument to get
+% all the needs fields initialized with default values.
 % o.luminances = number of luminances to measure, 3 s each.
 % o.reciprocalOfFraction = list desired values, e.g. 1, 64, 128, 256.
 % o.use10Bits = whether to enable the driver's 10-bit mode. Recommended.
@@ -138,7 +142,7 @@ function o=MeasureLuminancePrecision(o)
 % 
 % MARIO: Yet another interesting option would be booting Linux on your iMac
 % 2014 Retina 5k, again with the dither settings that gave you 11 bpc under
-% macOS, and see if Linux in EnableNative16BitFramebuffer mode ! can
+% macOS, and see if Linux in EnableNative16BitFramebuffer mode can
 % squeeze out more than 11 bpc.
 % 
 % MARIO: Btw., so far i still didn't manage to replicate your 11 bpc with
@@ -186,9 +190,7 @@ function o=MeasureLuminancePrecision(o)
 % photometer measurement code, and then run that. It will print out
 % register dumps after each Flip. Interesting is a comparison of the values
 % between 8 bit mode and 10 bit mode.
-
-
-
+%
 %% NOTES ON OTHER ISSUES
 % 
 % DENIS: Must we call "PsychColorCorrection"? I'm already doing correction
