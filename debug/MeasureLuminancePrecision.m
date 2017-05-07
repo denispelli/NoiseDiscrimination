@@ -1,11 +1,13 @@
-function data=MeasureLuminancePrecision(o)
-% data=MeasureLuminancePrecision(o);
+function o=MeasureLuminancePrecision(o)
+% o=MeasureLuminancePrecision(o);
 % Measure (and graph) the luminance at each of a requested number of
-% floating-point color values over a (small) range to reveal how many bits
-% of precision your display achieves. The input argument "o" is a struct
-% with many fields, as explained below in INPUT ARGUMENT.
+% floating-point luminance values over a (small) range to reveal how many
+% bits of precision your display achieves. The optional input argument "o"
+% is a struct with many fields, as explained below in INPUT ARGUMENT.
+% Calling it with no argument will return a struct o with all the default
+% values, which you can modify to use as an argument when you call it again.
 % 
-% Denis Pelli, May 2, 2017
+% Denis Pelli, May 7, 2017
 %
 %% REQUIRED: 
 % 1. MATLAB http://mathworks.com 
@@ -52,10 +54,10 @@ function data=MeasureLuminancePrecision(o)
 % FIG and PNG file, and the data are saved as a MAT file. 
 % 
 %% OUTPUT ARGUMENT:
-% The data are also returned as the output argument "data" struct. "data"
-% has a vector "data.L" of luminance readings and a corresponding vector
-% "data.v" of floating point color values. "data.model" describes the
-% best-fitting n-bit model.
+% The data are also returned as a field in the output argument "o" struct.
+% o.data has a vector o.data.L of luminance readings and a corresponding
+% vector o.data.v of floating point color values. o.data.model describes
+% the best-fitting n-bit model.
 % 
 %% Input argument:
 % o.luminances = number of luminances to measure, 3 s each.
@@ -74,7 +76,7 @@ function data=MeasureLuminancePrecision(o)
 % Using MeasureLuminancePrecision, I have documented 11-bit luminance
 % precision on both of these displays, provided you enable o.use10Bits.
 % https://www.macrumors.com/2015/10/30/4k-5k-imacs-10-bit-color-depth-osx-el-capitan/
-% https://developer.apple.com/library/content/samplecode/DeepImageDisplayWithOpenGL/Introduction/Intro.html#//apple_ref/doc/uid/TP40016622
+% https://developer.apple.com/library/content/releasenotes/MacOSX/WhatsNewInOSX/Articles/MacOSX10_11_2.html#//apple_ref/doc/uid/TP40016630-SW1
 % https://developer.apple.com/library/content/samplecode/DeepImageDisplayWithOpenGL/Introduction/Intro.html#//apple_ref/doc/uid/TP40016622
 % https://macperformanceguide.com/blog/2016/20161127_1422-Apple2016MacBookPro-10-bit-color.html
 % 
@@ -145,6 +147,47 @@ function data=MeasureLuminancePrecision(o)
 % probably add some debug code to the next PTB beta for you to run on
 % macOS, to dump some hardware settings, maybe that'd give some clues about
 % how that 11 bpc instead of expected max 10 bpc happens.
+%
+% MARIO: Thanks for all the measurement Denis. The new script is pretty
+% cool, with the automatic model fit and all. Also works on Octave.
+
+% MARIO: I now tested a 8 year old MacPro with a Radeon HD-5700 from
+% 2009'ish under OSX 10.11 in 'Native10BitFramebuffer' mode with my
+% ColorCal-II, and interestingly it also measures 8 bpc in standard mode,
+% and 11 bpc in 10 Bit mode - on a Display btw. that is only 8 bpc capable,
+% so it could only get > 8 bpc via dithering.
+% 
+% MARIO: However, i added some debug code to Screen() to check how the
+% hardware is programmed, and it turns out, on this machine it is not
+% programmed any different in 11 bpc mode than in 8 bpc mode! The gpu is
+% programmed for 8 bpc framebuffers and scanout, hw dithering of the gpu is
+% disabled.
+% 
+% MARIO: So what Apple apparently does on those machines which are not 10
+% bit supported is it implements an 11 bpc capable spatial dithering
+% algorithm in software (probably running as a shader on the gpu to speed
+% it up a bi! t), not using the display hardwares capabilities at all. This
+% would also explain the sync failures at least i get when running in "10
+% bit" mode, and the PTB warnings about pageflipping not being used.
+% Exactly what one would expect if a desktop compositor is running and does
+% some post-processing (= software dithering) pass on each image. This also
+% explains why the dither settings have no effect in any way -- or at best
+% would make the results worse rather than better if anything.
+% 
+% MARIO: I bet the same thing happens on your MacBookPro - they are just
+% faking it, although good enough to convince the photometer.
+% 
+% MARIO: The interesting question will be what they do on your iMac Retina
+% 5k for which they do advertise 10 bit support.
+% 
+% MARIO: Attached is a Screen mex file for Matlab on OSX with the debug
+% code. What i'd need is you to add a Screen('Null') command in your
+% script, after the Screen('Flip') that shows the test stim, before the
+% photometer measurement code, and then run that. It will print out
+% register dumps after each Flip. Interesting is a comparison of the values
+% between 8 bit mode and 10 bit mode.
+
+
 
 %% NOTES ON OTHER ISSUES
 % 
@@ -167,7 +210,7 @@ function data=MeasureLuminancePrecision(o)
 % (32 bit floating point precision is about ~ 23 bit linear precision in
 % the displayable color range of 0.0 - 1.0).
 % 
-% % SOFTWARE CLUT
+%% SOFTWARE CLUT
 % The following 4 parameters allow testing of the software CLUT, but that's
 % a relatively unimportant option and not usable on the Z Book (which seems
 % to be restricted to a uselessly small 8-bit table), so you might as well
@@ -190,8 +233,8 @@ function data=MeasureLuminancePrecision(o)
 % declare that intention in advance by calling
 % PsychImaging('AddTask','AllViews','EnableCLUTMapping',o.CLUTMapSize,1);
 % when you're getting ready to open your window. In that call, you specify
-% the o.CLUTMapSize, and this puts a ceiling of log2(o.CLUTMapSize) bits on your
-% luminance resolution. The best resolution on my PowerBook Pro is 11
+% the o.CLUTMapSize, and this puts a ceiling of log2(o.CLUTMapSize) bits on
+% your luminance resolution. The best resolution on my PowerBook Pro is 11
 % bits, so I set the o.CLUTMapSize to 4096, corresponding to 12-bit
 % precision, more than I need. If you use CLUTMapping, then you will
 % typically want to make the table length (a power of 2) long enough to not
@@ -229,20 +272,22 @@ function data=MeasureLuminancePrecision(o)
 % them, e.g. [1 128]. You'll get a graph for each, all side by side in one
 % MATLAB figure. Each graph will use the specified number of luminances.
 %
+% o.onePixel = display a pixel in a dark square to defeat dithering.
 % o.wigglePixelNotCLUT = whether to vary the value of the pixel or CLUT.
 % o.loadIdentityCLUT = whether to load identity into the CLUT.
 % o.enableCLUTMapping = whether to use software table lookup. See below.
-% o.CLUTMapSize = 2 raised to an integer power. May limit resolution.
+% o.CLUTMapSize = 2^n for n-bit precision. Make it big to conserve resolution.
 
 if nargin<1
    % If you omit the input argument "o", we set up a default here.
    % If you provide "o" it must define all these fields.
-   o.luminances=32; % Photometer takes 3 s/luminance. 32 luminances is enough for a pretty graph.
+   o.luminances=2; % Photometer takes 3 s/luminance. 32 luminances is enough for a pretty graph.
    o.reciprocalOfFraction=[128]; % List one or more, e.g. 1, 128, 256.
    o.vBase=.8;
-   o.useDithering=1; % 1 enable. [] default. 0 disable.
+   o.onePixel=0; % Isolate one pixel, to defeat dithering and measure the DAC precision.
+   o.useDithering=[]; % 1 enable. [] default. 0 disable.
    o.use10Bits=1; % Enable this to get 10-bit (and better with dithering) performance.
-   o.usePhotometer=1; % 1 use ColorCAL II XYZ; 0 simulate 8-bit rendering.
+   o.usePhotometer=0; % 1 use ColorCAL II XYZ; 0 simulate 8-bit rendering.
    o.useShuffle=0; % Randomize order of luminances to prevent systematic effect of changing background.
    o.removeDaylight=0; % Use this if your room has slowly changing daylight.
    o.wigglePixelNotCLUT=1; % 1 is fine. The software CLUT is not important.
@@ -250,6 +295,8 @@ if nargin<1
    o.enableCLUTMapping=0; % 1 use software CLUT; 0 don't. 0 is fine.
    o.CLUTMapSize=4096; % Size of software CLUT. Limits resolution to log2(o.CLUTMapSize) bits.
    o.useFractionOfScreen=0; % For debugging, reduce our window to expose Command Window.
+   o.callScreenNullForMario=0; % Used with custom version of SCREEN that reports GPU registers.
+   o.slowly=0; % Pause even when not using photometer, to monitor program progress.
 end
 
 %% BEGIN
@@ -294,6 +341,7 @@ try
    else
       window = PsychImaging('OpenWindow',screen,[1 1 1],round(o.useFractionOfScreen*screenBufferRect));
    end
+   screenRect=Screen('Rect',window);
    windowInfo=Screen('GetWindowInfo',window);
    switch(windowInfo.DisplayCoreId)
       % Choose the right magic dither code for the video driver. Currently
@@ -382,6 +430,16 @@ try
                Screen('LoadNormalizedGammaTable',window,gamma,loadOnNextFlip);
             end
             Screen('FillRect',window,g);
+            if o.onePixel
+               r=[0 0 800 800];
+               r=AlignRect(r,screenRect,'center','bottom');
+               Screen('FillRect',window,0,r); % Black square
+               r1=[0 0 1 1];
+               r1=CenterRect(r1,r);
+               Screen('FillRect',window,g,r1); % Show one pixel
+               Screen('TextSize',window,32);
+               Screen('DrawText',window,'One pixel at center',r(1)+8,r(2)+32,1,0,1);
+            end
          else
             iPixel=126;
             for j=-4:4
@@ -395,15 +453,20 @@ try
             Screen('LoadNormalizedGammaTable',window,gamma,loadOnNextFlip);
             Screen('FillRect',window,iPixel/(o.CLUTMapSize-1));
          end
+         msg='MeasureLuminancePrecision by Denis Pelli, 2017\n';
+         if nData>1
+            msg=sprintf('%sSeries %d of %d.\n',msg,iData,nData);
+         end
+         msg=[msg 'Now measuring luminances. Will then analyze and plot the results.\n'];
+         msg=sprintf('%s%d luminances spanning 1/%.0f of digital range at %.2f.\n',msg,o.luminances,1/d.fraction,d.v(1));
+         msg=sprintf('%sLuminance %d of %d.\n',msg,ii,length(newOrder));
          Screen('TextSize',window,64);
-         Screen('DrawText',window,'MeasureLuminancePrecision by Denis Pelli, 2017',100,100,0);
-         msg=sprintf('Series %d of %d.\n',iData,nData);
-         Screen('DrawText',window,msg,100,200,0);
-         msg=sprintf('%d luminances spanning 1/%.0f of digital range at %.2f.',o.luminances,1/d.fraction,d.v(1));
-         Screen('DrawText',window,msg,100,300,0);
-         Screen('DrawText',window,sprintf('Luminance %d of %d.',ii,length(newOrder)),100,400,0);
-         Screen('DrawText',window,'Now measuring luminances. Will then analyze and plot the results.',100,500,0);
+         Screen('DrawText',window,' ',0,0,0,g); % Set background.
+         DrawFormattedText(window,msg,50,100,0,80,[],[],1.5);
          Screen('Flip',window);
+         if o.callScreenNullForMario
+            Screen('Null');
+         end
          if o.usePhotometer
             if ii==1
                % Give the photometer time to react to new luminance.
@@ -419,6 +482,9 @@ try
          else
             % No photometer. Simulate 8-bit performance.
             L=200*round(g*255)/255;
+            if o.slowly
+               WaitSecs(4);
+            end
          end
          if ii<=o.luminances
             d.L(i)=L;
@@ -610,6 +676,7 @@ name=strrep(name,' ',''); % Remove spaces.
 savefig(gcf,[name,'.fig'],'compact'); % Save figure as fig file.
 print(gcf,'-dpng',[name,'.png']); % Save figure as png file.
 save([name '.mat'],'data'); % Save data as MAT file.
+o.data=data;
 end
 
 %% GET LUMINANCE
