@@ -288,7 +288,7 @@ if nargin<1
    % If you provide "o" it must define all these fields.
    o.luminances=32; % Photometer takes 5 s/luminance. 32 luminances is enough for a pretty graph.
    o.reciprocalOfFraction=[128]; % List one or more, e.g. 1, 128, 256.
-   o.vBase=.8; % Must be in range 0 to 1.
+   o.vBase=.8; % Base gray level must be in range 0 to 1.
    o.patchWidthPixels=0; % nxn pixel patch. 1 to defeat dithering. 0 for full-screen. 
    o.useDithering=[]; % 1 enable. [] default. 0 disable.
    o.use10Bits=1; % Enable this to get 10-bit (and better with dithering) performance.
