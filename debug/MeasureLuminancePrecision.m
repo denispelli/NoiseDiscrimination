@@ -64,7 +64,7 @@ function o=MeasureLuminancePrecision(o)
 % You must define all the necessary fields in the "o" struct. You may wish
 % to initially call o=MeasureLuminancePrecision without an argument to get
 % all the needs fields initialized with default values.
-% o.luminances = number of luminances to measure, 3 s each.
+% o.luminances = number of luminances to measure, 5 s each.
 % o.reciprocalOfFraction = list desired values, e.g. 1, 64, 128, 256.
 % o.use10Bits = whether to enable the driver's 10-bit mode. Recommended.
 % o.usePhotometer = 1 use ColorCAL II XYZ; 0 simulate 8-bit rendering.
@@ -262,34 +262,37 @@ function o=MeasureLuminancePrecision(o)
 % fields defined.
 %
 % o.luminances = how many luminances to be measured to produce your final
-% graph. 32 is typically enough. The CRS photometer takes 3 s/point.
+% graph. 32 is typically enough. The CRS photometer takes 5 s/point. This
+% includes 2 s wait for it to settle after luminance changes before we
+% initiate the reading.
 %
 % o.reciprocalOfFraction = reciprocal of the fraction of the full luminance
 % range you want to explore. Setting it to 1 will explore the whole range.
 % To demonstrate 10-bit precision over the whole range you'd need to test
-% 2^10=1024 luminances, which will take a long time, 3,000 s, nearly an
+% 2^10=1024 luminances, which will take a long time, 5,000 s, more than an
 % hour. Setting o.reciprocalOfFraction=256 will test only 1/256 of the
 % range, which is enough to reveal whether there are any steps finer than
 % one step at 8-bit precision. You can request several ranges by listing
 % them, e.g. [1 128]. You'll get a graph for each, all side by side in one
 % MATLAB figure. Each graph will use the specified number of luminances.
 %
-% o.onePixel = display a pixel in a dark square to defeat dithering.
+% o.patchWidthPixels = display a pixel in a dark square to defeat dithering.
 % o.wigglePixelNotCLUT = whether to vary the value of the pixel or CLUT.
 % o.loadIdentityCLUT = whether to load identity into the CLUT.
 % o.enableCLUTMapping = whether to use software table lookup. See below.
 % o.CLUTMapSize = 2^n for n-bit precision. Make it big to conserve resolution.
 
+sca
 if nargin<1
    % If you omit the input argument "o", we set up a default here.
    % If you provide "o" it must define all these fields.
-   o.luminances=2; % Photometer takes 3 s/luminance. 32 luminances is enough for a pretty graph.
+   o.luminances=32; % Photometer takes 5 s/luminance. 32 luminances is enough for a pretty graph.
    o.reciprocalOfFraction=[128]; % List one or more, e.g. 1, 128, 256.
-   o.vBase=.8;
-   o.onePixel=0; % Isolate one pixel, to defeat dithering and measure the DAC precision.
+   o.vBase=.8; % Must be in range 0 to 1.
+   o.patchWidthPixels=0; % nxn pixel patch. 1 to defeat dithering. 0 for full-screen. 
    o.useDithering=[]; % 1 enable. [] default. 0 disable.
    o.use10Bits=1; % Enable this to get 10-bit (and better with dithering) performance.
-   o.usePhotometer=0; % 1 use ColorCAL II XYZ; 0 simulate 8-bit rendering.
+   o.usePhotometer=1; % 1 use ColorCAL II XYZ; 0 simulate 8-bit rendering.
    o.useShuffle=0; % Randomize order of luminances to prevent systematic effect of changing background.
    o.removeDaylight=0; % Use this if your room has slowly changing daylight.
    o.wigglePixelNotCLUT=1; % 1 is fine. The software CLUT is not important.
@@ -298,7 +301,7 @@ if nargin<1
    o.CLUTMapSize=4096; % Size of software CLUT. Limits resolution to log2(o.CLUTMapSize) bits.
    o.useFractionOfScreen=0; % For debugging, reduce our window to expose Command Window.
    o.callScreenNullForMario=0; % Used with custom version of SCREEN that reports GPU registers.
-   o.slowly=0; % Pause even when not using photometer, to monitor program progress.
+   o.slowly=0; % Pause when not using photometer, to monitor program progress.
 end
 
 %% BEGIN
@@ -432,15 +435,28 @@ try
                Screen('LoadNormalizedGammaTable',window,gamma,loadOnNextFlip);
             end
             Screen('FillRect',window,g);
-            if o.onePixel
+            if o.patchWidthPixels
                r=[0 0 800 800];
-               r=AlignRect(r,screenRect,'center','bottom');
-               Screen('FillRect',window,0,r); % Black square
-               r1=[0 0 1 1];
+               r=AlignRect(r,screenRect,'right','bottom');
+               r1=[0 0 o.patchWidthPixels o.patchWidthPixels];
                r1=CenterRect(r1,r);
-               Screen('FillRect',window,g,r1); % Show one pixel
                Screen('TextSize',window,32);
-               Screen('DrawText',window,'One pixel at center',r(1)+8,r(2)+32,1,0,1);
+               if ii==1 && iData==1
+                  Screen('FillRect',window,0,r); % Black square
+                  rExtended=[r1(1) r(2) r1(3) r(4)];
+                  Screen('FillRect',window,1,rExtended);
+                  rExtended=[r(1) r1(2) r(3) r1(4)];
+                  Screen('FillRect',window,1,rExtended);
+                  Screen('DrawText',window,'Center photometer on cross.',r(1)+8,r(2)+32,1,0,1);
+                  Screen('DrawText',window,'Hit RETURN when ready.',r(1)+8,r(2)+64,1,0,1);
+                  Screen('Flip',window);
+                  ListenChar(2);
+                  KbStrokeWait();
+                  ListenChar;
+               end
+               Screen('FillRect',window,0,r); % Black square
+               Screen('FillRect',window,g,r1); % Show one pixel
+               Screen('DrawText',window,sprintf('%dx%d-pixel square at center',RectWidth(r1),RectHeight(r1)),r(1)+8,r(2)+32,1,0,1);
             end
          else
             iPixel=126;
