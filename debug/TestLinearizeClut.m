@@ -1,5 +1,6 @@
 o.useFractionOfScreen=0.2;
 o.desiredClutMargin=1;
+o.screen=0;
 loadOnNextFlip = 2; % REQUIRED for reliable LoadNormalizedGammaTable.
 cal.screen = o.screen;
 if cal.screen > 0

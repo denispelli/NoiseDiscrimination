@@ -103,6 +103,7 @@ function o = NoiseDiscrimination(oIn)
 
 %% CURRENT ISSUES
 % This happened once. I can't reproduce it.
+%
 % Warning: 245 out-of-range pixels, with values [ -9], were bounded to the range 2 to 2046. 
 % > In IndexOfLuminance (line 14)
 %   In NoiseDiscrimination (line 2027)
@@ -161,61 +162,7 @@ function o = NoiseDiscrimination(oIn)
 % binary, noiseCheckDeg 0.092, checkSec 0.013, noiseSD 0.5, noiseBeforeSec 0.2
 % N 3.59E-05
 % Luminance ?? cd/m^2, pupilDiameterMm 3.5
-
-%%%%%%%%%%%%%%%%%%%%%%%%
-% MAY 31, 2017 from Mario Kleiner
-% Providing a fix for CLUT bugs in May 2017 Psychtoolbox.
-% Hi Denis,
-% 
-% all bugs should be fixed in my GitHub master branch.
-% 
-% - 'PutImage' was utterly broken for normalized color range mode since
-% forever. If this ever worked for you with that task, it would be a
-% miracle. A fixed Screen() mex file will have to wait for the next
-% official beta release, probably a couple of days out.
-% 
-% In general i don't recommend use of PutImage in new code. It is awful
-% code with no flexibility, miserable performance, and essentially no
-% testing ever. It only exists for backwards compatibility with ancient
-% code, and to scare little children.
 %
-% The 'PutImage' bug has to wait for the next beta release, because
-% rebooting into OSX to recompile mex files puts me in a miserable mood
-% very quickly, so we want to avoid that as much as possible, and i already
-% lost 6 hours to this.
-%
-% ...
-% 
-% For luts > 256 slots you will need a floating point framebuffer that can
-% accurately represent more than 8 bit, that's why it got worse for your
-% 2048 slot lut. Enabling the 11 bpc framebuffer would also cause PTB to
-% use a 32 bit float ~ 23 bit linear precision intermediate virtual
-% framebuffer, so that's why that partially fixed the 2048 slot lut.
-% 
-% If you don't use a float framebuffer the data path was like this:
-% 
-% floating point color (~23 bit) rendering into -> 8 bpc virtual
-% framebuffer (rou! nding/quantizing from 23 bpc to 8 bpc = loss of
-% precision, potential ro! undoff errors)-> lut mapping (convert 8 bpc back
-% to 23 bpc, index into lut, output 23 bpc) -> System framebuffer of 8 bpc.
-% 
-% With native 11 bpc mode you have:
-% 
-% floating point color (~23 bit) rendering into -> 23 bpc virtual
-% framebuffer -> lut mapping (23 bpc input index into lut, output 23 bpc)
-% -> Downconversion to max. 11 bpc system framebuffer on Apple OSX. So no
-% loss of precision or rounding before the lut lookup.
-% 
-% The CLUT bugs will be fixed with this new PsychImaging.m file:
-% 
-% https://raw.githubusercontent.com/kleinerm/Psychtoolbox-3/master/Psychtoolbox/PsychGLImageProcessing/PsychImaging.m
-% 
-% -mario
-
-if exist('oIn','var') && isfield(oIn,'quitNow') && oIn.quitNow
-   o=oIn;
-   return
-end
 %% SUGGESTED VALUES FOR ANNULUS
 if 0
    % Copy this to produce a Gaussian annulus:
@@ -256,7 +203,7 @@ global window fixationLines fixationCrossWeightPix labelBounds location ...
 % created subroutines at the end of this file. The list is woefully
 % incomplete as the new routines haven't been tested as subroutines, and
 % many of their formerly locally variables need to be made global.
-global oOld % Saved from last run. Skip prompts that were the same in recent run.
+
 addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder in same directory as this M file
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
 % echo_executing_commands(2, 'local');
@@ -295,7 +242,6 @@ o.observer = 'junk'; % Name of person or existing algorithm.
 % o.observer='maximum'; % Existing algorithm instead of person.
 % o.observer='ideal'; % Existing algorithm instead of person.
 algorithmicObservers = {'ideal', 'brightnessSeeker', 'blackshot', 'maximum'};
-o.experimenter='none';
 o.eyes='both'; % 'left', 'right', 'both', or 'one', which asks user to specify at runtime.
 o.luminanceTransmission=1; % Less than one for dark glasses or neutral density filter.
 o.trialsPerRun = 40; % Typically 40.
@@ -333,7 +279,6 @@ o.pThreshold = 0.75;
 o.beta = nan; % Typically 1.7, 3.5, or Nan. Nan asks NoiseDiscrimination to set this at runtime.
 o.measureBeta = 0;
 o.targetXYDeg = [0 0]; % eccentricity of target center re fixation, + for right & up.
-o.nearPointXYInUnitSquare=[0.5 0.5];
 o.targetHeightDeg = 2; % Target size, range 0 to inf. If you ask for too
 % much, it gives you the max possible.
 % o.targetHeightDeg=30*o.noiseCheckDeg; % standard for counting neurons
@@ -853,6 +798,7 @@ try
       if cal.hiDPIMultiple ~= 1
          PsychImaging('AddTask','General','UseRetinaResolution');
       end
+      PsychImaging('AddTask','General','NormalizedHighresColorRange',1);
       if o.useNative10Bit
          PsychImaging('AddTask','General','EnableNative10BitFramebuffer');
       end
@@ -860,7 +806,7 @@ try
       if o.enableCLUTMapping
          PsychImaging('AddTask','AllViews','EnableCLUTMapping',o.CLUTMapLength,1); % clutSize, high res
          cal.gamma=repmat((0:o.maxEntry)'/o.maxEntry,1,3); % Identity
-         Screen('LoadNormalizedGammaTable',0,cal.gamma,0); % Set hardware CLUT to identity.
+         Screen('LoadNormalizedGammaTable',0,cal.gamma,0); % set hardware CLUT to identity.
       else
          warning('You need EnableCLUTMapping to control contrast.');
       end
@@ -877,39 +823,30 @@ try
          window=PsychImaging('OpenWindow',cal.screen,1.0,r);
       end
       
-      if 0
-         % This code to enable dithering is what Mario suggested, but it
-         % makes no difference at all. I get dithering on my MacBook Pro
-         % and iMac if and only if I EnableNative10BitFramebuffer, above. I
-         % haven't tested whether this dithering-control code affects my
-         % MacBook Air, but that's irrelevant since its screen is too
-         % viewing angle dependent for use in measuring threshold, which is
-         % why I need dithering.
-         windowInfo=Screen('GetWindowInfo',window);
-         o.displayCoreId=windowInfo.DisplayCoreId;
-         switch(o.displayCoreId)
-            case 'AMD',
-               o.displayEngineVersion=windowInfo.GPUMinorType/10;
-               switch(round(o.displayEngineVersion))
-                  case 6,
-                     o.displayGPUFamily='Southern Islands';
-                     % Examples:
-                     % AMD Radeon R9 M290X in MacBook Pro (Retina, 15-inch, Mid 2015)
-                     % AMD Radeon R9 M370X in iMac (Retina 5K, 27-inch, Late 2014)
-                     o.ditherCLUT=61696;
-                  case 8,
-                     o.displayGPUFamily='Sea Islands';
-                     % Used in hp Z Book laptop.
-                     o.ditherCLUT=59648; % Untested.
-                     % MARIO: Another number you could try is 59648. This
-                     % would enable dithering for a native 8 bit panel, which
-                     % is the wrong thing to do for the laptops 10 bit panel,
-                     % assuming the driver docs are correct. But then, who
-                     % knows?
-               end
-         end
-         Screen('ConfigureDisplay','Dithering',cal.screen,o.ditherCLUT);
+      windowInfo=Screen('GetWindowInfo',window);
+      o.displayCoreId=windowInfo.DisplayCoreId;
+      switch(o.displayCoreId)
+         case 'AMD',
+            o.displayEngineVersion=windowInfo.GPUMinorType/10;
+            switch(round(o.displayEngineVersion))
+               case 6,
+                  o.displayGPUFamily='Southern Islands';
+                  % Examples:
+                  % AMD Radeon R9 M290X in MacBook Pro (Retina, 15-inch, Mid 2015)
+                  % AMD Radeon R9 M370X in iMac (Retina 5K, 27-inch, Late 2014)
+                  o.ditherCLUT=61696;
+               case 8,
+                  o.displayGPUFamily='Sea Islands';
+                  % Used in hp Z Book laptop.
+                  o.ditherCLUT=59648; % Untested.
+                  % MARIO: Another number you could try is 59648. This
+                  % would enable dithering for a native 8 bit panel, which
+                  % is the wrong thing to do for the laptops 10 bit panel,
+                  % assuming the driver docs are correct. But then, who
+                  % knows?
+            end
       end
+      Screen('ConfigureDisplay','Dithering',cal.screen,o.ditherCLUT);
       
       % Compare hardware CLUT with identity.
       gammaRead=Screen('ReadNormalizedGammaTable',window);
@@ -966,7 +903,7 @@ try
          end
          Screen('FillRect',window,gray1);
          Screen('FillRect',window,gray,o.stimulusRect);
-       else
+      else
          Screen('FillRect',window);
       end % if exist('cal')
       if o.flipClick; Speak(['before Flip ' num2str(MFileLineNr)]); GetClicks; end
@@ -997,60 +934,25 @@ try
    degPerCm = 57/o.distanceCm;
    o.pixPerDeg = o.pixPerCm/degPerCm;
    
-   %% OBSERVER
-   black=0;
-   if ~exist('oOld','var') || ~isfield(oOld,'observer') || GetSecs-oOld.secs>5*60 || ~streq(oOld.observer,o.observer)
-      Screen('TextSize',window,textSize);
-      Screen('TextFont',window,'Verdana');
-      Screen('FillRect',window);
-      string=sprintf('Experimenter %s and observer %s. Right?\nHit RETURN to continue, or period "." to quit.',o.experimenter,o.observer);
-      DrawFormattedText(window,string,textSize,1.5*textSize,black,textLineLength,[],[],1.3);
-      Screen('Flip',window); % Display request.
-      if o.speakInstructions
-         Speak('Observer %s, right? Hit RETURN to continue, or period "." to quit.');
-      end
-      response=GetKeypress(o.isKbLegacy);
-      if ismember(response,{'.','escape'})
-         Speak('Quitting.');
-         o.abortRun=1;
-         o.quitNow=1;
-         sca;
-         return
-      end
-   end
    %% MONOCULAR?
    if ~isfield(o,'eyes')
       error('Please set o.eyes to ''left'',''right'',''one'', or ''both''.');
    end
-   if ~ismember(o.eyes,{'left','right','one','both'})
-      error('o.eyes=''%s'' is not allowed. It must be ''left'',''right'',''one'', or ''both''.',o.eyes);
-   end
-   if ~exist('oOld','var') || ~isfield(oOld,'eyes') || GetSecs-oOld.secs>5*60 || ~streq(oOld.eyes,o.eyes)
+   if ~streq(o.eyes,'both')
+      if ~ismember(o.eyes,{'left','right','one','both'})
+            error('o.eyes=''%s'' is not allowed. It must be ''left'',''right'',''one'', or ''both''.',o.eyes);
+      end
       Screen('TextSize',window,textSize);
       Screen('TextFont',window,'Verdana');
       Screen('FillRect',window,white);
       string='';
-      if streq(o.eyes,'both')
-         string='Please use both eyes.\nHit RETURN to continue, or period "." to quit.';
-         DrawFormattedText(window,string,textSize,1.5*textSize,black,textLineLength,[],[],1.3);
-         Screen('Flip',window); % Display request.
-         response=GetKeypress(o.isKbLegacy);
-      end
       if ismember(o.eyes,{'left','right'})
-         string=sprintf('Please use just your %s eye. Cover your other eye.\nHit RETURN to continue, or period "." to quit.',o.eyes);
+         string=sprintf('Please use just your %s eye. Cover your other eye. Hit RETURN to continue.',o.eyes);
          DrawFormattedText(window,string,textSize,1.5*textSize,black,textLineLength,[],[],1.3);
-         Screen('Flip',window); % Display request.
          if o.speakInstructions
             Speak(string);
          end
-         response=GetKeypress(o.isKbLegacy);
-         if ismember(response,{'.','escape'})
-            Speak('Quitting.');
-            o.abortRun=1;
-            o.quitNow=1;
-            sca;
-            return
-         end
+         GetKeypress(o.isKbLegacy);
       end
       while streq(o.eyes,'one')
          string = [string 'Which eye will you use, left or right? Please type L or R:'];
@@ -1072,12 +974,10 @@ try
       end
       Screen('FillRect',window,white);
       Screen('Flip',window); % Blank to acknowledge response.
-   end
-   if streq(o.eyes,'both')
-      ffprintf(ff,'Observer is using %s eyes.\n',o.eyes);
    else
       ffprintf(ff,'Observer is using %s eye.\n',o.eyes);
    end
+   ffprintf(ff,'Observer is using %s eyes.\n',o.eyes);
    
    %% PLACE FIXATION AND NEAR-POINT OF DISPLAY
    % DISPLAY NEAR POINT
@@ -1737,7 +1637,6 @@ try
    if ~ismember(o.observer,algorithmicObservers) && ~o.testBitDepth %&& ~o.saveSnapshot;
       Screen('FillRect',window,gray1);
       Screen('FillRect',window,gray,o.stimulusRect);
-      fprintf('gray1*o.maxEntry %.1f, gray*o.maxEntry %.1f, o.maxEntry %.0f\n',gray1*o.maxEntry,gray*o.maxEntry,o.maxEntry);
       if o.showCropMarks
          TrimMarks(window,frameRect);
       end
@@ -2636,37 +2535,7 @@ try
          end
       end
    end % for trial=1:o.trialsPerRun
-   
-   if o.runAborted
-      %% ASK WHETHER TO QUIT THE WHOLE SESSION
-      escapeKeyCode=KbName('escape');
-      spaceKeyCode=KbName('space');
-      returnKeyCode=KbName('return');
-      Screen('FillRect',window);
-      Screen('TextFont',window,'Verdana',0);
-      string='Quitting the run. Hit PERIOD again to quit the whole session. To proceed with the next run, hit SPACE or RETURN.';
-      black=0;
-      instructionalMargin=100;
-      % Set default background color.
-      Screen('DrawText', window,' ',0,0,black,1,1);
-      DrawFormattedText(window,string,instructionalMargin,instructionalMargin-0.5*textSize,black,65,[],[],1.1);
-      Screen('TextSize',window,textSize);
-      Screen('Flip',window); % Pose the question.
-      Speak('Hit PERIOD again to quit the whole session. To proceed with the next run, hit SPACE or RETURN.');
-      answer=GetKeypress([returnKeyCode spaceKeyCode escapeKeyCode '.']);
-      o.quitNow=ismember(answer,{'.','ESCAPE'});
-%       if o.useSpeech
-         if o.quitNow
-            Speak('Period.');
-         else
-            Speak('Proceeding to next run.');
-         end
-%       end
-      Screen('FillRect',window);
-   end
-
-
-%% DONE. REPORT THRESHOLD FOR THIS RUN.
+   %% DONE. REPORT THRESHOLD FOR THIS RUN.
    if ~isempty(o.data)
       psych.t = unique(o.data(:,1));
       psych.r = 1+10.^psych.t;
@@ -2786,33 +2655,29 @@ try
             end
          end
    end
-%    if o.runAborted && o.runNumber < o.runsDesired
-%       Speak('Please type period to skip the rest and quit now, or space to continue with next run.');
-%       response = 0;
-%       while 1
-%          response = GetKeypress(o.isKbLegacy);
-%          switch response
-%             case '.',
-%                ffprintf(ff,'*** ''.'' response. Quitting now.\n');
-%                Speak('Quitting now.');
-%                o.quitNow = 1;
-%                break;
-%             case ' ',
-%                Speak('Continuing.');
-%                o.quitNow = 0;
-%                break;
-%             otherwise
-%                Speak('Try again. Type space to continue, or period to quit.');
-%          end
-%       end
-%    end
-if o.quitNow && ~ismember(o.observer,algorithmicObservers)
-   Speak('QUITTING now. Done.');
-else
-   if ~o.runAborted && o.runNumber == o.runsDesired && o.congratulateWhenDone && ~ismember(o.observer,algorithmicObservers)
+   if o.runAborted && o.runNumber < o.runsDesired
+      Speak('Please type period to skip the rest and quit now, or space to continue with next run.');
+      response = 0;
+      while 1
+         response = GetKeypress(o.isKbLegacy);
+         switch response
+            case '.',
+               ffprintf(ff,'*** ''.'' response. Quitting now.\n');
+               Speak('Quitting now.');
+               o.quitNow = 1;
+               break;
+            case ' ',
+               Speak('Continuing.');
+               o.quitNow = 0;
+               break;
+            otherwise
+               Speak('Try again. Type space to continue, or period to quit.');
+         end
+      end
+   end
+   if o.runNumber == o.runsDesired && o.congratulateWhenDone && ~ismember(o.observer,algorithmicObservers)
       Speak('Congratulations. End of run.');
    end
-end
    if Screen(window,'WindowKind') == 1
       % Screen takes many seconds to close. This gives us a white screen
       % while we wait.
@@ -2853,8 +2718,7 @@ end
    save(fullfile(o.dataFolder,[o.dataFilename '.mat']),'o','cal');
    fprintf('Results saved in %s with extensions .txt and .mat\nin folder %s\n',o.dataFilename,o.dataFolder);
    Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
-   oOld=o;
-   oOld.secs=GetSecs; % Date for staleness.
+   
 catch
    %% MATLAB catch
    sca; % screen close all
@@ -3065,10 +2929,6 @@ end
 Screen('TextFont',window,'Verdana');
 Screen('TextSize',window,24);
 for bits = 1:11
-   % WARNING: Mario advises against using PutImage, which is retained in
-   % Psychtoolbox solely for backward compatibility. As of May 31, 2017,
-   % it's not compatible with high-res color, but that may be fixed in the
-   % next release.
    Screen('PutImage',window,img,r);
    %               msg=sprintf('o.testBitDepth: Now alternating with quantization to %d bits. Hit space bar to continue.',bits);
    %               newGamma=floor(cal.gamma*(2^bits-1))/(2^bits-1);
@@ -3077,8 +2937,8 @@ for bits = 1:11
    Screen('DrawText',window,' o.testBitDepth: Testing bits 1 to 11. ',100,100,0,1,1);
    Screen('DrawText',window,msg,100,136,0,1,1);
    Screen('Flip',window);
-   ListenChar(0); % Flush. May not be needed.
-   ListenChar(2); % No echo. Needed.
+   ListenChar(0); % flush. May not be needed.
+   ListenChar(2); % no echo. Needed.
    while CharAvail
       GetChar;
    end

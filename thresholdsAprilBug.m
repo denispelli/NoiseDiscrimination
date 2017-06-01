@@ -1,10 +1,10 @@
 % thresholdsApril
 % April 21, 2017, denis.pelli@nyu.edu
-% Script for Ning and Chen to measure equivalent noise in the periphery.
+% Script for Ning, Chen, & Satrianna to measure equivalent noise in the periphery.
 
 clear o
 o.durationSec=0.5; % signal duration. [0.05, 0.5]
-o.trialsPerRun=40;
+o.trialsPerRun=50;
 
 % NOISE
 o.useDynamicNoiseMovie = 1; % 0 for static noise
@@ -56,21 +56,18 @@ o.snapshotShowsFixationAfter=0;
 o.speakInstructions=0;
 
 % DEBUGGING
-o.useFractionOfScreen=0; % 0: normal, 0.5: small for debugging.
+o.useFractionOfScreen=0.6; % 0: normal, 0.5: small for debugging.
 o.flipClick=0;
 o.assessContrast=0;
 o.assessLoadGamma=0;
 o.showCropMarks=0; % mark the bounding box of the target
 o.printDurations=0;
 
-if 1
+if 0
    % NEW DATA COLLECTION, APRIL 21, 2017
-o.useFractionOfScreen=0; % 0: normal, 0.5: small for debugging.
-o.isKbLegacy=1;
-o.observer='ning';
-   % o.observer='chen';
+   o.observer='chen';
    o.observer='satrianna';
-   o.eyes='left'; % 'left', 'right', 'both'.
+   o.eyes='right'; % 'left', 'right', 'both'.
    % IMPORTANT: Use a tape measure or meter stick to measure the distance
    % from your eye to the screen. The number below must be accurate.
    o.distanceCm=70; % viewing distance
@@ -78,11 +75,12 @@ o.observer='ning';
    o.alphabet='DHKNORSVZ';
    o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
    o.durationSec = 0.2;
-   eccs=[-60 60 -30 30 -10 10 3 0];
+%    eccs=[-60 60 -30 30 -10 10 -3 3 0];
+      eccs=[ -3 3 0];
    if streq(o.eyes,'left')
       eccs=-eccs;
    end
-   for ecc = eccs;
+   for ecc = eccs
       o.nearPointXYInUnitSquare=[.5 .5];
       if ecc>10
          o.nearPointXYInUnitSquare=[.95 .5];
@@ -109,3 +107,84 @@ o.observer='ning';
    end
 end
 
+
+% NEW DATA COLLECTION, MAY 26, 2017
+o.useFractionOfScreen=0.3; % 0: normal, 0.5: small for debugging.
+o.observer='junk';
+o.eyes='right'; % 'left', 'right', 'both'.
+% IMPORTANT: Use a tape measure or meter stick to measure the distance
+% from your eye to the screen. The number below must be accurate.
+o.distanceCm=70; % viewing distance
+o.font='Sloan';
+o.alphabet='DHKNORSVZ';
+o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
+o.durationSec = 0.2;
+% o.CLUTMapLength=256;
+o.useNative10Bit=1;
+o.assessLoadGamma = 0; % diagnostic information
+%    eccs=[-60 60 -30 30 -10 10 -3 3 0];
+if 1
+    eccs=[ -3 3 0];
+    if streq(o.eyes,'left')
+        eccs=-eccs;
+    end
+    LetterSize=4;
+    for ecc=[-30 30]
+        o.nearPointXYInUnitSquare=[.5 .5];
+        if ecc>10
+            o.nearPointXYInUnitSquare=[.95 .5];
+        end
+        if ecc<-10
+            o.nearPointXYInUnitSquare=[.05 .5];
+        end
+        for noiseSD = [0.16 0]
+            o.targetXYDeg=[ecc 0];
+            o.targetHeightDeg=LetterSize;
+            o.noiseCheckDeg=o.targetHeightDeg/20;
+            o.noiseSD=noiseSD;
+            o=NoiseDiscrimination(o);
+        end
+    end
+    
+    
+    LetterSize=16;
+    for ecc=[-3 3]
+        o.nearPointXYInUnitSquare=[.5 .5];
+        if ecc>10
+            o.nearPointXYInUnitSquare=[.95 .5];
+        end
+        if ecc<-10
+            o.nearPointXYInUnitSquare=[.05 .5];
+        end
+        for noiseSD = [0 0.16]
+            o.targetXYDeg=[ecc 0];
+            o.targetHeightDeg=LetterSize;
+            o.noiseCheckDeg=o.targetHeightDeg/20;
+            o.noiseSD=noiseSD;
+            o=NoiseDiscrimination(o);
+        end
+    end
+end
+
+if 0
+    LetterSize=8;
+    for ecc=-60
+        o.nearPointXYInUnitSquare=[.5 .1];
+        o.eyes='right'; % 'left', 'right', 'both'.
+        for noiseSD = [0 0.16]
+            o.targetXYDeg=[0 ecc];
+            o.targetHeightDeg=LetterSize;
+            o.noiseCheckDeg=o.targetHeightDeg/20;
+            o.noiseSD=noiseSD;
+            o=NoiseDiscrimination(o);
+        end
+        o.eyes='both';
+        for noiseSD = [0 0.16]
+            o.targetXYDeg=[0 ecc];
+            o.targetHeightDeg=LetterSize;
+            o.noiseCheckDeg=o.targetHeightDeg/20;
+            o.noiseSD=noiseSD;
+            o=NoiseDiscrimination(o);
+        end
+    end
+end

@@ -38,31 +38,32 @@
 % different in most of the entries. The changes are tiny, often just 0.001.
 % Denis Pelli April 1, 2017
 %
-% Mario Kleiner replied, and I quote here his comments regarding 1. & 3. above:
-% -> Issue 3 (and partially 1) is very likely because the AMD graphics card
-% is not working in "discrete 256 slot gamma table mode" anymore, but with
-% a non-linear (or piece-wise linear) gamma table. The hardware does not
-% store 256 different color output values in a LUT, instead it implements a
-% non-linear or piece-wise linear mathematical function, which is cheaper
-% to implement in hardware for large gamma tables with more than 256 slots
-% or higher than 10-bit depths. The implemented function approximates
-% typical non-linear gamma functions for color/gamma correction well, but
-% of course can't fit any arbitrary discontinuous stuff you try to upload.
-% So the display driver takes your 256 slot input table, then uses some
-% mathematical model of the hardware implementation to do some function fit
-% with the function of the hardware, then stores the defining parameters of
-% the best fitting function in the hardware, so the hardware can implement
-% that "best fit" approximation of your input gamma table. Obviously that
-% only works well if your input LUT fulfills various unknown but hardware
-% specific constraints, and is generally close enough to a typical gamma
-% function. So i'm not surprised you get failure in case 1, or slight
-% deviations in case 3 (as the real but hidden gamma function is overfitted
-% to parts of your input data). I'm only surprised that in case of abject
-% fitting failure like in case 1 the driver wouldn't report this failure
-% back to us, but then that's just a typical macOS bug like so many others.
+% Mario Kleiner replied, and I quote here his comments regarding 1. & 3.
+% above: Issue 3 (and partially 1) is very likely because the AMD
+% graphics card is not working in "discrete 256 slot gamma table mode"
+% anymore, but with a non-linear (or piece-wise linear) gamma table. The
+% hardware does not store 256 different color output values in a LUT,
+% instead it implements a non-linear or piece-wise linear mathematical
+% function, which is cheaper to implement in hardware for large gamma
+% tables with more than 256 slots or higher than 10-bit depths. The
+% implemented function approximates typical non-linear gamma functions for
+% color/gamma correction well, but of course can't fit any arbitrary
+% discontinuous stuff you try to upload. So the display driver takes your
+% 256 slot input table, then uses some mathematical model of the hardware
+% implementation to do some function fit with the function of the hardware,
+% then stores the defining parameters of the best fitting function in the
+% hardware, so the hardware can implement that "best fit" approximation of
+% your input gamma table. Obviously that only works well if your input LUT
+% fulfills various unknown but hardware specific constraints, and is
+% generally close enough to a typical gamma function. So i'm not surprised
+% you get failure in case 1, or slight deviations in case 3 (as the real
+% but hidden gamma function is overfitted to parts of your input data). I'm
+% only surprised that in case of abject fitting failure like in case 1 the
+% driver wouldn't report this failure back to us, but then that's just a
+% typical macOS bug like so many others.
 
 clear all
-MAX_BLACK_ENTRIES=85; % 85 on MacBook Pro. Hopefully 256 on other computers.
+MAX_BLACK_ENTRIES=85; % 85 on MacBook Pro. 
 useFractionOfScreen=0;
 BackupCluts;
 Screen('Preference','SkipSyncTests',2);
