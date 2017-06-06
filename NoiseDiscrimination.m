@@ -1188,7 +1188,7 @@ try
       DrawFormattedText(window,string,textSize,1.5*textSize,black,textLineLength,[],[],1.3);
       Screen('Flip',window); % Display request.
       if o.speakInstructions
-         Speak('Observer %s, right? Hit RETURN to continue, or period "." to quit.');
+         Speak(sprintf('Observer %s, right? Hit RETURN to continue, or period to quit.',o.observer));
       end
       response=GetKeypress(o.isKbLegacy);
       if ismember(response,{'.','escape'})
@@ -1215,6 +1215,9 @@ try
          string='Please use both eyes.\nHit RETURN to continue, or period "." to quit.';
          DrawFormattedText(window,string,textSize,1.5*textSize,black,textLineLength,[],[],1.3);
          Screen('Flip',window); % Display request.
+         if o.speakInstructions
+            Speak(sprintf('Please use both eyes. Hit RETURN to continue, or period to quit.',o.observer));
+         end
          response=GetKeypress(o.isKbLegacy);
       end
       if ismember(o.eyes,{'left','right'})
@@ -1222,6 +1225,7 @@ try
          DrawFormattedText(window,string,textSize,1.5*textSize,black,textLineLength,[],[],1.3);
          Screen('Flip',window); % Display request.
          if o.speakInstructions
+            string=sprintf('Please use just your %s eye. Cover your other eye. Hit RETURN to continue, or period to quit.',o.eyes);
             Speak(string);
          end
          response=GetKeypress(o.isKbLegacy);
@@ -1233,6 +1237,7 @@ try
             return
          end
       end
+      string='';
       while streq(o.eyes,'one')
          string = [string 'Which eye will you use, left or right? Please type L or R:'];
          DrawFormattedText(window,string,textSize,1.5*textSize,black,textLineLength,[],[],1.3);
@@ -1317,6 +1322,8 @@ try
    Screen('DrawLine',window,black,x,y-a,x,y+a,a/20);
    Screen('Flip',window); % Display request.
    if o.speakInstructions
+      string=strrep(string,'.0','');
+      string=strrep(string,'\n','');
       Speak(string);
    end
    GetKeypress(o.isKbLegacy);
@@ -2696,8 +2703,6 @@ try
          if trial == 1
             WaitSecs(1); % First time is slow. Mario suggested a work around, explained at beginning of this file.
          end
-         %             Screen('FillRect',window,gray1);
-         %             Screen('FillRect',window,gray,o.stimulusRect);
          Screen('Flip',window,0,1); % Display instructions.
          
          % COLLECT RESPONSE
