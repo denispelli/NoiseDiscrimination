@@ -212,6 +212,187 @@ function o = NoiseDiscrimination(oIn)
 % 
 % -mario
 
+%% DITHERING
+% Dear Beau
+% 
+% Thanks. Here are my five technical questions (below) about how dithering
+% is done on my iMac 5k and MacBook Pro.
+% 
+% MEASUREMENTS. I've been measuring the luminance precision that I can
+% attain on various Apple machines. (You've got a copy of my MATLAB test
+% program, MeasureLuminancePrecision.m.) I'm very happy to be getting 11
+% bits (per color channel) on my iMac 5k and my MacBook Pro (Retina,
+% 15-inch, Mid 2015). Both have AMD 'Southern Islands' GPUs. AMD Radeon R9
+% M290X in MacBook Pro (Retina, 15-inch, Mid 2015) AMD Radeon R9 M370X in
+% iMac (Retina 5K, 27-inch, Late 2014) Apple claims "deep color" for the
+% iMac 5k, and not for the MacBook Pro. I get 11 bits on both.
+% https://developer.apple.com/library/content/releasenotes/MacOSX/WhatsNewInOSX/Articles/MacOSX10_11_2.html#//apple_ref/doc/uid/TP40016630-SW1
+% https://developer.apple.com/library/content/samplecode/DeepImageDisplayWithOpenGL/Introduction/Intro.html#//apple_ref/doc/uid/TP40016622
+% 
+% IMPRESSIONS. Mario Kleiner supports the Psychtoolbox software, which is
+% used by hundreds of scientists worldwide to do vision research on
+% Macintosh computers. http://psychtoolbox.com I've done various tests with
+% Mario, peeking at video GPU registers. He has the impression that
+% requesting 10-bit mode in fact turns on the dithering, giving us 1 extra
+% bit improvement over the iMac's 10-bit panel and 3 extra bits over the
+% MacBook Pro's 8-bit panel. We are guessing that dithering is done by the
+% GPU, because the very welcome dithering is unfortunately accompanied by
+% loss of ability to achieve reliable time synchronization of our software
+% with the display, presumably because dithering by the GPU introduces an
+% indirection in the video pipeline.
+% 
+% CONCERNS. I'm using the 11-bit precision to measure visual sensitivity
+% thresholds that my professional reputation depends on. Here's a link to
+% my latest poster:
+% http://psych.nyu.edu/pelli/pubs/pelli2017vss-peripheral-noise.pdf The
+% threshold contrasts in Fig. 2 with zero noise require luminance precision
+% better than 8 bits. 10 bits might be enough. 11 bits is dandy. However,
+% I'm worried that there may be systematic consequences of the dither that
+% affect the archival sensitivity functions that I'm measuring and
+% publishing (like those on the poster).
+% 
+% Might an Apple engineer answer five questions about dithering on the
+% MacBook Pro and iMac?
+% 
+% FIVE QUESTIONS: 1. When in 10-bit mode, do the Macs just add a 1- or
+% 3-bit static dither image to all video output before it goes through the
+% 8- or 10-bit panel? 2. Is there error diffusion? 3. Does the same pixel
+% image always produce the same luminance image? 4. Are successive images
+% dithered independently? 5. While using dither, any suggestions for how I
+% might synchronize my program to the frame store?
+% 
+% Best Denis
+% 
+% Mario's guesses about what's happening.
+% 
+% What you have under macOS 10.12 in high-precision mode is half-float
+% "framebuffers", which store pixels in 16 bit non-linear floating point
+% format, and that allows in practice to represent at most 11 bits per
+% channel linear precision for the displayable intensity range 0.0 - 1.0.
+% Psychtoolbox renders into this half-float framebuffer, which is not
+% actually the real framebuffer, but "faked" by the OS. Then at Flip time,
+% that buffer's content is converted into the actual framebuffer format by
+% the OS (probably the display server), applying Apple's proprietary
+% dithering during the process, and the dithered output goes to an 8-bit
+% framebuffer on the MacBook Pro, and a 10-bit framebuffer on the iMac.
+% Then (presumably) the MacBookPro drives an 8-bit panel from its 8-bit
+% framebuffer, and the iMac drives a native 10-bit panel from its 10-bit
+% framebuffer. This indirection through the half-float to native 8- or
+% 10-bit framebuffer seems to prevent precise control over when stimulus
+% onset happens and any precise timestamping, killing our timing, causing
+% sync test failures.
+% 
+% It seems that under macOS, these computers are neither using the true
+% depth of their framebuffers (8 and 10 bit) nor the hardware dithering.
+% Instead Apple uses a proprietary algorithm. So technically it is not the
+% dithering itself impairing performance so much that it kills timing.
+% Instead it is the indirection from the half-float framebuffer to the real
+% framebuffer that makes timing control impossible. It's the same
+% mechanism/indirection used when one displays non-fullscreen windows,
+% where precise timing is also impossible, because the Quartz desktop
+% compositor redirects all our output into intermediate buffers to perform
+% image compositing into the true framebuffer to add some bling to the
+% desktop GUI.
+% 
+% I assume the dithering is implemented by use of shaders on the GPU, maybe
+% OpenGL/Metal shading language based, maybe using the OpenCL GPU compute
+% language. This way they can implement their own proprietary dithering
+% method, but still get hardware acceleration of the dithering from the
+% GPU, so it only takes milliseconds instead of tens or hundreds of
+% milliseconds. That means it doesn't impair performance too much, it only
+% impairs timing of applications that need tight timing control and
+% timestamping.
+% 
+% Of course it still means they can't do really advanced algorithms, given
+% a high resolution display and the constraint of only having a few msecs
+% time. Probably only algorithms that operate in a small pixel
+% neighbourhood of each pixel as anything else would be rather compute
+% intense. Most likely not temporal dithering, as that would be more
+% difficult for a software implementation, and potentially suck way more of
+% the holy battery power on a laptop, but spatial dithering, but
+% potentially with a dither pattern that changes at each Screen('flip'),
+% ie. not re-randomized at video refresh rate, but still different for each
+% stimulus frame you present.
+% 
+% I assume the potential artifacts caused by this and its trade-offs will
+% be larger the more bits you have to fake. So on the iMac it is probably
+% not too bad, as you get 10 bits from the actual display hardware, so only
+% have to add 1 bit via dithering. On the MacBook Pro you have to fake 3
+% extra bits. In other words. i assume the dither algorithm is different
+% for the MacBook Pro and the iMac.
+
+%% BIT STEALING
+% On 06/04/2017 08:47 AM, Denis Pelli wrote: 
+% dear mario thanks. i asked about timing because i care about timing. if
+% he can help, great. if he can't help, it seems good to get at least one
+% of the apple engineers thinking about it. if they know people care about
+% this they might give more weight to it in the future. thanks for
+% reminding me about the bit stealing. i can try doing photometry on it. i
+% suppose that will give the expected answer. i'm less
+% 
+% MARIO ON BIT STEALING: I don't know how good it is, and it probably
+% depends a lot on the emission characteristics of the panels in use, given
+% that it was originally used on CRT monitors etc. I never read the
+% original article as it was behind a pay-wall, and this is a
+% implementation based on some website that introduced the same trick (see
+% the help text), not the scientific article. But somebody who read the
+% article told me it is essentially the same. At least measuring that one
+% panel on 1/128th of the range with your script gave expected results. A
+% full measurement would have required long enough access to a suitable
+% black cubicle instead of the regular lab space with no controlled
+% lighting at all.
+% 
+% DENIS: sure how to estimate visibility of the artifacts. i suppose if i
+% don't
+% 
+% MARIO: I didn't perceive variation on a 8 bpc panel with your script. You
+% probably could use the ColorCal x,y,z measurements to not only get
+% average luminance but average color/saturation and see if anything
+% changes systematically with your stimulus? Probably not, but who knows?
+% If the way the color vectors are "tilted" off the pure luminance r=g=b
+% axis would create some systematic "color contrast" edges in "color space"
+% maybe it could somehow subconsciously enhance contrast if you are really
+% unlucky?
+% 
+% DENIS: see any color variation i don't need to worry. do you think that
+% i'd have much better timing with bit stealing?
+% 
+% MARIO: On Linux it won't impair timing at all, you should always get
+% excellent timing.
+% 
+% On OSX you have at least the chance of better timing on AMD graphics, as
+% the processing is done within PTB, not some Apple intermediate layers. On
+% the MBP with standard 8 bpc framebuffer it would probably work as well as
+% anything can work timing-wise on osx. On the iMac i think a couple of
+% forum posts about sync failures and their specific symptoms indicated
+% that timing is always broken regardless if half-float framebuffers are
+% used or not. That's weird, because there isn't any reason for a
+% troublesome indirection if no custom dithering is used, but maybe that's
+% just some OS bug or lazyness - not switching to normal processing even if
+% special processing isn't needed.
+% 
+% Anyway you'll find out quickly if the sync failures go away at least most
+% of the time or not at all. And if you run with skipsynctest setting 1, so
+% PTB continues even in case of sync failures, it will print diagnostic
+% messages at each flip that will quickly tell.
+% 
+% Of course you could also dual-boot the iMac under Linux and then have
+% perfect timing and a 10 bpc panel like on the Linux HP laptop, plus the
+% bit-stealing style + 2.7 bits enhancements.
+% 
+% Or if you had a CRT around, go back to the roots and get a VideoSwitcher
+% for about $300 (help PsychVideoSwitcher), which is pretty much the video
+% attenuator as you co-invented it, just for use with regular color
+% monitors, with some improvements. PTB has drivers for it under the
+% PsychImaging tasks "EnableVideoSwitcherSimpleLuminanceOutput" and
+% "EnableVideoSwitcherCalibratedLuminanceOutput". Up to 16 bit luminance
+% precision iirc.
+% 
+% http://lobes.osu.edu/videoSwitcher/
+% 
+% -mario
+
+%% INPUT ARGUMENT
 if exist('oIn','var') && isfield(oIn,'quitNow') && oIn.quitNow
    o=oIn;
    return
