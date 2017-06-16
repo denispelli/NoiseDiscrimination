@@ -62,10 +62,4 @@ Screen('Flip',window);
 Speak('An unsigned 8-bit integer ramp 0 to 255. Click to continue.');
 GetClicks;
 
-% Trying to produce grayscale ramp, but I get a black screen.
-Screen('PutImage',window,0:255,screenRect); % a ramp
-Screen('Flip',window);
-Speak('A float ramp 0 to 255. Click to quit.');
-GetClicks;
-
 Screen('Close',window);
