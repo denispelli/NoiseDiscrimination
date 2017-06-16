@@ -228,7 +228,7 @@ function o = NoiseDiscrimination(oIn)
 % iMac 5k, and not for the MacBook Pro. I get 11 bits on both.
 % https://developer.apple.com/library/content/releasenotes/MacOSX/WhatsNewInOSX/Articles/MacOSX10_11_2.html#//apple_ref/doc/uid/TP40016630-SW1
 % https://developer.apple.com/library/content/samplecode/DeepImageDisplayWithOpenGL/Introduction/Intro.html#//apple_ref/doc/uid/TP40016622
-% 
+%
 % IMPRESSIONS. Mario Kleiner supports the Psychtoolbox software, which is
 % used by hundreds of scientists worldwide to do vision research on
 % Macintosh computers. http://psychtoolbox.com I've done various tests with
@@ -1000,7 +1000,7 @@ end
 Screen('Preference','SkipSyncTests',1);
 oldVisualDebugLevel = Screen('Preference','VisualDebugLevel',0);
 oldSupressAllWarnings = Screen('Preference','SuppressAllWarnings',1);
-if cal.ScreenConfigureDisplayBrightnessWorks
+if cal.ScreenConfigureDisplayBrightnessWorks && ismac
    % Psychtoolbox Bug. Screen ConfigureDisplay? claims that this will
    % silently do nothing if not supported. But when I used it on my video
    % projector, Screen gave a fatal error. That's ok, but how do I figure
@@ -1041,7 +1041,12 @@ try
       if o.enableCLUTMapping
          PsychImaging('AddTask','AllViews','EnableCLUTMapping',o.CLUTMapLength,1); % clutSize, high res
          cal.gamma=repmat((0:o.maxEntry)'/o.maxEntry,1,3); % Identity
-         Screen('LoadNormalizedGammaTable',0,cal.gamma,0); % Set hardware CLUT to identity.
+         % Set hardware CLUT to identity, without assuming we know the
+         % size. On Windows, the only allowed gamma table size is 256.
+         gamma=Screen('ReadNormalizedGammaTable',cal.screen);
+         maxEntry=length(gamma)-1;
+         gamma(:,1:3)=repmat((0:maxEntry)'/maxEntry,1,3);
+         Screen('LoadNormalizedGammaTable',cal.screen,gamma,0); 
       else
          warning('You need EnableCLUTMapping to control contrast.');
       end
@@ -1097,8 +1102,8 @@ try
       maxEntry=size(gammaRead,1)-1;
       gamma=repmat(((0:maxEntry)/maxEntry)',1,3);
       delta=gammaRead(:,2)-gamma(:,2);
-      ffprintf(ff,'Difference between identity and read-back of hardware CLUT (%dx%d): mean %.9f, sd %.9f\n',...
-         size(gammaRead),mean(delta),std(delta));
+      ffprintf(ff,'RMS difference between identity and read-back of hardware CLUT (%dx%d): %.9f\n',...
+         size(gammaRead),rms(delta));
       if o.flipClick; Speak(['after OpenWindow ' num2str(MFileLineNr)]); GetClicks; end
       if exist('cal')
          gray = mean([firstGrayClutEntry lastGrayClutEntry])/o.maxEntry; % CLUT color code for gray.
@@ -3043,6 +3048,7 @@ end
    oOld.secs=GetSecs; % Date for staleness.
 catch
    %% MATLAB catch
+   ListenChar;
    sca; % screen close all
    if exist('cal','var') && isfield(cal,'old') && isfield(cal.old,'gamma')
       Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
