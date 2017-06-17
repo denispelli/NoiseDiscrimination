@@ -39,7 +39,7 @@
 clear o
 o.CLUTMapLength=2048; % enough for 11-bit precision.
 % o.CLUTMapLength=256; % enough for 8-bit precision.
-upEntry=253;
+upEntry=2047;
 downEntry=1;
 o.screen = 0;
 try
