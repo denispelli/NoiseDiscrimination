@@ -8,8 +8,9 @@ function response = GetKeypress(enableKeys,deviceIndex,returnOneChar)
 % full descriptive output of KbName is returned, unmodified, e.g. 'a',
 % '1!', 'ESCAPE', or 'left_shift'.
 %
-% First version written by Hormet Yiltiz, October 2015, as "checkResponse".
-% Renamed "GetKeypress" by Denis Pelli, November 2015, and enhanced.
+% First version was written by Hormet Yiltiz, October 2015, as
+% "checkResponse". Renamed "GetKeypress" by Denis Pelli, November 2015, and
+% enhanced.
 
 printLog = 0;
 if nargin >= 1
