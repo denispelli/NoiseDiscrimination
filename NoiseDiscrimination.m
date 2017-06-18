@@ -451,7 +451,9 @@ if ismac && ~ScriptingOkShowPermission
    error(['Please give MATLAB permission to control the computer. ',...
       'You''ll need admin privileges to do this.']);
 end
-
+escapeChar=char(27);
+returnChar=char(13);
+spaceChar=' ';
 %% DEFAULT VALUE FOR EVERY "o" PARAMETER
 % They are overridden by what you provide in the argument struct oIn.
 if nargin < 1 || ~exist('oIn','var')
@@ -575,7 +577,6 @@ o.measureContrast=0;
 o.usePhotometer=1; % use photometer or 8-bit model
 o.assessLoadGamma = 0; % diagnostic information
 o.assessLowLuminance = 0;
-o.isKbLegacy = 0; % collect response via 1:ListenChar+GetChar; 0:KbCheck
 o.assessGray = 0; % For debugging. Diagnostic printout when we load gamma table.
 o.assessTargetLuminance=0;
 % o.observerQuadratic=-1.2; % estimated from old second harmonic data
@@ -1017,11 +1018,9 @@ end
 %% MATLAB try
 try
    %% OPEN WINDOW IF OBSERVER IS HUMAN
-   if ~o.isKbLegacy
-      % We can safely use this mode AND collect keyboard responses
-      % without worrying about writing to MATLAB console/editor.
-      ListenChar(2); % no echo
-   end
+   % We can safely use this mode AND collect keyboard responses
+   % without worrying about writing to MATLAB console/editor.
+   ListenChar(2); % no echo
    KbName('UnifyKeyNames');
    if ~ismember(o.observer,algorithmicObservers) || streq(o.task,'identify')
       % If o.observer is human, we need an open window for the whole
@@ -1194,8 +1193,8 @@ try
       if o.speakInstructions
          Speak(sprintf('Observer %s, right? Hit RETURN to continue, or ESCAPE to quit.',o.observer));
       end
-      response=GetKeypress(o.isKbLegacy);
-      if ismember(response,{'escape'})
+      response=GetKeypress;
+      if ismember(response,{escapeChar})
          if o.speakInstructions
             Speak('Quitting.');
          end
@@ -1224,8 +1223,8 @@ try
          if o.speakInstructions
             Speak('Please use both eyes. Hit RETURN to continue, or ESCAPE to quit.');
          end
-         response=GetKeypress(o.isKbLegacy);
-         if ismember(response,{'escape'})
+         response=GetKeypress;
+         if ismember(response,{escapeChar})
             if o.speakInstructions
                Speak('Quitting.');
             end
@@ -1243,8 +1242,8 @@ try
             string=sprintf('Please use just your %s eye. Cover your other eye. Hit RETURN to continue, or ESCAPE to quit.',o.eyes);
             Speak(string);
          end
-         response=GetKeypress(o.isKbLegacy);
-         if ismember(response,{'escape'})
+         response=GetKeypress;
+         if ismember(response,{escapeChar})
             if o.speakInstructions
                Speak('Quitting.');
             end
@@ -1262,8 +1261,8 @@ try
          if o.speakInstructions
             Speak(string);
          end
-         response=GetKeypress(o.isKbLegacy);
-         if ismember(response,{'escape'})
+         response=GetKeypress;
+         if ismember(response,{escapeChar})
             if o.speakInstructions
                Speak('Quitting.');
             end
@@ -1860,7 +1859,7 @@ try
          case '4afc',
             GetClicks;
          case 'identify',
-            GetKeypress(o.isKbLegacy);
+            GetKeypress;
       end
    end
    
@@ -2612,10 +2611,10 @@ try
                response = clicks;
             case 'identify'
                response = 0;
-               while ~ismember(response,1:o.alternatives)
+               while ~ismember(lower(response),lower(1:o.alternatives))
                   o.runAborted = 0;
-                  response = GetKeypress(o.isKbLegacy);
-                  if ismember(response,{'escape'})
+                  response = GetKeypress;
+                  if ismember(response,{escapeChar})
                      ffprintf(ff,'User typed ESCAPE. Run terminated.\n',response);
                      if o.speakInstructions
                         Speak('Run terminated.');
@@ -2734,8 +2733,8 @@ try
       if o.speakInstructions
          Speak('Hit ESCAPE again to quit the whole session. To proceed with the next run, hit SPACE or RETURN.');
       end
-      answer=GetKeypress(o.isKbLegacy,[returnKeyCode spaceKeyCode escapeKeyCode]);
-      o.quitNow=ismember(answer,{'escape'});
+      answer=GetKeypress([returnKeyCode spaceKeyCode escapeKeyCode]);
+      o.quitNow=ismember(answer,{escapeChar});
       if o.speakInstructions
          if o.quitNow
             Speak('escape.');
@@ -2873,9 +2872,9 @@ try
 %       end
 %       response = 0;
 %       while 1
-%          response = GetKeypress(o.isKbLegacy);
+%          response = GetKeypress;
 %          switch response
-%             case 'escape',
+%             case escapeChar,
 %                ffprintf(ff,'*** ESCAPE. Quitting now.\n');
 %                if o.speakInstructions
 %                   Speak('Quitting now.');
@@ -3355,7 +3354,7 @@ switch o.observer
                   end
             end
       end % switch o.task
-      [junk, response] = max(likely);
+      [~, response] = max(likely);
       if o.printLikelihood
          response
       end
@@ -3400,13 +3399,13 @@ switch o.observer
                likely(i) = sign(o.observerQuadratic)*(mean(ink(:))-mean(paper(:)));
             end
       end
-      [junk, response] = max(likely);
+      [~, response] = max(likely);
    case 'blackshot'
       clear likely
-      % Michelle Qiu digitized Fig. 6, observer CC, of Chubb et
-      % al. (2004). c is the contrast, defined as luminance
-      % minus mean luminance divided by mean luminance. b is the
-      % response of the blackshot mechanism.
+      % Michelle Qiu digitized Fig. 6, observer CC, of Chubb et al. (2004).
+      % c is the contrast, defined as luminance minus mean luminance
+      % divided by mean luminance. b is the response of the blackshot
+      % mechanism.
       c = [-1 -0.878 -0.748 -0.637 -0.508 -0.366 -0.248 -0.141 0.0992 0.214 0.324 0.412 0.523 0.634 0.767 0.878 1];
       b = [0.102 0.749 0.944 0.945 0.921 0.909 0.91 0.907 0.905 0.905 0.906 0.915 0.912 0.906 0.886 0.868 0.932];
       switch o.task
@@ -3441,7 +3440,7 @@ switch o.observer
                likely(i) =-mean(ink(:))+mean(paper(:));
             end
       end
-      [junk, response] = max(likely);
+      [~, response] = max(likely);
       if o.printLikelihood
          response
       end
@@ -3598,7 +3597,7 @@ if o.speakInstructions
    string=strrep(string,'\n','');
    Speak(string);
 end
-GetKeypress(o.isKbLegacy);
+GetKeypress;
 Screen('FillRect',window,white);
 Screen('Flip',window); % Blank, to acknowledge response.
 end
@@ -3660,13 +3659,9 @@ else
       if o.speakInstructions
          Speak(string);
       end
-      if o.isKbLegacy
-         answer = questdlg('','Fixation','Ok','Cancel','Ok');
-      else
-         ListenChar(0); % Get ready for the quesdlg.
-         answer = questdlg('','Fixation','Ok','Cancel','Ok');
-         ListenChar(2); % Go back to orig status; no echo.
-      end
+      ListenChar(0); % Get ready for the quesdlg.
+      answer = questdlg('','Fixation','Ok','Cancel','Ok');
+      ListenChar(2); % Go back to orig status; no echo.
       Screen('FillRect',window,white);
       Screen('Flip',window); % Blank, to acknowledge response.
       
