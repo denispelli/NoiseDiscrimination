@@ -1,5 +1,5 @@
 clear all
-o.useFractionOfScreen=.25; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
+% o.useFractionOfScreen=.25; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 % o.replicatePelli2006=1;
 o.pThreshold=0.64; % As in Pelli et al. (2006).
 % o.assessLinearity=0;
@@ -53,7 +53,7 @@ o.durationSec=inf;
 o.trialsPerRun=40; % Typically 40.
 % o.printLikelihood=0;
 % o.observer='ideal';
-o.speakInstructions=1;
+% o.speakInstructions=1;
 o=NoiseDiscrimination(o);
 % o.observer='blackshot';
 % o=NoiseDiscrimination(o);
