@@ -17,6 +17,10 @@ function o = NoiseDiscrimination(oIn)
 % NYU's free VPN software on your computer:
 % http://www.nyu.edu/its/nyunet/offcampus/vpn/#services
 %
+% ALTERNATE FOR ESCAPE KEY: The 2017 MacBook Pro with the task bar has no
+% ESCAPE key. To support computers without ESCAPE keys, NoiseDiscrimination
+% accepts the GRAVE ACCENT key as equivalent to the ESCAPE key.
+%
 % SNAPSHOT. It is useful to take snapshots of the stimulus produced by
 % NoiseDiscrimination. Such snapshots can be used in papers and talks to
 % show our stimuli. If you request a snapshot then NoiseDiscrimination
@@ -102,11 +106,11 @@ function o = NoiseDiscrimination(oIn)
 % 4. If using off-screen fixation, put it at same distance from eye, and compute its position relative to near point.
 
 %% CURRENT ISSUES
-% This happened once. I can't reproduce it.
+% This happened more than once, but very rarely. I can't reliably reproduce it.
 % Warning: 245 out-of-range pixels, with values [ -9], were bounded to the range 2 to 2046.
 % > In IndexOfLuminance (line 14)
 %   In NoiseDiscrimination (line 2027)
-
+%
 %% EXTRA DOCUMENTATION
 
 % On Feb 25, 2017 13:25, "Denis Pelli" <denis.pelli@nyu.edu> wrote:
@@ -452,6 +456,7 @@ if ismac && ~ScriptingOkShowPermission
       'You''ll need admin privileges to do this.']);
 end
 escapeChar=char(27);
+graveAccentChar='`';
 returnChar=char(13);
 spaceChar=' ';
 %% DEFAULT VALUE FOR EVERY "o" PARAMETER
@@ -694,7 +699,7 @@ end
 % end
 
 %% SET UP MISCELLANEOUS
-%onCleanupInstance=onCleanup(@()listenchar;sca); % clears screen when function terminated.
+%onCleanupInstance=onCleanup(@()listenchar;sca); % clears screen and restores keyboard when function terminated.
 plusMinusASCIIChar = char(177); % use this instead of literal plus minus sign to prevent platform-dependent encoding issues
 useImresize = exist('imresize','file'); % Requires the Image Processing Toolbox.
 if isnan(o.annularNoiseSD)
@@ -1191,16 +1196,17 @@ try
       DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
       Screen('Flip',window); % Display request.
       if o.speakInstructions
-         Speak(sprintf('Observer %s, right? Hit RETURN to continue, or ESCAPE to quit.',o.observer));
+         Speak(sprintf('Observer %s, right? If ok, hit RETURN to continue, otherwise hit ESCAPE to quit.',o.observer));
       end
       response=GetKeypress;
-      if ismember(response,{escapeChar})
+      if ismember(response,[escapeChar,graveAccentChar])
          if o.speakInstructions
             Speak('Quitting.');
          end
          o.abortRun=1;
          o.quitNow=1;
          sca;
+         ListenChar;
          return
       end
    end
@@ -1224,13 +1230,14 @@ try
             Speak('Please use both eyes. Hit RETURN to continue, or ESCAPE to quit.');
          end
          response=GetKeypress;
-         if ismember(response,{escapeChar})
+         if ismember(response,[escapeChar,graveAccentChar])
             if o.speakInstructions
                Speak('Quitting.');
             end
             o.abortRun=1;
             o.quitNow=1;
             sca;
+            ListenChar;
             return
          end
       end
@@ -1243,13 +1250,14 @@ try
             Speak(string);
          end
          response=GetKeypress;
-         if ismember(response,{escapeChar})
+         if ismember(response,[escapeChar,graveAccentChar])
             if o.speakInstructions
                Speak('Quitting.');
             end
             o.abortRun=1;
             o.quitNow=1;
             sca;
+            ListenChar;
             return
          end
       end
@@ -1262,13 +1270,14 @@ try
             Speak(string);
          end
          response=GetKeypress;
-         if ismember(response,{escapeChar})
+         if ismember(response,[escapeChar,graveAccentChar])
             if o.speakInstructions
                Speak('Quitting.');
             end
             o.abortRun=1;
             o.quitNow=1;
             sca;
+            ListenChar;
             return
          end
          response=upper(response);
@@ -1306,11 +1315,17 @@ try
    o.nearPointXYDeg=o.eccentricityXYDeg;
    
    o=SetUpNearPoint(window,o);
+   if o.quitNow
+      return
+   end
    
    o=SetUpFixation(window,o,ff);
+   if o.quitNow
+      return
+   end
    
    gap = o.gapFraction4afc*o.targetHeightPix;
- 
+   
    %% SET NOISE PARAMETERS
    o.targetWidthPix = o.targetHeightPix;
    o.targetHeightPix = o.noiseCheckPix*round(o.targetHeightPix/o.noiseCheckPix);
@@ -1859,7 +1874,19 @@ try
          case '4afc',
             GetClicks;
          case 'identify',
-            GetKeypress;
+            response=GetKeypress;
+            % This keypress serves mainly to start the first trial, but we
+            % quit if the user hits escape.
+            if ismember(response,[escapeChar,graveAccentChar])
+               if o.speakInstructions
+                  Speak('Quitting.');
+               end
+               o.abortRun=1;
+               o.quitNow=1;
+               sca;
+               ListenChar;
+               return
+            end
       end
    end
    
@@ -2614,7 +2641,7 @@ try
                while ~ismember(lower(response),lower(1:o.alternatives))
                   o.runAborted = 0;
                   response = GetKeypress;
-                  if ismember(response,{escapeChar})
+                  if ismember(response,[escapeChar,graveAccentChar])
                      ffprintf(ff,'User typed ESCAPE. Run terminated.\n',response);
                      if o.speakInstructions
                         Speak('Run terminated.');
@@ -2624,9 +2651,9 @@ try
                      break;
                   end
                   if length(response) > 1
-                     % GetKeypress converts a symbol like space to a string,
-                     % e.g. 'space', but our code assumed response is a scalar,
-                     % not a matrix. So we replace the string by 0.
+                     % GetKeypress might return a multi-character string,
+                     % but our code assumes the response is a scalar, not a
+                     % matrix. So we replace the string by 0.
                      response = 0;
                   end
                   [ok,response] = ismember(lower(response),lower(o.alphabet)); 
@@ -2718,6 +2745,7 @@ try
    if o.runAborted
       %% ASK WHETHER TO QUIT THE WHOLE SESSION
       escapeKeyCode=KbName('escape');
+      graveAccentKeyCode=KbName('`~')'
       spaceKeyCode=KbName('space');
       returnKeyCode=KbName('return');
       Screen('FillRect',window);
@@ -2733,8 +2761,8 @@ try
       if o.speakInstructions
          Speak('Hit ESCAPE again to quit the whole session. To proceed with the next run, hit SPACE or RETURN.');
       end
-      answer=GetKeypress([returnKeyCode spaceKeyCode escapeKeyCode]);
-      o.quitNow=ismember(answer,{escapeChar});
+      answer=GetKeypress([returnKeyCode spaceKeyCode escapeKeyCode graveAccentKeyCode]);
+      o.quitNow=ismember(answer,[escapeChar,graveAccentChar]);
       if o.speakInstructions
          if o.quitNow
             Speak('escape.');
@@ -2874,7 +2902,7 @@ try
 %       while 1
 %          response = GetKeypress;
 %          switch response
-%             case escapeChar,
+%             case {escapeChar,graveAccentChar},
 %                ffprintf(ff,'*** ESCAPE. Quitting now.\n');
 %                if o.speakInstructions
 %                   Speak('Quitting now.');
@@ -3121,6 +3149,7 @@ ffprintf(ff,'SUCCESS: o.saveSnapshot is done. Image saved, now returning.\n');
 fclose(dataFid);
 dataFid=-1;
 sca; % screen close all
+ListenChar;
 AutoBrightness(cal.screen,1); % Restore autobrightness.
 return;
 end % function SaveSnapshot
@@ -3550,6 +3579,10 @@ end
 function o=SetUpNearPoint(window,o)
 black = 0; % Retrieves the CLUT color code for black.
 white = 1; % Retrieves the CLUT color code for white.
+escapeChar=char(27);
+graveAccentChar='`';
+returnChar=char(13);
+spaceChar=' ';
 if ~all(isfinite(o.eccentricityXYDeg))
    error('o.eccentricityXYDeg (%.1f %.1f) must be finite. o.useFixation=%d is optional.',...
       o.eccentricityXYDeg,o.useFixation);
@@ -3597,7 +3630,17 @@ if o.speakInstructions
    string=strrep(string,'\n','');
    Speak(string);
 end
-GetKeypress;
+response=GetKeypress;
+if ismember(response,[escapeChar,graveAccentChar])
+   if o.speakInstructions
+      Speak('Quitting.');
+   end
+   o.abortRun=1;
+   o.quitNow=1;
+   sca;
+   ListenChar;
+   return
+end
 Screen('FillRect',window,white);
 Screen('Flip',window); % Blank, to acknowledge response.
 end
