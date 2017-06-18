@@ -32,7 +32,7 @@ function o = NoiseDiscrimination(oIn)
 % o.snapshotCaptionTextSizeDeg=0.5;
 %
 % Standard condition for counting V1 neurons: o.noiseCheckPix=13;
-% height=30*o.noiseCheckPix; o.distanceCm=45; SD=0.2, o.durationSec=0.2 s.
+% height=30*o.noiseCheckPix; o.viewingDistanceCm=45; SD=0.2, o.durationSec=0.2 s.
 %
 % BRIGHTNESS SEEKER. Observer 'brightnessSeeker' is a model of the human
 % observer with a saturation of brightness, based on an old research
@@ -92,18 +92,18 @@ function o = NoiseDiscrimination(oIn)
 % LuminanceOfIndex, MeasureLuminancePrecision.
 
 % VIEWING GEOMETRY
-% o.distanceCm % Distance from eye to near point.
+% o.viewingDistanceCm % Distance from eye to near point.
 % o.nearPointXYInUnitSquare=[0.8 0.5]; % Rough location of near point in o.stimlusRect re lower left corner.
 % o.nearPointXYPix % screen coordinate of point on screen closest to viewer's eye.
 % o.nearPointXYDeg % eccentricity of near point re fixation. Right & up are +.
-% 1. Set displayNearPointXYDeg to targetXYDeg, roughly.
+% 1. Set displayNearPointXYDeg to eccentricityXYDeg, roughly.
 % 2. Set displayNearPointXYPix according to o.nearPointXYInUnitSquare.
 % 3. Ask viewer to adjust display so desired near point is at desired viewing distance and orthogonal to line of sight from eye.
 % 4. If using off-screen fixation, put it at same distance from eye, and compute its position relative to near point.
 
 %% CURRENT ISSUES
 % This happened once. I can't reproduce it.
-% Warning: 245 out-of-range pixels, with values [ -9], were bounded to the range 2 to 2046. 
+% Warning: 245 out-of-range pixels, with values [ -9], were bounded to the range 2 to 2046.
 % > In IndexOfLuminance (line 14)
 %   In NoiseDiscrimination (line 2027)
 
@@ -166,14 +166,14 @@ function o = NoiseDiscrimination(oIn)
 % MAY 31, 2017 from Mario Kleiner
 % Providing a fix for CLUT bugs in May 2017 Psychtoolbox.
 % Hi Denis,
-% 
+%
 % all bugs should be fixed in my GitHub master branch.
-% 
+%
 % - 'PutImage' was utterly broken for normalized color range mode since
 % forever. If this ever worked for you with that task, it would be a
 % miracle. A fixed Screen() mex file will have to wait for the next
 % official beta release, probably a couple of days out.
-% 
+%
 % In general i don't recommend use of PutImage in new code. It is awful
 % code with no flexibility, miserable performance, and essentially no
 % testing ever. It only exists for backwards compatibility with ancient
@@ -185,39 +185,39 @@ function o = NoiseDiscrimination(oIn)
 % lost 6 hours to this.
 %
 % ...
-% 
+%
 % For luts > 256 slots you will need a floating point framebuffer that can
 % accurately represent more than 8 bit, that's why it got worse for your
 % 2048 slot lut. Enabling the 11 bpc framebuffer would also cause PTB to
 % use a 32 bit float ~ 23 bit linear precision intermediate virtual
 % framebuffer, so that's why that partially fixed the 2048 slot lut.
-% 
+%
 % If you don't use a float framebuffer the data path was like this:
-% 
+%
 % floating point color (~23 bit) rendering into -> 8 bpc virtual
 % framebuffer (rou! nding/quantizing from 23 bpc to 8 bpc = loss of
 % precision, potential ro! undoff errors)-> lut mapping (convert 8 bpc back
 % to 23 bpc, index into lut, output 23 bpc) -> System framebuffer of 8 bpc.
-% 
+%
 % With native 11 bpc mode you have:
-% 
+%
 % floating point color (~23 bit) rendering into -> 23 bpc virtual
 % framebuffer -> lut mapping (23 bpc input index into lut, output 23 bpc)
 % -> Downconversion to max. 11 bpc system framebuffer on Apple OSX. So no
 % loss of precision or rounding before the lut lookup.
-% 
+%
 % The CLUT bugs will be fixed with this new PsychImaging.m file:
-% 
+%
 % https://raw.githubusercontent.com/kleinerm/Psychtoolbox-3/master/Psychtoolbox/PsychGLImageProcessing/PsychImaging.m
-% 
+%
 % -mario
 
 %% DITHERING
 % Dear Beau
-% 
+%
 % Thanks. Here are my five technical questions (below) about how dithering
 % is done on my iMac 5k and MacBook Pro.
-% 
+%
 % MEASUREMENTS. I've been measuring the luminance precision that I can
 % attain on various Apple machines. (You've got a copy of my MATLAB test
 % program, MeasureLuminancePrecision.m.) I'm very happy to be getting 11
@@ -240,7 +240,7 @@ function o = NoiseDiscrimination(oIn)
 % loss of ability to achieve reliable time synchronization of our software
 % with the display, presumably because dithering by the GPU introduces an
 % indirection in the video pipeline.
-% 
+%
 % CONCERNS. I'm using the 11-bit precision to measure visual sensitivity
 % thresholds that my professional reputation depends on. Here's a link to
 % my latest poster:
@@ -250,21 +250,21 @@ function o = NoiseDiscrimination(oIn)
 % I'm worried that there may be systematic consequences of the dither that
 % affect the archival sensitivity functions that I'm measuring and
 % publishing (like those on the poster).
-% 
+%
 % Might an Apple engineer answer five questions about dithering on the
 % MacBook Pro and iMac?
-% 
+%
 % FIVE QUESTIONS: 1. When in 10-bit mode, do the Macs just add a 1- or
 % 3-bit static dither image to all video output before it goes through the
 % 8- or 10-bit panel? 2. Is there error diffusion? 3. Does the same pixel
 % image always produce the same luminance image? 4. Are successive images
 % dithered independently? 5. While using dither, any suggestions for how I
 % might synchronize my program to the frame store?
-% 
+%
 % Best Denis
-% 
+%
 % Mario's guesses about what's happening.
-% 
+%
 % What you have under macOS 10.12 in high-precision mode is half-float
 % "framebuffers", which store pixels in 16 bit non-linear floating point
 % format, and that allows in practice to represent at most 11 bits per
@@ -281,7 +281,7 @@ function o = NoiseDiscrimination(oIn)
 % 10-bit framebuffer seems to prevent precise control over when stimulus
 % onset happens and any precise timestamping, killing our timing, causing
 % sync test failures.
-% 
+%
 % It seems that under macOS, these computers are neither using the true
 % depth of their framebuffers (8 and 10 bit) nor the hardware dithering.
 % Instead Apple uses a proprietary algorithm. So technically it is not the
@@ -293,7 +293,7 @@ function o = NoiseDiscrimination(oIn)
 % compositor redirects all our output into intermediate buffers to perform
 % image compositing into the true framebuffer to add some bling to the
 % desktop GUI.
-% 
+%
 % I assume the dithering is implemented by use of shaders on the GPU, maybe
 % OpenGL/Metal shading language based, maybe using the OpenCL GPU compute
 % language. This way they can implement their own proprietary dithering
@@ -302,7 +302,7 @@ function o = NoiseDiscrimination(oIn)
 % milliseconds. That means it doesn't impair performance too much, it only
 % impairs timing of applications that need tight timing control and
 % timestamping.
-% 
+%
 % Of course it still means they can't do really advanced algorithms, given
 % a high resolution display and the constraint of only having a few msecs
 % time. Probably only algorithms that operate in a small pixel
@@ -313,7 +313,7 @@ function o = NoiseDiscrimination(oIn)
 % potentially with a dither pattern that changes at each Screen('flip'),
 % ie. not re-randomized at video refresh rate, but still different for each
 % stimulus frame you present.
-% 
+%
 % I assume the potential artifacts caused by this and its trade-offs will
 % be larger the more bits you have to fake. So on the iMac it is probably
 % not too bad, as you get 10 bits from the actual display hardware, so only
@@ -322,14 +322,14 @@ function o = NoiseDiscrimination(oIn)
 % for the MacBook Pro and the iMac.
 
 %% BIT STEALING
-% On 06/04/2017 08:47 AM, Denis Pelli wrote: 
+% On 06/04/2017 08:47 AM, Denis Pelli wrote:
 % dear mario thanks. i asked about timing because i care about timing. if
 % he can help, great. if he can't help, it seems good to get at least one
 % of the apple engineers thinking about it. if they know people care about
 % this they might give more weight to it in the future. thanks for
 % reminding me about the bit stealing. i can try doing photometry on it. i
 % suppose that will give the expected answer. i'm less
-% 
+%
 % MARIO ON BIT STEALING: I don't know how good it is, and it probably
 % depends a lot on the emission characteristics of the panels in use, given
 % that it was originally used on CRT monitors etc. I never read the
@@ -341,10 +341,10 @@ function o = NoiseDiscrimination(oIn)
 % full measurement would have required long enough access to a suitable
 % black cubicle instead of the regular lab space with no controlled
 % lighting at all.
-% 
+%
 % DENIS: sure how to estimate visibility of the artifacts. i suppose if i
 % don't
-% 
+%
 % MARIO: I didn't perceive variation on a 8 bpc panel with your script. You
 % probably could use the ColorCal x,y,z measurements to not only get
 % average luminance but average color/saturation and see if anything
@@ -353,13 +353,13 @@ function o = NoiseDiscrimination(oIn)
 % axis would create some systematic "color contrast" edges in "color space"
 % maybe it could somehow subconsciously enhance contrast if you are really
 % unlucky?
-% 
+%
 % DENIS: see any color variation i don't need to worry. do you think that
 % i'd have much better timing with bit stealing?
-% 
+%
 % MARIO: On Linux it won't impair timing at all, you should always get
 % excellent timing.
-% 
+%
 % On OSX you have at least the chance of better timing on AMD graphics, as
 % the processing is done within PTB, not some Apple intermediate layers. On
 % the MBP with standard 8 bpc framebuffer it would probably work as well as
@@ -370,16 +370,16 @@ function o = NoiseDiscrimination(oIn)
 % troublesome indirection if no custom dithering is used, but maybe that's
 % just some OS bug or lazyness - not switching to normal processing even if
 % special processing isn't needed.
-% 
+%
 % Anyway you'll find out quickly if the sync failures go away at least most
 % of the time or not at all. And if you run with skipsynctest setting 1, so
 % PTB continues even in case of sync failures, it will print diagnostic
 % messages at each flip that will quickly tell.
-% 
+%
 % Of course you could also dual-boot the iMac under Linux and then have
 % perfect timing and a 10 bpc panel like on the Linux HP laptop, plus the
 % bit-stealing style + 2.7 bits enhancements.
-% 
+%
 % Or if you had a CRT around, go back to the roots and get a VideoSwitcher
 % for about $300 (help PsychVideoSwitcher), which is pretty much the video
 % attenuator as you co-invented it, just for use with regular color
@@ -387,9 +387,9 @@ function o = NoiseDiscrimination(oIn)
 % PsychImaging tasks "EnableVideoSwitcherSimpleLuminanceOutput" and
 % "EnableVideoSwitcherCalibratedLuminanceOutput". Up to 16 bit luminance
 % precision iirc.
-% 
+%
 % http://lobes.osu.edu/videoSwitcher/
-% 
+%
 % -mario
 
 %% INPUT ARGUMENT
@@ -430,8 +430,8 @@ end
 % variable: o.centralNoiseEnvelopeE1DegDeg
 
 %% GLOBALS, FILES
-global window fixationLines fixationCrossWeightPix labelBounds location ...
-   screenRect tTest idealT64 leftEdgeOfResponse textSize checks img cal ...
+global window fixationLines fixationCrossWeightPix labelBounds ...
+   screenRect tTest idealT64 leftEdgeOfResponse checks img cal ...
    ff whichSignal dataFid trial
 % This list of global variables is shared only with the several newly
 % created subroutines at the end of this file. The list is woefully
@@ -465,7 +465,7 @@ o.ditherCLUT=61696; % Use this only on Denis's PowerBook Pro and iMac 5k.
 o.enableCLUTMapping = 1; % Required. Using software CLUT.
 o.testBitDepth = 0;
 o.useFractionOfScreen = 0; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
-o.distanceCm = 50; % viewing distance
+o.viewingDistanceCm = 50; % viewing distance
 o.flipScreenHorizontally = 0; % Use this when viewing the display in a mirror.
 o.observer = 'junk'; % Name of person or existing algorithm.
 % o.observer='denis'; o.observer='michelle'; o.observer='martin';
@@ -513,8 +513,8 @@ o.tGuessSd = nan; % Specify a finite value for Quest, or nan for default.
 o.pThreshold = 0.75;
 o.beta = nan; % Typically 1.7, 3.5, or Nan. Nan asks NoiseDiscrimination to set this at runtime.
 o.measureBeta = 0;
-o.targetXYDeg = [0 0]; % eccentricity of target center re fixation, + for right & up.
-o.nearPointXYInUnitSquare=[0.5 0.5];
+o.eccentricityXYDeg = [0 0]; % eccentricity of target center re fixation, + for right & up.
+o.nearPointXYInUnitSquare=[0.5 0.5]; % location of target center on screen. [0 0]  lower right, [1 1] upper right.
 o.targetHeightDeg = 2; % Target size, range 0 to inf. If you ask for too
 % much, it gives you the max possible.
 % o.targetHeightDeg=30*o.noiseCheckDeg; % standard for counting neurons
@@ -575,7 +575,6 @@ o.measureContrast=0;
 o.usePhotometer=1; % use photometer or 8-bit model
 o.assessLoadGamma = 0; % diagnostic information
 o.assessLowLuminance = 0;
-o.flipClick = 0; % For debugging, speak and wait for click before and after each flip.
 o.isKbLegacy = 0; % collect response via 1:ListenChar+GetChar; 0:KbCheck
 o.assessGray = 0; % For debugging. Diagnostic printout when we load gamma table.
 o.assessTargetLuminance=0;
@@ -690,7 +689,7 @@ end
 %     o.pixPerCm = RectWidth(screenRect)/(0.1*screenWidthMm);
 %     o.pixPerDeg = 2/0.0633; % As in Pelli et al. (2006).
 %     degPerCm = o.pixPerCm/o.pixPerDeg;
-%     o.distanceCm = 57/degPerCm;
+%     o.viewingDistanceCm = 57/degPerCm;
 % end
 
 %% SET UP MISCELLANEOUS
@@ -798,13 +797,13 @@ end
 %     ffprintf(ff,'You can use Switch Res X (http://www.madrau.com/) to select a pure resolution, not HiDPI.\n');
 % end
 o.pixPerCm = RectWidth(screenRect)/(0.1*screenWidthMm);
-degPerCm = 57/o.distanceCm;
+degPerCm = 57/o.viewingDistanceCm;
 o.pixPerDeg = o.pixPerCm/degPerCm;
-textSize = round(o.textSizeDeg*o.pixPerDeg);
-o.textSizeDeg = textSize/o.pixPerDeg;
-textLineLength=floor(1.9*RectWidth(screenRect)/textSize);
+o.textSize = round(o.textSizeDeg*o.pixPerDeg);
+o.textSizeDeg = o.textSize/o.pixPerDeg;
+o.textLineLength=floor(1.9*RectWidth(screenRect)/o.textSize);
 o.lineSpacing = 1.5;
-o.stimulusRect = InsetRect(screenRect,0,o.lineSpacing*1.2*textSize);
+o.stimulusRect = InsetRect(screenRect,0,o.lineSpacing*1.2*o.textSize);
 o.noiseCheckPix = round(o.noiseCheckDeg*o.pixPerDeg);
 switch o.task
    case 'identify',
@@ -939,7 +938,7 @@ switch o.observer
       if ~isfield(o,'runsDesired') || ~isfinite(o.runsDesired)
          o.runsDesired = 10;
       end
-      %         degPerCm=57/o.distanceCm;
+      %         degPerCm=57/o.viewingDistanceCm;
       %         o.pixPerCm=45; % for MacBook at native resolution.
       %         o.pixPerDeg=o.pixPerCm/degPerCm;
    otherwise
@@ -962,7 +961,9 @@ end
 %% NUMBER OF POSSIBLE SIGNALS
 clear signal
 if o.alternatives > length(o.alphabet)
-   Speak('Too many o.alternatives');
+   if o.speakInstructions
+      Speak('Too many o.alternatives');
+   end
    error('Too many o.alternatives');
 end
 for i = 1:o.alternatives
@@ -1006,6 +1007,10 @@ if cal.ScreenConfigureDisplayBrightnessWorks && ismac
    % projector, Screen gave a fatal error. That's ok, but how do I figure
    % out when it's safe to use?
    Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
+   cal.brightnessReading = Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
+   if abs(cal.brightnessSetting-cal.brightnessReading)>0.01
+      error('Tried to set brightness to %.2f, but read back as %.2f',cal.brightnessSetting,cal.brightnessReading);
+   end
 end
 
 
@@ -1026,7 +1031,6 @@ try
       if o.useFractionOfScreen
          ffprintf(ff,'Using tiny window for debugging.\n');
       end
-      if o.flipClick; Speak(['before OpenWindow ' num2str(MFileLineNr)]); GetClicks; end
       PsychImaging('PrepareConfiguration');
       if o.flipScreenHorizontally
          PsychImaging('AddTask','AllViews','FlipHorizontal');
@@ -1046,7 +1050,7 @@ try
          gamma=Screen('ReadNormalizedGammaTable',cal.screen);
          maxEntry=length(gamma)-1;
          gamma(:,1:3)=repmat((0:maxEntry)'/maxEntry,1,3);
-         Screen('LoadNormalizedGammaTable',cal.screen,gamma,0); 
+         Screen('LoadNormalizedGammaTable',cal.screen,gamma,0);
       else
          warning('You need EnableCLUTMapping to control contrast.');
       end
@@ -1104,7 +1108,6 @@ try
       delta=gammaRead(:,2)-gamma(:,2);
       ffprintf(ff,'RMS difference between identity and read-back of hardware CLUT (%dx%d): %.9f\n',...
          size(gammaRead),rms(delta));
-      if o.flipClick; Speak(['after OpenWindow ' num2str(MFileLineNr)]); GetClicks; end
       if exist('cal')
          gray = mean([firstGrayClutEntry lastGrayClutEntry])/o.maxEntry; % CLUT color code for gray.
          assert(gray*o.maxEntry == round(gray*o.maxEntry)); % Sum of first and last is even, so gray is integer.
@@ -1140,9 +1143,9 @@ try
          cal = LinearizeClut(cal);
          ffprintf(ff,'Size of cal.gamma %d %d\n',size(cal.gamma));
          
-%          ffprintf(ff,'Non-stimulus background is %.1f cd/m^2 at CLUT entry %d (and %d).\n',LMean,gray1*o.maxEntry,gray*o.maxEntry);
-%          ffprintf(ff,'%.1f cd/m^2 at %d\n',LuminanceOfIndex(cal,gray*o.maxEntry),gray1*o.maxEntry);
-%          ffprintf(ff,'%.3f dac at %d; %.3f dac at %d\n',cal.gamma(gray1*o.maxEntry+1,2),gray1*o.maxEntry,cal.gamma(gray*o.maxEntry+1,2),gray*o.maxEntry);
+         %          ffprintf(ff,'Non-stimulus background is %.1f cd/m^2 at CLUT entry %d (and %d).\n',LMean,gray1*o.maxEntry,gray*o.maxEntry);
+         %          ffprintf(ff,'%.1f cd/m^2 at %d\n',LuminanceOfIndex(cal,gray*o.maxEntry),gray1*o.maxEntry);
+         %          ffprintf(ff,'%.3f dac at %d; %.3f dac at %d\n',cal.gamma(gray1*o.maxEntry+1,2),gray1*o.maxEntry,cal.gamma(gray*o.maxEntry+1,2),gray*o.maxEntry);
          
          o.contrast = nan;
          Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
@@ -1152,12 +1155,10 @@ try
          end
          Screen('FillRect',window,gray1);
          Screen('FillRect',window,gray,o.stimulusRect);
-       else
+      else
          Screen('FillRect',window);
       end % if exist('cal')
-      if o.flipClick; Speak(['before Flip ' num2str(MFileLineNr)]); GetClicks; end
       Screen('Flip',window); % Load gamma table
-      if o.flipClick; Speak(['after Flip ' num2str(MFileLineNr)]); GetClicks; end
       if ~isfinite(window) || window == 0
          fprintf('error\n');
          error('Screen OpenWindow failed. Please try again.');
@@ -1167,9 +1168,7 @@ try
       gray = mean([firstGrayClutEntry lastGrayClutEntry])/o.maxEntry; % Will be a CLUT color code for gray.
       Screen('FillRect',window,gray1);
       Screen('FillRect',window,gray,o.stimulusRect);
-      if o.flipClick; Speak(['before Flip ' num2str(MFileLineNr)]); GetClicks; end
       Screen('Flip',window); % Screen is now all gray, at LMean.
-      if o.flipClick; Speak(['after Flip ' num2str(MFileLineNr)]); GetClicks; end
    else
       window = -1;
    end
@@ -1180,24 +1179,26 @@ try
       screenWidthPix = 1280;
    end
    o.pixPerCm = screenWidthPix/cal.screenWidthCm;
-   degPerCm = 57/o.distanceCm;
+   degPerCm = 57/o.viewingDistanceCm;
    o.pixPerDeg = o.pixPerCm/degPerCm;
    
    %% OBSERVER
    black=0;
    if ~exist('oOld','var') || ~isfield(oOld,'observer') || GetSecs-oOld.secs>5*60 || ~streq(oOld.observer,o.observer)
-      Screen('TextSize',window,textSize);
+      Screen('TextSize',window,o.textSize);
       Screen('TextFont',window,'Verdana');
       Screen('FillRect',window);
-      string=sprintf('Experimenter %s and observer %s. Right?\nHit RETURN to continue, or period "." to quit.',o.experimenter,o.observer);
-      DrawFormattedText(window,string,textSize,1.5*textSize,black,textLineLength,[],[],1.3);
+      string=sprintf('Experimenter %s and observer %s. Right?\nHit RETURN to continue, or ESCAPE to quit.',o.experimenter,o.observer);
+      DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
       Screen('Flip',window); % Display request.
       if o.speakInstructions
-         Speak(sprintf('Observer %s, right? Hit RETURN to continue, or period to quit.',o.observer));
+         Speak(sprintf('Observer %s, right? Hit RETURN to continue, or ESCAPE to quit.',o.observer));
       end
       response=GetKeypress(o.isKbLegacy);
-      if ismember(response,{'.','escape'})
-         Speak('Quitting.');
+      if ismember(response,{'escape'})
+         if o.speakInstructions
+            Speak('Quitting.');
+         end
          o.abortRun=1;
          o.quitNow=1;
          sca;
@@ -1212,30 +1213,41 @@ try
       error('o.eyes=''%s'' is not allowed. It must be ''left'',''right'',''one'', or ''both''.',o.eyes);
    end
    if ~exist('oOld','var') || ~isfield(oOld,'eyes') || GetSecs-oOld.secs>5*60 || ~streq(oOld.eyes,o.eyes)
-      Screen('TextSize',window,textSize);
+      Screen('TextSize',window,o.textSize);
       Screen('TextFont',window,'Verdana');
       Screen('FillRect',window,white);
       string='';
       if streq(o.eyes,'both')
-         string='Please use both eyes.\nHit RETURN to continue, or period "." to quit.';
-         DrawFormattedText(window,string,textSize,1.5*textSize,black,textLineLength,[],[],1.3);
+         string='Please use both eyes.\nHit RETURN to continue, or ESCAPE to quit.';
+         DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
          Screen('Flip',window); % Display request.
          if o.speakInstructions
-            Speak(sprintf('Please use both eyes. Hit RETURN to continue, or period to quit.',o.observer));
+            Speak('Please use both eyes. Hit RETURN to continue, or ESCAPE to quit.');
          end
          response=GetKeypress(o.isKbLegacy);
+         if ismember(response,{'escape'})
+            if o.speakInstructions
+               Speak('Quitting.');
+            end
+            o.abortRun=1;
+            o.quitNow=1;
+            sca;
+            return
+         end
       end
       if ismember(o.eyes,{'left','right'})
-         string=sprintf('Please use just your %s eye. Cover your other eye.\nHit RETURN to continue, or period "." to quit.',o.eyes);
-         DrawFormattedText(window,string,textSize,1.5*textSize,black,textLineLength,[],[],1.3);
+         string=sprintf('Please use just your %s eye. Cover your other eye.\nHit RETURN to continue, or ESCAPE to quit.',o.eyes);
+         DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
          Screen('Flip',window); % Display request.
          if o.speakInstructions
-            string=sprintf('Please use just your %s eye. Cover your other eye. Hit RETURN to continue, or period to quit.',o.eyes);
+            string=sprintf('Please use just your %s eye. Cover your other eye. Hit RETURN to continue, or ESCAPE to quit.',o.eyes);
             Speak(string);
          end
          response=GetKeypress(o.isKbLegacy);
-         if ismember(response,{'.','escape'})
-            Speak('Quitting.');
+         if ismember(response,{'escape'})
+            if o.speakInstructions
+               Speak('Quitting.');
+            end
             o.abortRun=1;
             o.quitNow=1;
             sca;
@@ -1245,12 +1257,21 @@ try
       string='';
       while streq(o.eyes,'one')
          string = [string 'Which eye will you use, left or right? Please type L or R:'];
-         DrawFormattedText(window,string,textSize,1.5*textSize,black,textLineLength,[],[],1.3);
+         DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
          Screen('Flip',window); % Display request.
          if o.speakInstructions
             Speak(string);
          end
          response=GetKeypress(o.isKbLegacy);
+         if ismember(response,{'escape'})
+            if o.speakInstructions
+               Speak('Quitting.');
+            end
+            o.abortRun=1;
+            o.quitNow=1;
+            sca;
+            return
+         end
          response=upper(response);
          switch(response)
             case 'L',
@@ -1273,160 +1294,29 @@ try
    %% PLACE FIXATION AND NEAR-POINT OF DISPLAY
    % DISPLAY NEAR POINT
    % VIEWING GEOMETRY
-   % o.nearPointXYInUnitSquare % roughly where in o.stimulusRect re lower-left corner.
-   % o.nearPointXYPix % Screen x,y point closest to viewer's eye.
-   % o.distanceCm % Distance from eye to near point.
+   % o.nearPointXYInUnitSquare % rough location in o.stimulusRect re lower-left corner.
+   % o.nearPointXYPix % near point screen coordinate.
+   % o.viewingDistanceCm % Distance from eye to near point.
    % o.nearPointXYDeg % (x,y) eccentricity of near point.
    % 1. assign target ecc. to displayNearPoint
    % 2. pick a good (x,y) on the screen for the displayNearPoint.
    % 3. ask viewer to adjust display to adjust display distance so (x,y) is at desired viewing distance and orthogonal to line of sight from eye to (x,y).
    % 4. If using off-screen fixation, put it at same distance from eye, and compute its position, left or right of (x,y) to put (x,y) at desired ecc.
    
-   %% SET UP NEAR POINT at correct slant and viewing distance.
-   if ~all(isfinite(o.targetXYDeg))
-      error('o.targetXYDeg (%.1f %.1f) must be finite. o.useFixation=%d is optional.',...
-         o.targetXYDeg,o.useFixation);
-   end
-   o.nearPointXYDeg=o.targetXYDeg;
-   if ~IsXYInRect(o.nearPointXYInUnitSquare,[0 0 1 1])
-      error('o.nearPointXYInUnitSquare (%.2f %.2f) must be in unit square [0 0 1 1].',o.nearPointXYInUnitSquare);
-   end
-   xy=o.nearPointXYInUnitSquare;
-   xy(2)=1-xy(2); % Move origin from lower left to upper left.
-   o.nearPointXYPix=xy.*[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)];
-   o.nearPointXYPix=o.nearPointXYPix+o.stimulusRect(1:2);
-   % o.nearPointXYPix is screen coordinate.
-   % Require margin between target and edge of stimulusRect.
-   r=InsetRect(o.stimulusRect,(0.5+o.targetMargin)*o.targetHeightDeg*o.pixPerDeg,0.6*o.targetHeightDeg*o.pixPerDeg);
-   if ~all(r(1:2)<=r(3:4))
-      error('%.1f o.targetHeightDeg too big to fit (with %.2f o.targetMargin) in %.1f x %.1f deg screen. Reduce viewing distance or target size.',...
-         o.targetHeightDeg,o.targetMargin,[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)]/o.pixPerDeg);
-   end
-   if ~IsXYInRect(o.nearPointXYPix,r)
-      % Adjust position of near point so target fits on screen.
-      o.nearPointXYPix=LimitXYToRect(o.nearPointXYPix,r);
-      % Update o.nearPointXYInUnitSquare.
-      xy=o.nearPointXYPix;
-      xy=xy-o.stimulusRect(1:2);
-      xy=xy./[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)];
-      xy(2)=1-xy(2);
-      ffprintf(ff,'NOTE: Adjusting o.nearPointXYInUnitSquare from [%.2f %.2f] to [%.2f %.2f] to fit %.1f deg target (with %.2f o.targetMargin) on screen.',...
-         o.nearPointXYInUnitSquare,xy,o.targetHeightDeg,o.targetMargin);
-      o.nearPointXYInUnitSquare=xy;
-   end
-   string = sprintf('Please adjust the viewing distance so the cross is %.1f cm from the observer''s eye. ',o.distanceCm);
-   string = [string 'Tilt and swivel the display so the cross is orthogonal to the line of sight. Then hit RETURN to continue.\n'];
-   Screen('TextSize',window,textSize);
-   Screen('TextFont',window,'Verdana');
-   Screen('FillRect',window,white);
-   DrawFormattedText(window,string,textSize,1.5*textSize,black,textLineLength,[],[],1.3);
-   x=o.nearPointXYPix(1);
-   y=o.nearPointXYPix(2);
-   a=0.1*RectHeight(o.stimulusRect);
-   Screen('DrawLine',window,black,x-a,y,x+a,y,a/20);
-   Screen('DrawLine',window,black,x,y-a,x,y+a,a/20);
-   Screen('Flip',window); % Display request.
-   if o.speakInstructions
-      string=strrep(string,'.0','');
-      string=strrep(string,'\n','');
-      Speak(string);
-   end
-   GetKeypress(o.isKbLegacy);
-   Screen('FillRect',window,white);
-   Screen('Flip',window); % Blank, to acknowledge response.
-
-   %% SET UP FIXATION
-   o.fixationXYPix=XYPixOfXYDeg(o,[0 0]);
-   if ~o.useFixation
-      o.fixationIsOffscreen = 0;
-   else
-      if ~IsXYInRect(o.fixationXYPix,o.stimulusRect)
-         o.fixationIsOffscreen = 1;
-         % o.fixationXYPix is in plane of display. Off-screen fixation is
-         % not! It is the same distance from the eye as the near point.
-         % fixationOffsetXYCm is vector from near point to fixation.
-         rDeg=sqrt(sum(o.nearPointXYDeg.^2));
-         ori=atan2d(-o.nearPointXYDeg(2),-o.nearPointXYDeg(1));
-         rCm=2*sind(0.5*rDeg)*o.distanceCm;
-         fixationOffsetXYCm=[cosd(ori) sind(ori)]*rCm;
-         if 1
-            % check
-            oriCheck=atan2d(fixationOffsetXYCm(2),fixationOffsetXYCm(1));
-            rCmCheck=sqrt(sum(fixationOffsetXYCm.^2));
-            rDegCheck=2*asind(0.5*rCm/o.distanceCm);
-            xyDegCheck=[cosd(ori) sind(ori)]*rDeg;
-            fprintf('CHECK OFFSCREEN GEOMETRY: ori %.1f %.1f; rCm %.1f %.1f; rDeg %.1f %.1f; xyDeg [%.1f %.1f] [%.1f %.1f]\n',...
-               ori,oriCheck,rCm,rCmCheck,rDeg,rDegCheck,-o.nearPointXYDeg,xyDegCheck);
-         end
-         fixationOffsetXYCm(2)=-fixationOffsetXYCm(2); % Make y increase upward.
-         string='';
-         if fixationOffsetXYCm(1)~=0
-            if fixationOffsetXYCm(1) < 0
-               string = sprintf('%sPlease set up a fixation mark %.1f cm to the left of the cross. ',string,-fixationOffsetXYCm(1));
-            else
-               string = sprintf('%sPlease set up a fixation mark %.1f cm to the right of the cross. ',string,fixationOffsetXYCm(1));
-            end
-         end
-         if fixationOffsetXYCm(2)~=0
-            if fixationOffsetXYCm(2) < 0
-               string = sprintf('%sPlease set fixation %.1f cm higher than the cross. ',string,-fixationOffsetXYCm(2));
-            else
-               string = sprintf('%sPlease set fixation %.1f cm lower than the cross. ',string,fixationOffsetXYCm(2));
-            end
-         end
-         string = sprintf('%sAdjust the viewing distances so both your fixation mark and the cross below are %.1f cm from the observer''s eye. ',...
-            string,o.distanceCm);
-         string = [string 'Tilt and swivel the display so that the cross is orthogonal to the observer''s line of sight. '...
-            'Then hit RETURN to proceed, or ESCAPE to quit. '];
-         Screen('TextSize',window,textSize);
-         Screen('TextFont',window,'Verdana');
-         Screen('FillRect',window,white);
-         DrawFormattedText(window,string,textSize,1.5*textSize,black,textLineLength,[],[],1.3);
-         x=o.nearPointXYPix(1);
-         y=o.nearPointXYPix(2);
-         a=0.1*RectHeight(o.stimulusRect);
-         Screen('DrawLine',window,black,x-a,y,x+a,y,a/20);
-         Screen('DrawLine',window,black,x,y-a,x,y+a,a/20);
-         Screen('Flip',window); % Display question.
-         if o.speakInstructions
-            Speak(string);
-         end
-         if o.isKbLegacy
-            answer = questdlg('','Fixation','Ok','Cancel','Ok');
-         else
-            ListenChar(0); % get ready for the quesdlg
-            answer = questdlg('','Fixation','Ok','Cancel','Ok');
-            ListenChar(2); % go back to orig status; no echo
-         end
-         Screen('FillRect',window,white);
-         Screen('Flip',window); % Blank, to acknowledge response.
-         
-         switch answer
-            case 'Ok',
-               o.fixationIsOffscreen = 1;
-               ffprintf(ff,'Offscreen fixation mark (%.1f,%.1f) cm from near point of display.\n',fixationOffsetXYCm);
-            otherwise,
-               o.fixationIsOffscreen = 0;
-               error('User refused off-screen fixation. Please reduce viewing distance (%.1f cm) or o.targetXYDeg (%.1f %.1f).',...
-                  o.distanceCm,o.targetXYDeg);
-         end
-      else
-         o.fixationIsOffscreen = 0;
-      end
-   end
-   o.targetXYPix=XYPixOfXYDeg(o,o.targetXYDeg);
+   % PLACE TARGET AT NEAR POINT
+   o.nearPointXYDeg=o.eccentricityXYDeg;
    
-   if o.fixationCrossBlankedNearTarget
-      ffprintf(ff,'Fixation cross is blanked near target. No delay in showing fixation after target.\n');
-   else
-      ffprintf(ff,'Fixation cross is blanked during and until %.2f s after target. No selective blanking near target. \n',o.fixationCrossBlankedUntilSecAfterTarget);
-   end
+   o=SetUpNearPoint(window,o);
+   
+   o=SetUpFixation(window,o,ff);
+   
    gap = o.gapFraction4afc*o.targetHeightPix;
+ 
+   %% SET NOISE PARAMETERS
    o.targetWidthPix = o.targetHeightPix;
    o.targetHeightPix = o.noiseCheckPix*round(o.targetHeightPix/o.noiseCheckPix);
    o.targetWidthPix = o.noiseCheckPix*round(o.targetWidthPix/o.noiseCheckPix);
    
-   %% SET NOISE PARAMETERS
    MAX_FRAMES=100; % Better to limit than crash the GPU.
    if window ~= -1
       frameRate = 1/Screen('GetFlipInterval',window);
@@ -1464,7 +1354,7 @@ try
       ffprintf(ff,'Constrained by MAX_FRAMES %d, reducing duration to %.3f s\n',MAX_FRAMES,o.durationSec);
    end
    
-   ffprintf(ff,'o.pixPerDeg %.1f, o.distanceCm %.1f\n',o.pixPerDeg,o.distanceCm);
+   ffprintf(ff,'o.pixPerDeg %.1f, o.viewingDistanceCm %.1f\n',o.pixPerDeg,o.viewingDistanceCm);
    if streq(o.task,'identify')
       ffprintf(ff,'Minimum letter resolution is %.0f checks.\n',o.minimumTargetHeightChecks);
    end
@@ -1642,7 +1532,7 @@ try
    xy=(o.targetXYPix-o.stimulusRect(1:2))./[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)];
    xy(2)=1-xy(2);
    string=sprintf('Target is at (%.1f,%.1f) deg, (%.2f %.2f) in unit square. ',...
-      o.targetXYDeg,xy);
+      o.eccentricityXYDeg,xy);
    if o.useFixation
       if o.fixationIsOffscreen
          string=[string 'Using off-screen fixation mark.'];
@@ -1915,7 +1805,7 @@ try
    % We are now done with the signal font (e.g. Sloan or Bookman), since we've saved our signals as images.
    if window ~= -1
       Screen('TextFont',window,textFont);
-      Screen('TextSize',window,textSize);
+      Screen('TextSize',window,o.textSize);
       Screen('TextStyle',window,textStyle);
       if ~o.useFractionOfScreen
          HideCursor;
@@ -1935,16 +1825,14 @@ try
          TrimMarks(window,frameRect);
       end
       Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
-      if o.flipClick; Speak(['before Flip ' num2str(MFileLineNr)]); GetClicks; end
       Screen('Flip',window,0,1); % Show gray screen at LMean with fixation and crop marks. Don't clear buffer.
-      if o.flipClick; Speak(['after Flip ' num2str(MFileLineNr)]); GetClicks; end
       
       msg='Starting new run. The vertical bar indicates target center. ';
       if o.useFixation
          if o.fixationIsOffscreen
             msg = [msg 'Please fix your eyes on your offscreen fixation mark, '];
          else
-            xyCm=(XYPixOfXYDeg(o,[0 0])-XYPixOfXYDeg(o,o.targetXYDeg))/o.pixPerCm;
+            xyCm=(XYPixOfXYDeg(o,[0 0])-XYPixOfXYDeg(o,o.eccentricityXYDeg))/o.pixPerCm;
             msg = [msg 'Please fix your eyes on the center of the fixation cross, '];
          end
          word = 'and';
@@ -1959,7 +1847,7 @@ try
             msg=[msg word ' press the space bar when ready to begin.'];
             fprintf('Please press the space bar when ready to begin.\n');
       end
-      DrawFormattedText(window,msg,0.5*textSize,1.5*textSize,black,textLineLength,[],[],1.3);
+      DrawFormattedText(window,msg,0.5*o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
       Screen('Flip',window,0,1); % "Starting new run ..."
       if o.speakInstructions
          if ismac
@@ -1992,7 +1880,7 @@ try
       tGuess = 0;
       tGuessSd = 4;
    end
-   rDeg=sqrt(sum(o.targetXYDeg.^2));
+   rDeg=sqrt(sum(o.eccentricityXYDeg.^2));
    switch o.thresholdParameter
       case 'spacing',
          nominalCriticalSpacingDeg = 0.3*(rDeg+0.45); % Eq. 14 from Song, Levi, and Pelli (2014).
@@ -2186,7 +2074,9 @@ try
                   movieSaveWhich = whichSignal;
                   if o.measureContrast
                      WaitSecs(0.3);
-                     Speak(o.alphabet(whichSignal));
+                     if o.speakInstructions
+                        Speak(o.alphabet(whichSignal));
+                     end
                   end
                else
                   whichSignal = movieSaveWhich;
@@ -2449,12 +2339,12 @@ try
                      % each trial.
                      if o.responseNumbersInCorners
                         % in corners
-                        r = [0 0 textSize 1.4*textSize];
-                        labelBounds = InsetRect(boundsRect,-1.1*textSize,-o.lineSpacing*textSize);
+                        r = [0 0 o.textSize 1.4*o.textSize];
+                        labelBounds = InsetRect(boundsRect,-1.1*o.textSize,-o.lineSpacing*o.textSize);
                      else
                         % on sides
-                        r = [0 0 textSize o.targetHeightPix];
-                        labelBounds = InsetRect(boundsRect,-2*textSize,0);
+                        r = [0 0 o.textSize o.targetHeightPix];
+                        labelBounds = InsetRect(boundsRect,-2*o.textSize,0);
                      end
                      location(1).labelRect = AlignRect(r,labelBounds,'left','top');
                      location(2).labelRect = AlignRect(r,labelBounds,'right','top');
@@ -2462,7 +2352,7 @@ try
                      location(4).labelRect = AlignRect(r,labelBounds,'right','bottom');
                      for i = 1:locations
                         [x, y] = RectCenter(location(i).labelRect);
-                        Screen('DrawText',window,sprintf('%d',i),x-textSize/2,y+0.4*textSize,black,gray1,1);
+                        Screen('DrawText',window,sprintf('%d',i),x-o.textSize/2,y+0.4*o.textSize,black,gray1,1);
                      end
                   end
             end % switch o.task
@@ -2566,7 +2456,6 @@ try
          end
          if isfinite(o.durationSec) % End the movie
             Screen('FillRect',window,gray,o.stimulusRect);
-            if o.flipClick; Speak(['before Flip dontclear ' num2str(MFileLineNr)]); GetClicks; end
             if o.useDynamicNoiseMovie
                Screen('Flip',window,0,1); % Clear stimulus at next frame.
             else
@@ -2574,15 +2463,12 @@ try
                Screen('Flip',window,o.movieFrameFlipSec(1,trial)+o.durationSec-0.5/frameRate,1);
             end
             o.movieFrameFlipSec(iMovieFrame+1,trial) = GetSecs;
-            if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]); GetClicks; end
             if ~o.fixationCrossBlankedNearTarget
                WaitSecs(o.fixationCrossBlankedUntilSecAfterTarget);
             end
             Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,black); % fixation
-            if o.flipClick; Speak(['before Flip dontclear ' num2str(MFileLineNr)]); GetClicks; end
             % After o.fixationCrossBlankedUntilSecAfterTarget, display new fixation.
-            Screen('Flip',window,o.movieFrameFlipSec(iMovieFrame+1,trial)+0.3,1); ...
-               if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]); GetClicks; end
+            Screen('Flip',window,o.movieFrameFlipSec(iMovieFrame+1,trial)+0.3,1);
          end % if isfinite(o.durationSec)
          for iMovieFrame = 1:o.movieFrames
             Screen('Close',movieTexture(iMovieFrame));
@@ -2592,27 +2478,27 @@ try
          % Print instruction in upper left corner.
          Screen('FillRect',window,gray1,topCaptionRect);
          message = sprintf('Trial %d of %d. Run %d of %d.',trial,o.trialsPerRun,o.runNumber,o.runsDesired);
-         Screen('DrawText',window,message,textSize/2,textSize/2,black,gray1);
+         Screen('DrawText',window,message,o.textSize/2,o.textSize/2,black,gray1);
          
          % Print instructions in lower left corner.
-         textRect = [0, 0, textSize, 1.2*textSize];
+         textRect = [0, 0, o.textSize, 1.2*o.textSize];
          textRect = AlignRect(textRect,screenRect,'left','bottom');
-         textRect = OffsetRect(textRect,textSize/2,-textSize/2); % inset from screen edges
+         textRect = OffsetRect(textRect,o.textSize/2,-o.textSize/2); % inset from screen edges
          textRect = round(textRect);
          switch o.task
             case '4afc',
                message = 'Please click 1 to 4 times for location 1 to 4, or more clicks to quit.';
             case 'identify',
-               message = sprintf('Please type the letter: %s, or period ''.'' to quit.',o.alphabet(1:o.alternatives));
+               message = sprintf('Please type the letter: %s, or ESCAPE to quit.',o.alphabet(1:o.alternatives));
          end
          bounds = Screen('TextBounds',window,message);
          ratio = RectWidth(bounds)/(0.93*RectWidth(screenRect));
          if ratio > 1
-            Screen('TextSize',window,floor(textSize/ratio));
+            Screen('TextSize',window,floor(o.textSize/ratio));
          end
          Screen('FillRect',window,gray1,bottomCaptionRect);
          Screen('DrawText',window,message,textRect(1),textRect(4),black,gray1,1);
-         Screen('TextSize',window,textSize);
+         Screen('TextSize',window,o.textSize);
          
          % DISPLAY RESPONSE ALTERNATIVES
          switch o.task
@@ -2686,16 +2572,14 @@ try
                   Screen('DrawTexture',window,texture,RectOfMatrix(img),rect);
                   Screen('Close',texture);
                   if o.labelAlternatives
-                     Screen('TextSize',window,textSize);
-                     textRect = AlignRect([0 0 textSize textSize],rect,'center','top');
+                     Screen('TextSize',window,o.textSize);
+                     textRect = AlignRect([0 0 o.textSize o.textSize],rect,'center','top');
                      Screen('DrawText',window,o.alphabet(i),textRect(1),textRect(4),black,gray1,1);
                   end
                   rect = OffsetRect(rect,step(1),step(2));
                end
                leftEdgeOfResponse = rect(1);
          end % switch o.task
-         %             if o.flipClick; Speak(['before LoadNormalizedGammaTable ' num2str(MFileLineNr)]); GetClicks; end
-         %             Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
          if o.assessLoadGamma
             ffprintf(ff,'Line %d: o.contrast %.3f, LoadNormalizedGammaTable 0.5*range/mean=%.3f\n', ...
                MFileLineNr,o.contrast,(cal.LLast-cal.LFirst)/(cal.LLast+cal.LFirst));
@@ -2718,7 +2602,9 @@ try
                clicks = GetClicks;
                if ~ismember(clicks,1:locations)
                   ffprintf(ff,'*** %d clicks. Run terminated.\n',clicks);
-                  Speak('Run terminated.');
+                  if o.speakInstructions
+                     Speak('Run terminated.');
+                  end
                   trial = trial-1;
                   o.runAborted = 1;
                   break;
@@ -2729,23 +2615,26 @@ try
                while ~ismember(response,1:o.alternatives)
                   o.runAborted = 0;
                   response = GetKeypress(o.isKbLegacy);
-                  %disp(sprintf('2:==>%s<==', response));
+                  if ismember(response,{'escape'})
+                     ffprintf(ff,'User typed ESCAPE. Run terminated.\n',response);
+                     if o.speakInstructions
+                        Speak('Run terminated.');
+                     end
+                     o.runAborted = 1;
+                     trial = trial-1;
+                     break;
+                  end
                   if length(response) > 1
                      % GetKeypress converts a symbol like space to a string,
                      % e.g. 'space', but our code assumed response is a scalar,
                      % not a matrix. So we replace the string by 0.
                      response = 0;
                   end
-                  if response == '.'
-                     ffprintf(ff,'*** ''%c'' response. Run terminated.\n',response);
-                     Speak('Run terminated.');
-                     o.runAborted = 1;
-                     trial = trial-1;
-                     break;
-                  end
-                  [ok, response] = ismember(upper(response),upper(o.alphabet)); % dgp 1/6/17 upper of alphabet, to work with lowercase letters
+                  [ok,response] = ismember(lower(response),lower(o.alphabet)); 
                   if ~ok
-                     Speak('Try again. Type period to quit.');
+                     if o.speakInstructions
+                        Speak('Try again. Or hit ESCAPE to quit.');
+                     end
                   end
                end % while ~ismember
          end % switch o.task
@@ -2817,13 +2706,12 @@ try
       q = QuestUpdate(q,tTest,response); % Add the new datum (actual test intensity and o.observer response) to the database.
       o.data(trial,1:2) = [tTest response];
       if cal.ScreenConfigureDisplayBrightnessWorks
-         %Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
+         Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
          cal.brightnessReading = Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
          if abs(cal.brightnessSetting-cal.brightnessReading) > 0.01
-            ffprintf(ff,'Screen brightness was set to %.0f%%, but now reads as %.0f%%.\n',100*cal.brightnessSetting,100*cal.brightnessReading);
-            sca;
-            Speak('Error. The screen brightness changed. In System Preferences Displays please turn off "Automatically adjust brightness".');
-            error('Screen brighness changed. Please disable System Preferences:Displays:"Automatically adjust brightness".');
+            string=sprintf('Screen brightness was set to %.0f%%, but reads as %.0f%%.\n',100*cal.brightnessSetting,100*cal.brightnessReading);
+            ffprintf(ff,string);
+            error(string);
          end
       end
    end % for trial=1:o.trialsPerRun
@@ -2835,29 +2723,31 @@ try
       returnKeyCode=KbName('return');
       Screen('FillRect',window);
       Screen('TextFont',window,'Verdana',0);
-      string='Quitting the run. Hit PERIOD again to quit the whole session. To proceed with the next run, hit SPACE or RETURN.';
+      string='Quitting the run. Hit ESCAPE again to quit the whole session. To proceed with the next run, hit SPACE or RETURN.';
       black=0;
       instructionalMargin=100;
       % Set default background color.
       Screen('DrawText', window,' ',0,0,black,1,1);
-      DrawFormattedText(window,string,instructionalMargin,instructionalMargin-0.5*textSize,black,65,[],[],1.1);
-      Screen('TextSize',window,textSize);
+      DrawFormattedText(window,string,instructionalMargin,instructionalMargin-0.5*o.textSize,black,65,[],[],1.1);
+      Screen('TextSize',window,o.textSize);
       Screen('Flip',window); % Pose the question.
-      Speak('Hit PERIOD again to quit the whole session. To proceed with the next run, hit SPACE or RETURN.');
-      answer=GetKeypress([returnKeyCode spaceKeyCode escapeKeyCode '.']);
-      o.quitNow=ismember(answer,{'.','ESCAPE'});
-%       if o.useSpeech
+      if o.speakInstructions
+         Speak('Hit ESCAPE again to quit the whole session. To proceed with the next run, hit SPACE or RETURN.');
+      end
+      answer=GetKeypress(o.isKbLegacy,[returnKeyCode spaceKeyCode escapeKeyCode]);
+      o.quitNow=ismember(answer,{'escape'});
+      if o.speakInstructions
          if o.quitNow
-            Speak('Period.');
+            Speak('escape.');
          else
             Speak('Proceeding to next run.');
          end
-%       end
+      end
       Screen('FillRect',window);
    end
-
-
-%% DONE. REPORT THRESHOLD FOR THIS RUN.
+   
+   
+   %% DONE. REPORT THRESHOLD FOR THIS RUN.
    if ~isempty(o.data)
       psych.t = unique(o.data(:,1));
       psych.r = 1+10.^psych.t;
@@ -2877,7 +2767,7 @@ try
    approxRequiredN = 64/10^((o.questMean-idealT64)/0.55);
    o.p = trialsRight/trial;
    o.trials = trial;
-   rDeg=sqrt(sum(o.targetXYDeg.^2));
+   rDeg=sqrt(sum(o.eccentricityXYDeg.^2));
    switch o.thresholdParameter
       case 'spacing',
          ffprintf(ff,'%s: p %.0f%%, size %.2f deg, ecc. %.1f deg, critical spacing %.2f deg.\n',o.observer,100*o.p,targetSizeDeg,rDeg,10^QuestMean(q));
@@ -2978,33 +2868,43 @@ try
          end
    end
 %    if o.runAborted && o.runNumber < o.runsDesired
-%       Speak('Please type period to skip the rest and quit now, or space to continue with next run.');
+%       if o.speakInstructions
+%          Speak('Please type ESCAPE to skip the rest and quit now, or space to continue with next run.');
+%       end
 %       response = 0;
 %       while 1
 %          response = GetKeypress(o.isKbLegacy);
 %          switch response
-%             case '.',
-%                ffprintf(ff,'*** ''.'' response. Quitting now.\n');
-%                Speak('Quitting now.');
+%             case 'escape',
+%                ffprintf(ff,'*** ESCAPE. Quitting now.\n');
+%                if o.speakInstructions
+%                   Speak('Quitting now.');
+%                end
 %                o.quitNow = 1;
 %                break;
 %             case ' ',
-%                Speak('Continuing.');
+%                if o.speakInstructions
+%                   Speak('Continuing.');
+%                end
 %                o.quitNow = 0;
 %                break;
 %             otherwise
-%                Speak('Try again. Type space to continue, or period to quit.');
+%                if o.speakInstructions
+%                   Speak('Try again. Type space to continue, or ESCAPE to quit.');
+%                end
 %          end
 %       end
 %    end
-if o.quitNow && ~ismember(o.observer,algorithmicObservers)
-   Speak('QUITTING now. Done.');
-else
-   if ~o.runAborted && o.runNumber == o.runsDesired && o.congratulateWhenDone && ~ismember(o.observer,algorithmicObservers)
-      Speak('Congratulations. End of run.');
+if o.speakInstructions
+   if o.quitNow && ~ismember(o.observer,algorithmicObservers)
+      Speak('QUITTING now. Done.');
+   else
+      if ~o.runAborted && o.runNumber == o.runsDesired && o.congratulateWhenDone && ~ismember(o.observer,algorithmicObservers)
+         Speak('Congratulations. End of run.');
+      end
    end
 end
-   if Screen(window,'WindowKind') == 1
+if Screen(window,'WindowKind') == 1
       % Screen takes many seconds to close. This gives us a white screen
       % while we wait.
       Screen('FillRect',window);
@@ -3064,7 +2964,7 @@ end % function o=NoiseDiscrimination(o)
 %% FUNCTION SaveSnapshot
 function SaveSnapshot(o)
 global window fixationLines fixationCrossWeightPix labelBounds location screenRect ...
-   tTest idealT64 leftEdgeOfResponse textSize checks img cal ff whichSignal dataFid
+   tTest idealT64 leftEdgeOfResponse checks img cal ff whichSignal dataFid
 % Hasn't been tested since it became a subroutine. It may need more of its
 % variables to be declared "global". A more elegant solution, more
 % transparent that "global" would be to put all the currently global
@@ -3093,7 +2993,7 @@ approxRequiredN = 64/10^((tTest-idealT64)/0.55);
 rect = Screen('TextBounds',window,'approx required n 0000');
 r = screenRect;
 r(3) = leftEdgeOfResponse;
-r = InsetRect(r,textSize/2,textSize/2);
+r = InsetRect(r,o.textSize/2,o.textSize/2);
 rect = AlignRect(rect,r,RectRight,RectBottom);
 if streq(o.task,'4afc')
    clear x
@@ -3111,7 +3011,7 @@ if streq(o.task,'4afc')
       end
       x(i).entropy = sum(-x(i).p.*log2(x(i).p));
    end
-   saveSize = Screen('TextSize',window,round(textSize*.4));
+   saveSize = Screen('TextSize',window,round(o.textSize*.4));
    saveFont = Screen('TextFont',window,'Courier');
    for i = 1:4
       s = [sprintf('L%d',i) sprintf(' %4.2f',x(i).L)];
@@ -3121,7 +3021,7 @@ if streq(o.task,'4afc')
       s = [sprintf('p%d',i) sprintf(' %4.2f',x(i).p)];
       Screen('DrawText',window,s,rect(1),rect(2)-240-(5-i)*30);
    end
-   Screen('TextSize',window,round(textSize*.8));
+   Screen('TextSize',window,round(o.textSize*.8));
    Screen('DrawText',window,sprintf('Mean %4.2f %4.2f %4.2f %4.2f',x(:).mean),rect(1),rect(2)-240);
    Screen('DrawText',window,sprintf('Sd   %4.2f %4.2f %4.2f %4.2f',x(:).sd),rect(1),rect(2)-210);
    Screen('DrawText',window,sprintf('Max  %4.2f %4.2f %4.2f %4.2f',x(:).max),rect(1),rect(2)-180);
@@ -3168,9 +3068,7 @@ for i = length(caption):- 1:1
 end
 Screen('TextSize',window,saveSize);
 Screen('TextFont',window,saveFont);
-if o.flipClick; Speak(['before Flip dontclear ' num2str(MFileLineNr)]); GetClicks; end
 Screen('Flip',window,0,1); % Save image for snapshot. Show target, instructions, and fixation.
-if o.flipClick; Speak(['after Flip dontclear ' num2str(MFileLineNr)]); GetClicks; end
 img = Screen('GetImage',window,cropRect);
 %                         grayPixels=img==gray;
 %                         img(grayPixels)=128;
@@ -3286,7 +3184,9 @@ for bits = 1:11
    GetChar;
    ListenChar; % Back to normal. Needed.
 end
-Speak('Done');
+if o.speakInstructions
+   Speak('Done');
+end
 end % function TestBitDepth
 %% FUNCTION MeasureContrast
 function oOut=MeasureContrast(o,line)
@@ -3597,10 +3497,11 @@ function xyPix=XYPixOfXYDeg(o,xyDeg)
 % o.stimulusRect. Deg increase right and up. Pix are in Apple screen
 % coordinates which increase down and right. The perspective transformation
 % is relative to location of near point, which is orthogonal to line of
-% sight.
+% sight. "location" refers to the near point. We typically put the target
+% there, but that is not assumed in this routine.
 xyDeg=xyDeg-o.nearPointXYDeg;
 rDeg=sqrt(sum(xyDeg.^2));
-rPix=o.pixPerCm*o.distanceCm*tand(rDeg);
+rPix=o.pixPerCm*o.viewingDistanceCm*tand(rDeg);
 if rDeg>0
    xyPix=xyDeg*rPix/rDeg;
    xyPix(2)=-xyPix(2); % Apple y goes down.
@@ -3615,10 +3516,11 @@ function xyDeg=XYDegOfXYPix(o,xyPix)
 % to fixation). Deg increase right and up. Pix are in Apple screen
 % coordinates which increase down and right. The perspective transformation
 % is relative to location of near point, which is orthogonal to line of
-% sight.
+% sight. We typically put the target at the near point, but that is not
+% assumed in this routine.
 xyPix=xyPix-o.nearPointXYPix;
 rPix=sqrt(sum(xyPix.^2));
-rDeg=atan2d(rPix/o.pixPerCm,o.distanceCm);
+rDeg=atan2d(rPix/o.pixPerCm,o.viewingDistanceCm);
 if rPix>0
    xyPix(2)=-xyPix(2); % Apple y goes down.
    xyDeg=xyPix*rDeg/rPix;
@@ -3643,4 +3545,148 @@ function xy=LimitXYToRect(xy,rect)
 assert(all(rect(1:2)<=rect(3:4)));
 xy=max(xy,rect(1:2));
 xy=min(xy,rect(3:4));
+end
+
+%% SET UP NEAR POINT at correct slant and viewing distance.
+function o=SetUpNearPoint(window,o)
+black = 0; % Retrieves the CLUT color code for black.
+white = 1; % Retrieves the CLUT color code for white.
+if ~all(isfinite(o.eccentricityXYDeg))
+   error('o.eccentricityXYDeg (%.1f %.1f) must be finite. o.useFixation=%d is optional.',...
+      o.eccentricityXYDeg,o.useFixation);
+end
+if ~IsXYInRect(o.nearPointXYInUnitSquare,[0 0 1 1])
+   error('o.nearPointXYInUnitSquare (%.2f %.2f) must be in unit square [0 0 1 1].',o.nearPointXYInUnitSquare);
+end
+xy=o.nearPointXYInUnitSquare;
+xy(2)=1-xy(2); % Move origin from lower left to upper left.
+o.nearPointXYPix=xy.*[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)];
+o.nearPointXYPix=o.nearPointXYPix+o.stimulusRect(1:2);
+% o.nearPointXYPix is screen coordinate.
+% Require margin between target and edge of stimulusRect.
+r=InsetRect(o.stimulusRect,(0.5+o.targetMargin)*o.targetHeightDeg*o.pixPerDeg,0.6*o.targetHeightDeg*o.pixPerDeg);
+if ~all(r(1:2)<=r(3:4))
+   error('%.1f o.targetHeightDeg too big to fit (with %.2f o.targetMargin) in %.1f x %.1f deg screen. Reduce viewing distance or target size.',...
+      o.targetHeightDeg,o.targetMargin,[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)]/o.pixPerDeg);
+end
+if ~IsXYInRect(o.nearPointXYPix,r)
+   % Adjust position of near point so target fits on screen.
+   o.nearPointXYPix=LimitXYToRect(o.nearPointXYPix,r);
+   % Update o.nearPointXYInUnitSquare.
+   xy=o.nearPointXYPix;
+   xy=xy-o.stimulusRect(1:2);
+   xy=xy./[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)];
+   xy(2)=1-xy(2);
+   ffprintf(ff,'NOTE: Adjusting o.nearPointXYInUnitSquare from [%.2f %.2f] to [%.2f %.2f] to fit %.1f deg target (with %.2f o.targetMargin) on screen.',...
+      o.nearPointXYInUnitSquare,xy,o.targetHeightDeg,o.targetMargin);
+   o.nearPointXYInUnitSquare=xy;
+end
+string = sprintf('Please adjust the viewing distance so the cross is %.1f cm from the observer''s eye. ',o.viewingDistanceCm);
+string = [string 'Tilt and swivel the display so the cross is orthogonal to the line of sight. Then hit RETURN to continue.\n'];
+Screen('TextSize',window,o.textSize);
+Screen('TextFont',window,'Verdana');
+Screen('FillRect',window,white);
+DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+x=o.nearPointXYPix(1);
+y=o.nearPointXYPix(2);
+a=0.1*RectHeight(o.stimulusRect);
+Screen('DrawLine',window,black,x-a,y,x+a,y,a/20);
+Screen('DrawLine',window,black,x,y-a,x,y+a,a/20);
+Screen('Flip',window); % Display request.
+if o.speakInstructions
+   string=strrep(string,'.0','');
+   string=strrep(string,'\n','');
+   Speak(string);
+end
+GetKeypress(o.isKbLegacy);
+Screen('FillRect',window,white);
+Screen('Flip',window); % Blank, to acknowledge response.
+end
+
+%% SET UP FIXATION
+function o=SetUpFixation(window,o,ff)
+o.fixationXYPix=XYPixOfXYDeg(o,[0 0]);
+if ~o.useFixation
+   o.fixationIsOffscreen = 0;
+else
+   if ~IsXYInRect(o.fixationXYPix,o.stimulusRect)
+      o.fixationIsOffscreen = 1;
+      % o.fixationXYPix is in plane of display. Off-screen fixation is
+      % not! It is the same distance from the eye as the near point.
+      % fixationOffsetXYCm is vector from near point to fixation.
+      rDeg=sqrt(sum(o.nearPointXYDeg.^2));
+      ori=atan2d(-o.nearPointXYDeg(2),-o.nearPointXYDeg(1));
+      rCm=2*sind(0.5*rDeg)*o.viewingDistanceCm;
+      fixationOffsetXYCm=[cosd(ori) sind(ori)]*rCm;
+      if 1
+         % check
+         oriCheck=atan2d(fixationOffsetXYCm(2),fixationOffsetXYCm(1));
+         rCmCheck=sqrt(sum(fixationOffsetXYCm.^2));
+         rDegCheck=2*asind(0.5*rCm/o.viewingDistanceCm);
+         xyDegCheck=[cosd(ori) sind(ori)]*rDeg;
+         fprintf('CHECK OFFSCREEN GEOMETRY: ori %.1f %.1f; rCm %.1f %.1f; rDeg %.1f %.1f; xyDeg [%.1f %.1f] [%.1f %.1f]\n',...
+            ori,oriCheck,rCm,rCmCheck,rDeg,rDegCheck,-o.nearPointXYDeg,xyDegCheck);
+      end
+      fixationOffsetXYCm(2)=-fixationOffsetXYCm(2); % Make y increase upward.
+      string='';
+      if fixationOffsetXYCm(1)~=0
+         if fixationOffsetXYCm(1) < 0
+            string = sprintf('%sPlease set up a fixation mark %.1f cm to the left of the cross. ',string,-fixationOffsetXYCm(1));
+         else
+            string = sprintf('%sPlease set up a fixation mark %.1f cm to the right of the cross. ',string,fixationOffsetXYCm(1));
+         end
+      end
+      if fixationOffsetXYCm(2)~=0
+         if fixationOffsetXYCm(2) < 0
+            string = sprintf('%sPlease set fixation %.1f cm higher than the cross. ',string,-fixationOffsetXYCm(2));
+         else
+            string = sprintf('%sPlease set fixation %.1f cm lower than the cross. ',string,fixationOffsetXYCm(2));
+         end
+      end
+      string = sprintf('%sAdjust the viewing distances so both your fixation mark and the cross below are %.1f cm from the observer''s eye. ',...
+         string,o.viewingDistanceCm);
+      string = [string 'Tilt and swivel the display so that the cross is orthogonal to the observer''s line of sight. '...
+         'Then hit RETURN to proceed, or ESCAPE to quit. '];
+      Screen('TextSize',window,o.textSize);
+      Screen('TextFont',window,'Verdana');
+      Screen('FillRect',window,white);
+      DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+      x=o.nearPointXYPix(1);
+      y=o.nearPointXYPix(2);
+      a=0.1*RectHeight(o.stimulusRect);
+      Screen('DrawLine',window,black,x-a,y,x+a,y,a/20);
+      Screen('DrawLine',window,black,x,y-a,x,y+a,a/20);
+      Screen('Flip',window); % Display question.
+      if o.speakInstructions
+         Speak(string);
+      end
+      if o.isKbLegacy
+         answer = questdlg('','Fixation','Ok','Cancel','Ok');
+      else
+         ListenChar(0); % Get ready for the quesdlg.
+         answer = questdlg('','Fixation','Ok','Cancel','Ok');
+         ListenChar(2); % Go back to orig status; no echo.
+      end
+      Screen('FillRect',window,white);
+      Screen('Flip',window); % Blank, to acknowledge response.
+      
+      switch answer
+         case 'Ok',
+            o.fixationIsOffscreen = 1;
+            ffprintf(ff,'Offscreen fixation mark (%.1f,%.1f) cm from near point of display.\n',fixationOffsetXYCm);
+         otherwise,
+            o.fixationIsOffscreen = 0;
+            error('User refused off-screen fixation. Please reduce viewing distance (%.1f cm) or o.eccentricityXYDeg (%.1f %.1f).',...
+               o.viewingDistanceCm,o.eccentricityXYDeg);
+      end
+   else
+      o.fixationIsOffscreen = 0;
+   end
+end
+o.targetXYPix=XYPixOfXYDeg(o,o.eccentricityXYDeg);
+if o.fixationCrossBlankedNearTarget
+   ffprintf(ff,'Fixation cross is blanked near target. No delay in showing fixation after target.\n');
+else
+   ffprintf(ff,'Fixation cross is blanked during and until %.2f s after target. No selective blanking near target. \n',o.fixationCrossBlankedUntilSecAfterTarget);
+end
 end
