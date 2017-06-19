@@ -2745,7 +2745,7 @@ try
    if o.runAborted
       %% ASK WHETHER TO QUIT THE WHOLE SESSION
       escapeKeyCode=KbName('escape');
-      graveAccentKeyCode=KbName('`~')'
+      graveAccentKeyCode=KbName('`~');
       spaceKeyCode=KbName('space');
       returnKeyCode=KbName('return');
       Screen('FillRect',window);
