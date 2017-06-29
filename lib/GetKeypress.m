@@ -14,7 +14,7 @@ function response = GetKeypress(enableKeys,deviceIndex,returnOneChar)
 
 printLog = 0;
 if nargin >= 1
-   % enableKeys should be cell strings.
+   % enableKeys should be a vector of key codes returned by KbName.
    restrictKeys=1;
    oldEnableKeys=RestrictKeysForKbCheck(enableKeys);
    if printLog; disp('Enabled keys list is:'); disp(enableKeys); end
