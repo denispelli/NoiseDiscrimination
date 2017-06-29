@@ -459,6 +459,10 @@ escapeChar=char(27);
 graveAccentChar='`';
 returnChar=char(13);
 spaceChar=' ';
+escapeKeyCode=KbName('escape');
+graveAccentKeyCode=KbName('`~');
+spaceKeyCode=KbName('space');
+returnKeyCode=KbName('return');
 %% DEFAULT VALUE FOR EVERY "o" PARAMETER
 % They are overridden by what you provide in the argument struct oIn.
 if nargin < 1 || ~exist('oIn','var')
@@ -467,8 +471,10 @@ end
 o = [];
 o.replicatePelli2006=0;
 o.CLUTMapLength=2048; % enough for 11-bit precision.
-o.useNative10Bit=1;
+o.useNative10Bit=0;
+o.useNative11Bit=1;
 o.ditherCLUT=61696; % Use this only on Denis's PowerBook Pro and iMac 5k.
+o.ditherCLUT=0; % As of June 28, 2017, there is no measurable effect of this dither control.
 o.enableCLUTMapping = 1; % Required. Using software CLUT.
 o.testBitDepth = 0;
 o.useFractionOfScreen = 0; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
@@ -539,7 +545,7 @@ o.noiseSD = 0.2; % Usually in the range 0 to 0.4. Typically 0.2.
 % o.noiseSD=0; % Usually in the range 0 to 0.4. Typically 0.2.
 o.annularNoiseSD = nan; % Typically nan (i.e. use o.noiseSD) or 0.2.
 o.noiseCheckDeg = 0.05; % Typically 0.05 or 0.2.
-o.noiseRadiusDeg = 1; % When o.task=4afc, the program will set o.noiseRadiusDeg=o.targetHeightDeg/2;
+o.noiseRadiusDeg = inf; % When o.task=4afc, the program will set o.noiseRadiusDeg=o.targetHeightDeg/2;
 o.noiseEnvelopeSpaceConstantDeg = inf;
 o.noiseRaisedCosineEdgeThicknessDeg = 0; % midpoint of raised cosine is at noiseRadiusDeg.
 o.noiseSpectrum = 'white'; % pink or white
@@ -553,7 +559,7 @@ o.noiseType = 'gaussian'; % 'gaussian' or 'uniform' or 'binary'
 o.noiseFrozenInTrial = 0; % 0 or 1.  If true (1), use same noise at all locations
 o.noiseFrozenInRun = 0; % 0 or 1.  If true (1), use same noise on every trial
 o.noiseFrozenInRunSeed = 0; % 0 or positive integer. If o.noiseFrozenInRun, then any nonzero positive integer will be used as the seed for the run.
-o.targetCross = 0; % No vertical line indicating target location.
+o.markTargetLocation = 0; % Is there a mark designating target position?
 o.useFixation=1;
 o.fixationIsOffscreen=0;
 o.fixationCrossDeg = inf; % Typically 1 or inf. Make this at least 4 deg for scotopic testing, since the fovea is blind scotopically.
@@ -763,7 +769,7 @@ if dataFid == -1
 end
 assert(dataFid > -1);
 ff = [1 dataFid];
-fprintf('\nSaving results in:\n');
+fprintf('\nSaving results in two data files:\n');
 ffprintf(ff,'%s\n',o.dataFilename);
 ffprintf(ff,'%s %s\n',o.functionNames,datestr(now));
 ffprintf(ff,'observer %s, task %s, alternatives %d,  beta %.1f,\n',o.observer,o.task,o.alternatives,o.beta);
@@ -832,6 +838,14 @@ assert(lastGrayClutEntry<o.maxEntry);
 assert(firstGrayClutEntry>1);
 assert(mod(firstGrayClutEntry+lastGrayClutEntry,2) == 0) % Must be even, so middle is an integer.
 o.minLRange = 0;
+useBrightnessFunction=1;
+if useBrightnessFunction
+   Brightness(cal.screen,cal.brightnessSetting); % Set brightness.
+   cal.brightnessReading = Brightness(cal.screen); % Read brightness.
+   if isfinite(cal.brightnessReading) && abs(cal.brightnessSetting-cal.brightnessReading)>0.01
+      error('Set brightness to %.2f, but read back %.2f',cal.brightnessSetting,cal.brightnessReading);
+   end
+end
 
 %% SET SIZES OF SCREEN ELEMENTS: text, stimulusRect, etc.
 Screen('Preference','TextAntiAliasing',0);
@@ -901,6 +915,9 @@ if ~isfield(o,'blankingRadiusReTargetHeight')
          %                                       % which are greatly diminished
          %                                       % at their edge.
    end
+end
+if ~isfield(o,'blankingRadiusReEccentricity')
+   o.blankingRadiusReEccentricity=0.5;
 end
 fixationCrossPix = round(o.fixationCrossDeg*o.pixPerDeg);
 fixationCrossWeightPix = round(o.fixationCrossWeightDeg*o.pixPerDeg);
@@ -1007,15 +1024,25 @@ end
 Screen('Preference','SkipSyncTests',1);
 oldVisualDebugLevel = Screen('Preference','VisualDebugLevel',0);
 oldSupressAllWarnings = Screen('Preference','SuppressAllWarnings',1);
-if cal.ScreenConfigureDisplayBrightnessWorks && ismac
-   % Psychtoolbox Bug. Screen ConfigureDisplay? claims that this will
-   % silently do nothing if not supported. But when I used it on my video
-   % projector, Screen gave a fatal error. That's ok, but how do I figure
-   % out when it's safe to use?
-   Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
-   cal.brightnessReading = Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
-   if abs(cal.brightnessSetting-cal.brightnessReading)>0.01
-      error('Tried to set brightness to %.2f, but read back as %.2f',cal.brightnessSetting,cal.brightnessReading);
+% if cal.ScreenConfigureDisplayBrightnessWorks && ismac
+if ~useBrightnessFunction
+   try
+      % Caution: Screen ConfigureDisplay Brightness gives a fatal error if not
+      % supported, and is unsupported on many devices, including a video
+      % projector under macOS. We use try-catch to recover.
+      for i=1:3
+         Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
+         cal.brightnessReading = Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
+%          Brightness(cal.screen,cal.brightnessSetting);
+%          cal.brightnessReading = Brightness(cal.screen);
+         if abs(cal.brightnessSetting-cal.brightnessReading)<0.01
+            break;
+         elseif i==3
+            error('Tried three times to set brightness to %.2f, but read back %.2f',cal.brightnessSetting,cal.brightnessReading);
+         end
+      end
+   catch
+      cal.brightnessReading=NaN;
    end
 end
 
@@ -1023,8 +1050,8 @@ end
 %% MATLAB try
 try
    %% OPEN WINDOW IF OBSERVER IS HUMAN
-   % We can safely use this mode AND collect keyboard responses
-   % without worrying about writing to MATLAB console/editor.
+   % We can safely use this mode AND collect keyboard responses without
+   % worrying about writing to MATLAB console/editor.
    ListenChar(2); % no echo
    KbName('UnifyKeyNames');
    if ~ismember(o.observer,algorithmicObservers) || streq(o.task,'identify')
@@ -1044,6 +1071,9 @@ try
       end
       if o.useNative10Bit
          PsychImaging('AddTask','General','EnableNative10BitFramebuffer');
+      end
+      if o.useNative11Bit
+         PsychImaging('AddTask','General','EnableNative11BitFramebuffer');
       end
       PsychImaging('AddTask','General','NormalizedHighresColorRange',1);
       if o.enableCLUTMapping
@@ -1198,7 +1228,8 @@ try
       if o.speakInstructions
          Speak(sprintf('Observer %s, right? If ok, hit RETURN to continue, otherwise hit ESCAPE to quit.',o.observer));
       end
-      response=GetKeypress;
+      % RestrictKeysForKbCheck; % NOT SURE. PERHAPS THIS CALL MAKES GetKeypress more reliable.
+      response=GetKeypress([escapeKeyCode graveAccentKeyCode returnKeyCode]);
       if ismember(response,[escapeChar,graveAccentChar])
          if o.speakInstructions
             Speak('Quitting.');
@@ -1211,6 +1242,8 @@ try
       end
    end
    %% MONOCULAR?
+
+   
    if ~isfield(o,'eyes')
       error('Please set o.eyes to ''left'',''right'',''one'', or ''both''.');
    end
@@ -1229,7 +1262,7 @@ try
          if o.speakInstructions
             Speak('Please use both eyes. Hit RETURN to continue, or ESCAPE to quit.');
          end
-         response=GetKeypress;
+         response=GetKeypress([escapeKeyCode graveAccentKeyCode returnKeyCode]);
          if ismember(response,[escapeChar,graveAccentChar])
             if o.speakInstructions
                Speak('Quitting.');
@@ -1249,7 +1282,7 @@ try
             string=sprintf('Please use just your %s eye. Cover your other eye. Hit RETURN to continue, or ESCAPE to quit.',o.eyes);
             Speak(string);
          end
-         response=GetKeypress;
+         response=GetKeypress([escapeKeyCode graveAccentKeyCode returnKeyCode]);
          if ismember(response,[escapeChar,graveAccentChar])
             if o.speakInstructions
                Speak('Quitting.');
@@ -1269,7 +1302,7 @@ try
          if o.speakInstructions
             Speak(string);
          end
-         response=GetKeypress;
+         response=GetKeypress([KbName('L') KbName('R') escapeKeyCode graveAccentKeyCode]);
          if ismember(response,[escapeChar,graveAccentChar])
             if o.speakInstructions
                Speak('Quitting.');
@@ -1433,19 +1466,39 @@ try
    if o.useFlankers
       ffprintf(ff,'Adding four flankers at center spacing of %.0f pix = %.1f deg = %.1fx letter height. Dark contrast %.3f (nan means same as target).\n',flankerSpacingPix,flankerSpacingPix/o.pixPerDeg,flankerSpacingPix/o.targetHeightPix,o.flankerContrast);
    end
-   [x, y] = RectCenter(o.stimulusRect);
+   [x,y] = RectCenter(o.stimulusRect);
    if o.useFixation
       fix.blankingRadiusReTargetHeight = o.blankingRadiusReTargetHeight;
-      fix.targetCross = o.targetCross;
-      xy=XYPixOfXYDeg(o,[0 0]); % location of fixation
-      fix.x = xy(1); % x location of fixation
-      fix.y = xy(2); % y location of fixation
-      fix.targetXYPix = o.targetXYPix;
-      fix.clipRect = o.stimulusRect;
-      fix.fixationCrossPix = fixationCrossPix;
-      fix.fixationCrossBlankedNearTarget = o.fixationCrossBlankedNearTarget;
-      fix.targetHeightPix = o.targetHeightPix;
-      fixationLines = ComputeFixationLines(fix);
+      fix.blankingRadiusReEccentricity = o.blankingRadiusReEccentricity;     
+      fix.markTargetLocation= o.markTargetLocation;
+      xy=round(XYPixOfXYDeg(o,[0 0])); % location of fixation
+      if 0
+         % Old
+         fix.x = xy(1); % x location of fixation
+         fix.y = xy(2); % y location of fixation
+         fix.targetXYPix = o.targetXYPix;
+         fix.clipRect = o.stimulusRect;
+         fix.fixationCrossPix = fixationCrossPix;
+         fix.targetHeightPix = o.targetHeightPix;
+         fixationLines = ComputeFixationLines(fix);
+      else
+         % New
+         fix.xy=xy;            %  location of fixation on screen.
+         fix.eccentricityXYPix=o.targetXYPix-xy;  % xy offset of target from fixation.
+         fix.clipRect = o.stimulusRect;
+         fix.fixationCrossPix=fixationCrossPix;% Width & height of fixation cross. 
+         fix.markTargetLocation=1;             % 0 or 1.
+         if isfield(o,'targetMarkDeg')
+            fix.targetMarkPix=o.targetMarkDeg*o.pixPerDeg;
+         end
+         if isfield(o,'blankingRadiusDeg')
+            fix.blankingRadiusPix=o.blankingRadiusDeg*o.pixPerDeg;
+         end
+         fix.blankingRadiusReEccentricity=o.blankingRadiusReEccentricity; 
+         fix.blankingRadiusReTargetHeight=o.blankingRadiusReTargetHeight;
+         fix.targetHeightPix=o.targetHeightPix;
+         fixationLines = ComputeFixationLines2(fix);
+      end
    end
    if window ~= -1 && ~isempty(fixationLines)
       Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,black); % fixation
@@ -1841,7 +1894,10 @@ try
       Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
       Screen('Flip',window,0,1); % Show gray screen at LMean with fixation and crop marks. Don't clear buffer.
       
-      msg='Starting new run. The vertical bar indicates target center. ';
+      msg='Starting new run. ';
+      if o.markTargetLocation
+         msg=[msg 'The X indicates target center. '];
+      end
       if o.useFixation
          if o.fixationIsOffscreen
             msg = [msg 'Please fix your eyes on your offscreen fixation mark, '];
@@ -1858,7 +1914,7 @@ try
             msg=[msg word ' click when ready to begin.'];
             fprintf('Please click when ready to begin.\n');
          case 'identify',
-            msg=[msg word ' press the space bar when ready to begin.'];
+            msg=[msg word ' press the SPACE bar when ready to begin.'];
             fprintf('Please press the space bar when ready to begin.\n');
       end
       DrawFormattedText(window,msg,0.5*o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
@@ -1874,7 +1930,9 @@ try
          case '4afc',
             GetClicks;
          case 'identify',
-            response=GetKeypress;
+%             fprintf('%d: RestrictKeysForKbCheck before ',MFileLineNr); disp(RestrictKeysForKbCheck);
+            response=GetKeypress([spaceKeyCode escapeKeyCode graveAccentKeyCode]);
+%             fprintf(' after '); disp(RestrictKeysForKbCheck); fprintf('\n');
             % This keypress serves mainly to start the first trial, but we
             % quit if the user hits escape.
             if ismember(response,[escapeChar,graveAccentChar])
@@ -2732,8 +2790,10 @@ try
       q = QuestUpdate(q,tTest,response); % Add the new datum (actual test intensity and o.observer response) to the database.
       o.data(trial,1:2) = [tTest response];
       if cal.ScreenConfigureDisplayBrightnessWorks
-         Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
+         %          Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
          cal.brightnessReading = Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
+         %          Brightness(cal.screen,cal.brightnessSetting);
+         %          cal.brightnessReading = Brightness(cal.screen);
          if abs(cal.brightnessSetting-cal.brightnessReading) > 0.01
             string=sprintf('Screen brightness was set to %.0f%%, but reads as %.0f%%.\n',100*cal.brightnessSetting,100*cal.brightnessReading);
             ffprintf(ff,string);
@@ -2750,7 +2810,7 @@ try
       returnKeyCode=KbName('return');
       Screen('FillRect',window);
       Screen('TextFont',window,'Verdana',0);
-      string='Quitting the run. Hit ESCAPE again to quit the whole session. To proceed with the next run, hit SPACE or RETURN.';
+      string='Run has been quit. Hit ESCAPE again to quit the whole session. Or hit RETURN to proceed with the next run.';
       black=0;
       instructionalMargin=100;
       % Set default background color.
@@ -2759,19 +2819,19 @@ try
       Screen('TextSize',window,o.textSize);
       Screen('Flip',window); % Pose the question.
       if o.speakInstructions
-         Speak('Hit ESCAPE again to quit the whole session. To proceed with the next run, hit SPACE or RETURN.');
+         Speak('Hit ESCAPE again to quit the whole session. To proceed with the next run, hit RETURN.');
       end
-      answer=GetKeypress([returnKeyCode spaceKeyCode escapeKeyCode graveAccentKeyCode]);
+      answer=GetKeypress([returnKeyCode escapeKeyCode graveAccentKeyCode]);
       o.quitNow=ismember(answer,[escapeChar,graveAccentChar]);
       if o.speakInstructions
          if o.quitNow
-            Speak('escape.');
+            Speak('Escape.');
          else
             Speak('Proceeding to next run.');
          end
       end
       Screen('FillRect',window);
-   end
+   end % if o.runAborted
    
    
    %% DONE. REPORT THRESHOLD FOR THIS RUN.
@@ -2821,7 +2881,7 @@ try
       ffprintf(ff,'WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.\n');
    end
    if o.measureBeta
-      % reanalyze the data with beta as a free parameter.
+      % Reanalyze the data with beta as a free parameter.
       ffprintf(ff,'o.measureBeta, offsetToMeasureBeta %.1f to %.1f\n',min(offsetToMeasureBeta),max(offsetToMeasureBeta));
       bestBeta = QuestBetaAnalysis(q);
       qq = q;
@@ -3188,9 +3248,9 @@ for bits = 1:11
    % it's not compatible with high-res color, but that may be fixed in the
    % next release.
    Screen('PutImage',window,img,r);
-   %               msg=sprintf('o.testBitDepth: Now alternating with quantization to %d bits. Hit space bar to continue.',bits);
+   %               msg=sprintf('o.testBitDepth: Now alternating with quantization to %d bits. Hit SPACE bar to continue.',bits);
    %               newGamma=floor(cal.gamma*(2^bits-1))/(2^bits-1);
-   msg = sprintf(' Now alternately clearing video DAC bit %d. Hit space bar to continue. ',bits);
+   msg = sprintf(' Now alternately clearing video DAC bit %d. Hit SPACE bar to continue. ',bits);
    newGamma = bitset(round(cal.gamma*(2^17-1)),17-bits,0)/(2^17-1);
    Screen('DrawText',window,' o.testBitDepth: Testing bits 1 to 11. ',100,100,0,1,1);
    Screen('DrawText',window,msg,100,136,0,1,1);
@@ -3247,7 +3307,7 @@ ffprintf(ff,'%d: Contrast nominal %.4f, est. %.4f, actual %.4f; Luminance %.2f %
 o.nominalContrast(trial)=o.contrast;
 o.actualContrast(trial)=actualContrast;
 oOut=o;
-end
+end % MeasureContrast
 %% FUNCTION AssessContrast
 function AssessContrast(o)
 % Estimate actual contrast on screen.
@@ -3583,6 +3643,10 @@ escapeChar=char(27);
 graveAccentChar='`';
 returnChar=char(13);
 spaceChar=' ';
+escapeKeyCode=KbName('escape');
+graveAccentKeyCode=KbName('`~');
+spaceKeyCode=KbName('space');
+returnKeyCode=KbName('return');
 if ~all(isfinite(o.eccentricityXYDeg))
    error('o.eccentricityXYDeg (%.1f %.1f) must be finite. o.useFixation=%d is optional.',...
       o.eccentricityXYDeg,o.useFixation);
@@ -3630,7 +3694,7 @@ if o.speakInstructions
    string=strrep(string,'\n','');
    Speak(string);
 end
-response=GetKeypress;
+response=GetKeypress([returnKeyCode escapeKeyCode graveAccentKeyCode]);
 if ismember(response,[escapeChar,graveAccentChar])
    if o.speakInstructions
       Speak('Quitting.');
@@ -3647,7 +3711,17 @@ end
 
 %% SET UP FIXATION
 function o=SetUpFixation(window,o,ff)
-o.fixationXYPix=XYPixOfXYDeg(o,[0 0]);
+black = BlackIndex(window); % Retrieves the CLUT color code for black.
+white = WhiteIndex(window); % Retrieves the CLUT color code for white.
+escapeChar=char(27);
+graveAccentChar='`';
+returnChar=char(13);
+spaceChar=' ';
+escapeKeyCode=KbName('escape');
+graveAccentKeyCode=KbName('`~');
+spaceKeyCode=KbName('space');
+returnKeyCode=KbName('return');
+o.fixationXYPix=round(XYPixOfXYDeg(o,[0 0]));
 if ~o.useFixation
    o.fixationIsOffscreen = 0;
 else
@@ -3666,28 +3740,33 @@ else
          rCmCheck=sqrt(sum(fixationOffsetXYCm.^2));
          rDegCheck=2*asind(0.5*rCm/o.viewingDistanceCm);
          xyDegCheck=[cosd(ori) sind(ori)]*rDeg;
-         fprintf('CHECK OFFSCREEN GEOMETRY: ori %.1f %.1f; rCm %.1f %.1f; rDeg %.1f %.1f; xyDeg [%.1f %.1f] [%.1f %.1f]\n',...
+         fprintf('OFFSCREEN GEOMETRY: ori %.1f %.1f; rCm %.1f %.1f; rDeg %.1f %.1f; xyDeg [%.1f %.1f] [%.1f %.1f]\n',...
             ori,oriCheck,rCm,rCmCheck,rDeg,rDegCheck,-o.nearPointXYDeg,xyDegCheck);
       end
       fixationOffsetXYCm(2)=-fixationOffsetXYCm(2); % Make y increase upward.
-      string='';
+      
+      string='Please set up a fixation mark';
       if fixationOffsetXYCm(1)~=0
          if fixationOffsetXYCm(1) < 0
-            string = sprintf('%sPlease set up a fixation mark %.1f cm to the left of the cross. ',string,-fixationOffsetXYCm(1));
+            string = sprintf('%s %.1f cm to the left of',string,-fixationOffsetXYCm(1));
          else
-            string = sprintf('%sPlease set up a fixation mark %.1f cm to the right of the cross. ',string,fixationOffsetXYCm(1));
+            string = sprintf('%s %.1f cm to the right of',string,fixationOffsetXYCm(1));
          end
+      end
+      if fixationOffsetXYCm(1)~=0 && fixationOffsetXYCm(2)~=0 
+         string=[string 'and'];
       end
       if fixationOffsetXYCm(2)~=0
          if fixationOffsetXYCm(2) < 0
-            string = sprintf('%sPlease set fixation %.1f cm higher than the cross. ',string,-fixationOffsetXYCm(2));
+            string = sprintf('%s %.1f cm higher than',string,-fixationOffsetXYCm(2));
          else
-            string = sprintf('%sPlease set fixation %.1f cm lower than the cross. ',string,fixationOffsetXYCm(2));
+            string = sprintf('%s %.1f cm lower than',string,fixationOffsetXYCm(2));
          end
       end
-      string = sprintf('%sAdjust the viewing distances so both your fixation mark and the cross below are %.1f cm from the observer''s eye. ',...
+      string = [string ' the cross.'];
+      string = sprintf('%s Adjust the viewing distances so both your fixation mark and the cross below are %.1f cm from the observer''s eye.',...
          string,o.viewingDistanceCm);
-      string = [string 'Tilt and swivel the display so that the cross is orthogonal to the observer''s line of sight. '...
+      string = [string ' Tilt and swivel the display so that the cross is orthogonal to the observer''s line of sight. '...
          'Then hit RETURN to proceed, or ESCAPE to quit. '];
       Screen('TextSize',window,o.textSize);
       Screen('TextFont',window,'Verdana');
@@ -3702,20 +3781,16 @@ else
       if o.speakInstructions
          Speak(string);
       end
-      ListenChar(0); % Get ready for the quesdlg.
-      answer = questdlg('','Fixation','Ok','Cancel','Ok');
-      ListenChar(2); % Go back to orig status; no echo.
+      answer = GetKeypress([returnKeyCode escapeKeyCode graveAccentKeyCode]);
       Screen('FillRect',window,white);
       Screen('Flip',window); % Blank, to acknowledge response.
-      
-      switch answer
-         case 'Ok',
-            o.fixationIsOffscreen = 1;
-            ffprintf(ff,'Offscreen fixation mark (%.1f,%.1f) cm from near point of display.\n',fixationOffsetXYCm);
-         otherwise,
-            o.fixationIsOffscreen = 0;
-            error('User refused off-screen fixation. Please reduce viewing distance (%.1f cm) or o.eccentricityXYDeg (%.1f %.1f).',...
-               o.viewingDistanceCm,o.eccentricityXYDeg);
+      if ismember(answer,returnChar)
+         o.fixationIsOffscreen = 1;
+         ffprintf(ff,'Offscreen fixation mark (%.1f,%.1f) cm from near point of display.\n',fixationOffsetXYCm);
+      else
+         o.fixationIsOffscreen = 0;
+         error('User refused off-screen fixation. Please reduce viewing distance (%.1f cm) or o.eccentricityXYDeg (%.1f %.1f).',...
+            o.viewingDistanceCm,o.eccentricityXYDeg);
       end
    else
       o.fixationIsOffscreen = 0;
