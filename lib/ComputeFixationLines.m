@@ -1,8 +1,8 @@
 function fixationLines=ComputeFixationLines(fix)
 %ComputeFixationLines returns an array fixationLines so that calling
 % Screen('DrawLines',window,fixationLines); 
-% will draw fixation and target crosses specified by the parameters in
-% the struct argument "fix".
+% will draw fixation cross and mark target location as specified by the
+% parameters in the struct argument "fix".
 % fix.x=50;                             % x location of fixation on screen.
 % fix.y=screenHeight/2;                 % y location of fixation on screen.
 % fix.targetXYPix=o.targetXYPix;        % Target position on screen.
@@ -30,7 +30,7 @@ function fixationLines=ComputeFixationLines(fix)
 %                                       % 0.5.
 % fix.targetHeightPix=targetHeightPix;  % Blanking radius is proportional
 %                                       % to specified target height.
-% fix.targetCross=1;                    % Draw vertical line indicating
+% fix.markTargetLocation=1;             % Draw mark indicating
 %                                       % target location.
 % fixationLines=ComputeFixationLines(fix);
 % Screen('DrawLines',window,fixationLines,fixationLineWeightPix,black);
@@ -51,8 +51,8 @@ function fixationLines=ComputeFixationLines(fix)
 if ~isfield(fix,'bouma') || ~isfinite(fix.bouma)
     fix.bouma=0.5;
 end
-if ~isfield(fix,'targetCross')
-    fix.targetCross=0; % Default is no vertical line indicating target location.
+if ~isfield(fix,'markTargetLocation')
+    fix.markTargetLocation=0; % Default is no mark indicating target location.
 end
 if ~isfield(fix,'fixationCrossBlankedNearTarget')
     fix.fixationCrossBlankedNearTarget=1; % Default is yes.
@@ -62,11 +62,12 @@ if ~isfield(fix,'blankingRadiusReTargetHeight')
 end
 blankingRadiusPix=fix.blankingRadiusReTargetHeight*fix.targetHeightPix;
 
-% We initially use abs(eccentricity) and assume fixation is at (0,0). At
-% the end, we adjust for polarity of eccentricity and the actual location
-% of fixation (fix.x,fix.y).
+% We initially take only the length of the eccentricity vector, and compute
+% our lines as though fixation were at (0,0) and the eccentricity were
+% positive and horizontal. At the end, we adjust for the direction of
+% eccentricity and the actual location of fixation (fix.x,fix.y).
 
-fix.eccentricityPix = sqrt(sum((fix.targetXYPix-fix.x).^2));
+fix.eccentricityPix = sqrt(sum((fix.targetXYPix-[fix.x fix.y]).^2));
 
 % Shift clipping rect to our new coordinate system in which fixation is
 % at (0,0).
@@ -131,7 +132,7 @@ end
 
 % Vertical target line
 xy=fix.targetXYPix;
-if fix.targetCross && IsInRect(xy(1),xy(2),fix.clipRect);
+if fix.markTargetLocation && IsInRect(xy(1),xy(2),fix.clipRect);
     % Compute at eccentricity zero, and then offset to desired target
     % eccentricity.
     lineStart=-fix.fixationCrossPix/2;
