@@ -1490,7 +1490,7 @@ try
          fix.markTargetLocation=1;             % 0 or 1.
          if isfield(o,'targetMarkDeg')
             fix.targetMarkPix=o.targetMarkDeg*o.pixPerDeg;
-         end
+          end
          if isfield(o,'blankingRadiusDeg')
             fix.blankingRadiusPix=o.blankingRadiusDeg*o.pixPerDeg;
          end
@@ -1891,7 +1891,9 @@ try
       if o.showCropMarks
          TrimMarks(window,frameRect);
       end
-      Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
+      if ~isempty(fixationLines)
+         Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
+      end
       Screen('Flip',window,0,1); % Show gray screen at LMean with fixation and crop marks. Don't clear buffer.
       
       msg='Starting new run. ';
@@ -2220,7 +2222,9 @@ try
       if ~ismember(o.observer,algorithmicObservers)
          Screen('FillRect',window,gray1);
          Screen('FillRect',window,gray,o.stimulusRect);
-         Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
+         if ~isempty(fixationLines)
+            Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
+         end
          rect = [0, 0, 1, 1]*2*o.annularNoiseBigRadiusDeg*o.pixPerDeg/o.noiseCheckPix;
          if o.newClutForEachImage % Usually enabled.
             % Compute CLUT for all possible noises and the given signal and
@@ -2291,7 +2295,7 @@ try
          if o.showCropMarks
             TrimMarks(window,frameRect); % This should be moved down, to be drawn AFTER the noise.
          end
-         if o.saveSnapshot && o.snapshotShowsFixationBefore
+         if o.saveSnapshot && o.snapshotShowsFixationBefore && ~isempty(fixationLines)
             Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
          end
       end % if ~ismember(o.observer,algorithmicObservers)
@@ -2550,7 +2554,9 @@ try
             if ~o.fixationCrossBlankedNearTarget
                WaitSecs(o.fixationCrossBlankedUntilSecAfterTarget);
             end
-            Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,black); % fixation
+            if ~isempty(fixationLines)
+               Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,black); % fixation
+            end
             % After o.fixationCrossBlankedUntilSecAfterTarget, display new fixation.
             Screen('Flip',window,o.movieFrameFlipSec(iMovieFrame+1,trial)+0.3,1);
          end % if isfinite(o.durationSec)
@@ -3059,7 +3065,7 @@ global window fixationLines fixationCrossWeightPix labelBounds location screenRe
 % argument and might need to be returned as an output. Note that if "o" is
 % modified here, it too may need to be returned as an output argument, or
 % made global.
-if o.snapshotShowsFixationAfter
+if o.snapshotShowsFixationAfter && ~isempty(fixationLines)
    Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
 end
 if o.cropSnapshot
