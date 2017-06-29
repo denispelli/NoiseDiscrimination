@@ -104,7 +104,7 @@ if ~all(diff(cal.old.gamma(:,2))>0)
    end
    cal.old.gamma(:,2)=g;
 end
-% In apple's gamma table the RGB values are all gray. We stick to those
+% In Apple's gamma table the RGB values are all gray. We stick to those
 % gray RGB triplets that drive the video DAC. RGB are voltages in a video
 % monitor. We analyze in terms of G channel, and then use the original RGB
 % triplet corresponding to each G value.
@@ -150,10 +150,14 @@ linearizedGamma=min(linearizedGamma,1);
 linearizedGamma=max(linearizedGamma,0);
 if ~isfield(cal,'gamma')
    % If new gamma not provided, take old gamma table as default,
-   % interpolated to cal.CLUTMapLength entries. This mapping conserves black
-   % (first) and white (last), and interpolates the rest. It can be done
-   % quickly, using ROUND, or precisely, using INTERP1, which takes a few
-   % ms.
+   % interpolated to cal.CLUTMapLength entries. This mapping conserves
+   % black (first) and white (last), and interpolates the rest. It can be
+   % done quickly, using ROUND, or precisely, using INTERP1, which takes a
+   % few ms.
+   if ~isfield(cal,'CLUTMapLength')
+      % If not specified, copied from old gamma table.
+      cal.CLUTMapLength=size(cal.old.gamma,1);
+   end
    cal.gamma=ones(cal.CLUTMapLength,3);
    oldMaxIndex=size(cal.old.gamma,1)-1;
    maxIndex=cal.CLUTMapLength-1;
