@@ -1241,9 +1241,8 @@ try
          return
       end
    end
-   %% MONOCULAR?
-
    
+   %% MONOCULAR?
    if ~isfield(o,'eyes')
       error('Please set o.eyes to ''left'',''right'',''one'', or ''both''.');
    end
