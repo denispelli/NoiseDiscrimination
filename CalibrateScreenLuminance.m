@@ -117,6 +117,10 @@ function CalibrateScreenLuminance(screen,screenOutput)
 % http://osxdaily.com/2010/05/15/stop-the-macbook-pro-and-macbook-screen-from-dimming/
 % addpath('lib');
 % addpath('AutoBrightness');
+forceMaximumBrightness=1;
+blindCalibration=0;
+using11bpc=1;
+gamma11bpc=1/2.4; % disabled
 try
     Speak('Welcome to Calibrate Screen Luminance.');
     fprintf('This program uses computer speech. Please turn up the volume to hear it.\n');
@@ -132,12 +136,8 @@ try
         cal.screen=max(Screen('Screens'));
     end
     KbName('UnifyKeyNames'); % Needed to work on Windows computer.
-    blindCalibration=0;
-    using10bpc=false;
-    gamma10bpc=1/2.4;
     [cal.screenWidthMm,cal.screenHeightMm]=Screen('DisplaySize',cal.screen);
-    % screenRect=Screen('Rect',cal.screen); % gives unreliable answer on
-    % Retina display
+    % screenRect=Screen('Rect',cal.screen); % unreliable on Retina display
     
     cal.pixelMax=255;
     fprintf('\n%s %s\n',mfilename,datestr(now));
@@ -186,7 +186,7 @@ try
         AutoBrightness(0); % Disable Apple's automatic adjustment of brightness
         cal.autoBrightnessDisabled=1;
         fprintf('Now checking your screen brightness control.\n');
-        Speak('Now checking your screen brightness control');
+        Speak('Will now check your screen brightness control');
         useBrightness=1; % In macOS 10.12.5 ScreenConfigureDisplayBrightnessWorks works erratically.
         cal.ScreenBrightnessWorks=1; % Default value
         cal.ScreenConfigureDisplayBrightnessWorks=0; % Default value.
@@ -233,11 +233,15 @@ try
     fprintf('When using a flat-panel display, we usually run at maximum "brightness".\n');
     if cal.ScreenConfigureDisplayBrightnessWorks || cal.BrightnessWorks
         fprintf('Your display is currently at %.0f%% brightness.\n',100*cal.brightnessSetting);
-        b=[];
-        while ~isfloat(b) || length(b)~=1 || b<0 || b>100
-            Speak('We usually run at 100% brightness. What percent brightness do you want?');
-            Speak('Please type a number from 0 to 100, followed by return.');
-            b=input('What brightness percentage do you want (0 to 100)?');
+        if ~forceMaximumBrightness
+            b=[];
+            while ~isfloat(b) || length(b)~=1 || b<0 || b>100
+                Speak('We usually run at 100% brightness. What percent brightness do you want?');
+                Speak('Please type a number from 0 to 100, followed by return.');
+                b=input('What brightness percentage do you want (0 to 100)?');
+            end
+        else
+            b=100;
         end
         cal.brightnessSetting=b/100;
         Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
@@ -330,14 +334,16 @@ try
     end
     Screen('Preference', 'SkipSyncTests', 1);
     cal.useRetinaResolution=0;
-    if ~using10bpc
+    if ~using11bpc
         [window,screenRect]=Screen('OpenWindow',cal.screen,[],[],[],[],[],0);
+        cal.psychImagingOption='';
     else
         PsychImaging('PrepareConfiguration');
-        PsychImaging('AddTask', 'General', 'EnableNative11BitFramebuffer');
-        PsychImaging('AddTask', 'FinalFormatting', 'DisplayColorCorrection', 'SimpleGamma');
+        PsychImaging('AddTask','General','EnableNative11BitFramebuffer');
+%         PsychImaging('AddTask', 'FinalFormatting', 'DisplayColorCorrection', 'SimpleGamma');
         [window,screenRect]=PsychImaging('OpenWindow', cal.screen, 0, []);
-        PsychColorCorrection('SetEncodingGamma', window, gamma10bpc);
+%         PsychColorCorrection('SetEncodingGamma', window, gamma11bpc);
+        cal.psychImagingOption='EnableNative11BitFramebuffer';
     end
     white = WhiteIndex(window);  % Retrieves the CLUT color code for white.
     fprintf('white %0.1f\n',white);
@@ -365,6 +371,7 @@ try
             if i==1
                 Speak('Hit return when ready to begin.');
                 input('Hit return when ready to begin','s');
+                Speak('Starting now.');
             end
             WaitSecs(2);
             n=GetLuminance;
@@ -488,6 +495,7 @@ try
             fprintf(f,'\tcal.profile=''%s'';\n',cal.profile);
         end
         fprintf(f,'\tcal.ScreenConfigureDisplayBrightnessWorks=%.0f;\n',cal.ScreenConfigureDisplayBrightnessWorks);
+        fprintf(f,'\tcal.BrightnessWorks=%.0f;\n',cal.BrightnessWorks);
         fprintf(f,'\tcal.brightnessSetting=%.2f;\n',cal.brightnessSetting);
         fprintf(f,'\tcal.brightnessRmsError=%.4f;\n',cal.brightnessRmsError);
         cal.screenRect=screenRect;
@@ -497,6 +505,7 @@ try
         fprintf(f,'\tcal.photometer=''%s'';\n',cal.photometer);
         fprintf(f,'\tcal.notes=''%s'';\n',prep(cal.notes));
         fprintf(f,'\tcal.calibratedBy=''%s'';\n',prep(cal.processUserLongName));
+        fprintf(f,'\tcal.psychImagingOption=''%s'';\n',cal.psychImagingOption);
         fprintf(f,'\tcal.dacBits=%d; %% From ReadNormalizedGammaTable.\n',cal.dacBits);
         fprintf(f,'\tcal.old.gammaIndexMax=%d;\n',cal.old.gammaIndexMax);
         fprintf(f,'\tcal.old.gammaHistogramStd=%.4f;\n',cal.old.gammaHistogramStd);
