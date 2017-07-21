@@ -130,7 +130,7 @@ for i=1:length(oo)
    oo(i).row=i;
 end
 t=struct2table(oo)
-for oi=1:length(oo)
+for oi=24:length(oo)
    o=oo(oi);
    o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
    o.experimenter='denis';
