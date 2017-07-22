@@ -34,7 +34,7 @@ o.alternatives=length(o.alphabet); % number of letters to use from o.alphabet
 
 % FIXATION
 o.fixationCrossDeg = 1; % Typically 1 or inf. Make this at least 4 deg for scotopic testing, since the fovea is blind scotopically.
-o.markTargetLocation=1;
+o.targetCross=1;
 o.fixationCrossWeightDeg = 0.05; % target line thickness
 o.fixationCrossBlankedNearTarget = 0; % 0 or 1.
 o.fixationCrossBlankedUntilSecAfterTarget = 0.6; % Pause after stimulus before display of fixation.
@@ -65,6 +65,7 @@ o.showCropMarks=0; % mark the bounding box of the target
 o.printDurations=0;
 
 o.useFractionOfScreen=0.3; % 0: normal, 0.5: small for debugging.
+o.useNative10Bit=1;
 o.assessLoadGamma = 0; % diagnostic information
 
 clear o oo
@@ -131,6 +132,7 @@ for i=1:length(oo)
 end
 t=struct2table(oo)
 for oi=24:length(oo)
+    fprintf('[For debbugging purposes] This is row %d.\n',oi);
    o=oo(oi);
 %    o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
    o.experimenter='denis';
@@ -143,16 +145,21 @@ for oi=24:length(oo)
    o.alphabet='DHKNORSVZ';
    o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
    o.durationSec = 0.2;
+   o.fixationCrossDeg = 3;
    o.noiseSD=0.16;
-   o.useDynamicNoiseMovie = 1;
-   o.markTargetLocation=1;
-   o.blankingRadiusDeg=0;
-   o.moviePreSec = 0.3;
-   o.moviePostSec = 0.3;
-   o.targetMarkDeg=1;
-   o.fixationCrossDeg=3;
+   
+   o.useDynamicNoiseMovie = 1; % 0 for static noise
+   o.moviePreSec = 0.1; % ignored for static noise
+   o.moviePostSec = 0.2; % ignored for static noise
+   o.noiseEnvelopeSpaceConstantDeg=inf; % always Inf for hard edge top-hat noise
+   o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
+   
    o=NoiseDiscrimination(o);
    if o.quitNow
       break
    end
 end
+% bugs
+% fixation lines are infinite. make them 3 deg.
+% there is no vertical line for target. remove?
+% The noise covers
