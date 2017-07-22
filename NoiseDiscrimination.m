@@ -1228,7 +1228,6 @@ try
       if o.speakInstructions
          Speak(sprintf('Observer %s, right? If ok, hit RETURN to continue, otherwise hit ESCAPE to quit.',o.observer));
       end
-      % RestrictKeysForKbCheck; % NOT SURE. PERHAPS THIS CALL MAKES GetKeypress more reliable.
       response=GetKeypress([escapeKeyCode graveAccentKeyCode returnKeyCode]);
       if ismember(response,[escapeChar,graveAccentChar])
          if o.speakInstructions
@@ -1241,9 +1240,8 @@ try
          return
       end
    end
-   %% MONOCULAR?
-
    
+   %% MONOCULAR?
    if ~isfield(o,'eyes')
       error('Please set o.eyes to ''left'',''right'',''one'', or ''both''.');
    end
@@ -1932,9 +1930,7 @@ try
          case '4afc',
             GetClicks;
          case 'identify',
-%             fprintf('%d: RestrictKeysForKbCheck before ',MFileLineNr); disp(RestrictKeysForKbCheck);
             response=GetKeypress([spaceKeyCode escapeKeyCode graveAccentKeyCode]);
-%             fprintf(' after '); disp(RestrictKeysForKbCheck); fprintf('\n');
             % This keypress serves mainly to start the first trial, but we
             % quit if the user hits escape.
             if ismember(response,[escapeChar,graveAccentChar])
