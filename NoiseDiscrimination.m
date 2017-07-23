@@ -111,6 +111,7 @@ function o = NoiseDiscrimination(oIn)
 % > In IndexOfLuminance (line 14)
 %   In NoiseDiscrimination (line 2027)
 %
+
 %% EXTRA DOCUMENTATION
 
 % On Feb 25, 2017 13:25, "Denis Pelli" <denis.pelli@nyu.edu> wrote:
@@ -401,6 +402,7 @@ if exist('oIn','var') && isfield(oIn,'quitNow') && oIn.quitNow
    o=oIn;
    return
 end
+
 %% SUGGESTED VALUES FOR ANNULUS
 if 0
    % Copy this to produce a Gaussian annulus:
@@ -463,6 +465,7 @@ escapeKeyCode=KbName('escape');
 graveAccentKeyCode=KbName('`~');
 spaceKeyCode=KbName('space');
 returnKeyCode=KbName('return');
+
 %% DEFAULT VALUE FOR EVERY "o" PARAMETER
 % They are overridden by what you provide in the argument struct oIn.
 if nargin < 1 || ~exist('oIn','var')
@@ -560,6 +563,7 @@ o.noiseFrozenInTrial = 0; % 0 or 1.  If true (1), use same noise at all location
 o.noiseFrozenInRun = 0; % 0 or 1.  If true (1), use same noise on every trial
 o.noiseFrozenInRunSeed = 0; % 0 or positive integer. If o.noiseFrozenInRun, then any nonzero positive integer will be used as the seed for the run.
 o.markTargetLocation = 0; % Is there a mark designating target position?
+o.targetMarkDeg=1;
 o.useFixation=1;
 o.fixationIsOffscreen=0;
 o.fixationCrossDeg = inf; % Typically 1 or inf. Make this at least 4 deg for scotopic testing, since the fovea is blind scotopically.
@@ -665,6 +669,7 @@ else
    end
    o=oo(1);
 end
+
 %% SCREEN PARAMETERS
 % 3/23/17 moved this block of code to after reading o parameters. Untested in new location.
 [screenWidthMm, screenHeightMm] = Screen('DisplaySize',o.screen);
@@ -1135,6 +1140,27 @@ try
          Screen('ConfigureDisplay','Dithering',cal.screen,o.ditherCLUT);
       end
       
+      % Recommended by Mario Kleiner, July 2017.
+      % The first 'DrawText' call triggers loading of the plugin, but may fail.
+      Screen('DrawText',window,' ',0,0,0,1,1);
+      o.drawTextPlugin=Screen('Preference','TextRenderer')>0;
+      if ~o.drawTextPlugin
+         warning('The DrawText plugin failed to load. See warning above.');
+      end
+      ffprintf(ff,'o.drawTextPlugin=%d\n',o.drawTextPlugin);
+      
+      % Recommended by Mario Kleiner, July 2017.
+      winfo=Screen('GetWindowInfo', window);
+      o.beamPositionQueriesAvailable= winfo.Beamposition ~= -1 && winfo.VBLEndline ~= -1;
+      ffprintf(ff,'o.beamPositionQueries=%d\n',o.beamPositionQueriesAvailable);
+      if ismac
+         % Rec by microfish@fishmonkey.com.au, July 22, 2017
+         o.psychtoolboxKernelDriverLoaded = ~system('kextstat -l -k | grep PsychtoolboxKernelDriver > /dev/null');
+         ffprintf(ff,'o.psychtoolboxKernelDriverLoaded=%d\n',o.psychtoolboxKernelDriverLoaded);
+      else
+         o.psychtoolboxKernelDriverLoaded=0;
+      end
+
       % Compare hardware CLUT with identity.
       gammaRead=Screen('ReadNormalizedGammaTable',window);
       maxEntry=size(gammaRead,1)-1;
@@ -1917,6 +1943,7 @@ try
             msg=[msg word ' press the SPACE bar when ready to begin.'];
             fprintf('Please press the space bar when ready to begin.\n');
       end
+      Screen('DrawText',window,' ',0,0,1,gray1,1); % Set background color.
       DrawFormattedText(window,msg,0.5*o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
       Screen('Flip',window,0,1); % "Starting new run ..."
       if o.speakInstructions
