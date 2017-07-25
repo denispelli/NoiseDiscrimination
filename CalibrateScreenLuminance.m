@@ -121,17 +121,19 @@ forceMaximumBrightness=1;
 blindCalibration=0;
 gamma11bpc=1/2.4; % disabled
 useFractionOfScreen=0; % Nonzero, about 0.3, debugging.
-if ismac && ismember(MacModelName,{'iMac14,1','iMac15,1','iMac17,1','iMac18,3','MacBookPro9,2','MacBookPro11,5','MacBookPro13,3','','MacBookPro14,3'});
-   using11bpc=1;
-   Speak('Assuming your screen luminance precision is 11 bits.');
-else
-   using11bpc=0;
-   Speak('Assuming your screen luminance precision is 8 bits.');
-end
 try
    Speak('Welcome to Calibrate Screen Luminance.');
    fprintf('This program uses computer speech. Please turn up the volume to hear it.\n');
    %     onCleanupInstance=onCleanup(@()sca); % clears screen when function is terminated.
+   
+   if ismac && ismember(MacModelName,{'iMac14,1','iMac15,1','iMac17,1','iMac18,3','MacBookPro9,2','MacBookPro11,5','MacBookPro13,3','','MacBookPro14,3'});
+      using11bpc=1;
+      Speak('I believe your screen luminance precision is 11 bits.');
+   else
+      using11bpc=0;
+      Speak('I believe your screen luminance precision is 8 bits.');
+   end
+   
    if nargin>1
       cal.screenOutput=screenOutput; % used only under Linux
    else
@@ -187,13 +189,13 @@ try
             'You''ll need admin privileges to do this.']);
       end
       
-      Speak('Reloading your screen''s color profile.');
+      Speak('Now reloading your screen''s color profile.');
       cal.profile=ScreenProfile(cal.screen); % Get name of current profile.
       % Now select some other profile.
       ScreenProfile(cal.screen,'Apple RGB');
       ScreenProfile(cal.screen,'CIE RGB'); % At least one of these two profiles will not be the original profile.
       ScreenProfile(cal.screen,cal.profile); % Freshly load the original profile.
-
+      
       fprintf('Now checking your screen brightness control.\n');
       Speak('Will now check your screen brightness control');
       AutoBrightness(0); % Disable Apple's automatic adjustment of brightness
