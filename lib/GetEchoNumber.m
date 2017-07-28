@@ -38,6 +38,6 @@ if nargin < 5
 end
 
 [string,terminatorChar] = GetEchoString(window,msg,x,y,textColor,bgColor,1,varargin{:});
-number = str2num(string); %#ok<ST2NM>
+n = str2num(string); % #ok<ST2NM>
 
 return;
