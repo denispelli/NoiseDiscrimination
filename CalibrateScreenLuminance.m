@@ -122,16 +122,31 @@ blindCalibration=0;
 gamma11bpc=1/2.4; % disabled
 useFractionOfScreen=0; % Nonzero, about 0.3, debugging.
 try
-   Speak('Welcome to Calibrate Screen Luminance.');
-   fprintf('This program uses computer speech. Please turn up the volume to hear it.\n');
+   fprintf('Welcome to Calibrate Screen Luminance.\n');
+   while(1)
+      reply=input('Do you want me to use computer speech to guide you (y or n)?:','s');
+      if length(reply)>=1
+         break;
+      end
+   end
+   useSpeech=ismember(reply(1),{'y' 'Y'});
+   if useSpeech
+      Speak('Welcome to Calibrate Screen Luminance.');
+      fprintf('This program uses computer speech. Please turn up the volume to hear it.\n');
+   end
    %     onCleanupInstance=onCleanup(@()sca); % clears screen when function is terminated.
-   
    if ismac && ismember(MacModelName,{'iMac14,1','iMac15,1','iMac17,1','iMac18,3','MacBookPro9,2','MacBookPro11,5','MacBookPro13,3','','MacBookPro14,3'});
       using11bpc=1;
-      Speak('I believe your screen luminance precision is 11 bits.');
+      if useSpeech
+         Speak('I believe your screen luminance precision is 11 bits.');
+      end
+      fprintf('I believe your screen luminance precision is 11 bits.\n');
    else
       using11bpc=0;
-      Speak('I believe your screen luminance precision is 8 bits.');
+      if useSpeech
+         Speak('I believe your screen luminance precision is 8 bits.');
+      end
+      fprintf('I believe your screen luminance precision is 8 bits.\n');
    end
    
    if nargin>1
@@ -150,14 +165,25 @@ try
    cal.pixelMax=255;
    fprintf('\n%s %s\n',mfilename,datestr(now));
    fprintf('Calibrate luminance.\n');
-   Speak('Do you have a Cambridge Research Systems colorimeter installed?');
-   while(1)
-      reply=input('Do you have a Cambridge Research Systems colorimeter installed (y/n)?:','s');
-      if length(reply)>=1
-         break;
-      end
+   try
+      L=GetLuminance;
+      automatic=1;
+   catch
+      fprintf('Ignore error message above, which merely indicates that no CRS Colorimeter is installed.\n');
+      automatic=0;
    end
-   automatic=ismember(reply(1),{'y' 'Y'});
+   if automatic
+      if useSpeech
+         Speak('I detect an installed Cambridge Research Systems colorimeter. Shall we use it?');
+      end
+      while(1)
+         reply=input('I detect an installed Cambridge Research Systems colorimeter. Shall we use it (y/n)?:','s');
+         if length(reply)>=1
+            break;
+         end
+      end
+      automatic=ismember(reply(1),{'y' 'Y'});
+   end
    if automatic
       luminances=64+1;
    else
@@ -167,15 +193,22 @@ try
    if automatic
       msg=sprintf('Ok. I''ll take %d readings automatically, using the colorimeter.',luminances);
    else
-      msg=sprintf('No. Ok. We''ll take %d readings manually, one by one.',luminances);
+      msg=sprintf('We''ll take %d readings manually, one by one.',luminances);
    end
-   Speak(msg);
+   if useSpeech
+      Speak(msg);
+   end
+   fprintf([msg '\n']);
    if automatic
       cal.photometer='Cambridge Research Systems Colorimeter';
    else
-      Speak('Please type name of your photometer, followed by RETURN. If it''s the Minolta Spotmeter just hit RETURN.');
+      if useSpeech
+         Speak('Please type name of your photometer, followed by RETURN. If it''s the Minolta Spotmeter just hit RETURN.');
+      end
       msg=input('Please type name of photometer, followed by RETURN.\nIf it''s the Minolta Spotmeter, just hit RETURN:','s');
-      Speak('Ok');
+      if useSpeech
+         Speak('Ok');
+      end
       if length(msg)<1
          cal.photometer='Minolta Spotmeter';
       else
@@ -188,8 +221,10 @@ try
          error(['Please give MATLAB permission to control the computer. ' ...
             'You''ll need admin privileges to do this.']);
       end
-      
-      Speak('Now reloading your screen''s color profile.');
+      if useSpeech
+         Speak('Now reloading your screen''s color profile.');
+      end
+      fprintf('Now reloading your screen''s color profile.\n');
       cal.profile=ScreenProfile(cal.screen); % Get name of current profile.
       % Now select some other profile.
       ScreenProfile(cal.screen,'Apple RGB');
@@ -197,7 +232,9 @@ try
       ScreenProfile(cal.screen,cal.profile); % Freshly load the original profile.
       
       fprintf('Now checking your screen brightness control.\n');
-      Speak('Will now check your screen brightness control');
+      if useSpeech
+         Speak('Will now check your screen brightness control');
+      end
       AutoBrightness(0); % Disable Apple's automatic adjustment of brightness
       cal.autoBrightnessDisabled=1;
       useBrightness=1; % In macOS 10.12.5 ScreenConfigureDisplayBrightnessWorks works erratically.
@@ -220,7 +257,10 @@ try
       end
       cal.brightnessRmsError=rms(desiredBrightness-brightness);
       if cal.brightnessRmsError>0.01
-         Speak('That doesn''t work, but we''ll proceed regardless.');
+         if useSpeech
+            Speak('That doesn''t work, but we''ll proceed regardless.');
+         end
+         fprintf('That doesn''t work, but we''ll proceed regardless.\n');
          if useBrightness
             fprintf('WARNING: Brightness function not working for this screen. RMS error %.3f\n',cal.brightnessRmsError);
             cal.ScreenBrightnessWorks=1;
@@ -229,7 +269,9 @@ try
             cal.ScreenConfigureDisplayBrightnessWorks=0;
          end
       else
-         Speak('It works!');
+         if useSpeech
+            Speak('It works!');
+         end
          if useBrightness
             cal.BrightnessWorks=1;
             fprintf('Brightness function works.\n');
@@ -249,9 +291,11 @@ try
       if ~forceMaximumBrightness
          b=[];
          while ~isfloat(b) || length(b)~=1 || b<0 || b>100
-            Speak('We usually run at 100% brightness. What percent brightness do you want?');
-            Speak('Please type a number from 0 to 100, followed by return.');
-            b=input('What brightness percentage do you want (0 to 100)?');
+            if useSpeech
+               Speak('We usually run at 100% brightness. What percent brightness do you want?');
+               Speak('Please type a number from 0 to 100, followed by return.');
+            end
+            b=input('We suggest 100. What brightness percentage do you want (0 to 100)?');
          end
       else
          b=100;
@@ -262,13 +306,17 @@ try
       if abs(cal.brightnessSetting-brightnessReading)>0.01
          fprintf('Brightness was set to %.0f%%, but now reads as %.0f%%.\n',100*cal.brightnessSetting,100*brightnessReading);
          sca;
-         Speak('Error. The screen brightness changed during calibration. In System Preferences Displays please turn off "Automatically adjust brightness".');
+         if useSpeech
+            Speak('Error. The screen brightness changed during calibration. In System Preferences Displays please turn off "Automatically adjust brightness".');
+         end
          error('Screen brighness changed during calibration. In System Preferences:Displays, please turn off "Automatically adjust brightness".');
       end
    else
       cal.brightnessSetting=1;
       cal.brightnessReading=nan;
-      Speak('Please set your screen to maximum brightness, then hit return');
+      if useSpeech
+         Speak('Please set your screen to maximum brightness, then hit return');
+      end
       fprintf('Please set your screen to maximum brightness.\n');
       input('Hit return when ready to proceed:\n','s');
    end
@@ -294,15 +342,19 @@ try
          'The gamma function produced by our software is independent of the profile \n'...
          'you select. Only the shade of white is affected. Then try again to run \n'...
          'CalibrateScreenLuminance.\n']);
-      Speak(['ERROR: To get a consistent white in your stimuli, please use System Preferences '...
-         'Displays Color to select a color profile that you like. Then try again.']);
+      if useSpeech
+         Speak(['ERROR: To get a consistent white in your stimuli, please use System Preferences '...
+            'Displays Color to select a color profile that you like. Then try again.']);
+      end
       error('YOur gamma table seems custom-made. Please use an official color profile.\n');
    end
    fprintf('Successfully read your gamma table ("color profile").\n');
    
    useEV=0;
-   %     response='x';
-   %     Speak('What units will you use for luminance? Type E or C');
+   %       response='x';
+   %       if useSpeech
+   %          Speak('What units will you use for luminance? Type E or C');
+   %       end
    %     while ~ismember(response,{'e','c'})
    %         response=input('What units will you use to specify luminance? Type   e (for EV)   or c (for cd/m^2) followed by return:','S');
    %         response=lower(response);
@@ -317,7 +369,9 @@ try
    end
    fprintf(['Thanks. You will enter luminances in units of ' luminanceUnit '\n']);
    if useEV
-      Speak('Please set the film speed to ISO 100 on your light meter. Then hit return to continue.');
+      if useSpeech
+         Speak('Please set the film speed to ISO 100 on your light meter. Then hit return to continue.');
+      end
       fprintf('IMPORTANT: Please set the film speed to ISO 100 on your light meter.\n');
       x=input('Hit return to continue:','S');
    end
@@ -340,10 +394,18 @@ try
    end
    screenRect=Screen('Rect',cal.screen);
    fprintf('Computer %s, %s, screenWidthCm %.1f, screenHeightCm %.1f\n',prep(cal.machineName),prep(cal.macModelName),cal.screenWidthMm/10,cal.screenHeightMm/10);
-   Speak(sprintf('We will measure %d luminances.',luminances));
+   if useSpeech
+      Speak(sprintf('We will measure %d luminances.',luminances));
+   end
+   fprintf('We will measure %d luminances.\n',luminances);
    if ~automatic
-      Speak(['Use a photometer to measure the screen luminance in ' luminanceUnitWords '.  Then type your reading followed by return.']);
-      Speak('If you make a mistake, you can go back by typing -1, followed by return. You can always quit by hitting ESCAPE.');
+      fprintf(['\nINSTRUCTIONS: Use a photometer to measure the screen luminance in ' luminanceUnit '.  Then type your reading followed by RETURN.\n']);
+      fprintf('If you make a mistake, you can go back by typing -1, followed by RETURN. You can always quit by hitting ESCAPE.\n');
+      if useSpeech
+         Speak(['Use a photometer to measure the screen luminance in ' luminanceUnitWords '.  Then type your reading followed by return.']);
+         Speak('If you make a mistake, you can go back by typing -1, followed by return. You can always quit by hitting ESCAPE.');
+      end
+      input('Hit RETURN when you''re ready to proceed:','s');
    end
    Screen('Preference','SkipSyncTests',1);
    cal.useRetinaResolution=0;
@@ -370,7 +432,7 @@ try
    end
    %         PsychColorCorrection('SetEncodingGamma',window,gamma11bpc);
    white = WhiteIndex(window);  % Retrieves the CLUT color code for white.
-   fprintf('white %0.1f\n',white);
+   %       fprintf('white %0.1f\n',white);
    i=0;
    if ~useFractionOfScreen
       HideCursor;
@@ -401,9 +463,13 @@ try
             end
             Screen('Flip',window,0,1); % Calibration: Show test patch and instructions.
             if i==1
-               Speak('Hit RETURN when ready to begin.');
+               if useSpeech
+                  Speak('Hit RETURN when ready to begin.');
+               end
                input('Hit RETURN when ready to begin','s');
-               Speak('Starting now.');
+               if useSpeech
+                  Speak('Starting now.');
+               end
             end
             WaitSecs(2);
             n=GetLuminance;
@@ -443,7 +509,9 @@ try
                   i=i-2;
                   continue;
                end
-               Speak(sprintf('%g',cal.old.L(i)));
+               if useSpeech
+                  Speak(sprintf('%g',cal.old.L(i)));
+               end
             else
                msg=sprintf(['%d of %d. Please type measured luminance (' luminanceUnit '), followed by RETURN:'],i,luminances);
                ListenChar(2); % suppress echoing of keyboard in Command Window
@@ -453,17 +521,23 @@ try
                   % [n,terminatorChar]=GetEchoNumber(window,msg,10,screenRect(4)-40,0,255/2,1); % external keyboard
                   if ismember(terminatorChar,[3  27]) % Cntl-C or Escape
                      if terminatorChar==3
-                        Speak('Control C');
+                        if useSpeech
+                           Speak('Control C');
+                        end
                      end
                      if terminatorChar==27
-                        Speak('Escape');
+                        if useSpeech
+                           Speak('Escape');
+                        end
                      end
                      error('User hit Control-C or Escape.');
                   end
                   if ~isfloat(n) || length(n)~=1
                      Speak('Invalid. Try again.');
                   else
-                     Speak(sprintf('%g',n));
+                     if useSpeech
+                        Speak(sprintf('%g',n));
+                     end
                      break;
                   end
                end
@@ -485,7 +559,9 @@ try
             if abs(cal.brightnessSetting-cal.brightnessReading)>0.01
                fprintf('Brightness was set to %.0f%%, but now reads as %.0f%%.\n',100*cal.brightnessSetting,100*cal.brightnessReading);
                sca;
-               Speak('Error. The screen brightness changed during calibration. In System Preferences, Displays, please turn off "Automatically adjust brightness".');
+               if useSpeech
+                  Speak('Error. The screen brightness changed during calibration. In System Preferences, Displays, please turn off "Automatically adjust brightness".');
+               end
                error('Screen brighness changed during calibration. In System Preferences:Displays, please turn off "Automatically adjust brightness".');
             end
          end
@@ -507,7 +583,9 @@ try
       Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,1);
    end
    fprintf('\n\n\n');
-   Speak('Thank you. Please wait for the Command Window to reappear, then please type notes, followed by return.');
+   if useSpeech
+      Speak('Thank you. Please wait for the Command Window to reappear, then please type notes, followed by return.');
+   end
    fprintf('\n'); % Not sure, but this FPRINTF may be needed under Windows to make INPUT work right.
    cal.notes=input('Please type one line about conditions of this calibration, including your name.\nYour notes:','s');
    filename='OurScreenCalibrations.m';
@@ -586,7 +664,9 @@ try
    fclose(fid);
    fprintf('The calibration data above, from "if" to "end", has been appended to the file %s.\n',filename);
    fprintf('Calibration finished. Now testing for monotonicity.\n');
-   Speak('Now testing for monotonicity.');
+   if useSpeech
+      Speak('Now testing for monotonicity.');
+   end
    cal.nFirst=1;
    cal.nLast=255;
    cal.LFirst=min(cal.old.L);
@@ -596,9 +676,14 @@ try
    xlabel('Gamma value');
    ylabel('Luminance (cd/m^2)');
    title('Gamma function');
-   Speak('Figure 1 shows a raw plot of the gamma function that you just measured.');
+   if useSpeech
+      Speak('Figure 1 shows a raw plot of the gamma function that you just measured.');
+   end
+   fprintf('Figure 1 shows a raw plot of the gamma function that you just measured.\n');
    fprintf('Congratulations. You''re done.\n');
-   Speak('Congratulations. You are done.');
+   if useSpeech
+      Speak('Congratulations. You are done.');
+   end
 catch
    sca;
    %     ListenChar(0); % flush
