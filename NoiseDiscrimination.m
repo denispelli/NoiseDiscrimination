@@ -1147,16 +1147,16 @@ try
       if ~o.drawTextPlugin
          warning('The DrawText plugin failed to load. See warning above.');
       end
-      ffprintf(ff,'o.drawTextPlugin=%d\n',o.drawTextPlugin);
+      ffprintf(ff,'o.drawTextPlugin=%d % 1 needed for accurate text rendering.\n',o.drawTextPlugin);
       
       % Recommended by Mario Kleiner, July 2017.
       winfo=Screen('GetWindowInfo', window);
       o.beamPositionQueriesAvailable= winfo.Beamposition ~= -1 && winfo.VBLEndline ~= -1;
-      ffprintf(ff,'o.beamPositionQueries=%d\n',o.beamPositionQueriesAvailable);
+      ffprintf(ff,'o.beamPositionQueries=%d % 1 for best timing.\n',o.beamPositionQueriesAvailable);
       if ismac
          % Rec by microfish@fishmonkey.com.au, July 22, 2017
          o.psychtoolboxKernelDriverLoaded = ~system('kextstat -l -k | grep PsychtoolboxKernelDriver > /dev/null');
-         ffprintf(ff,'o.psychtoolboxKernelDriverLoaded=%d\n',o.psychtoolboxKernelDriverLoaded);
+         ffprintf(ff,'o.psychtoolboxKernelDriverLoaded=%d % 1 for best timing.\n',o.psychtoolboxKernelDriverLoaded);
       else
          o.psychtoolboxKernelDriverLoaded=0;
       end
