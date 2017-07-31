@@ -714,11 +714,11 @@ try
    cal.LFirst=min(cal.old.L);
    cal.LLast=max(cal.old.L);
    cal=LinearizeClut(cal);
+   figure(1);
    plot(cal.old.G,cal.old.L);
    xlabel('Gamma value');
    ylabel('Luminance (cd/m^2)');
    title('Gamma function');
-   figure(1);
    fprintf('Figure 1 shows a raw plot of the gamma function that you just measured.\n');
    if useSpeech
       Speak('Figure 1 shows a raw plot of the gamma function that you just measured.');
