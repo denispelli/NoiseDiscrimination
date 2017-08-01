@@ -153,7 +153,7 @@ try
    if 1
       % Check for AMD video driver.
       % The GetWindowInfo command requires an open window.
-      fprintf('Now checking your video driver.\n');
+      fprintf('Now opening a small window to check your video driver.\n');
       oldVisualDebugLevel = Screen('Preference', 'VisualDebugLevel',0);
       oldSkipSyncTests = Screen('Preference', 'SkipSyncTests', 1);
       oldVerbosity = Screen('Preference', 'Verbosity',0);
@@ -218,7 +218,7 @@ try
       end
       while(1)
          reply=input('Shall we use it (y/n)?:','s');
-         if length(reply)>=1
+         if length(reply)>0
             break;
          end
       end
@@ -233,7 +233,7 @@ try
       luminances=2+1;  % Quick, to debug.
    end
    if useConnectedPhotometer
-      msg=sprintf('Ok. I''ll take %d readings useConnectedPhotometerally, using the colorimeter.',luminances);
+      msg=sprintf('Ok. I''ll take %d readings automatically, using the colorimeter.',luminances);
    else
       msg=sprintf('We''ll take %d readings manually, one by one.',luminances);
    end
