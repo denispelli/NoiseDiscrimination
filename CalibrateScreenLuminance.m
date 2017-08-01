@@ -153,6 +153,10 @@ try
    if 1
       % Check for AMD video driver.
       % The GetWindowInfo command requires an open window.
+      fprintf('Now checking your video driver.\n');
+      oldVisualDebugLevel = Screen('Preference', 'VisualDebugLevel',0);
+      oldSkipSyncTests = Screen('Preference', 'SkipSyncTests', 1);
+      oldVerbosity = Screen('Preference', 'Verbosity',0);
       PsychImaging('PrepareConfiguration');
       PsychImaging('AddTask','General','NormalizedHighresColorRange',1);
       screenBufferRect=Screen('Rect',cal.screen);
@@ -162,9 +166,11 @@ try
       windowInfo=Screen('GetWindowInfo',window);
       cal.displayCoreId=windowInfo.DisplayCoreId;
       Screen('Close',window);
-      windowInfo
-      using11bpc=streq(cal.displayCoreId,'AMD')
-   else
+      Screen('Preference', 'VisualDebugLevel', oldVisualDebugLevel);
+      Screen('Preference', 'SkipSyncTests', oldSkipSyncTests);
+      Screen('Preference', 'Verbosity',oldVerbosity);
+      using11bpc=streq(cal.displayCoreId,'AMD');
+  else
       % Shortcut: Check for Mac models that probably have AMD drivers. This
       % list is incomplete and hasn't been double checked. E.g. I omitted
       % the Mac Pro. This also misses any non-Mac computer with high
@@ -174,28 +180,38 @@ try
          'MacBookPro13,3','','MacBookPro14,3'});
    end
    if using11bpc
-      fprintf('Since this Mac has an AMD video driver, I''m assuming your screen luminance precision is 11 bits.\n');
+      fprintf('Since you have an AMD video driver, I''m assuming your screen luminance precision is 11 bits.\n');
       if useSpeech
-         Speak('Since this Mac has an AMD video driver, I''m assuming your screen luminance precision is 11 bits.');
+         Speak('Since you have an AMD video driver, I''m assuming your screen luminance precision is 11 bits.');
       end
    else
-      fprintf('Lacking evidence otherwise, I''m assuming your screen luminance precision is 8 bits.\n');
+      fprintf('Since your video driver is not AMD, I''m assuming your screen luminance precision is 8 bits.\n');
       if useSpeech
-         Speak('I''m assuming your screen luminance precision is 8 bits.');
+         Speak('Since your video driver is not AMD, I''m assuming your screen luminance precision is 8 bits.');
       end
    end
    KbName('UnifyKeyNames'); % Needed to work on Windows computer.
    [cal.screenWidthMm,cal.screenHeightMm]=Screen('DisplaySize',cal.screen);
+   cal.pixelMax=255; % ????
    
-   cal.pixelMax=255;
-   try
-      L=GetLuminance;
-      automatic=1;
-   catch
-      fprintf('Ignore error message above, which merely indicates that no CRS Colorimeter is installed.\n');
-      automatic=0;
+   %% Is a CRS colorimeter connected?
+   useConnectedPhotometer=0;
+   d=PsychHID('Devices');
+   for i=1:length(d)
+      if d(i).vendorID==2145 && d(i).deviceID==4097
+         useConnectedPhotometer=1;
+         break;
+      end
    end
-   if automatic
+%       usbHandle = PsychHID('OpenUSBDevice', 2145, 4097);
+%       usbHandle = PsychHID('OpenUSBDevice', vendorID, deviceID);
+%    oldVisualDebugLevel = Screen('Preference', 'VisualDebugLevel',0);
+%    oldVerbosity = Screen('Preference', 'Verbosity',0);
+%    oldSuppressAllWarnings = Screen('Preference', 'SuppressAllWarnings',1);
+%    Screen('Preference', 'Verbosity',oldVerbosity);
+%    Screen('Preference', 'Verbosity',oldVerbosity);
+%    Screen('Preference','SuppressAllWarnings',oldSuppressAllWarnings);
+   if useConnectedPhotometer
       fprintf('I detect a Cambridge Research Systems colorimeter.\n');
       if useSpeech
          Speak('I detect a Cambridge Research Systems colorimeter. Shall we use it?');
@@ -206,18 +222,18 @@ try
             break;
          end
       end
-      automatic=ismember(reply(1),{'y' 'Y'});
+      useConnectedPhotometer=ismember(reply(1),{'y' 'Y'});
    end
-   if automatic
+   if useConnectedPhotometer
       luminances=64+1;
    else
       luminances=32+1;
    end
    if makeItQuick
-      luminances=2+1;  %%%%%%% TO DEBUG
+      luminances=2+1;  % Quick, to debug.
    end
-   if automatic
-      msg=sprintf('Ok. I''ll take %d readings automatically, using the colorimeter.',luminances);
+   if useConnectedPhotometer
+      msg=sprintf('Ok. I''ll take %d readings useConnectedPhotometerally, using the colorimeter.',luminances);
    else
       msg=sprintf('We''ll take %d readings manually, one by one.',luminances);
    end
@@ -225,7 +241,7 @@ try
    if useSpeech
       Speak(msg);
    end
-   if automatic
+   if useConnectedPhotometer
       cal.photometer='Cambridge Research Systems Colorimeter';
    else
       if useSpeech
@@ -399,7 +415,7 @@ try
       luminanceUnitWords='candelas per meter squared';
       luminanceUnit='cd/m^2';
    end
-   fprintf(['Thanks. You will enter luminances in units of ' luminanceUnit '\n']);
+   fprintf(['Thanks. You will enter luminances in units of ' luminanceUnit '.\n']);
    if useEV
       if useSpeech
          Speak('Please set the film speed to ISO 100 on your light meter. Then hit return to continue.');
@@ -429,7 +445,7 @@ try
    if useSpeech
       Speak(sprintf('We will measure %d luminances.',luminances));
    end
-   if ~automatic
+   if ~useConnectedPhotometer
       fprintf(['\nINSTRUCTIONS: Use a photometer to measure the screen luminance in ' luminanceUnit '.  Then type your reading followed by RETURN.\n']);
       fprintf('If you make a mistake, you can go back by typing -1, followed by RETURN. You can always quit by hitting ESCAPE.\n');
       if useSpeech
@@ -484,7 +500,7 @@ try
          Screen('TextFont',window,'Arial');
          Screen('TextSize',window,20*screenScalar);
          Screen('Flip',window,0,1); % Calibration: Show test patch and instructions.
-         if automatic
+         if useConnectedPhotometer
             msg=sprintf('%d of %d.',i,luminances);
             Screen('DrawText',window,msg,10,screenRect(4)-200*screenScalar,black,white/2);
             if i==1
@@ -555,21 +571,27 @@ try
                n=[];
                while 1
                   txt=sprintf('If you make a mistake, you can go back by typing -1, followed by RETURN. You can always quit by hitting ESCAPE.\n');
-                  Screen('DrawText',window,txt,10,screenRect(4)-50*screenScalar,black,white/2);
-                  [n,terminatorChar]=GetEchoNumber(window,msg,10,screenRect(4)-100*screenScalar,black,white/2);
+                  Screen('DrawText',window,txt,10,screenRect(4)-70*screenScalar,black,white/2);
+                  macsWithTouchBars={'MacBookPro14,3'}; % 2017 MacBook Pro 15";
+                  if ismac && ismember(MacModelName,macsWithTouchBars)
+                     txt=sprintf('If there''s no ESCAPE key, use Grave Accent `, in the upper left corner of your keyboard.\n');
+                     Screen('DrawText',window,txt,10,screenRect(4)-20*screenScalar,black,white/2);
+                  end
+                  [n,terminatorChar]=GetEchoNumber(window,msg,10,screenRect(4)-120*screenScalar,black,white/2);
                   % [n,terminatorChar]=GetEchoNumber(window,msg,10,screenRect(4)-100,black,white/2,1); % external keyboard
-                  if ismember(terminatorChar,[3  27]) % Cntl-C or Escape
+                  graveAccentChar='`';
+                  if ismember(terminatorChar,[3  27 graveAccentChar]) % Cntl-C, Escape, or GraveAccent
                      if terminatorChar==3
                         if useSpeech
                            Speak('Control C');
                         end
                      end
-                     if terminatorChar==27
+                     if terminatorChar==27 || terminatorChar==graveAccentChar 
                         if useSpeech
                            Speak('Escape');
                         end
                      end
-                     error('User hit Control-C or Escape.');
+                     error('User hit Control-C, Escape, or GraveAccent.');
                   end
                   if ~isfloat(n) || length(n)~=1
                      Speak('Invalid. Try again.');
