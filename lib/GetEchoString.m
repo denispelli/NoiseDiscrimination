@@ -47,7 +47,7 @@ function [string,terminatorChar] = GetEchoString(windowPtr, msg, x, y, textColor
 % 02/15/16  dgp       Accept ESC for termination, return terminatorChar.
 % 8/1/17    dgp       If no ESCAPE key, treat GraveAccent as terminator.
 %                    The 2017 15" MacBook Pro has a touch bar, and no
-%                    ESCAPE key. In that case we accept the Grave Accent
+%                    ESCAPE key. In that case we treat the Grave Accent
 %                    key (in upper left of keyboard) as a terminator.
 
 if nargin < 7
