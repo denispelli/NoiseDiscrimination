@@ -776,6 +776,10 @@ if isempty(CORRMAT)
    CORRMAT=ColorCal2('ReadColorMatrix');
 end
 s = ColorCal2('MeasureXYZ');
+if isempty(s)
+   L=nan;
+   return
+end
 XYZ = CORRMAT(4:6,:) * [s.x s.y s.z]';
 L=XYZ(2);
 end
