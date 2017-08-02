@@ -580,13 +580,15 @@ try
                   [n,terminatorChar]=GetEchoNumber(window,msg,10,screenRect(4)-120*screenScalar,black,white/2);
                   % [n,terminatorChar]=GetEchoNumber(window,msg,10,screenRect(4)-100,black,white/2,1); % external keyboard
                   graveAccentChar='`';
-                  if ismember(terminatorChar,[3  27 graveAccentChar]) % Cntl-C, Escape, or GraveAccent
-                     if terminatorChar==3
+                  escapeChar=char(27);
+                  controlCChar=char(3);
+                  if ismember(terminatorChar,[controlCChar  escapeChar graveAccentChar])
+                     if terminatorChar==controlCChar
                         if useSpeech
                            Speak('Control C');
                         end
                      end
-                     if terminatorChar==27 || terminatorChar==graveAccentChar 
+                     if ismember(terminatorChar, [escapeChar graveAccentChar])
                         if useSpeech
                            Speak('Escape');
                         end
