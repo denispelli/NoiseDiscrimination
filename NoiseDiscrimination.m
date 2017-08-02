@@ -575,9 +575,9 @@ o.saveSnapshot = 0; % 0 or 1.  If true (1), take snapshot for public presentatio
 o.snapshotLetterContrast = 0.2; % nan to request program default. If set, this determines o.tSnapshot.;
 o.tSnapshot = nan; % nan to request program defaults.;
 o.cropSnapshot = 0; % If true (1), show only the target and noise, without unnecessary gray background.;
-o.snapshotCaptionTextSizeDeg = 0.5;;
-o.snapshotShowsFixationBefore = 1;;
-o.snapshotShowsFixationAfter = 0;;
+o.snapshotCaptionTextSizeDeg = 0.5;
+o.snapshotShowsFixationBefore = 1;
+o.snapshotShowsFixationAfter = 0;
 o.saveStimulus = 0; % saves to o.savedStimulus;
 o.gapFraction4afc = 0.03; % Typically 0, 0.03, or 0.2. Gap, as a fraction of o.targetHeightDeg, between the four squares in 4afc task, ignored in identify task.;
 o.showCropMarks = 0; % mark the bounding box of the target
@@ -722,11 +722,11 @@ if o.saveSnapshot
    end
    if ~isfinite(o.tSnapshot)
       switch o.targetModulates
-         case 'luminance',
+         case 'luminance'
             o.tSnapshot = -0.0; % log10(contrast)
-         case 'noise',
+         case 'noise'
             o.tSnapshot = .3; % log10(r-1)
-         case 'entropy',
+         case 'entropy'
             o.tSnapshot = 0; % log10(r-1)
          otherwise
             error('Unknown o.targetModulates "%s".',o.targetModulates);
@@ -751,7 +751,7 @@ end
 o.beginningTime = now;
 t = datevec(o.beginningTime);
 stack = dbstack;
-if length(stack) == 1;
+if length(stack) == 1
    o.functionNames = stack.name;
 else
    o.functionNames = [stack(2).name '-' stack(1).name];
@@ -786,7 +786,7 @@ if cal.screen > 0
 end
 cal = OurScreenCalibrations(cal.screen);
 if isfield(cal,'gamma')
-   rmfield(cal,'gamma');
+   cal=rmfield(cal,'gamma');
 end
 cal.CLUTMapLength=o.CLUTMapLength;
 o.cal = cal;
@@ -823,9 +823,9 @@ o.lineSpacing = 1.5;
 o.stimulusRect = InsetRect(screenRect,0,o.lineSpacing*1.2*o.textSize);
 o.noiseCheckPix = round(o.noiseCheckDeg*o.pixPerDeg);
 switch o.task
-   case 'identify',
+   case 'identify'
       o.noiseCheckPix = min(o.noiseCheckPix,RectHeight(o.stimulusRect));
-   case '4afc',
+   case '4afc'
       o.noiseCheckPix = min(o.noiseCheckPix,floor(RectHeight(o.stimulusRect)/(2+o.gapFraction4afc)));
       o.noiseRadiusDeg = o.targetHeightDeg/2;
 end
@@ -858,9 +858,9 @@ textFont = 'Verdana';
 if streq(o.task,'identify')
    o.showResponseNumbers = 0; % Inappropriate so suppress.
    switch o.alphabetPlacement
-      case 'right',
+      case 'right'
          o.stimulusRect(3) = o.stimulusRect(3)-RectHeight(screenRect)/max(6,o.alternatives);
-      case 'top',
+      case 'top'
          o.stimulusRect(2) = max(o.stimulusRect(2),screenRect(2)+0.5*RectWidth(screenRect)/max(6,o.alternatives));
       otherwise
          error('Unknown alphabetPlacement "%d".\n',o.alphabetPlacement);
@@ -908,13 +908,13 @@ o.annularNoiseBigRadiusDeg = min(o.annularNoiseBigRadiusDeg,RectWidth(screenRect
 o.annularNoiseSmallRadiusDeg = min(o.annularNoiseBigRadiusDeg,o.annularNoiseSmallRadiusDeg); % Big radius is at least as big as small radius.
 if ~isfield(o,'blankingRadiusReTargetHeight')
    switch o.targetKind
-      case 'letter';
+      case 'letter'
          o.blankingRadiusReTargetHeight = 1.5; % Make blanking radius 1.5 times
          %                                       % target height. That's a good
          %                                       % value for letters, which are
          %                                       % strong right up to the edge of
          %                                       % the target height.
-      case 'gabor';
+      case 'gabor'
          o.blankingRadiusReTargetHeight = 0.5; % Make blanking radius 0.5 times
          %                                       % target height. That's good for gabors,
          %                                       % which are greatly diminished
@@ -975,7 +975,7 @@ switch o.observer
       end
       if ~isfield(o,'beta') || ~isfinite(o.beta)
          switch o.targetModulates
-            case 'luminance',
+            case 'luminance'
                o.beta = 3.5;
             case {'noise', 'entropy'}
                o.beta = 1.7;
@@ -1038,8 +1038,8 @@ if ~useBrightnessFunction
       for i=1:3
          Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
          cal.brightnessReading = Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
-%          Brightness(cal.screen,cal.brightnessSetting);
-%          cal.brightnessReading = Brightness(cal.screen);
+         %          Brightness(cal.screen,cal.brightnessSetting);
+         %          cal.brightnessReading = Brightness(cal.screen);
          if abs(cal.brightnessSetting-cal.brightnessReading)<0.01
             break;
          elseif i==3
@@ -1117,16 +1117,16 @@ try
          windowInfo=Screen('GetWindowInfo',window);
          o.displayCoreId=windowInfo.DisplayCoreId;
          switch(o.displayCoreId)
-            case 'AMD',
+            case 'AMD'
                o.displayEngineVersion=windowInfo.GPUMinorType/10;
                switch(round(o.displayEngineVersion))
-                  case 6,
+                  case 6
                      o.displayGPUFamily='Southern Islands';
                      % Examples:
                      % AMD Radeon R9 M290X in MacBook Pro (Retina, 15-inch, Mid 2015)
                      % AMD Radeon R9 M370X in iMac (Retina 5K, 27-inch, Late 2014)
                      o.ditherCLUT=61696;
-                  case 8,
+                  case 8
                      o.displayGPUFamily='Sea Islands';
                      % Used in hp Z Book laptop.
                      o.ditherCLUT=59648; % Untested.
@@ -1160,7 +1160,7 @@ try
       else
          o.psychtoolboxKernelDriverLoaded=0;
       end
-
+      
       % Compare hardware CLUT with identity.
       gammaRead=Screen('ReadNormalizedGammaTable',window);
       maxEntry=size(gammaRead,1)-1;
@@ -1168,7 +1168,7 @@ try
       delta=gammaRead(:,2)-gamma(:,2);
       ffprintf(ff,'RMS difference between identity and read-back of hardware CLUT (%dx%d): %.9f\n',...
          size(gammaRead),rms(delta));
-      if exist('cal')
+      if exist('cal','var')
          gray = mean([firstGrayClutEntry lastGrayClutEntry])/o.maxEntry; % CLUT color code for gray.
          assert(gray*o.maxEntry == round(gray*o.maxEntry)); % Sum of first and last is even, so gray is integer.
          LMin = min(cal.old.L);
@@ -1339,9 +1339,9 @@ try
          end
          response=upper(response);
          switch(response)
-            case 'L',
+            case 'L'
                o.eyes='left';
-            case 'R',
+            case 'R'
                o.eyes='right';
             otherwise
                string=sprintf('Illegal response ''%s''. ',response);
@@ -1449,9 +1449,9 @@ try
    ffprintf(ff,'\n');
    o.noiseSize = 2*o.noiseRadiusDeg*[1, 1]*o.pixPerDeg/o.noiseCheckPix;
    switch o.task
-      case 'identify',
+      case 'identify'
          o.noiseSize = 2*round(o.noiseSize/2); % Even numbers, so we can center it on letter.
-      case '4afc',
+      case '4afc'
          o.noiseSize = round(o.noiseSize);
    end
    o.noiseRadiusDeg = 0.5*o.noiseSize(1)*o.noiseCheckPix/o.pixPerDeg;
@@ -1474,11 +1474,11 @@ try
    if o.annularNoiseBigRadiusDeg > o.annularNoiseSmallRadiusDeg
       o.canvasSize = max(o.canvasSize,2*o.annularNoiseBigRadiusDeg*[1, 1]*o.pixPerDeg/o.noiseCheckPix);
    end
-   switch o.task,
-      case 'identify',
+   switch o.task
+      case 'identify'
          o.canvasSize = min(o.canvasSize,floor(RectHeight(o.stimulusRect)/o.noiseCheckPix));
          o.canvasSize = 2*round(o.canvasSize/2); % Even number of checks, so we can center it on letter.
-      case '4afc',
+      case '4afc'
          o.canvasSize = min(o.canvasSize,floor(maxStimulusHeight/o.noiseCheckPix));
          o.canvasSize = round(o.canvasSize);
    end
@@ -1493,7 +1493,7 @@ try
    [x,y] = RectCenter(o.stimulusRect);
    if o.useFixation
       fix.blankingRadiusReTargetHeight = o.blankingRadiusReTargetHeight;
-      fix.blankingRadiusReEccentricity = o.blankingRadiusReEccentricity;     
+      fix.blankingRadiusReEccentricity = o.blankingRadiusReEccentricity;
       fix.markTargetLocation= o.markTargetLocation;
       xy=round(XYPixOfXYDeg(o,[0 0])); % location of fixation
       if 0
@@ -1510,15 +1510,15 @@ try
          fix.xy=xy;            %  location of fixation on screen.
          fix.eccentricityXYPix=o.targetXYPix-xy;  % xy offset of target from fixation.
          fix.clipRect = o.stimulusRect;
-         fix.fixationCrossPix=fixationCrossPix;% Width & height of fixation cross. 
+         fix.fixationCrossPix=fixationCrossPix;% Width & height of fixation cross.
          fix.markTargetLocation=1;             % 0 or 1.
          if isfield(o,'targetMarkDeg')
             fix.targetMarkPix=o.targetMarkDeg*o.pixPerDeg;
-          end
+         end
          if isfield(o,'blankingRadiusDeg')
             fix.blankingRadiusPix=o.blankingRadiusDeg*o.pixPerDeg;
          end
-         fix.blankingRadiusReEccentricity=o.blankingRadiusReEccentricity; 
+         fix.blankingRadiusReEccentricity=o.blankingRadiusReEccentricity;
          fix.blankingRadiusReTargetHeight=o.blankingRadiusReTargetHeight;
          fix.targetHeightPix=o.targetHeightPix;
          fixationLines = ComputeFixationLines2(fix);
@@ -1531,19 +1531,19 @@ try
    
    % COMPUTE noiseList
    switch o.noiseType % Fill noiseList with desired kind of noise.
-      case 'gaussian',
+      case 'gaussian'
          o.noiseListBound = 2;
          temp = randn([1, 20000]);
          noiseList = find(sign(temp.^2-o.noiseListBound^2)-1);
          noiseList = temp(noiseList);
          clear temp;
-      case 'uniform',
+      case 'uniform'
          o.noiseListBound = 1;
          noiseList = -1:1/1024:1;
-      case 'binary',
+      case 'binary'
          o.noiseListBound = 1;
          noiseList = [-1 1];
-      otherwise,
+      otherwise
          error('Unknown noiseType "%s"',o.noiseType);
    end
    
@@ -1656,9 +1656,9 @@ try
          boundsRect = CenterRect(boundsRect,[o.targetXYPix o.targetXYPix]);
          targetRect = round([0 0 o.targetHeightPix o.targetHeightPix]/o.noiseCheckPix);
          signal(1).image = ones(targetRect(3:4));
-      case 'identify',
+      case 'identify'
          switch o.targetKind
-            case 'letter',
+            case 'letter'
                scratchHeight = round(3*o.targetHeightPix/o.noiseCheckPix);
                [scratchWindow, scratchRect] = Screen('OpenOffscreenWindow',-1,[],[0 0 scratchHeight scratchHeight],8);
                if ~streq(o.font,'Sloan') && ~o.allowAnyFont
@@ -1666,7 +1666,7 @@ try
                end
                oldFont = Screen('TextFont',scratchWindow,o.font);
                font = Screen('TextFont',scratchWindow);
-               if ~streq(font,o.font);
+               if ~streq(font,o.font)
                   error('Can''t find requested font. Desired vs. actual font: "%s", "%s"\n',o.font,font);
                end
                oldSize = Screen('TextSize',scratchWindow,round(o.targetHeightPix/o.noiseCheckPix));
@@ -1769,7 +1769,7 @@ try
                %             Screen('TextStyle',scratchWindow,oldStyle);
                Screen('Close',scratchWindow);
                scratchWindow = -1;
-            case 'gabor',
+            case 'gabor'
                % o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
                % o.targetGaborSpaceConstantCycles=1.5; % The 1/e space constant of the gaussian envelope in periods of the sinewave.
                % o.targetGaborCycles=3; % cycles of the sinewave.
@@ -1886,7 +1886,7 @@ try
    end
    o.E1 = mean(power)*(o.noiseCheckPix/o.pixPerDeg)^2;
    ffprintf(ff,'log E1/deg^2 %.2f, where E1 is energy at unit contrast.\n',log10(o.E1));
-   if ismember(o.observer,algorithmicObservers);
+   if ismember(o.observer,algorithmicObservers)
       Screen('CloseAll');
       window = -1;
       LMin = 0;
@@ -1936,10 +1936,10 @@ try
          word = 'Please';
       end
       switch o.task
-         case '4afc',
+         case '4afc'
             msg=[msg word ' click when ready to begin.'];
             fprintf('Please click when ready to begin.\n');
-         case 'identify',
+         case 'identify'
             msg=[msg word ' press the SPACE bar when ready to begin.'];
             fprintf('Please press the space bar when ready to begin.\n');
       end
@@ -1954,9 +1954,9 @@ try
          Speak(msg);
       end
       switch o.task
-         case '4afc',
+         case '4afc'
             GetClicks;
-         case 'identify',
+         case 'identify'
             response=GetKeypress([spaceKeyCode escapeKeyCode graveAccentKeyCode]);
             % This keypress serves mainly to start the first trial, but we
             % quit if the user hits escape.
@@ -1976,9 +1976,9 @@ try
    %% SET PARAMETERS FOR QUEST
    delta = 0.02;
    switch o.task
-      case '4afc',
+      case '4afc'
          gamma = 1/4;
-      case 'identify',
+      case 'identify'
          gamma = 1/o.alternatives;
    end
    
@@ -1991,13 +1991,13 @@ try
    end
    rDeg=sqrt(sum(o.eccentricityXYDeg.^2));
    switch o.thresholdParameter
-      case 'spacing',
+      case 'spacing'
          nominalCriticalSpacingDeg = 0.3*(rDeg+0.45); % Eq. 14 from Song, Levi, and Pelli (2014).
          tGuess = log10(2*nominalCriticalSpacingDeg);
-      case 'size',
+      case 'size'
          nominalAcuityDeg = 0.029*(rDeg+2.72); % Eq. 13 from Song, Levi, and Pelli (2014).
          tGuess = log10(2*nominalAcuityDeg);
-      case 'contrast',
+      case 'contrast'
       otherwise
          error('Unknown o.thresholdParameter "%s".',o.thresholdParameter);
    end
@@ -2032,16 +2032,16 @@ try
          tTest = o.tSnapshot;
       end
       switch o.thresholdParameter
-         case 'spacing',
+         case 'spacing'
             spacingDeg = 10^tTest;
             flankerSpacingPix = spacingDeg*o.pixPerDeg;
             flankerSpacingPix = max(flankerSpacingPix,1.2*o.targetHeightPix);
             fprintf('flankerSpacingPix %d\n',flankerSpacingPix);
-         case 'size',
+         case 'size'
             targetSizeDeg = 10^tTest;
             o.targetHeightPix = targetSizeDeg*o.pixPerDeg;
             o.targetWidthPix = o.targetHeightPix;
-         case 'contrast',
+         case 'contrast'
             if streq(o.targetModulates,'luminance')
                r = 1;
                o.contrast = -10^tTest; % negative contrast, dark letters
@@ -2063,7 +2063,7 @@ try
          o.annularNoiseSD = a;
       end
       switch o.targetModulates
-         case 'noise',
+         case 'noise'
             a = (1-LMin/LMean)/(o.noiseListBound*o.noiseSD/o.noiseListSd);
             if r > a
                r = a;
@@ -2073,7 +2073,7 @@ try
                rWarningCount = rWarningCount+1;
             end
             tTest = log10(r-1);
-         case 'luminance',
+         case 'luminance'
             a = (min(cal.old.L)-LMean)/LMean;
             a = a+o.noiseListBound*o.noiseSD/o.noiseListSd;
             assert(a < 0,'Need range for signal.');
@@ -2081,7 +2081,7 @@ try
                o.contrast = a;
             end
             tTest = log10(-o.contrast);
-         case 'entropy',
+         case 'entropy'
             a = 128/o.backgroundEntropyLevels;
             if r > a
                r = a;
@@ -2155,18 +2155,18 @@ try
                   end
                   if i == signalLocation
                      switch o.targetModulates
-                        case 'noise',
+                        case 'noise'
                            location(i).image = 1+r*(o.noiseSD/o.noiseListSd)*noise;
-                        case 'luminance',
+                        case 'luminance'
                            location(i).image = 1+(o.noiseSD/o.noiseListSd)*noise+o.contrast;
-                        case 'entropy',
+                        case 'entropy'
                            q.noiseList = (0.5+floor(noiseList*0.499999*signalEntropyLevels))/(0.5*signalEntropyLevels);
                            q.sd = std(q.noiseList);
                            location(i).image = 1+(o.noiseSD/q.sd)*(0.5+floor(noise*0.499999*signalEntropyLevels))/(0.5*signalEntropyLevels);
                      end
                   else
                      switch o.targetModulates
-                        case 'entropy',
+                        case 'entropy'
                            q.noiseList = (0.5+floor(noiseList*0.499999*o.backgroundEntropyLevels))/(0.5*o.backgroundEntropyLevels);
                            q.sd = std(q.noiseList);
                            location(i).image = 1+(o.noiseSD/q.sd)*(0.5+floor(noise*0.499999*o.backgroundEntropyLevels))/(0.5*o.backgroundEntropyLevels);
@@ -2214,7 +2214,7 @@ try
                % figure(2);imshow(signalImage);
                signalMask = logical(signalImage);
                switch o.targetModulates
-                  case 'luminance',
+                  case 'luminance'
                      location(1).image = ones(o.canvasSize);
                      location(1).image(centralNoiseMask) = 1+(o.noiseSD/o.noiseListSd)*noise(centralNoiseMask);
                      location(1).image(annularNoiseMask) = 1+(o.annularNoiseSD/o.noiseListSd)*noise(annularNoiseMask);
@@ -2224,7 +2224,7 @@ try
                      location(1).image = ones(o.canvasSize);
                      location(1).image(centralNoiseMask) = 1+(o.noiseSD/o.noiseListSd)*noise(centralNoiseMask);
                      location(1).image(annularNoiseMask) = 1+(o.annularNoiseSD/o.noiseListSd)*noise(annularNoiseMask);
-                  case 'entropy',
+                  case 'entropy'
                      noise(~centralNoiseMask) = 0;
                      noise(signalMask) = (0.5+floor(noise(signalMask)*0.499999*signalEntropyLevels))/(0.5*signalEntropyLevels);
                      noise(~signalMask) = (0.5+floor(noise(~signalMask)*0.499999*o.backgroundEntropyLevels))/(0.5*o.backgroundEntropyLevels);
@@ -2599,9 +2599,9 @@ try
          textRect = OffsetRect(textRect,o.textSize/2,-o.textSize/2); % inset from screen edges
          textRect = round(textRect);
          switch o.task
-            case '4afc',
+            case '4afc'
                message = 'Please click 1 to 4 times for location 1 to 4, or more clicks to quit.';
-            case 'identify',
+            case 'identify'
                message = sprintf('Please type the letter: %s, or ESCAPE to quit.',o.alphabet(1:o.alternatives));
          end
          bounds = Screen('TextBounds',window,message);
@@ -2615,21 +2615,21 @@ try
          
          % DISPLAY RESPONSE ALTERNATIVES
          switch o.task
-            case '4afc',
+            case '4afc'
                leftEdgeOfResponse = screenRect(3);
             case 'identify'
                % Draw the response o.alternatives
                rect = [0 0 o.targetWidthPix o.targetHeightPix]/o.noiseCheckPix; % size of signal(1).image
                switch o.alphabetPlacement
-                  case 'right',
+                  case 'right'
                      desiredLengthPix = RectHeight(screenRect);
                      signalChecks = RectHeight(rect);
-                  case 'top',
+                  case 'top'
                      desiredLengthPix = 0.5*RectWidth(screenRect);
                      signalChecks = RectWidth(rect);
                end
                switch o.targetKind
-                  case 'letter',
+                  case 'letter'
                      spacingFraction = 0.25;
                   case 'gabor'
                      spacingFraction = 0;
@@ -2660,9 +2660,9 @@ try
                rect = OffsetRect(rect,-alphaGapPix,alphaGapPix); % spacing
                rect = round(rect);
                switch o.alphabetPlacement
-                  case 'right',
+                  case 'right'
                      step = [0 RectHeight(rect)+alphaGapPix];
-                  case 'top',
+                  case 'top'
                      step = [RectWidth(rect)+alphaGapPix 0];
                      rect = OffsetRect(rect,-(o.alternatives-1)*step(1),0);
                end
@@ -2709,7 +2709,7 @@ try
          
          % COLLECT RESPONSE
          switch o.task
-            case '4afc',
+            case '4afc'
                global ptb_mouseclick_timeout
                ptb_mouseclick_timeout = 0.8;
                clicks = GetClicks;
@@ -2743,7 +2743,7 @@ try
                      % matrix. So we replace the string by 0.
                      response = 0;
                   end
-                  [ok,response] = ismember(lower(response),lower(o.alphabet)); 
+                  [ok,response] = ismember(lower(response),lower(o.alphabet));
                   if ~ok
                      if o.speakInstructions
                         Speak('Try again. Or hit ESCAPE to quit.');
@@ -2785,9 +2785,9 @@ try
          break;
       end
       switch o.task % score as right or wrong
-         case '4afc',
+         case '4afc'
             response = response == signalLocation;
-         case 'identify',
+         case 'identify'
             response = response == whichSignal;
       end
       if ~ismember(o.observer,algorithmicObservers)
@@ -2798,7 +2798,7 @@ try
          end
       end
       switch o.thresholdParameter
-         case 'spacing',
+         case 'spacing'
             %                     results(n,1)=spacingDeg;
             %                     results(n,2)=response;
             %                     n=n+1;
@@ -2885,11 +2885,11 @@ try
    o.trials = trial;
    rDeg=sqrt(sum(o.eccentricityXYDeg.^2));
    switch o.thresholdParameter
-      case 'spacing',
+      case 'spacing'
          ffprintf(ff,'%s: p %.0f%%, size %.2f deg, ecc. %.1f deg, critical spacing %.2f deg.\n',o.observer,100*o.p,targetSizeDeg,rDeg,10^QuestMean(q));
-      case 'size',
+      case 'size'
          ffprintf(ff,'%s: p %.0f%%, ecc. %.1f deg, threshold size %.3f deg.\n',o.observer,100*o.p,rDeg,10^QuestMean(q));
-      case 'contrast',
+      case 'contrast'
    end
    o.contrast = -10^o.questMean;
    o.EOverN = 10^(2*o.questMean)*o.E1/o.N;
@@ -2959,7 +2959,7 @@ try
    %         ffprintf(ff,'Approximation, assuming pThreshold=0.64, predicts ideal threshold is about log E/N %.2f, E/N %.1f\n',log10(approximateIdealEOverN),approximateIdealEOverN);
    %         ffprintf(ff,'The approximation is Eq. A.24 of Pelli et al. (2006) Vision Research 46:4646-4674.\n');
    switch o.targetModulates
-      case 'noise',
+      case 'noise'
          t = o.questMean;
          o.r = 10^t+1;
          o.approxRequiredNumber = 64./10.^((t-idealT64)/0.55);
@@ -2967,7 +2967,7 @@ try
          ffprintf(ff,'r %.3f, approx required number %.0f\n',o.r,o.approxRequiredNumber);
          %              logNse=std(logApproxRequiredNumber)/sqrt(length(tSample));
          %              ffprintf(ff,'SUMMARY: %s %d runs mean+/-se: log(r-1) %.2f+/-%.2f, log(approx required n) %.2f+/-%.2f\n',o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
-      case 'entropy',
+      case 'entropy'
          t = o.questMean;
          o.r = 10^t+1;
          signalEntropyLevels = o.r*o.backgroundEntropyLevels;
@@ -2983,44 +2983,44 @@ try
             end
          end
    end
-%    if o.runAborted && o.runNumber < o.runsDesired
-%       if o.speakInstructions
-%          Speak('Please type ESCAPE to skip the rest and quit now, or space to continue with next run.');
-%       end
-%       response = 0;
-%       while 1
-%          response = GetKeypress;
-%          switch response
-%             case {escapeChar,graveAccentChar},
-%                ffprintf(ff,'*** ESCAPE. Quitting now.\n');
-%                if o.speakInstructions
-%                   Speak('Quitting now.');
-%                end
-%                o.quitNow = 1;
-%                break;
-%             case ' ',
-%                if o.speakInstructions
-%                   Speak('Continuing.');
-%                end
-%                o.quitNow = 0;
-%                break;
-%             otherwise
-%                if o.speakInstructions
-%                   Speak('Try again. Type space to continue, or ESCAPE to quit.');
-%                end
-%          end
-%       end
-%    end
-if o.speakInstructions
-   if o.quitNow && ~ismember(o.observer,algorithmicObservers)
-      Speak('QUITTING now. Done.');
-   else
-      if ~o.runAborted && o.runNumber == o.runsDesired && o.congratulateWhenDone && ~ismember(o.observer,algorithmicObservers)
-         Speak('Congratulations. End of run.');
+   %    if o.runAborted && o.runNumber < o.runsDesired
+   %       if o.speakInstructions
+   %          Speak('Please type ESCAPE to skip the rest and quit now, or space to continue with next run.');
+   %       end
+   %       response = 0;
+   %       while 1
+   %          response = GetKeypress;
+   %          switch response
+   %             case {escapeChar,graveAccentChar},
+   %                ffprintf(ff,'*** ESCAPE. Quitting now.\n');
+   %                if o.speakInstructions
+   %                   Speak('Quitting now.');
+   %                end
+   %                o.quitNow = 1;
+   %                break;
+   %             case ' ',
+   %                if o.speakInstructions
+   %                   Speak('Continuing.');
+   %                end
+   %                o.quitNow = 0;
+   %                break;
+   %             otherwise
+   %                if o.speakInstructions
+   %                   Speak('Try again. Type space to continue, or ESCAPE to quit.');
+   %                end
+   %          end
+   %       end
+   %    end
+   if o.speakInstructions
+      if o.quitNow && ~ismember(o.observer,algorithmicObservers)
+         Speak('QUITTING now. Done.');
+      else
+         if ~o.runAborted && o.runNumber == o.runsDesired && o.congratulateWhenDone && ~ismember(o.observer,algorithmicObservers)
+            Speak('Congratulations. End of run.');
+         end
       end
    end
-end
-if Screen(window,'WindowKind') == 1
+   if Screen(window,'WindowKind') == 1
       % Screen takes many seconds to close. This gives us a white screen
       % while we wait.
       Screen('FillRect',window);
@@ -3151,13 +3151,13 @@ saveSize = Screen('TextSize',window,o.snapshotCaptionTextSize);
 saveFont = Screen('TextFont',window,'Courier');
 caption = {''};
 switch o.targetModulates
-   case 'luminance',
+   case 'luminance'
       caption{1} = sprintf('signal %.3f',10^tTest);
       caption{2} = sprintf('noise sd %.3f',o.noiseSD);
-   case 'noise',
+   case 'noise'
       caption{1} = sprintf('noise sd %.3f',o.noiseSD);
       caption{end+1} = sprintf('n %.0f',checks);
-   case 'entropy',
+   case 'entropy'
       caption{1} = sprintf('ratio # lum. %.3f',1+10^tTest);
       caption{2} = sprintf('noise sd %.3f',o.noiseSD);
       caption{end+1} = sprintf('n %.0f',checks);
@@ -3166,11 +3166,11 @@ switch o.targetModulates
       caption{2} = sprintf('approx required n %.0f',approxRequiredN);
 end
 switch o.task
-   case '4afc',
+   case '4afc'
       answer = signalLocation;
       answerString = sprintf('%d',answer);
       caption{end+1} = sprintf('xyz%s',lower(answerString));
-   case 'identify',
+   case 'identify'
       answer = whichSignal;
       answerString = o.alphabet(answer);
       caption{end+1} = sprintf('xyz%s',lower(answerString));
@@ -3202,9 +3202,9 @@ switch o.targetModulates
       signalDescription = sprintf('%s',o.targetModulates);
 end
 switch o.targetModulates
-   case 'luminance',
+   case 'luminance'
       filename = sprintf('%s_%s_%s%s_%.3fc_%.0fpix_%s',signalDescription,o.task,o.noiseType,freezing,10^tTest,checks,answerString);
-   case {'noise', 'entropy'},
+   case {'noise', 'entropy'}
       filename = sprintf('%s_%s_%s%s_%.3fr_%.0fpix_%.0freq_%s',signalDescription,o.task,o.noiseType,freezing,1+10^tTest,checks,approxRequiredN,answerString);
 end
 mypath = fileparts(mfilename('fullpath'));
@@ -3225,11 +3225,11 @@ filename = [filename '.png'];
 imwrite(img,fullfile(mypath,filename),'png');
 ffprintf(ff,'Saving image to file "%s" ',filename);
 switch o.targetModulates
-   case 'luminance',
+   case 'luminance'
       ffprintf(ff,'log(contrast) %.2f\n',tTest);
-   case 'noise',
+   case 'noise'
       ffprintf(ff,'approx required n %.0f, sd ratio r %.3f, log(r-1) %.2f\n',approxRequiredN,1+10^tTest,tTest);
-   case 'entropy',
+   case 'entropy'
       ffprintf(ff,'ratio r=signalLevels/backgroundLevels %.3f, log(r-1) %.2f\n',1+10^tTest,tTest);
 end
 o.trialsPerRun = 1;
@@ -3253,6 +3253,7 @@ function TestBitDepth(o)
 % that if "o" is modified here, it too may need to be returned as an output
 % argument, or made global.
 % n=o.testBitDepth.
+global cal
 LMin = min(cal.old.L);
 LMax = max(cal.old.L);
 LMean = (LMax+LMin)/2;
@@ -3354,7 +3355,7 @@ else
    contrastEstimate = nan;
 end
 switch o.targetModulates
-   case 'luminance',
+   case 'luminance'
       img = [1 1+o.contrast];
    otherwise
       noise = PsychRandSample(noiseList,o.canvasSize);
@@ -3365,7 +3366,7 @@ imgEstimate = EstimateLuminance(cal,index)/LMean;
 rmsContrastError = rms(img(:)-imgEstimate(:));
 % ffprintf(ff,'Assess contrast: At LMean, the minimum contrast step is %.4f, with rmsContrastError %.3f\n',contrastEstimate,rmsContrastError);
 switch o.targetModulates
-   case 'luminance',
+   case 'luminance'
       img = [1, 1+o.contrast];
       img = IndexOfLuminance(cal,img*LMean);
       L = EstimateLuminance(cal,img);
@@ -3423,9 +3424,9 @@ switch o.observer
    case 'ideal'
       clear likely
       switch o.task
-         case '4afc',
+         case '4afc'
             switch o.targetModulates
-               case 'luminance',
+               case 'luminance'
                   % pick darkest
                   for i = 1:locations
                      im = location(i).image(signalImageIndex);
@@ -3447,9 +3448,9 @@ switch o.observer
                      signalLocation
                   end
             end
-         case 'identify',
+         case 'identify'
             switch o.targetModulates
-               case 'luminance',
+               case 'luminance'
                   for i = 1:o.alternatives
                      im = zeros(size(signal(i).image));
                      im(:) = location(1).image(signalImageIndex); % here be the signal
@@ -3479,7 +3480,7 @@ switch o.observer
    case 'brightnessSeeker'
       clear likely
       switch o.task
-         case '4afc',
+         case '4afc'
             % Rank by brightness.
             % Assume brightness is
             % (image-1)+o.observerQuadratic*(image-1)^2
@@ -3502,7 +3503,7 @@ switch o.observer
                brightness = im+o.observerQuadratic*im.^2;
                likely(i) = sign(o.observerQuadratic)*mean(brightness(:));
             end
-         case 'identify',
+         case 'identify'
             % Rank hypotheses by brightness contrast of
             % supposed letter to background.
             for i = 1:o.alternatives
@@ -3527,7 +3528,7 @@ switch o.observer
       c = [-1 -0.878 -0.748 -0.637 -0.508 -0.366 -0.248 -0.141 0.0992 0.214 0.324 0.412 0.523 0.634 0.767 0.878 1];
       b = [0.102 0.749 0.944 0.945 0.921 0.909 0.91 0.907 0.905 0.905 0.906 0.915 0.912 0.906 0.886 0.868 0.932];
       switch o.task
-         case '4afc',
+         case '4afc'
             % Rank by blackshot mechanism defined by Chubb et al. (2004).
             for i = 1:locations
                im = location(i).image(signalImageIndex);
@@ -3544,7 +3545,7 @@ switch o.observer
                likely
                signalLocation
             end
-         case 'identify',
+         case 'identify'
             % Rank hypotheses by blackshot contrast of
             % supposed letter to background.
             for i = 1:o.alternatives
@@ -3565,14 +3566,14 @@ switch o.observer
    case 'maximum'
       clear likely
       switch o.task
-         case '4afc',
+         case '4afc'
             % Rank by maximum pixel.
             for i = 1:locations
                im = location(i).image(signalImageIndex);
                im = im(:)-1;
                likely(i) = max(im(:));
             end
-         case 'identify',
+         case 'identify'
             error('maximum o.observer not yet implemented for "identify" task');
             % Rank hypotheses by contrast of supposed letter to
             % background.
@@ -3628,6 +3629,7 @@ end
 xyPix=xyPix+o.nearPointXYPix;
 end
 
+% THIS FUNCTION IS CURRENTLY UNUSED.
 function xyDeg=XYDegOfXYPix(o,xyPix)
 % Convert position from (x,y) coordinate in o.stimulusRect to deg (relative
 % to fixation). Deg increase right and up. Pix are in Apple screen
@@ -3651,7 +3653,7 @@ function isTrue=IsXYInRect(xy,rect)
 if nargin~=2
    error('Need two args for function isTrue=IsXYInRect(xy,rect)');
 end
-if size(xy)~=[1 2]
+if ~all(size(xy)==[1 2])
    error('First arg to IsXYInRect(xy,rect) must be [x y] pair.');
 end
 isTrue=IsInRect(xy(1),xy(2),rect);
@@ -3782,7 +3784,7 @@ else
             string = sprintf('%s %.1f cm to the right of',string,fixationOffsetXYCm(1));
          end
       end
-      if fixationOffsetXYCm(1)~=0 && fixationOffsetXYCm(2)~=0 
+      if fixationOffsetXYCm(1)~=0 && fixationOffsetXYCm(2)~=0
          string=[string 'and'];
       end
       if fixationOffsetXYCm(2)~=0
