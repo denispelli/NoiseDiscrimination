@@ -218,7 +218,7 @@ try
       end
       while(1)
          reply=input('Shall we use it (y/n)?:','s');
-         if length(reply)>0
+         if ~isempty(reply)
             break;
          end
       end
@@ -376,7 +376,7 @@ try
    % Make sure it's a good gamma table.
    cal.old.gammaHistogramStd=std(histcounts(cal.old.gamma(:,2),10,'Normalization','probability'));
    macStd=[0.0005  0.0082  0.0085  0.0111  0.0123  0.0683 0.0082];
-   if cal.old.gammaHistogramStd > max(macStd);
+   if cal.old.gammaHistogramStd > max(macStd)
       fprintf(['CalibrateScreenLuminance: Probably this is not an Apple profile.\n'...
          'We suggest that you use Apple:System preferences:Displays:Color:Display profile:\n'...
          'to select another profile and then reselect the profile you want. The \n'...
