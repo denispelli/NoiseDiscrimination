@@ -118,14 +118,17 @@ function CalibrateScreenLuminance(screen,screenOutput)
 % for brightness is display specific - works with some displays but not
 % with others.
 % http://osxdaily.com/2010/05/15/stop-the-macbook-pro-and-macbook-screen-from-dimming/
-addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
+
 forceMaximumBrightness=1;
-blindCalibration=0; % Useful when you can't see the screen.
+allowEV=0; % 1 to allow use of a photographer's light meter as a photometer. NOT TESTED.
+blindCalibration=0; % A fallback for computers that don't support Psychtoolbox GetEchoNumber.
 % gamma11bpc=1/2.4; % disabled
 useFractionOfScreen=0; % Set this nonzero, about 0.3, for debugging.
 makeItQuick=0; % 1 for debugging
+
 try
    commandwindow; % Bring focus to command window, if not already there.
+   addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
    fprintf('\nWelcome to Calibrate Screen Luminance.\n');
    while(1)
       reply=input('Do you want me to use computer speech to guide you (y or n)?:','s');
@@ -245,9 +248,9 @@ try
       cal.photometer='Cambridge Research Systems Colorimeter';
    else
       if useSpeech
-         Speak('Please type the name of your photometer, followed by RETURN. If it''s the Minolta Spotmeter just hit RETURN.');
+         Speak('Please type the brand name of your photometer or light meter, followed by RETURN. If it''s the Minolta Spotmeter just hit RETURN.');
       end
-      msg=input('Please type the name of your photometer, followed by RETURN.\nIf it''s the Minolta Spotmeter, just hit RETURN:','s');
+      msg=input('Please type the brand name of your photometer or light meter, followed by RETURN.\nIf it''s the Minolta Spotmeter, just hit RETURN:','s');
       if useSpeech
          Speak('Ok');
       end
@@ -398,16 +401,21 @@ try
    end
    fprintf('Successfully read your gamma table ("color profile").\n');
    
-   useEV=0;
-   %       response='x';
-   %       if useSpeech
-   %          Speak('What units will you use for luminance? Type E or C');
-   %       end
-   %     while ~ismember(response,{'e','c'})
-   %         response=input('What units will you use to specify luminance? Type   e (for EV)   or c (for cd/m^2) followed by return:','S');
-   %         response=lower(response);
-   %     end
-   %     useEV= response=='e';
+   if allowEV
+      response='x';
+      fprintf('Photometers usually report luminance in cd/m^2. Photographic light meters report it in EV units. \n');
+      if useSpeech
+         Speak('What units will you use for luminance? Type C or E');
+      end
+      while ~ismember(response,{'e','c'})
+         response=input('What units will you use to specify luminance? Type C (for cd/m^2) or E (for EV) followed by RETURN:','S');
+         response=lower(response);
+      end
+      useEV= response(1)=='e';
+   else
+      useEV=0;
+   end
+   
    if useEV
       luminanceUnitWords='exposure value EV';
       luminanceUnit='EV';
@@ -417,11 +425,11 @@ try
    end
    fprintf(['Thanks. You will enter luminances in units of ' luminanceUnit '.\n']);
    if useEV
+      fprintf('IMPORTANT: Please set the film speed to ISO 100 on your light meter.\n');
       if useSpeech
          Speak('Please set the film speed to ISO 100 on your light meter. Then hit return to continue.');
       end
-      fprintf('IMPORTANT: Please set the film speed to ISO 100 on your light meter.\n');
-      x=input('Hit return to continue:','S');
+      x=input('Hit RETURN to continue:','S');
    end
    fprintf('We will create a linearized gamma table that you can save for future use with this display.\n');
    computer=Screen('Computer');
@@ -446,10 +454,10 @@ try
       Speak(sprintf('We will measure %d luminances.',luminances));
    end
    if ~useConnectedPhotometer
-      fprintf(['\nINSTRUCTIONS: Use a photometer to measure the screen luminance in ' luminanceUnit '.  Then type your reading followed by RETURN.\n']);
+      fprintf(['\nINSTRUCTIONS: Use a photometer or light meter to measure the screen luminance in ' luminanceUnit '.  Then type your reading followed by RETURN.\n']);
       fprintf('If you make a mistake, you can go back by typing -1, followed by RETURN. You can always quit by hitting ESCAPE.\n');
       if useSpeech
-         Speak(['Use a photometer to measure the screen luminance in ' luminanceUnitWords '.  Then type your reading followed by return.']);
+         Speak(['Use a photometer or light meter to measure the screen luminance in ' luminanceUnitWords '.  Then type your reading followed by return.']);
 %          Speak('If you make a mistake, you can go back by typing -1, followed by return. You can always quit by hitting ESCAPE.');
       else
 %          input('\nHit RETURN once you''ve read the above instructions, and you''re ready to proceed:','s');
@@ -531,7 +539,8 @@ try
             end
          else
             if blindCalibration
-               % No echoing of typed response. Ugh.
+               % No echoing of typed response. Ugh. This code supports
+               % computers (Windows?) on which we cannot use GetEchoNumber.
                msg=sprintf('%d of %d.',i,luminances);
                Screen('DrawText',window,msg,10,screenRect(4)-200*screenScalar);
                msg=sprintf(['Please measure luminance (' luminanceUnit ') and type it in, followed by <return>:_____']);
