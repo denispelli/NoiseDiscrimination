@@ -1,5 +1,0 @@
-# NYU license servers
-SERVER lm0x.es.its.nyu.edu 27000
-SERVER lm1x.es.its.nyu.edu 27000
-SERVER lm2x.es.its.nyu.edu 27000
-USE_SERVER
