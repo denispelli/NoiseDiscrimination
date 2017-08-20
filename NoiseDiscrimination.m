@@ -847,6 +847,11 @@ useBrightnessFunction=1;
 if useBrightnessFunction
    Brightness(cal.screen,cal.brightnessSetting); % Set brightness.
    cal.brightnessReading = Brightness(cal.screen); % Read brightness.
+   if cal.brightnessReading==-1
+      % If it failed, try again. The first attempt sometimes fails.
+      % Not sure why. Maybe it times out.
+      cal.brightnessReading = Brightness(cal.screen); % Read brightness.
+   end
    if isfinite(cal.brightnessReading) && abs(cal.brightnessSetting-cal.brightnessReading)>0.01
       error('Set brightness to %.2f, but read back %.2f',cal.brightnessSetting,cal.brightnessReading);
    end
