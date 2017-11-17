@@ -200,6 +200,9 @@ try
    %% Is a CRS colorimeter connected?
    try
       usbHandle = PsychHID('OpenUSBDevice', 2145, 4097);
+      if ~isempty(usbHandle)
+         PsychHID('CloseUSBDevice', usbHandle);
+      end
       useConnectedPhotometer=1;
    catch
       useConnectedPhotometer=0;
