@@ -198,13 +198,11 @@ try
    cal.pixelMax=255; % ????
    
    %% Is a CRS colorimeter connected?
-   useConnectedPhotometer=0;
-   d=PsychHID('Devices');
-   for i=1:length(d)
-      if d(i).vendorID==2145 && d(i).deviceID==4097
-         useConnectedPhotometer=1;
-         break;
-      end
+   try
+      usbHandle = PsychHID('OpenUSBDevice', 2145, 4097);
+      useConnectedPhotometer=1;
+   catch
+      useConnectedPhotometer=0;
    end
 %       usbHandle = PsychHID('OpenUSBDevice', 2145, 4097);
 %       usbHandle = PsychHID('OpenUSBDevice', vendorID, deviceID);
