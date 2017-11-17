@@ -198,10 +198,12 @@ try
    cal.pixelMax=255; % ????
    
    %% Is a CRS colorimeter connected?
+   % This test works on macOS, but may not on Linux or Windows.
    try
-      usbHandle = PsychHID('OpenUSBDevice', 2145, 4097);
+      clear PsychHID
+      usbHandle=PsychHID('OpenUSBDevice',2145,4097);
       if ~isempty(usbHandle)
-         PsychHID('CloseUSBDevice', usbHandle);
+         PsychHID('CloseUSBDevice',usbHandle);
       end
       useConnectedPhotometer=1;
    catch
