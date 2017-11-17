@@ -207,8 +207,6 @@ try
    catch
       useConnectedPhotometer=0;
    end
-%       usbHandle = PsychHID('OpenUSBDevice', 2145, 4097);
-%       usbHandle = PsychHID('OpenUSBDevice', vendorID, deviceID);
 %    oldVisualDebugLevel = Screen('Preference', 'VisualDebugLevel',0);
 %    oldVerbosity = Screen('Preference', 'Verbosity',0);
 %    oldSuppressAllWarnings = Screen('Preference', 'SuppressAllWarnings',1);
