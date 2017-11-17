@@ -172,7 +172,7 @@ try
       Screen('Preference', 'VisualDebugLevel', oldVisualDebugLevel);
       Screen('Preference', 'SkipSyncTests', oldSkipSyncTests);
       Screen('Preference', 'Verbosity',oldVerbosity);
-      using11bpc=streq(cal.displayCoreId,'AMD');
+      using11bpc=ismember(cal.displayCoreId,{'AMD','R600'});
   else
       % Shortcut: Check for Mac models that probably have AMD drivers. This
       % list is incomplete and hasn't been double checked. E.g. I omitted
