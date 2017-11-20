@@ -1009,10 +1009,10 @@ if streq(o.observer,'brightnessSeeker')
 end
 [screenWidthMm, screenHeightMm] = Screen('DisplaySize',cal.screen);
 cal.screenWidthCm = screenWidthMm/10;
-ffprintf(ff,'Computer %s, %s, screen %d, %dx%d, %.1fx%.1f cm\n',cal.machineName,cal.macModelName,cal.screen,RectWidth(screenRect),RectHeight(screenRect),screenWidthMm/10,screenHeightMm/10);
+ffprintf(ff,'Computer %s, %s, screen %d, %dx%d, %.1fx%.1f cm\n',cal.localHostName,cal.macModelName,cal.screen,RectWidth(screenRect),RectHeight(screenRect),screenWidthMm/10,screenHeightMm/10);
 assert(cal.screenWidthCm == screenWidthMm/10);
 ffprintf(ff,'Computer account %s.\n',cal.processUserLongName);
-ffprintf(ff,'%s %s calibrated by %s on %s.\n',cal.machineName,cal.macModelName,cal.calibratedBy,cal.datestr);
+ffprintf(ff,'%s %s calibrated by %s on %s.\n',cal.localHostName,cal.macModelName,cal.calibratedBy,cal.datestr);
 ffprintf(ff,'%s\n',cal.notes);
 ffprintf(ff,'cal.ScreenConfigureDisplayBrightnessWorks=%.0f;\n',cal.ScreenConfigureDisplayBrightnessWorks);
 if ismac && isfield(cal,'profile')
@@ -1434,7 +1434,16 @@ try
    if streq(o.task,'identify')
       ffprintf(ff,'Minimum letter resolution is %.0f checks.\n',o.minimumTargetHeightChecks);
    end
-   ffprintf(ff,'o.font %s\n',o.font);
+   switch o.targetKind
+      case 'letter'
+         ffprintf(ff,'o.font %s\n',o.font);
+      case 'gabor'
+         ffprintf(ff,'o.targetGaborSpaceConstantCycles %.1f\n',o.targetGaborSpaceConstantCycles);
+         ffprintf(ff,'o.targetGaborCycles %.1f\n',o.targetGaborCycles);
+         ffprintf(ff,'o.targetGaborOrientationsDeg [');
+         ffprintf(ff,' %.0f',o.targetGaborOrientationsDeg);
+         ffprintf(ff,']\n');
+   end
    ffprintf(ff,'o.targetHeightPix %.0f, o.noiseCheckPix %.0f, o.durationSec %.2f s\n',o.targetHeightPix,o.noiseCheckPix,o.durationSec);
    ffprintf(ff,'o.targetModulates %s\n',o.targetModulates);
    if streq(o.targetModulates,'entropy')
