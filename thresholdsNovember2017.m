@@ -186,17 +186,32 @@ for i=1:length(oo)
    oo(i).row=i;
 end
 t=struct2table(oo)
-for oi=24:length(oo)
+% return
+% for oi=24:length(oo)
+for oi=45
    o=oo(oi);
-%    o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+   o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
    o.experimenter='denis';
    o.observer='chen';
    o.observer='satrianna';
    o.observer='hortense';
+   o.observer='darshan';
+   o.observer='flavia';
+   o.observer='shenghao';
+   o.observer='yichen';
    o.eyes='right'; % 'left', 'right', 'both'.
    o.viewingDistanceCm=70; % viewing distance
-   o.font='Sloan';
-   o.alphabet='DHKNORSVZ';
+   if 0
+      o.targetKind='letter';
+      o.font='Sloan';
+      o.alphabet='DHKNORSVZ';
+   else
+      o.targetKind='gabor';
+      o.targetGaborOrientationsDeg=[0 45 90 135];
+      o.targetGaborNames='1234';
+      o.alphabet=o.targetGaborNames;
+      o.alternatives=length(o.alphabet);
+   end
    o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
    o.durationSec = 0.2;
    o.noiseSD=0.16;
