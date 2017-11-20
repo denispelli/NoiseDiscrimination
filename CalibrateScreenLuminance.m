@@ -125,7 +125,7 @@ blindCalibration=0; % A fallback for computers that don't support Psychtoolbox G
 % gamma11bpc=1/2.4; % disabled
 useFractionOfScreen=0; % Set this nonzero, about 0.3, for debugging.
 makeItQuick=0; % 1 for debugging
-
+Screen('Preference', 'SkipSyncTests', 1);
 try
    commandwindow; % Bring focus to command window, if not already there.
    addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
@@ -439,17 +439,17 @@ try
    else
       cal.processUserLongName='';
    end
-   if isfield(computer,'machineName')
-      cal.machineName=strrep(computer.machineName,'’','''');  % work around bug in Screen('Computer')
+   if ~isfield(computer,'localHostName')
+      cal.localHostName='';
    else
-      cal.machineName='';
+      cal.localHostName=computer.localHostName;
    end
    if ismac
       cal.macModelName=MacModelName;
    else
       cal.macModelName='Not-a-mac';
    end
-   fprintf('Computer %s, %s, screenWidthCm %.1f, screenHeightCm %.1f\n',prep(cal.machineName),prep(cal.macModelName),cal.screenWidthMm/10,cal.screenHeightMm/10);
+   fprintf('Computer %s, %s, screenWidthCm %.1f, screenHeightCm %.1f\n',prep(cal.localHostName),prep(cal.macModelName),cal.screenWidthMm/10,cal.screenHeightMm/10);
    fprintf('We will measure %d luminances.\n',luminances);
    if useSpeech
       Speak(sprintf('We will measure %d luminances.',luminances));
@@ -685,7 +685,7 @@ try
       fprintf(f,'cal.screen==%d',cal.screen);
       fprintf(f,' && cal.screenWidthMm==%g && cal.screenHeightMm==%g',cal.screenWidthMm,cal.screenHeightMm);
       if ismac
-         fprintf(f,' && streq(cal.machineName,''%s'')',prep(cal.machineName));
+         fprintf(f,' && streq(cal.localHostName,''%s'')',prep(cal.localHostName));
       end
       fprintf(f,'\n');
       if length(cal.screenOutput)==1
