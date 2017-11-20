@@ -59,17 +59,18 @@ computer=Screen('Computer');
 [cal.screenWidthMm,cal.screenHeightMm]=Screen('DisplaySize',cal.screen);
 if computer.windows
    cal.processUserLongName=getenv('USERNAME');
-   cal.machineName=getenv('USERDOMAIN');
+   cal.localHostName=getenv('USERDOMAIN');
    cal.macModelName=[];
 elseif computer.linux
    cal.processUserLongName=getenv('USER');
-   cal.machineName=strrep(computer.machineName,'鈄1�7',''''); % work around bug in Screen('Computer')
+   cal.localHostName=strrep(computer.localHostName,'鈄1�7',''''); % work around bug in Screen('Computer')
    cal.osversion=computer.kern.version;
    cal.macModelName=[];
 elseif computer.osx || computer.macintosh
    cal.processUserLongName=computer.processUserLongName;
-   cal.machineName=strrep(computer.machineName,'鈄1�7',''''); % work around bug in Screen('Computer')
+   cal.localHostName=strrep(computer.localHostName,'鈄1�7',''''); % work around bug in Screen('Computer')
    cal.macModelName=MacModelName;
+   cal.machineName='';
 end
 cal.screenOutput=[]; % only for Linux
 cal.ScreenConfigureDisplayBrightnessWorks=1; % default value
@@ -100,8 +101,8 @@ switch cal.macModelName
       cal.old.n=[     0    16    32    48    64    80    96   112   128   143   159   175   191   207   223   239   255];
       cal.old.L=[   1.5   1.5001   3.1   7.4  12.9  19.2  26.4  34.5  43.0  54.2  66.4  80.6  93.4 107.6 119.1 130.8 137.3]; % cd/m^2
    case 'MacBookAir6,2'; % MacBook Air 13-inch
-      switch cal.machineName
-         case 'Santayana'
+      switch cal.localHostName
+         case 'Santayana-MacBookAir'
             cal.mfilename='CalibrateScreenLuminance';
             cal.datestr='none';
             cal.calibratedBy='Denis';
