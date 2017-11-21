@@ -11,41 +11,12 @@
 % Standard condition
 % gabor target at 1 of 4 orientations
 % (specify gabor sigma is in number of cycles.)
-% (specify how we converts size to s.f.)
+% (A = 1 period x period)
 % P=0.7, assuming 4 alternatives
 % luminance 206 cd/m2
-% monocular, temporal field
+% monocular, temporal field, preferred eye
 % duration 200 ms
 % 
-% Effect of threshold criterion: Graph Neq vs. P.
-% In each of the 3 domains
-% P: 0.35, 0.55, 0.75, 0.95
-% size: 2, 16 deg
-% eccentricity: 0, 30 deg
-% (omit 2 deg letter at 30 deg ecc.)
-% 
-% Graph E vs. N
-% In each of the 3 domains
-% size: 2, 16 deg
-% eccentricity: 0, 30 deg
-% (omit 2 deg letter at 30 deg ecc.)
-% 
-% Effect of Eccentricity: Graph Neq vs Eccentricity. like the poster
-% nasal and temporal fields
-% ecc: 0, 3, 10, 30, 60 deg
-% size: 2, 4, 8, 16 deg
-% 
-% Effect of luminance: Graph Neq vs. luminance.
-% Luminances: five points centered (logarithmically) on the transition luminance
-% size: 2 and 16 deg
-% ecc: 0, 8, 30 deg
-% 
-% Effect of number of eyes
-% Not sure how to graph this. 
-% Perhaps graph binocular:monocular ratio of Neq vs. Ecc, with size as a parameter.
-% number of eyes: 1, 2
-% size: 4, 16 deg
-% ecc: 0, 10, 30 deg
 
 clear o
 if verLessThan('matlab','R2013b')
@@ -124,10 +95,71 @@ o.useFractionOfScreen=0.3; % 0: normal, 0.5: small for debugging.
 o.assessLoadGamma = 0; % diagnostic information
 
 clear o oo
+
+o.observer='chen';
+o.observer='satrianna';
+o.observer='hortense';
+o.observer='darshan';
+o.observer='flavia';
+o.observer='shenghao';
+o.observer='yichen';
+o.observer='junk'
+o.experimenter=o.observer;
+% switch o.observer
+%    case 'denis'
+%       o.preferredEye='right';
+%    case 'hortense'
+%       o.preferredEye='right'
+%    case 'darshan'
+%       o.preferredEye='right'
+%    case 'flavia'
+%       o.preferredEye='right'
+%    case 'shenghao'
+%       o.preferredEye='right'
+%    case 'yichen'
+%       o.preferredEye='right'
+% end
 if 1
-   % NEW DATA COLLECTION, APRIL 21, 2017
+   % COLLECTION, NOVEMBER 2017
+   %% CREATE LIST OF CONDITIONS TO BE TESTED
+
+   %% Effect of threshold criterion: Graph Neq vs. P.
+   % In each of the 3 domains
+   % P: 0.35, 0.55, 0.75, 0.95
+   % size: 2, 16 deg
+   % eccentricity: 0, 30 deg
+   % (omit 2 deg letter at 30 deg ecc.)
+   eccs=[30 0];
+   sizes = [2 16];
+   Ps=[0.35, 0.55, 0.75, 0.95];
+   for ecc = eccs
+      switch(abs(ecc))
+         case(30)
+            sizes = [16];
+      end
+      for size = sizes
+         for noiseSD = [0 0.16]
+            o.eccentricityXYDeg=[ecc 0];
+            o.targetHeightDeg=size;
+            o.noiseCheckDeg=o.targetHeightDeg/20;
+            o.noiseSD=noiseSD;
+            for p=Ps
+               o.pThreshold=p;
+               if ~exist('oo','var');
+                  oo=o;
+               else
+                  oo(end+1)=o;
+               end
+            end
+         end
+      end
+   end
+
+   %% Effect of Eccentricity: Graph Neq vs Eccentricity. temporal field
+   % ecc: 0, 3, 10, 30, 60 deg
+   % size: 2, 4, 8, 16 deg
    o.eyes='right'; % 'left', 'right', 'both'.
-   eccs=[-60 60 -30 30 -10 10 -3 3 0];
+   eccs=[60 30 10 3 0];
    sizes = [2 4 8 16];
    for ecc = eccs
       switch(abs(ecc))
@@ -147,11 +179,16 @@ if 1
             else
                oo(end+1)=o;
             end
-            %             o=NoiseDiscrimination(o);
          end
       end
    end
 end
+
+% Graph E vs. N
+% In each of the 3 domains
+% size: 2, 16 deg
+% eccentricity: 0, 30 deg
+% (omit 2 deg letter at 30 deg ecc.)
 
 size=8;
 for ecc=-60
@@ -187,18 +224,12 @@ for i=1:length(oo)
 end
 t=struct2table(oo)
 % return
+
+% RUN THE CONDITIONS
 % for oi=24:length(oo)
 for oi=45
    o=oo(oi);
    o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
-   o.experimenter='denis';
-   o.observer='chen';
-   o.observer='satrianna';
-   o.observer='hortense';
-   o.observer='darshan';
-   o.observer='flavia';
-   o.observer='shenghao';
-   o.observer='yichen';
    o.eyes='right'; % 'left', 'right', 'both'.
    o.viewingDistanceCm=70; % viewing distance
    if 0
