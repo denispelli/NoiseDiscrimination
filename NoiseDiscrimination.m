@@ -1790,6 +1790,7 @@ try
                % o.targetGaborOrientationsDeg=[0 90]; % Orientations relative to vertical.
                % o.targetGaborNames='VH';
                targetRect = round([0 0 o.targetHeightPix o.targetHeightPix]/o.noiseCheckPix);
+               o.targetRectLocal = targetRect;
                widthChecks = RectWidth(targetRect)-1;
                axisValues = -widthChecks/2:widthChecks/2; % axisValues is used in creating the meshgrid.
                [x, y] = meshgrid(axisValues,axisValues);
