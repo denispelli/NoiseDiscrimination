@@ -31,15 +31,9 @@ octave-workspace
 *.Rhistory
 *.Rproj
 
+*.numbers
 *.png
 *.zip
-*.mp4
 *.csv
-*.xls
-*.xlsx
-*.doc
-*.docx
-*.pdf
-*.numbers
-*.svg
+~$*.docx
 .Rproj.user
