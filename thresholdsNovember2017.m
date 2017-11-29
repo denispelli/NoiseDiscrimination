@@ -129,6 +129,7 @@ if 1
    % size: 2, 16 deg
    % eccentricity: 0, 30 deg
    % (omit 2 deg letter at 30 deg ecc.)
+      o.eyes='right'; % 'left', 'right', 'both'.
    eccs=[30 0];
    sizes = [2 16];
    Ps=[0.35, 0.55, 0.75, 0.95];
@@ -158,7 +159,6 @@ if 1
    %% Effect of Eccentricity: Graph Neq vs Eccentricity. temporal field
    % ecc: 0, 3, 10, 30, 60 deg
    % size: 2, 4, 8, 16 deg
-   o.eyes='right'; % 'left', 'right', 'both'.
    eccs=[60 30 10 3 0];
    sizes = [2 4 8 16];
    for ecc = eccs
