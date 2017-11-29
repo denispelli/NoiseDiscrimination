@@ -32,8 +32,10 @@ o.fixationCrossWeightDeg = 0.05; % fixation line thickness
 o.fixationCrossBlankedNearTarget = 0; % 0 or 1.
 o.fixationCrossBlankedUntilSecAfterTarget = 0.6; % Pause after stimulus before display of fixation.
 % Skipped when fixationCrossBlankedNearTarget. Not needed when eccentricity is bigger than the target.
-o.markTargetLocation=0;
-o.targetMarkDeg=0.05;
+o.markTargetLocation=1;
+o.targetMarkDeg=0.5;
+o.blankingRadiusReEccentricity=0;
+o.blankingRadiusReTargetHeight=0;
 
 % USER INTERFACE
 o.alphabetPlacement='top'; % show possible answers on 'top' or 'right' for letters and gabors.
@@ -74,6 +76,9 @@ o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
 % targetHeightDeg = 4 deg
 % checkHeightDeg = targetHeightDeg/20 
 % With and without noise
+o.markTargetLocation=1;
+o.blankingRadiusReEccentricity=0;
+o.blankingRadiusReTargetHeight=0;
 
 
 o.observer='Jing';
