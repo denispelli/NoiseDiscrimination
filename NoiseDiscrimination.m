@@ -2252,8 +2252,12 @@ try
       end
       %% COMPUTE CLUT
       if ~ismember(o.observer,algorithmicObservers)
-         Screen('FillRect',window,gray1);
-         Screen('FillRect',window,gray,o.stimulusRect);
+         if trial==1
+            % Clear screen for first trial. After the first trial, the
+            % screen is already ready for next trial.
+            Screen('FillRect',window,gray1);
+            Screen('FillRect',window,gray,o.stimulusRect);
+         end
          if ~isempty(fixationLines)
             Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
          end
@@ -2596,7 +2600,7 @@ try
             Screen('Close',movieTexture(iMovieFrame));
          end
          eraseRect = ClipRect(eraseRect,o.stimulusRect);
-         
+         eraseRect = dstRect; % Erase only the movie, sparing the rest of the screen
          % Print instruction in upper left corner.
          Screen('FillRect',window,gray1,topCaptionRect);
          message = sprintf('Trial %d of %d. Run %d of %d.',trial,o.trialsPerRun,o.runNumber,o.runsDesired);
