@@ -618,7 +618,7 @@ o.printDurations = 0;
 o.newClutForEachImage = 1;
 
 %% READ USER-SUPPLIED o PARAMETERS
-if 1
+if 0
    % ACCEPT ALL o PARAMETERS.
    % All fields in the user-supplied "oIn" overwrite corresponding fields in "o".
    fields = fieldnames(oIn);
@@ -650,6 +650,7 @@ else
       'signalDurationSecSD' 'E' 'signal' 'newCal'};
    unknownFields={};
    for condition=1:conditions
+      oo(condition)=o;
       inputFields=fieldnames(oIn(condition));
       oo(condition).unknownFields={};
       for i=1:length(inputFields)
@@ -1514,33 +1515,22 @@ try
       fix.blankingRadiusReEccentricity = o.blankingRadiusReEccentricity;
       fix.markTargetLocation= o.markTargetLocation;
       fixationXYPix=round(XYPixOfXYDeg(o,[0 0])); % location of fixation
-      if 0
-         % Old
-         fix.x = fixationXYPix(1); % x location of fixation
-         fix.y = fixationXYPix(2); % y location of fixation
-         fix.targetXYPix = o.targetXYPix;
-         fix.clipRect = o.stimulusRect;
-         fix.fixationCrossPix = fixationCrossPix;
-         fix.targetHeightPix = o.targetHeightPix;
-         fixationLines = ComputeFixationLines(fix);
-      else
-         % New
-         fix.xy=fixationXYPix;            %  location of fixation on screen.
-         fix.eccentricityXYPix=o.targetXYPix-fixationXYPix;  % xy offset of target from fixation.
-         fix.clipRect = o.stimulusRect;
-         fix.fixationCrossPix=fixationCrossPix;% Width & height of fixation cross.
-         fix.markTargetLocation=1;             % 0 or 1.
-         if isfield(o,'targetMarkDeg')
-            fix.targetMarkPix=o.targetMarkDeg*o.pixPerDeg;
-         end
-         if isfield(o,'blankingRadiusDeg')
-            fix.blankingRadiusPix=o.blankingRadiusDeg*o.pixPerDeg;
-         end
-         fix.blankingRadiusReEccentricity=o.blankingRadiusReEccentricity;
-         fix.blankingRadiusReTargetHeight=o.blankingRadiusReTargetHeight;
-         fix.targetHeightPix=o.targetHeightPix;
-         fixationLines = ComputeFixationLines2(fix);
+ 
+      fix.xy=fixationXYPix;            %  location of fixation on screen.
+      fix.eccentricityXYPix=o.targetXYPix-fixationXYPix;  % xy offset of target from fixation.
+      fix.clipRect = o.stimulusRect;
+      fix.fixationCrossPix=fixationCrossPix;% Width & height of fixation cross.
+      fix.markTargetLocation=1;             % 0 or 1.
+      if isfield(o,'targetMarkDeg')
+         fix.targetMarkPix=o.targetMarkDeg*o.pixPerDeg;
       end
+      if isfield(o,'blankingRadiusDeg')
+         fix.blankingRadiusPix=o.blankingRadiusDeg*o.pixPerDeg;
+      end
+      fix.blankingRadiusReEccentricity=o.blankingRadiusReEccentricity;
+      fix.blankingRadiusReTargetHeight=o.blankingRadiusReTargetHeight;
+      fix.targetHeightPix=o.targetHeightPix;
+      fixationLines = ComputeFixationLines2(fix);
    end
    if window ~= -1 && ~isempty(fixationLines)
       Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,black); % fixation
@@ -2585,7 +2575,7 @@ try
             %             o.actualStimulus(1:dy:end,1:dx:end,2)
          end
          if isfinite(o.durationSec) % End the movie
-            Screen('FillRect',window,gray,o.stimulusRect);
+            Screen('FillRect',window,gray,dstRect); % Erase only the movie, sparing the rest of the screen.
             if o.useDynamicNoiseMovie
                Screen('Flip',window,0,1); % Clear stimulus at next frame.
             else
@@ -2632,7 +2622,7 @@ try
          Screen('DrawText',window,message,textRect(1),textRect(4),black,gray1,1);
          Screen('TextSize',window,o.textSize);
          
-         % DISPLAY RESPONSE ALTERNATIVES
+         %% DISPLAY RESPONSE ALTERNATIVES
          switch o.task
             case '4afc'
                leftEdgeOfResponse = screenRect(3);
@@ -2726,7 +2716,7 @@ try
          end
          Screen('Flip',window,0,1); % Display instructions.
          
-         % COLLECT RESPONSE
+         %% COLLECT RESPONSE
          switch o.task
             case '4afc'
                global ptb_mouseclick_timeout
