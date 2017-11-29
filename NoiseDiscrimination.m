@@ -76,7 +76,7 @@ function o = NoiseDiscrimination(oIn)
 %
 % FIXATION CROSS. The fixation cross is quite flexible. You specify its
 % size (full width) and stroke thickness in deg. If you request
-% o.fixationCrossBlankedNearTarget=1 then it maintains a blank margin (with
+% o.fixationCrossBlankedNearTarget=1 then we maintains a blank margin (with
 % no fixation line) around the target that is at least a target width (to
 % avoid overlap masking) and at least half the eccentricity (to avoid
 % crowding). Otherwise the fixation cross is blanked during target
@@ -1509,11 +1509,11 @@ try
       fix.blankingRadiusReTargetHeight = o.blankingRadiusReTargetHeight;
       fix.blankingRadiusReEccentricity = o.blankingRadiusReEccentricity;
       fix.markTargetLocation= o.markTargetLocation;
-      xy=round(XYPixOfXYDeg(o,[0 0])); % location of fixation
+      fixationXYPix=round(XYPixOfXYDeg(o,[0 0])); % location of fixation
       if 0
          % Old
-         fix.x = xy(1); % x location of fixation
-         fix.y = xy(2); % y location of fixation
+         fix.x = fixationXYPix(1); % x location of fixation
+         fix.y = fixationXYPix(2); % y location of fixation
          fix.targetXYPix = o.targetXYPix;
          fix.clipRect = o.stimulusRect;
          fix.fixationCrossPix = fixationCrossPix;
@@ -1521,8 +1521,8 @@ try
          fixationLines = ComputeFixationLines(fix);
       else
          % New
-         fix.xy=xy;            %  location of fixation on screen.
-         fix.eccentricityXYPix=o.targetXYPix-xy;  % xy offset of target from fixation.
+         fix.xy=fixationXYPix;            %  location of fixation on screen.
+         fix.eccentricityXYPix=o.targetXYPix-fixationXYPix;  % xy offset of target from fixation.
          fix.clipRect = o.stimulusRect;
          fix.fixationCrossPix=fixationCrossPix;% Width & height of fixation cross.
          fix.markTargetLocation=1;             % 0 or 1.
@@ -1634,10 +1634,10 @@ try
          ffprintf(ff,'No response numbers. Assuming o.observer already knows them.\n');
       end
    end
-   xy=(o.targetXYPix-o.stimulusRect(1:2))./[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)];
-   xy(2)=1-xy(2);
+   fixationXYPix=(o.targetXYPix-o.stimulusRect(1:2))./[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)];
+   fixationXYPix(2)=1-fixationXYPix(2);
    string=sprintf('Target is at (%.1f,%.1f) deg, (%.2f %.2f) in unit square. ',...
-      o.eccentricityXYDeg,xy);
+      o.eccentricityXYDeg,fixationXYPix);
    if o.useFixation
       if o.fixationIsOffscreen
          string=[string 'Using off-screen fixation mark.'];
