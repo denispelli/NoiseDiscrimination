@@ -574,6 +574,8 @@ o.fixationCrossDeg = inf; % Typically 1 or inf. Make this at least 4 deg for sco
 o.fixationCrossWeightDeg = 0.03; % Typically 0.03. Make it much thicker for scotopic testing.
 o.fixationCrossBlankedNearTarget = 1; % 0 or 1.
 o.fixationCrossBlankedUntilSecAfterTarget = 0.6; % Pause after stimulus before display of fixation. Skipped when fixationCrossBlankedNearTarget. Not needed when eccentricity is bigger than the target.
+o.blankingRadiusReTargetHeight= nan;
+o.blankingRadiusReEccentricity= 0.5;
 o.textSizeDeg = 0.6;
 o.saveSnapshot = 0; % 0 or 1.  If true (1), take snapshot for public presentation.;
 o.snapshotLetterContrast = 0.2; % nan to request program default. If set, this determines o.tSnapshot.;
@@ -638,7 +640,7 @@ else
    knownOutputFields={'labelAlternatives' 'beginningTime' ...
       'functionNames' 'dataFilename' 'dataFolder' 'cal' 'pixPerDeg' ...
       'lineSpacing' 'stimulusRect' 'noiseCheckPix' 'maxLRange' ...
-      'minLRange' 'targetHeightPix' 'blankingRadiusReTargetHeight'...
+      'minLRange' 'targetHeightPix' ...
       'contrast' 'targetWidthPix' 'checkSec' 'moviePreFrames'...
       'movieSignalFrames' 'moviePostFrames' 'movieFrames' 'noiseSize'...
       'annularNoiseSmallSize' 'annularNoiseBigSize' 'canvasSize'...
@@ -648,7 +650,7 @@ else
       'centralNoiseEnvelopeE1DegDeg' 'E1' 'data' 'psych' 'questMean'...
       'questSd' 'p' 'trials' 'EOverN' 'efficiency' 'signalDurationSecMean'...
       'signalDurationSecSD' 'E' 'signal' 'newCal'...
-      'beamPositionQueriesAvailable' 'blankingRadiusReEccentricity'...
+      'beamPositionQueriesAvailable' ...
       'drawTextPlugin' 'fixationXYPix' 'maxEntry' 'nearPointXYDeg'...
       'nearPointXYPix' 'pixPerCm' 'psychtoolboxKernelDriverLoaded'...
       'targetXYPix' 'textLineLength' 'textSize' 'unknownFields'...
@@ -921,7 +923,7 @@ o.annularNoiseSmallRadiusDeg = max(o.noiseRadiusDeg,o.annularNoiseSmallRadiusDeg
 o.annularNoiseBigRadiusDeg = max(o.annularNoiseBigRadiusDeg,o.annularNoiseSmallRadiusDeg); % Big radius is at least as big as small radius.
 o.annularNoiseBigRadiusDeg = min(o.annularNoiseBigRadiusDeg,RectWidth(screenRect)/o.pixPerDeg);
 o.annularNoiseSmallRadiusDeg = min(o.annularNoiseBigRadiusDeg,o.annularNoiseSmallRadiusDeg); % Big radius is at least as big as small radius.
-if ~isfield(o,'blankingRadiusReTargetHeight')
+if isnan(o.blankingRadiusReTargetHeight)
    switch o.targetKind
       case 'letter'
          o.blankingRadiusReTargetHeight = 1.5; % Make blanking radius 1.5 times
@@ -935,9 +937,6 @@ if ~isfield(o,'blankingRadiusReTargetHeight')
          %                                       % which are greatly diminished
          %                                       % at their edge.
    end
-end
-if ~isfield(o,'blankingRadiusReEccentricity')
-   o.blankingRadiusReEccentricity=0.5;
 end
 fixationCrossPix = round(o.fixationCrossDeg*o.pixPerDeg);
 fixationCrossWeightPix = round(o.fixationCrossWeightDeg*o.pixPerDeg);
@@ -1520,12 +1519,11 @@ try
       fix.blankingRadiusReEccentricity = o.blankingRadiusReEccentricity;
       fix.markTargetLocation= o.markTargetLocation;
       fixationXYPix=round(XYPixOfXYDeg(o,[0 0])); % location of fixation
- 
       fix.xy=fixationXYPix;            %  location of fixation on screen.
       fix.eccentricityXYPix=o.targetXYPix-fixationXYPix;  % xy offset of target from fixation.
       fix.clipRect = o.stimulusRect;
       fix.fixationCrossPix=fixationCrossPix;% Width & height of fixation cross.
-      fix.markTargetLocation=1;             % 0 or 1.
+%       fix.markTargetLocation=1;             % 0 or 1.
       if isfield(o,'targetMarkDeg')
          fix.targetMarkPix=o.targetMarkDeg*o.pixPerDeg;
       end
@@ -1943,7 +1941,7 @@ try
             msg = [msg 'Please fix your eyes on your offscreen fixation mark, '];
          else
             xyCm=(XYPixOfXYDeg(o,[0 0])-XYPixOfXYDeg(o,o.eccentricityXYDeg))/o.pixPerCm;
-            msg = [msg 'Please fix your eyes on the center of the fixation cross, '];
+            msg = [msg 'Please fix your eyes on the center of the fixation cross +, '];
          end
          word = 'and';
       else
@@ -3812,8 +3810,8 @@ else
             string = sprintf('%s %.1f cm lower than',string,fixationOffsetXYCm(2));
          end
       end
-      string = [string ' the cross.'];
-      string = sprintf('%s Adjust the viewing distances so both your fixation mark and the cross below are %.1f cm from the observer''s eye.',...
+      string = [string ' the cross +.'];
+      string = sprintf('%s Adjust the viewing distances so both your fixation mark and the cross + below are %.1f cm from the observer''s eye.',...
          string,o.viewingDistanceCm);
       string = [string ' Tilt and swivel the display so that the cross is orthogonal to the observer''s line of sight. '...
          'Then hit RETURN to proceed, or ESCAPE to quit. '];
