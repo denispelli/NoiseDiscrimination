@@ -38,7 +38,7 @@ o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
 
 % SIGNAL
 o.targetHeightDeg=8; % Target size, range 0 to inf.
-eccentricityDeg=0; % eccentricity [0 8 16 32]
+o.eccentricityXYDeg=[0 0]; % eccentricity [0 8 16 32]
 
 % TO REPLICATE MANOJ
 % o.font='ITC Bookman Std';
@@ -70,7 +70,6 @@ o.fixationCrossBlankedUntilSecAfterTarget = 0.6; % Pause after stimulus before d
 % USER INTERFACE
 o.alphabetPlacement='top'; % show possible answers on 'top' or 'right' for letters and gabors.
 % o.fixationCrossWeightDeg=0.05; % target line thickness
-o.isKbLegacy=0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar, for Linux compatibility.
 % o.tGuess=log10(0.2); % Optionally tell Quest the initial log contrast on first trial.
 
 % SNAPSHOT
