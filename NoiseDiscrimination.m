@@ -497,6 +497,7 @@ o.observer = 'junk'; % Name of person or existing algorithm.
 % o.observer='ideal'; % Existing algorithm instead of person.
 algorithmicObservers = {'ideal', 'brightnessSeeker', 'blackshot', 'maximum'};
 o.experimenter='none';
+o.experiment='';
 o.eyes='both'; % 'left', 'right', 'both', or 'one', which asks user to specify at runtime.
 o.luminanceTransmission=1; % Less than one for dark glasses or neutral density filter.
 o.trialsPerRun = 40; % Typically 40.
@@ -618,6 +619,8 @@ o.measuredDurationSec = [];
 o.movieFrameFlipSec = [];
 o.printDurations = 0;
 o.newClutForEachImage = 1;
+o.experiment='';
+o.condition=1;
 
 %% READ USER-SUPPLIED o PARAMETERS
 if 0
@@ -675,7 +678,7 @@ else
    unknownFields=unique(unknownFields);
    if ~isempty(unknownFields)
       warning off backtrace
-      warning(['Ignoring unknown o input fields:' sprintf(' %s',unknownFields{:}) '.']);
+      warning(['SKIPPING THIS RUN: unknown o input fields:' sprintf(' %s',unknownFields{:}) '.']);
       warning on backtrace
       return
    end
@@ -1515,25 +1518,17 @@ try
    end
    [x,y] = RectCenter(o.stimulusRect);
    if o.useFixation
-      fix.blankingRadiusReTargetHeight = o.blankingRadiusReTargetHeight;
-      fix.blankingRadiusReEccentricity = o.blankingRadiusReEccentricity;
       fix.markTargetLocation= o.markTargetLocation;
       fixationXYPix=round(XYPixOfXYDeg(o,[0 0])); % location of fixation
       fix.xy=fixationXYPix;            %  location of fixation on screen.
       fix.eccentricityXYPix=o.targetXYPix-fixationXYPix;  % xy offset of target from fixation.
       fix.clipRect = o.stimulusRect;
       fix.fixationCrossPix=fixationCrossPix;% Width & height of fixation cross.
-%       fix.markTargetLocation=1;             % 0 or 1.
-      if isfield(o,'targetMarkDeg')
-         fix.targetMarkPix=o.targetMarkDeg*o.pixPerDeg;
-      end
-      if isfield(o,'blankingRadiusDeg')
-         fix.blankingRadiusPix=o.blankingRadiusDeg*o.pixPerDeg;
-      end
+      fix.targetMarkPix=o.targetMarkDeg*o.pixPerDeg;
       fix.blankingRadiusReEccentricity=o.blankingRadiusReEccentricity;
       fix.blankingRadiusReTargetHeight=o.blankingRadiusReTargetHeight;
       fix.targetHeightPix=o.targetHeightPix;
-      fixationLines = ComputeFixationLines2(fix);
+      [fixationLines,o.markTargetLocation]=ComputeFixationLines2(fix);
    end
    if window ~= -1 && ~isempty(fixationLines)
       Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,black); % fixation
