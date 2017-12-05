@@ -62,15 +62,17 @@ o.alternatives=length(o.alphabet);
 % FIXATION
 o.fixationCrossDeg = 1; % Typically 1 or inf. Make this at least 4 deg for scotopic testing, since the fovea is blind scotopically.
 o.markTargetLocation=1;
-o.fixationCrossWeightDeg = 0.05; % target line thickness
+o.targetMarkDeg=0.5;
+o.fixationCrossWeightDeg = 0.05; % line thickness
 o.fixationCrossBlankedNearTarget = 0; % 0 or 1.
 o.fixationCrossBlankedUntilSecAfterTarget = 0.6; % Pause after stimulus before display of fixation.
 % Skipped when fixationCrossBlankedNearTarget. Not needed when eccentricity is bigger than the target.
+o.blankingRadiusReEccentricity=0;
+o.blankingRadiusReTargetHeight=0;
 
 % USER INTERFACE
 o.alphabetPlacement='top'; % show possible answers on 'top' or 'right' for letters and gabors.
-% o.fixationCrossWeightDeg=0.05; % target line thickness
-% o.tGuess=log10(0.2); % Optionally tell Quest the initial log contrast on first trial.
+% o.tGuess=log10(0.2); % Optionally tell Quest the initial log contrast of first trial.
 
 % SNAPSHOT
 o.saveSnapshot=0; % 0 or 1.  If true (1), take snapshot for public presentation.
@@ -84,40 +86,26 @@ o.speakInstructions=0;
 
 % DEBUGGING
 % o.useFractionOfScreen=0.6; % 0: normal, 0.5: small for debugging.
-o.flipClick=0;
 o.assessContrast=0;
 o.assessLoadGamma=0;
 o.showCropMarks=0; % mark the bounding box of the target
 o.printDurations=0;
-
-o.useFractionOfScreen=0.3; % 0: normal, 0.5: small for debugging.
 o.assessLoadGamma = 0; % diagnostic information
+% o.useFractionOfScreen=0.3; % 0: normal, 0.5: small for debugging.
 
 clear o oo
 
-o.observer='chen';
-o.observer='satrianna';
-o.observer='hortense';
-o.observer='darshan';
-o.observer='flavia';
-o.observer='shenghao';
-o.observer='yichen';
-o.observer='junk'
-o.experimenter=o.observer;
-% switch o.observer
-%    case 'denis'
-%       o.preferredEye='right';
-%    case 'hortense'
-%       o.preferredEye='right'
-%    case 'darshan'
-%       o.preferredEye='right'
-%    case 'flavia'
-%       o.preferredEye='right'
-%    case 'shenghao'
-%       o.preferredEye='right'
-%    case 'yichen'
-%       o.preferredEye='right'
-% end
+o.experiment='';
+o.experimenter='chen';
+o.experimenter='satrianna';
+o.experimenter='hortense';
+o.experimenter='darshan';
+o.experimenter='flavia';
+o.experimenter='shenghao';
+o.experimenter='yichen';
+o.experimenter='none';
+o.observer=o.experimenter;
+
 if 1
    % COLLECTION, NOVEMBER 2017
    %% CREATE LIST OF CONDITIONS TO BE TESTED
@@ -128,7 +116,8 @@ if 1
    % size: 2, 16 deg
    % eccentricity: 0, 30 deg
    % (omit 2 deg letter at 30 deg ecc.)
-      o.eyes='right'; % 'left', 'right', 'both'.
+   o.experiment='Neq vs. P';
+   o.eyes='right'; % 'left', 'right', 'both'.
    eccs=[30 0];
    sizes = [2 16];
    Ps=[0.35, 0.55, 0.75, 0.95];
@@ -158,13 +147,14 @@ if 1
    %% Effect of Eccentricity: Graph Neq vs Eccentricity. temporal field
    % ecc: 0, 3, 10, 30, 60 deg
    % size: 2, 4, 8, 16 deg
+   o.experiment='Neq vs eccentricity';
    eccs=[60 30 10 3 0];
    sizes = [2 4 8 16];
    for ecc = eccs
       switch(abs(ecc))
-         case(30),
+         case(30)
             sizes = [4 8 16];
-         case(60),
+         case(60)
             sizes= [8 16];
       end
       for size = sizes
@@ -173,7 +163,7 @@ if 1
             o.targetHeightDeg=size;
             o.noiseCheckDeg=o.targetHeightDeg/20;
             o.noiseSD=noiseSD;
-            if ~exist('oo','var');
+            if ~exist('oo','var')
                oo=o;
             else
                oo(end+1)=o;
@@ -189,6 +179,7 @@ end
 % eccentricity: 0, 30 deg
 % (omit 2 deg letter at 30 deg ecc.)
 
+o.experiment='E vs. N';
 size=8;
 for ecc=-60
    o.eyes='right'; % 'left', 'right', 'both'.
@@ -211,7 +202,7 @@ for ecc=-60
       o.noiseCheckDeg=o.targetHeightDeg/20;
       o.noiseSD=noiseSD;
       %          o=NoiseDiscrimination(o);
-      if ~exist('oo','var');
+      if ~exist('oo','var')
          oo=o;
       else
          oo(end+1)=o;
@@ -219,18 +210,21 @@ for ecc=-60
    end
 end
 for i=1:length(oo)
-   oo(i).row=i;
+   oo(i).condition=i;
 end
-t=struct2table(oo)
+t=struct2table(oo);
+t
 % return
 
 % RUN THE CONDITIONS
 % for oi=24:length(oo)
-for oi=45
+for oi=1:4
    o=oo(oi);
-   o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
-   o.eyes='right'; % 'left', 'right', 'both'.
+%    o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+   o.blankingRadiusReEccentricity=0;
    o.viewingDistanceCm=70; % viewing distance
+   o.viewingDistanceCm=40; % viewing distance
+   o.eyes='right'; % 'left', 'right', 'both'.
    if 0
       o.targetKind='letter';
       o.font='Sloan';
@@ -247,9 +241,9 @@ for oi=45
    o.noiseSD=0.16;
    o.useDynamicNoiseMovie = 1;
    o.markTargetLocation=1;
-   o.blankingRadiusDeg=0;
-   o.moviePreSec = 0.3;
-   o.moviePostSec = 0.3;
+   o.blankingRadiusReTargetHeight=0;
+   o.moviePreSec = 0.2;
+   o.moviePostSec = 0.2;
    o.targetMarkDeg=1;
    o.fixationCrossDeg=3;
    o=NoiseDiscrimination(o);
