@@ -19,9 +19,6 @@
 % 
 
 clear o
-if verLessThan('matlab','R2013b')
-   error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
-end
 o.durationSec=0.5; % signal duration. [0.05, 0.5]
 o.trialsPerRun=50;
 
@@ -93,6 +90,10 @@ o.printDurations=0;
 o.assessLoadGamma = 0; % diagnostic information
 % o.useFractionOfScreen=0.3; % 0: normal, 0.5: small for debugging.
 
+%%%%%%%%%%%%%%%%%%%%% EVERYTHING ABOVE IS IGNORED %%%%%%%%%%%%%%%%%%%%%
+if verLessThan('matlab','R2013b')
+   error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
+end
 clear o oo
 
 o.experiment='';
