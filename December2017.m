@@ -26,12 +26,11 @@ if 1
    end
    clear o oo
    
-   % Any parameter that is unique to a condition, below, must be created
-   % here, because MATLAB disallows assignment between elements of arrays
-   % of dissimilar structs.
+   % We list parameters here in the order that we want them to appear
+   % as columns in the list.
    o.condition=1;
    o.experiment='';
-      o.eccentricityXYDeg=[0 0];
+   o.eccentricityXYDeg=[0 0];
    o.targetHeightDeg=1;
    o.noiseSD=0.16;
    o.pThreshold = 0.75;
@@ -75,7 +74,7 @@ if 1
    end
    o.noiseType= 'gaussian';
    o.durationSec = 0.2;
-
+   
    %% Effect of threshold criterion: Graph Neq vs. P.
    % In each of the 3 domains
    % P: 0.35, 0.55, 0.75, 0.95
