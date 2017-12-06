@@ -41,12 +41,12 @@ if 1
    o.experimenter='none';
    o.observer=o.experimenter; % Enter observer's name here.
    o.eccentricityXYDeg=[0 0];
-   o.targetHeightDeg=size;
-   o.noiseSD=noiseSD;
+   o.targetHeightDeg=1;
+   o.noiseSD=0.16;
    o.pThreshold = 0.75;
    o.noiseType= 'gaussian';
    o.noiseCheckDeg=nan;
-      o.durationSec = 0.2;
+   o.durationSec = 0.2;
    o.targetGaborCycles=3;
    
    %% Effect of noise check size: Graph (E-E0)/N vs. checkDeg.
