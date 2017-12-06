@@ -46,6 +46,7 @@ if 1
    o.pThreshold = 0.75;
    o.noiseType= 'gaussian';
    o.noiseCheckDeg=nan;
+      o.durationSec = 0.2;
    o.targetGaborCycles=3;
    
    %% Effect of noise check size: Graph (E-E0)/N vs. checkDeg.
@@ -54,6 +55,7 @@ if 1
    sizes = o.targetGaborCycles/0.5; % 0.5 c/deg
    o.viewingDistanceCm=40; % viewing distance
    o.noiseType= 'binary';
+   o.durationSec = 0.1;
    for size = sizes
       o.eccentricityXYDeg=[0 0];
       o.targetHeightDeg=size;
@@ -79,7 +81,8 @@ if 1
       end
    end
    o.noiseType= 'gaussian';
-   
+   o.durationSec = 0.2;
+
    %% Effect of threshold criterion: Graph Neq vs. P.
    % In each of the 3 domains
    % P: 0.35, 0.55, 0.75, 0.95
@@ -208,7 +211,6 @@ if 1
          o.alphabet=o.targetGaborNames;
          o.alternatives=length(o.alphabet);
       end
-      o.durationSec = 0.2;
       o.useDynamicNoiseMovie = 1;
       o.markTargetLocation=1;
       if all(o.eccentricityXYDeg==0)
