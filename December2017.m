@@ -31,22 +31,15 @@ if 1
    % of dissimilar structs.
    o.condition=1;
    o.experiment='';
-   o.experimenter='chen';
-   o.experimenter='satrianna';
-   o.experimenter='hortense';
-   o.experimenter='darshan';
-   o.experimenter='flavia';
-   o.experimenter='shenghao';
-   o.experimenter='yichen';
-   o.experimenter='none';
-   o.observer=o.experimenter; % Enter observer's name here.
-   o.eccentricityXYDeg=[0 0];
+      o.eccentricityXYDeg=[0 0];
    o.targetHeightDeg=1;
    o.noiseSD=0.16;
    o.pThreshold = 0.75;
    o.noiseType= 'gaussian';
    o.noiseCheckDeg=nan;
    o.durationSec = 0.2;
+   o.eyes='right';
+   o.viewingDistanceCm=40.;
    o.targetGaborCycles=3;
    
    %% Effect of noise check size: Graph (E-E0)/N vs. checkDeg.
@@ -199,6 +192,15 @@ if 1
    for oi=1:4
       o=oo(oi);
       %    o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+      o.experimenter='chen';
+      o.experimenter='satrianna';
+      o.experimenter='hortense';
+      o.experimenter='darshan';
+      o.experimenter='flavia';
+      o.experimenter='shenghao';
+      o.experimenter='yichen';
+      o.experimenter='none';
+      o.observer=o.experimenter; % Enter observer's name here.
       o.blankingRadiusReEccentricity=0;
       if 0
          o.targetKind='letter';
