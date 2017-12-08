@@ -51,7 +51,7 @@ if 1
    for size = sizes
       o.eccentricityXYDeg=[0 0];
       o.targetHeightDeg=size;
-      for noiseSD = [0 0.5]
+      for noiseSD = [0 0.2]
          o.noiseSD=noiseSD;
          if noiseSD>0
             for n=[10  40  160]
