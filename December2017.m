@@ -36,7 +36,7 @@ if 1
    o.pThreshold = 0.75;
    o.noiseType= 'gaussian';
    o.noiseCheckDeg=nan;
-   o.durationSec = 0.2;
+   o.durationSec = 0.4;
    o.eyes='right';
    o.viewingDistanceCm=40.;
    o.targetGaborCycles=3;
