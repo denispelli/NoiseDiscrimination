@@ -167,7 +167,7 @@ try
       r=AlignRect(r,screenBufferRect,'right','bottom');
       window=PsychImaging('OpenWindow',cal.screen,0,r);
       windowInfo=Screen('GetWindowInfo',window);
-      if hasfield(windowInfo,'DisplayCoreId')
+      if isfield(windowInfo,'DisplayCoreId')
          cal.displayCoreId=windowInfo.DisplayCoreId;
       else
          cal.displayCoreId='';
@@ -205,12 +205,15 @@ try
    % This test works on macOS, but may not on Linux or Windows.
    try
       clear PsychHID
+      fprintf('* Checking for USB photometer ...\n');
       usbHandle=PsychHID('OpenUSBDevice',2145,4097);
       if ~isempty(usbHandle)
          PsychHID('CloseUSBDevice',usbHandle);
       end
+      fprintf('* USB phototometer found.\n');
       useConnectedPhotometer=1;
    catch
+      fprintf('* No USB phototometer found, proceeding.\n');
       useConnectedPhotometer=0;
    end
    %    oldVisualDebugLevel = Screen('Preference', 'VisualDebugLevel',0);
