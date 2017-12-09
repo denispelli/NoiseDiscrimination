@@ -541,6 +541,7 @@ o.targetHeightDeg = 2; % Target size, range 0 to inf. If you ask for too
 % o.targetHeightDeg=30*o.noiseCheckDeg; % standard for counting neurons
 % project
 o.minimumTargetHeightChecks = 8; % Minimum target resolution, in units of the check size.
+o.fineSignal=0; % True to render signal at full resolution (signalCheckPix=1). False to use noise resolution (signalCheckPix=noiseCheckPix).
 o.targetMargin = 0.25; % Minimum from edge of target to edge of o.stimulusRect, as fraction of targetHeightDeg.
 o.durationSec = 0.2; % Typically 0.2 or inf (wait indefinitely for response).
 o.useFlankers = 0; % 0 or 1. Enable for crowding experiments.
@@ -846,6 +847,12 @@ switch o.task
 end
 o.noiseCheckPix = max(o.noiseCheckPix,1);
 o.noiseCheckDeg = o.noiseCheckPix/o.pixPerDeg;
+if o.fineSignal
+   o.signalCheckPix=1;
+else
+   o.signalCheckPix=o.noiseCheckPix;
+end
+o.signalCheckDeg=o.signalCheckPix/o.pixPerDeg;
 BackupCluts(o.screen);
 o.maxEntry=o.CLUTMapLength-1;
 LMean = (max(cal.old.L)+min(cal.old.L))/2;
@@ -888,13 +895,13 @@ if streq(o.task,'identify')
 end
 o.stimulusRect = 2*round(o.stimulusRect/2);
 if streq(o.task,'identify')
-   o.targetHeightPix = 2*round(0.5*o.targetHeightDeg/o.noiseCheckDeg)*o.noiseCheckPix; % even round multiple of check size
-   if o.targetHeightPix < o.minimumTargetHeightChecks*o.noiseCheckPix
-      ffprintf(ff,'Increasing requested targetHeight checks from %d to %d, the minimum.\n',o.targetHeightPix/o.noiseCheckPix,o.minimumTargetHeightChecks);
-      o.targetHeightPix = 2*ceil(0.5*o.minimumTargetHeightChecks)*o.noiseCheckPix;
+   o.targetHeightPix = 2*round(0.5*o.targetHeightDeg/o.signalCheckDeg)*o.signalCheckPix; % even round multiple of check size
+   if o.targetHeightPix < o.minimumTargetHeightChecks*o.signalCheckPix
+      ffprintf(ff,'Increasing requested targetHeight checks from %d to %d, the minimum.\n',o.targetHeightPix/o.signalCheckPix,o.minimumTargetHeightChecks);
+      o.targetHeightPix = 2*ceil(0.5*o.minimumTargetHeightChecks)*o.signalCheckPix;
    end
 else
-   o.targetHeightPix = round(o.targetHeightDeg/o.noiseCheckDeg)*o.noiseCheckPix; % round multiple of check size
+   o.targetHeightPix = round(o.targetHeightDeg/o.signalCheckDeg)*o.signalCheckPix; % round multiple of check size
 end
 switch o.task
    case 'identify'
@@ -1402,8 +1409,8 @@ try
    
    %% SET NOISE PARAMETERS
    o.targetWidthPix = o.targetHeightPix;
-   o.targetHeightPix = o.noiseCheckPix*round(o.targetHeightPix/o.noiseCheckPix);
-   o.targetWidthPix = o.noiseCheckPix*round(o.targetWidthPix/o.noiseCheckPix);
+   o.targetHeightPix = o.signalCheckPix*round(o.targetHeightPix/o.signalCheckPix);
+   o.targetWidthPix = o.signalCheckPix*round(o.targetWidthPix/o.signalCheckPix);
    
    MAX_FRAMES=100; % Better to limit than crash the GPU.
    if window ~= -1
@@ -1456,7 +1463,7 @@ try
          ffprintf(ff,' %.0f',o.targetGaborOrientationsDeg);
          ffprintf(ff,']\n');
    end
-   ffprintf(ff,'o.targetHeightPix %.0f, o.noiseCheckPix %.0f, o.durationSec %.2f s\n',o.targetHeightPix,o.noiseCheckPix,o.durationSec);
+   ffprintf(ff,'o.targetHeightPix %.0f, o.signalCheckPix %.0f, o.noiseCheckPix %.0f, o.durationSec %.2f s\n',o.targetHeightPix,o.signalCheckPix,o.noiseCheckPix,o.durationSec);
    ffprintf(ff,'o.targetModulates %s\n',o.targetModulates);
    if streq(o.targetModulates,'entropy')
       o.noiseType = 'uniform';
@@ -1494,29 +1501,29 @@ try
    
    % Make o.canvasSize to hold the biggest thing we're showing, signal or
    % noise. We limit o.canvasSize to fit in o.stimulusRect.
-   o.canvasSize = [o.targetHeightPix o.targetWidthPix]/o.noiseCheckPix;
+   o.canvasSize = [o.targetHeightPix o.targetWidthPix]/o.signalCheckPix;
    o.canvasSize = 2*o.canvasSize; % Denis. For extended noise background.
-   o.canvasSize = max(o.canvasSize,o.noiseSize);
+   o.canvasSize  = max(o.canvasSize,o.noiseSize*o.noiseCheckPix/o.signalCheckPix);
    if o.annularNoiseBigRadiusDeg > o.annularNoiseSmallRadiusDeg
       o.canvasSize = max(o.canvasSize,2*o.annularNoiseBigRadiusDeg*[1, 1]*o.pixPerDeg/o.noiseCheckPix);
    end
    switch o.task
       case 'identify'
-         o.canvasSize = min(o.canvasSize,floor(RectHeight(o.stimulusRect)/o.noiseCheckPix));
+         o.canvasSize = min(o.canvasSize,floor(RectHeight(o.stimulusRect)/o.signalCheckPix));
          o.canvasSize = 2*round(o.canvasSize/2); % Even number of checks, so we can center it on letter.
       case '4afc'
-         o.canvasSize = min(o.canvasSize,floor(maxStimulusHeight/o.noiseCheckPix));
+         o.canvasSize = min(o.canvasSize,floor(maxStimulusHeight/o.signalCheckPix));
          o.canvasSize = round(o.canvasSize);
    end
+   o.canvasSize=(o.noiseCheckPix/o.signalCheckPix)*round(o.canvasSize*o.signalCheckPix/o.noiseCheckPix); % Make it a multiple of noiseCheckPix.
    ffprintf(ff,'Noise height %.2f deg. Noise hole %.2f deg. Height is %.2fT and hole is %.2fT, where T is target height.\n', ...
       o.annularNoiseBigRadiusDeg*o.targetHeightDeg,o.annularNoiseSmallRadiusDeg*o.targetHeightDeg,o.annularNoiseBigRadiusDeg,o.annularNoiseSmallRadiusDeg);
-   if o.assessLowLuminance
+    if o.assessLowLuminance
       ffprintf(ff,'o.assessLowLuminance %d %% check out DAC limits at low end.\n',o.assessLowLuminance);
    end
    if o.useFlankers
       ffprintf(ff,'Adding four flankers at center spacing of %.0f pix = %.1f deg = %.1fx letter height. Dark contrast %.3f (nan means same as target).\n',flankerSpacingPix,flankerSpacingPix/o.pixPerDeg,flankerSpacingPix/o.targetHeightPix,o.flankerContrast);
    end
-   [x,y] = RectCenter(o.stimulusRect);
    if o.useFixation
       fix.markTargetLocation= o.markTargetLocation;
       fixationXYPix=round(XYPixOfXYDeg(o,[0 0])); % location of fixation
@@ -1535,7 +1542,7 @@ try
    end
    clear tSample
    
-   % COMPUTE noiseList
+   % Compute noiseList
    switch o.noiseType % Fill noiseList with desired kind of noise.
       case 'gaussian'
          o.noiseListBound = 2;
@@ -1604,10 +1611,11 @@ try
       otherwise
          error('Unknown task %d',o.task);
    end
-   checks = (o.targetHeightPix/o.noiseCheckPix);
-   ffprintf(ff,'Target height is %.1f checks, %.1f deg.\n',checks,o.targetHeightDeg);
-   ffprintf(ff,'%s size %.1f deg, check size %.3f deg.\n',...
-      object,o.targetHeightDeg,o.noiseCheckDeg);
+   checks = o.targetHeightPix/o.noiseCheckPix;
+   ffprintf(ff,'Target height %.1f deg is %.1 signalChecks or %.1f noiseChecks.\n',...
+      o.targetHeightDeg,o.targetHeightPix/o.signalCheckPix,o.targetHeightPix/o.noiseCheckPix);
+   ffprintf(ff,'%s size %.1f deg, signalCheck %.3f deg, noiseCheck %.3f deg.\n',...
+      object,o.targetHeightDeg,o.signalCheckDeg,o.noiseCheckDeg);
    if streq(object,'Letter')
       ffprintf(ff,'Nominal letter size is %.2f deg. See o.alphabetHeightDeg below for actual size. \n',o.targetHeightDeg);
    end
@@ -1660,12 +1668,12 @@ try
          % boundsRect contains all 4 positions.
          boundsRect = [-o.targetWidthPix, -o.targetHeightPix, o.targetWidthPix+gap, o.targetHeightPix+gap];
          boundsRect = CenterRect(boundsRect,[o.targetXYPix o.targetXYPix]);
-         targetRect = round([0 0 o.targetHeightPix o.targetHeightPix]/o.noiseCheckPix);
+         targetRect = round([0 0 o.targetHeightPix o.targetHeightPix]/o.signalCheckPix);
          signal(1).image = ones(targetRect(3:4));
       case 'identify'
          switch o.targetKind
             case 'letter'
-               scratchHeight = round(3*o.targetHeightPix/o.noiseCheckPix);
+               scratchHeight = round(3*o.targetHeightPix/o.signalCheckPix);
                [scratchWindow, scratchRect] = Screen('OpenOffscreenWindow',-1,[],[0 0 scratchHeight scratchHeight],8);
                if ~streq(o.font,'Sloan') && ~o.allowAnyFont
                   warning('You should set o.allowAnyFont=1 unless o.font=''Sloan''.');
@@ -1675,7 +1683,7 @@ try
                if ~streq(font,o.font)
                   error('Can''t find requested font. Desired vs. actual font: "%s", "%s"\n',o.font,font);
                end
-               oldSize = Screen('TextSize',scratchWindow,round(o.targetHeightPix/o.noiseCheckPix));
+               oldSize = Screen('TextSize',scratchWindow,round(o.targetHeightPix/o.signalCheckPix));
                oldStyle = Screen('TextStyle',scratchWindow,0);
                canvasRect = [0 0 o.canvasSize];
                if o.allowAnyFont
@@ -1685,17 +1693,17 @@ try
                   end
                   o.targetRectLocal = TextCenteredBounds(scratchWindow,letters,1);
                else
-                  o.targetRectLocal = round([0 0 o.targetHeightPix o.targetHeightPix]/o.noiseCheckPix);
+                  o.targetRectLocal = round([0 0 o.targetHeightPix o.targetHeightPix]/o.signalCheckPix);
                end
                r = TextBounds(scratchWindow,'x',1);
-               o.xHeightPix = RectHeight(r)*o.noiseCheckPix;
+               o.xHeightPix = RectHeight(r)*o.signalCheckPix;
                o.xHeightDeg = o.xHeightPix/o.pixPerDeg;
                r = TextBounds(scratchWindow,'H',1);
-               o.HHeightPix = RectHeight(r)*o.noiseCheckPix;
+               o.HHeightPix = RectHeight(r)*o.signalCheckPix;
                o.HHeightDeg = o.HHeightPix/o.pixPerDeg;
                ffprintf(ff,'o.xHeightDeg %.2f deg (traditional typographer''s x-height)\n',o.xHeightDeg);
                ffprintf(ff,'o.HHeightDeg %.2f deg (capital H ascender height)\n',o.HHeightDeg);
-               alphabetHeightPix = RectHeight(o.targetRectLocal)*o.noiseCheckPix;
+               alphabetHeightPix = RectHeight(o.targetRectLocal)*o.signalCheckPix;
                o.alphabetHeightDeg = alphabetHeightPix/o.pixPerDeg;
                ffprintf(ff,'o.alphabetHeightDeg %.2f deg (bounding box for letters used, including any ascenders and descenders)\n',o.alphabetHeightDeg);
                if o.printTargetBounds
@@ -1708,7 +1716,7 @@ try
                   if ~o.allowAnyFont
                      % Draw position is left at baseline
                      % targetRect is just big enough to hold any Sloan letter.
-                     % targetRect=round([0 0 1 1]*o.targetHeightPix/o.noiseCheckPix),
+                     % targetRect=round([0 0 1 1]*o.targetHeightPix/o.signalCheckPix),
                      x = targetRect(1);
                      y = targetRect(4);
                   else
@@ -1716,7 +1724,7 @@ try
                      % targetRect is just big enough to hold any letter.
                      % targetRect allows for descenders and extension in any
                      % direction.
-                     % targetRect=round([a b c d]*o.targetHeightPix/o.noiseCheckPix), where a
+                     % targetRect=round([a b c d]*o.targetHeightPix/o.signalCheckPix), where a
                      % b c and d depend on the font.
                      x = (targetRect(1)+targetRect(3))/2; % horizontal middle
                      y = targetRect(4)-o.targetRectLocal(4); % baseline
@@ -1763,7 +1771,7 @@ try
                   signal(i).image = letter < (white1+black0)/2;
                   % We have now drawn letter(i) into signal(i).image. The target
                   % size is always given by o.targetRectLocal. This is a square
-                  % [0 0 1 1]*o.targetHeightPix/o.noiseCheckPix only if
+                  % [0 0 1 1]*o.targetHeightPix/o.signalCheckPix only if
                   % o.allowAnyFont=0. In general, it need not be square. Any code
                   % that needs a bounding rect for the target should use
                   % o.targetRectLocal, not o.targetHeightPix. In the letter
@@ -1781,13 +1789,13 @@ try
                % o.targetGaborCycles=3; % cycles of the sinewave.
                % o.targetGaborOrientationsDeg=[0 90]; % Orientations relative to vertical.
                % o.targetGaborNames='VH';
-               targetRect = round([0 0 o.targetHeightPix o.targetHeightPix]/o.noiseCheckPix);
+               targetRect = round([0 0 o.targetHeightPix o.targetHeightPix]/o.signalCheckPix);
                o.targetRectLocal = targetRect;
                widthChecks = RectWidth(targetRect)-1;
                axisValues = -widthChecks/2:widthChecks/2; % axisValues is used in creating the meshgrid.
                [x, y] = meshgrid(axisValues,axisValues);
-               spaceConstantChecks = o.targetGaborSpaceConstantCycles*(o.targetHeightPix/o.noiseCheckPix)/o.targetGaborCycles;
-               cyclesPerCheck = o.targetGaborCycles/(o.targetHeightPix/o.noiseCheckPix);
+               spaceConstantChecks = o.targetGaborSpaceConstantCycles*(o.targetHeightPix/o.signalCheckPix)/o.targetGaborCycles;
+               cyclesPerCheck = o.targetGaborCycles/(o.targetHeightPix/o.signalCheckPix);
                for i = 1:o.alternatives
                   a = cos(o.targetGaborOrientationsDeg(i)*pi/180)*2*pi*cyclesPerCheck;
                   b = sin(o.targetGaborOrientationsDeg(i)*pi/180)*2*pi*cyclesPerCheck;
@@ -1838,7 +1846,7 @@ try
    % Compute central noise mask
    centralNoiseMask = zeros(o.canvasSize); % initialize with 0
    rect = RectOfMatrix(centralNoiseMask);
-   r = CenterRect([0 0 o.noiseSize],rect);
+   r = CenterRect([0 0 o.noiseSize]*o.noiseCheckPix/o.signalCheckPix,rect);
    r = round(r);
    centralNoiseMask = FillRectInMatrix(1,r,centralNoiseMask); % fill radius with 1
    centralNoiseMask = logical(centralNoiseMask);
@@ -1853,14 +1861,14 @@ try
       x = x-mean(x(:));
       y = y-mean(y(:));
       radius = sqrt(x.^2+y.^2);
-      sigma = o.noiseEnvelopeSpaceConstantDeg*o.pixPerDeg/o.noiseCheckPix;
+      sigma = o.noiseEnvelopeSpaceConstantDeg*o.pixPerDeg/o.signalCheckPix;
       if ~isfield(o,'annularNoiseEnvelopeRadiusDeg')
          o.annularNoiseEnvelopeRadiusDeg = 0;
       end
       assert(isfinite(o.annularNoiseEnvelopeRadiusDeg));
       assert(o.annularNoiseEnvelopeRadiusDeg >= 0);
       if o.annularNoiseEnvelopeRadiusDeg > 0
-         noiseEnvelopeRadiusPix = o.annularNoiseEnvelopeRadiusDeg*o.pixPerDeg/o.noiseCheckPix;
+         noiseEnvelopeRadiusPix = o.annularNoiseEnvelopeRadiusDeg*o.pixPerDeg/o.signalCheckPix;
          distance = radius-noiseEnvelopeRadiusPix;
       else
          distance = radius;
@@ -1871,8 +1879,8 @@ try
       [x, y] = meshgrid(1:o.canvasSize(1),1:o.canvasSize(2));
       x = x-mean(x(:));
       y = y-mean(y(:));
-      thickness = o.noiseRaisedCosineEdgeThicknessDeg*o.pixPerDeg/o.noiseCheckPix;
-      radius = o.noiseRadiusDeg*o.pixPerDeg/o.noiseCheckPix;
+      thickness = o.noiseRaisedCosineEdgeThicknessDeg*o.pixPerDeg/o.signalCheckPix;
+      radius = o.noiseRadiusDeg*o.pixPerDeg/o.signalCheckPix;
       a = 90+180*(sqrt(x.^2+y.^2)-radius)/thickness;
       a = min(180,a);
       a = max(0,a);
@@ -1891,7 +1899,7 @@ try
          assert(all(ok));
       end
    end
-   o.E1 = mean(power)*(o.noiseCheckPix/o.pixPerDeg)^2;
+   o.E1 = mean(power)*(o.signalCheckPix/o.pixPerDeg)^2;
    ffprintf(ff,'log E1/deg^2 %.2f, where E1 is energy at unit contrast.\n',log10(o.E1));
    if ismember(o.observer,algorithmicObservers)
       Screen('CloseAll');
@@ -2147,7 +2155,8 @@ try
                      end
                      rng(o.noiseListSeed);
                   end
-                  noise = PsychRandSample(noiseList,o.canvasSize);
+                  noise = PsychRandSample(noiseList,o.canvasSize*o.signalCheckPix/o.noiseCheckPix);
+                  noise=Expand(noise,o.noiseCheckPix/o.signalCheckPix);
                   if o.noiseIsFiltered
                      if any(mtf(:) ~= 1)
                         if any(mtf(:) ~= 0)
@@ -2200,7 +2209,8 @@ try
                if o.noiseFrozenInRun
                   rng(o.noiseListSeed);
                end
-               noise = PsychRandSample(noiseList,o.canvasSize);
+               noise = PsychRandSample(noiseList,o.canvasSize*o.signalCheckPix/o.noiseCheckPix);
+               noise=Expand(noise,o.noiseCheckPix/o.signalCheckPix);
                noise(~centralNoiseMask & ~annularNoiseMask) = 0;
                noise(centralNoiseMask) = centralNoiseEnvelope(centralNoiseMask).*noise(centralNoiseMask);
                canvasRect = RectOfMatrix(noise);
@@ -2248,6 +2258,7 @@ try
          fprintf('%g ',unique(signalImage(:)));
          fprintf('\n');
       end
+      
       %% COMPUTE CLUT
       if ~ismember(o.observer,algorithmicObservers)
          if trial==1
@@ -2370,6 +2381,7 @@ try
             fprintf(', contrast %.4f\n',(LL(2)-LL(1))/LL(1));
          end
       end
+      
       %% CONVERT IMAGE MOVIE TO TEXTURE MOVIE
       if ~ismember(o.observer,algorithmicObservers)
          for iMovieFrame = 1:o.movieFrames
@@ -2382,7 +2394,7 @@ try
                   img = location(1).image;
                   % ffprintf(ff,'signal rect height %.1f, image height %.0f, dst rect %d %d %d %d\n',RectHeight(rect),size(img,1),rect);
                   img = IndexOfLuminance(cal,img*LMean)/o.maxEntry;
-                  img = Expand(img,o.noiseCheckPix);
+                  img = Expand(img,o.signalCheckPix);
                   if o.assessLinearity
                      AssessLinearity(o);
                   end
@@ -2412,7 +2424,7 @@ try
                         else
                            img = 1+o.contrast*signal(i).image;
                         end
-                        img = Expand(img,o.noiseCheckPix);
+                        img = Expand(img,o.signalCheckPix);
                         buffer = Screen('GetImage',window,r,'drawBuffer');
                         blanks = buffer == 1;
                         buffer(blanks) = IndexOfLuminance(cal,LMean);
@@ -2440,7 +2452,7 @@ try
                   for i = 1:locations
                      img = location(i).image;
                      img = IndexOfLuminance(cal,img*LMean);
-                     img = Expand(img,o.noiseCheckPix);
+                     img = Expand(img,o.signalCheckPix);
                      texture = Screen('MakeTexture',window,img/o.maxEntry,0,0,1); % FIXME: use one texture instead of 4
                      
                      eraseRect = UnionRect(eraseRect,location(i).rect);
@@ -2552,7 +2564,7 @@ try
             % Reading from the buffer, the image has already been converted
             % from index to RGB. We use our calibration to estimate
             % luminance from G.
-            rect=CenterRect(o.noiseCheckPix*o.targetRectLocal,o.stimulusRect);
+            rect=CenterRect(o.signalCheckPix*o.targetRectLocal,o.stimulusRect);
             o.actualStimulus = Screen('GetImage',window,rect,'frontBuffer',1);
             % Get the mode and mode of rest.
             p=o.actualStimulus(:,:,2);
@@ -2630,7 +2642,7 @@ try
                leftEdgeOfResponse = screenRect(3);
             case 'identify'
                % Draw the response o.alternatives
-               rect = [0 0 o.targetWidthPix o.targetHeightPix]/o.noiseCheckPix; % size of signal(1).image
+               rect = [0 0 o.targetWidthPix o.targetHeightPix]/o.signalCheckPix; % size of signal(1).image
                switch o.alphabetPlacement
                   case 'right'
                      desiredLengthPix = RectHeight(screenRect);
@@ -2650,7 +2662,7 @@ try
                end
                alphaSpaces = o.alternatives+spacingFraction*(o.alternatives+1);
                alphaPix = desiredLengthPix/alphaSpaces;
-               %                         alphaCheckPix=alphaPix/(signalChecks/o.noiseCheckPix);
+               %                         alphaCheckPix=alphaPix/(signalChecks/o.signalCheckPix);
                alphaCheckPix = alphaPix/signalChecks;
                alphaGapPixCeil = (desiredLengthPix-o.alternatives*ceil(alphaCheckPix)*signalChecks)/(o.alternatives+1);
                alphaGapPixFloor = (desiredLengthPix-o.alternatives*floor(alphaCheckPix)*signalChecks)/(o.alternatives+1);
@@ -2665,7 +2677,7 @@ try
                end
                alphaGapPix = (desiredLengthPix-o.alternatives*signalChecks*alphaCheckPix)/(o.alternatives+1);
                useExpand = alphaCheckPix == round(alphaCheckPix);
-               rect = [0 0 o.targetWidthPix o.targetHeightPix]/o.noiseCheckPix; % size of signal(1).image
+               rect = [0 0 o.targetWidthPix o.targetHeightPix]/o.signalCheckPix; % size of signal(1).image
                rect = round(rect*alphaCheckPix);
                rect = AlignRect(rect,screenRect,RectRight,RectTop);
                rect = OffsetRect(rect,-alphaGapPix,alphaGapPix); % spacing
@@ -3369,7 +3381,8 @@ switch o.targetModulates
    case 'luminance'
       img = [1 1+o.contrast];
    otherwise
-      noise = PsychRandSample(noiseList,o.canvasSize);
+      noise = PsychRandSample(noiseList,o.canvasSize*o.signalCheckPix/o.noiseCheckPix);
+      noise=Expand(noise,o.noiseCheckPix/o.signalCheckPix);
       img = 1+noise*o.noiseSD/o.noiseListSd;
 end
 index = IndexOfLuminance(cal,img*LMean);
