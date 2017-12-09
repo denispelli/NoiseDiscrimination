@@ -202,7 +202,7 @@ try
    cal.pixelMax=255; % ????
    
    %% Is a CRS colorimeter connected?
-   % This test works on macOS, but may not on Linux or Windows.
+   % This test works on macOS, but may fail on Linux or Windows.
    try
       clear PsychHID
       fprintf('* Checking for USB photometer ...\n');
