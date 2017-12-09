@@ -42,11 +42,12 @@ if 1
    o.targetGaborCycles=3;
    
    %% Effect of noise check size: Graph (E-E0)/N vs. checkDeg.
+   % Replicating result from Manoj
    o.experiment='checkSize';
    o.fineSignal=1;
    o.eyes='right'; % 'left', 'right', 'both'.
    sizes = o.targetGaborCycles/0.5; % 0.5 c/deg
-   o.viewingDistanceCm=40; % viewing distance
+   o.viewingDistanceCm=80; % viewing distance
    o.noiseType= 'binary';
    o.durationSec = 0.1;
    for size = sizes
@@ -55,7 +56,7 @@ if 1
       for noiseSD = [0.2 0]
          o.noiseSD=noiseSD;
          if noiseSD>0
-            for n=[10  40  160]
+            for n=[10  40  160 320]
                o.noiseCheckDeg=o.targetHeightDeg/n;
                if ~exist('oo','var')
                   oo=o;
