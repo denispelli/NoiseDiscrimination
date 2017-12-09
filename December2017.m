@@ -1,4 +1,4 @@
-% thresholdsApril
+% December2017.m
 % December 5, 2017, denis.pelli@nyu.edu
 % Script for darshan, flavia, shenghao, and yichen to measure equivalent noise in the periphery.
 
@@ -43,6 +43,7 @@ if 1
    
    %% Effect of noise check size: Graph (E-E0)/N vs. checkDeg.
    o.experiment='checkSize';
+   o.fineSignal=0;
    o.eyes='right'; % 'left', 'right', 'both'.
    sizes = o.targetGaborCycles/0.5; % 0.5 c/deg
    o.viewingDistanceCm=40; % viewing distance
@@ -74,6 +75,7 @@ if 1
    end
    o.noiseType= 'gaussian';
    o.durationSec = 0.2;
+   o.fineSignal=0;
    
    %% Effect of threshold criterion: Graph Neq vs. P.
    % In each of the 3 domains
@@ -190,7 +192,7 @@ if 1
    % for oi=24:length(oo)
    for oi=1:4
       o=oo(oi);
-      %    o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+%       o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
       o.experimenter='chen';
       o.experimenter='satrianna';
       o.experimenter='hortense';
