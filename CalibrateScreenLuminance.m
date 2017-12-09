@@ -142,7 +142,7 @@ try
       Speak('Welcome to Calibrate Screen Luminance.');
    end
    %     onCleanupInstance=onCleanup(@()sca); % clears screen when function is terminated.
-
+   
    if nargin>1
       cal.screenOutput=screenOutput; % used only under Linux
    else
@@ -167,13 +167,17 @@ try
       r=AlignRect(r,screenBufferRect,'right','bottom');
       window=PsychImaging('OpenWindow',cal.screen,0,r);
       windowInfo=Screen('GetWindowInfo',window);
-      cal.displayCoreId=windowInfo.DisplayCoreId;
+      if hasfield(windowInfo,'DisplayCoreId')
+         cal.displayCoreId=windowInfo.DisplayCoreId;
+      else
+         cal.displayCoreId='';
+      end
       Screen('Close',window);
       Screen('Preference', 'VisualDebugLevel', oldVisualDebugLevel);
       Screen('Preference', 'SkipSyncTests', oldSkipSyncTests);
       Screen('Preference', 'Verbosity',oldVerbosity);
       using11bpc=ismember(cal.displayCoreId,{'AMD','R600'});
-  else
+   else
       % Shortcut: Check for Mac models that probably have AMD drivers. This
       % list is incomplete and hasn't been double checked. E.g. I omitted
       % the Mac Pro. This also misses any non-Mac computer with high
@@ -209,12 +213,12 @@ try
    catch
       useConnectedPhotometer=0;
    end
-%    oldVisualDebugLevel = Screen('Preference', 'VisualDebugLevel',0);
-%    oldVerbosity = Screen('Preference', 'Verbosity',0);
-%    oldSuppressAllWarnings = Screen('Preference', 'SuppressAllWarnings',1);
-%    Screen('Preference', 'Verbosity',oldVerbosity);
-%    Screen('Preference', 'Verbosity',oldVerbosity);
-%    Screen('Preference','SuppressAllWarnings',oldSuppressAllWarnings);
+   %    oldVisualDebugLevel = Screen('Preference', 'VisualDebugLevel',0);
+   %    oldVerbosity = Screen('Preference', 'Verbosity',0);
+   %    oldSuppressAllWarnings = Screen('Preference', 'SuppressAllWarnings',1);
+   %    Screen('Preference', 'Verbosity',oldVerbosity);
+   %    Screen('Preference', 'Verbosity',oldVerbosity);
+   %    Screen('Preference','SuppressAllWarnings',oldSuppressAllWarnings);
    if useConnectedPhotometer
       fprintf('I detect a Cambridge Research Systems colorimeter.\n');
       if useSpeech
@@ -336,16 +340,16 @@ try
    if cal.ScreenConfigureDisplayBrightnessWorks || cal.BrightnessWorks
       fprintf('Your display is currently at %.0f%% brightness.\n',100*cal.brightnessSetting);
       if forceMaximumBrightness
-          b=100;
+         b=100;
       else
-          b=[];
-          while ~isfloat(b) || length(b)~=1 || b<0 || b>100
-              if useSpeech
-                  Speak('We usually run at 100% brightness. What percent brightness do you want?');
-                  Speak('Please type a number from 0 to 100, followed by return.');
-              end
-              b=input('We suggest 100. What brightness percentage do you want (0 to 100)?');
-          end
+         b=[];
+         while ~isfloat(b) || length(b)~=1 || b<0 || b>100
+            if useSpeech
+               Speak('We usually run at 100% brightness. What percent brightness do you want?');
+               Speak('Please type a number from 0 to 100, followed by return.');
+            end
+            b=input('We suggest 100. What brightness percentage do you want (0 to 100)?');
+         end
       end
       cal.brightnessSetting=b/100;
       if cal.ScreenConfigureDisplayBrightnessWorks
@@ -459,14 +463,14 @@ try
       fprintf('If you make a mistake, you can go back by typing -1, followed by RETURN. You can always quit by hitting ESCAPE.\n');
       if useSpeech
          Speak(['Use a photometer or light meter to measure the screen luminance in ' luminanceUnitWords '.  Then type your reading followed by return.']);
-%          Speak('If you make a mistake, you can go back by typing -1, followed by return. You can always quit by hitting ESCAPE.');
+         %          Speak('If you make a mistake, you can go back by typing -1, followed by return. You can always quit by hitting ESCAPE.');
       else
-%          input('\nHit RETURN once you''ve read the above instructions, and you''re ready to proceed:','s');
+         %          input('\nHit RETURN once you''ve read the above instructions, and you''re ready to proceed:','s');
       end
    end
    Screen('Preference','SkipSyncTests',1);
    cal.useRetinaResolution=0;
-      
+   
    screenBufferRect = Screen('Rect',cal.screen);
    PsychImaging('PrepareConfiguration');
    if using11bpc
@@ -478,8 +482,8 @@ try
    PsychImaging('AddTask','General','NormalizedHighresColorRange',1);
    %         PsychImaging('AddTask','FinalFormatting','DisplayColorCorrection','SimpleGamma');
    if ~useFractionOfScreen
-       screenScalar=1;
-     r=[];
+      screenScalar=1;
+      r=[];
    else
       screenScalar=useFractionOfScreen;
       r=round(useFractionOfScreen*screenBufferRect);
