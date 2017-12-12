@@ -45,31 +45,39 @@ if 1
    % Replicating result from Manoj
    o.experiment='checkSize';
    o.fineSignal=1;
-   o.eyes='right'; % 'left', 'right', 'both'.
+   o.eyes='both'; % 'left', 'right', 'both'.
    sizes = o.targetGaborCycles/0.5; % 0.5 c/deg
+   o.targetGaborPhaseDeg=-90; % cosine phase
    o.viewingDistanceCm=80; % viewing distance
    o.noiseType= 'binary';
    o.durationSec = 0.1;
+   o.assessContrast=1;
    for size = sizes
       o.eccentricityXYDeg=[0 0];
       o.targetHeightDeg=size;
-      for noiseSD = [0.2 0]
-         o.noiseSD=noiseSD;
-         if noiseSD>0
-            for n=[10  40  160 320]
-               o.noiseCheckDeg=o.targetHeightDeg/n;
-               if ~exist('oo','var')
-                  oo=o;
+      for duration=[0.1 0.4]
+         o.durationSec =duration;
+         for fine=0:1
+            o.fineSignal=fine;
+            for noiseSD = [0.2 0]
+               o.noiseSD=noiseSD;
+               if noiseSD>0
+                  for n=10 % [10  40  160 320]
+                     o.noiseCheckDeg=o.targetHeightDeg/n;
+                     if ~exist('oo','var')
+                        oo=o;
+                     else
+                        oo(end+1)=o;
+                     end
+                  end
                else
-                  oo(end+1)=o;
+                  o.noiseCheckDeg=o.targetHeightDeg/10;
+                  if ~exist('oo','var')
+                     oo=o;
+                  else
+                     oo(end+1)=o;
+                  end
                end
-            end
-         else
-            o.noiseCheckDeg=o.targetHeightDeg/20;
-            if ~exist('oo','var')
-               oo=o;
-            else
-               oo(end+1)=o;
             end
          end
       end
