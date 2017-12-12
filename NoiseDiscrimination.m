@@ -18,8 +18,10 @@ function o = NoiseDiscrimination(oIn)
 % http://www.nyu.edu/its/nyunet/offcampus/vpn/#services
 %
 % ALTERNATE FOR ESCAPE KEY: The 2017 MacBook Pro with the task bar has no
-% ESCAPE key. To support computers without ESCAPE keys, NoiseDiscrimination
-% accepts the GRAVE ACCENT key as equivalent to the ESCAPE key.
+% built-in ESCAPE key. (The task bar sometimes simulates ESCAPE key, but I
+% don't know if we can count on it being there.) To support computers
+% without ESCAPE keys, NoiseDiscrimination accepts the GRAVE ACCENT key as
+% equivalent to the ESCAPE key.
 %
 % SNAPSHOT. It is useful to take snapshots of the stimulus produced by
 % NoiseDiscrimination. Such snapshots can be used in papers and talks to
