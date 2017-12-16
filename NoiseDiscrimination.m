@@ -32,13 +32,13 @@ function o = NoiseDiscrimination(oIn)
 % a caption on the figure. The caption may not be included if you enable
 % cropping. Here are the parameters that you can control:
 % o.saveSnapshot=1; % If true (1), take snapshot for public presentation.
-% o.snapshotLetterContrast=0.2; % nan to request program default.
+% o.snapshotTargetContrast=0.2; % nan to request program default.
 % o.cropSnapshot=0; % If true (1), crop to include only target and noise,
 %                   % plus response numbers, if displayed.
 % o.snapshotCaptionTextSizeDeg=0.5;
 %
 % Standard condition for counting V1 neurons: o.noiseCheckPix=13;
-% height=30*o.noiseCheckPix; o.viewingDistanceCm=45; SD=0.2, o.durationSec=0.2 s.
+% height=30*o.noiseCheckPix; o.viewingDistanceCm=45; SD=0.2, o.targetDurationSec=0.2 s.
 %
 % BRIGHTNESS SEEKER. Observer 'brightnessSeeker' is a model of the human
 % observer with a saturation of brightness, based on an old research
@@ -543,9 +543,9 @@ o.targetHeightDeg = 2; % Target size, range 0 to inf. If you ask for too
 % o.targetHeightDeg=30*o.noiseCheckDeg; % standard for counting neurons
 % project
 o.minimumTargetHeightChecks = 8; % Minimum target resolution, in units of the check size.
-o.fineSignal=0; % True to render signal at full resolution (signalCheckPix=1). False to use noise resolution (signalCheckPix=noiseCheckPix).
+o.highResolutionTarget=0; % True to render signal at full resolution (signalCheckPix=1). False to use noise resolution (signalCheckPix=noiseCheckPix).
 o.targetMargin = 0.25; % Minimum from edge of target to edge of o.stimulusRect, as fraction of targetHeightDeg.
-o.durationSec = 0.2; % Typically 0.2 or inf (wait indefinitely for response).
+o.targetDurationSec = 0.2; % Typically 0.2 or inf (wait indefinitely for response).
 o.useFlankers = 0; % 0 or 1. Enable for crowding experiments.
 o.flankerContrast = -0.85; % Negative for dark letters.
 o.flankerContrast = nan; % Nan requests that flanker contrast always equal signal contrast.
@@ -582,7 +582,7 @@ o.blankingRadiusReTargetHeight= nan;
 o.blankingRadiusReEccentricity= 0.5;
 o.textSizeDeg = 0.6;
 o.saveSnapshot = 0; % 0 or 1.  If true (1), take snapshot for public presentation.;
-o.snapshotLetterContrast = 0.2; % nan to request program default. If set, this determines o.tSnapshot.;
+o.snapshotTargetContrast = 0.2; % nan to request program default. If set, this determines o.tSnapshot.;
 o.tSnapshot = nan; % nan to request program defaults.;
 o.cropSnapshot = 0; % If true (1), show only the target and noise, without unnecessary gray background.;
 o.snapshotCaptionTextSizeDeg = 0.5;
@@ -593,7 +593,6 @@ o.gapFraction4afc = 0.03; % Typically 0, 0.03, or 0.2. Gap, as a fraction of o.t
 o.showCropMarks = 0; % mark the bounding box of the target
 o.showResponseNumbers = 1;
 o.responseNumbersInCorners = 0;
-o.printSignalDuration = 0; % print out actual duration of each trial.
 o.printCrossCorrelation = 0;
 o.printLikelihood = 0;
 o.assessLinearity = 0;
@@ -617,8 +616,8 @@ o.movieFrameFlipSec = []; % flip times (useful to calculate frame drops)
 o.useDynamicNoiseMovie = 0; % 0 for static noise
 o.moviePreSec = 0;
 o.moviePostSec = 0;
-o.likelyDurationSec = [];
-o.measuredDurationSec = [];
+o.likelyTargetDurationSec = [];
+o.measuredTargetDurationSec = [];
 o.movieFrameFlipSec = [];
 o.printDurations = 0;
 o.newClutForEachImage = 1;
@@ -654,8 +653,8 @@ else
       'targetRectLocal' 'xHeightPix' 'xHeightDeg' 'HHeightPix' ...
       'HHeightDeg' 'alphabetHeightDeg' 'annularNoiseEnvelopeRadiusDeg' ...
       'centralNoiseEnvelopeE1DegDeg' 'E1' 'data' 'psych' 'questMean'...
-      'questSd' 'p' 'trials' 'EOverN' 'efficiency' 'signalDurationSecMean'...
-      'signalDurationSecSD' 'E' 'signal' 'newCal'...
+      'questSd' 'p' 'trials' 'EOverN' 'efficiency' 'targetDurationSecMean'...
+      'targetDurationSecSD' 'E' 'signal' 'newCal'...
       'beamPositionQueriesAvailable' ...
       'drawTextPlugin' 'fixationXYPix' 'maxEntry' 'nearPointXYDeg'...
       'nearPointXYPix' 'pixPerCm' 'psychtoolboxKernelDriverLoaded'...
@@ -735,8 +734,8 @@ if isnan(o.annularNoiseSD)
    o.annularNoiseSD = o.noiseSD;
 end
 if o.saveSnapshot
-   if isfinite(o.snapshotLetterContrast) && streq(o.targetModulates,'luminance')
-      o.tSnapshot = log10(o.snapshotLetterContrast);
+   if isfinite(o.snapshotTargetContrast) && streq(o.targetModulates,'luminance')
+      o.tSnapshot = log10(o.snapshotTargetContrast);
    end
    if ~isfinite(o.tSnapshot)
       switch o.targetModulates
@@ -849,7 +848,7 @@ switch o.task
 end
 o.noiseCheckPix = max(o.noiseCheckPix,1);
 o.noiseCheckDeg = o.noiseCheckPix/o.pixPerDeg;
-if o.fineSignal
+if o.highResolutionTarget
    o.signalCheckPix=1;
 else
    o.signalCheckPix=o.noiseCheckPix;
@@ -1421,11 +1420,11 @@ try
       frameRate = 60;
    end
    ffprintf(ff,'Frame rate %.1f Hz.\n',frameRate);
-   o.durationSec = max(1,round(o.durationSec*frameRate))/frameRate;
+   o.targetDurationSec = max(1,round(o.targetDurationSec*frameRate))/frameRate;
    if o.useDynamicNoiseMovie
       o.checkSec = 1/frameRate;
    else
-      o.checkSec = o.durationSec;
+      o.checkSec = o.targetDurationSec;
    end
    if ~o.useDynamicNoiseMovie
       o.moviePreFrames = 0;
@@ -1433,7 +1432,7 @@ try
       o.moviePostFrames = 0;
    else
       o.moviePreFrames = round(o.moviePreSec*frameRate);
-      o.movieSignalFrames = round(o.durationSec*frameRate);
+      o.movieSignalFrames = round(o.targetDurationSec*frameRate);
       if o.movieSignalFrames < 1
          o.movieSignalFrames = 1;
       end
@@ -1447,8 +1446,8 @@ try
    if o.movieFrames>MAX_FRAMES
       o.movieFrames=MAX_FRAMES;
       o.movieSignalFrames=o.movieFrames-o.moviePreFrames-o.moviePostFrames;
-      o.durationSec=o.movieSignalFrames/frameRate;
-      ffprintf(ff,'Constrained by MAX_FRAMES %d, reducing duration to %.3f s\n',MAX_FRAMES,o.durationSec);
+      o.targetDurationSec=o.movieSignalFrames/frameRate;
+      ffprintf(ff,'Constrained by MAX_FRAMES %d, reducing duration to %.3f s\n',MAX_FRAMES,o.targetDurationSec);
    end
    
    ffprintf(ff,'o.pixPerDeg %.1f, o.viewingDistanceCm %.1f\n',o.pixPerDeg,o.viewingDistanceCm);
@@ -1465,7 +1464,7 @@ try
          ffprintf(ff,' %.0f',o.targetGaborOrientationsDeg);
          ffprintf(ff,']\n');
    end
-   ffprintf(ff,'o.targetHeightPix %.0f, o.signalCheckPix %.0f, o.noiseCheckPix %.0f, o.durationSec %.2f s\n',o.targetHeightPix,o.signalCheckPix,o.noiseCheckPix,o.durationSec);
+   ffprintf(ff,'o.targetHeightPix %.0f, o.signalCheckPix %.0f, o.noiseCheckPix %.0f, o.targetDurationSec %.2f s\n',o.targetHeightPix,o.signalCheckPix,o.noiseCheckPix,o.targetDurationSec);
    ffprintf(ff,'o.targetModulates %s\n',o.targetModulates);
    if streq(o.targetModulates,'entropy')
       o.noiseType = 'uniform';
@@ -2062,8 +2061,8 @@ try
             if streq(o.targetModulates,'luminance')
                r = 1;
                o.contrast = -10^tTest; % negative contrast, dark letters
-               if o.saveSnapshot && isfinite(o.snapshotLetterContrast)
-                  o.contrast = -o.snapshotLetterContrast;
+               if o.saveSnapshot && isfinite(o.snapshotTargetContrast)
+                  o.contrast = -o.snapshotTargetContrast;
                end
             else
                r = 1+10^tTest;
@@ -2590,13 +2589,13 @@ try
             %             dy=round(dx*0.7);
             %             o.actualStimulus(1:dy:end,1:dx:end,2)
          end
-         if isfinite(o.durationSec) % End the movie
+         if isfinite(o.targetDurationSec) % End the movie
             Screen('FillRect',window,gray,dstRect); % Erase only the movie, sparing the rest of the screen.
             if o.useDynamicNoiseMovie
                Screen('Flip',window,0,1); % Clear stimulus at next frame.
             else
                % Clear stimulus at next frame after specified duration.
-               Screen('Flip',window,o.movieFrameFlipSec(1,trial)+o.durationSec-0.5/frameRate,1);
+               Screen('Flip',window,o.movieFrameFlipSec(1,trial)+o.targetDurationSec-0.5/frameRate,1);
             end
             o.movieFrameFlipSec(iMovieFrame+1,trial) = GetSecs;
             if ~o.fixationCrossBlankedNearTarget
@@ -2607,7 +2606,7 @@ try
             end
             % After o.fixationCrossBlankedUntilSecAfterTarget, display new fixation.
             Screen('Flip',window,o.movieFrameFlipSec(iMovieFrame+1,trial)+0.3,1);
-         end % if isfinite(o.durationSec)
+         end % if isfinite(o.targetDurationSec)
          for iMovieFrame = 1:o.movieFrames
             Screen('Close',movieTexture(iMovieFrame));
          end
@@ -2777,7 +2776,7 @@ try
                end % while ~ismember
          end % switch o.task
          if ~o.runAborted
-            if ~isfinite(o.durationSec)
+            if ~isfinite(o.targetDurationSec)
                % Signal persists until response, so we measure response time.
                o.movieFrameFlipSec(iMovieFrame+1,trial) = GetSecs;
             end
@@ -2789,13 +2788,13 @@ try
                movieFirstSignalFrame = 1;
                movieLastSignalFrame = 1;
             end
-            o.measuredDurationSec(trial) = o.movieFrameFlipSec(movieLastSignalFrame+1,trial)-...
+            o.measuredTargetDurationSec(trial) = o.movieFrameFlipSec(movieLastSignalFrame+1,trial)-...
                o.movieFrameFlipSec(movieFirstSignalFrame,trial);
-            o.likelyDurationSec(trial) = round(o.measuredDurationSec(trial)*frameRate)/frameRate;
+            o.likelyTargetDurationSec(trial) = round(o.measuredTargetDurationSec(trial)*frameRate)/frameRate;
             s = sprintf('Signal duration requested %.3f s, measured %.3f s, and likely %.3f s, an excess of %.0f frames.\n', ...
-               o.durationSec,o.measuredDurationSec(trial),o.likelyDurationSec(trial), ...
-               (o.likelyDurationSec(trial)-o.durationSec)*frameRate);
-            if abs(o.measuredDurationSec(trial)-o.durationSec) > 0.010
+               o.targetDurationSec,o.measuredTargetDurationSec(trial),o.likelyTargetDurationSec(trial), ...
+               (o.likelyTargetDurationSec(trial)-o.targetDurationSec)*frameRate);
+            if abs(o.measuredTargetDurationSec(trial)-o.targetDurationSec) > 0.010
                ffprintf(ff,'WARNING: %s',s);
             else
                if o.printDurations
@@ -2920,16 +2919,18 @@ try
    o.EOverN = 10^(2*o.questMean)*o.E1/o.N;
    o.efficiency = o.idealEOverNThreshold/o.EOverN;
    
-   o.signalDurationSecMean = mean(o.likelyDurationSec,'omitnan');
-   o.signalDurationSecSD = std(o.likelyDurationSec,'omitnan');
-   ffprintf(ff,'Mean duration %.3f +/- %.3f s (sd over %d trials).\n',o.signalDurationSecMean,o.signalDurationSecSD,length(o.likelyDurationSec));
+   o.targetDurationSecMean = mean(o.likelyTargetDurationSec,'omitnan');
+   o.targetDurationSecSD = std(o.likelyTargetDurationSec,'omitnan');
+   ffprintf(ff,'Mean target duration %.3f +/- %.3f s (sd over %d trials).\n',o.targetDurationSecMean,o.targetDurationSecSD,length(o.likelyTargetDurationSec));
    ffprintf(ff,'Mean luminance %.1f cd/m^2\n',LMean);
    
    o.E = 10^(2*o.questMean)*o.E1;
    if streq(o.targetModulates,'luminance')
-      ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold+/-sd log(contrast) %.2f+/-%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
+      ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold+/-sd log(contrast) %.2f+/-%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',...
+         o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
    else
-      ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold+/-sd log(r-1) %.2f+/-%.2f, approx required n %.0f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
+      ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold+/-sd log(r-1) %.2f+/-%.2f, approx required n %.0f\n',...
+         o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
    end
    if abs(trialsRight/trial-o.pThreshold) > 0.1
       ffprintf(ff,'WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.\n');
