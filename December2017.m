@@ -36,7 +36,7 @@ if 1
    o.pThreshold = 0.75;
    o.noiseType= 'gaussian';
    o.noiseCheckDeg=nan;
-   o.durationSec = 0.4;
+   o.targetDurationSec = 0.4;
    o.eyes='right';
    o.viewingDistanceCm=40.;
    o.targetGaborCycles=3;
@@ -44,21 +44,21 @@ if 1
    %% Effect of noise check size: Graph (E-E0)/N vs. checkDeg.
    % Replicating result from Manoj
    o.experiment='checkSize';
-   o.fineSignal=1;
+   o.highResolutionTarget=1;
    o.eyes='both'; % 'left', 'right', 'both'.
    sizes = o.targetGaborCycles/0.5; % 0.5 c/deg
    o.targetGaborPhaseDeg=-90; % cosine phase
    o.viewingDistanceCm=80; % viewing distance
    o.noiseType= 'binary';
-   o.durationSec = 0.1;
+   o.targetDurationSec = 0.1;
    o.assessContrast=1;
    for size = sizes
       o.eccentricityXYDeg=[0 0];
       o.targetHeightDeg=size;
       for duration=[0.1 0.4]
-         o.durationSec =duration;
+         o.targetDurationSec =duration;
          for fine=0:1
-            o.fineSignal=fine;
+            o.highResolutionTarget=fine;
             for noiseSD = [0.2 0]
                o.noiseSD=noiseSD;
                if noiseSD>0
@@ -83,8 +83,8 @@ if 1
       end
    end
    o.noiseType= 'gaussian';
-   o.durationSec = 0.2;
-   o.fineSignal=0;
+   o.targetDurationSec = 0.2;
+   o.highResolutionTarget=0;
    
    %% Effect of threshold criterion: Graph Neq vs. P.
    % In each of the 3 domains
@@ -198,7 +198,7 @@ if 1
    %% RUN THE CONDITIONS
    % Typically, you'll select just a few of the conditions stored in oo
    % that you want to run now. Select them from the printout of "t" above.
-   for oi=1:5
+   for oi=13
       o=oo(oi);
 %       o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
       o.experimenter='chen';
