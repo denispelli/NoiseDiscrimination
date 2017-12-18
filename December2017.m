@@ -40,87 +40,7 @@ if 1
    o.eyes='right';
    o.viewingDistanceCm=40.;
    o.targetGaborCycles=3;
-   
-   %% Effect of noise check size: Graph (E-E0)/N vs. checkDeg.
-   % Replicating result from Manoj
-   o.experiment='checkSize';
-   o.highResolutionTarget=1;
-   o.eyes='both'; % 'left', 'right', 'both'.
-   sizes = o.targetGaborCycles/0.5; % 0.5 c/deg
-   o.targetGaborPhaseDeg=-90; % cosine phase
-   o.viewingDistanceCm=80; % viewing distance
-   o.noiseType= 'binary';
-   o.targetDurationSec = 0.1;
-   o.assessContrast=1;
-   for size = sizes
-      o.eccentricityXYDeg=[0 0];
-      o.targetHeightDeg=size;
-      for duration=[0.1 0.4]
-         o.targetDurationSec =duration;
-         for fine=0:1
-            o.highResolutionTarget=fine;
-            for noiseSD = [0.2 0]
-               o.noiseSD=noiseSD;
-               if noiseSD>0
-                  for n=10 % [10  40  160 320]
-                     o.noiseCheckDeg=o.targetHeightDeg/n;
-                     if ~exist('oo','var')
-                        oo=o;
-                     else
-                        oo(end+1)=o;
-                     end
-                  end
-               else
-                  o.noiseCheckDeg=o.targetHeightDeg/10;
-                  if ~exist('oo','var')
-                     oo=o;
-                  else
-                     oo(end+1)=o;
-                  end
-               end
-            end
-         end
-      end
-   end
-   o.noiseType= 'gaussian';
-   o.targetDurationSec = 0.2;
-   o.highResolutionTarget=0;
-   
-   %% Effect of threshold criterion: Graph Neq vs. P.
-   % In each of the 3 domains
-   % P: 0.35, 0.55, 0.75, 0.95
-   % size: 2, 16 deg
-   % eccentricity: 0, 30 deg
-   % (omit 2 deg letter at 30 deg ecc.)
-   o.viewingDistanceCm=40; % viewing distance
-   o.experiment='Neq vs. P';
-   o.eyes='right'; % 'left', 'right', 'both'.
-   Ps=[0.35, 0.55, 0.75, 0.95];
-   for ecc = [30 0]
-      switch(abs(ecc))
-         case(30)
-            sizes = 16;
-         case 0
-            sizes=[2 16];
-      end
-      for size = sizes
-         for noiseSD = [0 0.16]
-            o.eccentricityXYDeg=[ecc 0];
-            o.targetHeightDeg=size;
-            o.noiseCheckDeg=o.targetHeightDeg/20;
-            o.noiseSD=noiseSD;
-            for p=Ps
-               o.pThreshold=p;
-               if ~exist('oo','var')
-                  oo=o;
-               else
-                  oo(end+1)=o;
-               end
-            end
-         end
-      end
-   end
-   
+      
    %% Graph E vs. N, monocular vs binocular
    % In each of the 3 domains
    % size: 2, 16 deg
@@ -194,7 +114,7 @@ if 1
 end % Create the oo list of conditions.
 
 
-if 1
+if 0
    %% RUN THE CONDITIONS
    % Typically, you'll select just a few of the conditions stored in oo
    % that you want to run now. Select them from the printout of "t" above.
@@ -233,7 +153,7 @@ if 1
       o.targetMarkDeg=1;
       o.fixationCrossDeg=3;
       o=NoiseDiscrimination(o);
-      if o.quitNow
+      if o.quitSession
          break
       end
    end
