@@ -21,7 +21,7 @@ function newCal=LinearizeClut(cal)
 % Denis Pelli, NYU, July 5, 2014; February 21, 2017, April 2, 2017.
 %
 % INPUT FIELDS
-% cal.CLUTMapLength is the desired length of the gamma table. This will
+% cal.clutMapLength is the desired length of the gamma table. This will
 % typically be 1024 or 4096, to allow 10- or 12-bit precision.
 % cal.old.gamma is the gamma table (i.e. color lookup table or CLUT, also
 %      called color profile) when the luminance was calibrated.
@@ -62,7 +62,7 @@ function newCal=LinearizeClut(cal)
 checkLuminance=0; % optional diagnostic print out
 checkLinearization=0; % optional diagnostic print out
 if isfield(cal,'gamma')
-   assert(size(cal.gamma,1)==cal.CLUTMapLength)
+   assert(size(cal.gamma,1)==cal.clutMapLength)
 end
 % If not strictly monotonic.
 if ~all(diff(cal.old.L)>0)
@@ -150,17 +150,17 @@ linearizedGamma=min(linearizedGamma,1);
 linearizedGamma=max(linearizedGamma,0);
 if ~isfield(cal,'gamma')
    % If new gamma not provided, take old gamma table as default,
-   % interpolated to cal.CLUTMapLength entries. This mapping conserves
+   % interpolated to cal.clutMapLength entries. This mapping conserves
    % black (first) and white (last), and interpolates the rest. It can be
    % done quickly, using ROUND, or precisely, using INTERP1, which takes a
    % few ms.
-   if ~isfield(cal,'CLUTMapLength')
+   if ~isfield(cal,'clutMapLength')
       % If not specified, copied from old gamma table.
-      cal.CLUTMapLength=size(cal.old.gamma,1);
+      cal.clutMapLength=size(cal.old.gamma,1);
    end
-   cal.gamma=ones(cal.CLUTMapLength,3);
+   cal.gamma=ones(cal.clutMapLength,3);
    oldMaxIndex=size(cal.old.gamma,1)-1;
-   maxIndex=cal.CLUTMapLength-1;
+   maxIndex=cal.clutMapLength-1;
    cal.gamma=cal.old.gamma(round(1+oldMaxIndex*(0:maxIndex)/maxIndex),1:3);
    %     cal.gamma=interp1(cal.old.gamma,1+oldMaxIndex*(0:maxIndex)/maxIndex),'pchip');
 end
