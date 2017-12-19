@@ -38,7 +38,8 @@ o.speakInstructions=0;
 % then please collect a third point.
 
 % IMPORTANT: Use a tape measure or meter stick to measure the distance from
-% your eye to the screen. The number below must be accurate.
+% your eye to the screen. The actual distance must accurately agree with
+% o.viewingDistanceCm.
 o.viewingDistanceCm=70; % viewing distance
 o.font='Sloan';
 o.alphabet='DHKNORSVZ';
@@ -48,9 +49,6 @@ o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
 % targetHeightDeg = 4 deg
 % checkHeightDeg = targetHeightDeg/20 
 % With and without noise
-o.markTargetLocation=1;
-o.blankingRadiusReEccentricity=0;
-o.blankingRadiusReTargetHeight=0;
 o.targetDurationSec=0.5;
 for noise = [0.16 0]
     for ecc= [5 1]
