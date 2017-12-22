@@ -31,6 +31,7 @@ assert(~isempty(data))
 %% Compute derived quantities
 for i=1:2:length(data)
    % Neq=N E0/(E-E0)
+   assert(data(i+1).N==0)
    data(i).E0=data(i+1).E;
    data(i).Neq=data(i).N*data(i).E0*(data(i).E-data(i).E0);
 end
