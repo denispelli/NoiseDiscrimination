@@ -1,4 +1,4 @@
-% Analyze the data collected by checkSizeRun.
+%% Analyze the data collected by checkSizeRun.
 experiment='checkSize';
 dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
 cd(dataFolder);
@@ -28,14 +28,15 @@ data = data([data(:).trials]>=40); % Discard thresholds with less than 40 trials
 fprintf('%d thresholds.\n',length(data));
 assert(~isempty(data))
 
-% Compute derived quantities
+%% Compute derived quantities
 for i=1:2:length(data)
+   assert(data(i+1).N==0)
    data(i).E0=data(i+1).E;
    data(i).EE0N=(data(i).E-data(i).E0)/data(i).N;
    data(i).Neq=data(i).N*data(i).E0*(data(i).E-data(i).E0);
 end
 
-% Create CSV file
+%% Create CSV file
 t=struct2table(data);
 spreadsheet=fullfile(fileparts(mfilename('fullpath')),'data',[experiment '.csv']);
 writetable(t,spreadsheet);
@@ -44,7 +45,7 @@ fprintf('All selected fields for thresholds with at least 40 trials have been sa
 
 fprintf('Please make a log-log plot of (E-E0)/N vs. targetDurationSec, with a line for each condition: fullResolutionTarget = 0 or 1\n');
 
-% Plot
+%% Plot
 figure;
 for i=[1 3]
    loglog([data([i i+4]).targetDurationSec],[data([i i+4]).EE0N],'-');
