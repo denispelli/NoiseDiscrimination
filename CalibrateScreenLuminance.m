@@ -494,7 +494,11 @@ try
    end
    [window,screenRect]=PsychImaging('OpenWindow',cal.screen,0,r);
    windowInfo=Screen('GetWindowInfo',window);
-   cal.displayCoreId=windowInfo.DisplayCoreId;
+   if isfield(windowInfo,'DisplayCoreId')
+      cal.displayCoreId=windowInfo.DisplayCoreId;
+   else
+      cal.displayCoreId='';
+   end
    cal.bitsPerColorComponent=windowInfo.BitsPerColorComponent;
    %         PsychColorCorrection('SetEncodingGamma',window,gamma11bpc);
    black = BlackIndex(window);  % Retrieves the CLUT color code for white.
