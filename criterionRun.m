@@ -10,18 +10,15 @@ if 1
    o.condition=1;
    o.experiment='criterion';
    o.eccentricityXYDeg=[0 0];
-   o.targetHeightDeg=1;
    o.noiseSD=0.16;
-   o.pThreshold = 0.75;
    o.noiseType= 'gaussian';
-   o.noiseCheckDeg=nan;
-   o.targetDurationSec = 0.4;
    o.eyes='right';
-   o.viewingDistanceCm=40.;
+   o.viewingDistanceCm=40;
+   o.targetHeightDeg=1;
    o.targetGaborCycles=3;
-   o.noiseType= 'gaussian';
    o.targetDurationSec = 0.2;
    o.fullResolutionTarget=0;
+   o.pThreshold = 0.75;
    
    %% Effect of threshold criterion: Graph Neq vs. P.
    % In each of the 3 domains
