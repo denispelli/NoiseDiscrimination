@@ -31,6 +31,7 @@ assert(~isempty(data))
 %% Compute derived quantities
 for j=1:5:length(data)
    for i=j:j+3
+      assert(data(j+4).N==0)
       data(i).E0=data(j+4).E;
       % (E-E0)/N
       data(i).EE0N=(data(i).E-data(i).E0)/data(i).N;
