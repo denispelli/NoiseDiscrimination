@@ -36,7 +36,7 @@ for j=1:5:length(data)
       % (E-E0)/N
       data(i).EE0N=(data(i).E-data(i).E0)/data(i).N;
       % Neq=N E0/(E-E0)
-      data(i).Neq=data(i).N*data(i).E0*(data(i).E-data(i).E0);
+      data(i).Neq=data(i).N*data(i).E0/(data(i).E-data(i).E0);
    end
 end
 

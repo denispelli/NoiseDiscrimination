@@ -33,7 +33,7 @@ for i=1:2:length(data)
    assert(data(i+1).N==0)
    data(i).E0=data(i+1).E;
    data(i).EE0N=(data(i).E-data(i).E0)/data(i).N;
-   data(i).Neq=data(i).N*data(i).E0*(data(i).E-data(i).E0);
+   data(i).Neq=data(i).N*data(i).E0/(data(i).E-data(i).E0);
 end
 
 %% Create CSV file
