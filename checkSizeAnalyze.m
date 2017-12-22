@@ -24,7 +24,7 @@ for ii = 1:length(matFiles)
       end
    end
 end
-data = data([data(:).trials]>=0); % Discard thresholds with less than 40 trials.
+data = data([data(:).trials]>=40); % Discard thresholds with less than 40 trials.
 fprintf('%d thresholds.\n',length(data));
 assert(~isempty(data))
 
@@ -32,6 +32,7 @@ assert(~isempty(data))
 for i=1:2:length(data)
    data(i).E0=data(i+1).E;
    data(i).EE0N=(data(i).E-data(i).E0)/data(i).N;
+   data(i).Neq=data(i).N*data(i).E0*(data(i).E-data(i).E0);
 end
 
 % Create CSV file
@@ -52,7 +53,8 @@ end
 legend(sprintf('fullRes %d',data(1).fullResolutionTarget),sprintf('fullRes %d',data(3).fullResolutionTarget));
 legend('boxoff');
 title(experiment);
-xlabel('noiseCheckDeg');
-ylabel('Neq (s deg^2)');
-caption=sprintf('experimenter %s, observer %s, 
+xlabel('duration (s)');
+ylabel('(E-E0)/N');
+caption=sprintf('experimenter %s, observer %s, targetKind %s, noiseType %s',...
+   data(1).experimenter,data(1).observer,data(1).targetKind,data(1).noiseType);
 annotation('textbox',[.1 0 1 1],'String',caption,'FitBoxToText','on');
