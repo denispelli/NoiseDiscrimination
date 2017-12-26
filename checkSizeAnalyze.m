@@ -34,6 +34,7 @@ for i=1:2:length(data)
    data(i).E0=data(i+1).E;
    data(i).EE0N=(data(i).E-data(i).E0)/data(i).N;
    data(i).Neq=data(i).N*data(i).E0/(data(i).E-data(i).E0);
+   data(i).targetCyclesPerDeg=data(i).targetGaborCycles/data(i).targetHeightDeg;
 end
 
 %% Create CSV file
