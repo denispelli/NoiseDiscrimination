@@ -38,6 +38,7 @@ for j=1:5:length(data)
       % Neq=N E0/(E-E0)
       data(i).Neq=data(i).N*data(i).E0/(data(i).E-data(i).E0);
    end
+   data(i).targetCyclesPerDeg=data(i).targetGaborCycles/data(i).targetHeightDeg;
 end
 
 %% Create CSV file
@@ -51,15 +52,18 @@ fprintf('Please make a log-log plot of (E-E0)/N vs. noiseCheckDeg, with a line f
 
 %% Plot
 figure;
-for j=1:5:length(data)
-   loglog([data(j:j+3).noiseCheckDeg],[data(j:j+3).EE0N],'-x');
-   hold on
+for domain=1:2
+   ii=(domain-1)*5+(1:4);
+   loglog([data(ii).noiseCheckDeg],[data(ii).EE0N],'-x'); 
+   hold on;
+   domainName{domain}=sprintf('fullResolutionTarget %d',data(ii(1)).fullResolutionTarget);
 end
-legend(sprintf('fullResolutionTarget %d',data(1).fullResolutionTarget),sprintf('fullResolutionTarget %d',data(6).fullResolutionTarget));
+hold off
+legend(domainName);
 legend('boxoff');
 title(experiment);
 xlabel('noiseCheckDeg');
 ylabel('(E-E0)/N');
 caption=sprintf('experimenter %s, observer %s, targetKind %s, %.1f c/deg, cosine phase, noiseType %s',...
-   data(1).experimenter,data(1).observer,data(1).targetKind,data(1).targetGaborCycles/data(1).targetHeightDeg, data(1).noiseType);
+   data(1).experimenter,data(1).observer,data(1).targetKind,data(1).targetCyclesPerDeg,data(1).noiseType);
 annotation('textbox',[.1 0 1 1],'String',caption,'FitBoxToText','on');
