@@ -10,7 +10,6 @@ if 1
    o.condition=1;
    o.experiment='checkSize2';
    o.eccentricityXYDeg=[0 0];
-   o.targetHeightDeg=1;
    o.noiseSD=0.16;
    o.pThreshold = 0.75;
    o.noiseType= 'gaussian';
@@ -25,7 +24,7 @@ if 1
    o.experiment='checkSize';
    o.fullResolutionTarget=1;
    o.eyes='both'; % 'left', 'right', 'both'.
-   sizes = o.targetGaborCycles/0.5; % 0.5 c/deg
+   sizes=o.targetGaborCycles/0.5; % 0.5 c/deg
    o.targetGaborPhaseDeg=-90; % cosine phase
    o.viewingDistanceCm=80; % viewing distance
    o.noiseType= 'binary';
