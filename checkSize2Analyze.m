@@ -55,11 +55,11 @@ for j=1:5:length(data)
    loglog([data(j:j+3).noiseCheckDeg],[data(j:j+3).EE0N],'-x');
    hold on
 end
-legend(sprintf('fullRes %d',data(1).fullResolutionTarget),sprintf('fullRes %d',data(5).fullResolutionTarget));
+legend(sprintf('fullResolutionTarget %d',data(1).fullResolutionTarget),sprintf('fullResolutionTarget %d',data(6).fullResolutionTarget));
 legend('boxoff');
 title(experiment);
 xlabel('noiseCheckDeg');
 ylabel('(E-E0)/N');
-caption=sprintf('experimenter %s, observer %s, targetKind %s, noiseType %s',...
-   data(1).experimenter,data(1).observer,data(1).targetKind,data(1).noiseType);
+caption=sprintf('experimenter %s, observer %s, targetKind %s, %.1f c/deg, cosine phase, noiseType %s',...
+   data(1).experimenter,data(1).observer,data(1).targetKind,data(1).targetGaborCycles/data(1).targetHeightDeg, data(1).noiseType);
 annotation('textbox',[.1 0 1 1],'String',caption,'FitBoxToText','on');
