@@ -1,75 +1,86 @@
-if 1
-   %% CREATE LIST OF CONDITIONS TO BE TESTED
-   if verLessThan('matlab','R2013b')
-      error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
+%% CREATE LIST OF CONDITIONS TO BE TESTED
+if verLessThan('matlab','R2013b')
+   error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
+end
+clear o oo
+fakeRun=1;
+
+% We list parameters here in the order that we want them to appear
+% as columns in the list.
+o.condition=1;
+o.experiment='criterion';
+o.eccentricityXYDeg=[0 0];
+o.noiseSD=0.16;
+o.noiseType= 'gaussian';
+o.eyes='right';
+o.viewingDistanceCm=40;
+o.targetHeightDeg=1;
+o.targetGaborCycles=3;
+o.targetDurationSec = 0.2;
+o.fullResolutionTarget=0;
+o.pThreshold = 0.75;
+
+%% Effect of threshold criterion: Graph Neq vs. P.
+% In each of the 3 domains
+% P: 0.35, 0.55, 0.75, 0.95
+% size: 2, 16 deg
+% eccentricity: 0, 30 deg
+% (omit 2 deg letter at 30 deg ecc.)
+o.viewingDistanceCm=25; % viewing distance
+o.experiment='Neq vs. P';
+o.eyes='right'; % 'left', 'right', 'both'.
+Ps=[0.35, 0.55, 0.75, 0.95];
+for ecc = [30 0]
+   switch(abs(ecc))
+      case(30)
+         sizes = 16;
+      case 0
+         sizes=[2 16];
    end
-   clear o oo
-   
-   % We list parameters here in the order that we want them to appear
-   % as columns in the list.
-   o.condition=1;
-   o.experiment='criterion';
-   o.eccentricityXYDeg=[0 0];
-   o.noiseSD=0.16;
-   o.noiseType= 'gaussian';
-   o.eyes='right';
-   o.viewingDistanceCm=40;
-   o.targetHeightDeg=1;
-   o.targetGaborCycles=3;
-   o.targetDurationSec = 0.2;
-   o.fullResolutionTarget=0;
-   o.pThreshold = 0.75;
-   
-   %% Effect of threshold criterion: Graph Neq vs. P.
-   % In each of the 3 domains
-   % P: 0.35, 0.55, 0.75, 0.95
-   % size: 2, 16 deg
-   % eccentricity: 0, 30 deg
-   % (omit 2 deg letter at 30 deg ecc.)
-   o.viewingDistanceCm=25; % viewing distance
-   o.experiment='Neq vs. P';
-   o.eyes='right'; % 'left', 'right', 'both'.
-   Ps=[0.35, 0.55, 0.75, 0.95];
-   for ecc = [30 0]
-      switch(abs(ecc))
-         case(30)
-            sizes = 16;
-         case 0
-            sizes=[2 16];
-      end
-      for size = sizes
-         for noiseSD = [0 0.16]
-            o.eccentricityXYDeg=[ecc 0];
-            o.targetHeightDeg=size;
-            o.noiseCheckDeg=o.targetHeightDeg/20;
-            o.noiseSD=noiseSD;
-            for p=Ps
-               o.pThreshold=p;
-               if ~exist('oo','var')
-                  oo=o;
-               else
-                  oo(end+1)=o;
-               end
+   for size = sizes
+      for noiseSD = [0 0.16]
+         o.eccentricityXYDeg=[ecc 0];
+         o.targetHeightDeg=size;
+         o.noiseCheckDeg=o.targetHeightDeg/20;
+         o.noiseSD=noiseSD;
+         for p=Ps
+            o.pThreshold=p;
+            if ~exist('oo','var')
+               oo=o;
+            else
+               oo(end+1)=o;
             end
          end
       end
    end
+end
 
-   %% Number the conditions, and print the list.
-   for i=1:length(oo)
-      oo(i).condition=i;
+%% Number the conditions, and print the list.
+for i=1:length(oo)
+   oo(i).condition=i;
+end
+t=struct2table(oo);
+t % Print the oo list of conditions.
+
+if fakeRun
+   data=table2struct(t);
+   for i=1:length(data)
+      data(i).E=data(i).noiseSD+0.03+0.01*floor((i-1)/8);
+      data(i).trials=40;
+      data(i).N=data(i).noiseSD;
+      data(i).experimenter='Experimenter';
+      data(i).observer='Observer';
+      data(1).targetKind='gabor';
+      data(1).noiseType='gaussian';
    end
-   t=struct2table(oo);
-   t
-end % Print the oo list of conditions.
-
-if 1
+   criterionAnalyze;
+else
    %% RUN THE CONDITIONS
    % Typically, you'll select just a few of the conditions stored in oo
    % that you want to run now. Select them from the printout of "t" above.
    for oi=1:length(oo)
       o=oo(oi);
-%       o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+      %       o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
       o.experimenter='chen';
       o.experimenter='satrianna';
       o.experimenter='hortense';
