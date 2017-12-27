@@ -70,8 +70,8 @@ if fakeRun
       data(i).N=data(i).noiseSD;
       data(i).experimenter='Experimenter';
       data(i).observer='Observer';
-      data(1).targetKind='gabor';
-      data(1).noiseType='gaussian';
+      data(i).targetKind='gabor';
+      data(i).noiseType='gaussian';
    end
    criterionAnalyze;
 else
