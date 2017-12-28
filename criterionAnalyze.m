@@ -58,6 +58,9 @@ figure;
 clear domainName
 for domain=1:3
    ii=(domain-1)*8+4+(1:4);
+   if max(ii)>length(data)
+      break;
+   end
    semilogy([data(ii).pThreshold],[data(ii).Neq],'-x'); 
    hold on;
    domainName{domain}=sprintf('ecc %.0f deg, %.1f c/deg',data(ii(1)).eccentricityXYDeg(1),data(ii(1)).targetCyclesPerDeg);
