@@ -17,7 +17,7 @@ if ~fakeRun
             'targetCheckDeg' 'fullResolutionTarget' ...
             'noiseType' 'noiseSD'  'noiseCheckDeg' ...
             'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' 'pThreshold' ...
-            'contrast' 'E' 'N' }
+            'contrast' 'E' 'N' 'LMean'}
          if isfield(d.o,field{:})
             data(ii).(field{:})=d.o.(field{:});
          else
@@ -55,7 +55,7 @@ fprintf('Please make a log-lin plot of Neq vs. pThreshold.\n');
 
 %% Plot
 figure;
-clear domainName
+clear legendString
 for domain=1:3
    ii=(domain-1)*8+4+(1:4);
    if max(ii)>length(data)
@@ -63,10 +63,15 @@ for domain=1:3
    end
    semilogy([data(ii).pThreshold],[data(ii).Neq],'-x'); 
    hold on;
-   domainName{domain}=sprintf('ecc %.0f deg, %.1f c/deg',data(ii(1)).eccentricityXYDeg(1),data(ii(1)).targetCyclesPerDeg);
+   i=ii(1);
+   legendString{domain}=sprintf('ecc %.0f deg, %.1f c/deg, %.1f s, %.0f cd/m^2',...
+      data(i).eccentricityXYDeg(1),data(i).targetCyclesPerDeg,data(i).targetDurationSec,data(i).LMean);
+   if isfield(data(i),'domainName') && ~isempty(data(i).domainName)
+      legendString{domain}=[data(i).domainName ': ' legendString{domain}];
+   end
 end
 hold off;
-legend(domainName);
+legend(legendString);
 legend('boxoff');
 title(experiment);
 xlabel('pThreshold');
@@ -76,6 +81,5 @@ caption{1}=sprintf('experimenter %s, observer %s,', ...
    data(1).experimenter,data(1).observer);
 caption{2}=sprintf('targetKind %s, noiseType %s', ...
    data(1).targetKind,data(1).noiseType);
-caption{3}=sprintf('targetDurationSec %.1f, eyes %s', ...
-   data(1).targetDurationSec,data(1).eyes);
+caption{3}=sprintf('eyes %s', data(1).eyes);
 annotation('textbox',[0.2 0.2 .1 .1],'String',caption,'FitBoxToText','on','LineStyle','none');
