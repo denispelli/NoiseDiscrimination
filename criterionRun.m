@@ -72,6 +72,7 @@ if fakeRun
       data(i).observer='Observer';
       data(i).targetKind='gabor';
       data(i).noiseType='gaussian';
+      data(i).LMean=280;
    end
    criterionAnalyze;
 else
