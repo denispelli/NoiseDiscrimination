@@ -487,6 +487,7 @@ o.ditherCLUT=61696; % Use this only on Denis's PowerBook Pro and iMac 5k.
 o.ditherCLUT=0; % As of June 28, 2017, there is no measurable effect of this dither control.
 o.enableCLUTMapping = 1; % Required. Using software CLUT.
 o.assessBitDepth = 0;
+o.luminanceFactor=1;
 o.useFractionOfScreen = 0; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 o.viewingDistanceCm = 50; % viewing distance
 o.flipScreenHorizontally = 0; % Use this when viewing the display in a mirror.
@@ -1318,7 +1319,8 @@ try
          LMin = min(cal.old.L);
          LMax = max(cal.old.L);
          LMean = mean([LMin, LMax]); % Desired background luminance.
-         LMean=LMean*(1+(rand-0.5)/32); % Tiny jitter.
+         LMean=LMean*(1+(rand-0.5)/32); % Tiny jitter, ±1.5%
+         LMean = o.luminanceFactor*LMean;
          if o.assessLowLuminance
             LMean = 0.8*LMin+0.2*LMax;
          end
