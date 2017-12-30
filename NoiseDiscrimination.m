@@ -2036,6 +2036,7 @@ try
       LMax = 200;
       LMean = 100;
    end
+   o.LMean=LMean; % Save in our struct for later reference to trial data.
    % We are now done with the signal font (e.g. Sloan or Bookman), since we've saved our signals as images.
    if window ~= -1
       Screen('TextFont',window,textFont);
