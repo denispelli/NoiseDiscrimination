@@ -38,7 +38,7 @@ for domain=1:3
          cpd=4;
          o.targetDurationSec=0.1;
          o.luminanceFactor=1/8;
-         o.domainName='photon';
+         o.conditionName='photon';
 %          o.minScreenWidthDeg=10;
       case 2
          % cortical
@@ -46,7 +46,7 @@ for domain=1:3
          cpd=0.5;
          o.targetDurationSec=0.4;
          o.luminanceFactor=1;
-         o.domainName='cortical';
+         o.conditionName='cortical';
 %          o.minScreenWidthDeg=10;
       case 3
          % ganglion
@@ -54,7 +54,7 @@ for domain=1:3
          cpd=0.2;
          o.targetDurationSec=0.2;
          o.luminanceFactor=1;
-         o.domainName='ganglion';
+         o.conditionName='ganglion';
 %          o.minScreenWidthDeg=50;
    end
    for noiseSD = [0 0.16]
