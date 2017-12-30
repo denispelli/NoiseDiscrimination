@@ -3674,7 +3674,7 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 0.9922 0.9922 0.9922;0.9932 0.9932 0.9932;0.9941 0.9941 0.9941;0.9951 0.9951 0.9951;0.9961 0.9961 0.9961;...
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
-if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pellis-MacBook-Pro')
+if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pellis-MacBook-Pro-Flavia')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
 	cal.ScreenConfigureDisplayBrightnessWorks=0;
