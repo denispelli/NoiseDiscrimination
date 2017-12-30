@@ -19,6 +19,7 @@ o.targetGaborCycles=3;
 o.targetDurationSec = 0.2;
 o.fullResolutionTarget=0;
 o.pThreshold = 0.75;
+cal=OurScreenCalibrations(0);
 
 %% Effect of threshold criterion: Graph Neq vs. P.
 % In each of the 3 domains
@@ -26,7 +27,6 @@ o.pThreshold = 0.75;
 % size: 2, 16 deg
 % eccentricity: 0, 30 deg
 % (omit 2 deg letter at 30 deg ecc.)
-o.viewingDistanceCm=25; % viewing distance
 o.experiment='Neq vs. P';
 o.eyes='right'; % 'left', 'right', 'both'.
 Ps=[0.35, 0.55, 0.75, 0.95];
@@ -39,24 +39,30 @@ for domain=1:3
          o.targetDurationSec=0.1;
          o.luminanceFactor=1/8;
          o.domainName='photon';
+%          o.minScreenWidthDeg=10;
       case 2
          % cortical
          ecc=0;
          cpd=0.5;
-          o.targetDurationSec=0.4;
+         o.targetDurationSec=0.4;
          o.luminanceFactor=1;
          o.domainName='cortical';
-     case 3
+%          o.minScreenWidthDeg=10;
+      case 3
          % ganglion
          ecc=30;
          cpd=0.2;
          o.targetDurationSec=0.2;
          o.luminanceFactor=1;
          o.domainName='ganglion';
+%          o.minScreenWidthDeg=50;
    end
    for noiseSD = [0 0.16]
       o.eccentricityXYDeg=[ecc 0];
       o.targetHeightDeg=o.targetGaborCycles/cpd;
+      o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
+      o.maxViewingDistanceCm=round(cal.screenWidthMm/10/(2*tand(o.minScreenWidthDeg/2)));
+      o.viewingDistanceCm=min([o.maxViewingDistanceCm 50]);
       o.noiseCheckDeg=o.targetHeightDeg/20;
       o.noiseSD=noiseSD;
       for p=Ps
