@@ -625,6 +625,9 @@ o.printDurations = 0;
 o.newClutForEachImage = 1;
 o.experiment='';
 o.condition=1;
+o.conditionName='';
+o.minScreenWidthDeg=nan;
+o.maxViewingDistanceCm=nan;
 
 %% READ USER-SUPPLIED o PARAMETERS
 if 0
