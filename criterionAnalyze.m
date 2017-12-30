@@ -74,8 +74,8 @@ for domain=1:3
    else
       legendString{domain}=[legendString{domain} sprintf(', luminanceFactor %.2f',data(i).luminanceFactor)];
    end
-   if isfield(data(i),'domainName') && ~isempty(data(i).domainName)
-      legendString{domain}=[data(i).domainName ': ' legendString{domain}];
+   if isfield(data(i),'conditionName') && ~isempty(data(i).conditionName)
+      legendString{domain}=[data(i).conditionName ': ' legendString{domain}];
    end
 end
 hold off;
