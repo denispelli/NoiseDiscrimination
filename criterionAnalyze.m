@@ -8,20 +8,22 @@ if ~fakeRun
    cd(dataFolder);
    matFiles=dir(fullfile(dataFolder,[experiment 'Run*.mat']));
    clear data;
-   for ii = 1:length(matFiles)
+   for i = 1:length(matFiles)
       % Extract the desired fields into "data", one row per threshold.
-      d = load(matFiles(ii).name);
+      d = load(matFiles(i).name);
+      data(i).LMean=mean([d.cal.LFirst d.cal.LLast]); % Compute from cal in case it's not in o.
+      data(i).luminanceFactor=1; % default value
       for field={'condition' 'experiment' 'dataFilename' 'experimenter' 'observer' 'trials' ...
             'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' ...
             'targetHeightDeg' 'targetDurationSec' 'targetDurationSecMean'...
             'targetCheckDeg' 'fullResolutionTarget' ...
             'noiseType' 'noiseSD'  'noiseCheckDeg' ...
             'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' 'pThreshold' ...
-            'contrast' 'E' 'N' 'LMean'}
+            'contrast' 'E' 'N' 'luminanceFactor' 'LMean'}
          if isfield(d.o,field{:})
-            data(ii).(field{:})=d.o.(field{:});
+            data(i).(field{:})=d.o.(field{:});
          else
-            if ii==1
+            if i==1
                warning OFF BACKTRACE
                warning('Missing data field: %s\n',field{:});
             end
@@ -42,7 +44,7 @@ for i=1:length(data)
       data(i).Neq=data(i).N*data(i).E0/(data(i).E-data(i).E0);
    end
    data(i).targetCyclesPerDeg=data(i).targetGaborCycles/data(i).targetHeightDeg;
-end
+ end
 
 %% Create CSV file
 t=struct2table(data);
@@ -58,14 +60,20 @@ figure;
 clear legendString
 for domain=1:3
    ii=(domain-1)*8+4+(1:4);
-   if max(ii)>length(data)
+   ii=ii(ii<=length(data));
+   if isempty(ii)
       break;
    end
    semilogy([data(ii).pThreshold],[data(ii).Neq],'-x'); 
    hold on;
    i=ii(1);
-   legendString{domain}=sprintf('ecc %.0f deg, %.1f c/deg, %.1f s, %.0f cd/m^2',...
-      data(i).eccentricityXYDeg(1),data(i).targetCyclesPerDeg,data(i).targetDurationSec,data(i).LMean);
+   legendString{domain}=sprintf('ecc %.0f deg, %.1f c/deg, %.1f s',...
+      data(i).eccentricityXYDeg(1),data(i).targetCyclesPerDeg,data(i).targetDurationSec);
+   if isfield(data(i),'LMean') && ~isempty(data(i).LMean)
+      legendString{domain}=[legendString{domain} sprintf(', %.0f cd/m^2',data(i).LMean)];
+   else
+      legendString{domain}=[legendString{domain} sprintf(', luminanceFactor %.2f',data(i).luminanceFactor)];
+   end
    if isfield(data(i),'domainName') && ~isempty(data(i).domainName)
       legendString{domain}=[data(i).domainName ': ' legendString{domain}];
    end
