@@ -30,8 +30,16 @@ if ~fakeRun
          end
       end
    end
-   data = data([data(:).trials]>=40); % Discard thresholds with less than 40 trials.
-   fprintf('%d thresholds.\n',length(data));
+   if any([data(:).trials]<40)
+      s=sprintf('Threshold condition(trials):');
+      s=[s sprintf(' %d(%d),',data([data(:).trials]<40).condition,data([data(:).trials]<40).trials)];
+      warning('%d threshold(s) with fewer than 40 trials. %s',sum([data(:).trials]<40),s);
+   end
+%    data = data([data(:).trials]>=40); % Discard thresholds with less than 40 trials.
+   % Sort by condition
+   [~,ii]=sort([data(:).condition]);
+   data=data(ii);
+   fprintf('Plotting %d thresholds.\n',length(data));
 end
 assert(~isempty(data))
 
