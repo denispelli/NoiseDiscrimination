@@ -103,6 +103,16 @@ caption{2}=sprintf('targetKind %s, noiseType %s', ...
 caption{3}=sprintf('eyes %s', data(1).eyes);
 annotation('textbox',[0.2 0.2 .1 .1],'String',caption,'FitBoxToText','on','LineStyle','none');
 
+pbaspect([1 1 1]); % Make vertical and horizontal axes equal in length.
+
+% Scale so 3 log units vertically have same length as whole horizontal range.
+% xLimits = get(gca,'XLim');
+% yLimits = get(gca,'YLim');
+% yDecade = diff(yLimits)/diff(log10(yLimits));  %# Average y decade size
+% % xDecade = diff(xLimits)/diff(log10(xLimits));  %# Average x decade size
+% set(gca,'XLim',xLimits,'YLim',yLimits,...
+%         'DataAspectRatio',[1 3*yDecade/diff(xLimits) 1]);
+
 % Save plot to disk
 graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[experiment '.eps']);
 saveas(gcf,graphFile,'epsc')
