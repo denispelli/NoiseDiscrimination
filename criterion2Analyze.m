@@ -86,12 +86,15 @@ for domain=1:3
       legendString{domain}=[data(i).conditionName ': ' legendString{domain}];
    end
 end
+% axesPtr=axes; % doesn't seem to have any effect
+% axesPtr.Position=[1,1,3,3];
 hold off;
 legend(legendString);
 legend('boxoff');
 title(experiment);
 xlabel('pThreshold');
 ylabel('Neq (s deg^2)');
+axis([0.25 1 1e-7 1e-4]); % Limits of x and y.
 clear caption
 caption{1}=sprintf('experimenter %s, observer %s,', ...
    data(1).experimenter,data(1).observer);
@@ -99,3 +102,8 @@ caption{2}=sprintf('targetKind %s, noiseType %s', ...
    data(1).targetKind,data(1).noiseType);
 caption{3}=sprintf('eyes %s', data(1).eyes);
 annotation('textbox',[0.2 0.2 .1 .1],'String',caption,'FitBoxToText','on','LineStyle','none');
+
+% Save plot to disk
+graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[experiment '.eps']);
+saveas(gcf,graphFile,'epsc')
+% print(gcf,graphFile,'-depsc'); % equivalent to saveas above
