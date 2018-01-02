@@ -3216,12 +3216,12 @@ try
    o.signal = signal; % worth saving
    %     o.q=q; % not worth saving
    o.newCal = cal;
+   o=orderfields(o);
    save(fullfile(o.dataFolder,[o.dataFilename '.mat']),'o','cal');
    fprintf('Results saved in %s with extensions .txt and .mat\nin folder %s\n',o.dataFilename,o.dataFolder);
    Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
    oOld=o;
    oOld.secs=GetSecs; % Date for staleness.
-   o=orderfields(o);
 catch
    %% MATLAB catch
    ListenChar;
