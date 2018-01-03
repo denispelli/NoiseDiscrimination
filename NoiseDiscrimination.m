@@ -2166,7 +2166,8 @@ try
    rWarningCount = 0;
    runStart = GetSecs;
    for trial = 1:o.trialsPerRun
-      o=orderfields(o);
+      [~,neworder]=sort(lower(fieldnames(o)));
+      o=orderfields(o,neworder);
       %% SET TARGET LOG CONTRAST: tTest
       tTest = QuestQuantile(q);
       if o.measureBeta
@@ -3217,7 +3218,8 @@ try
    o.signal = signal; % worth saving
    %     o.q=q; % not worth saving
    o.newCal = cal;
-   o=orderfields(o);
+   [~,neworder]=sort(lower(fieldnames(o)));
+   o=orderfields(o,neworder);
    save(fullfile(o.dataFolder,[o.dataFilename '.mat']),'o','cal');
    fprintf('Results saved in %s with extensions .txt and .mat\nin folder %s\n',o.dataFilename,o.dataFolder);
    Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
@@ -3235,7 +3237,8 @@ catch
       fclose(dataFid);
       dataFid = -1;
    end
-   o=orderfields(o);
+   [~,neworder]=sort(lower(fieldnames(o)));
+   o=orderfields(o,neworder);
    psychrethrow(psychlasterror);
 end
 end % function o=NoiseDiscrimination(o)
