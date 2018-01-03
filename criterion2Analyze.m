@@ -86,9 +86,7 @@ for domain=1:3
       legendString{domain}=[data(i).conditionName ': ' legendString{domain}];
    end
 end
-% axesPtr=axes; % doesn't seem to have any effect
-% axesPtr.Position=[1,1,3,3];
-hold off;
+hold off
 legend(legendString);
 legend('boxoff');
 title(experiment);
@@ -101,7 +99,7 @@ caption{1}=sprintf('experimenter %s, observer %s,', ...
 caption{2}=sprintf('targetKind %s, noiseType %s', ...
    data(1).targetKind,data(1).noiseType);
 caption{3}=sprintf('eyes %s', data(1).eyes);
-annotation('textbox',[0.2 0.2 .1 .1],'String',caption,'FitBoxToText','on','LineStyle','none');
+annotation('textbox',[0.25 0.15 .1 .1],'String',caption,'FitBoxToText','on','LineStyle','none');
 
 pbaspect([1 1 1]); % Make vertical and horizontal axes equal in length.
 
