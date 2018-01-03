@@ -68,14 +68,14 @@ fprintf('Please make a log-log plot of (E-E0)/N vs. noiseCheckDeg, with a line f
 %% Plot
 figure;
 clear legendString
-for domain=1:2
-   ii=(domain-1)*5+(1:4);
+for graph=1:2
+   ii=(graph-1)*5+(1:4);
    i=ii(1);
    loglog([data(ii).noiseCheckDeg],[data(ii).EE0N],'-x'); 
    hold on;
-   legendString{domain}=sprintf('fullResolutionTarget %d',data(i).fullResolutionTarget);
+   legendString{graph}=sprintf('fullResolutionTarget %d',data(i).fullResolutionTarget);
    if isfield(data(i),'conditionName') && ~isempty(data(i).conditionName)
-      legendString{domain}=[data(i).conditionName ': ' legendString{domain}];
+      legendString{graph}=[data(i).conditionName ': ' legendString{graph}];
    end
 end
 hold off
