@@ -86,7 +86,7 @@ t % Print the oo list of conditions.
 if fakeRun
    data=table2struct(t);
    for i=1:length(data)
-      data(i).E=data(i).noiseSD+0.03+0.01*floor((i-1)/8);
+      data(i).E=10*data(i).noiseSD+1e-5*(1+floor((i-1)/8));
       data(i).trials=40;
       data(i).N=data(i).noiseSD;
       data(i).experimenter='Experimenter';
@@ -95,7 +95,7 @@ if fakeRun
       data(i).noiseType='gaussian';
       data(i).LMean=280*data(i).luminanceFactor;
    end
-   criterionAnalyze;
+   criterion2Analyze;
 else
    %% RUN THE CONDITIONS
    % Typically, you'll select just a few of the conditions stored in oo
