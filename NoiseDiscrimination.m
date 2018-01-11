@@ -665,7 +665,7 @@ else
       'nearPointXYPix' 'pixPerCm' 'psychtoolboxKernelDriverLoaded'...
       'targetXYPix' 'textLineLength' 'textSize' 'unknownFields'...
       'deviceIndex' 'speakEachLetter' 'targetCheckDeg' 'targetCheckPix'...
-      'textFont' 'useSpeech'
+      'textFont' 'useSpeech' 'LMean'...
       };
    unknownFields={};
    for condition=1:conditions
@@ -686,11 +686,12 @@ else
    end
    unknownFields=unique(unknownFields);
    if ~isempty(unknownFields)
-      warning off backtrace
-      warning(['ERROR: unknown o input fields:' sprintf(' %s',unknownFields{:}) '.']);
-      warning on backtrace
-      o.quitSession=1;
-      return
+      error(['Unknown field(s) in input struct:' sprintf(' o.%s',unknownFields{:}) '.']);
+%       warning off backtrace
+%       warning(['ERROR: unknown o input fields:' sprintf(' %s',unknownFields{:}) '.']);
+%       warning on backtrace
+%       o.quitSession=1;
+%       return
    end
    o=oo(1);
 end
