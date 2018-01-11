@@ -118,6 +118,14 @@ end
 if nargin > 1
     command = [command,' ',num2str(newLevel)];
 end
-[status,oldLevel] = system(command);
-oldLevel=str2num(oldLevel);
+[status,oldString] = system(command);
+oldLevel=str2double(oldString);
+if isempty(oldLevel)
+   error('Brightness applescript error: %s',oldString);
 end
+% When I ran this soon after a macOS update, I got an error message saying
+% something like "System Preferences application not running". Once I
+% manually opened System Preferences, Brightness ran fine, even after I
+% closed System Preferences. I think there's a way to launch an app in
+% applescript, and it would be good to add that to Brightness to avoid this
+% rare failure mode. denis.pelli@nyu.edu January 2018.
