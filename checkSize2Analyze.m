@@ -67,6 +67,7 @@ fprintf('Please make a log-log plot of (E-E0)/N vs. noiseCheckDeg, with a line f
 
 %% Plot
 figure;
+set(gca,'FontSize',12);
 clear legendString
 for graph=1:2
    ii=(graph-1)*5+(1:4);
