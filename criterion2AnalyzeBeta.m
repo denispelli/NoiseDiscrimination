@@ -90,7 +90,7 @@ if ~fakeRun
 end
 assert(~isempty(data))
 
-% Run QuestPlus
+% Run QUESTPlus
 clear dataPlus
 for i=1:length(data)
    dataPlus(i) = QUESTPlusRecalculate(data(i));
