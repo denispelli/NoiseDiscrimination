@@ -1,6 +1,6 @@
 %% Maximum likelihood estimate of parameters of psychometric function.
 % Analyze the data collected by <experiment>Run.
-% Combine all runs of each condition: experiment,observer,conditionName,noiseSD.
+% Combine all runs of each combo of: experiment,observer,conditionName,noiseSD.
 %
 % denis.pelli@nyu.edu January 18, 2018
 % We call QUESTPlusRecalculate, written by Shenghao Lin, to do the fit.
@@ -10,6 +10,7 @@ if ~exist('fakeRun')
    fakeRun=0;
 end
 if ~fakeRun
+   % Read in all MAT data files for <experiment>.
    dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
    cd(dataFolder);
    matFiles=dir(fullfile(dataFolder,[experiment 'Run*.mat']));
@@ -21,8 +22,8 @@ if ~fakeRun
       o=d.o;
       % The data are in o.psych:
       % o.psych.t is a unique sorted list of log c.
-      % o.psych.trials is the number of trials at that contrast. trials>0.
-      % o.psych.right is the number of trials with correct response. 0?right?trials
+      % o.psych.trials is the number of trials at each contrast. trials>0.
+      % o.psych.right is the number of trials with correct response at each contrast. 0?right?trials
       merged=0;
       if exist('data','var')
          for j=1:length(data)
@@ -85,7 +86,7 @@ if ~fakeRun
    end
    [~,ii]=sortrows(cell2mat(cc'));
    data=data(ii);
-   fprintf('Analyzing %d conditions.\n',length(data));
+   fprintf('Analyzing %d combinations of: experiment,observer,conditionName,noiseSD.\n',length(data));
 end
 assert(~isempty(data))
 
