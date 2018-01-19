@@ -1,9 +1,10 @@
-%% Analyze the data collected by <experiment>Run.
-% Combine runs for each condition.
-% Maximum likelihood estimate of parameters of psychometric function.
+%% Maximum likelihood estimate of parameters of psychometric function.
+% Analyze the data collected by <experiment>Run.
+% Combine all runs of each condition: experiment,observer,conditionName,noiseSD.
 %
 % denis.pelli@nyu.edu January 18, 2018
 % We call QUESTPlusRecalculate, written by Shenghao Lin, to do the fit.
+
 experiment='criterion2';
 if ~exist('fakeRun')
    fakeRun=0;
