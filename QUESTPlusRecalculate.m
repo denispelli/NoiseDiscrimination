@@ -59,6 +59,7 @@ o.lapse=psiParamsFit(4);
 oOut = o;
 end
 
+%% Modified from QUESTPlus qpUpdate, skipping entropy, to run faster.
 function questData = qpUpdateOnly(questData,stim,outcome,varargin)
 % qpUpdateOnly  Update just the trial data in the questData structure for
 % the trial stimulus and outcome. We save time by not computing entropies,
