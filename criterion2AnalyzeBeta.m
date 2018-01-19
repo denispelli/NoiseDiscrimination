@@ -1,4 +1,9 @@
 %% Analyze the data collected by <experiment>Run.
+% Combine runs for each condition.
+% Maximum likelihood estimate of parameters of psychometric function.
+%
+% denis.pelli@nyu.edu January 18, 2018
+% We call QUESTPlusRecalculate, written by Shenghao Lin, to do the fit.
 experiment='criterion2';
 if ~exist('fakeRun')
    fakeRun=0;
@@ -13,21 +18,14 @@ if ~fakeRun
       % Extract the desired fields into "data", one row per condition, merging runs.
       d = load(matFiles(i).name);
       o=d.o;
-      if any(o.psych.trials~=1)
-         bad=find(o.psych.trials~=1);
-         bad=bad(1);
-         fprintf('Too many trials: index %d, logC %.2f, trials %d, right %d\n',bad,o.psych.t(bad),o.psych.trials(bad),o.psych.right(bad));
-%          error(['%s: o.psych.trials not equal to 1: ' num2str(unique(o.psych.right))],matFiles(i).name);
-         o.psych.right(bad)=round(o.psych.right(bad)/o.psych.trials(bad));
-         o.psych.trials(bad)=1;
-      end
-      if ~all(ismember(unique(o.psych.right),[0 1]))
-         error(['%s: The o.psych.right values are not binary: ' num2str(unique(o.psych.right))],matFiles(i).name);
-      end
-
+      % The data are in o.psych:
+      % o.psych.t is a unique sorted list of log c.
+      % o.psych.trials is the number of trials at that contrast. trials>0.
+      % o.psych.right is the number of trials with correct response. 0?right?trials
       merged=0;
       if exist('data','var')
          for j=1:length(data)
+            % Match observer, noiseSD, and conditionName
             if streq(data(j).observer,o.observer) && data(j).noiseSD==o.noiseSD && streq(data(j).conditionName,o.conditionName)
                % Merge d into row j.
                merged=1;
@@ -36,6 +34,8 @@ if ~fakeRun
                data(j).psych.trials=[data(j).psych.trials o.psych.trials];
                data(j).trials=data(j).trials+o.trials;
                data(j).condition=[data(j).condition o.condition];
+               % We merely append the new data, without bothering to sort,
+               % or run "unique".
             end
          end
       end
@@ -66,12 +66,17 @@ if ~fakeRun
          end
       end
    end
+   if any([data(:).trials]<20)
+      s=sprintf('Threshold condition(trials):');
+      s=[s sprintf(' %d(%d),',data([data(:).trials]<20).condition,data([data(:).trials]<20).trials)];
+      warning('Discarding %d threshold(s) with fewer than 20 trials. %s',sum([data(:).trials]<20),s);
+      data = data([data(:).trials]>=20); % Discard thresholds with less than 20 trials.
+   end
    if any([data(:).trials]<40)
       s=sprintf('Threshold condition(trials):');
       s=[s sprintf(' %d(%d),',data([data(:).trials]<40).condition,data([data(:).trials]<40).trials)];
       warning('%d threshold(s) with fewer than 40 trials. %s',sum([data(:).trials]<40),s);
    end
-%    data = data([data(:).trials]>=40); % Discard thresholds with less than 40 trials.
    % Sort by condition, where "condition" may contain several numbers.
    clear cc
    for k=1:length(data)
@@ -83,10 +88,14 @@ if ~fakeRun
 end
 assert(~isempty(data))
 
-%% Compute derived quantities
+% Run QuestPlus
 clear dataPlus
 for i=1:length(data)
    dataPlus(i) = QUESTPlusRecalculate(data(i));
+end
+
+%% Compute derived quantities: E0, Neq, targetCyclesPerDeg
+for i=1:length(data)
    % Neq=N E0/(E-E0)
    i0=i-1;
    if i0>=1 && i0<=length(dataPlus) && dataPlus(i0).N==0
@@ -101,5 +110,10 @@ t=struct2table(dataPlus);
 spreadsheet=fullfile(fileparts(mfilename('fullpath')),'data',[experiment '.csv']);
 writetable(t,spreadsheet);
 t
-fprintf('All selected fields have been saved in spreadsheet: \\data\\%s.csv\n',experiment);
+fprintf('Saved in spreadsheet: \\data\\%s.csv\n',experiment);
 
+for i=1:length(dataPlus)
+   o=dataPlus(i);
+   fprintf('experiment %s, observer %s, conditionName %8s, trials %3d, noiseSD %.2f, contrast %.3f, steepness %.1f, guessing %.1f, lapse %.2f\n',...
+      o.experiment,o.observer,o.conditionName,o.trials,o.noiseSD,o.contrast,o.steepness,o.guessing,o.lapse);
+end
