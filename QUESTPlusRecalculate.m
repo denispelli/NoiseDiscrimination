@@ -18,7 +18,7 @@ steepnesses=1.5:0.1:4;
 guessingRates=0.5;
 lapseRates=0.01; % formerly 0:0.01:0.04
 contrastDB = 20.*transpose(o.psych.t); % transform to dB
-% When using qpUpdate (not our pqUpdateOnly), we could save time by
+% When using qpUpdate (not our qpUpdateOnly), we could save time by
 % quantizing to reduce the number of unique contrasts that QUEST must
 % consider. 
 % contrastDB=0.5*round(2*contrastDB); % 0.5 dB quantization
