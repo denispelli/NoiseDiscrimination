@@ -20,7 +20,7 @@ if ~fakeRun
       % Extract the desired fields into "data", one row per condition, merging runs.
       d = load(matFiles(i).name);
       o=d.o;
-      % The data are in o.psych:
+      % The trial data are in o.psych:
       % o.psych.t is a unique sorted list of log c.
       % o.psych.trials is the number of trials at each contrast. trials>0.
       % o.psych.right is the number of trials with correct response at each contrast. 0?right?trials
@@ -29,20 +29,24 @@ if ~fakeRun
          for j=1:length(data)
             % Match observer, noiseSD, and conditionName
             if streq(data(j).observer,o.observer) && data(j).noiseSD==o.noiseSD && streq(data(j).conditionName,o.conditionName)
-               % Merge d into row j.
+               % Merge o into matching row j.
                merged=1;
                data(j).psych.t=[data(j).psych.t' o.psych.t']';
                data(j).psych.right=[data(j).psych.right o.psych.right];
                data(j).psych.trials=[data(j).psych.trials o.psych.trials];
                data(j).trials=data(j).trials+o.trials;
                data(j).condition=[data(j).condition o.condition];
+               if data(j).alternatives~=o.alternatives
+                  error('Trying to merge runs with unequal o.alternatives %d vs %d',data(j).alternatives,o.alternatives);
+               end
+               break
                % We merely append the new data, without bothering to sort,
                % or run "unique".
             end
          end
-      end
+      end % exist('data','var')
       if ~merged
-         % Create new row for d.
+         % Create new row for o.
          if exist('data','var')
             j=length(data)+1;
          else
@@ -51,6 +55,7 @@ if ~fakeRun
          data(j).LMean=mean([d.cal.LFirst d.cal.LLast]); % Compute from cal in case it's not in o.
          data(j).luminanceFactor=1; % default value
          for field={'condition' 'experiment' 'dataFilename' 'experimenter' 'observer' 'trials' ...
+               'alternatives' ...
                'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' ...
                'targetHeightDeg' 'targetDurationSec' 'targetDurationSecMean'...
                'targetCheckDeg' 'fullResolutionTarget' ...
@@ -87,7 +92,7 @@ if ~fakeRun
    [~,ii]=sortrows(cell2mat(cc'));
    data=data(ii);
    fprintf('Analyzing %d combinations of: experiment,observer,conditionName,noiseSD.\n',length(data));
-end
+end % ~fakeRun
 assert(~isempty(data))
 
 % Run QUESTPlus
@@ -114,8 +119,9 @@ writetable(t,spreadsheet);
 t
 fprintf('Saved in spreadsheet: \\data\\%s.csv\n',experiment);
 
+fprintf('experiment observer conditionName trials noiseSD contrast logE steepness guessing lapse\n');
 for i=1:length(dataPlus)
    o=dataPlus(i);
-   fprintf('experiment %s, observer %s, conditionName %8s, trials %3d, noiseSD %.2f, contrast %.3f, steepness %.1f, guessing %.1f, lapse %.2f\n',...
-      o.experiment,o.observer,o.conditionName,o.trials,o.noiseSD,o.contrast,o.steepness,o.guessing,o.lapse);
+   fprintf('%s, %s, %8s, trials %3d, noiseSD %.2f, contrast %.3f, logE %.2f, steepness %.1f, guessing %.2f, lapse %.2f\n',...
+      o.experiment,o.observer,o.conditionName,o.trials,o.noiseSD,o.contrast,log10(o.E),o.steepness,o.guessing,o.lapse);
 end
