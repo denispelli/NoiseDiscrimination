@@ -57,4 +57,46 @@ o.lapse=psiParamsFit(4);
 
 %% Return value
 oOut = o;
+
+o.plotSteepness=true;
+persistent conditionName
+if o.plotSteepness
+   %% Plot trial data with maximum likelihood fit
+   newFigure=~exist('conditionName','var') || ~streq(o.conditionName,conditionName);
+   conditionName=o.conditionName;
+   if newFigure
+      figure; clf; hold on
+   end
+   stimCounts = qpCounts(qpData(questPlusData.trialData),questPlusData.nOutcomes);
+   stim = [stimCounts.stim];
+   stimFine = linspace(-40,0,100)';
+   plotProportionsFit = qpPFWeibull(stimFine,psiParamsFit);
+   for cc = 1:length(stimCounts)
+      nTrials(cc) = sum(stimCounts(cc).outcomeCounts);
+      pCorrect(cc) = stimCounts(cc).outcomeCounts(2)/nTrials(cc);
+   end
+   for cc = 1:length(stimCounts)
+      if o.noiseSD==0
+         h = scatter(stim(cc)/20,pCorrect(cc),100,'o','MarkerEdgeColor',[0 1 0],'MarkerFaceColor',[0 1 0],...
+            'MarkerFaceAlpha',nTrials(cc)/max(nTrials),'MarkerEdgeAlpha',nTrials(cc)/max(nTrials));
+      else
+         h = scatter(stim(cc)/20,pCorrect(cc),100,'o','MarkerEdgeColor',[0 0 0],'MarkerFaceColor',[0 1 0],...
+            'MarkerFaceAlpha',nTrials(cc)/max(nTrials),'MarkerEdgeAlpha',nTrials(cc)/max(nTrials));
+      end
+   end
+   if o.noiseSD==0
+      plot(stimFine/20,plotProportionsFit(:,2),'-','Color',[1.0 0.2 0.0],'LineWidth',3);
+   else
+      plot(stimFine/20,plotProportionsFit(:,2),'--','Color',[1.0 0.2 0.0],'LineWidth',3);
+   end
+   xlabel('Log contrast');
+   ylabel('Proportion correct');
+   xlim([-2 00]); ylim([0 1]);
+   title({'Weibull psychometric function', ''});
+   if newFigure
+      hold on
+   else
+      drawnow;
+   end
+end
 end
