@@ -31,9 +31,9 @@ function o = NoiseDiscrimination(oIn)
 % some information about the condition is contained in the file name and in
 % a caption on the figure. The caption may not be included if you enable
 % cropping. Here are the parameters that you can control:
-% o.saveSnapshot=1; % If true (1), take snapshot for public presentation.
+% o.saveSnapshot=true; % If true (1), take snapshot for public presentation.
 % o.snapshotTargetContrast=0.2; % nan to request program default.
-% o.cropSnapshot=0; % If true (1), crop to include only target and noise,
+% o.cropSnapshot=false; % If true (1), crop to include only target and noise,
 %                   % plus response numbers, if displayed.
 % o.snapshotCaptionTextSizeDeg=0.5;
 %
@@ -476,23 +476,23 @@ ff=1; % Once we open a data file, ff will print to both screen and data file.
 %% DEFAULT VALUE FOR EVERY "o" PARAMETER
 % They are overridden by what you provide in the argument struct oIn.
 if nargin < 1 || ~exist('oIn','var')
-   oIn.noInputArgument = 1;
+   oIn.noInputArgument =true;
 end
 o = [];
-o.measureSteepness=0;
-o.printQuestPlusParameters=1;
-o.replicatePelli2006=0;
+o.measureSteepness=false;
+o.printQuestPlusParameters=true;
+o.replicatePelli2006=false;
 o.clutMapLength=2048; % enough for 11-bit precision.
-o.useNative10Bit=0;
-o.useNative11Bit=1;
+o.useNative10Bit=false;
+o.useNative11Bit=true;
 o.ditherCLUT=61696; % Use this only on Denis's PowerBook Pro and iMac 5k.
-o.ditherCLUT=0; % As of June 28, 2017, there is no measurable effect of this dither control.
-o.enableCLUTMapping = 1; % Required. Using software CLUT.
-o.assessBitDepth = 0;
+o.ditherCLUT=false; % As of June 28, 2017, there is no measurable effect of this dither control.
+o.enableCLUTMapping =true; % Required. Using software CLUT.
+o.assessBitDepth =false;
 o.luminanceFactor=1;
-o.useFractionOfScreen = 0; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
+o.useFractionOfScreen =false; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 o.viewingDistanceCm = 50; % viewing distance
-o.flipScreenHorizontally = 0; % Use this when viewing the display in a mirror.
+o.flipScreenHorizontally =false; % Use this when viewing the display in a mirror.
 o.observer = ''; % Name of person or existing algorithm.
 % o.observer='denis'; o.observer='michelle'; o.observer='martin';
 % o.observer='tiffany'; o.observer='irene'; o.observer='joy';
@@ -509,18 +509,18 @@ o.luminanceTransmission=1; % Less than one for dark glasses or neutral density f
 o.trialsPerRun = 40; % Typically 40.
 o.runNumber = 1; % For display only, indicate the run number. When o.runNumber==runsDesired this program says "Congratulations" before returning.
 o.runsDesired = 1; % How many runs you to plan to do, used solely for display (and congratulations).
-o.speakInstructions = 0;
-o.congratulateWhenDone = 1; % 0 or 1. Spoken after last run (i.e. when o.runNumber==o.runsDesired). You can turn this off.
-o.quitRun = 0; % 0 or 1. Returned value is 1 if the user aborts this run (i.e. threshold).
-o.quitSession = 0; % 0 or 1. Returned value is 1 if the observer wants to quit now; no more runs.
+o.speakInstructions =false;
+o.congratulateWhenDone =true; % 0 or 1. Spoken after last run (i.e. when o.runNumber==o.runsDesired). You can turn this off.
+o.quitRun =false; % 0 or 1. Returned value is 1 if the user aborts this run (i.e. threshold).
+o.quitSession =false; % 0 or 1. Returned value is 1 if the observer wants to quit now; no more runs.
 o.targetKind = 'letter';
 % o.targetKind='gabor'; % one cycle within targetSize
 o.font = 'Sloan';
 % o.font='Bookman';
-% o.allowAnyFont=0; % Old code assumes Sloan font.
-o.allowAnyFont = 1; % New code supports any font.
+% o.allowAnyFont=false; % Old code assumes Sloan font.
+o.allowAnyFont =true; % New code supports any font.
 o.alphabet = 'DHKNORSVZ';
-o.printTargetBounds = 0;
+o.printTargetBounds =false;
 o.targetGaborPhaseDeg = 0; % Phase offset of sinewave in deg at center of gabor.
 o.targetGaborSpaceConstantCycles = 0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
 o.targetGaborCycles = 3; % cycles of the sinewave in targetHeight
@@ -546,10 +546,10 @@ o.targetHeightDeg = 2; % Target size, range 0 to inf. If you ask for too
 % o.targetHeightDeg=30*o.noiseCheckDeg; % standard for counting neurons
 % project
 o.minimumTargetHeightChecks = 8; % Minimum target resolution, in units of the check size.
-o.fullResolutionTarget=0; % True to render signal at full resolution (targetCheckPix=1). False to use noise resolution (targetCheckPix=noiseCheckPix).
+o.fullResolutionTarget=false; % True to render signal at full resolution (targetCheckPix=1). False to use noise resolution (targetCheckPix=noiseCheckPix).
 o.targetMargin = 0.25; % Minimum from edge of target to edge of o.stimulusRect, as fraction of targetHeightDeg.
 o.targetDurationSec = 0.2; % Typically 0.2 or inf (wait indefinitely for response).
-o.useFlankers = 0; % 0 or 1. Enable for crowding experiments.
+o.useFlankers =false; % 0 or 1. Enable for crowding experiments.
 o.flankerContrast = -0.85; % Negative for dark letters.
 o.flankerContrast = nan; % Nan requests that flanker contrast always equal signal contrast.
 o.flankerSpacingDeg = 4;
@@ -563,49 +563,49 @@ o.noiseRadiusDeg = inf; % When o.task=4afc, the program will set o.noiseRadiusDe
 o.noiseEnvelopeSpaceConstantDeg = inf;
 o.noiseRaisedCosineEdgeThicknessDeg = 0; % midpoint of raised cosine is at noiseRadiusDeg.
 o.noiseSpectrum = 'white'; % pink or white
-o.showBlackAnnulus = 0;
+o.showBlackAnnulus =false;
 o.blackAnnulusContrast = -1; % (LBlack-LMean)/LMean. -1 for black line. >-1 for gray line.
 o.blackAnnulusSmallRadiusDeg = 2;
 o.blackAnnulusThicknessDeg = 0.1;
 o.annularNoiseBigRadiusDeg = inf; % Noise extent in deg, or inf.
 o.annularNoiseSmallRadiusDeg = inf; % Hole extent or 0 (no hole).
 o.noiseType = 'gaussian'; % 'gaussian' or 'uniform' or 'binary'
-o.noiseFrozenInTrial = 0; % 0 or 1.  If true (1), use same noise at all locations
-o.noiseFrozenInRun = 0; % 0 or 1.  If true (1), use same noise on every trial
+o.noiseFrozenInTrial =false; % 0 or 1.  If true (1), use same noise at all locations
+o.noiseFrozenInRun =false; % 0 or 1.  If true (1), use same noise on every trial
 o.noiseFrozenInRunSeed = 0; % 0 or positive integer. If o.noiseFrozenInRun, then any nonzero positive integer will be used as the seed for the run.
-o.markTargetLocation = 0; % Is there a mark designating target position?
+o.markTargetLocation =false; % Is there a mark designating target position?
 o.targetMarkDeg=1;
-o.useFixation=1;
-o.fixationIsOffscreen=0;
+o.useFixation=true;
+o.fixationIsOffscreen=false;
 o.fixationCrossDeg = inf; % Typically 1 or inf. Make this at least 4 deg for scotopic testing, since the fovea is blind scotopically.
 o.fixationCrossWeightDeg = 0.03; % Typically 0.03. Make it much thicker for scotopic testing.
-o.fixationCrossBlankedNearTarget = 1; % 0 or 1.
+o.fixationCrossBlankedNearTarget =true; % 0 or 1.
 o.fixationCrossBlankedUntilSecAfterTarget = 0.6; % Pause after stimulus before display of fixation. Skipped when fixationCrossBlankedNearTarget. Not needed when eccentricity is bigger than the target.
 o.blankingRadiusReTargetHeight= nan;
 o.blankingRadiusReEccentricity= 0.5;
 o.textSizeDeg = 0.6;
-o.saveSnapshot = 0; % 0 or 1.  If true (1), take snapshot for public presentation.;
+o.saveSnapshot =false; % 0 or 1.  If true (1), take snapshot for public presentation.;
 o.snapshotTargetContrast = 0.2; % nan to request program default. If set, this determines o.tSnapshot.;
 o.tSnapshot = nan; % nan to request program defaults.;
-o.cropSnapshot = 0; % If true (1), show only the target and noise, without unnecessary gray background.;
+o.cropSnapshot =false; % If true (1), show only the target and noise, without unnecessary gray background.;
 o.snapshotCaptionTextSizeDeg = 0.5;
-o.snapshotShowsFixationBefore = 1;
-o.snapshotShowsFixationAfter = 0;
-o.saveStimulus = 0; % saves to o.savedStimulus;
+o.snapshotShowsFixationBefore =true;
+o.snapshotShowsFixationAfter =false;
+o.saveStimulus =false; % saves to o.savedStimulus;
 o.gapFraction4afc = 0.03; % Typically 0, 0.03, or 0.2. Gap, as a fraction of o.targetHeightDeg, between the four squares in 4afc task, ignored in identify task.;
-o.showCropMarks = 0; % mark the bounding box of the target
-o.showResponseNumbers = 1;
-o.responseNumbersInCorners = 0;
-o.printCrossCorrelation = 0;
-o.printLikelihood = 0;
-o.assessLinearity = 0;
-o.assessContrast = 0; % diagnostic information
-o.measureContrast=0;
-o.usePhotometer=1; % use photometer or 8-bit model
-o.assessLoadGamma = 0; % diagnostic information
-o.assessLowLuminance = 0;
-o.assessGray = 0; % For debugging. Diagnostic printout when we load gamma table.
-o.assessTargetLuminance=0;
+o.showCropMarks =false; % mark the bounding box of the target
+o.showResponseNumbers =true;
+o.responseNumbersInCorners =false;
+o.printCrossCorrelation =false;
+o.printLikelihood =false;
+o.assessLinearity =false;
+o.assessContrast =false; % diagnostic information
+o.measureContrast=false;
+o.usePhotometer=true; % use photometer or 8-bit model
+o.assessLoadGamma =false; % diagnostic information
+o.assessLowLuminance =false;
+o.assessGray =false; % For debugging. Diagnostic printout when we load gamma table.
+o.assessTargetLuminance=false;
 % o.observerQuadratic=-1.2; % estimated from old second harmonic data
 o.observerQuadratic = -0.7; % adjusted to fit noise letter data.
 o.backgroundEntropyLevels = 2; % Value used only if o.targetModulates is 'entropy'
@@ -613,17 +613,17 @@ o.idealEOverNThreshold = nan; % You can run the ideal first, and then provide it
 o.screen = 0;
 o.screen = max(Screen('Screens'));
 o.alphabetPlacement = 'top'; % 'top' or 'right';
-o.replicatePelli2006 = 0;
+o.replicatePelli2006 =false;
 o.isWin = IsWin; % override this to simulate Windows on a Mac.
 o.movieFrameFlipSec = []; % flip times (useful to calculate frame drops)
-o.useDynamicNoiseMovie = 0; % 0 for static noise
+o.useDynamicNoiseMovie =false; % 0 for static noise
 o.moviePreSec = 0;
 o.moviePostSec = 0;
 o.likelyTargetDurationSec = [];
 o.measuredTargetDurationSec = [];
 o.movieFrameFlipSec = [];
-o.printDurations = 0;
-o.newClutForEachImage = 1;
+o.printDurations =false;
+o.newClutForEachImage =true;
 o.experiment='';
 o.condition=1;
 o.conditionName='';
@@ -691,7 +691,7 @@ else
 %       warning off backtrace
 %       warning(['ERROR: unknown o input fields:' sprintf(' %s',unknownFields{:}) '.']);
 %       warning on backtrace
-%       o.quitSession=1;
+%       o.quitSession=true;
 %       return
    end
    o=oo(1);
@@ -768,9 +768,9 @@ end
 if ~isfield(o,'labelAlternatives')
    switch o.targetKind
       case 'gabor'
-         o.labelAlternatives = 1;
+         o.labelAlternatives =true;
       case 'letter'
-         o.labelAlternatives = 0;
+         o.labelAlternatives =false;
    end
 end
 
@@ -778,7 +778,7 @@ end
 cal.screen = o.screen;
 cal = OurScreenCalibrations(cal.screen);
 % Must call Brightness while no window is open.
-useBrightnessFunction=1;
+useBrightnessFunction=true;
 if useBrightnessFunction
    Brightness(cal.screen,cal.brightnessSetting); % Set brightness.
    cal.brightnessReading = Brightness(cal.screen); % Read brightness.
@@ -825,8 +825,8 @@ try
    black = 0; % Retrieves the CLUT color code for black.
    white = WhiteIndex(window); % Retrieves the CLUT color code for white.
    o.deviceIndex=-3; % all keyboard and keypad devices
-   o.speakEachLetter=0;
-   o.useSpeech=0;
+   o.speakEachLetter=false;
+   o.useSpeech=false;
    if isempty(o.experimenter)
       ListenChar(2); % no echo
       Screen('FillRect',window);
@@ -847,7 +847,7 @@ try
       Screen('TextSize',window,o.textSize);
       [name,terminatorChar]=GetEchoString(window,'Experimenter name:',instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
       if ismember(terminatorChar,[escapeChar graveAccentChar])
-         o.quitRun=1;
+         o.quitRun=true;
          o.quitSession=OfferToQuitSession(window,o,instructionalMarginPix,screenRect);
          if o.quitSession
             ffprintf(ff,'*** User typed ESCAPE twice. Session terminated.\n');
@@ -882,7 +882,7 @@ try
       end
       [name,terminatorChar]=GetEchoString(window,'Observer name:',instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
       if ismember(terminatorChar,[escapeChar graveAccentChar])
-         o.quitRun=1;
+         o.quitRun=true;
          o.quitSession=OfferToQuitSession(window,o,instructionalMarginPix,screenRect);
          if o.quitSession
             ffprintf(ff,'*** User typed ESCAPE twice. Session terminated.\n');
@@ -1011,7 +1011,7 @@ try
    %% SET SIZES OF SCREEN ELEMENTS: text, stimulusRect, etc.
    textFont = 'Verdana';
    if streq(o.task,'identify')
-      o.showResponseNumbers = 0; % Inappropriate so suppress.
+      o.showResponseNumbers =false; % Inappropriate so suppress.
       switch o.alphabetPlacement
          case 'right'
             o.stimulusRect(3) = o.stimulusRect(3)-RectHeight(screenRect)/max(6,o.alternatives);
@@ -1243,7 +1243,7 @@ try
       if o.enableCLUTMapping % How we use LoadNormalizedGammaTable
          loadOnNextFlip = 2; % Load software CLUT at flip.
       else
-         loadOnNextFlip = 1; % Load hardware CLUT: 0. now; 1. on flip.
+         loadOnNextFlip =true; % Load hardware CLUT: 0. now; 1. on flip.
       end
       if ~o.useFractionOfScreen
          window=PsychImaging('OpenWindow',cal.screen,1.0);
@@ -1305,7 +1305,7 @@ try
          o.psychtoolboxKernelDriverLoaded = ~system('kextstat -l -k | grep PsychtoolboxKernelDriver > /dev/null');
          ffprintf(ff,'o.psychtoolboxKernelDriverLoaded=%d %% 1 for best timing.\n',o.psychtoolboxKernelDriverLoaded);
       else
-         o.psychtoolboxKernelDriverLoaded=0;
+         o.psychtoolboxKernelDriverLoaded=false;
       end
       
       % Compare hardware CLUT with identity.
@@ -1408,8 +1408,8 @@ try
          if o.speakInstructions
             Speak('Quitting.');
          end
-         o.quitRun=1;
-         o.quitSession=1;
+         o.quitRun=true;
+         o.quitSession=true;
          sca;
          ListenChar;
          return
@@ -1441,8 +1441,8 @@ try
             if o.speakInstructions
                Speak('Quitting.');
             end
-            o.quitRun=1;
-            o.quitSession=1;
+            o.quitRun=true;
+            o.quitSession=true;
             sca;
             ListenChar;
             return
@@ -1462,8 +1462,8 @@ try
             if o.speakInstructions
                Speak('Quitting.');
             end
-            o.quitRun=1;
-            o.quitSession=1;
+            o.quitRun=true;
+            o.quitSession=true;
             sca;
             ListenChar;
             return
@@ -1483,8 +1483,8 @@ try
             if o.speakInstructions
                Speak('Quitting.');
             end
-            o.quitRun=1;
-            o.quitSession=1;
+            o.quitRun=true;
+            o.quitSession=true;
             sca;
             ListenChar;
             return
@@ -1700,10 +1700,10 @@ try
          else
             mtf = [];
          end
-         o.noiseIsFiltered = 1;
+         o.noiseIsFiltered =true;
       case 'white'
          mtf = ones(o.noiseSize);
-         o.noiseIsFiltered = 0;
+         o.noiseIsFiltered =false;
    end
    if o.noiseSD == 0
       mtf = 0;
@@ -2110,8 +2110,8 @@ try
                if o.speakInstructions
                   Speak('Quitting.');
                end
-               o.quitRun=1;
-               o.quitSession=1;
+               o.quitRun=true;
+               o.quitSession=true;
                sca;
                ListenChar;
                return
@@ -2168,7 +2168,7 @@ try
    %% DO A RUN
    o.data = [];
    q = QuestCreate(tGuess,tGuessSd,o.pThreshold,o.beta,delta,gamma);
-   q.normalizePdf = 1; % adds a few ms per call to QuestUpdate, but otherwise the pdf will underflow after about 1000 trials.
+   q.normalizePdf =true; % adds a few ms per call to QuestUpdate, but otherwise the pdf will underflow after about 1000 trials.
    wrongRight = {'wrong', 'right'};
    timeZero = GetSecs;
    trialsRight = 0;
@@ -2892,21 +2892,21 @@ try
                      Speak('Run terminated.');
                   end
                   trial = trial-1;
-                  o.quitRun = 1;
+                  o.quitRun =true;
                   break;
                end
                response = clicks;
             case 'identify'
                response = 0;
                while ~ismember(lower(response),lower(1:o.alternatives))
-                  o.quitRun = 0;
+                  o.quitRun =false;
                   response = GetKeypress;
                   if ismember(response,[escapeChar,graveAccentChar])
                      ffprintf(ff,'User typed ESCAPE. Run terminated.\n',response);
                      if o.speakInstructions
                         Speak('Run terminated.');
                      end
-                     o.quitRun = 1;
+                     o.quitRun =true;
                      trial = trial-1;
                      break;
                   end
@@ -3096,6 +3096,30 @@ try
       o.qpSteepness=psiParamsFit(2);          % steepness
       o.qpGuessing=psiParamsFit(3);
       o.qpLapse=psiParamsFit(4);
+      
+      o.plotSteepness=true;
+      if o.plotSteepness
+         %% Plot trial data with maximum likelihood fit
+         figure; clf; hold on
+         stimCounts = qpCounts(qpData(questPlusData.trialData),questPlusData.nOutcomes);
+         stim = [stimCounts.stim];
+         stimFine = linspace(-40,0,100)';
+         plotProportionsFit = qpPFWeibull(stimFine,psiParamsFit);
+         for cc = 1:length(stimCounts)
+            nTrials(cc) = sum(stimCounts(cc).outcomeCounts);
+            pCorrect(cc) = stimCounts(cc).outcomeCounts(2)/nTrials(cc);
+         end
+         for cc = 1:length(stimCounts)
+            h = scatter(stim(cc)/20,pCorrect(cc),100,'o','MarkerEdgeColor',[0 0 1],'MarkerFaceColor',[0 0 1],...
+               'MarkerFaceAlpha',nTrials(cc)/max(nTrials),'MarkerEdgeAlpha',nTrials(cc)/max(nTrials));
+         end
+         plot(stimFine/20,plotProportionsFit(:,2),'-','Color',[1.0 0.2 0.0],'LineWidth',3);
+         xlabel('Log contrast');
+         ylabel('Proportion correct');
+         xlim([-2 00]); ylim([0 1]);
+         title({'Fit Weibull psychometric function', ''});
+         drawnow;
+      end
    end
    
    o.targetDurationSecMean = mean(o.likelyTargetDurationSec,'omitnan');
@@ -3187,13 +3211,13 @@ try
    %                if o.speakInstructions
    %                   Speak('Quitting now.');
    %                end
-   %                o.quitSession = 1;
+   %                o.quitSession =true;
    %                break;
    %             case ' ',
    %                if o.speakInstructions
    %                   Speak('Continuing.');
    %                end
-   %                o.quitSession = 0;
+   %                o.quitSession =false;
    %                break;
    %             otherwise
    %                if o.speakInstructions
@@ -3926,8 +3950,8 @@ if ismember(response,[escapeChar,graveAccentChar])
    if o.speakInstructions
       Speak('Quitting.');
    end
-   o.quitRun=1;
-   o.quitSession=1;
+   o.quitRun=true;
+   o.quitSession=true;
    sca;
    ListenChar;
    return
@@ -3950,10 +3974,10 @@ spaceKeyCode=KbName('space');
 returnKeyCode=KbName('return');
 o.fixationXYPix=round(XYPixOfXYDeg(o,[0 0]));
 if ~o.useFixation
-   o.fixationIsOffscreen = 0;
+   o.fixationIsOffscreen =false;
 else
    if ~IsXYInRect(o.fixationXYPix,o.stimulusRect)
-      o.fixationIsOffscreen = 1;
+      o.fixationIsOffscreen =true;
       % o.fixationXYPix is in plane of display. Off-screen fixation is
       % not! It is the same distance from the eye as the near point.
       % fixationOffsetXYCm is vector from near point to fixation.
@@ -4012,15 +4036,15 @@ else
       Screen('FillRect',window,white);
       Screen('Flip',window); % Blank, to acknowledge response.
       if ismember(answer,returnChar)
-         o.fixationIsOffscreen = 1;
+         o.fixationIsOffscreen =true;
          ffprintf(ff,'Offscreen fixation mark (%.1f,%.1f) cm from near point of display.\n',fixationOffsetXYCm);
       else
-         o.fixationIsOffscreen = 0;
+         o.fixationIsOffscreen =false;
          error('User refused off-screen fixation. Please reduce viewing distance (%.1f cm) or o.eccentricityXYDeg (%.1f %.1f).',...
             o.viewingDistanceCm,o.eccentricityXYDeg);
       end
    else
-      o.fixationIsOffscreen = 0;
+      o.fixationIsOffscreen =false;
    end
 end
 o.targetXYPix=XYPixOfXYDeg(o,o.eccentricityXYDeg);
