@@ -479,6 +479,8 @@ if nargin < 1 || ~exist('oIn','var')
    oIn.noInputArgument = 1;
 end
 o = [];
+o.measureSteepness=0;
+o.printQuestPlusParameters=1;
 o.replicatePelli2006=0;
 o.clutMapLength=2048; % enough for 11-bit precision.
 o.useNative10Bit=0;
@@ -537,7 +539,6 @@ o.tGuess = nan; % Specify a finite value for Quest, or nan for default.
 o.tGuessSd = nan; % Specify a finite value for Quest, or nan for default.
 o.pThreshold = 0.75;
 o.beta = nan; % Typically 1.7, 3.5, or Nan. Nan asks NoiseDiscrimination to set this at runtime.
-o.measureBeta = 0;
 o.eccentricityXYDeg = [0 0]; % eccentricity of target center re fixation, + for right & up.
 o.nearPointXYInUnitSquare=[0.5 0.5]; % location of target center on screen. [0 0]  lower right, [1 1] upper right.
 o.targetHeightDeg = 2; % Target size, range 0 to inf. If you ask for too
@@ -665,7 +666,7 @@ else
       'nearPointXYPix' 'pixPerCm' 'psychtoolboxKernelDriverLoaded'...
       'targetXYPix' 'textLineLength' 'textSize' 'unknownFields'...
       'deviceIndex' 'speakEachLetter' 'targetCheckDeg' 'targetCheckPix'...
-      'textFont' 'useSpeech' 'LMean'...
+      'textFont' 'useSpeech' 'LMean' 'measureSteepness'...
       };
    unknownFields={};
    for condition=1:conditions
@@ -1104,7 +1105,6 @@ try
       case 'identify'
          idealT64 = -0.30;
    end
-   offsetToMeasureBeta = -0.4:0.1:0.2; % offset of t, i.e. log signal intensity
    switch o.observer
       case algorithmicObservers
          if ~isfield(o,'beta') || ~isfinite(o.beta)
@@ -1120,9 +1120,6 @@ try
          %         o.pixPerCm=45; % for MacBook at native resolution.
          %         o.pixPerDeg=o.pixPerCm/degPerCm;
       otherwise
-         if o.measureBeta
-            o.trialsPerRun = max(200,o.trialsPerRun);
-         end
          if ~isfield(o,'beta') || ~isfinite(o.beta)
             switch o.targetModulates
                case 'luminance'
@@ -2157,6 +2154,17 @@ try
       tGuessSd = o.tGuessSd;
    end
    
+   %% Set parameters for QUESTPlus
+   if o.measureSteepness
+      steepnesses=1:0.1:5;
+      guessingRates=1/o.alternatives;
+      lapseRates=0.01; 
+      contrastDB = -80:0.5:20;
+      questPlusData = qpParams('stimParamsDomainList', {contrastDB},...,
+         'psiParamsDomainList',{contrastDB, steepnesses, guessingRates, lapseRates});
+      questPlusData = qpInitialize(questPlusData);
+   end
+   
    %% DO A RUN
    o.data = [];
    q = QuestCreate(tGuess,tGuessSd,o.pThreshold,o.beta,delta,gamma);
@@ -2170,10 +2178,10 @@ try
       [~,neworder]=sort(lower(fieldnames(o)));
       o=orderfields(o,neworder);
       %% SET TARGET LOG CONTRAST: tTest
-      tTest = QuestQuantile(q);
-      if o.measureBeta
-         offsetToMeasureBeta = Shuffle(offsetToMeasureBeta);
-         tTest = tTest+offsetToMeasureBeta(1);
+      if o.measureSteepness
+         tTest=qpQuery(questPlusData)/20; % Convert dB to log contrast.
+      else
+         tTest = QuestQuantile(q);
       end
       if ~isfinite(tTest)
          ffprintf(ff,'WARNING: trial %d: tTest %f not finite. Setting to QuestMean.\n',trial,tTest);
@@ -2260,6 +2268,12 @@ try
          end
          rng(o.noiseListSeed);
       end % if o.noiseFrozenInRun
+      
+      %% RESTRICT tTest TO LEGAL VALUE IN QUESTPLUS
+      if o.measureSteepness
+         i=knnsearch(contrastDB'/20,tTest);
+         tTest=contrastDB(i)/20;
+      end
       
       %% COMPUTE MOVIE IMAGES
       movieImage = {};
@@ -2976,6 +2990,11 @@ try
       end
       trialsRight = trialsRight+response;
       q = QuestUpdate(q,tTest,response); % Add the new datum (actual test intensity and o.observer response) to the database.
+      if o.measureSteepness
+         stim=20*tTest;
+         outcome=response+1;
+         questPlusData = qpUpdate(questPlusData,stim,outcome); 
+      end
       o.data(trial,1:2) = [tTest response];
       if cal.ScreenConfigureDisplayBrightnessWorks
          %          Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
@@ -3055,6 +3074,30 @@ try
    o.EOverN = 10^(2*o.questMean)*o.E1/o.N;
    o.efficiency = o.idealEOverNThreshold/o.EOverN;
    
+   %% QUESTPlus: Estimate steepness and threshold contrast.
+   if o.measureSteepness
+      psiParamsIndex = qpListMaxArg(questPlusData.posterior);
+      psiParamsBayesian = questPlusData.psiParamsDomain(psiParamsIndex,:);
+      if o.printQuestPlusParameters
+         ffprintf(ff,'Max posterior fit parameters:      log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
+            psiParamsBayesian(1)/20,psiParamsBayesian(2),psiParamsBayesian(3),psiParamsBayesian(4));
+      end
+      o.qpBayesianContrast=sign(o.contrast)*10^(psiParamsBayesian(1)/20);	% threshold contrast
+      o.qpBayesianSteepness=psiParamsBayesian(2);          % steepness
+      o.qpBayesianGuessing=psiParamsBayesian(3);
+      o.qpBayesianLapse=psiParamsBayesian(4);
+      psiParamsFit = qpFit(questPlusData.trialData,questPlusData.qpPF,psiParamsBayesian,questPlusData.nOutcomes,...,
+         'lowerBounds', [min(contrastDB) min(steepnesses) min(guessingRates) min(lapseRates)],'upperBounds',[max(contrastDB) max(steepnesses) max(guessingRates) max(lapseRates)]);
+      if o.printQuestPlusParameters
+         ffprintf(ff,'Maximum likelihood fit parameters: log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
+            psiParamsFit(1)/20,psiParamsFit(2),psiParamsFit(3),psiParamsFit(4));
+      end
+      o.qpContrast=sign(o.contrast)*10^(psiParamsFit(1)/20);	% threshold contrast
+      o.qpSteepness=psiParamsFit(2);          % steepness
+      o.qpGuessing=psiParamsFit(3);
+      o.qpLapse=psiParamsFit(4);
+   end
+   
    o.targetDurationSecMean = mean(o.likelyTargetDurationSec,'omitnan');
    o.targetDurationSecSD = std(o.likelyTargetDurationSec,'omitnan');
    ffprintf(ff,'Mean target duration %.3f +/- %.3f s (sd over %d trials).\n',o.targetDurationSecMean,o.targetDurationSecSD,length(o.likelyTargetDurationSec));
@@ -3070,20 +3113,6 @@ try
    end
    if abs(trialsRight/trial-o.pThreshold) > 0.1
       ffprintf(ff,'WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.\n');
-   end
-   if o.measureBeta
-      % Reanalyze the data with beta as a free parameter.
-      ffprintf(ff,'o.measureBeta, offsetToMeasureBeta %.1f to %.1f\n',min(offsetToMeasureBeta),max(offsetToMeasureBeta));
-      bestBeta = QuestBetaAnalysis(q);
-      qq = q;
-      qq.beta = bestBeta;
-      qq = QuestRecompute(qq);
-      ffprintf(ff,'dt    P\n');
-      tt = QuestMean(qq);
-      for offset = sort(offsetToMeasureBeta)
-         t = tt+offset;
-         ffprintf(ff,'%5.2f %.2f\n',offset,QuestP(qq,offset));
-      end
    end
    % end
    
