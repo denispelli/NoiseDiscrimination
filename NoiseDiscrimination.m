@@ -479,8 +479,13 @@ if nargin < 1 || ~exist('oIn','var')
    oIn.noInputArgument =true;
 end
 o = [];
-o.measureSteepness=false;
-o.printQuestPlusParameters=true;
+o.questPlusEnable=false;
+o.questPlusSteepnesses=1:0.1:5;
+o.questPlusGuessingRates=nan; % 1/alternatives
+o.questPlusLapseRates=[0:0.01:0.05];
+o.questPlusLogContrasts=-3:0.05:0.5;
+o.questPlusPrint=true;
+o.questPlusPlot=true;
 o.replicatePelli2006=false;
 o.clutMapLength=2048; % enough for 11-bit precision.
 o.useNative10Bit=false;
@@ -538,7 +543,7 @@ o.alternatives = 9; % The number of letters to use from o.alphabet.
 o.tGuess = nan; % Specify a finite value for Quest, or nan for default.
 o.tGuessSd = nan; % Specify a finite value for Quest, or nan for default.
 o.pThreshold = 0.75;
-o.beta = nan; % Typically 1.7, 3.5, or Nan. Nan asks NoiseDiscrimination to set this at runtime.
+o.steepness = nan; % Typically 1.7, 3.5, or Nan. Nan asks NoiseDiscrimination to set this at runtime.
 o.eccentricityXYDeg = [0 0]; % eccentricity of target center re fixation, + for right & up.
 o.nearPointXYInUnitSquare=[0.5 0.5]; % location of target center on screen. [0 0]  lower right, [1 1] upper right.
 o.targetHeightDeg = 2; % Target size, range 0 to inf. If you ask for too
@@ -666,7 +671,7 @@ else
       'nearPointXYPix' 'pixPerCm' 'psychtoolboxKernelDriverLoaded'...
       'targetXYPix' 'textLineLength' 'textSize' 'unknownFields'...
       'deviceIndex' 'speakEachLetter' 'targetCheckDeg' 'targetCheckPix'...
-      'textFont' 'useSpeech' 'LMean' 'measureSteepness'...
+      'textFont' 'useSpeech' 'LMean' ...
       };
    unknownFields={};
    for condition=1:conditions
@@ -838,7 +843,7 @@ try
       Screen('TextSize',window,round(0.6*o.textSize));
       Screen('DrawText',window,'You can skip these screens by defining o.experimenter and o.observer in your script.',instructionalMarginPix,screenRect(4)/2-1.5*o.textSize,black,white);
       Screen('TextSize',window,round(o.textSize*0.35));
-      Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, Denis Pelli. All rights reserved.'),instructionalMarginPix,screenRect(4)-0.5*instructionalMarginPix,black,white,1);
+      Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.'),instructionalMarginPix,screenRect(4)-0.5*instructionalMarginPix,black,white,1);
       if IsWindows
          background=[];
       else
@@ -873,7 +878,7 @@ try
       Screen('DrawText',window,'Hello Observer,',instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,white);
       Screen('DrawText',window,'Please slowly type your name followed by RETURN.',instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,white);
       Screen('TextSize',window,round(o.textSize*0.35));
-      Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, Denis Pelli. All rights reserved.'),instructionalMarginPix,screenRect(4)-0.5*instructionalMarginPix,black,white,1);
+      Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.'),instructionalMarginPix,screenRect(4)-0.5*instructionalMarginPix,black,white,1);
       Screen('TextSize',window,o.textSize);
       if IsWindows
          background=[];
@@ -935,7 +940,7 @@ try
    fprintf('\nSaving results in two data files:\n');
    ffprintf(ff,'%s\n',o.dataFilename);
    ffprintf(ff,'%s %s\n',o.functionNames,datestr(now));
-   ffprintf(ff,'observer %s, task %s, alternatives %d,  beta %.1f,\n',o.observer,o.task,o.alternatives,o.beta);
+   ffprintf(ff,'observer %s, task %s, alternatives %d,  steepness %.1f,\n',o.observer,o.task,o.alternatives,o.steepness);
    
    %% GET SCREEN CALIBRATION cal
    cal.screen = o.screen;
@@ -1107,8 +1112,8 @@ try
    end
    switch o.observer
       case algorithmicObservers
-         if ~isfield(o,'beta') || ~isfinite(o.beta)
-            o.beta = 1.7;
+         if ~isfield(o,'steepness') || ~isfinite(o.steepness)
+            o.steepness = 1.7;
          end
          if ~isfield(o,'trialsPerRun') || ~isfinite(o.trialsPerRun)
             o.trialsPerRun = 1000;
@@ -1120,12 +1125,12 @@ try
          %         o.pixPerCm=45; % for MacBook at native resolution.
          %         o.pixPerDeg=o.pixPerCm/degPerCm;
       otherwise
-         if ~isfield(o,'beta') || ~isfinite(o.beta)
+         if ~isfield(o,'steepness') || ~isfinite(o.steepness)
             switch o.targetModulates
                case 'luminance'
-                  o.beta = 3.5;
+                  o.steepness = 3.5;
                case {'noise', 'entropy'}
-                  o.beta = 1.7;
+                  o.steepness = 1.7;
             end
          end
    end
@@ -1786,7 +1791,7 @@ try
    end
    ffprintf(ff,'%s noise log N/(%s)=%.2f, where N is power spectral density in %s.\n', ...
       temporal,o.NUnits,log10(o.N),o.NUnits);
-   ffprintf(ff,'pThreshold %.2f, beta %.1f\n',o.pThreshold,o.beta);
+   ffprintf(ff,'pThreshold %.2f, steepness %.1f\n',o.pThreshold,o.steepness);
    ffprintf(ff,'Your (log) guess is %.2f +/- %.2f\n',o.tGuess,o.tGuessSd);
    ffprintf(ff,'o.trialsPerRun %.0f\n',o.trialsPerRun);
    white1 = 1;
@@ -2120,12 +2125,12 @@ try
    end
    
    %% SET PARAMETERS FOR QUEST
-   delta = 0.02;
+   o.lapse = 0.02;
    switch o.task
       case '4afc'
-         gamma = 1/4;
+         o.guess = 1/4;
       case 'identify'
-         gamma = 1/o.alternatives;
+         o.guess = 1/o.alternatives;
    end
    
    if streq(o.targetModulates,'luminance')
@@ -2155,11 +2160,11 @@ try
    end
    
    %% Set parameters for QUESTPlus
-   if o.measureSteepness
-      steepnesses=1:0.1:5;
-      guessingRates=1/o.alternatives;
-      lapseRates=0.01; 
-      contrastDB = -80:0.5:20;
+   if o.questPlusEnable
+      steepnesses=o.questPlusSteepnesses;
+      guessingRates=o.questPlusGuessingRates;
+      lapseRates=o.questPlusLapseRates;
+      contrastDB=20*o.questPlusLogContrasts;
       questPlusData = qpParams('stimParamsDomainList', {contrastDB},...,
          'psiParamsDomainList',{contrastDB, steepnesses, guessingRates, lapseRates});
       questPlusData = qpInitialize(questPlusData);
@@ -2167,7 +2172,7 @@ try
    
    %% DO A RUN
    o.data = [];
-   q = QuestCreate(tGuess,tGuessSd,o.pThreshold,o.beta,delta,gamma);
+   q = QuestCreate(tGuess,tGuessSd,o.pThreshold,o.steepness,o.lapse,o.guess);
    q.normalizePdf =true; % adds a few ms per call to QuestUpdate, but otherwise the pdf will underflow after about 1000 trials.
    wrongRight = {'wrong', 'right'};
    timeZero = GetSecs;
@@ -2178,7 +2183,7 @@ try
       [~,neworder]=sort(lower(fieldnames(o)));
       o=orderfields(o,neworder);
       %% SET TARGET LOG CONTRAST: tTest
-      if o.measureSteepness
+      if o.questPlusEnable
          tTest=qpQuery(questPlusData)/20; % Convert dB to log contrast.
       else
          tTest = QuestQuantile(q);
@@ -2270,7 +2275,7 @@ try
       end % if o.noiseFrozenInRun
       
       %% RESTRICT tTest TO LEGAL VALUE IN QUESTPLUS
-      if o.measureSteepness
+      if o.questPlusEnable
          i=knnsearch(contrastDB'/20,tTest);
          tTest=contrastDB(i)/20;
       end
@@ -2990,7 +2995,7 @@ try
       end
       trialsRight = trialsRight+response;
       q = QuestUpdate(q,tTest,response); % Add the new datum (actual test intensity and o.observer response) to the database.
-      if o.measureSteepness
+      if o.questPlusEnable
          stim=20*tTest;
          outcome=response+1;
          questPlusData = qpUpdate(questPlusData,stim,outcome); 
@@ -3075,11 +3080,13 @@ try
    o.efficiency = o.idealEOverNThreshold/o.EOverN;
    
    %% QUESTPlus: Estimate steepness and threshold contrast.
-   if o.measureSteepness
+   if o.questPlusEnable
       psiParamsIndex = qpListMaxArg(questPlusData.posterior);
       psiParamsBayesian = questPlusData.psiParamsDomain(psiParamsIndex,:);
-      if o.printQuestPlusParameters
-         ffprintf(ff,'Max posterior fit parameters:      log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
+      if o.questPlusPrint
+         ffprintf(ff,'Quest: Max posterior est. of threshold: log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
+            o.questMean,o.steepness,o.guess,o.lapse);
+         ffprintf(ff,'QuestPlus: Max posterior estimate:      log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
             psiParamsBayesian(1)/20,psiParamsBayesian(2),psiParamsBayesian(3),psiParamsBayesian(4));
       end
       o.qpBayesianContrast=sign(o.contrast)*10^(psiParamsBayesian(1)/20);	% threshold contrast
@@ -3088,17 +3095,15 @@ try
       o.qpBayesianLapse=psiParamsBayesian(4);
       psiParamsFit = qpFit(questPlusData.trialData,questPlusData.qpPF,psiParamsBayesian,questPlusData.nOutcomes,...,
          'lowerBounds', [min(contrastDB) min(steepnesses) min(guessingRates) min(lapseRates)],'upperBounds',[max(contrastDB) max(steepnesses) max(guessingRates) max(lapseRates)]);
-      if o.printQuestPlusParameters
-         ffprintf(ff,'Maximum likelihood fit parameters: log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
+      if o.questPlusPrint
+         ffprintf(ff,'QuestPlus: Max likelihood estimate:     log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
             psiParamsFit(1)/20,psiParamsFit(2),psiParamsFit(3),psiParamsFit(4));
-      end
+     end
       o.qpContrast=sign(o.contrast)*10^(psiParamsFit(1)/20);	% threshold contrast
       o.qpSteepness=psiParamsFit(2);          % steepness
       o.qpGuessing=psiParamsFit(3);
       o.qpLapse=psiParamsFit(4);
-      
-      o.plotSteepness=true;
-      if o.plotSteepness
+      if o.questPlusPlot
          %% Plot trial data with maximum likelihood fit
          figure; clf; hold on
          stimCounts = qpCounts(qpData(questPlusData.trialData),questPlusData.nOutcomes);
