@@ -16,7 +16,7 @@ printParameters=0; % For debugging.
 %% QUESTPlus initialization
 steepnesses=1.5:0.1:4;
 guessingRates=1/o.alternatives;
-lapseRates=0.01; % formerly 0:0.01:0.04
+lapseRates=0:0.01:0.04; % formerly 0:0.01:0.04
 contrastDB = 20.*transpose(o.psych.t); % transform to dB
 % When using qpUpdate (not our qpUpdateOnly), we could save time by
 % quantizing to reduce the number of unique contrasts that QUESTPlus must
