@@ -91,7 +91,7 @@ if fakeRun
       data(i).noiseType='gaussian';
       data(i).LMean=280*data(i).luminanceFactor;
    end
-   criterion2Analyze;
+   steepnessAnalyze;
 else
    %% RUN THE CONDITIONS
    % Typically, you'll select just a few of the conditions stored in oo
@@ -107,7 +107,6 @@ else
       %       o.experimenter='shenghao';
       %       o.experimenter='yichen';
       o.trials=100;
-      o.measureSteepness=1;
       o.experimenter='';
       o.observer=''; % Enter observer's name at run time.
       if oi>1 && isempty(o.observer)
@@ -126,8 +125,8 @@ else
          o.targetGaborOrientationsDeg=[0 45 90 135];
          o.targetGaborNames='1234';
          o.alphabet=o.targetGaborNames;
-         o.alternatives=length(o.alphabet);
       end
+      o.alternatives=length(o.alphabet);
       o.useDynamicNoiseMovie = 1;
       o.markTargetLocation=1;
       if all(o.eccentricityXYDeg==0)
@@ -138,6 +137,13 @@ else
       o.moviePostSec = 0.2;
       o.targetMarkDeg=1;
       o.fixationCrossDeg=3;
+      o.questPlusEnable=true;
+      o.questPlusSteepnesses=1:0.1:5;
+      o.questPlusGuessingRates=1/o.alternatives;
+      o.questPlusLapseRates=0:0.01:0.05;
+      o.questPlusLogContrasts=-3:0.05:0.5;
+      o.questPlusPrint=true;
+      o.questPlusPlot=true;
       oOut=NoiseDiscrimination(o);
       if oOut.quitSession
          break
