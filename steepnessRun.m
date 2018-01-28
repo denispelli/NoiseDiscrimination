@@ -114,7 +114,7 @@ else
       %       o.experimenter='flavia';
       %       o.experimenter='shenghao';
       %       o.experimenter='yichen';
-      o.trials=100;
+      o.trials=150;
       o.experimenter='';
       o.observer=''; % Enter observer's name at run time.
       if oi>1 && isempty(o.observer)
