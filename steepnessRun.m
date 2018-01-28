@@ -57,7 +57,7 @@ for domain=1:3
       case 3
          % ganglion
          ecc=30;
-         cpd=0.2;
+         cpd=0.5;
          o.targetDurationSec=0.2;
          o.luminanceFactor=1;
          o.conditionName='ganglion';
