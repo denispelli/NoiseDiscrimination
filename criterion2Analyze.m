@@ -1,117 +1,131 @@
-%% Analyze the data collected by <experiment>Run.
+%% Maximum likelihood estimate of parameters of psychometric function.
+% Analyze the data collected by <experiment>Run.
+% Combine all runs of each combo of: experiment,observer,conditionName,noiseSD.
+%
+% denis.pelli@nyu.edu January 18, 2018
+% We call QUESTPlusRecalculate, written by Shenghao Lin, to do the fit.
+
 experiment='criterion2';
 if ~exist('fakeRun')
    fakeRun=0;
 end
 if ~fakeRun
+   % Read in all MAT data files for <experiment>.
    dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
    cd(dataFolder);
    matFiles=dir(fullfile(dataFolder,[experiment 'Run*.mat']));
    clear data;
+   j=0;
    for i = 1:length(matFiles)
-      % Extract the desired fields into "data", one row per threshold.
+      % Extract the desired fields into "data", one row per condition,
+      % merging multiple runs of same condition.
       d = load(matFiles(i).name);
-      data(i).LMean=mean([d.cal.LFirst d.cal.LLast]); % Compute from cal in case it's not in o.
-      data(i).luminanceFactor=1; % default value
-      for field={'condition' 'experiment' 'dataFilename' 'experimenter' 'observer' 'trials' ...
-            'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' ...
-            'targetHeightDeg' 'targetDurationSec' 'targetDurationSecMean'...
-            'targetCheckDeg' 'fullResolutionTarget' ...
-            'noiseType' 'noiseSD'  'noiseCheckDeg' ...
-            'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' 'pThreshold' ...
-            'contrast' 'E' 'N' 'luminanceFactor' 'LMean' 'conditionName'}
-         if isfield(d.o,field{:})
-            data(i).(field{:})=d.o.(field{:});
+      o=d.o;
+      % The trial data are in o.psych:
+      % o.psych.t is a unique sorted list of log c.
+      % o.psych.trials is the number of trials at each contrast. trials>0.
+      % o.psych.right is the number of trials with correct response at each contrast. 0?right?trials
+      merged=0;
+      if exist('data','var')
+         for j=1:length(data)
+            % Match observer, noiseSD, and conditionName
+            if streq(data(j).observer,o.observer) && data(j).noiseSD==o.noiseSD && streq(data(j).conditionName,o.conditionName)
+               % Merge o into matching row j.
+               merged=1;
+               data(j).psych.t=[data(j).psych.t' o.psych.t']';
+               data(j).psych.right=[data(j).psych.right o.psych.right];
+               data(j).psych.trials=[data(j).psych.trials o.psych.trials];
+               data(j).trials=data(j).trials+o.trials;
+               data(j).condition=[data(j).condition o.condition];
+               if data(j).alternatives~=o.alternatives
+                  error('Trying to merge runs with unequal o.alternatives %d vs %d',data(j).alternatives,o.alternatives);
+               end
+               break
+               % We merely append the new data, without bothering to sort,
+               % or run "unique".
+            end
+         end
+      end % exist('data','var')
+      if ~merged
+         % Create new row for o.
+         if exist('data','var')
+            j=length(data)+1;
          else
-            if i==1
-               warning OFF BACKTRACE
-               warning('Missing data field: %s\n',field{:});
+            j=1;
+         end
+         data(j).LMean=mean([d.cal.LFirst d.cal.LLast]); % Compute from cal in case it's not in o.
+         data(j).luminanceFactor=1; % default value
+         for field={'condition' 'experiment' 'dataFilename' 'experimenter' 'observer' 'trials' ...
+               'alternatives' ...
+               'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' 'targetCyclesPerDeg'...
+               'targetHeightDeg' 'targetDurationSec' 'targetDurationSecMean'...
+               'targetCheckDeg' 'fullResolutionTarget' ...
+               'noiseType' 'noiseSD'  'noiseCheckDeg' ...
+               'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' 'pThreshold' ...
+               'contrast' 'E' 'N' 'E1' 'luminanceFactor' 'LMean' 'conditionName' 'psych'}
+            if isfield(d.o,field{:})
+               data(j).(field{:})=d.o.(field{:});
+            else
+               if j==1
+                  warning OFF BACKTRACE
+                  warning('Missing data field: %s\n',field{:});
+               end
             end
          end
       end
+   end
+   if any([data(:).trials]<20)
+      s=sprintf('Threshold condition(trials):');
+      s=[s sprintf(' %d(%d),',data([data(:).trials]<20).condition,data([data(:).trials]<20).trials)];
+      warning('Discarding %d threshold(s) with fewer than 20 trials. %s',sum([data(:).trials]<20),s);
+      data = data([data(:).trials]>=20); % Discard thresholds with less than 20 trials.
    end
    if any([data(:).trials]<40)
       s=sprintf('Threshold condition(trials):');
       s=[s sprintf(' %d(%d),',data([data(:).trials]<40).condition,data([data(:).trials]<40).trials)];
       warning('%d threshold(s) with fewer than 40 trials. %s',sum([data(:).trials]<40),s);
    end
-%    data = data([data(:).trials]>=40); % Discard thresholds with less than 40 trials.
-   % Sort by condition
-   [~,ii]=sort([data(:).condition]);
+   % Sort by condition, where "condition" may contain several numbers.
+   clear cc
+   for k=1:length(data)
+      cc{k}=data(k).condition;
+   end
+   [~,ii]=sortrows(cell2mat(cc'));
    data=data(ii);
-   fprintf('Plotting %d thresholds.\n',length(data));
-end
+   fprintf('Analyzing %d combinations of: experiment,observer,conditionName,noiseSD.\n',length(data));
+end % ~fakeRun
 assert(~isempty(data))
 
-%% Compute derived quantities
+for i=1:length(data)
+   data(i).targetCyclesPerDeg=data(i).targetGaborCycles/data(i).targetHeightDeg;
+end
+
+% Run QUESTPlus
+clear dataPlus
+for i=1:length(data)
+   dataPlus(i) = QUESTPlusFit(data(i));
+end
+
+%% Compute derived quantities: E0, Neq, targetCyclesPerDeg
 for i=1:length(data)
    % Neq=N E0/(E-E0)
-   i0=i-4;
-   if i0>=1 && i0<=length(data) && data(i0).N==0
-      data(i).E0=data(i0).E;
-      data(i).Neq=data(i).N*data(i).E0/(data(i).E-data(i).E0);
+   i0=i-1;
+   if i0>=1 && i0<=length(dataPlus) && dataPlus(i0).N==0
+      dataPlus(i).E0=dataPlus(i0).E;
+      dataPlus(i).Neq=dataPlus(i).N*dataPlus(i).E0/(dataPlus(i).E-dataPlus(i).E0);
    end
-   data(i).targetCyclesPerDeg=data(i).targetGaborCycles/data(i).targetHeightDeg;
  end
 
 %% Create CSV file
-t=struct2table(data);
+t=struct2table(dataPlus);
 spreadsheet=fullfile(fileparts(mfilename('fullpath')),'data',[experiment '.csv']);
 writetable(t,spreadsheet);
 t
-fprintf('All selected fields have been saved in spreadsheet: \\data\\%s.csv\n',experiment);
+fprintf('Saved in spreadsheet: \\data\\%s.csv\n',experiment);
 
-fprintf('Please make a log-lin plot of Neq vs. pThreshold.\n');
-
-%% Plot
-figure;
-clear legendString
-for domain=1:3
-   ii=(domain-1)*8+4+(1:4);
-   ii=ii(ii<=length(data));
-   if isempty(ii)
-      break;
-   end
-   semilogy([data(ii).pThreshold],[data(ii).Neq],'-x'); 
-   hold on;
-   i=ii(1);
-   legendString{domain}=sprintf('ecc %.0f deg, %.1f c/deg, %.1f s',...
-      data(i).eccentricityXYDeg(1),data(i).targetCyclesPerDeg,data(i).targetDurationSec);
-   if isfield(data(i),'LMean') && ~isempty(data(i).LMean)
-      legendString{domain}=[legendString{domain} sprintf(', %.0f cd/m^2',data(i).LMean)];
-   else
-      legendString{domain}=[legendString{domain} sprintf(', luminanceFactor %.2f',data(i).luminanceFactor)];
-   end
-   if isfield(data(i),'conditionName') && ~isempty(data(i).conditionName)
-      legendString{domain}=[data(i).conditionName ': ' legendString{domain}];
-   end
+fprintf('experiment observer conditionName trials noiseSD contrast logE steepness guessing lapse\n');
+for i=1:length(dataPlus)
+   o=dataPlus(i);
+   fprintf('%s, %s, %8s, trials %3d, noiseSD %.2f, contrast %.3f, logE %.2f, steepness %.1f, guessing %.2f, lapse %.2f\n',...
+      o.experiment,o.observer,o.conditionName,o.trials,o.noiseSD,o.contrast,log10(o.E),o.steepness,o.guessing,o.lapse);
 end
-hold off
-legend(legendString);
-legend('boxoff');
-title(experiment);
-xlabel('pThreshold');
-ylabel('Neq (s deg^2)');
-axis([0.25 1 1e-7 1e-4]); % Limits of x and y.
-clear caption
-caption{1}=sprintf('experimenter %s, observer %s,', ...
-   data(1).experimenter,data(1).observer);
-caption{2}=sprintf('targetKind %s, noiseType %s', ...
-   data(1).targetKind,data(1).noiseType);
-caption{3}=sprintf('eyes %s', data(1).eyes);
-annotation('textbox',[0.25 0.15 .1 .1],'String',caption,'FitBoxToText','on','LineStyle','none');
-
-pbaspect([1 1 1]); % Make vertical and horizontal axes equal in length.
-
-% Scale so 3 log units vertically have same length as whole horizontal range.
-% xLimits = get(gca,'XLim');
-% yLimits = get(gca,'YLim');
-% yDecade = diff(yLimits)/diff(log10(yLimits));  %# Average y decade size
-% % xDecade = diff(xLimits)/diff(log10(xLimits));  %# Average x decade size
-% set(gca,'XLim',xLimits,'YLim',yLimits,...
-%         'DataAspectRatio',[1 3*yDecade/diff(xLimits) 1]);
-
-% Save plot to disk
-graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[experiment '.eps']);
-saveas(gcf,graphFile,'epsc')
-% print(gcf,graphFile,'-depsc'); % equivalent to saveas above
