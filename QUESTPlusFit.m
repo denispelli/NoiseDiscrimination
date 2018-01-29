@@ -83,6 +83,7 @@ if o.plotSteepness
       nTrials(cc)=sum(stimCounts(cc).outcomeCounts);
       pCorrect(cc)=stimCounts(cc).outcomeCounts(2)/nTrials(cc);
    end
+   o.trials=sum(nTrials);
    s=sprintf('noiseSD=%.2f',o.noiseSD);
    if o.noiseSD==0
       color=[0 0 0];
@@ -98,16 +99,18 @@ if o.plotSteepness
    ylabel('Proportion correct');
    xlim([0.01 1]); ylim([0 1]);
    set(gca,'FontSize',12);
-   noteString{1}=sprintf('%s: %s %.1f c/deg, ecc %.0f deg, %.0f cd/m^2, %.1f s, eyes %s',...
-      o.conditionName,o.targetKind,o.targetCyclesPerDeg,o.eccentricityXYDeg(1),o.LMean,o.targetDurationSec,o.eyes);
-   noteString{end+1}=sprintf('noiseSD %.2f, log c %0.2f, steepness %0.1f, guessing %0.1f, lapse %0.2f', ...
-      o.noiseSD,log10(o.contrast),o.steepness,o.guessing,o.lapse);
+   noteString{1}=sprintf('%s: %s %.1f c/deg, ecc %.0f deg, %.1f s\n%.0f cd/m^2, eyes %s, trials %d',...
+      o.conditionName,o.targetKind,o.targetCyclesPerDeg,o.eccentricityXYDeg(1),o.targetDurationSec,o.LMean,o.eyes,o.trials);
+   noteString{2}=sprintf('%8s %7s %5s %9s %8s %5s','observer','noiseSD','log c','steepness','guessing','lapse');
+   noteString{end+1}=sprintf('%8s %7.2f %5.2f %9.1f %8.1f %5.2f', ...
+      o.observer,o.noiseSD,log10(o.contrast),o.steepness,o.guessing,o.lapse);
    if newFigure
       hold on
    else
       legend('show','Location','southeast');
       legend('boxoff');
-      annotation('textbox',[0.14 0.05 .5 .2],'String',noteString,'FitBoxToText','on','LineStyle','none');
+      annotation('textbox',[0.14 0.11 .5 .2],'String',noteString,...
+          'FitBoxToText','on','LineStyle','none','FontName','Monospaced','FontSize',9);
       drawnow;
    end
 end
