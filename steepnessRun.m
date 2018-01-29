@@ -99,7 +99,7 @@ if fakeRun
       data(i).noiseType='gaussian';
       data(i).LMean=280*data(i).luminanceFactor;
    end
-   steepnessAnalyze; % NOT YET WRITTEN
+   steepnessAnalyze(data); % NOT YET TESTED
 else
    %% RUN THE CONDITIONS
    % Typically, you'll select just a few of the conditions stored in oo
