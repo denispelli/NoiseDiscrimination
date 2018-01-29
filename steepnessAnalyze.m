@@ -126,6 +126,6 @@ fprintf('Saved in spreadsheet: \\data\\%s.csv\n',experiment);
 fprintf('experiment observer conditionName trials noiseSD contrast logE steepness guessing lapse\n');
 for i=1:length(dataPlus)
    o=dataPlus(i);
-   fprintf('%s, %s, %8s, trials %3d, noiseSD %.2f, contrast %.3f, logE %.2f, steepness %.1f, guessing %.2f, lapse %.2f\n',...
+   fprintf('%s, %10s, %8s, trials %3d, noiseSD %.2f, contrast %.3f, logE %.2f, steepness %.1f, guessing %.2f, lapse %.2f\n',...
       o.experiment,o.observer,o.conditionName,o.trials,o.noiseSD,o.contrast,log10(o.E),o.steepness,o.guessing,o.lapse);
 end
