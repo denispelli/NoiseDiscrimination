@@ -3105,7 +3105,9 @@ try
       o.qpLapse=psiParamsFit(4);
       if o.questPlusPlot
          %% Plot trial data with maximum likelihood fit
-         figure; clf; hold on
+         figure('Name',o.conditionName,'NumberTitle','off');
+         title(o.conditionName,'FontSize',14);
+         hold on
          stimCounts=qpCounts(qpData(questPlusData.trialData),questPlusData.nOutcomes);
          stim=[stimCounts.stim];
          stimFine=linspace(-40,0,100)';
@@ -3122,7 +3124,12 @@ try
          xlabel('Log contrast');
          ylabel('Proportion correct');
          xlim([-2 00]); ylim([0 1]);
-         title({'Fit Weibull psychometric function', ''});
+         title({'Weibull psychometric fit',''});
+         set(gca,'FontSize',12);
+         % annotation('textbox',[0.25 0.2 .1 .1],'String',string,'FitBoxToText','on','LineStyle','none');
+         legendString={'
+         legend(legendString);
+         legend('boxoff');
          drawnow;
       end
    end
