@@ -87,7 +87,7 @@ t=struct2table(oo);
 t % Print the oo list of conditions.
 
 if fakeRun
-    % NOT IMPLEMENTED
+    % NOT IMPLEMENTED.
     % PRODUCE FAKE RUN TO CHECK THE ANALYSIS & PLOTTING.
    data=table2struct(t);
    for i=1:length(data)
