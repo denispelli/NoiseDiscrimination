@@ -14,7 +14,7 @@ function oOut=QUESTPlusFit(o)
 printParameters=0; % For debugging.
 
 %% QUESTPlus initialization
-steepnesses=1:0.1:5;
+steepnesses=1:0.5:5;
 if isfield(o,'questPlusSteepnesses')
    steepnesses=o.questPlusSteepnesses;
 end
@@ -46,13 +46,13 @@ psiParamsquestPlus=questPlusData.psiParamsDomain(psiParamsIndex,:);
 if printParameters && 0
    % Useless because it assumes a uniform prior. Stick to maximum
    % likelihood.
-   fprintf('Max posterior fit:      log c %0.2f, steepness %0.1f, guessing %0.1f, lapse %0.2f\n', ...
+   fprintf('QuestPlus: Max posterior fit:      log c %0.2f, steepness %0.1f, guessing %0.1f, lapse %0.2f\n', ...
       psiParamsquestPlus(1)/20,psiParamsquestPlus(2),psiParamsquestPlus(3),psiParamsquestPlus(4));
 end
 psiParamsFit=qpFit(questPlusData.trialData,questPlusData.qpPF,psiParamsquestPlus,questPlusData.nOutcomes,...,
    'lowerBounds',[min(contrastDB) min(steepnesses) min(guessingRates) min(lapseRates)],'upperBounds',[max(contrastDB) max(steepnesses) max(guessingRates) max(lapseRates)]);
 if printParameters
-   fprintf('Maximum likelihood fit: log c %0.2f, steepness %0.1f, guessing %0.1f, lapse %0.2f\n', ...
+   fprintf('QuestPlus: Maximum likelihood fit: log c %0.2f, steepness %0.1f, guessing %0.1f, lapse %0.2f\n', ...
       psiParamsFit(1)/20,psiParamsFit(2),psiParamsFit(3),psiParamsFit(4));
 end
 o.contrast=10^(psiParamsFit(1)/20);   % threshold contrast
