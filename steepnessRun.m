@@ -87,11 +87,12 @@ t=struct2table(oo);
 t % Print the oo list of conditions.
 
 if fakeRun
-   % PRODUCE FAKE RUN TO CHECK OUR THE ANALYSIS & PLOTTING.
+    % NOT IMPLEMENTED
+    % PRODUCE FAKE RUN TO CHECK THE ANALYSIS & PLOTTING.
    data=table2struct(t);
    for i=1:length(data)
       data(i).E=10*data(i).noiseSD+1e-5*(1+floor((i-1)/8));
-      data(i).trials=100;
+      data(i).trialsPerRun=128;
       data(i).N=data(i).noiseSD;
       data(i).experimenter='Experimenter';
       data(i).observer='Observer';
@@ -99,7 +100,7 @@ if fakeRun
       data(i).noiseType='gaussian';
       data(i).LMean=280*data(i).luminanceFactor;
    end
-   steepnessAnalyze(data); % NOT YET TESTED
+   steepnessAnalyze(data);
 else
    %% RUN THE CONDITIONS
    % Typically, you'll select just a few of the conditions stored in oo
@@ -114,7 +115,7 @@ else
       %       o.experimenter='flavia';
       %       o.experimenter='shenghao';
       %       o.experimenter='yichen';
-      o.trials=150;
+      o.trialsPerRun=128;
       o.experimenter='';
       o.observer=''; % Enter observer's name at run time.
       if oi>1 && isempty(o.observer)
@@ -150,7 +151,7 @@ else
       o.moviePostSec=0.2;
       o.targetMarkDeg=1;
       o.fixationCrossDeg=3;
-      % We need QuestPlus to measure steepness.
+      % We use QuestPlus to measure steepness.
       o.questPlusEnable=true;
       o.questPlusSteepnesses=1:0.1:5;
       o.questPlusGuessingRates=1/o.alternatives;
