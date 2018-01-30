@@ -800,10 +800,16 @@ end
 %% TRY-CATCH BLOCK CONTAINS ALL CODE IN WHICH WINDOW IS OPEN
 try
    %% ASK EXPERIMENTER NAME
-   Screen('Preference', 'SkipSyncTests', 1);
+   Screen('Preference', 'SkipSyncTests',1);
    Screen('Preference','TextAntiAliasing',1);
    if isempty(o.observer) || isempty(o.experimenter)
-      [window,screenRect]=Screen('OpenWindow',0); % Temporary, just to ask names.
+      if ~o.useFractionOfScreen
+         [window,screenRect]=Screen('OpenWindow',0); % Temporary, just to ask names.
+      else
+         r=round(o.useFractionOfScreen*screenBufferRect);
+         r=AlignRect(r,screenBufferRect,'right','bottom');
+         [window,screenRect]=Screen('OpenWindow',0,1,r); % Temporary, just to ask names.
+      end
    else
       window=0;
    end
@@ -829,25 +835,26 @@ try
    %    o.textSize=40;
    black=0; % Retrieves the CLUT color code for black.
    white=WhiteIndex(window); % Retrieves the CLUT color code for white.
+   o.gray1=mean([white black]);
    o.deviceIndex=-3; % all keyboard and keypad devices
    o.speakEachLetter=false;
    o.useSpeech=false;
    if isempty(o.experimenter)
       ListenChar(2); % no echo
-      Screen('FillRect',window);
+      Screen('FillRect',window,o.gray1);
       Screen('TextSize',window,o.textSize);
       Screen('TextFont',window,o.textFont,0);
-      Screen('DrawText',window,'',instructionalMarginPix,screenRect(4)/2-4.5*o.textSize,black,white);
-      Screen('DrawText',window,'Hello Experimenter,',instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,white);
-      Screen('DrawText',window,'Please slowly type your name followed by RETURN.',instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,white);
+      Screen('DrawText',window,'',instructionalMarginPix,screenRect(4)/2-4.5*o.textSize,black,o.gray1);
+      Screen('DrawText',window,'Hello Experimenter,',instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
+      Screen('DrawText',window,'Please slowly type your name followed by RETURN.',instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
       Screen('TextSize',window,round(0.6*o.textSize));
-      Screen('DrawText',window,'You can skip these screens by defining o.experimenter and o.observer in your script.',instructionalMarginPix,screenRect(4)/2-1.5*o.textSize,black,white);
+      Screen('DrawText',window,'You can skip these screens by defining o.experimenter and o.observer in your script.',instructionalMarginPix,screenRect(4)/2-1.5*o.textSize,black,o.gray1);
       Screen('TextSize',window,round(o.textSize*0.35));
-      Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.'),instructionalMarginPix,screenRect(4)-0.5*instructionalMarginPix,black,white,1);
+      Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.'),instructionalMarginPix,screenRect(4)-0.5*instructionalMarginPix,black,o.gray1,1);
       if IsWindows
          background=[];
       else
-         background=WhiteIndex(window);
+         background=o.gray1;
       end
       Screen('TextSize',window,o.textSize);
       [name,terminatorChar]=GetEchoString(window,'Experimenter name:',instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
@@ -864,26 +871,26 @@ try
          sca;
          return
       end
-      Screen('FillRect',window);
+      Screen('FillRect',window,o.gray1);
       o.experimenter=name;
    end
    
    %% ASK OBSERVER NAME
    if isempty(o.observer)
       ListenChar(2); % no echo
-      Screen('FillRect',window);
+      Screen('FillRect',window,o.gray1);
       Screen('TextSize',window,o.textSize);
       Screen('TextFont',window,o.textFont,0);
-      Screen('DrawText',window,'',instructionalMarginPix,screenRect(4)/2-4.5*o.textSize,black,white);
-      Screen('DrawText',window,'Hello Observer,',instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,white);
-      Screen('DrawText',window,'Please slowly type your name followed by RETURN.',instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,white);
+      Screen('DrawText',window,'',instructionalMarginPix,screenRect(4)/2-4.5*o.textSize,black,o.gray1);
+      Screen('DrawText',window,'Hello Observer,',instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
+      Screen('DrawText',window,'Please slowly type your name followed by RETURN.',instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
       Screen('TextSize',window,round(o.textSize*0.35));
-      Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.'),instructionalMarginPix,screenRect(4)-0.5*instructionalMarginPix,black,white,1);
+      Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.'),instructionalMarginPix,screenRect(4)-0.5*instructionalMarginPix,black,o.gray1,1);
       Screen('TextSize',window,o.textSize);
       if IsWindows
          background=[];
       else
-         background=WhiteIndex(window);
+         background=o.gray1;
       end
       [name,terminatorChar]=GetEchoString(window,'Observer name:',instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
       if ismember(terminatorChar,[escapeChar graveAccentChar])
@@ -900,7 +907,7 @@ try
          return
       end
       o.observer=name;
-      Screen('FillRect',window);
+      Screen('FillRect',window,o.gray1);
       % Keep the temporary window open until we open the main one, so observer
       % knows program is running.
    end
@@ -1219,6 +1226,7 @@ try
       if o.useFractionOfScreen
          ffprintf(ff,'Using tiny window for debugging.\n');
       end
+      Screen('Preference', 'SkipSyncTests',1);
       PsychImaging('PrepareConfiguration');
       if o.flipScreenHorizontally
          PsychImaging('AddTask','AllViews','FlipHorizontal');
@@ -1331,21 +1339,21 @@ try
          if o.assessLowLuminance
             LMean=0.8*LMin+0.2*LMax;
          end
-         % CLUT entry 1: gray1
-         % First entry is black. Second entry is gray1. We have
+         % CLUT entry 1: o.gray1
+         % First entry is black. Second entry is o.gray1. We have
          % two clut entries that produce the same gray. One (gray) is in
          % the middle of the CLUT and the other is at a low entry, near
-         % black. The benefit of having small gray1 is that we get better
+         % black. The benefit of having small o.gray1 is that we get better
          % blending of letters written (as black=0) on that background by
          % Screen DrawText.
-         gray1=1/o.maxEntry;
-         assert(gray1*o.maxEntry <= firstGrayClutEntry-1);
-         % gray1 is between black and the darkest stimulus luminance.
+         o.gray1=1/o.maxEntry;
+         assert(o.gray1*o.maxEntry <= firstGrayClutEntry-1);
+         % o.gray1 is between black and the darkest stimulus luminance.
          cal.gamma(1,1:3)=0; % Black.
          cal.LFirst=LMean;
          cal.LLast=LMean;
-         cal.nFirst=gray1*o.maxEntry;
-         cal.nLast=gray1*o.maxEntry;
+         cal.nFirst=o.gray1*o.maxEntry;
+         cal.nLast=o.gray1*o.maxEntry;
          cal=LinearizeClut(cal);
          
          % CLUT entries for stimulus.
@@ -1356,9 +1364,9 @@ try
          cal=LinearizeClut(cal);
          ffprintf(ff,'Size of cal.gamma %d %d\n',size(cal.gamma));
          
-         %          ffprintf(ff,'Non-stimulus background is %.1f cd/m^2 at CLUT entry %d (and %d).\n',LMean,gray1*o.maxEntry,gray*o.maxEntry);
-         %          ffprintf(ff,'%.1f cd/m^2 at %d\n',LuminanceOfIndex(cal,gray*o.maxEntry),gray1*o.maxEntry);
-         %          ffprintf(ff,'%.3f dac at %d; %.3f dac at %d\n',cal.gamma(gray1*o.maxEntry+1,2),gray1*o.maxEntry,cal.gamma(gray*o.maxEntry+1,2),gray*o.maxEntry);
+         %          ffprintf(ff,'Non-stimulus background is %.1f cd/m^2 at CLUT entry %d (and %d).\n',LMean,o.gray1*o.maxEntry,gray*o.maxEntry);
+         %          ffprintf(ff,'%.1f cd/m^2 at %d\n',LuminanceOfIndex(cal,gray*o.maxEntry),o.gray1*o.maxEntry);
+         %          ffprintf(ff,'%.3f dac at %d; %.3f dac at %d\n',cal.gamma(o.gray1*o.maxEntry+1,2),o.gray1*o.maxEntry,cal.gamma(gray*o.maxEntry+1,2),gray*o.maxEntry);
          
          o.contrast=nan;
          Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
@@ -1366,7 +1374,7 @@ try
             ffprintf(ff,'Line %d: o.contrast %.3f, LoadNormalizedGammaTable 0.5*range/mean=%.3f\n', ...
                MFileLineNr,o.contrast,(cal.LLast-cal.LFirst)/(cal.LLast+cal.LFirst));
          end
-         Screen('FillRect',window,gray1);
+         Screen('FillRect',window,o.gray1);
          Screen('FillRect',window,gray,o.stimulusRect);
       else
          Screen('FillRect',window);
@@ -1379,7 +1387,7 @@ try
       black=0; % Retrieves the CLUT color code for black.
       white=1; % Retrieves the CLUT color code for white.
       gray=mean([firstGrayClutEntry lastGrayClutEntry])/o.maxEntry; % Will be a CLUT color code for gray.
-      Screen('FillRect',window,gray1);
+      Screen('FillRect',window,o.gray1);
       Screen('FillRect',window,gray,o.stimulusRect);
       Screen('Flip',window); % Screen is now all gray, at LMean.
    else
@@ -1401,8 +1409,9 @@ try
       Screen('Preference','TextAntiAliasing',1);
       Screen('TextSize',window,o.textSize);
       Screen('TextFont',window,'Verdana');
-      Screen('FillRect',window);
+      Screen('FillRect',window,o.gray1);
       string=sprintf('Experimenter %s and observer %s. Right?\nHit RETURN to continue, or ESCAPE to quit.',o.experimenter,o.observer);
+      Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
       DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
       Screen('Flip',window); % Display request.
       if o.speakInstructions
@@ -1431,11 +1440,12 @@ try
    if ~exist('oOld','var') || ~isfield(oOld,'eyes') || GetSecs-oOld.secs>5*60 || ~streq(oOld.eyes,o.eyes)
       Screen('TextSize',window,o.textSize);
       Screen('TextFont',window,'Verdana');
-      Screen('FillRect',window,white);
+      Screen('FillRect',window,o.gray1);
       string='';
       if streq(o.eyes,'both')
          Screen('Preference','TextAntiAliasing',1);
          string='Please use both eyes.\nHit RETURN to continue, or ESCAPE to quit.';
+         Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
          DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
          Screen('Flip',window); % Display request.
          if o.speakInstructions
@@ -1456,6 +1466,7 @@ try
       if ismember(o.eyes,{'left','right'})
          Screen('Preference','TextAntiAliasing',1);
          string=sprintf('Please use just your %s eye. Cover your other eye.\nHit RETURN to continue, or ESCAPE to quit.',o.eyes);
+         Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
          DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
          Screen('Flip',window); % Display request.
          if o.speakInstructions
@@ -1478,6 +1489,7 @@ try
       while streq(o.eyes,'one')
          Screen('Preference','TextAntiAliasing',1);
          string=[string 'Which eye will you use, left or right? Please type L or R:'];
+         Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
          DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
          Screen('Flip',window); % Display request.
          if o.speakInstructions
@@ -1504,7 +1516,7 @@ try
                string=sprintf('Illegal response ''%s''. ',response);
          end
       end
-      Screen('FillRect',window,white);
+      Screen('FillRect',window,o.gray1);
       Screen('Flip',window); % Blank to acknowledge response.
    end
    if streq(o.eyes,'both')
@@ -2055,14 +2067,14 @@ try
    end
    frameRect=InsetRect(boundsRect,-1,-1);
    if o.saveSnapshot
-      gray1=gray;
+      o.gray1=gray;
    end
    
    %% START NEW RUN, DISPLAYING STIMULI ON SCREEN
    if ~ismember(o.observer,algorithmicObservers) && ~o.assessBitDepth %&& ~o.saveSnapshot;
-      Screen('FillRect',window,gray1);
+      Screen('FillRect',window,o.gray1);
       Screen('FillRect',window,gray,o.stimulusRect);
-      fprintf('gray1*o.maxEntry %.1f, gray*o.maxEntry %.1f, o.maxEntry %.0f\n',gray1*o.maxEntry,gray*o.maxEntry,o.maxEntry);
+      fprintf('o.gray1*o.maxEntry %.1f, gray*o.maxEntry %.1f, o.maxEntry %.0f\n',o.gray1*o.maxEntry,gray*o.maxEntry,o.maxEntry);
       if o.showCropMarks
          TrimMarks(window,frameRect);
       end
@@ -2099,7 +2111,7 @@ try
             msg=[msg word ' press the SPACE bar when ready to begin.'];
             fprintf('Please press the space bar when ready to begin.\n');
       end
-      Screen('DrawText',window,' ',0,0,1,gray1,1); % Set background color.
+      Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
       DrawFormattedText(window,msg,0.5*o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
       Screen('Flip',window,0,1); % "Starting new run ..."
       if o.speakInstructions
@@ -2424,7 +2436,7 @@ try
          if trial==1
             % Clear screen for first trial. After the first trial, the
             % screen is already ready for next trial.
-            Screen('FillRect',window,gray1);
+            Screen('FillRect',window,o.gray1);
             Screen('FillRect',window,gray,o.stimulusRect);
          end
          if ~isempty(fixationLines)
@@ -2488,7 +2500,7 @@ try
             AssessContrast(o);
          end
          if o.measureContrast
-            % fprintf('gray*o.maxEntry %d gamma %.3f, gray1*o.maxEntry %d gamma %.3f\n',gray*o.maxEntry,cal.gamma(gray*o.maxEntry+1,2),gray1*o.maxEntry,cal.gamma(gray1*o.maxEntry+1,2));
+            % fprintf('gray*o.maxEntry %d gamma %.3f, o.gray1*o.maxEntry %d gamma %.3f\n',gray*o.maxEntry,cal.gamma(gray*o.maxEntry+1,2),o.gray1*o.maxEntry,cal.gamma(o.gray1*o.maxEntry+1,2));
             Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
             Screen('Flip',window,0,1);
             o=MeasureContrast(o,MFileLineNr);
@@ -2646,7 +2658,7 @@ try
                      location(4).labelRect=AlignRect(r,labelBounds,'right','bottom');
                      for i=1:locations
                         [x, y]=RectCenter(location(i).labelRect);
-                        Screen('DrawText',window,sprintf('%d',i),x-o.textSize/2,y+0.4*o.textSize,black,gray1,1);
+                        Screen('DrawText',window,sprintf('%d',i),x-o.textSize/2,y+0.4*o.textSize,black,o.gray1,1);
                      end
                   end
             end % switch o.task
@@ -2772,9 +2784,9 @@ try
          eraseRect=ClipRect(eraseRect,o.stimulusRect);
          eraseRect=dstRect; % Erase only the movie, sparing the rest of the screen
          % Print instruction in upper left corner.
-         Screen('FillRect',window,gray1,topCaptionRect);
+         Screen('FillRect',window,o.gray1,topCaptionRect);
          message=sprintf('Trial %d of %d. Run %d of %d.',trial,o.trialsPerRun,o.runNumber,o.runsDesired);
-         Screen('DrawText',window,message,o.textSize/2,o.textSize/2,black,gray1);
+         Screen('DrawText',window,message,o.textSize/2,o.textSize/2,black,o.gray1);
          
          % Print instructions in lower left corner.
          textRect=[0, 0, o.textSize, 1.2*o.textSize];
@@ -2792,8 +2804,8 @@ try
          if ratio > 1
             Screen('TextSize',window,floor(o.textSize/ratio));
          end
-         Screen('FillRect',window,gray1,bottomCaptionRect);
-         Screen('DrawText',window,message,textRect(1),textRect(4),black,gray1,1);
+         Screen('FillRect',window,o.gray1,bottomCaptionRect);
+         Screen('DrawText',window,message,textRect(1),textRect(4),black,o.gray1,1);
          Screen('TextSize',window,o.textSize);
          
          %% DISPLAY RESPONSE ALTERNATIVES
@@ -2870,7 +2882,7 @@ try
                   if o.labelAlternatives
                      Screen('TextSize',window,o.textSize);
                      textRect=AlignRect([0 0 o.textSize o.textSize],rect,'center','top');
-                     Screen('DrawText',window,o.alphabet(i),textRect(1),textRect(4),black,gray1,1);
+                     Screen('DrawText',window,o.alphabet(i),textRect(1),textRect(4),black,o.gray1,1);
                   end
                   rect=OffsetRect(rect,step(1),step(2));
                end
@@ -3032,7 +3044,7 @@ try
       black=0;
       instructionalMarginPix=100;
       % Set default background color.
-      Screen('DrawText', window,' ',0,0,black,1,1);
+      Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
       DrawFormattedText(window,string,instructionalMarginPix,instructionalMarginPix-0.5*o.textSize,black,60,[],[],1.1);
       Screen('TextSize',window,o.textSize);
       Screen('Flip',window); % Pose the question.
@@ -3953,7 +3965,8 @@ string=sprintf('Please adjust the viewing distance so the cross is %.1f cm from 
 string=[string 'Tilt and swivel the display so the cross is orthogonal to the line of sight. Then hit RETURN to continue.\n'];
 Screen('TextSize',window,o.textSize);
 Screen('TextFont',window,'Verdana');
-Screen('FillRect',window,white);
+Screen('FillRect',window,o.gray1);
+Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
 DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
 x=o.nearPointXYPix(1);
 y=o.nearPointXYPix(2);
@@ -3977,7 +3990,7 @@ if ismember(response,[escapeChar,graveAccentChar])
    ListenChar;
    return
 end
-Screen('FillRect',window,white);
+Screen('FillRect',window,o.gray1);
 Screen('Flip',window); % Blank, to acknowledge response.
 end
 
@@ -4042,7 +4055,8 @@ else
          'Then hit RETURN to proceed, or ESCAPE to quit. '];
       Screen('TextSize',window,o.textSize);
       Screen('TextFont',window,'Verdana');
-      Screen('FillRect',window,white);
+      Screen('FillRect',window,o.gray1);
+      Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
       DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
       x=o.nearPointXYPix(1);
       y=o.nearPointXYPix(2);
