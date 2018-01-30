@@ -9,14 +9,14 @@ returnKeyCode=KbName('return');
 graveAccentKeyCode=KbName('`~');
 escapeChar=char(27);
 graveAccentChar='`';
-Screen('FillRect',window);
+backgroundColor=oo(1).gray1;
+Screen('FillRect',window,backgroundColor);
 Screen('TextFont',window,oo(1).textFont,0);
 black=0;
-white=255;
 Screen('Preference','TextAntiAliasing',0);
-% Screen('TextSize',window,round(oo(1).textSize*0.35));
-% Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, Denis Pelli. All rights reserved.'),instructionalMarginPix,screenRect(4)-0.5*instructionalMarginPix,black,white,1);
 Screen('TextSize',window,oo(1).textSize);
+% Set background color for DrawFormattedText.
+Screen('DrawText',window,' ',0,0,black,backgroundColor,1);
 string='Quitting the run. Hit ESCAPE again to quit the whole session. Or hit RETURN to proceed with the next run.';
 DrawFormattedText(window,string,instructionalMarginPix,instructionalMarginPix+0.5*oo(1).textSize,black,60,[],[],1.1);
 Screen('Flip',window);
