@@ -11,7 +11,7 @@ function oOut=QUESTPlusFit(o)
 % For a quick test:
 % load ~/Dropbox/NoiseDiscrimination/data/criterion2Run-NoiseDiscrimination-darshan.2017.12.31.14.34.39.mat
 
-printParameters=1; % For debugging.
+printParameters=0; % For debugging.
 
 %% QUESTPlus initialization
 steepnesses=1:0.1:5;
@@ -43,7 +43,9 @@ end
 %% Estimate steepness and threshold contrast.
 psiParamsIndex=qpListMaxArg(questPlusData.posterior);
 psiParamsquestPlus=questPlusData.psiParamsDomain(psiParamsIndex,:);
-if printParameters
+if printParameters && 0
+   % Useless because it assumes a uniform prior. Stick to maximum
+   % likelihood.
    fprintf('Max posterior fit:      log c %0.2f, steepness %0.1f, guessing %0.1f, lapse %0.2f\n', ...
       psiParamsquestPlus(1)/20,psiParamsquestPlus(2),psiParamsquestPlus(3),psiParamsquestPlus(4));
 end
@@ -64,13 +66,17 @@ oOut=o;
 
 o.plotSteepness=true;
 if o.plotSteepness
-   persistent conditionName noteString
+   persistent conditionName noteString firstObserver
    %% Plot trial data with maximum likelihood fit
    newFigure=~streq(o.conditionName,conditionName);
+   if newFigure
+         firstObserver=o.observer;
+   end
+   newObserver=~streq(o.observer,firstObserver);
    conditionName=o.conditionName;
    if newFigure
       noteString={};
-      figure('Name',o.conditionName,'NumberTitle','off');
+      figure('Name',[o.experiment ':' o.conditionName],'NumberTitle','off');
       title({o.conditionName,''},'FontSize',14);
       hold on
       set(gca,'FontSize',12);
@@ -84,13 +90,18 @@ if o.plotSteepness
       pCorrect(cc)=stimCounts(cc).outcomeCounts(2)/nTrials(cc);
    end
    o.trials=sum(nTrials);
-   s=sprintf('noiseSD=%.2f',o.noiseSD);
+   s=sprintf('%.2f %s',o.noiseSD,o.observer);
    if o.noiseSD==0
       color=[0 0 0];
    else
       color=[1 .2 0];
    end
-   semilogx(10.^(stimFine/20),plotProportionsFit(:,2),'-','Color',color,'LineWidth',3,'DisplayName',s); 
+   if newObserver
+      lineStyle='--';
+   else
+      lineStyle='-';
+   end
+   semilogx(10.^(stimFine/20),plotProportionsFit(:,2),lineStyle,'Color',color,'LineWidth',3,'DisplayName',s); 
    scatter(10.^(stim/20),pCorrect,100,'o','MarkerEdgeColor',color,'MarkerFaceColor',...
       color,'MarkerEdgeAlpha',.1,'MarkerFaceAlpha',.1,'DisplayName',s);
    set(gca,'xscale','log');
@@ -102,15 +113,17 @@ if o.plotSteepness
    noteString{1}=sprintf('%s: %s %.1f c/deg, ecc %.0f deg, %.1f s\n%.0f cd/m^2, eyes %s, trials %d',...
       o.conditionName,o.targetKind,o.targetCyclesPerDeg,o.eccentricityXYDeg(1),o.targetDurationSec,o.LMean,o.eyes,o.trials);
    noteString{2}=sprintf('%8s %7s %5s %9s %8s %5s','observer','noiseSD','log c','steepness','guessing','lapse');
-   noteString{end+1}=sprintf('%8s %7.2f %5.2f %9.1f %8.1f %5.2f', ...
+   noteString{end+1}=sprintf('%-8s %7.2f %5.2f %9.1f %8.2f %5.2f', ...
       o.observer,o.noiseSD,log10(o.contrast),o.steepness,o.guessing,o.lapse);
    if newFigure
       hold on
    else
+      text(0.4,0.4,'noiseSD observer');
       legend('show','Location','southeast');
       legend('boxoff');
       annotation('textbox',[0.14 0.11 .5 .2],'String',noteString,...
-          'FitBoxToText','on','LineStyle','none','FontName','Monospaced','FontSize',9);
+          'FitBoxToText','on','LineStyle','none',...
+          'FontName','Monospaced','FontSize',9);
       drawnow;
    end
 end
