@@ -45,7 +45,7 @@ for domain=1:3
          o.targetDurationSec=0.1;
          o.luminanceFactor=1/8;
          o.conditionName='photon';
-         %          o.minScreenWidthDeg=10;
+         % o.minScreenWidthDeg=10;
       case 2
          % cortical
          ecc=0;
@@ -53,7 +53,7 @@ for domain=1:3
          o.targetDurationSec=0.4;
          o.luminanceFactor=1;
          o.conditionName='cortical';
-         %          o.minScreenWidthDeg=10;
+         %  o.minScreenWidthDeg=10;
       case 3
          % ganglion
          ecc=30;
@@ -61,7 +61,7 @@ for domain=1:3
          o.targetDurationSec=0.2;
          o.luminanceFactor=1;
          o.conditionName='ganglion';
-         %          o.minScreenWidthDeg=50;
+         % o.minScreenWidthDeg=50;
    end
    for noiseSD=[0 0.16]
       o.eccentricityXYDeg=[ecc 0];
@@ -107,7 +107,7 @@ else
    % that you want to run now. Select them from the printout of "t" above.
    for oi=1:length(oo) % Edit this line to select conditions you want to run now.
       o=oo(oi);
-      %       o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+%       o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
       %       o.experimenter='chen';
       %       o.experimenter='satrianna';
       %       o.experimenter='hortense';
