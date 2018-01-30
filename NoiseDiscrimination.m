@@ -693,11 +693,11 @@ else
    unknownFields=unique(unknownFields);
    if ~isempty(unknownFields)
       error(['Unknown field(s) in input struct:' sprintf(' o.%s',unknownFields{:}) '.']);
-%       warning off backtrace
-%       warning(['ERROR: unknown o input fields:' sprintf(' %s',unknownFields{:}) '.']);
-%       warning on backtrace
-%       o.quitSession=true;
-%       return
+      %       warning off backtrace
+      %       warning(['ERROR: unknown o input fields:' sprintf(' %s',unknownFields{:}) '.']);
+      %       warning on backtrace
+      %       o.quitSession=true;
+      %       return
    end
    o=oo(1);
 end
@@ -2075,12 +2075,17 @@ try
       if o.markTargetLocation
          msg=[msg 'The X indicates target center. '];
       end
+      if streq(o.eyes,'both')
+         eyeOrEyes='eyes';
+      else
+         eyeOrEyes='eye';
+      end
       if o.useFixation
          if o.fixationIsOffscreen
-            msg=[msg 'Please fix your eyes on your offscreen fixation mark, '];
+            msg=sprintf('%sPlease fix your %s on your offscreen fixation mark, ',msg,eyeOrEyes);
          else
             xyCm=(XYPixOfXYDeg(o,[0 0])-XYPixOfXYDeg(o,o.eccentricityXYDeg))/o.pixPerCm;
-            msg=[msg 'Please fix your eyes on the center of the fixation cross +, '];
+            msg=sprintf('%sPlease fix your %s the center of the fixation cross +, ',msg,eyeOrEyes);
          end
          word='and';
       else
@@ -2998,7 +3003,7 @@ try
       if o.questPlusEnable
          stim=20*tTest;
          outcome=response+1;
-         questPlusData=qpUpdate(questPlusData,stim,outcome); 
+         questPlusData=qpUpdate(questPlusData,stim,outcome);
       end
       o.data(trial,1:2)=[tTest response];
       if cal.ScreenConfigureDisplayBrightnessWorks
@@ -3080,32 +3085,28 @@ try
    o.efficiency=o.idealEOverNThreshold/o.EOverN;
    
    %% QUESTPlus: Estimate steepness and threshold contrast.
-   if o.questPlusEnable
+   if o.questPlusEnable && isfield(questPlusData,'trialData')
       psiParamsIndex=qpListMaxArg(questPlusData.posterior);
       psiParamsBayesian=questPlusData.psiParamsDomain(psiParamsIndex,:);
       if o.questPlusPrint
          ffprintf(ff,'Quest: Max posterior est. of threshold: log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
             o.questMean,o.steepness,o.guess,o.lapse);
-         ffprintf(ff,'QuestPlus: Max posterior estimate:      log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
-            psiParamsBayesian(1)/20,psiParamsBayesian(2),psiParamsBayesian(3),psiParamsBayesian(4));
+         %          ffprintf(ff,'QuestPlus: Max posterior estimate:      log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
+         %             psiParamsBayesian(1)/20,psiParamsBayesian(2),psiParamsBayesian(3),psiParamsBayesian(4));
       end
-      o.qpBayesianContrast=sign(o.contrast)*10^(psiParamsBayesian(1)/20);	% threshold contrast
-      o.qpBayesianSteepness=psiParamsBayesian(2);          % steepness
-      o.qpBayesianGuessing=psiParamsBayesian(3);
-      o.qpBayesianLapse=psiParamsBayesian(4);
       psiParamsFit=qpFit(questPlusData.trialData,questPlusData.qpPF,psiParamsBayesian,questPlusData.nOutcomes,...,
          'lowerBounds', [min(contrastDB) min(steepnesses) min(guessingRates) min(lapseRates)],'upperBounds',[max(contrastDB) max(steepnesses) max(guessingRates) max(lapseRates)]);
       if o.questPlusPrint
          ffprintf(ff,'QuestPlus: Max likelihood estimate:     log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
             psiParamsFit(1)/20,psiParamsFit(2),psiParamsFit(3),psiParamsFit(4));
-     end
+      end
       o.qpContrast=sign(o.contrast)*10^(psiParamsFit(1)/20);	% threshold contrast
       o.qpSteepness=psiParamsFit(2);          % steepness
       o.qpGuessing=psiParamsFit(3);
       o.qpLapse=psiParamsFit(4);
       if o.questPlusPlot
          %% Plot trial data with maximum likelihood fit
-         figure('Name',o.conditionName,'NumberTitle','off');
+         figure('Name',[o.experiment ':' o.conditionName],'NumberTitle','off');
          title(o.conditionName,'FontSize',14);
          hold on
          stimCounts=qpCounts(qpData(questPlusData.trialData),questPlusData.nOutcomes);
@@ -3116,20 +3117,28 @@ try
             nTrials(cc)=sum(stimCounts(cc).outcomeCounts);
             pCorrect(cc)=stimCounts(cc).outcomeCounts(2)/nTrials(cc);
          end
-         for cc=1:length(stimCounts)
-            h=scatter(stim(cc)/20,pCorrect(cc),100,'o','MarkerEdgeColor',[0 0 1],'MarkerFaceColor',[0 0 1],...
-               'MarkerFaceAlpha',nTrials(cc)/max(nTrials),'MarkerEdgeAlpha',nTrials(cc)/max(nTrials));
-         end
-         plot(stimFine/20,plotProportionsFit(:,2),'-','Color',[1.0 0.2 0.0],'LineWidth',3);
-         xlabel('Log contrast');
+         legendString=sprintf('%.2f %s',o.noiseSD,o.observer);
+         semilogx(10.^(stimFine/20),plotProportionsFit(:,2),'-','Color',[0 0 0],'LineWidth',3,'DisplayName',legendString);
+         scatter(10.^(stim/20),pCorrect,100,'o','MarkerEdgeColor',[0 0 0],'MarkerFaceColor',...
+            [0 0 0],'MarkerEdgeAlpha',.1,'MarkerFaceAlpha',.1,'DisplayName',legendString);
+         set(gca,'xscale','log');
+         set(gca,'XTickLabel',{'0.01' '0.1' '1'});
+         xlabel('Contrast');
          ylabel('Proportion correct');
-         xlim([-2 00]); ylim([0 1]);
-         title({'Weibull psychometric fit',''});
+         xlim([0.01 1]); ylim([0 1]);
          set(gca,'FontSize',12);
-         % annotation('textbox',[0.25 0.2 .1 .1],'String',string,'FitBoxToText','on','LineStyle','none');
-         legendString={'
-         legend(legendString);
+         o.targetCyclesPerDeg=o.targetGaborCycles/o.targetHeightDeg;
+         noteString{1}=sprintf('%s: %s %.1f c/deg, ecc %.0f deg, %.1f s\n%.0f cd/m^2, eyes %s, trials %d',...
+            o.conditionName,o.targetKind,o.targetCyclesPerDeg,o.eccentricityXYDeg(1),o.targetDurationSec,o.LMean,o.eyes,o.trials);
+         noteString{2}=sprintf('%8s %7s %5s %9s %8s %5s','observer','noiseSD','log c','steepness','guessing','lapse');
+         noteString{end+1}=sprintf('%-8s %7.2f %5.2f %9.1f %8.2f %5.2f', ...
+            o.observer,o.noiseSD,log10(o.qpContrast),o.qpSteepness,o.qpGuessing,o.qpLapse);
+         text(0.4,0.4,'noiseSD observer');
+         legend('show','Location','southeast');
          legend('boxoff');
+         annotation('textbox',[0.14 0.11 .5 .2],'String',noteString,...
+            'FitBoxToText','on','LineStyle','none',...
+            'FontName','Monospaced','FontSize',9);
          drawnow;
       end
    end
