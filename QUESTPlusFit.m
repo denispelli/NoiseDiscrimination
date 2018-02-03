@@ -66,17 +66,27 @@ oOut=o;
 
 o.plotSteepness=true;
 if o.plotSteepness
-   persistent conditionName noteString firstObserver
+   persistent conditionName noteString observers 
    %% Plot trial data with maximum likelihood fit
    newFigure=~streq(o.conditionName,conditionName);
    if newFigure
-         firstObserver=o.observer;
+         observers={o.observer};
    end
-   newObserver=~streq(o.observer,firstObserver);
+   observerIndex=[];
+   for i=1:length(observers)
+      if streq(o.observer,observers{i})
+         observerIndex=i;
+         break;
+      end
+   end
+   if isempty(observerIndex)
+      observers{end+1}=o.observer;
+      observerIndex=length(observers);
+   end
    conditionName=o.conditionName;
    if newFigure
       noteString={};
-      figure('Name',[o.experiment ':' o.conditionName],'NumberTitle','off');
+      figure('Name',[o.experiment '-' o.conditionName],'NumberTitle','off');
       title({o.conditionName,''},'FontSize',14);
       hold on
       set(gca,'FontSize',12);
@@ -96,10 +106,15 @@ if o.plotSteepness
    else
       color=[1 .2 0];
    end
-   if newObserver
-      lineStyle='--';
-   else
-      lineStyle='-';
+   switch observerIndex
+      case 1
+         lineStyle='-';
+      case 2
+         lineStyle='--';
+      case 3
+         lineStyle=':';
+      case 4
+         lineStyle='-.';
    end
    semilogx(10.^(stimFine/20),plotProportionsFit(:,2),lineStyle,'Color',color,'LineWidth',3,'DisplayName',s); 
    scatter(10.^(stim/20),pCorrect,100,'o','MarkerEdgeColor',color,'MarkerFaceColor',...
@@ -110,15 +125,15 @@ if o.plotSteepness
    ylabel('Proportion correct');
    xlim([0.01 1]); ylim([0 1]);
    set(gca,'FontSize',12);
-   noteString{1}=sprintf('%s: %s %.1f c/deg, ecc %.0f deg, %.1f s\n%.0f cd/m^2, eyes %s, trials %d',...
-      o.conditionName,o.targetKind,o.targetCyclesPerDeg,o.eccentricityXYDeg(1),o.targetDurationSec,o.LMean,o.eyes,o.trials);
-   noteString{2}=sprintf('%8s %7s %5s %9s %8s %5s','observer','noiseSD','log c','steepness','guessing','lapse');
-   noteString{end+1}=sprintf('%-8s %7.2f %5.2f %9.1f %8.2f %5.2f', ...
-      o.observer,o.noiseSD,log10(o.contrast),o.steepness,o.guessing,o.lapse);
+   noteString{1}=sprintf('%s: %s %.1f c/deg, ecc %.0f deg, %.1f s\n%.0f cd/m^2, eyes %s',...
+      o.conditionName,o.targetKind,o.targetCyclesPerDeg,o.eccentricityXYDeg(1),o.targetDurationSec,o.LMean,o.eyes);
+   noteString{2}=sprintf('%8s %7s %5s %9s %6s %5s %6s','observer','noiseSD','log c','steepness','guessing','lapse','trials');
+   noteString{end+1}=sprintf('%-8s %7.2f %5.2f %9.1f %8.2f %5.2f %6d', ...
+      o.observer,o.noiseSD,log10(o.contrast),o.steepness,o.guessing,o.lapse,o.trials);
    if newFigure
       hold on
    else
-      text(0.4,0.4,'noiseSD observer');
+      text(0.4,0.55,'noiseSD observer');
       legend('show','Location','southeast');
       legend('boxoff');
       annotation('textbox',[0.14 0.11 .5 .2],'String',noteString,...
