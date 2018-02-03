@@ -5,6 +5,7 @@
 % denis.pelli@nyu.edu January 18, 2018
 % We call QUESTPlusRecalculate, written by Shenghao Lin, to do the fit.
 
+mergeRuns=0;
 experiment='steepness';
 if ~exist('fakeRun')
    fakeRun=0;
@@ -24,28 +25,30 @@ if ~fakeRun
       % The trial data are in o.psych:
       % o.psych.t is a unique sorted list of log c.
       % o.psych.trials is the number of trials at each contrast. trials>0.
-      % o.psych.right is the number of trials with correct response at each contrast. 0?right?trials
+      % o.psych.right is the number of trials with correct response at each contrast. 0<=right<=trials
       merged=0;
-      if exist('data','var')
-         for j=1:length(data)
-            % Match observer, noiseSD, and conditionName
-            if streq(data(j).observer,o.observer) && data(j).noiseSD==o.noiseSD && streq(data(j).conditionName,o.conditionName)
-               % Merge o into matching row j.
-               merged=1;
-               data(j).psych.t=[data(j).psych.t' o.psych.t']';
-               data(j).psych.right=[data(j).psych.right o.psych.right];
-               data(j).psych.trials=[data(j).psych.trials o.psych.trials];
-               data(j).trials=data(j).trials+o.trials;
-               data(j).condition=[data(j).condition o.condition];
-               if data(j).alternatives~=o.alternatives
-                  error('Trying to merge runs with unequal o.alternatives %d vs %d',data(j).alternatives,o.alternatives);
+      if mergeRuns
+         if exist('data','var')
+            for j=1:length(data)
+               % Match observer, noiseSD, and conditionName
+               if o.trials>10 && streq(data(j).observer,o.observer) && data(j).noiseSD==o.noiseSD && streq(data(j).conditionName,o.conditionName)
+                  % Merge o into matching row j.
+                  merged=1;
+                  data(j).psych.t=[data(j).psych.t' o.psych.t']';
+                  data(j).psych.right=[data(j).psych.right o.psych.right];
+                  data(j).psych.trials=[data(j).psych.trials o.psych.trials];
+                  data(j).trials=data(j).trials+o.trials;
+                  data(j).condition=[data(j).condition o.condition];
+                  if data(j).alternatives~=o.alternatives
+                     error('Trying to merge runs with unequal o.alternatives %d vs %d',data(j).alternatives,o.alternatives);
+                  end
+                  break
+                  % We merely append the new data, without bothering to sort,
+                  % or run "unique".
                end
-               break
-               % We merely append the new data, without bothering to sort,
-               % or run "unique".
             end
-         end
-      end % exist('data','var')
+         end % exist('data','var')
+      end % if mergeRuns
       if ~merged
          % Create new row for o.
          if exist('data','var')
@@ -88,9 +91,9 @@ if ~fakeRun
    % Sort by condition, where "condition" may contain several numbers.
    clear cc
    for k=1:length(data)
-      cc{k}=data(k).condition;
+      cc(k)=mean(data(k).condition);
    end
-   [~,ii]=sortrows(cell2mat(cc'));
+   [~,ii]=sort(cc);
    data=data(ii);
    fprintf('Analyzing %d combinations of: experiment,observer,conditionName,noiseSD.\n',length(data));
 end % ~fakeRun
@@ -101,9 +104,21 @@ for i=1:length(data)
 end
 
 % Run QUESTPlus
+close all % Get rid of any existing figures.
 clear dataPlus
+clear QUESTPlusFit % Clear the persistent variables.
 for i=1:length(data)
    dataPlus(i) = QUESTPlusFit(data(i));
+end
+
+% Save plots to disk
+figHandles = findall(groot, 'Type', 'figure');
+for i=1:length(figHandles)
+   figure(figHandles(i).Number);
+   graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[figHandles(i).Name '.eps']);
+   saveas(gcf,graphFile,'epsc')
+   % print(gcf,graphFile,'-depsc'); % equivalent to saveas above
+   fprintf('Plot saved as "%s".\n',[figHandles(i).Name '.eps']);
 end
 
 %% Compute derived quantities: E0, Neq, targetCyclesPerDeg
@@ -114,7 +129,7 @@ for i=1:length(data)
       dataPlus(i).E0=dataPlus(i0).E;
       dataPlus(i).Neq=dataPlus(i).N*dataPlus(i).E0/(dataPlus(i).E-dataPlus(i).E0);
    end
- end
+end
 
 %% Create CSV file
 t=struct2table(dataPlus);
