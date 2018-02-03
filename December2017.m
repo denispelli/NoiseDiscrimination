@@ -9,9 +9,7 @@
 % measure each Neq twice.
 % six observers.
 % gabor target at 1 of 4 orientations
-% (specify gabor sigma is in number of cycles.)
-% (A = 1 period x period)
-% P=0.7, assuming 4 alternatives
+% P=0.75, assuming 4 alternatives
 % luminance 206 cd/m2
 % monocular, temporal field, right eye
 % duration 200 ms
@@ -121,15 +119,8 @@ if 0
    for oi=13
       o=oo(oi);
 %       o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
-      o.experimenter='chen';
-      o.experimenter='satrianna';
-      o.experimenter='hortense';
-      o.experimenter='darshan';
-      o.experimenter='flavia';
-      o.experimenter='shenghao';
-      o.experimenter='yichen';
-      o.experimenter='none';
-      o.observer=o.experimenter; % Enter observer's name here.
+      o.experimenter='';
+      o.observer=''; 
       o.blankingRadiusReEccentricity=0;
       if 0
          o.targetKind='letter';
