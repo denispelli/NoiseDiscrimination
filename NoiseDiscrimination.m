@@ -635,9 +635,11 @@ o.conditionName='';
 o.minScreenWidthDeg=nan;
 o.maxViewingDistanceCm=nan;
 o.pupilDiameterMm=[];
+o.useFilter=false;
 o.filterTransmission=1;
 o.setRetinalIlluminance=false;
 o.desiredRetinalIlluminanceTd=[];
+o.retinalIlluminanceTd=[];
 
 %% READ USER-SUPPLIED o PARAMETERS
 if 0
@@ -704,24 +706,6 @@ else
       %       return
    end
    o=oo(1);
-end
-
-%% PUPIL SIZE
-% Measured December 2017 by Darshan.
-% Monocular right eye viewing of 250 cd/m^2 screen.
-if isempty(o.pupilDiameterMm)
-   switch lower(o.observer)
-      case 'hortense'
-         o.pupilDiameterMm=3.3;
-      case 'katerina'
-         o.pupilDiameterMm=5.0;
-      case 'shenghao'
-         o.pupilDiameterMm=5.3;
-      case 'yichen'
-         o.pupilDiameterMm=4.4;
-      case 'darshan'
-         o.pupilDiameterMm=4.9;
-   end
 end
 
 %% SCREEN PARAMETERS
@@ -951,7 +935,6 @@ try
       % Adjust textSize so our line fits perfectly.
       o.textSize=round(o.textSize/fraction);
    end
-   %    o.textSize=40;
    black=0; % The CLUT color code for black.
    white=WhiteIndex(window); % Retrieves the CLUT color code for white.
    o.gray1=mean([white black]);
@@ -1000,9 +983,12 @@ try
       Screen('FillRect',window,o.gray1);
       Screen('TextSize',window,o.textSize);
       Screen('TextFont',window,o.textFont,0);
-      Screen('DrawText',window,'',instructionalMarginPix,screenRect(4)/2-4.5*o.textSize,black,o.gray1);
-      Screen('DrawText',window,'Hello Observer,',instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
-      Screen('DrawText',window,'Please slowly type your name followed by RETURN.',instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
+%       Screen('DrawText',window,'',...
+%          instructionalMarginPix,screenRect(4)/2-4.5*o.textSize,black,o.gray1);
+      Screen('DrawText',window,'Hello Observer,',...
+         instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
+      Screen('DrawText',window,'Please slowly type your name followed by RETURN.',...
+         instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
       Screen('TextSize',window,round(o.textSize*0.35));
       Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.'),instructionalMarginPix,screenRect(4)-0.5*instructionalMarginPix,black,o.gray1,1);
       Screen('TextSize',window,o.textSize);
@@ -1030,7 +1016,134 @@ try
       % Keep the temporary window open until we open the main one, so observer
       % knows program is running.
    end
+
+   %% ASK FILTER TRANSMISSION
+   persistent previousRunUsedFilter
+   if ~o.useFilter
+      o.filterTransmission=1;
+      if previousRunUsedFilter
+         % If the preceding run had a filter, and this run does not, we ask
+         % the observer to remove the filter or sunglasses.
+         ListenChar(2); % no echo
+         Screen('FillRect',window,o.gray1);
+         Screen('TextSize',window,o.textSize);
+         Screen('TextFont',window,o.textFont,0);
+         Screen('DrawText',window,'Please remove any filter or sunglasses.',...
+            instructionalMarginPix,screenRect(4)/2-7*o.textSize,black,o.gray1);
+         Screen('DrawText',window,'Hit RETURN to continue.',...
+            instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
+         Screen('TextSize',window,round(o.textSize*0.35));
+         Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.'),instructionalMarginPix,screenRect(4)-0.5*instructionalMarginPix,black,o.gray1,1);
+         Screen('TextSize',window,o.textSize);
+         if IsWindows
+            background=[];
+         else
+            background=o.gray1;
+         end
+         [~,terminatorChar]=GetEchoString(window,'',...
+            instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
+         if ismember(terminatorChar,[escapeChar graveAccentChar])
+            o.quitRun=true;
+            o.quitSession=OfferToQuitSession(window,o,instructionalMarginPix,screenRect);
+            if o.quitSession
+               ffprintf(ff,'*** User typed ESCAPE twice. Session terminated.\n');
+            else
+               ffprintf(ff,'*** User typed ESCAPE. Run terminated.\n');
+            end
+            ListenChar(0);
+            ShowCursor;
+            sca;
+            return
+         end
+         Screen('FillRect',window,o.gray1);
+         % Keep the temporary window open until we open the main one, so observer
+         % knows program is running.
+      end
+   else % if previousRunUsedFilter
+      ListenChar(2); % no echo
+      Screen('FillRect',window,o.gray1);
+      Screen('TextSize',window,o.textSize);
+      Screen('TextFont',window,o.textFont,0);
+      Screen('DrawText',window,'Please use a filter or sunglasses to reduce the brightness.',...
+         instructionalMarginPix,screenRect(4)/2-7*o.textSize,black,o.gray1);
+      Screen('DrawText',window,'Please slowly type its transmission (between 0.000 and 1.000)',...
+         instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
+      if ~isempty(o.filterTransmission)
+         Screen('DrawText',window,sprintf('followed by RETURN. Or just hit RETURN to say: %.3f',o.filterTransmission),...
+            instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
+      end
+      Screen('TextSize',window,round(o.textSize*0.35));
+      Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.'),instructionalMarginPix,screenRect(4)-0.5*instructionalMarginPix,black,o.gray1,1);
+      Screen('TextSize',window,o.textSize);
+      if IsWindows
+         background=[];
+      else
+         background=o.gray1;
+      end
+      [name,terminatorChar]=GetEchoString(window,'Filter transmission:',...
+         instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
+      if ~isempty(name)
+         o.filterTransmission=str2num(name);
+      end
+      if isempty(o.filterTransmission)
+         error('You must specify the filter transmission.');
+      end
+      if ismember(terminatorChar,[escapeChar graveAccentChar])
+         o.quitRun=true;
+         o.quitSession=OfferToQuitSession(window,o,instructionalMarginPix,screenRect);
+         if o.quitSession
+            ffprintf(ff,'*** User typed ESCAPE twice. Session terminated.\n');
+         else
+            ffprintf(ff,'*** User typed ESCAPE. Run terminated.\n');
+         end
+         ListenChar(0);
+         ShowCursor;
+         sca;
+         return
+      end
+      Screen('FillRect',window,o.gray1);
+      % Keep the temporary window open until we open the main one, so observer
+      % knows program is running.
+   end % if previousRunUsedFilter
+   previousRunUsedFilter=o.useFilter;
    
+   %% PUPIL SIZE
+   % Measured December 2017 by Darshan.
+   % Monocular right eye viewing of 250 cd/m^2 screen.
+   if isempty(o.pupilDiameterMm)
+      switch lower(o.observer)
+         case 'hortense'
+            o.pupilDiameterMm=3.3;
+         case 'katerina'
+            o.pupilDiameterMm=5.0;
+         case 'shenghao'
+            o.pupilDiameterMm=5.3;
+         case 'yichen'
+            o.pupilDiameterMm=4.4;
+         case 'darshan'
+            o.pupilDiameterMm=4.9;
+      end
+   end
+
+   %% RETINAL ILLUMINANCE
+   LOld=mean([min(cal.old.L) max(cal.old.L)]);
+   if o.setRetinalIlluminance
+      if isempty(o.desiredRetinalIlluminanceTd) || isempty(o.pupilDiameterMm)
+         error(['When you request o.setRetinalIlluminance=true, ' ...
+            'you must also specify o.desiredRetinalIlluminanceTd and o.pupilDiameterMm.']);
+      end
+      % o.filterTransmission refers to optical neutral density filters or
+      % sunglasses.
+      % o.luminanceFactor refers to software attenuation of luminance from
+      % the standard middle of attainable range.
+      td=o.filterTransmission*LOld*pi*o.pupilDiameterMm^2/4;
+      o.luminanceFactor=o.desiredRetinalIlluminanceTd/td;
+      o.luminanceFactor=min([1 max([0.125 o.luminanceFactor])]); % bounds
+   end
+   o.retinalIlluminanceTd=o.luminanceFactor*o.filterTransmission*LOld*pi*o.pupilDiameterMm^2/4;
+   % Need to update all reports of luminance to include effect of filter.
+   % Ask user to report filterTransmission. 
+
    %% OPEN OUTPUT FILES
    o.beginningTime=now;
    t=datevec(o.beginningTime);
