@@ -45,8 +45,8 @@ o.pThreshold=0.75;
 cal=OurScreenCalibrations(0);
 if ~streq(cal.macModelName,'MacBookPro14,3')
    % If we don't actually have a MacBook Pro, pretend we do.
-   cal.screenWidthMm=330;
-   cal.screenHeightMm=206;
+   cal.screenWidthMm=330; % 13"
+   cal.screenHeightMm=206; % 8.1"
 end
 
 %% Psychometric steepness.
@@ -80,8 +80,8 @@ for domain=1:3
          o.luminanceFactor=1;
          % o.minScreenWidthDeg=50;
    end
-   for eyes=Shuffle({'right' 'binocular'})
-      o.eyes=eyes;
+   for eyes=Shuffle({'right' 'both'})
+      o.eyes=eyes{1};
       for noiseSD=Shuffle([0 0.16])
          o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
          o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
@@ -121,14 +121,14 @@ if fakeRun
    end
    steepnessAnalyze(data);
 end
-if ~fakeRun && 0
+if ~fakeRun && 1
    %% RUN THE CONDITIONS
    % Typically, you'll select just a few of the conditions stored in oo
    % that you want to run now. Select them from the printout of "t" above.
    clear oOut
    for oi=1:length(oo) % Edit this line to select conditions you want to run now.
       o=oo(oi);
-      %       o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+%             o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
       o.trialsPerRun=40;
       o.experimenter='';
       o.observer=''; % Enter observer's name at run time.
