@@ -634,6 +634,10 @@ o.condition=1;
 o.conditionName='';
 o.minScreenWidthDeg=nan;
 o.maxViewingDistanceCm=nan;
+o.pupilDiameterMm=[];
+o.filterTransmission=1;
+o.setRetinalIlluminance=false;
+o.desiredRetinalIlluminanceTd=[];
 
 %% READ USER-SUPPLIED o PARAMETERS
 if 0
@@ -671,7 +675,7 @@ else
       'nearPointXYPix' 'pixPerCm' 'psychtoolboxKernelDriverLoaded'...
       'targetXYPix' 'textLineLength' 'textSize' 'unknownFields'...
       'deviceIndex' 'speakEachLetter' 'targetCheckDeg' 'targetCheckPix'...
-      'textFont' 'useSpeech' 'LMean' ...
+      'textFont' 'useSpeech' 'LMean' 'targetCyclesPerDeg'...
       };
    unknownFields={};
    for condition=1:conditions
@@ -702,9 +706,26 @@ else
    o=oo(1);
 end
 
+%% PUPIL SIZE
+% Measured December 2017 by Darshan.
+% Monocular right eye viewing of 250 cd/m^2 screen.
+if isempty(o.pupilDiameterMm)
+   switch lower(o.observer)
+      case 'hortense'
+         o.pupilDiameterMm=3.3;
+      case 'katerina'
+         o.pupilDiameterMm=5.0;
+      case 'shenghao'
+         o.pupilDiameterMm=5.3;
+      case 'yichen'
+         o.pupilDiameterMm=4.4;
+      case 'darshan'
+         o.pupilDiameterMm=4.9;
+   end
+end
+
 %% SCREEN PARAMETERS
-% 3/23/17 moved this block of code to after reading o parameters. Untested in new location.
-[screenWidthMm, screenHeightMm]=Screen('DisplaySize',o.screen);
+[screenWidthMm,screenHeightMm]=Screen('DisplaySize',o.screen);
 screenBufferRect=Screen('Rect',o.screen);
 screenRect=Screen('Rect',o.screen,1);
 resolution=Screen('Resolution',o.screen);
@@ -782,7 +803,20 @@ end
 %% GET SCREEN CALIBRATION cal
 cal.screen=o.screen;
 cal=OurScreenCalibrations(cal.screen);
-% Must call Brightness while no window is open.
+if isfield(cal,'gamma')
+   cal=rmfield(cal,'gamma');
+end
+if cal.screen > 0
+   fprintf('Using external monitor.\n');
+end
+cal.clutMapLength=o.clutMapLength;
+o.cal=cal;
+if ~isfield(cal,'old') || ~isfield(cal.old,'L')
+   fprintf('This screen has not yet been calibrated. Please use CalibrateScreenLuminance to calibrate it.\n');
+   error('This screen has not yet been calibrated. Please use CalibrateScreenLuminance to calibrate it.\n');
+end
+
+%% Must call Brightness while no window is open.
 useBrightnessFunction=true;
 if useBrightnessFunction
    Brightness(cal.screen,cal.brightnessSetting); % Set brightness.
@@ -796,23 +830,108 @@ if useBrightnessFunction
       error('Set brightness to %.2f, but read back %.2f',cal.brightnessSetting,cal.brightnessReading);
    end
 end
+if ~useBrightnessFunction
+   try
+      % Caution: Screen ConfigureDisplay Brightness gives a fatal error
+      % if not supported, and is unsupported on many devices, including
+      % a video projector under macOS. We use try-catch to recover.
+      % NOTE: It was my impression in summer 2017 that the Brightness
+      % function (which uses AppleScript to control the System
+      % Preferences Display panel) is currently more reliable than the
+      % Screen ConfigureDisplay Brightness feature (which uses a macOS
+      % call). The Screen call adjusts the brightness, but not the
+      % slider in the Preferences Display panel, and macOS later
+      % unpredictably resets the brightness to the level of the slider,
+      % not what we asked for. This is a macOS bug in the Apple call
+      % used by Screen.
+      for i=1:3
+         Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
+         cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
+         %          Brightness(cal.screen,cal.brightnessSetting);
+         %          cal.brightnessReading=Brightness(cal.screen);
+         if abs(cal.brightnessSetting-cal.brightnessReading)<0.01
+            break;
+         elseif i==3
+            error('Tried three times to set brightness to %.2f, but read back %.2f',...
+               cal.brightnessSetting,cal.brightnessReading);
+         end
+      end
+   catch
+      cal.brightnessReading=NaN;
+   end
+end
+if cal.ScreenConfigureDisplayBrightnessWorks
+   AutoBrightness(cal.screen,0);
+   ffprintf(ff,'Turning autobrightness off. Setting "brightness" to %.2f, on a scale of 0.0 to 1.0;\n',cal.brightnessSetting);
+end
+
 
 %% TRY-CATCH BLOCK CONTAINS ALL CODE IN WHICH WINDOW IS OPEN
 try
-   %% ASK EXPERIMENTER NAME
+   %% OPEN WINDOW
    Screen('Preference', 'SkipSyncTests',1);
    Screen('Preference','TextAntiAliasing',1);
-   if isempty(o.observer) || isempty(o.experimenter)
-      if ~o.useFractionOfScreen
-         [window,screenRect]=Screen('OpenWindow',0); % Temporary, just to ask names.
-      else
-         r=round(o.useFractionOfScreen*screenBufferRect);
-         r=AlignRect(r,screenBufferRect,'right','bottom');
-         [window,screenRect]=Screen('OpenWindow',0,1,r); % Temporary, just to ask names.
-      end
-   else
-      window=0;
+   if o.useFractionOfScreen
+      ffprintf(ff,'Using tiny window for debugging.\n');
    end
+   PsychImaging('PrepareConfiguration');
+   if o.flipScreenHorizontally
+      PsychImaging('AddTask','AllViews','FlipHorizontal');
+   end
+   if cal.hiDPIMultiple ~= 1
+      PsychImaging('AddTask','General','UseRetinaResolution');
+   end
+   if o.useNative10Bit
+      PsychImaging('AddTask','General','EnableNative10BitFramebuffer');
+   end
+   if o.useNative11Bit
+      PsychImaging('AddTask','General','EnableNative11BitFramebuffer');
+   end
+   PsychImaging('AddTask','General','NormalizedHighresColorRange',1);
+   if o.enableCLUTMapping
+      o.maxEntry=o.clutMapLength-1; % moved here on Feb. 4, 2018
+      PsychImaging('AddTask','AllViews','EnableCLUTMapping',o.clutMapLength,1); % clutSize, high res
+      cal.gamma=repmat((0:o.maxEntry)'/o.maxEntry,1,3); % Identity
+      % Set hardware CLUT to identity, without assuming we know the
+      % size. On Windows, the only allowed gamma table size is 256.
+      gamma=Screen('ReadNormalizedGammaTable',cal.screen);
+      maxEntry=length(gamma)-1;
+      gamma(:,1:3)=repmat((0:maxEntry)'/maxEntry,1,3);
+      Screen('LoadNormalizedGammaTable',cal.screen,gamma,0);
+   else
+      warning('You need EnableCLUTMapping to control contrast.');
+   end
+   if o.enableCLUTMapping % How we use LoadNormalizedGammaTable
+      loadOnNextFlip=2; % Load software CLUT at flip.
+   else
+      loadOnNextFlip=true; % Load hardware CLUT: 0. now; 1. on flip.
+   end
+   if ~o.useFractionOfScreen
+      [window,screenRect]=PsychImaging('OpenWindow',cal.screen,1.0);
+   else
+      r=round(o.useFractionOfScreen*screenBufferRect);
+      r=AlignRect(r,screenBufferRect,'right','bottom');
+      [window,screenRect]=PsychImaging('OpenWindow',cal.screen,1.0,r);
+   end
+   screenRect=Screen('Rect',cal.screen,1); % screen rect in UseRetinaResolution mode
+   if o.useFractionOfScreen
+      screenRect=round(o.useFractionOfScreen*screenRect);
+   end
+   % if cal.hiDPIMultiple~=1
+   %     ffprintf(ff,'HiDPI: It doesn''t matter, but you might be curious to know.\n');
+   %     if ismac
+   %         str='Your Retina display';
+   %     else
+   %         str='Your display';
+   %     end
+   %     ffprintf(ff,'%s is in dual-resolution HiDPI mode. Display resolution is %.2fx buffer resolution.\n',str,cal.hiDPIMultiple);
+   %     ffprintf(ff,'Draw buffer is %d x %d. ',screenBufferRect(3:4));
+   %     ffprintf(ff,'Display is %d x %d.\n',screenRect(3:4));
+   %     ffprintf(ff,'We are using it in its native %d x %d resolution.\n',resolution.width,resolution.height);
+   %     ffprintf(ff,'You can use Switch Res X (http://www.madrau.com/) to select a pure resolution, not HiDPI.\n');
+   % end
+      
+   %% ASK EXPERIMENTER NAME
    instructionalMarginPix=round(0.08*min(RectWidth(screenRect),RectHeight(screenRect)));
    o.textSize=39;
    o.textFont='Verdana';
@@ -833,7 +952,7 @@ try
       o.textSize=round(o.textSize/fraction);
    end
    %    o.textSize=40;
-   black=0; % Retrieves the CLUT color code for black.
+   black=0; % The CLUT color code for black.
    white=WhiteIndex(window); % Retrieves the CLUT color code for white.
    o.gray1=mean([white black]);
    o.deviceIndex=-3; % all keyboard and keypad devices
@@ -911,11 +1030,6 @@ try
       % Keep the temporary window open until we open the main one, so observer
       % knows program is running.
    end
-   %    if window
-   %       % No window can be open when we call Brightness.
-   %       Screen('Close',window);
-   %       window=0;
-   %    end
    
    %% OPEN OUTPUT FILES
    o.beginningTime=now;
@@ -949,40 +1063,7 @@ try
    ffprintf(ff,'%s %s\n',o.functionNames,datestr(now));
    ffprintf(ff,'observer %s, task %s, alternatives %d,  steepness %.1f,\n',o.observer,o.task,o.alternatives,o.steepness);
    
-   %% GET SCREEN CALIBRATION cal
-   cal.screen=o.screen;
-   cal=OurScreenCalibrations(cal.screen);
-   if cal.screen > 0
-      fprintf('Using external monitor.\n');
-   end
-   if isfield(cal,'gamma')
-      cal=rmfield(cal,'gamma');
-   end
-   cal.clutMapLength=o.clutMapLength;
-   o.cal=cal;
-   if ~isfield(cal,'old') || ~isfield(cal.old,'L')
-      fprintf('This screen has not yet been calibrated. Please use CalibrateScreenLuminance to calibrate it.\n');
-      error('This screen has not yet been calibrated. Please use CalibrateScreenLuminance to calibrate it.\n');
-   end
-   BackupCluts;
-   [savedGamma,dacBits]=Screen('ReadNormalizedGammaTable',cal.screen); % Restored when program terminates.
-   screenRect=Screen('Rect',cal.screen,1); % screen rect in UseRetinaResolution mode
-   if o.useFractionOfScreen
-      screenRect=round(o.useFractionOfScreen*screenRect);
-   end
-   % if cal.hiDPIMultiple~=1
-   %     ffprintf(ff,'HiDPI: It doesn''t matter, but you might be curious to know.\n');
-   %     if ismac
-   %         str='Your Retina display';
-   %     else
-   %         str='Your display';
-   %     end
-   %     ffprintf(ff,'%s is in dual-resolution HiDPI mode. Display resolution is %.2fx buffer resolution.\n',str,cal.hiDPIMultiple);
-   %     ffprintf(ff,'Draw buffer is %d x %d. ',screenBufferRect(3:4));
-   %     ffprintf(ff,'Display is %d x %d.\n',screenRect(3:4));
-   %     ffprintf(ff,'We are using it in its native %d x %d resolution.\n',resolution.width,resolution.height);
-   %     ffprintf(ff,'You can use Switch Res X (http://www.madrau.com/) to select a pure resolution, not HiDPI.\n');
-   % end
+   %% STIMULUS PARAMETERS
    o.pixPerCm=RectWidth(screenRect)/(0.1*screenWidthMm);
    degPerCm=57/o.viewingDistanceCm;
    o.pixPerDeg=o.pixPerCm/degPerCm;
@@ -1008,7 +1089,6 @@ try
    end
    o.targetCheckDeg=o.targetCheckPix/o.pixPerDeg;
    BackupCluts(o.screen);
-   o.maxEntry=o.clutMapLength-1;
    LMean=(max(cal.old.L)+min(cal.old.L))/2;
    o.maxLRange=2*min(max(cal.old.L)-LMean,LMean-min(cal.old.L));
    % We use nearly the whole clut (entries 2 to 254) for stimulus generation.
@@ -1063,8 +1143,8 @@ try
    end
    % The actual clipping is done using o.stimulusRect. This restriction of
    % noiseRadius and annularNoiseBigRadius is merely to save time (and
-   % excessive texture size) by not computing pixels that won't be seen. The
-   % actual clipping is done using o.stimulusRect.
+   % excessive texture size) by not computing pixels that won't be seen.
+   % The actual clipping is done using o.stimulusRect.
    o.noiseRadiusDeg=max(o.noiseRadiusDeg,0);
    o.noiseRadiusDeg=min(o.noiseRadiusDeg,RectWidth(screenRect)/o.pixPerDeg);
    o.noiseRaisedCosineEdgeThicknessDeg=max(0,o.noiseRaisedCosineEdgeThicknessDeg);
@@ -1181,41 +1261,16 @@ try
       end
       ScreenProfile(cal.screen,cal.profile);
    end
-   if cal.ScreenConfigureDisplayBrightnessWorks
-      AutoBrightness(cal.screen,0);
-      ffprintf(ff,'Turning autobrightness off. Setting "brightness" to %.2f, on a scale of 0.0 to 1.0;\n',cal.brightnessSetting);
-   end
    Screen('Preference','SkipSyncTests',1);
    oldVisualDebugLevel=Screen('Preference','VisualDebugLevel',0);
    oldSupressAllWarnings=Screen('Preference','SuppressAllWarnings',1);
-   % if cal.ScreenConfigureDisplayBrightnessWorks && ismac
-   if ~useBrightnessFunction
-      try
-         % Caution: Screen ConfigureDisplay Brightness gives a fatal error if not
-         % supported, and is unsupported on many devices, including a video
-         % projector under macOS. We use try-catch to recover.
-         for i=1:3
-            Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
-            cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
-            %          Brightness(cal.screen,cal.brightnessSetting);
-            %          cal.brightnessReading=Brightness(cal.screen);
-            if abs(cal.brightnessSetting-cal.brightnessReading)<0.01
-               break;
-            elseif i==3
-               error('Tried three times to set brightness to %.2f, but read back %.2f',cal.brightnessSetting,cal.brightnessReading);
-            end
-         end
-      catch
-         cal.brightnessReading=NaN;
-      end
-   end
-   if window~=0
-      Screen('Close',window); % Close temporary window
-   end
+%    if window~=0
+%       Screen('Close',window); % Close temporary window
+%    end
    
    %% OPEN WINDOW IF OBSERVER IS HUMAN
-   % We can safely use this mode AND collect keyboard responses without
-   % worrying about writing to MATLAB console/editor.
+   % We can safely use this no-echo mode AND collect keyboard responses
+   % without worrying about writing to MATLAB console/editor.
    ListenChar(2); % no echo
    KbName('UnifyKeyNames');
    if ~ismember(o.observer,algorithmicObservers) || streq(o.task,'identify')
@@ -1223,56 +1278,14 @@ try
       % experiment, in which to display stimuli. If o.observer is machine,
       % we need a screen only briefly, to create the targets to be
       % identified.
-      if o.useFractionOfScreen
-         ffprintf(ff,'Using tiny window for debugging.\n');
-      end
-      Screen('Preference', 'SkipSyncTests',1);
-      PsychImaging('PrepareConfiguration');
-      if o.flipScreenHorizontally
-         PsychImaging('AddTask','AllViews','FlipHorizontal');
-      end
-      if cal.hiDPIMultiple ~= 1
-         PsychImaging('AddTask','General','UseRetinaResolution');
-      end
-      if o.useNative10Bit
-         PsychImaging('AddTask','General','EnableNative10BitFramebuffer');
-      end
-      if o.useNative11Bit
-         PsychImaging('AddTask','General','EnableNative11BitFramebuffer');
-      end
-      PsychImaging('AddTask','General','NormalizedHighresColorRange',1);
-      if o.enableCLUTMapping
-         PsychImaging('AddTask','AllViews','EnableCLUTMapping',o.clutMapLength,1); % clutSize, high res
-         cal.gamma=repmat((0:o.maxEntry)'/o.maxEntry,1,3); % Identity
-         % Set hardware CLUT to identity, without assuming we know the
-         % size. On Windows, the only allowed gamma table size is 256.
-         gamma=Screen('ReadNormalizedGammaTable',cal.screen);
-         maxEntry=length(gamma)-1;
-         gamma(:,1:3)=repmat((0:maxEntry)'/maxEntry,1,3);
-         Screen('LoadNormalizedGammaTable',cal.screen,gamma,0);
-      else
-         warning('You need EnableCLUTMapping to control contrast.');
-      end
-      if o.enableCLUTMapping % How we use LoadNormalizedGammaTable
-         loadOnNextFlip=2; % Load software CLUT at flip.
-      else
-         loadOnNextFlip=true; % Load hardware CLUT: 0. now; 1. on flip.
-      end
-      if ~o.useFractionOfScreen
-         window=PsychImaging('OpenWindow',cal.screen,1.0);
-      else
-         r=round(o.useFractionOfScreen*screenBufferRect);
-         r=AlignRect(r,screenBufferRect,'right','bottom');
-         window=PsychImaging('OpenWindow',cal.screen,1.0,r);
-      end
-      
+% openwindow was here      
       if 0
          % This code to enable dithering is what Mario suggested, but it
          % makes no difference at all. I get dithering on my MacBook Pro
          % and iMac if and only if I EnableNative10BitFramebuffer, above. I
          % haven't tested whether this dithering-control code affects my
          % MacBook Air, but that's irrelevant since its screen is too
-         % viewing angle dependent for use in measuring threshold, which is
+         % viewing-angle dependent for use in measuring threshold, which is
          % why I need dithering.
          windowInfo=Screen('GetWindowInfo',window);
          o.displayCoreId=windowInfo.DisplayCoreId;
@@ -1298,7 +1311,7 @@ try
                end
          end
          Screen('ConfigureDisplay','Dithering',cal.screen,o.ditherCLUT);
-      end
+      end % if 0
       
       % Recommended by Mario Kleiner, July 2017.
       % The first 'DrawText' call triggers loading of the plugin, but may fail.
@@ -1357,6 +1370,7 @@ try
          cal=LinearizeClut(cal);
          
          % CLUT entries for stimulus.
+
          cal.LFirst=LMin;
          cal.LLast=LMean+(LMean-LMin); % Symmetric about LMean.
          cal.nFirst=firstGrayClutEntry;
@@ -1434,8 +1448,8 @@ try
    if ~isfield(o,'eyes')
       error('Please set o.eyes to ''left'',''right'',''one'', or ''both''.');
    end
-   if ~ismember(o.eyes,{'left','right','one','both'})
-      error('o.eyes=''%s'' is not allowed. It must be ''left'',''right'',''one'', or ''both''.',o.eyes);
+   if ~ismember(o.eyes,{'left','right','both'})
+      error('o.eyes==''%s'' is not allowed. It must be ''left'',''right'', or ''both''.',o.eyes);
    end
    if ~exist('oOld','var') || ~isfield(oOld,'eyes') || GetSecs-oOld.secs>5*60 || ~streq(oOld.eyes,o.eyes)
       Screen('TextSize',window,o.textSize);
