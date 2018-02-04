@@ -115,7 +115,7 @@ if fakeRun
    end
    steepnessAnalyze(data);
 end
-if ~fakeRun && 0
+if ~fakeRun && 1
    %% RUN THE CONDITIONS
    % Typically, you'll select just a few of the conditions stored in oo
    % that you want to run now. Select them from the printout of "t" above.
