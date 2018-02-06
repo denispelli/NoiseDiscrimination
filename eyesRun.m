@@ -21,37 +21,37 @@ if verLessThan('matlab','R2013b')
    error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
 end
 clear o oo
-fakeRun=false; % Used to check plotting before we have data.
+fakeRun=false; % Enable fakeRun to check plotting before we have data.
 
-% We list parameters here in the order that we want them to appear
-% as columns in the list.
+% We list parameters here in the order that we want them to appear as
+% columns in the list. I don't think we use these values. This is just for
+% the cosmetic ordering of the fields in the struct, which later determines
+% the order of the columns in the table.
 o.condition=1;
-o.experiment='xxx';
-o.conditionName='xxx';
-o.luminanceFactor=1;
-o.eccentricityXYDeg=[0 0];
-o.noiseSD=0.16;
-o.noiseType= 'gaussian';
+o.experiment='';
+o.conditionName='';
+o.viewingDistanceCm=40;
 o.eyes='right';
+o.desiredRetinalIlluminanceTd=[];
+o.useFilter=false;
+o.eccentricityXYDeg=[0 0];
+o.noiseSD=0;
 o.targetDurationSec=0.2;
 o.targetCyclesPerDeg=3;
-o.viewingDistanceCm=40;
-o.minScreenWidthDeg=[];
-o.maxViewingDistanceCm=[];
 o.targetGaborCycles=3;
 o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
-o.fullResolutionTarget=false;
-o.pThreshold=0.75;
+o.noiseCheckDeg=o.targetHeightDeg/20;
+
 cal=OurScreenCalibrations(0);
 if ~streq(cal.macModelName,'MacBookPro14,3')
-   % If we don't actually have a MacBook Pro, pretend we do.
+   % For debugging, if I don't actually have a 15" MacBook Pro, pretend I do.
    cal.screenWidthMm=330; % 13"
    cal.screenHeightMm=206; % 8.1"
 end
 
 %% Psychometric steepness.
-% In each of the 3 domains:
-% noiseSD: 0 0.16
+% In each of the 3 domains: photon, cortical, ganglion
+% Two noise levels, noiseSD: 0 0.16
 o.experiment='eyes';
 for domain=1:3
    switch domain
@@ -63,10 +63,9 @@ for domain=1:3
          o.targetDurationSec=0.1;
          o.useFilter=true;
          o.filterTransmission=[]; % Supplied by observer at run time.
-         o.setRetinalIlluminance=true;
          o.desiredRetinalIlluminanceTd=100;
          o.luminanceFactor=[]; % Set by program to achieve desired td.
-         % o.minScreenWidthDeg=10;
+         % o.minScreenWidthDeg=30; % Big to determine pupil size.
       case 2
          % cortical
          o.conditionName='cortical';
@@ -75,7 +74,7 @@ for domain=1:3
          o.targetDurationSec=0.4;
          o.luminanceFactor=1;
          o.useFilter=false;
-         o.setRetinalIlluminance=false;
+         o.desiredRetinalIlluminanceTd=[];
          %  o.minScreenWidthDeg=10;
       case 3
          % ganglion
@@ -85,16 +84,17 @@ for domain=1:3
          o.targetDurationSec=0.2;
          o.luminanceFactor=1;
          o.useFilter=false;
-         o.setRetinalIlluminance=false;
-         % o.minScreenWidthDeg=50;
+         o.desiredRetinalIlluminanceTd=[];
+         % o.minScreenWidthDeg=10;
    end
    for eyes=Shuffle({'right' 'both'})
       o.eyes=eyes{1};
       for noiseSD=Shuffle([0 0.16])
          o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
-         o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
-         o.maxViewingDistanceCm=round(cal.screenWidthMm/10/(2*tand(o.minScreenWidthDeg/2)));
-         o.viewingDistanceCm=min([o.maxViewingDistanceCm 50]);
+%          o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
+         o.minScreenWidthDeg=1+o.targetHeightDeg*2;
+         o.maxViewingDistanceCm=round(0.1*cal.screenWidthMm/(2*tand(o.minScreenWidthDeg/2)));
+         o.viewingDistanceCm=min([o.maxViewingDistanceCm 40]);
          o.noiseCheckDeg=o.targetHeightDeg/20;
          o.noiseSD=noiseSD;
          if ~exist('oo','var')
@@ -129,17 +129,17 @@ if fakeRun
    end
    steepnessAnalyze(data);
 end
-if ~fakeRun && 1
+if ~fakeRun && 0
    %% RUN THE CONDITIONS
    % Typically, you'll select just a few of the conditions stored in oo
    % that you want to run now. Select them from the printout of "t" above.
    clear oOut
-   for oi=1:length(oo) % Edit this line to select conditions you want to run now.
+   for oi=1:length(oo) % Edit this line to select the conditions you want to run now.
       o=oo(oi);
-      %             o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+      % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
       o.trialsPerRun=40;
       if exist('oOut','var')
-         % Copy answers from previous run.
+         % Copy answers from immediately preceding run.
          o.experimenter=oOut.experimenter;
          o.observer=oOut.observer;
          % Setting o.useFilter false forces o.filterTransmission=1.
@@ -182,9 +182,9 @@ if ~fakeRun && 1
       end
       oOut=NoiseDiscrimination(o);
       fprintf(['%s: pupilDiameterMm %.1f, filterTransmission %.3f, luminanceFactor %.2f,\n'...
-         'setRetinalIlluminance %s, desiredRetinalIlluminance %.1f, retinalIlluminanceTd %.1f\n'],...
+         'desiredRetinalIlluminance %.1f, retinalIlluminanceTd %.1f\n'],...
          o.conditionName,oOut.pupilDiameterMm,oOut.filterTransmission,oOut.luminanceFactor,...
-         string(oOut.setRetinalIlluminance),oOut.desiredRetinalIlluminanceTd,oOut.retinalIlluminanceTd);
+         oOut.desiredRetinalIlluminanceTd,oOut.retinalIlluminanceTd);
       if oOut.quitSession
          break
       end
