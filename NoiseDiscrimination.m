@@ -946,11 +946,10 @@ try
       Screen('FillRect',window,o.gray1);
       Screen('TextSize',window,o.textSize);
       Screen('TextFont',window,o.textFont,0);
-      Screen('DrawText',window,'',instructionalMarginPix,screenRect(4)/2-4.5*o.textSize,black,o.gray1);
-      Screen('DrawText',window,'Hello Experimenter,',instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
-      Screen('DrawText',window,'Please slowly type your name followed by RETURN.',instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
+      Screen('DrawText',window,'Hello,',instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
+      Screen('DrawText',window,'Please slowly type the experimenter''s name followed by RETURN.',instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
       Screen('TextSize',window,round(0.6*o.textSize));
-      Screen('DrawText',window,'You can skip these screens by defining o.experimenter and o.observer in your script.',instructionalMarginPix,screenRect(4)/2-1.5*o.textSize,black,o.gray1);
+      Screen('DrawText',window,'I''ll remember your answers, to skip these questions on the next run.',instructionalMarginPix,screenRect(4)/2-1.5*o.textSize,black,o.gray1);
       Screen('TextSize',window,round(o.textSize*0.35));
       Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.'),instructionalMarginPix,screenRect(4)-0.5*instructionalMarginPix,black,o.gray1,1);
       if IsWindows
@@ -983,8 +982,6 @@ try
       Screen('FillRect',window,o.gray1);
       Screen('TextSize',window,o.textSize);
       Screen('TextFont',window,o.textFont,0);
-%       Screen('DrawText',window,'',...
-%          instructionalMarginPix,screenRect(4)/2-4.5*o.textSize,black,o.gray1);
       Screen('DrawText',window,'Hello Observer,',...
          instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
       Screen('DrawText',window,'Please slowly type your name followed by RETURN.',...
@@ -1064,11 +1061,14 @@ try
       Screen('FillRect',window,o.gray1);
       Screen('TextSize',window,o.textSize);
       Screen('TextFont',window,o.textFont,0);
-      Screen('DrawText',window,'Please use a filter or sunglasses to reduce the brightness.',...
+      Screen('DrawText',window,'Please use a filter or sunglasses to reduce the luminance.',...
          instructionalMarginPix,screenRect(4)/2-7*o.textSize,black,o.gray1);
       Screen('DrawText',window,'Please slowly type its transmission (between 0.000 and 1.000)',...
          instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
-      if ~isempty(o.filterTransmission)
+      if isempty(o.filterTransmission)
+         Screen('DrawText',window,'followed by RETURN.',...
+            instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
+      else
          Screen('DrawText',window,sprintf('followed by RETURN. Or just hit RETURN to say: %.3f',o.filterTransmission),...
             instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
       end
@@ -1128,9 +1128,13 @@ try
    %% RETINAL ILLUMINANCE
    LOld=mean([min(cal.old.L) max(cal.old.L)]);
    if o.setRetinalIlluminance
-      if isempty(o.desiredRetinalIlluminanceTd) || isempty(o.pupilDiameterMm)
+      if isempty(o.pupilDiameterMm)
          error(['When you request o.setRetinalIlluminance=true, ' ...
-            'you must also specify o.desiredRetinalIlluminanceTd and o.pupilDiameterMm.']);
+            'you must also specify o.pupilDiameterMm or an observer with known pupil size.']);
+      end
+      if isempty(o.desiredRetinalIlluminanceTd)
+         error(['When you request o.setRetinalIlluminance=true, ' ...
+            'you must also specify o.desiredRetinalIlluminanceTd.']);
       end
       % o.filterTransmission refers to optical neutral density filters or
       % sunglasses.
@@ -1511,8 +1515,8 @@ try
          fprintf('error\n');
          error('Screen OpenWindow failed. Please try again.');
       end
-      black=0; % Retrieves the CLUT color code for black.
-      white=1; % Retrieves the CLUT color code for white.
+      black=0; % The CLUT color code for black.
+      white=1; % The CLUT color code for white.
       gray=mean([firstGrayClutEntry lastGrayClutEntry])/o.maxEntry; % Will be a CLUT color code for gray.
       Screen('FillRect',window,o.gray1);
       Screen('FillRect',window,gray,o.stimulusRect);
@@ -1530,14 +1534,17 @@ try
    degPerCm=57/o.viewingDistanceCm;
    o.pixPerDeg=o.pixPerCm/degPerCm;
    
-   %% OBSERVER
-   black=0;
-   if ~exist('oOld','var') || ~isfield(oOld,'observer') || GetSecs-oOld.secs>5*60 || ~streq(oOld.observer,o.observer)
+   %% CONFIRM OLD ANSWERS IF STALE OR OBSERVER CHANGED
+   if ~isempty(oOld) && (GetSecs-oOld.secs>10*60 || ~streq(oOld.observer,o.observer))
       Screen('Preference','TextAntiAliasing',1);
       Screen('TextSize',window,o.textSize);
       Screen('TextFont',window,'Verdana');
       Screen('FillRect',window,o.gray1);
-      string=sprintf('Experimenter %s and observer %s. Right?\nHit RETURN to continue, or ESCAPE to quit.',o.experimenter,o.observer);
+      string=sprintf('Confirming: Experimenter %s and observer %s.');
+      if o.useFilter
+         string=sprintf('%s With filter transmission %.3f.',o.filterTransmission);
+      end
+      string=sprintf('%s Right?\nHit RETURN to continue, or ESCAPE to quit.');
       Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
       DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
       Screen('Flip',window); % Display request.
@@ -1559,7 +1566,7 @@ try
    
    %% MONOCULAR?
    if ~isfield(o,'eyes')
-      error('Please set o.eyes to ''left'',''right'',''one'', or ''both''.');
+      error('Please set o.eyes to ''left'',''right'', or ''both''.');
    end
    if ~ismember(o.eyes,{'left','right','both'})
       error('o.eyes==''%s'' is not allowed. It must be ''left'',''right'', or ''both''.',o.eyes);
