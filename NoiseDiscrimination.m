@@ -637,7 +637,6 @@ o.maxViewingDistanceCm=nan;
 o.pupilDiameterMm=[];
 o.useFilter=false;
 o.filterTransmission=1;
-o.setRetinalIlluminance=false;
 o.desiredRetinalIlluminanceTd=[];
 o.retinalIlluminanceTd=[];
 
@@ -1127,14 +1126,10 @@ try
 
    %% RETINAL ILLUMINANCE
    LOld=mean([min(cal.old.L) max(cal.old.L)]);
-   if o.setRetinalIlluminance
+   if ~isempty(o.desiredRetinalIlluminanceTd)
       if isempty(o.pupilDiameterMm)
-         error(['When you request o.setRetinalIlluminance=true, ' ...
+         error(['When you request o.desiredRetinalIlluminanceTd, ' ...
             'you must also specify o.pupilDiameterMm or an observer with known pupil size.']);
-      end
-      if isempty(o.desiredRetinalIlluminanceTd)
-         error(['When you request o.setRetinalIlluminance=true, ' ...
-            'you must also specify o.desiredRetinalIlluminanceTd.']);
       end
       % o.filterTransmission refers to optical neutral density filters or
       % sunglasses.
