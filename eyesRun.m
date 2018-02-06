@@ -61,7 +61,11 @@ for domain=1:3
          o.eccentricityXYDeg=[0 0];
          o.targetCyclesPerDeg=4;
          o.targetDurationSec=0.1;
-         o.luminanceFactor=1/8;
+         o.useFilter=true;
+         o.filterTransmission=[]; % Supplied by observer at run time.
+         o.setRetinalIlluminance=true;
+         o.desiredRetinalIlluminanceTd=100;
+         o.luminanceFactor=[]; % Set by program to achieve desired td.
          % o.minScreenWidthDeg=10;
       case 2
          % cortical
@@ -70,6 +74,8 @@ for domain=1:3
          o.targetCyclesPerDeg=0.5;
          o.targetDurationSec=0.4;
          o.luminanceFactor=1;
+         o.useFilter=false;
+         o.setRetinalIlluminance=false;
          %  o.minScreenWidthDeg=10;
       case 3
          % ganglion
@@ -78,6 +84,8 @@ for domain=1:3
          o.targetCyclesPerDeg=0.5;
          o.targetDurationSec=0.2;
          o.luminanceFactor=1;
+         o.useFilter=false;
+         o.setRetinalIlluminance=false;
          % o.minScreenWidthDeg=50;
    end
    for eyes=Shuffle({'right' 'both'})
@@ -128,17 +136,14 @@ if ~fakeRun && 1
    clear oOut
    for oi=1:length(oo) % Edit this line to select conditions you want to run now.
       o=oo(oi);
-%             o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+      %             o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
       o.trialsPerRun=40;
-      o.experimenter='';
-      o.observer=''; % Enter observer's name at run time.
-      if exist('oOut','var') && isempty(o.observer)
-         % Copy from previous run.
-         o.observer=oOut.observer;
-      end
-      if exist('oOut','var') && isempty(o.experimenter)
-         % Copy from previous run.
+      if exist('oOut','var')
+         % Copy answers from previous run.
          o.experimenter=oOut.experimenter;
+         o.observer=oOut.observer;
+         % Setting o.useFilter false forces o.filterTransmission=1.
+         o.filterTransmission=oOut.filterTransmission;
       end
       o.blankingRadiusReEccentricity=0; % No blanking.
       if 0
@@ -176,6 +181,10 @@ if ~fakeRun && 1
          o.questPlusPlot=true;
       end
       oOut=NoiseDiscrimination(o);
+      fprintf(['%s: pupilDiameterMm %.1f, filterTransmission %.3f, luminanceFactor %.2f,\n'...
+         'setRetinalIlluminance %s, desiredRetinalIlluminance %.1f, retinalIlluminanceTd %.1f\n'],...
+         o.conditionName,oOut.pupilDiameterMm,oOut.filterTransmission,oOut.luminanceFactor,...
+         string(oOut.setRetinalIlluminance),oOut.desiredRetinalIlluminanceTd,oOut.retinalIlluminanceTd);
       if oOut.quitSession
          break
       end
