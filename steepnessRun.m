@@ -24,25 +24,26 @@ end
 clear o oo
 fakeRun=false; % Used to check plotting before we have data.
 
-% We list parameters here in the order that we want them to appear
-% as columns in the list.
+% We list parameters here in the order that we want them to appear as
+% columns in the list. I don't think we use these values. This is just for
+% the cosmetic ordering of the fields in the struct, which later determines
+% the order of the columns in the table.
 o.condition=1;
-o.experiment='steepness';
-o.conditionName='photon';
-o.luminanceFactor=0.125;
+o.experiment='';
+o.conditionName='';
+o.viewingDistanceCm=40;
+o.eyes='right';
+o.desiredRetinalIlluminanceTd=[];
+o.useFilter=false;
+o.luminanceFactor=1;
 o.eccentricityXYDeg=[0 0];
 o.noiseSD=0.16;
-o.noiseType= 'gaussian';
-o.eyes='right';
 o.targetDurationSec=0.2;
 o.targetCyclesPerDeg=3;
-o.viewingDistanceCm=40;
-o.minScreenWidthDeg=[];
-o.maxViewingDistanceCm=[];
 o.targetGaborCycles=3;
 o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
-o.fullResolutionTarget=false;
-o.pThreshold=0.75;
+o.noiseCheckDeg=o.targetHeightDeg/20;
+
 cal=OurScreenCalibrations(0);
 
 %% Psychometric steepness.
@@ -50,6 +51,7 @@ cal=OurScreenCalibrations(0);
 % noiseSD: 0 0.16
 o.experiment='steepness';
 o.eyes='right'; % 'left', 'right', 'both'.
+o.viewingDistanceCm=40;
 for domain=1:3
    switch domain
       case 1
@@ -115,7 +117,7 @@ if fakeRun
    end
    steepnessAnalyze(data);
 end
-if ~fakeRun && 1
+if ~fakeRun && 0
    %% RUN THE CONDITIONS
    % Typically, you'll select just a few of the conditions stored in oo
    % that you want to run now. Select them from the printout of "t" above.
