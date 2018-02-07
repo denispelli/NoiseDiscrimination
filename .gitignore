@@ -37,3 +37,6 @@ octave-workspace
 *.csv
 ~$*.docx
 .Rproj.user
+
+# Hidden file for Apple Finder
+*.DS_Store
