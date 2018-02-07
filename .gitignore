@@ -40,3 +40,6 @@ octave-workspace
 
 # Hidden file for Apple Finder
 *.DS_Store
+
+# Graphs of our results
+*.eps
