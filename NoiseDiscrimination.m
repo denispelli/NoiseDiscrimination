@@ -494,7 +494,6 @@ o.ditherCLUT=61696; % Use this only on Denis's PowerBook Pro and iMac 5k.
 o.ditherCLUT=false; % As of June 28, 2017, there is no measurable effect of this dither control.
 o.enableCLUTMapping=true; % Required. Using software CLUT.
 o.assessBitDepth=false;
-o.luminanceFactor=1;
 o.useFractionOfScreen=false; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 o.viewingDistanceCm=50; % viewing distance
 o.flipScreenHorizontally=false; % Use this when viewing the display in a mirror.
@@ -634,11 +633,15 @@ o.condition=1;
 o.conditionName='';
 o.minScreenWidthDeg=nan;
 o.maxViewingDistanceCm=nan;
-o.pupilDiameterMm=[];
 o.useFilter=false;
 o.filterTransmission=1;
 o.desiredRetinalIlluminanceTd=[];
+o.desiredLuminance=[];
+o.desiredLuminanceFactor=1;
+o.luminanceFactor=1;
+o.luminance=[];
 o.retinalIlluminanceTd=[];
+o.pupilDiameterMm=[];
 
 %% READ USER-SUPPLIED o PARAMETERS
 if 0
@@ -1124,8 +1127,20 @@ try
       end
    end
 
-   %% RETINAL ILLUMINANCE
-   LOld=mean([min(cal.old.L) max(cal.old.L)]);
+   %% LUMINANCE
+   % LStandard is the highest luminance at which we can display a sinusoid
+   % at maximum contrast (nearly 1). I have done most of my experiments at
+   % that luminance.
+   LStandard=mean([min(cal.old.L) max(cal.old.L)]);
+   if 1 ~= ~isempty(o.desiredRetinalIlluminanceTd)+~isempty(o.desiredLuminance)+~isempty(o.desiredLuminanceFactor)
+      error('You must specify one and only one of o.desiredLuminanceFactor, o.desiredLuminance, and o.desiredRetinalIlluminanceTd.');
+   end
+   if ~isempty(o.desiredLuminance)
+      o.luminanceFactor=o.desiredLuminance/LStandard;
+   end
+   if ~isempty(o.desiredLuminanceFactor)
+      o.luminanceFactor=o.desiredLuminanceFactor;
+   end
    if ~isempty(o.desiredRetinalIlluminanceTd)
       if isempty(o.pupilDiameterMm)
          error(['When you request o.desiredRetinalIlluminanceTd, ' ...
@@ -1135,13 +1150,13 @@ try
       % sunglasses.
       % o.luminanceFactor refers to software attenuation of luminance from
       % the standard middle of attainable range.
-      td=o.filterTransmission*LOld*pi*o.pupilDiameterMm^2/4;
+      td=o.filterTransmission*LStandard*pi*o.pupilDiameterMm^2/4;
       o.luminanceFactor=o.desiredRetinalIlluminanceTd/td;
-      o.luminanceFactor=min([1 max([0.125 o.luminanceFactor])]); % bounds
    end
-   o.retinalIlluminanceTd=o.luminanceFactor*o.filterTransmission*LOld*pi*o.pupilDiameterMm^2/4;
+   o.luminanceFactor=min([max(cal.old.L)/LStandard o.luminanceFactor]); % upper bound
+   o.luminance=o.luminanceFactor*o.filterTransmission*LStandard;
+   o.retinalIlluminanceTd=o.luminance*pi*o.pupilDiameterMm^2/4;
    % Need to update all reports of luminance to include effect of filter.
-   % Ask user to report filterTransmission. 
 
    %% OPEN OUTPUT FILES
    o.beginningTime=now;
@@ -3287,7 +3302,7 @@ try
    o.targetDurationSecMean=mean(o.likelyTargetDurationSec,'omitnan');
    o.targetDurationSecSD=std(o.likelyTargetDurationSec,'omitnan');
    ffprintf(ff,'Mean target duration %.3f +/- %.3f s (sd over %d trials).\n',o.targetDurationSecMean,o.targetDurationSecSD,length(o.likelyTargetDurationSec));
-   ffprintf(ff,'Mean luminance %.1f cd/m^2\n',LMean);
+   ffprintf(ff,'Mean luminance %.1f cd/m^2, which filter reduces to %.2f cd/m^2.\n',LMean,o.luminance);
    
    o.E=10^(2*o.questMean)*o.E1;
    if streq(o.targetModulates,'luminance')
