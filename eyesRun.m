@@ -49,7 +49,7 @@ if ~streq(cal.macModelName,'MacBookPro14,3')
    cal.screenHeightMm=206; % 8.1"
 end
 
-%% Psychometric steepness.
+%% Three domains.
 % In each of the 3 domains: photon, cortical, ganglion
 % Two noise levels, noiseSD: 0 0.16
 o.experiment='eyes';
@@ -61,10 +61,8 @@ for domain=1:3
          o.eccentricityXYDeg=[0 0];
          o.targetCyclesPerDeg=4;
          o.targetDurationSec=0.1;
-         o.useFilter=true;
-         o.filterTransmission=[]; % Supplied by observer at run time.
-         o.desiredRetinalIlluminanceTd=100;
-         o.luminanceFactor=[]; % Set by program to achieve desired td.
+         o.desiredLuminance=10;
+         o.desiredLuminanceFactor=[];
          % o.minScreenWidthDeg=30; % Big to determine pupil size.
       case 2
          % cortical
@@ -72,9 +70,8 @@ for domain=1:3
          o.eccentricityXYDeg=[0 0];
          o.targetCyclesPerDeg=0.5;
          o.targetDurationSec=0.4;
-         o.luminanceFactor=1;
-         o.useFilter=false;
-         o.desiredRetinalIlluminanceTd=[];
+         o.desiredLuminance=[];
+         o.desiredLuminanceFactor=1;
          %  o.minScreenWidthDeg=10;
       case 3
          % ganglion
@@ -82,9 +79,8 @@ for domain=1:3
          o.eccentricityXYDeg=[30 0];
          o.targetCyclesPerDeg=0.5;
          o.targetDurationSec=0.2;
-         o.luminanceFactor=1;
-         o.useFilter=false;
-         o.desiredRetinalIlluminanceTd=[];
+         o.desiredLuminance=[];
+         o.desiredLuminanceFactor=1;
          % o.minScreenWidthDeg=10;
    end
    for eyes=Shuffle({'right' 'both'})
@@ -129,7 +125,7 @@ if fakeRun
    end
    steepnessAnalyze(data);
 end
-if ~fakeRun && 0
+if ~fakeRun && 1
    %% RUN THE CONDITIONS
    % Typically, you'll select just a few of the conditions stored in oo
    % that you want to run now. Select them from the printout of "t" above.
@@ -181,10 +177,12 @@ if ~fakeRun && 0
          o.questPlusPlot=true;
       end
       oOut=NoiseDiscrimination(o);
-      fprintf(['%s: pupilDiameterMm %.1f, filterTransmission %.3f, luminanceFactor %.2f,\n'...
-         'desiredRetinalIlluminance %.1f, retinalIlluminanceTd %.1f\n'],...
-         o.conditionName,oOut.pupilDiameterMm,oOut.filterTransmission,oOut.luminanceFactor,...
-         oOut.desiredRetinalIlluminanceTd,oOut.retinalIlluminanceTd);
+      fprintf(['%s: %.1f cd/m^2, luminanceFactor %.2f, filterTransmission %.3f\n'],...
+         o.conditionName,oOut.luminance,oOut.luminanceFactor,oOut.filterTransmission);
+      if ~isempty(oOut.pupilDiameterMm)
+         fprintf(['%s: retinalIlluminanceTd %.1f td, pupilDiameterMm %.1f\n'],...
+            o.conditionName,oOut.retinalIlluminanceTd,oOut.pupilDiameterMm);
+      end
       if oOut.quitSession
          break
       end
