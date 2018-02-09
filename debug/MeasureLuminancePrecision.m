@@ -314,13 +314,13 @@ if 0
    Screen('Preference','Verbosity',10);
 end
 if 1
+   % Quick test, February 2018
    o.luminances=128;
    o.luminanceFactor=1/16;
    o.reciprocalOfFraction=[512]; % List one or more, e.g. 1, 128, 256.
    cal=OurScreenCalibrations(0);
    LMin=min(cal.old.L);
    LMax=max(cal.old.L);
-   %    LMean=mean([LMin LMax]); % Desired background luminance.
    L=o.luminanceFactor*0.5*cal.old.L(end);
    o.vBase=interp1(cal.old.L,cal.old.G,L);
 end
@@ -673,19 +673,22 @@ for iData=1:length(data)
       name=[name 'simulating 8 bits, '];
    end
    name=sprintf('%sshift %.2f, ',name,d.model.vShift);
-   name=sprintf('%smodel sd %.2f%%, ',name,100*d.model.sd/d.L(1));
+   name=sprintf('%smodel rms luminance error %.2f%%, ',name,100*d.model.sd/d.L(1));
    y=y+dy;
    text(x,y,name);
    name='';
-   name=sprintf('%s%d luminances span a %.0f-bit prec. step at %.3f',name,o.luminances,log2(1/d.fraction),d.v(1));
+   name=sprintf('%s%d luminances span 1/%.0f of pixel range 0 to 1.',name,o.luminances,1/d.fraction);
    y=y+dy;
    text(x,y,name);
    dL=max(diff(d.model.L));
    L=mean(d.model.L);
-   name=sprintf('Model step %.3f at %.1f cd/m^2, is %.4f frac., %.1f bit prec.',dL,L,dL/L,-log2(dL/L));
+   name=sprintf('Model cd/m^2: dL/L=%.3f/%.1f=%.4f,',dL,L,dL/L);
    y=y+dy;
    text(x,y,name);
-   name=sprintf('Mean %.2f, range %.2f, %.2f cd/m^2.',mean(d.L),min(d.L),max(d.L));
+   name=sprintf('-log2 dL/L %.1f bit luminance precision.',-log2(dL/L));
+   y=y+dy;
+   text(x,y,name);
+   name=sprintf('Luminance mean %.2f, range %.2f, %.2f cd/m^2.',mean(d.L),min(d.L),max(d.L));
    y=y+dy;
    text(x,y,name);
    name=sprintf('Display range %.1f, %.0f cd/m^2.',LMin,LMax);
@@ -725,7 +728,7 @@ name=strrep(name,'''',''); % Remove quote marks.
 name=strrep(name,' ',''); % Remove spaces.
 savefig(gcf,[name,'.fig'],'compact'); % Save figure as fig file.
 print(gcf,'-dpng',[name,'.png']); % Save figure as png file.
-save([name '.mat'],'data'); % Save data as MAT file.
+save([name '.mat'],'data','o'); % Save data as MAT file.
 o.data=data;
 end
 
