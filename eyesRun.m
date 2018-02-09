@@ -49,7 +49,7 @@ if ~streq(cal.macModelName,'MacBookPro14,3')
    cal.screenHeightMm=206; % 8.1"
 end
 
-%% Three domains.
+%% THREE DOMAINS
 % In each of the 3 domains: photon, cortical, ganglion
 % Two noise levels, noiseSD: 0 0.16
 o.experiment='eyes';
@@ -167,7 +167,7 @@ if ~fakeRun && 1
       o.targetMarkDeg=1;
       o.fixationCrossDeg=3;
       if 0
-         % We use QuestPlus to measure steepness.
+         % Use QuestPlus to measure steepness.
          o.questPlusEnable=true;
          o.questPlusSteepnesses=1:0.1:5;
          o.questPlusGuessingRates=1/o.alternatives;
