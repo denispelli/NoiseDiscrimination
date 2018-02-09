@@ -61,6 +61,7 @@ for domain=1:3
          o.targetCyclesPerDeg=4;
          o.targetDurationSec=0.1;
          o.luminanceFactor=1/8;
+         o.desiredLuminanceFactor=1/8;
          % o.minScreenWidthDeg=10;
       case 2
          % cortical
@@ -69,6 +70,7 @@ for domain=1:3
          o.targetCyclesPerDeg=0.5;
          o.targetDurationSec=0.4;
          o.luminanceFactor=1;
+         o.desiredLuminanceFactor=1;
          %  o.minScreenWidthDeg=10;
       case 3
          % ganglion
@@ -77,6 +79,7 @@ for domain=1:3
          o.targetCyclesPerDeg=0.5;
          o.targetDurationSec=0.2;
          o.luminanceFactor=1;
+         o.desiredLuminanceFactor=1;
          % o.minScreenWidthDeg=50;
    end
    for noiseSD=[0 0.16]
