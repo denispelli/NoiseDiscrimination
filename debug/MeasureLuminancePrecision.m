@@ -6,28 +6,28 @@ function o=MeasureLuminancePrecision(o)
 % is a struct with many fields, as explained below in INPUT ARGUMENT.
 % Calling it with no argument will return a struct o with all the default
 % values, which you can modify to use as an argument when you call it again.
-% 
+%
 % Denis Pelli, May 7, 2017
 %
-%% REQUIRED: 
-% 1. MATLAB http://mathworks.com 
+%% REQUIRED:
+% 1. MATLAB http://mathworks.com
 % or Octave, free from https://www.gnu.org/software/octave/download.html
 % 2. The Psychtoolbox, free from http://psychtoolbox.org.
 % 3. A Cambridge Research Systems photometer or colorimeter.
 % http://www.crsltd.com/tools-for-vision-science/light-measurement-display-calibation/colorcal-mkii-colorimeter/
 % It's plug and play, taking power through its USB cable. You could easily
 % modify this program to work with any other photometer.
-% 
-%% INSTRUCTIONS: 
+%
+%% INSTRUCTIONS:
 % Plug your photometer's USB cable into your computer, carefully place your
 % photometer stably against your computer's screen, set PARAMETERS (below),
 % then run. The results (including the best-fitting n-bit-precision model)
 % will be displayed as a graph in a MATLAB figure window, and also saved in
 % three files (in the same folder as this file) with filename extensions:
 % png, fig, and mat. The filename describes the testing conditions, e.g.
-% DenissMacBookPro5K-Dithering61696-o.use10Bits-LoadIdentityCLUT-Luminances8.fig
-% 
-%% EXPLANATION: 
+% DenissMacBookPro5K-Dithering61696-o.useNative10Bit-LoadIdentityCLUT-Luminances8.fig
+%
+%% EXPLANATION:
 % Using Psychtoolbox SCREEN imaging, measures how precisely we can control
 % display luminance. Loads identity into the Color Lookup Table (CLUT) and
 % measures the luminance produced by each value loaded into a large
@@ -46,31 +46,31 @@ function o=MeasureLuminancePrecision(o)
 % a floating point number, where 0 is black and 1 is maximum output, so
 % that your software, without change, will drive any display and benefit
 % from as much precision as the display hardware and driver provide.
-% 
+%
 %% GRAPH AND OUTPUT FILES:
 % Typically you'll run MeasureLuminancePrecision from the command line. It
 % will make all the requested measurements and plot the results, including
 % the best-fitting n-bit-precision model. Each figure is saved as both a
-% FIG and PNG file, and the data are saved as a MAT file. 
-% 
+% FIG and PNG file, and the data are saved as a MAT file.
+%
 %% OUTPUT ARGUMENT:
 % Returns the "o" struct with all the parameters that controlled this run.
 % The data (saved in MAT file) are also returned as a field in the "o"
 % struct. o.data has a vector o.data.L of luminance readings and a
 % corresponding vector o.data.v of floating point color values.
 % o.data.model describes the best-fitting n-bit model.
-% 
+%
 %% INPUT ARGUMENT:
 % You must define all the necessary fields in the "o" struct. You may wish
 % to initially call o=MeasureLuminancePrecision without an argument to get
 % all the needs fields initialized with default values.
 % o.luminances = number of luminances to measure, 5 s each.
 % o.reciprocalOfFraction = list desired values, e.g. 1, 64, 128, 256.
-% o.use10Bits = whether to enable the driver's 10-bit mode. Recommended.
+% o.useNative11Bit = whether to enable the driver's 11-bit mode. Recommended.
 % o.usePhotometer = 1 use ColorCAL II XYZ; 0 simulate 8-bit rendering.
 % See INPUT ARGUMENT below.
-% 
-%% A FEW COMPUTERS THAT SUPPORT MORE-THAN-8-BIT PRECISION 
+%
+%% A FEW COMPUTERS THAT SUPPORT MORE-THAN-8-BIT PRECISION
 % As of April 2017, Apple documents (below) indicate that two currently
 % available macOS computers attain 10-bit precision from pixel to display
 % (in each of the three RGB channels): the Mac Pro and the iMac 27" retina
@@ -78,21 +78,21 @@ function o=MeasureLuminancePrecision(o)
 % (Retina, 15-inch, Mid 2015). I tested my MacBook Pro (Retina, 15-inch,
 % Mid 2015) and iMac (Retina 5K, 27-inch, Late 2014). Both use AMD drivers.
 % Using MeasureLuminancePrecision, I have documented 11-bit luminance
-% precision on both of these displays, provided you enable o.use10Bits.
+% precision on both of these displays, provided you enable o.useNative11Bit.
 % https://www.macrumors.com/2015/10/30/4k-5k-imacs-10-bit-color-depth-osx-el-capitan/
 % https://developer.apple.com/library/content/releasenotes/MacOSX/WhatsNewInOSX/Articles/MacOSX10_11_2.html#//apple_ref/doc/uid/TP40016630-SW1
 % https://developer.apple.com/library/content/samplecode/DeepImageDisplayWithOpenGL/Introduction/Intro.html#//apple_ref/doc/uid/TP40016622
 % https://macperformanceguide.com/blog/2016/20161127_1422-Apple2016MacBookPro-10-bit-color.html
-% 
+%
 % My Hewlett-Packard Z Book laptop running Linux attains 10-bit luminance
 % precision. I have not yet succeeded in getting dither to work on the Z
 % Book. I thank  my former student, Hörmet Yiltiz, for setting up the Z
 % Book and getting 10-bit imaging to work, with help from Mario Kleiner.
-% 
+%
 % MacBook Pro driving NEC PA244UHD 4K display
 % https://macperformanceguide.com/blog/2016/20161127_1422-Apple2016MacBookPro-10-bit-color.html
 
-%% NOTES ON DITHERING 
+%% NOTES ON DITHERING
 % Currently, I've had no success with the Psychtoolbox dithering control:
 % Screen('ConfigureDisplay','Dithering',screen,ditheringCode); In my
 % limited experiments, dithering is always on for my MacBook Pro and iMac,
@@ -102,7 +102,7 @@ function o=MeasureLuminancePrecision(o)
 % there's no need to investigate the MacBook Pro or iMac. Mario and I
 % imagine that there may yet be a way to enable dithering on the HP Z Book,
 % and I hope someone will discover the trick.
-% 
+%
 % o.ditheringCode = 61696; Required for dither on my iMac and MacBook Pro.'
 % For dither, the magic number 61696 is appropriate for the graphics chips
 % belonging to the AMD Radeon "Southern Islands" gpu family. Such chips are
@@ -111,7 +111,7 @@ function o=MeasureLuminancePrecision(o)
 % far as I know, in April 2017, those are the only Apple Macs with AMD
 % drivers, and may be the only Macs that support more-than-8-bit luminance
 % precision.
-% 
+%
 % MARIO: FOR HP Z Book "Sea Islands" GPU:
 % 10 bpc panel dither setup code for the zBooks "Sea Islands" (CIK) gpu:
 % http://lxr.free-electrons.com/source/drivers/gpu/drm/radeon/cik.c#L8814
@@ -132,19 +132,19 @@ function o=MeasureLuminancePrecision(o)
 % native high bit depths is still a more deterministic thing that simulated
 % high bit depths. I would use dithering only for high level stimuli with
 % low spatial frequencies for that reason.
-% 
+%
 % MARIO: Another thing you could test is if that laptop can drive a
 % conventional 8 bit external panel with 12 or more bits via dithering. The
 % gpu can do 12 bits in the 'EnableNative16BitFramebuffer' mode. So far i
 % thought +2 extra bits would be all you could get via dithering, but after
 % your surprising 11 bit result on your MacBookPro, with +3 extra bits, who
 % knows if there's room for more?
-% 
+%
 % MARIO: Yet another interesting option would be booting Linux on your iMac
 % 2014 Retina 5k, again with the dither settings that gave you 11 bpc under
 % macOS, and see if Linux in EnableNative16BitFramebuffer mode can
 % squeeze out more than 11 bpc.
-% 
+%
 % MARIO: Btw., so far i still didn't manage to replicate your 11 bpc with
 % dithering finding on any AMD hardware + 8 bit display here, even with
 % more modern AMD graphics cards, so i'm still puzzled by that result. I'll
@@ -160,13 +160,13 @@ function o=MeasureLuminancePrecision(o)
 % ColorCal-II, and interestingly it also measures 8 bpc in standard mode,
 % and 11 bpc in 10 Bit mode - on a Display btw. that is only 8 bpc capable,
 % so it could only get > 8 bpc via dithering.
-% 
+%
 % MARIO: However, i added some debug code to Screen() to check how the
 % hardware is programmed, and it turns out, on this machine it is not
 % programmed any different in 11 bpc mode than in 8 bpc mode! The gpu is
 % programmed for 8 bpc framebuffers and scanout, hw dithering of the gpu is
 % disabled.
-% 
+%
 % MARIO: So what Apple apparently does on those machines which are not 10
 % bit supported is it implements an 11 bpc capable spatial dithering
 % algorithm in software (probably running as a shader on the gpu to speed
@@ -177,13 +177,13 @@ function o=MeasureLuminancePrecision(o)
 % some post-processing (= software dithering) pass on each image. This also
 % explains why the dither settings have no effect in any way -- or at best
 % would make the results worse rather than better if anything.
-% 
+%
 % MARIO: I bet the same thing happens on your MacBookPro - they are just
 % faking it, although good enough to convince the photometer.
-% 
+%
 % MARIO: The interesting question will be what they do on your iMac Retina
 % 5k for which they do advertise 10 bit support.
-% 
+%
 % MARIO: Attached is a Screen mex file for Matlab on OSX with the debug
 % code. What i'd need is you to add a Screen('Null') command in your
 % script, after the Screen('Flip') that shows the test stim, before the
@@ -192,39 +192,39 @@ function o=MeasureLuminancePrecision(o)
 % between 8 bit mode and 10 bit mode.
 %
 %% NOTES ON OTHER ISSUES
-% 
+%
 % DENIS: Must we call "PsychColorCorrection"? I'm already doing correction
 % based on my photometry.
-% 
+%
 % MARIO: No. But it's certainly more convenient and faster, and very
 % accurate. That's the recommended way to do gamma correction on > 8 bpc
 % framebuffers. For testing it would be better to leave it out, so you use
 % a identity mapping like when testing on the Macs.
-% 
+%
 % DENIS: Must we call "FinalFormatting"? Is the call to "FinalFormatting"
 % just loading an identity gamma? Can I, instead, just use
 % LoadFormattedGammaTable to load identity?
-% 
+%
 % MARIO: No, only if you want PTB to do high precision color/gamma
 % correction via the modes and settings supported by
 % PsychColorCorrection(). The call itself would simply establish an
 % identity gamma "curve", however operating at ~ 23 bpc linear precision
 % (32 bit floating point precision is about ~ 23 bit linear precision in
 % the displayable color range of 0.0 - 1.0).
-% 
+%
 %% SOFTWARE CLUT
 % The following 4 parameters allow testing of the software CLUT, but that's
 % a relatively unimportant option and not usable on the Z Book (which seems
 % to be restricted to a uselessly small 8-bit table), so you might as well
 % not bother testing the software CLUT.
-% 
+%
 % My experiments with LoadNormalizedGammaTable indicate that it is accurate
 % only for very smooth gamma functions. (Mario says this is because it
 % stores only a functional approximation, not the requested values.) Thus
 % fiddling with the CLUT is not a recommended way to achieve fine steps in
 % luminance. It is generally better to leave the CLUT alone and adjust the
 % pixel values.
-% 
+%
 % o.enableCLUTMapping is easily misunderstood. It does NOT modify the
 % hardware CLUT through which each pixel is processed. CLUTMapping is an
 % extra transformation that occurs BEFORE the hardware CLUT. One could be
@@ -242,21 +242,21 @@ function o=MeasureLuminancePrecision(o)
 % typically want to make the table length (a power of 2) long enough to not
 % limit your luminance resolution. You can use o.enableCLUTMapping to turn
 % CLUTMapping on and off and thus see whether it's limiting resolution.
-% 
+%
 % DENIS: I was surprised by a limitation. On macOS I enable Clut mapping
 % with 4096 Clut size. Works fine. In Linux if the requested Clut size is
 % larger than 256 the call to loadnormalizedgammatable with load=2 gives a
 % fatal error complaining that my Clut is bigger than 256. Seems weird
 % since it was already told when I enabled that I'd be using a 256 element
 % soft Clut.
-% 
+%
 % MARIO: I don't understand that? What kind of clut mapping with load=2? On
 % Linux the driver uses the discrete 256 slot hardware gamma table, instead
 % of the non-linear gamma mapping that macOS now uses. Also PTB on Linux
 % completely disables hw gamma tables in >= 10 bit modes, so all gamma
 % correction is done via PsychColorCorrection(). You start off with a
 % identity gamma table.
-% 
+%
 %% INPUT ARGUMENT
 % If you provide an input argument "o", it must be a struct with all these
 % fields defined.
@@ -289,19 +289,20 @@ if nargin<1
    o.luminances=32; % Photometer takes 5 s/luminance. 32 luminances is enough for a pretty graph.
    o.reciprocalOfFraction=[128]; % List one or more, e.g. 1, 128, 256.
    o.vBase=.8; % Base gray level must be in range 0 to 1.
-   o.patchWidthPixels=0; % nxn pixel patch. 1 to defeat dithering. 0 for full-screen. 
-   o.useDithering=[]; % 1 enable. [] default. 0 disable.
-   o.use10Bits=1; % Enable this to get 10-bit (and better with dithering) performance.
-   o.usePhotometer=1; % 1 use ColorCAL II XYZ; 0 simulate 8-bit rendering.
-   o.useShuffle=0; % Randomize order of luminances to prevent systematic effect of changing background.
-   o.removeDaylight=0; % Use this if your room has slowly changing daylight.
-   o.wigglePixelNotCLUT=1; % 1 is fine. The software CLUT is not important.
-   o.loadIdentityCLUT=1; % 1 is fine. This nullifies the CLUT.
-   o.enableCLUTMapping=0; % 1 use software CLUT; 0 don't. 0 is fine.
+   o.patchWidthPixels=0; % nxn pixel patch. 1 to defeat dithering. 0 for full-screen.
+   o.useDithering=[]; % true enable. [] default. false disable.
+   o.useNative10Bit=false;  % Enable this to get 10-bit (and better with dithering) performance.
+   o.useNative11Bit=true;  % Enable this to get 11-bit (and better with dithering) performance.
+   o.usePhotometer=true; % true: use ColorCAL II XYZ; 0 simulate 8-bit rendering.
+   o.useShuffle=false; % Randomize order of luminances to prevent systematic effect of changing background.
+   o.removeDaylight=false; % Use this if your room has slowly changing daylight.
+   o.wigglePixelNotCLUT=true; % true is fine. The software CLUT is not important.
+   o.loadIdentityCLUT=true; % true is fine. This nullifies the CLUT.
+   o.enableCLUTMapping=false; % true use software CLUT; false don't. false is fine.
    o.CLUTMapSize=4096; % Size of software CLUT. Limits resolution to log2(o.CLUTMapSize) bits.
-   o.useFractionOfScreen=0; % For debugging, reduce our window to expose Command Window.
-   o.callScreenNullForMario=0; % Used with custom version of SCREEN that reports GPU registers.
-   o.slowly=0; % Pause when not using photometer, to monitor program progress.
+   o.useFractionOfScreen=false; % For debugging, reduce our window to expose Command Window.
+   o.callScreenNullForMario=false; % Used with custom version of SCREEN that reports GPU registers.
+   o.slowly=false; % Pause when not using photometer, to monitor program progress.
 end
 
 %% BEGIN
@@ -311,6 +312,17 @@ if 0
    % Print full report for Mario
    Screen('Preference','SkipSyncTests',1);
    Screen('Preference','Verbosity',10);
+end
+if 1
+   o.luminances=128;
+   o.luminanceFactor=1/16;
+   o.reciprocalOfFraction=[512]; % List one or more, e.g. 1, 128, 256.
+   cal=OurScreenCalibrations(0);
+   LMin=min(cal.old.L);
+   LMax=max(cal.old.L);
+   %    LMean=mean([LMin LMax]); % Desired background luminance.
+   L=o.luminanceFactor*0.5*cal.old.L(end);
+   o.vBase=interp1(cal.old.L,cal.old.G,L);
 end
 try
    %% OPEN WINDOW
@@ -331,8 +343,11 @@ try
       % PsychColorCorrection('SetEncodingGamma',w,1/2.50); % your display might have a different gamma
       Screen('Flip',w);
    end
-   if o.use10Bits
+   if o.useNative10Bit
       PsychImaging('AddTask','General','EnableNative10BitFramebuffer');
+   end
+   if o.useNative11Bit
+      PsychImaging('AddTask','General','EnableNative11BitFramebuffer');
    end
    PsychImaging('AddTask','General','NormalizedHighresColorRange',1);
    if o.enableCLUTMapping
@@ -399,7 +414,7 @@ try
       % Check whether loading identity as a CLUT map is innocuous.
       % Setting o.CLUTMapSize=4096 affords 12-bit precision.
       gamma=repmat(((0:o.CLUTMapSize-1)/(o.CLUTMapSize-1))',1,3);
-      loadOnNextFlip=0;
+      loadOnNextFlip=false;
       Screen('LoadNormalizedGammaTable',window,gamma,loadOnNextFlip);
       Screen('Flip',window);
    end
@@ -431,8 +446,8 @@ try
          gamma=repmat(((0:o.CLUTMapSize-1)/(o.CLUTMapSize-1))',1,3);
          if o.wigglePixelNotCLUT
             if o.loadIdentityCLUT
-               loadOnNextFlip=1;
-               Screen('LoadNormalizedGammaTable',window,gamma,loadOnNextFlip);
+               loadOnNextFlip=true;
+               Screen('LoadNormalizedGammaTable',window,gamma,double(loadOnNextFlip));
             end
             Screen('FillRect',window,g);
             if o.patchWidthPixels
@@ -466,7 +481,7 @@ try
             if o.enableCLUTMapping
                loadOnNextFlip=2;
             else
-               loadOnNextFlip=1;
+               loadOnNextFlip=true;
             end
             Screen('LoadNormalizedGammaTable',window,gamma,loadOnNextFlip);
             Screen('FillRect',window,iPixel/(o.CLUTMapSize-1));
@@ -490,11 +505,11 @@ try
                % Give the photometer time to react to new luminance.
                WaitSecs(8);
             else
-                if o.useShuffle
-                    WaitSecs(8);
-                else
-                    WaitSecs(2);
-                end
+               if o.useShuffle
+                  WaitSecs(8);
+               else
+                  WaitSecs(2);
+               end
             end
             L=GetLuminance; % Read photometer
          else
@@ -555,17 +570,17 @@ for iData=1:length(data)
    vShift=-1:0.01:1;
    sd=ones(16,length(vShift))*nan;
    for bits=nMin:16
-       for j=1:length(vShift)
-           white=2^bits-1;
-           v=d.v+vShift(j)*2^-bits;
-           q=floor(v*white)/white;
-           x=ones(size(d.v))';
-           if length(unique(q))>1
-              x=[x q'];
-           end
-           [~, ~, ~, ~, stats]=regress(d.L',x);
-           sd(bits,j)=sqrt(stats(4));
-       end
+      for j=1:length(vShift)
+         white=2^bits-1;
+         v=d.v+vShift(j)*2^-bits;
+         q=floor(v*white)/white;
+         x=ones(size(d.v))';
+         if length(unique(q))>1
+            x=[x q'];
+         end
+         [~, ~, ~, ~, stats]=regress(d.L',x);
+         sd(bits,j)=sqrt(stats(4));
+      end
    end
    minsd=min(min(sd));
    [bits jShift]=find(sd==minsd,1);
@@ -587,9 +602,9 @@ for iData=1:length(data)
       b(2)=0;
    end
    if b(2)<b(1)/10
-         b=regress(d.L',ones(size(d.v')));
-         b(2)=0;
-         data(iData).model.bits=0;
+      b=regress(d.L',ones(size(d.v')));
+      b(2)=0;
+      data(iData).model.bits=0;
    end
    data(iData).model.b=b;
    data(iData).model.v=linspace(d.v(1),d.v(end),1000);
@@ -639,14 +654,17 @@ for iData=1:length(data)
    if isfinite(o.useDithering)
       name=sprintf('%sditheringCode %d, ',name,o.ditheringCode);
    end
-   if o.use10Bits
-      name=sprintf('%suse10Bits, ',name);
+   if o.useNative10Bit
+      name=sprintf('%suseNative10Bit, ',name);
+   end
+   if o.useNative11Bit
+      name=sprintf('%suseNative11Bit, ',name);
    end
    y=y+dy;
    text(x,y,name);
    name='';
    if o.loadIdentityCLUT
-%       name=[name 'loadIdentityCLUT, '];
+      %       name=[name 'loadIdentityCLUT, '];
    end
    if o.enableCLUTMapping
       name=sprintf('%sCLUTMapSize=%d, ',name,o.CLUTMapSize);
@@ -662,6 +680,17 @@ for iData=1:length(data)
    name=sprintf('%s%d luminances span a %.0f-bit prec. step at %.3f',name,o.luminances,log2(1/d.fraction),d.v(1));
    y=y+dy;
    text(x,y,name);
+   dL=max(diff(d.model.L));
+   L=mean(d.model.L);
+   name=sprintf('Model step %.3f at %.1f cd/m^2, is %.4f frac., %.1f bit prec.',dL,L,dL/L,-log2(dL/L));
+   y=y+dy;
+   text(x,y,name);
+   name=sprintf('Mean %.2f, range %.2f, %.2f cd/m^2.',mean(d.L),min(d.L),max(d.L));
+   y=y+dy;
+   text(x,y,name);
+   name=sprintf('Display range %.1f, %.0f cd/m^2.',LMin,LMax);
+   y=y+dy;
+   text(x,y,name);
    name='';
 end
 folder=fileparts(mfilename('fullpath'));
@@ -670,8 +699,11 @@ name=computer.machineName;
 if isfinite(o.useDithering)
    name=sprintf('%s-Dither%d',name,o.ditheringCode);
 end
-if o.use10Bits
-   name=sprintf('%s-Use10Bits',name);
+if o.useNative10Bit
+   name=sprintf('%s-useNative10Bit',name);
+end
+if o.useNative11Bit
+   name=sprintf('%s-useNative11Bit',name);
 end
 if o.loadIdentityCLUT
    %    name=[name '-LoadIdentityCLUT'];
@@ -683,8 +715,8 @@ if ~o.usePhotometer
    name=[name '-Simulating8Bits'];
 end
 if o.useShuffle
-  name=[name '-Shuffled'];
-end  
+   name=[name '-Shuffled'];
+end
 name=sprintf('%s-Luminances%d',name,o.luminances);
 name=sprintf('%s-Span%.0fBitStep',name,log2(1/d.fraction));
 name=sprintf('%s-At%.3f',name,d.v(1));
