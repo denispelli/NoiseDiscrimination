@@ -315,9 +315,9 @@ if 0
 end
 if 1
    % Quick test, February 2018
-   o.luminances=128;
-   o.luminanceFactor=1/16;
-   o.reciprocalOfFraction=[512]; % List one or more, e.g. 1, 128, 256.
+   o.luminances=2048;
+   o.luminanceFactor=1/40;
+   o.reciprocalOfFraction=[1024]; % List one or more, e.g. 1, 128, 256.
    cal=OurScreenCalibrations(0);
    LMin=min(cal.old.L);
    LMax=max(cal.old.L);
