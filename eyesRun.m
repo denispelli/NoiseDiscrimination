@@ -61,7 +61,7 @@ for domain=1:3
          o.eccentricityXYDeg=[0 0];
          o.targetCyclesPerDeg=4;
          o.targetDurationSec=0.1;
-         o.desiredLuminance=10;
+         o.desiredLuminance=5; % cd/m^2
          o.desiredLuminanceFactor=[];
          % o.minScreenWidthDeg=30; % Big to determine pupil size.
       case 2
