@@ -306,23 +306,23 @@ if nargin<1
 end
 
 %% BEGIN
-BackupCluts;
-Screen('Preference','SkipSyncTests',2);
-if 0
-   % Print full report for Mario
-   Screen('Preference','SkipSyncTests',1);
-   Screen('Preference','Verbosity',10);
-end
 if 1
    % Quick test, February 2018
-   o.luminances=2048;
-   o.luminanceFactor=1/40;
+   o.luminances=4096;
+   o.luminanceFactor=.9;
    o.reciprocalOfFraction=[1024]; % List one or more, e.g. 1, 128, 256.
    cal=OurScreenCalibrations(0);
    LMin=min(cal.old.L);
    LMax=max(cal.old.L);
    L=o.luminanceFactor*0.5*cal.old.L(end);
    o.vBase=interp1(cal.old.L,cal.old.G,L);
+end
+BackupCluts;
+Screen('Preference','SkipSyncTests',2);
+if 0
+   % Print full report for Mario
+   Screen('Preference','SkipSyncTests',1);
+   Screen('Preference','Verbosity',10);
 end
 try
    %% OPEN WINDOW
