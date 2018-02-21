@@ -31,9 +31,9 @@ function o=NoiseDiscrimination(oIn)
 % some information about the condition is contained in the file name and in
 % a caption on the figure. The caption may not be included if you enable
 % cropping. Here are the parameters that you can control:
-% o.saveSnapshot=true; % If true (1), take snapshot for public presentation.
+% o.saveSnapshot=true; % If true, take snapshot for public presentation.
 % o.snapshotTargetContrast=0.2; % nan to request program default.
-% o.cropSnapshot=false; % If true (1), crop to include only target and noise,
+% o.cropSnapshot=false; % If true, crop to include only target and noise,
 %                   % plus response numbers, if displayed.
 % o.snapshotCaptionTextSizeDeg=0.5;
 %
@@ -78,7 +78,7 @@ function o=NoiseDiscrimination(oIn)
 %
 % FIXATION CROSS. The fixation cross is quite flexible. You specify its
 % size (full width) and stroke thickness in deg. If you request
-% o.fixationCrossBlankedNearTarget=1 then we maintains a blank margin (with
+% o.fixationCrossBlankedNearTarget=1 then we maintain a blank margin (with
 % no fixation line) around the target that is at least a target width (to
 % avoid overlap masking) and at least half the eccentricity (to avoid
 % crowding). Otherwise the fixation cross is blanked during target
@@ -206,8 +206,8 @@ function o=NoiseDiscrimination(oIn)
 % If you don't use a float framebuffer the data path was like this:
 %
 % floating point color (~23 bit) rendering into -> 8 bpc virtual
-% framebuffer (rou! nding/quantizing from 23 bpc to 8 bpc=loss of
-% precision, potential ro! undoff errors)-> lut mapping (convert 8 bpc back
+% framebuffer (rounding/quantizing from 23 bpc to 8 bpc=loss of
+% precision, potential roundoff errors)-> lut mapping (convert 8 bpc back
 % to 23 bpc, index into lut, output 23 bpc) -> System framebuffer of 8 bpc.
 %
 % With native 11 bpc mode you have:
@@ -515,8 +515,8 @@ o.runNumber=1; % For display only, indicate the run number. When o.runNumber==ru
 o.runsDesired=1; % How many runs you to plan to do, used solely for display (and congratulations).
 o.speakInstructions=false;
 o.congratulateWhenDone=true; % 0 or 1. Spoken after last run (i.e. when o.runNumber==o.runsDesired). You can turn this off.
-o.quitRun=false; % 0 or 1. Returned value is 1 if the user aborts this run (i.e. threshold).
-o.quitSession=false; % 0 or 1. Returned value is 1 if the observer wants to quit now; no more runs.
+o.quitRun=false; % Returned value is true if the user aborts this run (i.e. threshold).
+o.quitSession=false; % Returned value is true if the observer wants to quit now; no more runs.
 o.targetKind='letter';
 % o.targetKind='gabor'; % one cycle within targetSize
 o.font='Sloan';
@@ -644,7 +644,7 @@ o.retinalIlluminanceTd=[];
 o.pupilDiameterMm=[];
 
 %% READ USER-SUPPLIED o PARAMETERS
-if 0
+if false
    % ACCEPT ALL o PARAMETERS.
    % All fields in the user-supplied "oIn" overwrite corresponding fields in "o".
    fields=fieldnames(oIn);
@@ -3994,16 +3994,30 @@ end % switch
 end % function ModelObserver(o)
 
 function L=GetLuminance
-% L=GetLuminance(usePhotometer)
-% Measure luminance.
-% Cambridge Research Systems ColorCAL II XYZ.
+% L=GetLuminance;
+% Measure luminance in cd/m^2.
+% Cambridge Research Systems
+% ColorCAL II XYZ
+%
+% ColorCal2 throws a fatal error if the device is not attached. You can
+% protect against that by wrapping this in a try-catch block.
+%
+% If you want the new reading to be unaffected by prior luminances, i find
+% i need to allow at least 5 s for the device to settle at the new
+% luminance before taking a reading. i'm measuring tiny changes (luminance
+% quantization in the display), so i need very high precision. i think i'm
+% getting at least 16-bit precision.
+%
+% Denis Pelli 2018
 persistent CORRMAT
 if isempty(CORRMAT)
-   % Get ColorCAL II XYZ correction matrix (CRT=1; WLED LCD=2; OLED=3):
+   % Get ColorCAL II XYZ correction matrix.
+   % CORRMAT contains three correction matrices. Choose one.
+   % CRT=1:3; WLED LCD=4:6; OLED=7:9
    CORRMAT=ColorCal2('ReadColorMatrix');
 end
 s=ColorCal2('MeasureXYZ');
-XYZ=CORRMAT(4:6,:) * [s.x s.y s.z]';
+XYZ=CORRMAT(4:6,:)*[s.x s.y s.z]';
 L=XYZ(2);
 end
 
