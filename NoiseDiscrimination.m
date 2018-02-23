@@ -2740,6 +2740,7 @@ try
                         else
                            img=1+o.contrast*signal(i).image;
                         end
+                        img=img(:,1:20); % FIX THIS--REMOVE DGP!
                         img=Expand(img,o.targetCheckPix);
                         buffer=Screen('GetImage',window,r,'drawBuffer');
                         blanks=buffer == 1;
