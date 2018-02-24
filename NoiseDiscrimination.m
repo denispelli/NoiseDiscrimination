@@ -32,7 +32,7 @@ function o=NoiseDiscrimination(oIn)
 % a caption on the figure. The caption may not be included if you enable
 % cropping. Here are the parameters that you can control:
 % o.saveSnapshot=true; % If true, take snapshot for public presentation.
-% o.snapshotTargetContrast=0.2; % nan to request program default.
+% o.snapshotContrast=0.2; % nan to request program default.
 % o.cropSnapshot=false; % If true, crop to include only target and noise,
 %                   % plus response numbers, if displayed.
 % o.snapshotCaptionTextSizeDeg=0.5;
@@ -536,7 +536,7 @@ o.targetModulates='luminance'; % Display a luminance decrement.
 o.task='identify'; % 'identify' or '4afc'
 % o.thresholdParameter='size';
 % o.thresholdParameter='spacing';
-o.thresholdParameter='contrast'; % Use Quest to measure threshold 'contrast','size', or 'spacing'.
+o.thresholdParameter='contrast'; % Use Quest to measure threshold 'contrast','size', 'spacing', or 'flankerContrast'.
 % WARNING: size and spacing are not yet fully implemented.
 o.alternatives=9; % The number of letters to use from o.alphabet.
 o.tGuess=nan; % Specify a finite value for Quest, or nan for default.
@@ -589,7 +589,7 @@ o.blankingRadiusReTargetHeight= nan;
 o.blankingRadiusReEccentricity= 0.5;
 o.textSizeDeg=0.6;
 o.saveSnapshot=false; % 0 or 1.  If true (1), take snapshot for public presentation.;
-o.snapshotTargetContrast=0.2; % nan to request program default. If set, this determines o.tSnapshot.;
+o.snapshotContrast=0.2; % nan to request program default. If set, this determines o.tSnapshot.;
 o.tSnapshot=nan; % nan to request program defaults.;
 o.cropSnapshot=false; % If true (1), show only the target and noise, without unnecessary gray background.;
 o.snapshotCaptionTextSizeDeg=0.5;
@@ -756,8 +756,8 @@ if isnan(o.annularNoiseSD)
    o.annularNoiseSD=o.noiseSD;
 end
 if o.saveSnapshot
-   if isfinite(o.snapshotTargetContrast) && streq(o.targetModulates,'luminance')
-      o.tSnapshot=log10(o.snapshotTargetContrast);
+   if isfinite(o.snapshotContrast) && streq(o.targetModulates,'luminance')
+      o.tSnapshot=log10(o.snapshotContrast);
    end
    if ~isfinite(o.tSnapshot)
       switch o.targetModulates
@@ -2319,7 +2319,8 @@ try
          nominalAcuityDeg=0.029*(rDeg+2.72); % Eq. 13 from Song, Levi, and Pelli (2014).
          tGuess=log10(2*nominalAcuityDeg);
       case 'contrast'
-      otherwise
+      case 'flankerContrast'
+     otherwise
          error('Unknown o.thresholdParameter "%s".',o.thresholdParameter);
    end
    if isfinite(o.tGuess)
@@ -2335,14 +2336,33 @@ try
       guessingRates=o.questPlusGuessingRates;
       lapseRates=o.questPlusLapseRates;
       contrastDB=20*o.questPlusLogContrasts;
-      questPlusData=qpParams('stimParamsDomainList', {contrastDB},...,
-         'psiParamsDomainList',{contrastDB, steepnesses, guessingRates, lapseRates});
+      if streq(o.thresholdParameter,'flankerContrast')
+         questPlusData=qpParams('stimParamsDomainList', {contrastDB},...,
+            'psiParamsDomainList',{contrastDB, steepnesses, guessingRates, lapseRates},'qpPF',@qpPFCrowding);
+      else
+         questPlusData=qpParams('stimParamsDomainList', {contrastDB},...,
+            'psiParamsDomainList',{contrastDB, steepnesses, guessingRates, lapseRates},'qpPF',@qpPFWeibull);
+      end
       questPlusData=qpInitialize(questPlusData);
    end
    
    %% DO A RUN
    o.data=[];
-   q=QuestCreate(tGuess,tGuessSd,o.pThreshold,o.steepness,o.lapse,o.guess);
+   if streq(o.thresholdParameter,'flankerContrast')
+      % Falling psychometric function for crowding of target as a function of
+      % flanker contrast. We assume that the observer makes a random finger
+      % error on fraction delta of the trials, and gets proportion gamma of
+      % those trials right. On the rest of the trials (no finger error) he
+      % gets it wrong only if he fails to guess it (prob. gamma) and fails
+      % to detect it (prob. exp...).
+      q=QuestCreate(tGuess,tGuessSd,pThreshold,o.steepness,0,0); % Prob of detecting flanker.
+      q.p2=o.lapse*o.guess+(1-o.lapse)*(1-(1-o.guess)*q.p2); % Prob of identifying target.
+      q.s2=fliplr([1-q.p2;q.p2]);
+      %    figure;
+      %    plot(q.x2,q.p2);
+   else
+      q=QuestCreate(tGuess,tGuessSd,o.pThreshold,o.steepness,o.lapse,o.guess);
+   end
    q.normalizePdf=true; % adds a few ms per call to QuestUpdate, but otherwise the pdf will underflow after about 1000 trials.
    wrongRight={'wrong', 'right'};
    timeZero=GetSecs;
@@ -2380,14 +2400,20 @@ try
             if streq(o.targetModulates,'luminance')
                r=1;
                o.contrast=-10^tTest; % negative contrast, dark letters
-               if o.saveSnapshot && isfinite(o.snapshotTargetContrast)
-                  o.contrast=-o.snapshotTargetContrast;
+               if o.saveSnapshot && isfinite(o.snapshotContrast)
+                  o.contrast=-o.snapshotContrast;
                end
             else
                r=1+10^tTest;
                o.contrast=0;
             end
-      end
+          case 'flankerContrast'
+             assert(streq(o.targetModulates,'luminance'))
+             o.flankerContrast=-10^tTest; % negative contrast, dark letters
+             if o.saveSnapshot && isfinite(o.snapshotContrast)
+                o.flankerContrast=-o.snapshotContrast;
+             end
+     end
       a=(1-LMin/LMean)*o.noiseListSd/o.noiseListBound;
       if o.noiseSD > a
          ffprintf(ff,'WARNING: Reducing o.noiseSD of %s noise to %.2f to avoid overflow.\n',o.noiseType,a);
@@ -3143,22 +3169,21 @@ try
       end
       switch o.thresholdParameter
          case 'spacing'
-            %                     results(n,1)=spacingDeg;
-            %                     results(n,2)=response;
-            %                     n=n+1;
+%             result=spacingDeg;
             spacingDeg=flankerSpacingPix/o.pixPerDeg;
             tTest=log10(spacingDeg);
          case 'size'
-            %                     results(n,1)=targetSizeDeg;
-            %                     results(n,2)=response;
-            %                     n=n+1;
+%             result=targetSizeDeg;
             targetSizeDeg=o.targetHeightPix/o.pixPerDeg;
             tTest=log10(targetSizeDeg);
          case 'contrast'
-            %                     results(n,1)=10^tTest;
-            %                     results(n,2)=response;
-            %                     n=n+1;
+%             result=10^tTest;
+         case 'flankerContrast'
+%             result=10^tTest;
       end
+%       results(n,1)=result;
+%       results(n,2)=response;
+%       n=n+1;
       trialsRight=trialsRight+response;
       q=QuestUpdate(q,tTest,response); % Add the new datum (actual test intensity and o.observer response) to the database.
       if o.questPlusEnable
@@ -3240,9 +3265,11 @@ try
       case 'size'
          ffprintf(ff,'%s: p %.0f%%, ecc. %.1f deg, threshold size %.3f deg.\n',o.observer,100*o.p,rDeg,10^QuestMean(q));
       case 'contrast'
+         o.contrast=-10^o.questMean;
+      case 'flankerContrast'
+         o.flankerContrast=-10^o.questMean;
    end
-   o.contrast=-10^o.questMean;
-   o.EOverN=10^(2*o.questMean)*o.E1/o.N;
+   o.EOverN=o.contrast^2*o.E1/o.N;
    o.efficiency=o.idealEOverNThreshold/o.EOverN;
    
    %% QUESTPlus: Estimate steepness and threshold contrast.
@@ -3265,8 +3292,8 @@ try
       o.qpSteepness=psiParamsFit(2);          % steepness
       o.qpGuessing=psiParamsFit(3);
       o.qpLapse=psiParamsFit(4);
+      %% Plot trial data with maximum likelihood fit
       if o.questPlusPlot
-         %% Plot trial data with maximum likelihood fit
          figure('Name',[o.experiment ':' o.conditionName],'NumberTitle','off');
          title(o.conditionName,'FontSize',14);
          hold on
@@ -3301,8 +3328,8 @@ try
             'FitBoxToText','on','LineStyle','none',...
             'FontName','Monospaced','FontSize',9);
          drawnow;
-      end
-   end
+      end % if o.questPlusPlot
+   end % if o.questPlusEnable 
    
    o.targetDurationSecMean=mean(o.likelyTargetDurationSec,'omitnan');
    o.targetDurationSecSD=std(o.likelyTargetDurationSec,'omitnan');
