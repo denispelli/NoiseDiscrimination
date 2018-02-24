@@ -1,17 +1,15 @@
-% eyesRun.m
-% Measure effect of binocular vs monocular viewing on Neq for each of 3
-% conditions, with and without noise. We expect that using two eyes halves
-% Neq when the internal noise is independent between eyes (photon and
-% ganglion) and no change when it is common to the two eyes (cortical).
-% January 31, 2018
+% flankersRun.m
+% Show target with flankers.
+% EVENTUALLY: We want to measure threshold contrast of flanker (in noise) for reliable
+% identification of the target. 
+% With and without noise. 
+% February, 2018
 % Denis Pelli
 
 % STANDARD CONDITION
-% January 31, 2018
 % Measure each Neq twice.
-% Six observers.
-% gabor target at 1 of 4 orientations
-% P=0.75, assuming 4 alternatives
+% Letter target surrounded by letter flankers.
+% P=0.75, assuming 9 alternatives
 % luminance 250 cd/m2
 % monocular, temporal field, right eye
 
@@ -45,26 +43,27 @@ o.useFlankers=true;
 o.flankerContrast=-0.85; % Negative for dark letters.
 % o.flankerContrast=nan; % Nan requests that flanker contrast always equal signal contrast.
 o.flankerSpacingDeg=4;
-
+      o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 
 cal=OurScreenCalibrations(0);
-if ~streq(cal.macModelName,'MacBookPro14,3')
-   % For debugging, if I don't actually have a 15" MacBook Pro, pretend I do.
+if ~streq(cal.macModelName,'MacBookPro14,3') && false
+   % For debugging, if this isn't a 15" MacBook Pro 2017, pretend it is.
    cal.screenWidthMm=330; % 13"
    cal.screenHeightMm=206; % 8.1"
+   warning('PRETENDING THIS IS A 15" MacBook Pro 2017');
 end
 
 % Two noise levels, noiseSD: 0 0.16
 o.experiment='flankers';
-% cortical
 o.conditionName='cortical';
 o.eccentricityXYDeg=[0 0];
-o.targetDurationSec=5;
+o.targetDurationSec=2;
 o.desiredLuminance=[];
 o.desiredLuminanceFactor=1;
 %  o.minScreenWidthDeg=10;
 o.eyes='right';
-for noiseSD=Shuffle([0 0.16])
+% for noiseSD=Shuffle([0 0.16])
+for noiseSD=[.06 0]
    o.targetHeightDeg=4;
    %          o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
    o.minScreenWidthDeg=1+o.targetHeightDeg*2;
@@ -78,7 +77,6 @@ for noiseSD=Shuffle([0 0.16])
       oo(end+1)=o;
    end
 end
-
 
 
 %% Number the conditions, and print the list.
@@ -107,11 +105,11 @@ end
 if ~fakeRun && 1
    %% RUN THE CONDITIONS
    % Typically, you'll select just a few of the conditions stored in oo
-   % that you want to run now. Select them from the printout of "t" above.
+   % that you want to run now. Select them from the printout of "t" in your
+   % Command Window.
    clear oOut
-   for oi=1:length(oo) % Edit this line to select the conditions you want to run now.
+   for oi=1:length(oo) % Edit this line to select which conditions to run now.
       o=oo(oi);
-      o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
       o.trialsPerRun=40;
       if exist('oOut','var')
          % Copy answers from immediately preceding run.
@@ -134,7 +132,7 @@ if ~fakeRun && 1
          o.alphabet=o.targetGaborNames;
       end
       o.alternatives=length(o.alphabet);
-      o.useDynamicNoiseMovie=true;
+      o.useDynamicNoiseMovie=false;
       if all(o.eccentricityXYDeg==0)
          o.markTargetLocation=false;
       else
