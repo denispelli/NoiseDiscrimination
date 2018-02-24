@@ -553,7 +553,7 @@ o.minimumTargetHeightChecks=8; % Minimum target resolution, in units of the chec
 o.fullResolutionTarget=false; % True to render signal at full resolution (targetCheckPix=1). False to use noise resolution (targetCheckPix=noiseCheckPix).
 o.targetMargin=0.25; % Minimum from edge of target to edge of o.stimulusRect, as fraction of targetHeightDeg.
 o.targetDurationSec=0.2; % Typically 0.2 or inf (wait indefinitely for response).
-o.useFlankers=false; % 0 or 1. Enable for crowding experiments.
+o.useFlankers=false; % Enable for crowding experiments.
 o.flankerContrast=-0.85; % Negative for dark letters.
 o.flankerContrast=nan; % Nan requests that flanker contrast always equal signal contrast.
 o.flankerSpacingDeg=4;
@@ -1788,10 +1788,14 @@ try
    o.annularNoiseBigSize=2*round(o.annularNoiseBigSize/2); % An even number, so we can center it on center of letter.
    o.annularNoiseBigRadiusDeg=0.5*o.annularNoiseBigSize(1)/(o.pixPerDeg/o.noiseCheckPix);
    
-   % Make o.canvasSize to hold the biggest thing we're showing, signal or
-   % noise. We limit o.canvasSize to fit in o.stimulusRect.
+   % Make o.canvasSize just big enough to hold everything we're showing,
+   % including signal, flankers, and noise. We limit o.canvasSize to fit in
+   % o.stimulusRect.
    o.canvasSize=[o.targetHeightPix o.targetWidthPix]/o.targetCheckPix;
    o.canvasSize=2*o.canvasSize; % Denis. For extended noise background.
+   if o.useFlankers
+      o.canvasSize=o.canvasSize+[2 2]*flankerSpacingPix/o.targetCheckPix;
+   end
    o.canvasSize=max(o.canvasSize,o.noiseSize*o.noiseCheckPix/o.targetCheckPix);
    if o.annularNoiseBigRadiusDeg > o.annularNoiseSmallRadiusDeg
       o.canvasSize=max(o.canvasSize,2*o.annularNoiseBigRadiusDeg*[1, 1]*o.pixPerDeg/o.noiseCheckPix);
@@ -1811,7 +1815,8 @@ try
       ffprintf(ff,'o.assessLowLuminance %d %% check out DAC limits at low end.\n',o.assessLowLuminance);
    end
    if o.useFlankers
-      ffprintf(ff,'Adding four flankers at center spacing of %.0f pix=%.1f deg=%.1fx letter height. Dark contrast %.3f (nan means same as target).\n',flankerSpacingPix,flankerSpacingPix/o.pixPerDeg,flankerSpacingPix/o.targetHeightPix,o.flankerContrast);
+      ffprintf(ff,'Adding four flankers at center spacing of %.0f pix=%.1f deg=%.1fx letter height. Dark contrast %.3f (nan means same as target).\n',...
+         flankerSpacingPix,flankerSpacingPix/o.pixPerDeg,flankerSpacingPix/o.targetHeightPix,o.flankerContrast);
    end
    if o.useFixation
       fix.markTargetLocation= o.markTargetLocation;
@@ -1882,6 +1887,7 @@ try
    end
    % END OF NOISE COMPUTATION
    
+   %% PREPARE SOUNDS
    rightBeep=MakeBeep(2000,0.05);
    rightBeep(end)=0;
    wrongBeep=MakeBeep(500,0.5);
@@ -1892,6 +1898,8 @@ try
    purr=MakeBeep(200,0.6);
    purr(end)=0;
    Snd('Open');
+   
+   %% PREPARE TARGET IMAGE
    switch o.task
       case '4afc'
          object='Square';
@@ -1950,6 +1958,8 @@ try
    ffprintf(ff,'pThreshold %.2f, steepness %.1f\n',o.pThreshold,o.steepness);
    ffprintf(ff,'Your (log) guess is %.2f +/- %.2f\n',o.tGuess,o.tGuessSd);
    ffprintf(ff,'o.trialsPerRun %.0f\n',o.trialsPerRun);
+   
+   %% COMPUTE signal(i).image FOR ALL i.
    white1=1;
    black0=0;
    Screen('Preference','TextAntiAliasing',0);
@@ -1975,7 +1985,7 @@ try
                end
                oldSize=Screen('TextSize',scratchWindow,round(o.targetHeightPix/o.targetCheckPix));
                oldStyle=Screen('TextStyle',scratchWindow,0);
-               canvasRect=[0 0 o.canvasSize];
+               canvasRect=[0 0 o.canvasSize]; % o.canvasSize =[width height];
                if o.allowAnyFont
                   clear letters
                   for i=1:o.alternatives
@@ -2014,8 +2024,8 @@ try
                      % targetRect is just big enough to hold any letter.
                      % targetRect allows for descenders and extension in any
                      % direction.
-                     % targetRect=round([a b c d]*o.targetHeightPix/o.targetCheckPix), where a
-                     % b c and d depend on the font.
+                     % targetRect=round([a b c d]*o.targetHeightPix/o.targetCheckPix), 
+                     % where a b c and d depend on the font.
                      x=(targetRect(1)+targetRect(3))/2; % horizontal middle
                      y=targetRect(4)-o.targetRectLocal(4); % baseline
                      % DrawText draws from left, so shift left by half letter width, to center letter at desired draw
@@ -2062,7 +2072,7 @@ try
                   % We have now drawn letter(i) into signal(i).image. The target
                   % size is always given by o.targetRectLocal. This is a square
                   % [0 0 1 1]*o.targetHeightPix/o.targetCheckPix only if
-                  % o.allowAnyFont=0. In general, it need not be square. Any code
+                  % o.allowAnyFont=false. In general, it need not be square. Any code
                   % that needs a bounding rect for the target should use
                   % o.targetRectLocal, not o.targetHeightPix. In the letter
                   % generation, targetHeightPix is used solely to set the nominal
@@ -2293,7 +2303,6 @@ try
       case 'identify'
          o.guess=1/o.alternatives;
    end
-   
    if streq(o.targetModulates,'luminance')
       tGuess=-0.5;
       tGuessSd=2;
@@ -2343,6 +2352,7 @@ try
    for trial=1:o.trialsPerRun
       [~,neworder]=sort(lower(fieldnames(o)));
       o=orderfields(o,neworder);
+
       %% SET TARGET LOG CONTRAST: tTest
       if o.questPlusEnable
          tTest=qpQuery(questPlusData)/20; % Convert dB to log contrast.
@@ -2387,6 +2397,7 @@ try
          ffprintf(ff,'WARNING: Reducing o.annularNoiseSD of %s noise to %.2f to avoid overflow.\n',o.noiseType,a);
          o.annularNoiseSD=a;
       end
+      %% RESTRICT tTest TO PHYSICALLY POSSIBLE RANGE
       switch o.targetModulates
          case 'noise'
             a=(1-LMin/LMean)/(o.noiseListBound*o.noiseSD/o.noiseListSd);
@@ -2401,7 +2412,7 @@ try
          case 'luminance'
             a=(min(cal.old.L)-LMean)/LMean;
             a=a+o.noiseListBound*o.noiseSD/o.noiseListSd;
-            assert(a < 0,'Need range for signal.');
+            assert(a<0,'Need range for signal.');
             if o.contrast < a
                o.contrast=a;
             end
@@ -2421,6 +2432,7 @@ try
          otherwise
             error('Unknown o.targetModulates "%s"',o.targetModulates);
       end % switch o.targetModulates
+      
       if o.noiseFrozenInRun
          if trial == 1
             if o.noiseFrozenInRunSeed
@@ -2563,6 +2575,30 @@ try
                      noise(~signalMask)=(0.5+floor(noise(~signalMask)*0.499999*o.backgroundEntropyLevels))/(0.5*o.backgroundEntropyLevels);
                      location(1).image=1+(o.noiseSD/o.noiseListSd)*noise;
                end
+               if o.useFlankers && streq(o.targetModulates,'luminance')
+                  % ADD FOUR FLANKERS, EACH A RANDOM LETTER LIKE THE TARGET
+                  if isfinite(o.flankerContrast)
+                     c=o.flankerContrast;
+                  else
+                     c=o.contrast; % Same contrast as target.
+                  end
+                  for theta=0:90:270
+                     i=randi(o.alternatives);
+                     r=RectOfMatrix(signal(i).image);
+                     r=CenterRect(r,canvasRect);
+                     offset=round(flankerSpacingPix/o.targetCheckPix);
+                     r=OffsetRect(r,cosd(theta)*offset,sind(theta)*offset);
+                     assert(IsRectInRect(r,canvasRect));
+                     flankerImageIndex=logical(FillRectInMatrix(true,r,zeros(o.canvasSize)));
+                     flankerImage=zeros(o.canvasSize);
+                     if (iMovieFrame > o.moviePreFrames ...
+                           && iMovieFrame <= o.moviePreFrames+o.movieSignalFrames)
+                        % Add in flanker only during the signal interval.
+                        flankerImage(flankerImageIndex)=signal(i).image(:);
+                     end
+                     location(1).image=location(1).image+c*flankerImage; % Add flanker.
+                  end % for theta=0:90:270
+               end % if o.useFlankers
             otherwise
                error('Unknown o.task "%s"',o.task);
          end
@@ -2586,7 +2622,7 @@ try
          if ~isempty(fixationLines)
             Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
          end
-         rect=[0, 0, 1, 1]*2*o.annularNoiseBigRadiusDeg*o.pixPerDeg/o.noiseCheckPix;
+         rect=[0 0 1 1]*2*o.annularNoiseBigRadiusDeg*o.pixPerDeg/o.noiseCheckPix;
          if o.newClutForEachImage % Usually enabled.
             % Compute CLUT for all possible noises and the given signal and
             % contrast. Note: The gray screen in the non-stimulus areas is
@@ -2727,38 +2763,6 @@ try
                   eraseRect=dstRect;
                   rect=CenterRect([0 0 o.targetHeightPix o.targetWidthPix],rect);
                   rect=round(rect); % target rect
-                  if o.useFlankers
-                     flankerOffset=[-1 0; 1 0; 0 -1; 0 1]*flankerSpacingPix;
-                     flankerBoundsRect=[];
-                     for j=1:4
-                        dx=flankerOffset(j,1);
-                        dy=flankerOffset(j,2);
-                        r=OffsetRect(rect,dx,dy);
-                        i=randi(o.alternatives);
-                        if isfinite(o.flankerContrast)
-                           img=1+o.flankerContrast*signal(i).image;
-                        else
-                           img=1+o.contrast*signal(i).image;
-                        end
-                        img=img(:,1:20); % FIX THIS--REMOVE DGP!
-                        img=Expand(img,o.targetCheckPix);
-                        buffer=Screen('GetImage',window,r,'drawBuffer');
-                        blanks=buffer == 1;
-                        buffer(blanks)=IndexOfLuminance(cal,LMean);
-                        bufferL=LuminanceOfIndex(cal,buffer(:,:,1));
-                        bufferTest=IndexOfLuminance(cal,bufferL);
-                        img=IndexOfLuminance(cal,bufferL+img*LMean-LMean);
-                        texture=Screen('MakeTexture',window,img/o.maxEntry,0,0,1);
-                        srcRect=RectOfMatrix(img);
-                        dstRect=r;
-                        offset=dstRect(1:2)-srcRect(1:2);
-                        dstRect=ClipRect(dstRect,o.stimulusRect);
-                        srcRect=OffsetRect(dstRect,-offset(1),-offset(2));
-                        % Screen('DrawTexture',window,texture,srcRect,dstRect);
-                        % Screen('Close',texture);
-                        eraseRect=UnionRect(eraseRect,r);
-                     end
-                  end % if o.useFlankers
                case '4afc'
                   rect=[0 0 o.targetHeightPix o.targetWidthPix];
                   location(1).rect=AlignRect(rect,boundsRect,'left','top');
