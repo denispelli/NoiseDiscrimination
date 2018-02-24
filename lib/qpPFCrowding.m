@@ -54,8 +54,8 @@ function predictedProportions = qpPFCrowding(stimParams,psiParams)
 % p.parse(stimParams,psiParams,varargin{:});
 
 %% Here is the Matlab version
-if (size(psiParams,2) ~= 4)
-   error('Parameters vector has wrong length for qpPFWeibull');
+if size(psiParams,2) ~= 4
+   error('Parameters vector has wrong length for qpPFCrowding');
 end
 if size(stimParams,2) ~= 1
    error('Each row of stimParams should have only one entry');
