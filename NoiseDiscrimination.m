@@ -2337,12 +2337,12 @@ try
       lapseRates=o.questPlusLapseRates;
       contrastDB=20*o.questPlusLogContrasts;
       if streq(o.thresholdParameter,'flankerContrast')
-         questPlusData=qpParams('stimParamsDomainList', {contrastDB},...,
-            'psiParamsDomainList',{contrastDB, steepnesses, guessingRates, lapseRates},'qpPF',@qpPFCrowding);
+         psychometricFunction=@qpPFCrowding;
       else
-         questPlusData=qpParams('stimParamsDomainList', {contrastDB},...,
-            'psiParamsDomainList',{contrastDB, steepnesses, guessingRates, lapseRates},'qpPF',@qpPFWeibull);
+         psychometricFunction=@qpPFWeibull;
       end
+      questPlusData=qpParams('stimParamsDomainList', {contrastDB},...,
+         'psiParamsDomainList',{contrastDB, steepnesses, guessingRates, lapseRates},'qpPF',psychometricFunction);
       questPlusData=qpInitialize(questPlusData);
    end
    
