@@ -48,13 +48,13 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
    warning('PRETENDING THIS IS A 15" MacBook Pro 2017');
 end
 
+      o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 o.useFlankers=true;
 o.thresholdParameter='flankerContrast';
-o.contrast=0.2;
+o.contrast=-0.2;
 o.flankerContrast=-0.85; % Negative for dark letters.
 % o.flankerContrast=nan; % Nan requests that flanker contrast always equal signal contrast.
 o.flankerSpacingDeg=3;
-%       o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 % Two noise levels, noiseSD: 0 0.16
 o.experiment='flankers';
 o.conditionName='cortical';
@@ -66,7 +66,7 @@ o.desiredLuminanceFactor=1;
 %  o.minScreenWidthDeg=10;
 o.eyes='right';
 % for noiseSD=Shuffle([0 0.16])
-for noiseSD=[.06 0]
+for noiseSD=[.16 0]
    %          o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
    o.minScreenWidthDeg=1+o.targetHeightDeg*2;
    o.maxViewingDistanceCm=round(0.1*cal.screenWidthMm/(2*tand(o.minScreenWidthDeg/2)));
