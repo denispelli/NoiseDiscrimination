@@ -405,6 +405,7 @@ function o=NoiseDiscrimination(oIn)
 
 %% INPUT ARGUMENT
 if exist('oIn','var') && isfield(oIn,'quitSession') && oIn.quitSession
+   % Return immediately if the user wants to quit.
    o=oIn;
    return
 end
@@ -553,6 +554,7 @@ o.minimumTargetHeightChecks=8; % Minimum target resolution, in units of the chec
 o.fullResolutionTarget=false; % True to render signal at full resolution (targetCheckPix=1). False to use noise resolution (targetCheckPix=noiseCheckPix).
 o.targetMargin=0.25; % Minimum from edge of target to edge of o.stimulusRect, as fraction of targetHeightDeg.
 o.targetDurationSec=0.2; % Typically 0.2 or inf (wait indefinitely for response).
+o.contrast=[];
 o.useFlankers=false; % Enable for crowding experiments.
 o.flankerContrast=-0.85; % Negative for dark letters.
 o.flankerContrast=nan; % Nan requests that flanker contrast always equal signal contrast.
@@ -643,6 +645,7 @@ o.luminance=[];
 o.retinalIlluminanceTd=[];
 o.pupilDiameterMm=[];
 
+
 %% READ USER-SUPPLIED o PARAMETERS
 if false
    % ACCEPT ALL o PARAMETERS.
@@ -679,7 +682,7 @@ else
       'nearPointXYPix' 'pixPerCm' 'psychtoolboxKernelDriverLoaded'...
       'targetXYPix' 'textLineLength' 'textSize' 'unknownFields'...
       'deviceIndex' 'speakEachLetter' 'targetCheckDeg' 'targetCheckPix'...
-      'textFont' 'useSpeech' 'LMean' 'targetCyclesPerDeg'...
+      'textFont' 'useSpeech' 'LMean' 'targetCyclesPerDeg' 'contrast' 'flankerContrast'...
       };
    unknownFields={};
    for condition=1:conditions
@@ -688,6 +691,7 @@ else
       oo(condition).unknownFields={};
       for i=1:length(inputFields)
          if ismember(inputFields{i},initializedFields)
+            % We accept only the parameters that we initialized above.
             % Overwrite initial value.
             oo(condition).(inputFields{i})=oIn(condition).(inputFields{i});
          elseif ~ismember(inputFields{i},knownOutputFields)
@@ -757,7 +761,7 @@ if isnan(o.annularNoiseSD)
 end
 if o.saveSnapshot
    if isfinite(o.snapshotContrast) && streq(o.targetModulates,'luminance')
-      o.tSnapshot=log10(o.snapshotContrast);
+      o.tSnapshot=log10(abs(o.snapshotContrast));
    end
    if ~isfinite(o.tSnapshot)
       switch o.targetModulates
@@ -1447,16 +1451,16 @@ try
       if ~o.drawTextPlugin
          warning('The DrawText plugin failed to load. See warning above.');
       end
-      ffprintf(ff,'o.drawTextPlugin=%d %% 1 needed for accurate text rendering.\n',o.drawTextPlugin);
+      ffprintf(ff,'o.drawTextPlugin %s %% Need true for accurate text rendering.\n',mat2str(o.drawTextPlugin));
       
       % Recommended by Mario Kleiner, July 2017.
       winfo=Screen('GetWindowInfo', window);
       o.beamPositionQueriesAvailable= winfo.Beamposition ~= -1 && winfo.VBLEndline ~= -1;
-      ffprintf(ff,'o.beamPositionQueries=%d %% 1 for best timing.\n',o.beamPositionQueriesAvailable);
+      ffprintf(ff,'o.beamPositionQueries %s %% true for best timing.\n',mat2str(o.beamPositionQueriesAvailable));
       if ismac
          % Rec by microfish@fishmonkey.com.au, July 22, 2017
          o.psychtoolboxKernelDriverLoaded=~system('kextstat -l -k | grep PsychtoolboxKernelDriver > /dev/null');
-         ffprintf(ff,'o.psychtoolboxKernelDriverLoaded=%d %% 1 for best timing.\n',o.psychtoolboxKernelDriverLoaded);
+         ffprintf(ff,'o.psychtoolboxKernelDriverLoaded %s %% true for best timing.\n',mat2str(o.psychtoolboxKernelDriverLoaded));
       else
          o.psychtoolboxKernelDriverLoaded=false;
       end
@@ -1509,7 +1513,6 @@ try
          %          ffprintf(ff,'%.1f cd/m^2 at %d\n',LuminanceOfIndex(cal,gray*o.maxEntry),o.gray1*o.maxEntry);
          %          ffprintf(ff,'%.3f dac at %d; %.3f dac at %d\n',cal.gamma(o.gray1*o.maxEntry+1,2),o.gray1*o.maxEntry,cal.gamma(gray*o.maxEntry+1,2),gray*o.maxEntry);
          
-         o.contrast=nan;
          Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
          if o.assessLoadGamma
             ffprintf(ff,'Line %d: o.contrast %.3f, LoadNormalizedGammaTable 0.5*range/mean=%.3f\n', ...
@@ -1754,6 +1757,7 @@ try
    end
    ffprintf(ff,'o.targetHeightPix %.0f, o.targetCheckPix %.0f, o.noiseCheckPix %.0f, o.targetDurationSec %.2f s\n',o.targetHeightPix,o.targetCheckPix,o.noiseCheckPix,o.targetDurationSec);
    ffprintf(ff,'o.targetModulates %s\n',o.targetModulates);
+   ffprintf(ff,'o.thresholdParameter %s\n',o.thresholdParameter);
    if streq(o.targetModulates,'entropy')
       o.noiseType='uniform';
       ffprintf(ff,'o.backgroundEntropyLevels %d\n',o.backgroundEntropyLevels);
@@ -1956,7 +1960,6 @@ try
    ffprintf(ff,'%s noise log N/(%s)=%.2f, where N is power spectral density in %s.\n', ...
       temporal,o.NUnits,log10(o.N),o.NUnits);
    ffprintf(ff,'pThreshold %.2f, steepness %.1f\n',o.pThreshold,o.steepness);
-   ffprintf(ff,'Your (log) guess is %.2f +/- %.2f\n',o.tGuess,o.tGuessSd);
    ffprintf(ff,'o.trialsPerRun %.0f\n',o.trialsPerRun);
    
    %% COMPUTE signal(i).image FOR ALL i.
@@ -2191,7 +2194,7 @@ try
    end
    o.centralNoiseEnvelopeE1DegDeg=sum(centralNoiseEnvelope(:).^2*o.noiseCheckPix/o.pixPerDeg^2);
    
-   % o.E1 is energy at unit contrast.
+   %% o.E1 is energy at unit contrast.
    power=1:length(signal);
    for i=1:length(power)
       power(i)=sum(signal(i).image(:).^2);
@@ -2310,6 +2313,7 @@ try
       tGuess=0;
       tGuessSd=4;
    end
+   ffprintf(ff,'Your (log) guess is %.2f +/- %.2f\n',o.tGuess,o.tGuessSd);
    rDeg=sqrt(sum(o.eccentricityXYDeg.^2));
    switch o.thresholdParameter
       case 'spacing'
@@ -2442,7 +2446,15 @@ try
             if o.contrast < a
                o.contrast=a;
             end
-            tTest=log10(-o.contrast);
+            if o.flankerContrast < a
+               o.flankerContrast=a;
+            end
+            switch o.thresholdParameter
+               case 'flankerContrast'
+                  tTest=log10(abs(o.flankerContrast));
+               case 'contrast'
+                  tTest=log10(abs(o.contrast));
+            end
          case 'entropy'
             a=128/o.backgroundEntropyLevels;
             if r > a
@@ -2601,8 +2613,8 @@ try
                      noise(~signalMask)=(0.5+floor(noise(~signalMask)*0.499999*o.backgroundEntropyLevels))/(0.5*o.backgroundEntropyLevels);
                      location(1).image=1+(o.noiseSD/o.noiseListSd)*noise;
                end
-               if o.useFlankers && streq(o.targetModulates,'luminance')
-                  % ADD FOUR FLANKERS, EACH A RANDOM LETTER LIKE THE TARGET
+               %% ADD FOUR FLANKERS, EACH A RANDOM LETTER LIKE THE TARGET
+              if o.useFlankers && streq(o.targetModulates,'luminance')
                   if isfinite(o.flankerContrast)
                      c=o.flankerContrast;
                   else
@@ -2627,7 +2639,7 @@ try
                end % if o.useFlankers
             otherwise
                error('Unknown o.task "%s"',o.task);
-         end
+         end % switch o.task
          movieImage{iMovieFrame}=location;
       end % for iMovieFrame=1:o.movieFrames
       
@@ -2655,15 +2667,18 @@ try
             % drawn with CLUT index n=1.
             
             % Noise
+            % Set up luminance range that allows for superposition of noise
+            % on target and on flanker. If the noise in fact does not
+            % superimpose target or flanker then this range may be broader
+            % than strictly necessary.
             cal.LFirst=LMean*(1-o.noiseListBound*r*o.noiseSD/o.noiseListSd);
             cal.LLast=LMean*(1+o.noiseListBound*r*o.noiseSD/o.noiseListSd);
-            if streq(o.targetModulates,'luminance')
-               cal.LFirst=cal.LFirst+min(0,LMean*o.contrast);
-               cal.LLast=cal.LLast+max(0,LMean*o.contrast);
+            if ~o.useFlankers
+               o.flankerContrast=0;
             end
-            if o.useFlankers && isfinite(o.flankerContrast)
-               cal.LFirst=min(cal.LFirst,LMean*(1+o.flankerContrast));
-               cal.LLast=max(cal.LLast,LMean*(1+o.flankerContrast));
+            if streq(o.targetModulates,'luminance')
+               cal.LFirst=cal.LFirst+LMean*min([0 o.contrast o.flankerContrast]);
+               cal.LLast=cal.LLast+LMean*max([0 o.contrast o.flankerContrast]);
             end
             if o.annularNoiseBigRadiusDeg > o.annularNoiseSmallRadiusDeg
                cal.LFirst=min(cal.LFirst,LMean*(1-o.noiseListBound*r*o.annularNoiseSD/o.noiseListSd));
@@ -2738,10 +2753,11 @@ try
          fprintf(', luminance');
          fprintf(' %.1f',LL);
          if o.contrast<0
-            fprintf(', contrast %.4f\n',(LL(1)-LL(2))/LL(2));
+            c=(LL(1)-LL(2))/LL(2);
          else
-            fprintf(', contrast %.4f\n',(LL(2)-LL(1))/LL(1));
+            c=(LL(2)-LL(1))/LL(1);
          end
+         fprintf(', contrast %.4f\n',c);
          movieTexture(iMovieFrame)=Screen('MakeTexture',window,img,0,0,1);
          rect=Screen('Rect',movieTexture(iMovieFrame));
          img=Screen('GetImage',movieTexture(iMovieFrame),rect,'frontBuffer',1);
@@ -2754,10 +2770,11 @@ try
          fprintf(', luminance');
          fprintf(' %.1f',LL);
          if o.contrast<0
-            fprintf(', contrast %.4f\n',(LL(1)-LL(2))/LL(2));
+            c=(LL(1)-LL(2))/LL(2);
          else
-            fprintf(', contrast %.4f\n',(LL(2)-LL(1))/LL(1));
+            c=(LL(2)-LL(1))/LL(1);
          end
+         fprintf(', contrast %.4f\n',c);
       end
       
       %% CONVERT IMAGE MOVIE TO TEXTURE MOVIE
@@ -2853,10 +2870,11 @@ try
          fprintf(', luminance');
          fprintf(' %.1f',LL);
          if o.contrast<0
-            fprintf(', contrast %.4f\n',(LL(1)-LL(2))/LL(2));
+            c=(LL(1)-LL(2))/LL(2);
          else
-            fprintf(', contrast %.4f\n',(LL(2)-LL(1))/LL(1));
+            c=(LL(2)-LL(1))/LL(1);
          end
+         fprintf(', contrast %.4f\n',c);
          % Compare hardware CLUT with identity.
          gammaRead=Screen('ReadNormalizedGammaTable',window);
          maxEntry=size(gammaRead,1)-1;
@@ -2892,8 +2910,8 @@ try
             end % if o.showBlackAnnulus
             if o.saveStimulus && iMovieFrame == o.moviePreFrames+1
                o.savedStimulus=Screen('GetImage',window,o.stimulusRect,'drawBuffer');
-               fprintf('o.savedStimulus at contrast %.3f\n',o.contrast);
-               Screen('DrawText',window,sprintf('o.contrast %.3f',o.contrast),20,150);
+               fprintf('o.savedStimulus at contrast %.3f, flankerContrast %.3f\n',o.contrast,o.flankerContrast);
+               Screen('DrawText',window,sprintf('o.contrast %.3f, flankerContrast %.3f',o.contrast,o.flankerContrast),20,150);
                o.newCal=cal;
                if o.saveSnapshot
                   snapshotTexture=Screen('OpenOffscreenWindow',movieTexture(iMovieFrame));
@@ -2925,10 +2943,11 @@ try
             ffprintf(ff,', luminance');
             ffprintf(ff,' %.1f',LL);
             if o.contrast<0
-               fprintf(', contrast %.4f\n',(LL(1)-LL(2))/LL(2));
+               c=(LL(1)-LL(2))/LL(2);
             else
-               fprintf(', contrast %.4f\n',(LL(2)-LL(1))/LL(1));
+               c=(LL(2)-LL(1))/LL(1);
             end
+            ffprintf(ff,', contrast %.4f\n',c);
             ffprintf(ff,'\n');
             %             print stimulus as table of numbers
             %             dx=round(size(o.actualStimulus,2)/10);
@@ -3283,12 +3302,18 @@ try
          %             psiParamsBayesian(1)/20,psiParamsBayesian(2),psiParamsBayesian(3),psiParamsBayesian(4));
       end
       psiParamsFit=qpFit(questPlusData.trialData,questPlusData.qpPF,psiParamsBayesian,questPlusData.nOutcomes,...,
-         'lowerBounds', [min(contrastDB) min(steepnesses) min(guessingRates) min(lapseRates)],'upperBounds',[max(contrastDB) max(steepnesses) max(guessingRates) max(lapseRates)]);
+         'lowerBounds', [min(contrastDB) min(steepnesses) min(guessingRates) min(lapseRates)],...
+         'upperBounds',[max(contrastDB) max(steepnesses) max(guessingRates) max(lapseRates)]);
       if o.questPlusPrint
          ffprintf(ff,'QuestPlus: Max likelihood estimate:     log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
             psiParamsFit(1)/20,psiParamsFit(2),psiParamsFit(3),psiParamsFit(4));
       end
-      o.qpContrast=sign(o.contrast)*10^(psiParamsFit(1)/20);	% threshold contrast
+      switch o.thresholdParameter
+         case 'contrast'
+            o.qpContrast=sign(o.contrast)*10^(psiParamsFit(1)/20);	% threshold contrast
+         case 'flankerContrast'
+            o.qpContrast=sign(o.flankerContrast)*10^(psiParamsFit(1)/20);	% threshold contrast
+      end
       o.qpSteepness=psiParamsFit(2);          % steepness
       o.qpGuessing=psiParamsFit(3);
       o.qpLapse=psiParamsFit(4);
@@ -4122,8 +4147,8 @@ graveAccentKeyCode=KbName('`~');
 spaceKeyCode=KbName('space');
 returnKeyCode=KbName('return');
 if ~all(isfinite(o.eccentricityXYDeg))
-   error('o.eccentricityXYDeg (%.1f %.1f) must be finite. o.useFixation=%d is optional.',...
-      o.eccentricityXYDeg,o.useFixation);
+   error('o.eccentricityXYDeg (%.1f %.1f) must be finite. o.useFixation %s is optional.',...
+      o.eccentricityXYDeg,mat2str(o.useFixation));
 end
 if ~IsXYInRect(o.nearPointXYInUnitSquare,[0 0 1 1])
    error('o.nearPointXYInUnitSquare (%.2f %.2f) must be in unit square [0 0 1 1].',o.nearPointXYInUnitSquare);
