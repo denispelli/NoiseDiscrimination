@@ -1,7 +1,7 @@
 function state = rng(x, generator)
-% used for octave compatibility with MATLAB
+% Help our MATLAB programs to run in Octave.
 
-% Hörmet Yiltiz, hyiltiz@gmail.com 
+% Hormet Yiltiz, hyiltiz@gmail.com 
 % Copyright, 2015 
 % Distributed under GPLv3+.
 %
@@ -28,7 +28,7 @@ if IsOctave
         end
 
         if isnumeric(x)
-            % set the random number Seed
+            % Set the random number seed.
             rand('seed', x);
         end
     end
@@ -38,7 +38,7 @@ if IsOctave
     end
 
 else
-    % do nothing for MATLAB
-    % we could actually use this function for MATLAB legacy compatibility
+    % Do nothing when running in MATLAB.
+    % One could use this function for compatibility with old versions of MATLAB.
 end
 end
