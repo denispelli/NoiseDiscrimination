@@ -3232,37 +3232,7 @@ try
    end % for trial=1:o.trialsPerRun
    
    o.quitSession=OfferToQuitSession(window,o,instructionalMarginPix,screenRect);
-   if 0 && o.quitRun
-      %% ASK WHETHER TO QUIT THE WHOLE SESSION
-      escapeKeyCode=KbName('escape');
-      graveAccentKeyCode=KbName('`~');
-      spaceKeyCode=KbName('space');
-      returnKeyCode=KbName('return');
-      Screen('FillRect',window);
-      Screen('TextFont',window,'Verdana',0);
-      string='Run has been quit. Hit ESCAPE again to quit the whole session. Or hit RETURN to proceed with the next run.';
-      black=0;
-      instructionalMarginPix=100;
-      % Set default background color.
-      Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
-      DrawFormattedText(window,string,instructionalMarginPix,instructionalMarginPix-0.5*o.textSize,black,60,[],[],1.1);
-      Screen('TextSize',window,o.textSize);
-      Screen('Flip',window); % Pose the question.
-      if o.speakInstructions
-         Speak('Hit ESCAPE again to quit the whole session. To proceed with the next run, hit RETURN.');
-      end
-      answer=GetKeypress([returnKeyCode escapeKeyCode graveAccentKeyCode]);
-      o.quitSession=ismember(answer,[escapeChar,graveAccentChar]);
-      if o.speakInstructions
-         if o.quitSession
-            Speak('Escape.');
-         else
-            Speak('Proceeding to next run.');
-         end
-      end
-      Screen('FillRect',window);
-   end % if o.quitRun
-   
+      
    
    %% DONE. REPORT THRESHOLD FOR THIS RUN.
    if ~isempty(o.data)
@@ -3440,34 +3410,6 @@ try
             end
          end
    end
-   %    if o.quitRun && o.runNumber < o.runsDesired
-   %       if o.speakInstructions
-   %          Speak('Please type ESCAPE to skip the rest and quit now, or space to continue with next run.');
-   %       end
-   %       response=0;
-   %       while 1
-   %          response=GetKeypress;
-   %          switch response
-   %             case {escapeChar,graveAccentChar},
-   %                ffprintf(ff,'*** ESCAPE. Quitting now.\n');
-   %                if o.speakInstructions
-   %                   Speak('Quitting now.');
-   %                end
-   %                o.quitSession=true;
-   %                break;
-   %             case ' ',
-   %                if o.speakInstructions
-   %                   Speak('Continuing.');
-   %                end
-   %                o.quitSession=false;
-   %                break;
-   %             otherwise
-   %                if o.speakInstructions
-   %                   Speak('Try again. Type space to continue, or ESCAPE to quit.');
-   %                end
-   %          end
-   %       end
-   %    end
    if o.speakInstructions
       if o.quitSession && ~ismember(o.observer,algorithmicObservers)
          Speak('QUITTING now. Done.');
