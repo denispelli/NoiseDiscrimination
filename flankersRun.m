@@ -158,13 +158,16 @@ if ~fakeRun && 1
          oOut.conditionName,oOut.noiseSD,log10(oOut.N),oOut.flankerSpacingDeg,oOut.contrast,oOut.flankerContrast);
       oo(oi).flankerContrast=oOut.flankerContrast;
       oo(oi).N=oOut.N;
+      oo(oi).trials=oOut.trials;
+      oo(oi).data=oOut.data;
+      oo(oi).psych=oOut.psych;
       if oOut.quitSession
          break
       end
    end
 end % Run the selected conditions
 t=struct2table(oo);
-vars={'noiseSD' 'N' 'flankerSpacingDeg' 'contrast' 'flankerContrast'};
+vars={'trials' 'noiseSD' 'N' 'flankerSpacingDeg' 'contrast' 'flankerContrast'};
 t(:,vars) % Print the oo list of conditions, now with measured threshold
 
 
