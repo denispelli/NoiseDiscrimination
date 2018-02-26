@@ -538,6 +538,7 @@ o.task='identify'; % 'identify' or '4afc'
 % o.thresholdParameter='size';
 % o.thresholdParameter='spacing';
 o.thresholdParameter='contrast'; % Use Quest to measure threshold 'contrast','size', 'spacing', or 'flankerContrast'.
+o.thresholdPolarity=1; % Must be -1 or 1;
 % WARNING: size and spacing are not yet fully implemented.
 o.alternatives=9; % The number of letters to use from o.alphabet.
 o.tGuess=nan; % Specify a finite value for Quest, or nan for default.
@@ -557,7 +558,7 @@ o.targetDurationSec=0.2; % Typically 0.2 or inf (wait indefinitely for response)
 o.contrast=[];
 o.useFlankers=false; % Enable for crowding experiments.
 o.flankerContrast=-0.85; % Negative for dark letters.
-o.flankerContrast=nan; % Nan requests that flanker contrast always equal signal contrast.
+o.flankerContrast=nan; % Nan requests that flanker contrast always equal target contrast.
 o.flankerSpacingDeg=4;
 % o.flankerSpacingDeg=1.4*o.targetHeightDeg; % Put this in your code, if
 % you like. It won't work here.
@@ -1478,7 +1479,7 @@ try
          LMin=min(cal.old.L);
          LMax=max(cal.old.L);
          LMean=mean([LMin, LMax]); % Desired background luminance.
-         LMean=LMean*(1+(rand-0.5)/32); % Tiny jitter, ±1.5%
+%          LMean=LMean*(1+(rand-0.5)/32); % Tiny jitter, ±1.5%
          LMean=o.luminanceFactor*LMean;
          if o.assessLowLuminance
             LMean=0.8*LMin+0.2*LMax;
@@ -2323,7 +2324,10 @@ try
          nominalAcuityDeg=0.029*(rDeg+2.72); % Eq. 13 from Song, Levi, and Pelli (2014).
          tGuess=log10(2*nominalAcuityDeg);
       case 'contrast'
+         o.thresholdPolarity=sign(o.contrast);
       case 'flankerContrast'
+         assert(o.useFlankers);
+         o.thresholdPolarity=sign(o.flankerContrast);
      otherwise
          error('Unknown o.thresholdParameter "%s".',o.thresholdParameter);
    end
@@ -2413,7 +2417,7 @@ try
             end
           case 'flankerContrast'
              assert(streq(o.targetModulates,'luminance'))
-             o.flankerContrast=-10^tTest; % negative contrast, dark letters
+             o.flankerContrast=o.thresholdPolarity*10^tTest; 
              if o.saveSnapshot && isfinite(o.snapshotContrast)
                 o.flankerContrast=-o.snapshotContrast;
              end
@@ -2620,9 +2624,12 @@ try
                   else
                      c=o.contrast; % Same contrast as target.
                   end
-                  for theta=0:90:270
-                     i=randi(o.alternatives);
-                     r=RectOfMatrix(signal(i).image);
+                  for j=1:4
+                     theta=j*90;
+                     if iMovieFrame==1
+                        whichFlanker(j)=randi(o.alternatives);
+                     end
+                     r=RectOfMatrix(signal(whichFlanker(j)).image);
                      r=CenterRect(r,canvasRect);
                      offset=round(flankerSpacingPix/o.targetCheckPix);
                      r=OffsetRect(r,cosd(theta)*offset,sind(theta)*offset);
@@ -2632,7 +2639,7 @@ try
                      if (iMovieFrame > o.moviePreFrames ...
                            && iMovieFrame <= o.moviePreFrames+o.movieSignalFrames)
                         % Add in flanker only during the signal interval.
-                        flankerImage(flankerImageIndex)=signal(i).image(:);
+                        flankerImage(flankerImageIndex)=signal(whichFlanker(j)).image(:);
                      end
                      location(1).image=location(1).image+c*flankerImage; % Add flanker.
                   end % for theta=0:90:270
@@ -3196,9 +3203,9 @@ try
             targetSizeDeg=o.targetHeightPix/o.pixPerDeg;
             tTest=log10(targetSizeDeg);
          case 'contrast'
-%             result=10^tTest;
+%             result=o.thresholdPolarity*10^tTest;
          case 'flankerContrast'
-%             result=10^tTest;
+%             result=o.thresholdPolarity*10^tTest;
       end
 %       results(n,1)=result;
 %       results(n,2)=response;
@@ -3284,9 +3291,9 @@ try
       case 'size'
          ffprintf(ff,'%s: p %.0f%%, ecc. %.1f deg, threshold size %.3f deg.\n',o.observer,100*o.p,rDeg,10^QuestMean(q));
       case 'contrast'
-         o.contrast=-10^o.questMean;
+         o.contrast=o.thresholdPolarity*10^o.questMean;
       case 'flankerContrast'
-         o.flankerContrast=-10^o.questMean;
+         o.flankerContrast=o.thresholdPolarity*10^o.questMean;
    end
    o.EOverN=o.contrast^2*o.E1/o.N;
    o.efficiency=o.idealEOverNThreshold/o.EOverN;
@@ -3308,11 +3315,12 @@ try
          ffprintf(ff,'QuestPlus: Max likelihood estimate:     log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
             psiParamsFit(1)/20,psiParamsFit(2),psiParamsFit(3),psiParamsFit(4));
       end
+      o.qpContrast=o.thresholdPolarity*10^(psiParamsFit(1)/20);	% threshold contrast
       switch o.thresholdParameter
          case 'contrast'
-            o.qpContrast=sign(o.contrast)*10^(psiParamsFit(1)/20);	% threshold contrast
+            o.contrast=o.qpContrast;
          case 'flankerContrast'
-            o.qpContrast=sign(o.flankerContrast)*10^(psiParamsFit(1)/20);	% threshold contrast
+            o.flankerContrast=o.qpContrast;
       end
       o.qpSteepness=psiParamsFit(2);          % steepness
       o.qpGuessing=psiParamsFit(3);
