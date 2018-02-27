@@ -124,15 +124,15 @@ allowEV=false; % 1 to allow use of a photographer's light meter as a photometer.
 blindCalibration=false; % A fallback for computers that don't support Psychtoolbox GetEchoNumber.
 % gamma11bpc=1/2.4; % disabled
 useFractionOfScreen=0; % Set this nonzero, about 0.3, for debugging.
-makeItQuick=false; % 1 for debugging
+makeItQuick=false; % true for debugging
 Screen('Preference', 'SkipSyncTests', 1);
 try
    commandwindow; % Bring focus to command window, if not already there.
    addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
    fprintf('\nWelcome to Calibrate Screen Luminance.\n');
-   while(1)
+   while true
       reply=input('Do you want me to use computer speech to guide you (y or n)?:','s');
-      if length(reply)>=1
+      if ~isempty(reply)
          break;
       end
    end
@@ -153,7 +153,7 @@ try
    else
       cal.screen=max(Screen('Screens'));
    end
-   if 1
+   if true
       % Check for AMD video driver.
       % The GetWindowInfo command requires an open window.
       fprintf('Now opening a small window to check your video driver.\n');
@@ -227,7 +227,7 @@ try
       if useSpeech
          Speak('I detect a Cambridge Research Systems colorimeter. Shall we use it?');
       end
-      while(1)
+      while true
          reply=input('Shall we use it (y/n)?:','s');
          if ~isempty(reply)
             break;
@@ -262,7 +262,7 @@ try
       if useSpeech
          Speak('Ok');
       end
-      if length(msg)<1
+      if isempty(msg)
          cal.photometer='Minolta Spotmeter';
       else
          cal.photometer=msg;
@@ -371,7 +371,7 @@ try
          error('Screen brighness changed during calibration. In System Preferences:Displays, please turn off "Automatically adjust brightness".');
       end
    else
-      cal.brightnessSetting=1;
+      cal.brightnessSetting=1.0;
       cal.brightnessReading=nan;
       if useSpeech
          Speak('Please set your screen to maximum brightness, then hit return');
