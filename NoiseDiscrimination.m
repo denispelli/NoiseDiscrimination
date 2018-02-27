@@ -405,14 +405,16 @@ function o=NoiseDiscrimination(oIn)
 
 %% INPUT ARGUMENT
 if exist('oIn','var') && isfield(oIn,'quitSession') && oIn.quitSession
-   % Return immediately if the user wants to quit.
+   % If the user wants to quit, then return immediately.
    o=oIn;
    return
 end
 
 %% SUGGESTED VALUES FOR ANNULUS
-if 0
+if false
    % Copy this to produce a Gaussian annulus:
+   o.noiseSD=0.2; % Usually in the range 0 to 0.4. Typically 0.2.
+   o.annularNoiseSD=0; 
    o.noiseRadiusDeg=inf;
    o.annularNoiseEnvelopeRadiusDeg=2;
    o.noiseEnvelopeSpaceConstantDeg=1.1;
@@ -420,13 +422,13 @@ if 0
    o.annularNoiseSmallRadiusDeg=inf;
    % Returns: o.centralNoiseEnvelopeE1DegDeg
 end
-if 0
+if false
    % Copy this to produce a hard-edge annulus:
    o.noiseSD=0; % Usually in the range 0 to 0.4. Typically 0.2.
+   o.annularNoiseSD=0.2; % Typically nan (i.e. use o.noiseSD) or 0.2.
    o.noiseRadiusDeg=0;
    o.annularNoiseEnvelopeRadiusDeg=0;
    o.noiseEnvelopeSpaceConstantDeg=inf;
-   o.annularNoiseSD=0.2; % Typically nan (i.e. use o.noiseSD) or 0.2.
    o.annularNoiseBigRadiusDeg=3; % Noise extent re target. Typically 1 or inf.
    o.annularNoiseSmallRadiusDeg=1; % Typically 1 or 0 (no hole).
    % Returns: o.centralNoiseEnvelopeE1DegDeg
@@ -438,7 +440,7 @@ end
 % (o.annularNoiseSmallRadiusDeg+o.annularNoiseBigRadiusDeg)/2
 %
 % 2. adjust the annulus thickness of the hard annulus
-% o.annularNoiseSmallRadiusDeg-o.annularNoiseBigRadiusDeg to achieve the
+% o.annularNoiseBigRadiusDeg-o.annularNoiseSmallRadiusDeg to achieve the
 % same "area" as the Gaussian annulus. This "area" is reported in a new
 % variable: o.centralNoiseEnvelopeE1DegDeg
 
@@ -544,7 +546,7 @@ o.alternatives=9; % The number of letters to use from o.alphabet.
 o.tGuess=nan; % Specify a finite value for Quest, or nan for default.
 o.tGuessSd=nan; % Specify a finite value for Quest, or nan for default.
 o.pThreshold=0.75;
-o.steepness=nan; % Typically 1.7, 3.5, or Nan. Nan asks NoiseDiscrimination to set this at runtime.
+o.steepness=[]; % Typically 1.7, 3.5, or []. [] asks NoiseDiscrimination to set this at runtime.
 o.eccentricityXYDeg=[0 0]; % eccentricity of target center re fixation, + for right & up.
 o.nearPointXYInUnitSquare=[0.5 0.5]; % location of target center on screen. [0 0]  lower right, [1 1] upper right.
 o.targetHeightDeg=2; % Target size, range 0 to inf. If you ask for too
@@ -645,7 +647,16 @@ o.luminanceFactor=1;
 o.luminance=[];
 o.retinalIlluminanceTd=[];
 o.pupilDiameterMm=[];
-
+o.annularNoiseEnvelopeRadiusDeg=0;
+o.labelAlternatives=[];
+o.trialsPerRun=40;
+o.runsDesired=1;
+o.eyes='both';
+% The user can only set fields that are initialized above. This is meant to 
+% catch any mistakes where the user tries to set a field that isn't used
+% below. We ignore input fields that are known output fields. Any field
+% that is neither already initialized or a known output field is flagged as
+% a fatal error, so it gets fixed immediately.
 
 %% READ USER-SUPPLIED o PARAMETERS
 if false
@@ -782,7 +793,7 @@ if streq(o.targetKind,'gabor')
    o.alternatives=length(o.targetGaborOrientationsDeg);
    o.alphabet=o.targetGaborNames(1:o.alternatives);
 end
-if ~isfield(o,'labelAlternatives')
+if isempty(o.labelAlternatives)
    switch o.targetKind
       case 'gabor'
          o.labelAlternatives=true;
@@ -1331,20 +1342,20 @@ try
    end
    switch o.observer
       case algorithmicObservers
-         if ~isfield(o,'steepness') || ~isfinite(o.steepness)
+         if isempty(o.steepness) || ~isfinite(o.steepness)
             o.steepness=1.7;
          end
-         if ~isfield(o,'trialsPerRun') || ~isfinite(o.trialsPerRun)
+         if isempty(o.trialsPerRun) || ~isfinite(o.trialsPerRun)
             o.trialsPerRun=1000;
          end
-         if ~isfield(o,'runsDesired') || ~isfinite(o.runsDesired)
+         if isempty(o.runsDesired) || ~isfinite(o.runsDesired)
             o.runsDesired=10;
          end
          %         degPerCm=57/o.viewingDistanceCm;
          %         o.pixPerCm=45; % for MacBook at native resolution.
          %         o.pixPerDeg=o.pixPerCm/degPerCm;
       otherwise
-         if ~isfield(o,'steepness') || ~isfinite(o.steepness)
+         if isempty(o.steepness) || ~isfinite(o.steepness)
             switch o.targetModulates
                case 'luminance'
                   o.steepness=3.5;
@@ -1411,7 +1422,7 @@ try
       % we need a screen only briefly, to create the targets to be
       % identified.
 % openwindow was here      
-      if 0
+      if false
          % This code to enable dithering is what Mario suggested, but it
          % makes no difference at all. I get dithering on my MacBook Pro
          % and iMac if and only if I EnableNative10BitFramebuffer, above. I
@@ -1443,7 +1454,7 @@ try
                end
          end
          Screen('ConfigureDisplay','Dithering',cal.screen,o.ditherCLUT);
-      end % if 0
+      end % if false
       
       % Recommended by Mario Kleiner, July 2017.
       % The first 'DrawText' call triggers loading of the plugin, but may fail.
@@ -1579,9 +1590,6 @@ try
    end
    
    %% MONOCULAR?
-   if ~isfield(o,'eyes')
-      error('Please set o.eyes to ''left'',''right'', or ''both''.');
-   end
    if ~ismember(o.eyes,{'left','right','both'})
       error('o.eyes==''%s'' is not allowed. It must be ''left'',''right'', or ''both''.',o.eyes);
    end
@@ -2137,7 +2145,7 @@ try
    end % switch o.task
    Screen('Preference','TextAntiAliasing',1);
    
-   % Compute annular noise mask
+   % Compute hard-edged annular noise mask
    annularNoiseMask=zeros(o.canvasSize); % initialize with 0
    rect=RectOfMatrix(annularNoiseMask);
    r=[0 0 o.annularNoiseBigSize(1) o.annularNoiseBigSize(2)];
@@ -2148,7 +2156,7 @@ try
    annularNoiseMask=FillRectInMatrix(0,r,annularNoiseMask); % fill small radius with 0
    annularNoiseMask=logical(annularNoiseMask);
    
-   % Compute central noise mask
+   % Compute hard-edged central noise mask
    centralNoiseMask=zeros(o.canvasSize); % initialize with 0
    rect=RectOfMatrix(centralNoiseMask);
    r=CenterRect([0 0 o.noiseSize]*o.noiseCheckPix/o.targetCheckPix,rect);
@@ -2161,20 +2169,19 @@ try
    end
    
    if isfinite(o.noiseEnvelopeSpaceConstantDeg)
-      % Compute Gaussian central noise envelope
-      [x, y]=meshgrid(1:o.canvasSize(1),1:o.canvasSize(2));
+      % Compute Gaussian noise envelope, which will be central or annular,
+      % depending on whether o.annularNoiseEnvelopeRadiusDeg is zero or
+      % greater than zero.
+      [x,y]=meshgrid(1:o.canvasSize(1),1:o.canvasSize(2));
       x=x-mean(x(:));
       y=y-mean(y(:));
       radius=sqrt(x.^2+y.^2);
       sigma=o.noiseEnvelopeSpaceConstantDeg*o.pixPerDeg/o.targetCheckPix;
-      if ~isfield(o,'annularNoiseEnvelopeRadiusDeg')
-         o.annularNoiseEnvelopeRadiusDeg=0;
-      end
       assert(isfinite(o.annularNoiseEnvelopeRadiusDeg));
       assert(o.annularNoiseEnvelopeRadiusDeg >= 0);
       if o.annularNoiseEnvelopeRadiusDeg > 0
          noiseEnvelopeRadiusPix=o.annularNoiseEnvelopeRadiusDeg*o.pixPerDeg/o.targetCheckPix;
-         distance=radius-noiseEnvelopeRadiusPix;
+         distance=abs(radius-noiseEnvelopeRadiusPix);
       else
          distance=radius;
       end
@@ -2707,7 +2714,7 @@ try
                cal.nFirst=1;
                cal.nLast=o.maxEntry;
             end
-            if 0 % Compute clut for the specific image
+            if false % Compute clut for the specific image
                L=[];
                for i=1:locations
                   L=[L location(i).image(:)*LMean];
@@ -4000,34 +4007,6 @@ switch o.observer
 end % switch
 end % function ModelObserver(o)
 
-function L=GetLuminance
-% L=GetLuminance;
-% Measure luminance in cd/m^2.
-% Cambridge Research Systems
-% ColorCAL II XYZ
-%
-% ColorCal2 throws a fatal error if the device is not attached. You can
-% protect against that by wrapping this in a try-catch block.
-%
-% If you want the new reading to be unaffected by prior luminances, i find
-% i need to allow at least 5 s for the device to settle at the new
-% luminance before taking a reading. i'm measuring tiny changes (luminance
-% quantization in the display), so i need very high precision. i think i'm
-% getting at least 16-bit precision.
-%
-% Denis Pelli 2018
-persistent CORRMAT
-if isempty(CORRMAT)
-   % Get ColorCAL II XYZ correction matrix.
-   % CORRMAT contains three correction matrices. Choose one.
-   % CRT=1:3; WLED LCD=4:6; OLED=7:9
-   CORRMAT=ColorCal2('ReadColorMatrix');
-end
-s=ColorCal2('MeasureXYZ');
-XYZ=CORRMAT(4:6,:)*[s.x s.y s.z]';
-L=XYZ(2);
-end
-
 function xyPix=XYPixOfXYDeg(o,xyDeg)
 % Convert position from deg (relative to fixation) to (x,y) coordinate in
 % o.stimulusRect. Deg increase right and up. Pix are in Apple screen
@@ -4184,7 +4163,7 @@ else
       ori=atan2d(-o.nearPointXYDeg(2),-o.nearPointXYDeg(1));
       rCm=2*sind(0.5*rDeg)*o.viewingDistanceCm;
       fixationOffsetXYCm=[cosd(ori) sind(ori)]*rCm;
-      if 1
+      if true
          % check
          oriCheck=atan2d(fixationOffsetXYCm(2),fixationOffsetXYCm(1));
          rCmCheck=sqrt(sum(fixationOffsetXYCm.^2));
