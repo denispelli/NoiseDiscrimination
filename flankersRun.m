@@ -47,15 +47,17 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
    warning('PRETENDING THIS IS A 15" MacBook Pro 2017');
 end
 
-o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
-o.useDynamicNoiseMovie=false;
-o.useFlankers=true;
-o.thresholdParameter='flankerContrast';
+% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+o.useDynamicNoiseMovie=true;
+if true
+   o.useFlankers=true;
+   o.thresholdParameter='flankerContrast';
+end
 o.contrast=-0.2;
 o.flankerContrast=-0.85; % Negative for dark letters.
 % o.flankerContrast=nan; % Nan requests that flanker contrast always equal signal contrast.
 o.annularNoiseSD=0; 
-o.flankerSpacingDeg=6;
+o.flankerSpacingDeg=3;
 o.noiseRadiusDeg=inf;
 o.annularNoiseEnvelopeRadiusDeg=o.flankerSpacingDeg;
 o.noiseEnvelopeSpaceConstantDeg=o.flankerSpacingDeg/2;
@@ -64,9 +66,9 @@ o.annularNoiseSmallRadiusDeg=0;
 % Two noise levels, noiseSD: 0 0.16
 o.experiment='flankers';
 o.conditionName='Neq of flanker';
-o.eccentricityXYDeg=[18 0];
-o.targetHeightDeg=4;
-o.targetDurationSec=2;
+o.eccentricityXYDeg=[20 0];
+o.targetHeightDeg=2;
+o.targetDurationSec=0.2;
 o.desiredLuminance=[];
 o.desiredLuminanceFactor=1;
 %  o.minScreenWidthDeg=10;
