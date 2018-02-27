@@ -765,7 +765,7 @@ end
 
 %% SET UP MISCELLANEOUS
 %onCleanupInstance=onCleanup(@()listenchar;sca); % clears screen and restores keyboard when function terminated.
-plusMinusASCIIChar=char(177); % use this instead of literal plus minus sign to prevent platform-dependent encoding issues
+plusMinusChar=char(177); % use this instead of literal plus minus sign to prevent platform-dependent encoding issues
 useImresize=exist('imresize','file'); % Requires the Image Processing Toolbox.
 if isnan(o.annularNoiseSD)
    o.annularNoiseSD=o.noiseSD;
@@ -2332,7 +2332,7 @@ try
       tGuess=0;
       tGuessSd=4;
    end
-   ffprintf(ff,'Your (log) guess is %.2f +/- %.2f\n',o.tGuess,o.tGuessSd);
+   ffprintf(ff,['Your (log) guess is %.2f',plusMinusChar,'%.2f\n'],o.tGuess,o.tGuessSd);
    rDeg=sqrt(sum(o.eccentricityXYDeg.^2));
    switch o.thresholdParameter
       case 'spacing'
@@ -3275,9 +3275,9 @@ try
    rDeg=sqrt(sum(o.eccentricityXYDeg.^2));
    switch o.thresholdParameter
       case 'spacing'
-         ffprintf(ff,'%s: p %.0f%%, size %.2f deg, ecc. %.1f deg, critical spacing %.2f deg.\n',o.observer,100*o.p,targetSizeDeg,rDeg,10^QuestMean(q));
+         ffprintf(ff,'%s: p %.0f%%, size %.2f deg, ecc. %.1f deg, critical spacing %.2f deg.\n',o.observer,100*o.p,targetSizeDeg,rDeg,10^o.questMean);
       case 'size'
-         ffprintf(ff,'%s: p %.0f%%, ecc. %.1f deg, threshold size %.3f deg.\n',o.observer,100*o.p,rDeg,10^QuestMean(q));
+         ffprintf(ff,'%s: p %.0f%%, ecc. %.1f deg, threshold size %.3f deg.\n',o.observer,100*o.p,rDeg,10^o.questMean);
       case 'contrast'
          o.contrast=o.thresholdPolarity*10^o.questMean;
       case 'flankerContrast'
@@ -3354,15 +3354,17 @@ try
    
    o.targetDurationSecMean=mean(o.likelyTargetDurationSec,'omitnan');
    o.targetDurationSecSD=std(o.likelyTargetDurationSec,'omitnan');
-   ffprintf(ff,'Mean target duration %.3f +/- %.3f s (sd over %d trials).\n',o.targetDurationSecMean,o.targetDurationSecSD,length(o.likelyTargetDurationSec));
+   ffprintf(ff,['Mean target duration %.3f',plusMinusChar,'%.3f s (sd over %d trials).\n'],o.targetDurationSecMean,o.targetDurationSecSD,length(o.likelyTargetDurationSec));
    ffprintf(ff,'Mean luminance %.1f cd/m^2, which filter reduces to %.2f cd/m^2.\n',LMean,o.luminance);
    
    o.E=10^(2*o.questMean)*o.E1;
    if streq(o.targetModulates,'luminance')
-      ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold+/-sd log(contrast) %.2f+/-%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',...
-         o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
+      ffprintf(ff,['Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
+         'Threshold',plusMinusChar,'sd log(contrast) %.2f',plusMinusChar,'%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n'],...
+         o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,o.thresholdPolarity*10^t,log10(o.EOverN),o.efficiency);
    else
-      ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold+/-sd log(r-1) %.2f+/-%.2f, approx required n %.0f\n',...
+      ffprintf(ff,['Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
+         'Threshold',plusMinusChar,'sd log(r-1) %.2f',plusMinusChar,'%.2f, approx required n %.0f\n'],...
          o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
    end
    if abs(trialsRight/trial-o.pThreshold) > 0.1
@@ -3374,14 +3376,15 @@ try
    %     tse=std(tSample)/sqrt(length(tSample));
    %     switch o.targetModulates
    %         case 'luminance',
-   %         ffprintf(ff,'SUMMARY: %s %d runs mean+/-se: log(contrast) %.2f+/-%.2f, contrast %.3f\n',o.observer,length(tSample),mean(tSample),tse,10^mean(tSample));
+   %         ffprintf(ff,['SUMMARY: %s %d runs mean',plusMinusChar,'se: log(contrast) %.2f',plusMinusChar,'%.2f, contrast %.3f\n'],...
+   %             o.observer,length(tSample),mean(tSample),tse,10^mean(tSample));
    %         %         efficiency=(o.idealEOverNThreshold^2) / (10^(2*t));
    %         %         ffprintf(ff,'Efficiency=%f\n', efficiency);
    %         %o.EOverN=10^mean(2*tSample)*o.E1/o.N;
-   %         ffprintf(ff,'Threshold log E/N %.2f+/-%.2f, E/N %.1f\n',mean(log10(o.EOverN)),std(log10(o.EOverN))/sqrt(length(o.EOverN)),o.EOverN);
+   %         ffprintf(ff,['Threshold log E/N %.2f',plusMinusChar,'%.2f, E/N %.1f\n'],mean(log10(o.EOverN)),std(log10(o.EOverN))/sqrt(length(o.EOverN)),o.EOverN);
    %         %o.efficiency=o.idealEOverNThreshold/o.EOverN;
    %         ffprintf(ff,'User-provided ideal threshold E/N log E/N %.2f, E/N %.1f\n',log10(o.idealEOverNThreshold),o.idealEOverNThreshold);
-   %         ffprintf(ff,'Efficiency log %.2f+/-%.2f, %.4f %%\n',mean(log10(o.efficiency)),std(log10(o.efficiency))/sqrt(length(o.efficiency)),100*10^mean(log10(o.efficiency)));
+   %         ffprintf(ff,['Efficiency log %.2f',plusMinusChar,'%.2f, %.4f %%\n'],mean(log10(o.efficiency)),std(log10(o.efficiency))/sqrt(length(o.efficiency)),100*10^mean(log10(o.efficiency)));
    %         corr=zeros(length(signal));
    %         for i=1:length(signal)
    %             for j=1:i
@@ -3411,7 +3414,8 @@ try
          o.logApproxRequiredNumber=log10(o.approxRequiredNumber);
          ffprintf(ff,'r %.3f, approx required number %.0f\n',o.r,o.approxRequiredNumber);
          %              logNse=std(logApproxRequiredNumber)/sqrt(length(tSample));
-         %              ffprintf(ff,'SUMMARY: %s %d runs mean+/-se: log(r-1) %.2f+/-%.2f, log(approx required n) %.2f+/-%.2f\n',o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
+         %              ffprintf(ff,['SUMMARY: %s %d runs mean',plusMinusChar,'se: log(r-1) %.2f',plusMinusChar,'%.2f, log(approx required n) %.2f',plusMinusChar,'%.2f\n'],...
+         % o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
       case 'entropy'
          t=o.questMean;
          o.r=10^t+1;
@@ -3573,7 +3577,7 @@ saveFont=Screen('TextFont',window,'Courier');
 caption={''};
 switch o.targetModulates
    case 'luminance'
-      caption{1}=sprintf('signal %.3f',10^tTest);
+      caption{1}=sprintf('signal %.3f',o.thresholdPolarity*10^tTest);
       caption{2}=sprintf('noise sd %.3f',o.noiseSD);
    case 'noise'
       caption{1}=sprintf('noise sd %.3f',o.noiseSD);
@@ -3624,7 +3628,7 @@ switch o.targetModulates
 end
 switch o.targetModulates
    case 'luminance'
-      filename=sprintf('%s_%s_%s%s_%.3fc_%.0fpix_%s',signalDescription,o.task,o.noiseType,freezing,10^tTest,checks,answerString);
+      filename=sprintf('%s_%s_%s%s_%.3fc_%.0fpix_%s',signalDescription,o.task,o.noiseType,freezing,o.thresholdPolarity*10^tTest,checks,answerString);
    case {'noise', 'entropy'}
       filename=sprintf('%s_%s_%s%s_%.3fr_%.0fpix_%.0freq_%s',signalDescription,o.task,o.noiseType,freezing,1+10^tTest,checks,approxRequiredN,answerString);
 end
