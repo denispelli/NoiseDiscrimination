@@ -2,15 +2,23 @@ function CalibrateScreenLuminance(screen,screenOutput)
 % This will calibrate the luminance of your screen. This is often called
 % "gamma" calibration, because in the days of CRTs a power law with
 % exponent "gamma" was often used to describe the relation of screen
-% luminance to input voltage. Before starting calibration, make sure your
-% screen is at maximum brightness, by repeatedly pressing the keyboard
-% "brighter" key (labeled with a sunburst), or use the System
-% Preferences:Displays and push the brightness slider all the way to the
-% right. It's important to maintain the lighting conditions of the computer
-% screen in the room when you test people. The angle of viewing matters
-% too, so you should have the photometer look at the screen from the same
-% direction that the observers will. Please minimize incident light falling
-% on the screen, but don't make the room dark, because that's tiring.
+% luminance to input voltage. 
+%
+% MAXIMUM BRIGHTNESS: Before starting calibration, make sure your screen is
+% at maximum brightness, by repeatedly pressing the keyboard "brighter" key
+% (labeled with a sunburst), or use the System Preferences:Displays and
+% push the brightness slider all the way to the right. It's important to
+% maintain the lighting conditions of the computer screen in the room when
+% you test people. If you're using macOS then we'll do this for you
+% automatically, using Applescript to control the System
+% Preferences:Displays panel.
+%
+% The angle of viewing matters too, so you should have the photometer look
+% at the screen from the same direction that the observers will. Please
+% minimize incident light falling on the screen, but don't make the room
+% dark, because that will later tire your observers by making them work in
+% the dark.
+%
 % Results will be appended to "OurScreenCalibrations.m".
 % Denis Pelli, March 23, 2015, February 25, 2017
 % July 20, 2017 enhanced to use new Brightness.m.
@@ -53,9 +61,11 @@ function CalibrateScreenLuminance(screen,screenOutput)
 % by LinearClut will have the same chroma as the white in the color table
 % that you saved in cal.old.gamma.
 %
-% See also LinearizeClut, ourScreenCalibrations, testLuminanceCalibration,
-% testGammaNull, IndexOfLuminance, LuminanceOfIndex.
-
+% I now use and recommend the Cambridge Research Systems colorimeter. It's
+% a photocell with a USB cable that plugs into your computer.
+% CalibrateScreenLuminance.m supports it for automated readings.
+% http://www.crsltd.com/tools-for-vision-science/light-measurement-display-calibation/colorcal-mkii-colorimeter/
+%
 % Photometers that report in cd/m^2 tend to be expensive. However, there
 % are very cheap apps that run on an iPhone and report luminance in EV
 % units. EV (exposure value) units are a photographers term, and are
@@ -67,16 +77,19 @@ function CalibrateScreenLuminance(screen,screenOutput)
 % https://www.resna.org/sites/default/files/legacy/conference/proceedings/2010/Outcomes/Student%20Papers/HilderbrandH.html
 % To facilitate use of such cheap light meters, I've added an EV mode to
 % the program, allowing you to specify each luminance in EV units.
+%
+% See also LinearizeClut, ourScreenCalibrations, testLuminanceCalibration,
+% testGammaNull, IndexOfLuminance, LuminanceOfIndex.
 
 % For Mac OSX, Apple says, on a portable/desktop computer: Press the F1/F14 key to
 % decrease the brightness, and press the F2/F15 key to increase the
 % brightness.
-% Intenet comment: If you have a second display, note that ctrl-F1 and
+% Internet comment: If you have a second display, note that ctrl-F1 and
 % ctrl-F2 usually change the brightness on the other display (or external
-% display) on OS X 10.7.
+% display) on macOS 10.7.
 
 % From nick.peatfield@gmail.com May 9, 2015
-% dimmer.scpt:
+% AppleScript dimmer.scpt:
 % tell application "System Events"
 %         key code 107
 %     end tell
@@ -120,9 +133,9 @@ function CalibrateScreenLuminance(screen,screenOutput)
 % http://osxdaily.com/2010/05/15/stop-the-macbook-pro-and-macbook-screen-from-dimming/
 
 forceMaximumBrightness=true;
-allowEV=false; % 1 to allow use of a photographer's light meter as a photometer. NOT TESTED.
+allowEV=false; % true to allow use of a photographer's light meter as a photometer. NOT TESTED.
 blindCalibration=false; % A fallback for computers that don't support Psychtoolbox GetEchoNumber.
-% gamma11bpc=1/2.4; % disabled
+% gamma11bpc=1/2.4; % disabled. Set display gamma.
 useFractionOfScreen=0; % Set this nonzero, about 0.3, for debugging.
 makeItQuick=false; % true for debugging
 Screen('Preference', 'SkipSyncTests', 1);
