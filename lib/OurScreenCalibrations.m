@@ -72,7 +72,7 @@ elseif computer.osx || computer.macintosh
    cal.machineName='';
 end
 cal.screenOutput=[]; % only for Linux
-cal.ScreenConfigureDisplayBrightnessWorks=1; % default value
+cal.ScreenConfigureDisplayBrightnessWorks=true; % default value
 cal.brightnessSetting=1.00; % default value
 cal.brightnessRMSError=0; % default value
 
@@ -130,7 +130,7 @@ if streq(cal.macModelName,'MacBookPro9,2') && cal.screen==0 && streq(cal.machine
 end
 if streq(cal.macModelName,'iMac14,1') && cal.screen==0 && streq(cal.machineName,'pellimac')
    cal.screenOutput=[]; % used only under Linux
-   cal.ScreenConfigureDisplayBrightnessWorks=1;
+   cal.ScreenConfigureDisplayBrightnessWorks=true;
    cal.brightnessSetting=1.00;
    cal.brightnessReading=1.00;
    cal.brightnessRMSError=0.00; % between settings and readings
@@ -147,7 +147,7 @@ end
 if streq(cal.macModelName,'MacBookAir6,2') && cal.screen==0 && streq(cal.machineName,'Santayana')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='Color LCD';
-   cal.ScreenConfigureDisplayBrightnessWorks=1;
+   cal.ScreenConfigureDisplayBrightnessWorks=true;
    cal.brightnessSetting=1.00;
    cal.brightnessRmsError=0.0000;
    cal.screenRect=[0 0 1440 900];
@@ -421,7 +421,7 @@ if streq(cal.macModelName,'MacBookAir6,2') && cal.screen==0 && streq(cal.machine
 end
 if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && streq(cal.machineName,'Nick''s MacBook Pro')
    cal.screenOutput=[]; % used only under Linux
-   cal.ScreenConfigureDisplayBrightnessWorks=1;
+   cal.ScreenConfigureDisplayBrightnessWorks=true;
    cal.brightnessSetting=1.00;
    cal.brightnessReading=1.00;
    cal.brightnessRMS=0.00; % between settings and readings
@@ -438,7 +438,7 @@ end
 if streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==599 && cal.screenHeightMm==340 && streq(cal.machineName,'pelliamdimac')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='iMac';
-   cal.ScreenConfigureDisplayBrightnessWorks=1;
+   cal.ScreenConfigureDisplayBrightnessWorks=true;
    cal.brightnessSetting=1.00;
    cal.brightnessRmsError=0.0000;
    % 	cal.screenRect=[0 0 2560 1440];
@@ -454,7 +454,7 @@ end
 if streq(cal.macModelName,'MacBookAir4,2') && cal.screen==0 && streq(cal.machineName,'Rose')
    cal.screenOutput=[]; % used only under Linux
    %	cal.profile='osascript: /Users/scotopic/Documents/MATLAB/noisediscrimination-software: No such file or directory';
-   cal.ScreenConfigureDisplayBrightnessWorks=1;
+   cal.ScreenConfigureDisplayBrightnessWorks=true;
    cal.brightnessSetting=1.00;
    cal.brightnessRmsError=0.0000;
    % 	cal.screenRect=[0 0 1440 900];
@@ -470,7 +470,7 @@ end
 if streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && cal.screenWidthMm==331 && cal.screenHeightMm==206 && streq(cal.machineName,'Denis''s MacBook Pro 5K')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='Color LCD';
-   cal.ScreenConfigureDisplayBrightnessWorks=1;
+   cal.ScreenConfigureDisplayBrightnessWorks=true;
    cal.brightnessSetting=1.00;
    cal.brightnessRmsError=0.0000;
    % cal.screenRect=[0 0 1440 900];
@@ -486,7 +486,7 @@ end
 if streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==602 && cal.screenHeightMm==341 && streq(cal.machineName,'pelliamdimac')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='iMac';
-   cal.ScreenConfigureDisplayBrightnessWorks=1;
+   cal.ScreenConfigureDisplayBrightnessWorks=true;
    cal.brightnessSetting=1.00;
    cal.brightnessRmsError=0.0000;
    % cal.screenRect=[0 0 1600 900];
@@ -503,7 +503,7 @@ end
 if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthMm==285 && cal.screenHeightMm==179 && streq(cal.machineName,'UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME.')
    cal.screenOutput=[]; % used only under Linux
    %cal.profile='';
-   cal.ScreenConfigureDisplayBrightnessWorks=1;
+   cal.ScreenConfigureDisplayBrightnessWorks=true;
    cal.brightnessSetting=1.00;
    cal.brightnessRmsError=0.0000;
    cal.screenRect=[0 0 1280 800];
@@ -520,7 +520,7 @@ end
 if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthMm==286 && cal.screenHeightMm==179 && streq(cal.machineName,'UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME.')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='/Users/Oana/Downloads/Archive/AutoBrightness/ScreenProfile.applescript:3700:3704: execution error: System Events got an error: Can��t get window 1 of process "System Preferences". Invalid index. (-1719)';
-   cal.ScreenConfigureDisplayBrightnessWorks=1;
+   cal.ScreenConfigureDisplayBrightnessWorks=true;
    cal.brightnessSetting=1.00;
    cal.brightnessRmsError=0.0000;
    % cal.screenRect=[0 0 1280 800];
@@ -537,7 +537,7 @@ end
 if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthMm==285 && cal.screenHeightMm==179 && streq(cal.machineName,'UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME.')
    cal.screenOutput=[]; % used only under Linux
    %cal.profile='';
-   cal.ScreenConfigureDisplayBrightnessWorks=1;
+   cal.ScreenConfigureDisplayBrightnessWorks=true;
    cal.brightnessSetting=1.00;
    cal.brightnessRmsError=0.0000;
    cal.screenRect=[0 0 1280 800];
@@ -554,7 +554,7 @@ end
 if IsOSX && streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthMm==286 && cal.screenHeightMm==179 && streq(cal.machineName,'Kant')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='CIE RGB';
-   cal.ScreenConfigureDisplayBrightnessWorks=1;
+   cal.ScreenConfigureDisplayBrightnessWorks=true;
    cal.brightnessSetting=1.00;
    cal.brightnessRmsError=0.0000;
    % cal.screenRect=[0 0 1280 800];
@@ -571,7 +571,7 @@ end
 if IsOSX && streq(cal.macModelName,'MacBookAir5,1') && cal.screen==0 && cal.screenWidthMm==260 && cal.screenHeightMm==140 && streq(cal.machineName,'Kant')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='Color LCD';
-   cal.ScreenConfigureDisplayBrightnessWorks=1;
+   cal.ScreenConfigureDisplayBrightnessWorks=true;
    cal.brightnessSetting=1.00;
    cal.brightnessRmsError=0.0000;
    % cal.screenRect=[0 0 1366 768];
@@ -587,7 +587,7 @@ end
 
 if IsWin && cal.screen==0 && cal.screenWidthMm==677 && cal.screenHeightMm==381
    cal.screenOutput=[]; % used only under Linux
-   cal.ScreenConfigureDisplayBrightnessWorks=0;
+   cal.ScreenConfigureDisplayBrightnessWorks=false;
    cal.brightnessSetting=1.00;
    cal.brightnessRmsError=NaN;
    % cal.screenRect=[0 0 1920 1080];
@@ -603,7 +603,7 @@ end
 
 if cal.screen==0 && strcmpi(cal.machineName, 'ThPad')
    cal.screenOutput=[]; % used only under Linux
-   cal.ScreenConfigureDisplayBrightnessWorks=0;
+   cal.ScreenConfigureDisplayBrightnessWorks=false;
    cal.brightnessSetting=1.00;
    cal.brightnessRmsError=NaN;
    cal.screenRect=[0 0 1366 768];
@@ -621,7 +621,7 @@ end
 if IsOSX && streq(cal.macModelName,'MacBookPro11,3') && cal.screen==0 && cal.screenWidthMm==331 && cal.screenHeightMm==206 && streq(cal.machineName,'Ivy')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='Color LCD';
-   cal.ScreenConfigureDisplayBrightnessWorks=1;
+   cal.ScreenConfigureDisplayBrightnessWorks=true;
    cal.brightnessSetting=1.00;
    cal.brightnessRmsError=0.0000;
    % cal.screenRect=[0 0 1440 900];
@@ -636,7 +636,7 @@ if IsOSX && streq(cal.macModelName,'MacBookPro11,3') && cal.screen==0 && cal.scr
 end
 if IsLinux && cal.screen==0 && strcmpi(cal.machineName, 'ZBook') %cal.screenWidthMm==508 && cal.screenHeightMm==285
    cal.screenOutput=[]; % used only under Linux
-   cal.ScreenConfigureDisplayBrightnessWorks=0;
+   cal.ScreenConfigureDisplayBrightnessWorks=false;
    cal.brightnessSetting=1.00;
    cal.brightnessRmsError=NaN;
    % cal.screenRect=[0 0 1920 1080];
@@ -651,7 +651,7 @@ if IsLinux && cal.screen==0 && strcmpi(cal.machineName, 'ZBook') %cal.screenWidt
 end
 if IsLinux && cal.screen==1 && cal.screenWidthMm==361 && cal.screenHeightMm==203 && strcmpi(cal.machineName, 'ThPad')
    cal.screenOutput=[]; % used only under Linux
-   cal.ScreenConfigureDisplayBrightnessWorks=0;
+   cal.ScreenConfigureDisplayBrightnessWorks=false;
    cal.brightnessSetting=1.00;
    cal.brightnessRmsError=NaN;
    % cal.screenRect=[0 0 1366 768];
@@ -667,7 +667,7 @@ end
 if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==541 && cal.screenHeightMm==338 && streq(cal.machineName,'pelliamdimac')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='iMac';
-   cal.ScreenConfigureDisplayBrightnessWorks=1;
+   cal.ScreenConfigureDisplayBrightnessWorks=true;
    cal.brightnessSetting=1.00;
    cal.brightnessRmsError=0.0000;
    % cal.screenRect=[0 0 1280 800];
@@ -683,7 +683,7 @@ end
 if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==541 && cal.screenHeightMm==338 && streq(cal.machineName,'pelliamdimac')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='iMac';
-   cal.ScreenConfigureDisplayBrightnessWorks=1;
+   cal.ScreenConfigureDisplayBrightnessWorks=true;
    cal.brightnessSetting=1.00;
    cal.brightnessRmsError=0.0000;
    % cal.screenRect=[0 0 1280 800];
@@ -700,7 +700,7 @@ end
 if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==602 && cal.screenHeightMm==341 && streq(cal.machineName,'pelliamdimac')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='iMac';
-   cal.ScreenConfigureDisplayBrightnessWorks=1;
+   cal.ScreenConfigureDisplayBrightnessWorks=true;
    cal.brightnessSetting=1.00;
    cal.brightnessRmsError=0.0000;
    % cal.screenRect=[0 0 1600 900];
@@ -783,7 +783,7 @@ end
 if IsOSX && streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && cal.screenWidthMm==331 && cal.screenHeightMm==206 && streq(cal.machineName,'Denis''s MacBook Pro 5K')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='Color LCD';
-   cal.ScreenConfigureDisplayBrightnessWorks=1;
+   cal.ScreenConfigureDisplayBrightnessWorks=true;
    cal.brightnessSetting=1.00;
    cal.brightnessRmsError=0.0000;
    % cal.screenRect=[0 0 1440 900];
@@ -1058,8 +1058,8 @@ end
 if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==602 && cal.screenHeightMm==341 && streq(cal.machineName,'iMac5k-PelliLab')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='iMac';
-	cal.ScreenConfigureDisplayBrightnessWorks=0;
-	cal.BrightnessWorks=1;
+	cal.ScreenConfigureDisplayBrightnessWorks=false;
+	cal.BrightnessWorks=true;
 	cal.brightnessSetting=1.00;
 	cal.brightnessRmsError=0.0000;
 	% cal.screenRect=[0 0 1600 900];
@@ -1135,8 +1135,8 @@ end
 if IsOSX && streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && cal.screenWidthMm==331 && cal.screenHeightMm==206 && streq(cal.machineName,'Denis''s MacBook Pro 5K')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='CIE RGB';
-	cal.ScreenConfigureDisplayBrightnessWorks=0;
-	cal.BrightnessWorks=1; 	cal.brightnessSetting=1.00;
+	cal.ScreenConfigureDisplayBrightnessWorks=false;
+	cal.BrightnessWorks=true; 	cal.brightnessSetting=1.00;
 	cal.brightnessRmsError=0.0000;
 	% cal.screenRect=[0 0 1440 900];
 	cal.mfilename='CalibrateScreenLuminance';
@@ -1366,8 +1366,8 @@ end
 if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.machineName,'UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME.')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD Calibrated';
-	cal.ScreenConfigureDisplayBrightnessWorks=0;
-	cal.BrightnessWorks=1; 	cal.brightnessSetting=1.00;
+	cal.ScreenConfigureDisplayBrightnessWorks=false;
+	cal.BrightnessWorks=true; 	cal.brightnessSetting=1.00;
 	cal.brightnessRmsError=0.0000;
 	% cal.screenRect=[0 0 1680 1050];
 	cal.mfilename='CalibrateScreenLuminance';
@@ -1597,8 +1597,8 @@ end
 if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.machineName,'UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME.')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD Calibrated';
-	cal.ScreenConfigureDisplayBrightnessWorks=0;
-	cal.BrightnessWorks=1; 	cal.brightnessSetting=1.00;
+	cal.ScreenConfigureDisplayBrightnessWorks=false;
+	cal.BrightnessWorks=true; 	cal.brightnessSetting=1.00;
 	cal.brightnessRmsError=0.0000;
 	% cal.screenRect=[0 0 1680 1050];
 	cal.mfilename='CalibrateScreenLuminance';
@@ -1828,8 +1828,8 @@ end
 if IsOSX && streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && cal.screenWidthMm==331 && cal.screenHeightMm==206 && streq(cal.localHostName,'Deniss-MacBook-Pro-5K')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='CIE RGB';
-	cal.ScreenConfigureDisplayBrightnessWorks=0;
-	cal.BrightnessWorks=1; 	cal.brightnessSetting=1.00;
+	cal.ScreenConfigureDisplayBrightnessWorks=false;
+	cal.BrightnessWorks=true; 	cal.brightnessSetting=1.00;
 	cal.brightnessRmsError=0.0000;
 	% cal.screenRect=[0 0 1440 900];
 	cal.mfilename='CalibrateScreenLuminance';
@@ -2059,8 +2059,8 @@ end
 if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pellis-MacBook-Pro-Shenghao')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD Calibrated';
-	cal.ScreenConfigureDisplayBrightnessWorks=0;
-	cal.BrightnessWorks=1; 	cal.brightnessSetting=1.00;
+	cal.ScreenConfigureDisplayBrightnessWorks=false;
+	cal.BrightnessWorks=true; 	cal.brightnessSetting=1.00;
 	cal.brightnessRmsError=0.0000;
 	% cal.screenRect=[0 0 1680 1050];
 	cal.mfilename='CalibrateScreenLuminance';
@@ -2290,8 +2290,8 @@ end
 if IsOSX && streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && cal.screenWidthMm==331 && cal.screenHeightMm==206 && streq(cal.localHostName,'Everglades')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
-	cal.ScreenConfigureDisplayBrightnessWorks=0;
-	cal.BrightnessWorks=1; 	cal.brightnessSetting=1.00;
+	cal.ScreenConfigureDisplayBrightnessWorks=false;
+	cal.BrightnessWorks=true; 	cal.brightnessSetting=1.00;
 	cal.brightnessRmsError=0.0000;
 	% cal.screenRect=[0 0 1440 900];
 	cal.mfilename='CalibrateScreenLuminance';
@@ -2523,8 +2523,8 @@ end
 if IsOSX && streq(cal.macModelName,'MacBookAir6,2') && cal.screen==0 && streq(cal.localHostName,'Santayana-MacBookAir')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
-	cal.ScreenConfigureDisplayBrightnessWorks=0;
-	cal.BrightnessWorks=1; 	cal.brightnessSetting=1.00;
+	cal.ScreenConfigureDisplayBrightnessWorks=false;
+	cal.BrightnessWorks=true; 	cal.brightnessSetting=1.00;
 	cal.brightnessRmsError=0.0000;
 	cal.mfilename='CalibrateScreenLuminance';
 	cal.datestr='22-Nov-2017';
@@ -2753,8 +2753,8 @@ end
 if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pellis-MacBook-Pro-Yichen')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
-	cal.ScreenConfigureDisplayBrightnessWorks=0;
-	cal.BrightnessWorks=1; 	cal.brightnessSetting=1.00;
+	cal.ScreenConfigureDisplayBrightnessWorks=false;
+	cal.BrightnessWorks=true; 	cal.brightnessSetting=1.00;
 	cal.brightnessRmsError=0.0000;
 	% cal.screenRect=[0 0 1680 1050];
 	cal.mfilename='CalibrateScreenLuminance';
@@ -2984,8 +2984,8 @@ end
 if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==207 && streq(cal.localHostName,'Pellis-MacBook-Pro-Darshan')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
-	cal.ScreenConfigureDisplayBrightnessWorks=0;
-	cal.BrightnessWorks=1; 	cal.brightnessSetting=1.00;
+	cal.ScreenConfigureDisplayBrightnessWorks=false;
+	cal.BrightnessWorks=true; 	cal.brightnessSetting=1.00;
 	cal.brightnessRmsError=0.0000;
 	% cal.screenRect=[0 0 1920 1200];
 	cal.mfilename='CalibrateScreenLuminance';
@@ -3215,8 +3215,8 @@ end
 if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pellis-MacBook-Pro-Flavia')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
-	cal.ScreenConfigureDisplayBrightnessWorks=0;
-	cal.BrightnessWorks=1; 	cal.brightnessSetting=1.00;
+	cal.ScreenConfigureDisplayBrightnessWorks=false;
+	cal.BrightnessWorks=true; 	cal.brightnessSetting=1.00;
 	cal.brightnessRmsError=0.0000;
 	% cal.screenRect=[0 0 1680 1050];
 	cal.mfilename='CalibrateScreenLuminance';
@@ -3446,8 +3446,8 @@ end
 if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Denis-Mac-Katerina')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
-	cal.ScreenConfigureDisplayBrightnessWorks=0;
-	cal.BrightnessWorks=1; 	cal.brightnessSetting=1.00;
+	cal.ScreenConfigureDisplayBrightnessWorks=false;
+	cal.BrightnessWorks=true; 	cal.brightnessSetting=1.00;
 	cal.brightnessRmsError=0.0000;
 	% cal.screenRect=[0 0 1680 1050];
 	cal.mfilename='CalibrateScreenLuminance';
