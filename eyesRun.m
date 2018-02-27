@@ -15,11 +15,8 @@
 % luminance 250 cd/m2
 % monocular, temporal field, right eye
 
-clear all
 %% CREATE LIST OF CONDITIONS TO BE TESTED
-if verLessThan('matlab','R2013b')
-   error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
-end
+clear all
 clear o oo
 fakeRun=false; % Enable fakeRun to check plotting before we have data.
 
@@ -27,20 +24,6 @@ fakeRun=false; % Enable fakeRun to check plotting before we have data.
 % columns in the list. I don't think we use these values. This is just for
 % the cosmetic ordering of the fields in the struct, which later determines
 % the order of the columns in the table.
-o.condition=1;
-o.experiment='';
-o.conditionName='';
-o.viewingDistanceCm=40;
-o.eyes='right';
-o.desiredRetinalIlluminanceTd=[];
-o.useFilter=false;
-o.eccentricityXYDeg=[0 0];
-o.noiseSD=0;
-o.targetDurationSec=0.2;
-o.targetCyclesPerDeg=3;
-o.targetGaborCycles=3;
-o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
-o.noiseCheckDeg=o.targetHeightDeg/20;
 
 cal=OurScreenCalibrations(0);
 if ~streq(cal.macModelName,'MacBookPro14,3')
@@ -52,7 +35,13 @@ end
 %% THREE DOMAINS
 % In each of the 3 domains: photon, cortical, ganglion
 % Two noise levels, noiseSD: 0 0.16
+%
+o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 o.experiment='eyes';
+o.condition=1;
+o.viewingDistanceCm=40;
+o.eyes='right';
+o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
 for domain=1:3
    switch domain
       case 1
@@ -61,8 +50,9 @@ for domain=1:3
          o.eccentricityXYDeg=[0 0];
          o.targetCyclesPerDeg=4;
          o.targetDurationSec=0.1;
-         o.desiredLuminance=5; % cd/m^2
+         o.desiredLuminance=2.5; % cd/m^2
          o.desiredLuminanceFactor=[];
+         o.useFilter=true;
          % o.minScreenWidthDeg=30; % Big to determine pupil size.
       case 2
          % cortical
@@ -72,6 +62,7 @@ for domain=1:3
          o.targetDurationSec=0.4;
          o.desiredLuminance=[];
          o.desiredLuminanceFactor=1;
+         o.useFilter=false;
          %  o.minScreenWidthDeg=10;
       case 3
          % ganglion
@@ -81,13 +72,14 @@ for domain=1:3
          o.targetDurationSec=0.2;
          o.desiredLuminance=[];
          o.desiredLuminanceFactor=1;
+         o.useFilter=false;
          % o.minScreenWidthDeg=10;
    end
    for eyes=Shuffle({'right' 'both'})
       o.eyes=eyes{1};
       for noiseSD=Shuffle([0 0.16])
          o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
-%          o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
+         %          o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
          o.minScreenWidthDeg=1+o.targetHeightDeg*2;
          o.maxViewingDistanceCm=round(0.1*cal.screenWidthMm/(2*tand(o.minScreenWidthDeg/2)));
          o.viewingDistanceCm=min([o.maxViewingDistanceCm 40]);
@@ -106,8 +98,12 @@ end
 for i=1:length(oo)
    oo(i).condition=i;
 end
-t=struct2table(oo);
-t % Print the oo list of conditions.
+t=struct2table(oo,'AsArray',true);
+vars={'condition' 'experiment' 'conditionName' ...
+   'useFilter' 'eccentricityXYDeg' ...
+   'targetDurationSec' 'targetCyclesPerDeg' ...
+   'targetGaborCycles' 'targetHeightDeg' 'noiseSD' };
+t(:,vars) % Print the oo list of conditions.
 
 if fakeRun
    % NOT IMPLEMENTED.
@@ -142,17 +138,19 @@ if ~fakeRun && 1
          o.filterTransmission=oOut.filterTransmission;
       end
       o.blankingRadiusReEccentricity=0; % No blanking.
-      if 0
+      if false
          % Target letter
          o.targetKind='letter';
          o.font='Sloan';
          o.alphabet='DHKNORSVZ';
+         o.contrast=-1; % negative contrast.
       else
          % Target gabor
          o.targetKind='gabor';
          o.targetGaborOrientationsDeg=[0 45 90 135];
          o.targetGaborNames='1234';
          o.alphabet=o.targetGaborNames;
+         o.contrast=1; % positive contrast.
       end
       o.alternatives=length(o.alphabet);
       o.useDynamicNoiseMovie=true;
@@ -177,14 +175,43 @@ if ~fakeRun && 1
          o.questPlusPlot=true;
       end
       oOut=NoiseDiscrimination(o);
-      fprintf(['%s: %.1f cd/m^2, luminanceFactor %.2f, filterTransmission %.3f\n'],...
-         o.conditionName,oOut.luminance,oOut.luminanceFactor,oOut.filterTransmission);
-      if ~isempty(oOut.pupilDiameterMm)
-         fprintf(['%s: retinalIlluminanceTd %.1f td, pupilDiameterMm %.1f\n'],...
-            o.conditionName,oOut.retinalIlluminanceTd,oOut.pupilDiameterMm);
+      oo(oi).trials=oOut.trials; % Always defined.
+      %       fprintf(['%s: %.1f cd/m^2, luminanceFactor %.2f, filterTransmission %.3f\n'],...
+      %          o.conditionName,oOut.luminance,oOut.luminanceFactor,oOut.filterTransmission);
+      if isfield(oOut,'psych')
+         fprintf(['<strong>%s: luminance %.1f cd/m^2, '...
+            'eccentricity %.1f %.1f deg, '...
+            'duration %.2f s, cyclesPerDeg %.1f, '...
+            'noiseSD %.2f, log N %.2f, '...
+            'contrast %.3f</strong>\n'],...
+            oOut.conditionName,oOut.luminance,...
+            oOut.eccentricityXYDeg, ...
+            oOut.targetDurationSec, oOut.targetCyclesPerDeg,...
+            oOut.noiseSD,log10(oOut.N),...
+            oOut.contrast);
+         oo(oi).experimenter=oOut.experimenter;
+         oo(oi).observer=oOut.observer;
+         oo(oi).filterTransmission=oOut.filterTransmission;
+         oo(oi).luminance=oOut.luminance;
+         oo(oi).contrast=oOut.contrast;
+         oo(oi).N=oOut.N;
+         oo(oi).data=oOut.data;
+         oo(oi).psych=oOut.psych;
       end
       if oOut.quitSession
          break
       end
+   end
+   %% PRINT THE RESULTS
+   t=struct2table(oo(1:oi),'AsArray',true);
+   rows=t.trials>0;
+%    vars={'condition' 'experiment' 'conditionName' ...
+%       'viewingDistanceCm' 'eyes'  ...
+%       'luminance' 'eccentricityXYDeg' ...
+%       'targetDurationSec' 'targetCyclesPerDeg' ...
+%       'targetGaborCycles' 'targetHeightDeg' 'noiseSD' 'noiseCheckDeg'};
+    vars={'experiment' 'condition' 'observer' 'trials' 'luminance' 'eccentricityXYDeg' 'targetDurationSec' 'targetCyclesPerDeg' 'noiseSD' 'N' 'contrast'};
+   if any(rows)
+      t(rows,vars) % Print the oo list of conditions, with measured threshold.
    end
 end % Run the selected conditions
