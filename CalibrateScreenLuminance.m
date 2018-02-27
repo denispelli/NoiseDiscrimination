@@ -119,12 +119,12 @@ function CalibrateScreenLuminance(screen,screenOutput)
 % with others.
 % http://osxdaily.com/2010/05/15/stop-the-macbook-pro-and-macbook-screen-from-dimming/
 
-forceMaximumBrightness=1;
-allowEV=0; % 1 to allow use of a photographer's light meter as a photometer. NOT TESTED.
-blindCalibration=0; % A fallback for computers that don't support Psychtoolbox GetEchoNumber.
+forceMaximumBrightness=true;
+allowEV=false; % 1 to allow use of a photographer's light meter as a photometer. NOT TESTED.
+blindCalibration=false; % A fallback for computers that don't support Psychtoolbox GetEchoNumber.
 % gamma11bpc=1/2.4; % disabled
 useFractionOfScreen=0; % Set this nonzero, about 0.3, for debugging.
-makeItQuick=0; % 1 for debugging
+makeItQuick=false; % 1 for debugging
 Screen('Preference', 'SkipSyncTests', 1);
 try
    commandwindow; % Bring focus to command window, if not already there.
@@ -211,10 +211,10 @@ try
          PsychHID('CloseUSBDevice',usbHandle);
       end
       fprintf('* USB phototometer found.\n');
-      useConnectedPhotometer=1;
+      useConnectedPhotometer=true;
    catch
       fprintf('* No USB phototometer found, proceeding.\n');
-      useConnectedPhotometer=0;
+      useConnectedPhotometer=false;
    end
    %    oldVisualDebugLevel = Screen('Preference', 'VisualDebugLevel',0);
    %    oldVerbosity = Screen('Preference', 'Verbosity',0);
@@ -289,10 +289,10 @@ try
          Speak('Will now check your screen brightness control');
       end
       AutoBrightness(cal.screen,0); % Disable Apple's automatic adjustment of brightness
-      cal.autoBrightnessDisabled=1;
-      useBrightness=1; % In macOS 10.12.5 ScreenConfigureDisplayBrightnessWorks works erratically.
-      cal.BrightnessWorks=1; % Default value
-      cal.ScreenConfigureDisplayBrightnessWorks=0; % Default value.
+      cal.autoBrightnessDisabled=true;
+      useBrightness=true; % In macOS 10.12.5 ScreenConfigureDisplayBrightnessWorks works erratically.
+      cal.BrightnessWorks=true; % Default value
+      cal.ScreenConfigureDisplayBrightnessWorks=false; % Default value.
       if useBrightness
          cal.brightnessSetting=Brightness(cal.screen);
       else
@@ -317,26 +317,26 @@ try
          fprintf('That doesn''t work, but we''ll proceed regardless.\n');
          if useBrightness
             fprintf('WARNING: Brightness function not working for this screen. RMS error %.3f\n',cal.brightnessRmsError);
-            cal.BrightnessWorks=1;
+            cal.BrightnessWorks=true;
          else
             fprintf('WARNING: Screen ConfigureDisplay Brightness not working for this screen. RMS error %.3f\n',cal.brightnessRmsError);
-            cal.ScreenConfigureDisplayBrightnessWorks=0;
+            cal.ScreenConfigureDisplayBrightnessWorks=false;
          end
       else
          if useSpeech
             Speak('It works!');
          end
          if useBrightness
-            cal.BrightnessWorks=1;
+            cal.BrightnessWorks=true;
             fprintf('Brightness function works.\n');
          else
-            cal.ScreenConfigureDisplayBrightnessWorks=1;
+            cal.ScreenConfigureDisplayBrightnessWorks=true;
             fprintf('Screen ConfigureDisplay Brightness works.\n');
          end
       end
    else
-      cal.BrightnessWorks=0;
-      cal.ScreenConfigureDisplayBrightnessWorks=0;
+      cal.BrightnessWorks=false;
+      cal.ScreenConfigureDisplayBrightnessWorks=false;
       cal.brightnessRmsError=nan;
    end
    fprintf('When using a flat-panel display, we usually run at maximum "brightness".\n');
@@ -421,7 +421,7 @@ try
       end
       useEV= response(1)=='e';
    else
-      useEV=0;
+      useEV=false;
    end
    
    if useEV
@@ -472,7 +472,7 @@ try
       end
    end
    Screen('Preference','SkipSyncTests',1);
-   cal.useRetinaResolution=0;
+   cal.useRetinaResolution=false;
    
    screenBufferRect = Screen('Rect',cal.screen);
    PsychImaging('PrepareConfiguration');
@@ -707,8 +707,8 @@ try
       if ismac
          fprintf(f,'\tcal.profile=''%s'';\n',cal.profile);
       end
-      fprintf(f,'\tcal.ScreenConfigureDisplayBrightnessWorks=%.0f;\n',cal.ScreenConfigureDisplayBrightnessWorks);
-      fprintf(f,'\tcal.BrightnessWorks=%.0f; % Capitalized reference to Brightness.m and applescript.\n',cal.BrightnessWorks);
+      fprintf(f,'\tcal.ScreenConfigureDisplayBrightnessWorks=%s;\n',mat2str(cal.ScreenConfigureDisplayBrightnessWorks));
+      fprintf(f,'\tcal.BrightnessWorks=%s; % Capitalized reference to Brightness.m and applescript.\n',mat2str(cal.BrightnessWorks));
       fprintf(f,'\tcal.brightnessSetting=%.2f;\n',cal.brightnessSetting);
       fprintf(f,'\tcal.brightnessRmsError=%.4f;\n',cal.brightnessRmsError);
       cal.screenRect=screenRect;
