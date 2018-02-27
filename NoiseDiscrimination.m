@@ -466,6 +466,7 @@ if ismac && ~ScriptingOkShowPermission
    error(['Please give MATLAB permission to control the computer. ',...
       'You''ll need admin privileges to do this.']);
 end
+plusMinusChar=char(177); % Use this instead of literal plus minus sign to prevent corruption of this non-ASCII character.
 escapeChar=char(27);
 graveAccentChar='`';
 returnChar=char(13);
@@ -765,7 +766,6 @@ end
 
 %% SET UP MISCELLANEOUS
 %onCleanupInstance=onCleanup(@()listenchar;sca); % clears screen and restores keyboard when function terminated.
-plusMinusChar=char(177); % use this instead of literal plus minus sign to prevent platform-dependent encoding issues
 useImresize=exist('imresize','file'); % Requires the Image Processing Toolbox.
 if isnan(o.annularNoiseSD)
    o.annularNoiseSD=o.noiseSD;
@@ -1863,9 +1863,9 @@ try
    switch o.noiseType % Fill noiseList with desired kind of noise.
       case 'gaussian'
          o.noiseListBound=2;
-         temp=randn([1, 20000]);
-         noiseList=find(sign(temp.^2-o.noiseListBound^2)-1);
-         noiseList=temp(noiseList);
+         temp=randn([1 20000]);
+         ok=temp.^2<o.noiseListBound^2;
+         noiseList=temp(ok);
          clear temp;
       case 'uniform'
          o.noiseListBound=1;
