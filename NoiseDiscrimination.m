@@ -500,10 +500,7 @@ o.assessBitDepth=false;
 o.useFractionOfScreen=false; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 o.viewingDistanceCm=50; % viewing distance
 o.flipScreenHorizontally=false; % Use this when viewing the display in a mirror.
-o.observer=''; % Name of person or existing algorithm.
-% o.observer='denis'; o.observer='michelle'; o.observer='martin';
-% o.observer='tiffany'; o.observer='irene'; o.observer='joy';
-% o.observer='jacob'; o.observer='jacobaltholz';
+o.observer=''; % Name of person or algorithm.
 % o.observer='brightnessSeeker'; % Existing algorithm instead of person.
 % o.observer='blackshot'; % Existing algorithm instead of person.
 % o.observer='maximum'; % Existing algorithm instead of person.
@@ -514,6 +511,7 @@ o.experiment='';
 o.eyes='both'; % 'left', 'right', 'both', or 'one', which asks user to specify at runtime.
 o.luminanceTransmission=1; % Less than one for dark glasses or neutral density filter.
 o.trialsPerRun=40; % Typically 40.
+o.trials=0; % Initialize trial counter so it's defined even if user quits early.
 o.runNumber=1; % For display only, indicate the run number. When o.runNumber==runsDesired this program says "Congratulations" before returning.
 o.runsDesired=1; % How many runs you to plan to do, used solely for display (and congratulations).
 o.speakInstructions=false;
@@ -531,6 +529,7 @@ o.printTargetBounds=false;
 o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
 o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
 o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
+o.targetCyclesPerDeg=nan;
 o.targetGaborOrientationsDeg=[0 90]; % Orientations relative to vertical.
 o.targetGaborNames='VH';
 o.targetModulates='luminance'; % Display a luminance decrement.
@@ -557,7 +556,7 @@ o.minimumTargetHeightChecks=8; % Minimum target resolution, in units of the chec
 o.fullResolutionTarget=false; % True to render signal at full resolution (targetCheckPix=1). False to use noise resolution (targetCheckPix=noiseCheckPix).
 o.targetMargin=0.25; % Minimum from edge of target to edge of o.stimulusRect, as fraction of targetHeightDeg.
 o.targetDurationSec=0.2; % Typically 0.2 or inf (wait indefinitely for response).
-o.contrast=[];
+o.contrast=1; % Default is positive contrast.
 o.useFlankers=false; % Enable for crowding experiments.
 o.flankerContrast=-0.85; % Negative for dark letters.
 o.flankerContrast=nan; % Nan requests that flanker contrast always equal target contrast.
@@ -639,7 +638,7 @@ o.conditionName='';
 o.minScreenWidthDeg=nan;
 o.maxViewingDistanceCm=nan;
 o.useFilter=false;
-o.filterTransmission=1;
+o.filterTransmission=0.115; % our dark glasses.
 o.desiredRetinalIlluminanceTd=[];
 o.desiredLuminance=[];
 o.desiredLuminanceFactor=1;
@@ -976,6 +975,7 @@ try
          background=o.gray1;
       end
       Screen('TextSize',window,o.textSize);
+      fprintf('*Waiting for experimenter name.\n');
       [name,terminatorChar]=GetEchoString(window,'Experimenter name:',instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
       if ismember(terminatorChar,[escapeChar graveAccentChar])
          o.quitRun=true;
@@ -1012,6 +1012,7 @@ try
       else
          background=o.gray1;
       end
+      fprintf('*Waiting for observer name.\n');
       [name,terminatorChar]=GetEchoString(window,'Observer name:',instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
       if ismember(terminatorChar,[escapeChar graveAccentChar])
          o.quitRun=true;
@@ -1055,6 +1056,7 @@ try
          else
             background=o.gray1;
          end
+         fprintf('*Waiting for observer to remove sunglasses.\n');
          [~,terminatorChar]=GetEchoString(window,'',...
             instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
          if ismember(terminatorChar,[escapeChar graveAccentChar])
@@ -1071,15 +1073,17 @@ try
             return
          end
          Screen('FillRect',window,o.gray1);
-         % Keep the temporary window open until we open the main one, so observer
-         % knows program is running.
+         % Keep the temporary window open until we open the main one, so
+         % observer knows program is running.
       end
-   else % if previousRunUsedFilter
+   else % if ~o.useFilter
       ListenChar(2); % no echo
       Screen('FillRect',window,o.gray1);
       Screen('TextSize',window,o.textSize);
       Screen('TextFont',window,o.textFont,0);
       Screen('DrawText',window,'Please use a filter or sunglasses to reduce the luminance.',...
+         instructionalMarginPix,screenRect(4)/2-9*o.textSize,black,o.gray1);
+      Screen('DrawText',window,'(Our lab sunglasses transmit 0.115)',...
          instructionalMarginPix,screenRect(4)/2-7*o.textSize,black,o.gray1);
       Screen('DrawText',window,'Please slowly type its transmission (between 0.000 and 1.000)',...
          instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
@@ -1098,6 +1102,7 @@ try
       else
          background=o.gray1;
       end
+      fprintf('*Waiting for observer to specify filter transmission.\n');
       [name,terminatorChar]=GetEchoString(window,'Filter transmission:',...
          instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
       if ~isempty(name)
@@ -1152,7 +1157,7 @@ try
       error('You must specify one and only one of o.desiredLuminanceFactor, o.desiredLuminance, and o.desiredRetinalIlluminanceTd.');
    end
    if ~isempty(o.desiredLuminance)
-      o.luminanceFactor=o.desiredLuminance/LStandard;
+      o.luminanceFactor=o.desiredLuminance/(LStandard*o.filterTransmission);
    end
    if ~isempty(o.desiredLuminanceFactor)
       o.luminanceFactor=o.desiredLuminanceFactor;
@@ -1576,6 +1581,7 @@ try
       if o.speakInstructions
          Speak(sprintf('Observer %s, right? If ok, hit RETURN to continue, otherwise hit ESCAPE to quit.',o.observer));
       end
+      fprintf('*Confirming observer name.\n');
       response=GetKeypress([escapeKeyCode graveAccentKeyCode returnKeyCode]);
       if ismember(response,[escapeChar,graveAccentChar])
          if o.speakInstructions
@@ -1607,6 +1613,7 @@ try
          if o.speakInstructions
             Speak('Please use both eyes. Hit RETURN to continue, or ESCAPE to quit.');
          end
+         fprintf('*Asking which eye(s).\n');
          response=GetKeypress([escapeKeyCode graveAccentKeyCode returnKeyCode]);
          if ismember(response,[escapeChar,graveAccentChar])
             if o.speakInstructions
@@ -1629,6 +1636,7 @@ try
             string=sprintf('Please use just your %s eye. Cover your other eye. Hit RETURN to continue, or ESCAPE to quit.',o.eyes);
             Speak(string);
          end
+         fprintf('*Telling observer which eye(s) to use.\n');
          response=GetKeypress([escapeKeyCode graveAccentKeyCode returnKeyCode]);
          if ismember(response,[escapeChar,graveAccentChar])
             if o.speakInstructions
@@ -1651,6 +1659,7 @@ try
          if o.speakInstructions
             Speak(string);
          end
+         fprintf('*Asking observer which eye(s).\n');
          response=GetKeypress([KbName('L') KbName('R') escapeKeyCode graveAccentKeyCode]);
          if ismember(response,[escapeChar,graveAccentChar])
             if o.speakInstructions
@@ -1696,6 +1705,7 @@ try
    % PLACE TARGET AT NEAR POINT
    o.nearPointXYDeg=o.eccentricityXYDeg;
    
+   fprintf('*Waiting for observer to set viewing distance.\n');
    o=SetUpNearPoint(window,o);
    if o.quitSession
       return
@@ -2290,6 +2300,7 @@ try
          case '4afc'
             GetClicks;
          case 'identify'
+            fprintf('*Waiting for SPACE key to start first trial.\n');
             response=GetKeypress([spaceKeyCode escapeKeyCode graveAccentKeyCode]);
             % This keypress serves mainly to start the first trial, but we
             % quit if the user hits escape.
@@ -2414,7 +2425,7 @@ try
          case 'contrast'
             if streq(o.targetModulates,'luminance')
                r=1;
-               o.contrast=-10^tTest; % negative contrast, dark letters
+               o.contrast=o.thresholdPolarity*10^tTest; % negative contrast, dark letters
                if o.saveSnapshot && isfinite(o.snapshotContrast)
                   o.contrast=-o.snapshotContrast;
                end
