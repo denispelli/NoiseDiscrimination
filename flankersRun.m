@@ -1,43 +1,24 @@
 % flankersRun.m
-% Show target with flankers. Measure threshold contrast of flanker (in
-% noise) for reliable identification of the target.
-% With and without noise.
+% Show target with flankers. Measure threshold contrast of flanker (with
+% and without noise) for reliable identification of the target.
+% To estimate equivalent input noise.
 % February, 2018
 % Denis Pelli
 
 % STANDARD CONDITION
-% Measure each Neq twice.
+% Measure Neq.
 % Letter target surrounded by letter flankers.
-% Full screen noise.
+% Noise annulus on flankers only.
 % P=0.75, assuming 9 alternatives
 % luminance 250 cd/m2
 % monocular, temporal field, right eye
 
-clear all
 %% CREATE LIST OF CONDITIONS TO BE TESTED
 if verLessThan('matlab','R2013b')
    error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
 end
 clear o oo
 fakeRun=false; % Enable fakeRun to check plotting before we have data.
-
-% We list parameters here in the order that we want them to appear as
-% columns in the list. I don't think we use these values. This is just for
-% the cosmetic ordering of the fields in the struct, which later determines
-% the order of the columns in the table.
-o.condition=1;
-o.experiment='';
-o.conditionName='';
-o.viewingDistanceCm=[];
-o.eyes=[];
-o.desiredRetinalIlluminanceTd=[];
-o.useFilter=false;
-o.filterTransmission=0.115;
-o.eccentricityXYDeg=[];
-o.noiseSD=[];
-o.targetDurationSec=[];
-o.targetHeightDeg=[];
-o.noiseCheckDeg=[];
 
 cal=OurScreenCalibrations(0);
 if false && ~streq(cal.macModelName,'MacBookPro14,3')
@@ -56,7 +37,7 @@ end
 o.contrast=-0.2;
 o.flankerContrast=-0.85; % Negative for dark letters.
 % o.flankerContrast=nan; % Nan requests that flanker contrast always equal signal contrast.
-o.annularNoiseSD=0; 
+o.annularNoiseSD=0;
 o.flankerSpacingDeg=3;
 o.noiseRadiusDeg=inf;
 o.annularNoiseEnvelopeRadiusDeg=o.flankerSpacingDeg;
@@ -88,14 +69,23 @@ for noiseSD=[0.16 0]
    end
 end
 
-
 %% Number the conditions, and print the list.
 for i=1:length(oo)
    oo(i).condition=i;
 end
-t=struct2table(oo);
-t % Print the oo list of conditions.
+t=struct2table(oo,'AsArray',true);
+% We list parameters here in the order that we want them to appear as
+% columns in the table, which we print in the Command Window. Currently we
+% do not save the table.
+% vars={'condition' 'experiment' 'conditionName' ...
+%    'viewingDistanceCm' 'eyes' 'desiredRetinalIlluminanceTd' ...
+%    'useFilter' 'filterTransmission' 'eccentricityXYDeg' ...
+%    'noiseSD' 'targetDurationSec' 'targetHeightDeg' ...
+%    'noiseCheckDeg'};
+vars={'condition' 'experiment' 'noiseSD' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast'};
+t(:,vars) % Print the oo list of conditions.
 
+%% FAKE DATA TO EXERCISE THE ANALYSIS
 if fakeRun
    % NOT IMPLEMENTED.
    % PRODUCE FAKE RUN TO CHECK THE ANALYSIS & PLOTTING.
@@ -112,8 +102,9 @@ if fakeRun
    end
    steepnessAnalyze(data);
 end
+
+%% RUN THE CONDITIONS
 if ~fakeRun && true
-   %% RUN THE CONDITIONS
    % Typically, you'll select just a few of the conditions stored in oo
    % that you want to run now. Select them from the printout of "t" in your
    % Command Window.
@@ -134,12 +125,14 @@ if ~fakeRun && true
          o.targetKind='letter';
          o.font='Sloan';
          o.alphabet='DHKNORSVZ';
+         o.contrast=-1; % negative contrast.
       else
          % Target gabor
          o.targetKind='gabor';
          o.targetGaborOrientationsDeg=[0 45 90 135];
          o.targetGaborNames='1234';
          o.alphabet=o.targetGaborNames;
+         o.contrast=1; % positive contrast.
       end
       o.alternatives=length(o.alphabet);
       if all(o.eccentricityXYDeg==0)
@@ -163,20 +156,33 @@ if ~fakeRun && true
          o.questPlusPlot=true;
       end
       oOut=NoiseDiscrimination(o);
-      fprintf(['<strong>%s: noiseSD %.2f, log N %.2f, flankerSpacingDeg %.1f, target contrast %.3f, threshold flankerContrast %.3f</strong>\n'],...
-         oOut.conditionName,oOut.noiseSD,log10(oOut.N),oOut.flankerSpacingDeg,oOut.contrast,oOut.flankerContrast);
-      oo(oi).flankerContrast=oOut.flankerContrast;
-      oo(oi).N=oOut.N;
-      oo(oi).trials=oOut.trials;
-      oo(oi).data=oOut.data;
-      oo(oi).psych=oOut.psych;
+      oo(oi).trials=oOut.trials; % Always defined.
+      if isfield(oOut,'psych')
+         fprintf(['<strong>%s: noiseSD %.2f, log N %.2f, flankerSpacingDeg %.1f, '...
+            'target contrast %.3f, threshold flankerContrast %.3f</strong>\n'],...
+            oOut.conditionName,oOut.noiseSD,log10(oOut.N),oOut.flankerSpacingDeg,...
+            oOut.contrast,oOut.flankerContrast);
+         oo(oi).experimenter=oOut.experimenter;
+         oo(oi).observer=oOut.observer;
+         oo(oi).filterTransmission=oOut.filterTransmission;
+         oo(oi).flankerContrast=oOut.flankerContrast;
+         oo(oi).contrast=oOut.contrast;
+         oo(oi).N=oOut.N;
+         oo(oi).data=oOut.data;
+         oo(oi).psych=oOut.psych;
+      end
       if oOut.quitSession
          break
       end
    end
+
+   %% PRINT THE RESULTS
+   t=struct2table(oo(1:oi),'AsArray',true);
+   rows=t.trials>0;
+   vars={'observer' 'trials' 'noiseSD' 'N' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'flankerContrast'};
+   if any(rows)
+      t(rows,vars) % Print the oo list of conditions, with measured flanker threshold.
+   end
 end % Run the selected conditions
-t=struct2table(oo);
-vars={'trials' 'noiseSD' 'N' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'flankerContrast'};
-t(:,vars) % Print the oo list of conditions, now with measured threshold.
 
 
