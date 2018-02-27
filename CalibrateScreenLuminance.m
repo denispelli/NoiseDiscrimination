@@ -81,13 +81,13 @@ function CalibrateScreenLuminance(screen,screenOutput)
 % See also LinearizeClut, ourScreenCalibrations, testLuminanceCalibration,
 % testGammaNull, IndexOfLuminance, LuminanceOfIndex.
 
-% For Mac OSX, Apple says, on a portable/desktop computer: Press the F1/F14 key to
-% decrease the brightness, and press the F2/F15 key to increase the
+% For macOS, Apple says, on a portable/desktop computer: Press the F1/F14
+% key to decrease the brightness, and press the F2/F15 key to increase the
 % brightness.
 % Internet comment: If you have a second display, note that ctrl-F1 and
 % ctrl-F2 usually change the brightness on the other display (or external
 % display) on macOS 10.7.
-
+%
 % From nick.peatfield@gmail.com May 9, 2015
 % AppleScript dimmer.scpt:
 % tell application "System Events"
@@ -106,28 +106,28 @@ function CalibrateScreenLuminance(screen,screenOutput)
 % system('osascript brighter.scpt')
 % For max brightness, run the script 16 times.
 
-% Me: Does anyone know how to control or read the Mac OSX brightness
+% Me: Does anyone know how to control or read the macOS brightness
 % setting from within MATLAB?
 % Mario: Current PTB has this:
 % [oldBrightness]=Screen('ConfigureDisplay','Brightness', screenId [,outputId][,brightness]);
 % E.g.,
 % Screen('ConfigureDisplay', 'Brightness',0,0,0.25)
 % sets the brightness of the display on screen 0 to 25% and returns the
-% old value. This is supported on OSX and Linux, but not on Windows.
-% screenId and outputId are interchangeable on OSX, because on OSX Screen
+% old value. This is supported on macOS and Linux, but not on Windows.
+% screenId and outputId are interchangeable on macOS, because on macOS Screen
 % == Output, whereas on Linux outputId would set/get the brightness on a
 % given video output "outputId" for a given X-Screen "screenId". Iow., on
-% OSX you could leave one out [] or set both to the same value. Range is
+% macOS you could leave one out [] or set both to the same value. Range is
 % 0.0 - 1.0. This controls the display backlight brightness on supported
 % displays, like the brightness keys do. E.g., it works on the MacBooks,
 % probably also on iMac's, but there isn't a guarantee it will work on
 % non-Apple displays or non-builtin Apple displays. However, there isn't
 % any high level api for this and bits of the low level api we use has been
-% marked as "deprecated, will be removed in a future OSX version, there is
-% no replacement" since OSX 10.9. So it works on current OSX versions if it
+% marked as "deprecated, will be removed in a future macOS version, there is
+% no replacement" since macOS 10.9. So it works on current macOS versions if it
 % works at all for your display, but could already be gone forever with the
-% next major OSX update, together with some other low level features in the
-% general area of fine display control. Just as on OSX, on Linux support
+% next major macOS update, together with some other low level features in the
+% general area of fine display control. Just as on macOS, on Linux support
 % for brightness is display specific - works with some displays but not
 % with others.
 % http://osxdaily.com/2010/05/15/stop-the-macbook-pro-and-macbook-screen-from-dimming/
