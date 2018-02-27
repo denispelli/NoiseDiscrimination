@@ -55,7 +55,7 @@ o.desiredLuminanceFactor=1;
 %  o.minScreenWidthDeg=10;
 o.eyes='right';
 % for noiseSD=Shuffle([0 0.16])
-for noiseSD=[0.16 0]
+for noiseSD=[0.2 0]
    %          o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
    o.minScreenWidthDeg=1+o.targetHeightDeg*2;
    o.maxViewingDistanceCm=round(0.1*cal.screenWidthMm/(2*tand(o.minScreenWidthDeg/2)));
@@ -125,14 +125,12 @@ if ~fakeRun && true
          o.targetKind='letter';
          o.font='Sloan';
          o.alphabet='DHKNORSVZ';
-         o.contrast=-1; % negative contrast.
       else
          % Target gabor
          o.targetKind='gabor';
          o.targetGaborOrientationsDeg=[0 45 90 135];
          o.targetGaborNames='1234';
          o.alphabet=o.targetGaborNames;
-         o.contrast=1; % positive contrast.
       end
       o.alternatives=length(o.alphabet);
       if all(o.eccentricityXYDeg==0)
