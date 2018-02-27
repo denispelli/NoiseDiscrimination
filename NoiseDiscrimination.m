@@ -1570,11 +1570,11 @@ try
       Screen('TextSize',window,o.textSize);
       Screen('TextFont',window,'Verdana');
       Screen('FillRect',window,o.gray1);
-      string=sprintf('Confirming: Experimenter %s and observer %s.');
+      string=sprintf('Confirming: Experimenter %s and observer %s.',o.experimenter,o.observer);
       if o.useFilter
-         string=sprintf('%s With filter transmission %.3f.',o.filterTransmission);
+         string=sprintf('%s With filter transmission %.3f.',string,o.filterTransmission);
       end
-      string=sprintf('%s Right?\nHit RETURN to continue, or ESCAPE to quit.');
+      string=sprintf('%s Right?\nHit RETURN to continue, or ESCAPE to quit.',string);
       Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
       DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
       Screen('Flip',window); % Display request.
