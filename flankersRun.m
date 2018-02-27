@@ -40,7 +40,7 @@ o.targetHeightDeg=[];
 o.noiseCheckDeg=[];
 
 cal=OurScreenCalibrations(0);
-if ~streq(cal.macModelName,'MacBookPro14,3')
+if 0 && ~streq(cal.macModelName,'MacBookPro14,3')
    % For debugging, if this isn't a 15" MacBook Pro 2017, pretend it is.
    cal.screenWidthMm=330; % 13"
    cal.screenHeightMm=206; % 8.1"
@@ -102,7 +102,7 @@ if fakeRun
    end
    steepnessAnalyze(data);
 end
-if ~fakeRun && 1
+if ~fakeRun && true
    %% RUN THE CONDITIONS
    % Typically, you'll select just a few of the conditions stored in oo
    % that you want to run now. Select them from the printout of "t" in your
@@ -167,7 +167,7 @@ if ~fakeRun && 1
    end
 end % Run the selected conditions
 t=struct2table(oo);
-vars={'trials' 'noiseSD' 'N' 'flankerSpacingDeg' 'contrast' 'flankerContrast'};
-t(:,vars) % Print the oo list of conditions, now with measured threshold
+vars={'trials' 'noiseSD' 'N' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'flankerContrast'};
+t(:,vars) % Print the oo list of conditions, now with measured threshold.
 
 
