@@ -414,7 +414,7 @@ end
 if false
    % Copy this to produce a Gaussian annulus:
    o.noiseSD=0.2; % Usually in the range 0 to 0.4. Typically 0.2.
-   o.annularNoiseSD=0; 
+   o.annularNoiseSD=0;
    o.noiseRadiusDeg=inf;
    o.annularNoiseEnvelopeRadiusDeg=2;
    o.noiseEnvelopeSpaceConstantDeg=1.1;
@@ -566,12 +566,12 @@ o.flankerSpacingDeg=4;
 % you like. It won't work here.
 o.noiseSD=0.2; % Usually in the range 0 to 0.4. Typically 0.2.
 % o.noiseSD=0; % Usually in the range 0 to 0.4. Typically 0.2.
-o.annularNoiseSD=nan; % Typically nan (i.e. use o.noiseSD) or 0.2.
+o.annularNoiseSD=0; % Typically nan (i.e. use o.noiseSD) or 0.2.
 o.noiseCheckDeg=0.05; % Typically 0.05 or 0.2.
 o.noiseRadiusDeg=inf; % When o.task=4afc, the program will set o.noiseRadiusDeg=o.targetHeightDeg/2;
 o.noiseEnvelopeSpaceConstantDeg=inf;
 o.noiseRaisedCosineEdgeThicknessDeg=0; % midpoint of raised cosine is at noiseRadiusDeg.
-o.noiseSpectrum='white'; % pink or white
+o.noiseSpectrum='white'; % 'pink' or 'white'
 o.showBlackAnnulus=false;
 o.blackAnnulusContrast=-1; % (LBlack-LMean)/LMean. -1 for black line. >-1 for gray line.
 o.blackAnnulusSmallRadiusDeg=2;
@@ -652,7 +652,7 @@ o.labelAlternatives=[];
 o.trialsPerRun=40;
 o.runsDesired=1;
 o.eyes='both';
-% The user can only set fields that are initialized above. This is meant to 
+% The user can only set fields that are initialized above. This is meant to
 % catch any mistakes where the user tries to set a field that isn't used
 % below. We ignore input fields that are known output fields. Any field
 % that is neither already initialized or a known output field is flagged as
@@ -931,7 +931,7 @@ try
    %     ffprintf(ff,'We are using it in its native %d x %d resolution.\n',resolution.width,resolution.height);
    %     ffprintf(ff,'You can use Switch Res X (http://www.madrau.com/) to select a pure resolution, not HiDPI.\n');
    % end
-      
+   
    %% ASK EXPERIMENTER NAME
    instructionalMarginPix=round(0.08*min(RectWidth(screenRect),RectHeight(screenRect)));
    o.textSize=39;
@@ -1032,7 +1032,7 @@ try
       % Keep the temporary window open until we open the main one, so observer
       % knows program is running.
    end
-
+   
    %% ASK FILTER TRANSMISSION
    persistent previousRunUsedFilter
    if ~o.useFilter
@@ -1147,7 +1147,7 @@ try
             o.pupilDiameterMm=4.9;
       end
    end
-
+   
    %% LUMINANCE
    % LStandard is the highest luminance at which we can display a sinusoid
    % at maximum contrast (nearly 1). I have done most of my experiments at
@@ -1178,7 +1178,7 @@ try
    o.luminance=o.luminanceFactor*o.filterTransmission*LStandard;
    o.retinalIlluminanceTd=o.luminance*pi*o.pupilDiameterMm^2/4;
    % Need to update all reports of luminance to include effect of filter.
-
+   
    %% OPEN OUTPUT FILES
    o.beginningTime=now;
    t=datevec(o.beginningTime);
@@ -1412,9 +1412,9 @@ try
    Screen('Preference','SkipSyncTests',1);
    oldVisualDebugLevel=Screen('Preference','VisualDebugLevel',0);
    oldSupressAllWarnings=Screen('Preference','SuppressAllWarnings',1);
-%    if window~=0
-%       Screen('Close',window); % Close temporary window
-%    end
+   %    if window~=0
+   %       Screen('Close',window); % Close temporary window
+   %    end
    
    %% OPEN WINDOW IF OBSERVER IS HUMAN
    % We can safely use this no-echo mode AND collect keyboard responses
@@ -1426,7 +1426,7 @@ try
       % experiment, in which to display stimuli. If o.observer is machine,
       % we need a screen only briefly, to create the targets to be
       % identified.
-% openwindow was here      
+      % openwindow was here
       if false
          % This code to enable dithering is what Mario suggested, but it
          % makes no difference at all. I get dithering on my MacBook Pro
@@ -1495,7 +1495,7 @@ try
          LMin=min(cal.old.L);
          LMax=max(cal.old.L);
          LMean=mean([LMin, LMax]); % Desired background luminance.
-%          LMean=LMean*(1+(rand-0.5)/32); % Tiny jitter, ±1.5%
+         %          LMean=LMean*(1+(rand-0.5)/32); % Tiny jitter, ±1.5%
          LMean=o.luminanceFactor*LMean;
          if o.assessLowLuminance
             LMean=0.8*LMin+0.2*LMax;
@@ -1518,7 +1518,7 @@ try
          cal=LinearizeClut(cal);
          
          % CLUT entries for stimulus.
-
+         
          cal.LFirst=LMin;
          cal.LLast=LMean+(LMean-LMin); % Symmetric about LMean.
          cal.nFirst=firstGrayClutEntry;
@@ -1956,7 +1956,7 @@ try
    end
    fixationXYPix=(o.targetXYPix-o.stimulusRect(1:2))./[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)];
    fixationXYPix(2)=1-fixationXYPix(2);
-   string=sprintf('Target is at (%.1f,%.1f) deg, (%.2f %.2f) in unit square. ',...
+   string=sprintf('Target is at (%.1f %.1f) deg, (%.2f %.2f) in unit square. ',...
       o.eccentricityXYDeg,fixationXYPix);
    if o.useFixation
       if o.fixationIsOffscreen
@@ -1976,8 +1976,8 @@ try
       o.NUnits='s deg^2';
       temporal='Dynamic';
    end
-   ffprintf(ff,'%s noise log N/(%s)=%.2f, where N is power spectral density in %s.\n', ...
-      temporal,o.NUnits,log10(o.N),o.NUnits);
+   ffprintf(ff,'%s noise power spectral density N %s log=%.2f\n', ...
+      temporal,o.NUnits,log10(o.N));
    ffprintf(ff,'pThreshold %.2f, steepness %.1f\n',o.pThreshold,o.steepness);
    ffprintf(ff,'o.trialsPerRun %.0f\n',o.trialsPerRun);
    
@@ -2046,7 +2046,7 @@ try
                      % targetRect is just big enough to hold any letter.
                      % targetRect allows for descenders and extension in any
                      % direction.
-                     % targetRect=round([a b c d]*o.targetHeightPix/o.targetCheckPix), 
+                     % targetRect=round([a b c d]*o.targetHeightPix/o.targetCheckPix),
                      % where a b c and d depend on the font.
                      x=(targetRect(1)+targetRect(3))/2; % horizontal middle
                      y=targetRect(4)-o.targetRectLocal(4); % baseline
@@ -2332,7 +2332,6 @@ try
       tGuess=0;
       tGuessSd=4;
    end
-   ffprintf(ff,['Your (log) guess is %.2f',plusMinusChar,'%.2f\n'],o.tGuess,o.tGuessSd);
    rDeg=sqrt(sum(o.eccentricityXYDeg.^2));
    switch o.thresholdParameter
       case 'spacing'
@@ -2346,7 +2345,7 @@ try
       case 'flankerContrast'
          assert(o.useFlankers);
          o.thresholdPolarity=sign(o.flankerContrast);
-     otherwise
+      otherwise
          error('Unknown o.thresholdParameter "%s".',o.thresholdParameter);
    end
    if isfinite(o.tGuess)
@@ -2355,7 +2354,8 @@ try
    if isfinite(o.tGuessSd)
       tGuessSd=o.tGuessSd;
    end
-   
+   ffprintf(ff,['Log guess %.2f',plusMinusChar,'%.2f\n'],tGuess,tGuessSd);
+
    %% Set parameters for QUESTPlus
    if o.questPlusEnable
       steepnesses=o.questPlusSteepnesses;
@@ -2398,7 +2398,7 @@ try
    for trial=1:o.trialsPerRun
       [~,neworder]=sort(lower(fieldnames(o)));
       o=orderfields(o,neworder);
-
+      
       %% SET TARGET LOG CONTRAST: tTest
       if o.questPlusEnable
          tTest=qpQuery(questPlusData)/20; % Convert dB to log contrast.
@@ -2433,13 +2433,13 @@ try
                r=1+10^tTest;
                o.contrast=0;
             end
-          case 'flankerContrast'
-             assert(streq(o.targetModulates,'luminance'))
-             o.flankerContrast=o.thresholdPolarity*10^tTest; 
-             if o.saveSnapshot && isfinite(o.snapshotContrast)
-                o.flankerContrast=-o.snapshotContrast;
-             end
-     end
+         case 'flankerContrast'
+            assert(streq(o.targetModulates,'luminance'))
+            o.flankerContrast=o.thresholdPolarity*10^tTest;
+            if o.saveSnapshot && isfinite(o.snapshotContrast)
+               o.flankerContrast=-o.snapshotContrast;
+            end
+      end
       a=(1-LMin/LMean)*o.noiseListSd/o.noiseListBound;
       if o.noiseSD > a
          ffprintf(ff,'WARNING: Reducing o.noiseSD of %s noise to %.2f to avoid overflow.\n',o.noiseType,a);
@@ -2462,6 +2462,7 @@ try
             end
             tTest=log10(r-1);
          case 'luminance'
+            % min negative contrast
             a=(min(cal.old.L)-LMean)/LMean;
             a=a+o.noiseListBound*o.noiseSD/o.noiseListSd;
             assert(a<0,'Need range for signal.');
@@ -2469,6 +2470,14 @@ try
                o.contrast=a;
             end
             if o.flankerContrast < a
+               o.flankerContrast=a;
+            end
+            a=-a; % max contrast
+            assert(a>0,'Need range for signal.');
+            if o.contrast > a
+               o.contrast=a;
+            end
+            if o.flankerContrast > a
                o.flankerContrast=a;
             end
             switch o.thresholdParameter
@@ -2636,7 +2645,7 @@ try
                      location(1).image=1+(o.noiseSD/o.noiseListSd)*noise;
                end
                %% ADD FOUR FLANKERS, EACH A RANDOM LETTER LIKE THE TARGET
-              if o.useFlankers && streq(o.targetModulates,'luminance')
+               if o.useFlankers && streq(o.targetModulates,'luminance')
                   if isfinite(o.flankerContrast)
                      c=o.flankerContrast;
                   else
@@ -3213,21 +3222,21 @@ try
       end
       switch o.thresholdParameter
          case 'spacing'
-%             result=spacingDeg;
+            %             result=spacingDeg;
             spacingDeg=flankerSpacingPix/o.pixPerDeg;
             tTest=log10(spacingDeg);
          case 'size'
-%             result=targetSizeDeg;
+            %             result=targetSizeDeg;
             targetSizeDeg=o.targetHeightPix/o.pixPerDeg;
             tTest=log10(targetSizeDeg);
          case 'contrast'
-%             result=o.thresholdPolarity*10^tTest;
+            %             result=o.thresholdPolarity*10^tTest;
          case 'flankerContrast'
-%             result=o.thresholdPolarity*10^tTest;
+            %             result=o.thresholdPolarity*10^tTest;
       end
-%       results(n,1)=result;
-%       results(n,2)=response;
-%       n=n+1;
+      %       results(n,1)=result;
+      %       results(n,2)=response;
+      %       n=n+1;
       trialsRight=trialsRight+response;
       q=QuestUpdate(q,tTest,response); % Add the new datum (actual test intensity and o.observer response) to the database.
       if o.questPlusEnable
@@ -3250,7 +3259,7 @@ try
    end % for trial=1:o.trialsPerRun
    
    o.quitSession=OfferToQuitSession(window,o,instructionalMarginPix,screenRect);
-      
+   
    
    %% DONE. REPORT THRESHOLD FOR THIS RUN.
    if ~isempty(o.data)
@@ -3350,7 +3359,7 @@ try
             'FontName','Monospaced','FontSize',9);
          drawnow;
       end % if o.questPlusPlot
-   end % if o.questPlusEnable 
+   end % if o.questPlusEnable
    
    o.targetDurationSecMean=mean(o.likelyTargetDurationSec,'omitnan');
    o.targetDurationSecSD=std(o.likelyTargetDurationSec,'omitnan');
@@ -3360,7 +3369,7 @@ try
    o.E=10^(2*o.questMean)*o.E1;
    if streq(o.targetModulates,'luminance')
       ffprintf(ff,['Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
-         'Threshold',plusMinusChar,'sd log(contrast) %.2f',plusMinusChar,'%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n'],...
+         'Threshold',plusMinusChar,'sd log contrast %.2f',plusMinusChar,'%.2f, contrast %.4f, log E/N %.2f, efficiency %.5f\n'],...
          o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,o.thresholdPolarity*10^t,log10(o.EOverN),o.efficiency);
    else
       ffprintf(ff,['Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
