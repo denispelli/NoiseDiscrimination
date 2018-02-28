@@ -76,10 +76,11 @@ for domain=1:3
          % o.minScreenWidthDeg=10;
    end
    for eyes=Shuffle({'right' 'both'})
-%    for eyes={'right'}
+      %    for eyes={'right'}
       o.eyes=eyes{1};
       for noiseSD=Shuffle([0 0.3])
-%       for noiseSD=0.3
+         %       for noiseSD=0.3
+         o.noiseType='binary';
          o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
          %          o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
          o.minScreenWidthDeg=1+o.targetHeightDeg*2;
