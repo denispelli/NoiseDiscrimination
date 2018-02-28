@@ -36,7 +36,7 @@ end
 % In each of the 3 domains: photon, cortical, ganglion
 % Two noise levels, noiseSD: 0 0.16
 %
-o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 o.experiment='eyes';
 o.condition=1;
 o.viewingDistanceCm=40;
@@ -76,14 +76,16 @@ for domain=1:3
          % o.minScreenWidthDeg=10;
    end
    for eyes=Shuffle({'right' 'both'})
+%    for eyes={'right'}
       o.eyes=eyes{1};
-      for noiseSD=Shuffle([0 0.16])
+      for noiseSD=Shuffle([0 0.3])
+%       for noiseSD=0.3
          o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
          %          o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
          o.minScreenWidthDeg=1+o.targetHeightDeg*2;
          o.maxViewingDistanceCm=round(0.1*cal.screenWidthMm/(2*tand(o.minScreenWidthDeg/2)));
          o.viewingDistanceCm=min([o.maxViewingDistanceCm 40]);
-         o.noiseCheckDeg=o.targetHeightDeg/20;
+         o.noiseCheckDeg=o.targetHeightDeg/10;
          o.noiseSD=noiseSD;
          if ~exist('oo','var')
             oo=o;
@@ -156,14 +158,16 @@ if ~fakeRun && 1
       o.useDynamicNoiseMovie=true;
       if all(o.eccentricityXYDeg==0)
          o.markTargetLocation=false;
+         o.blankingRadiusReTargetHeight=2;
+         o.fixationCrossDeg=10;
       else
          o.markTargetLocation=true;
+         o.blankingRadiusReTargetHeight=0;
+         o.fixationCrossDeg=3;
       end
-      o.blankingRadiusReTargetHeight=0;
-      o.moviePreSec=0.2;
-      o.moviePostSec=0.2;
+      o.moviePreSec=0.3;
+      o.moviePostSec=0.3;
       o.targetMarkDeg=1;
-      o.fixationCrossDeg=3;
       if 0
          % Use QuestPlus to measure steepness.
          o.questPlusEnable=true;
