@@ -540,6 +540,8 @@ o.task='identify'; % 'identify' or '4afc'
 % o.thresholdParameter='size';
 % o.thresholdParameter='spacing';
 o.thresholdParameter='contrast'; % Use Quest to measure threshold 'contrast','size', 'spacing', or 'flankerContrast'.
+o.constantStimuli=[];
+o.useMethodOfConstantStimuli=false;
 o.thresholdPolarity=1; % Must be -1 or 1;
 % WARNING: size and spacing are not yet fully implemented.
 o.alternatives=9; % The number of letters to use from o.alphabet.
@@ -694,7 +696,8 @@ else
       'nearPointXYPix' 'pixPerCm' 'psychtoolboxKernelDriverLoaded'...
       'targetXYPix' 'textLineLength' 'textSize' 'unknownFields'...
       'deviceIndex' 'speakEachLetter' 'targetCheckDeg' 'targetCheckPix'...
-      'textFont' 'useSpeech' 'LMean' 'targetCyclesPerDeg' 'contrast' 'flankerContrast'...
+      'textFont'  'LMean' 'targetCyclesPerDeg' 'contrast' ...
+      'thresholdParameterValueList' 'noInputArgument' ...
       };
    unknownFields={};
    for condition=1:conditions
@@ -2404,6 +2407,18 @@ try
          tTest=qpQuery(questPlusData)/20; % Convert dB to log contrast.
       else
          tTest=QuestQuantile(q);
+      end
+      if o.useMethodOfConstantStimuli
+         % thresholdParameterValueList is used solely within this if block.
+         if trial==1
+            assert(size(o.constantStimuli,1)==1)
+            o.thresholdParameterValueList=...
+               repmat(o.constantStimuli,1,ceil(o.trialsPerRun/length(o.constantStimuli)));
+            o.thresholdParameterValueList=Shuffle(o.thresholdParameterValueList);
+         end
+         c=o.thresholdParameterValueList(trial);
+         o.thresholdPolarity=sign(c);
+         tTest=log10(abs(c));
       end
       if ~isfinite(tTest)
          ffprintf(ff,'WARNING: trial %d: tTest %f not finite. Setting to QuestMean.\n',trial,tTest);
