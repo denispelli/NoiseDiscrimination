@@ -28,7 +28,7 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
    warning('PRETENDING THIS IS A 15" MacBook Pro 2017');
 end
 
-% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 o.useDynamicNoiseMovie=true;
 if true
    o.useFlankers=true;
@@ -46,16 +46,19 @@ o.annularNoiseBigRadiusDeg=inf;
 o.annularNoiseSmallRadiusDeg=0;
 % Two noise levels, noiseSD: 0 0.16
 o.experiment='flankers';
-o.conditionName='Neq of flanker';
+o.conditionName='P target id. vs. flanker contrast';
 o.eccentricityXYDeg=[20 0];
 o.targetHeightDeg=2;
 o.targetDurationSec=0.2;
 o.desiredLuminance=[];
 o.desiredLuminanceFactor=1;
+o.constantStimuli=[-0.01 -0.03 -0.1 -0.3 -0.7];
+o.trialsPerRun=5*50;
+o.useMethodOfConstantStimuli=true;
 %  o.minScreenWidthDeg=10;
-o.eyes='right';
+o.eyes='both';
 % for noiseSD=Shuffle([0 0.16])
-for noiseSD=[0.2 0]
+for noiseSD=[0]
    %          o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
    o.minScreenWidthDeg=1+o.targetHeightDeg*2;
    o.maxViewingDistanceCm=round(0.1*cal.screenWidthMm/(2*tand(o.minScreenWidthDeg/2)));
@@ -85,24 +88,6 @@ t=struct2table(oo,'AsArray',true);
 vars={'condition' 'experiment' 'noiseSD' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast'};
 t(:,vars) % Print the oo list of conditions.
 
-%% FAKE DATA TO EXERCISE THE ANALYSIS
-if fakeRun
-   % NOT IMPLEMENTED.
-   % PRODUCE FAKE RUN TO CHECK THE ANALYSIS & PLOTTING.
-   data=table2struct(t);
-   for i=1:length(data)
-      data(i).E=10*data(i).noiseSD+1e-5*(1+floor((i-1)/8));
-      data(i).trialsPerRun=40;
-      data(i).N=data(i).noiseSD;
-      data(i).experimenter='Experimenter';
-      data(i).observer='Observer';
-      data(i).targetKind='gabor';
-      data(i).noiseType='gaussian';
-      data(i).LMean=280*data(i).luminanceFactor;
-   end
-   steepnessAnalyze(data);
-end
-
 %% RUN THE CONDITIONS
 if ~fakeRun && true
    % Typically, you'll select just a few of the conditions stored in oo
@@ -111,7 +96,6 @@ if ~fakeRun && true
    clear oOut
    for oi=1:length(oo) % Edit this line to select which conditions to run now.
       o=oo(oi);
-      o.trialsPerRun=40;
       if exist('oOut','var')
          % Reuse answers from immediately preceding run.
          o.experimenter=oOut.experimenter;
@@ -166,6 +150,14 @@ if ~fakeRun && true
          oo(oi).flankerContrast=oOut.flankerContrast;
          oo(oi).contrast=oOut.contrast;
          oo(oi).N=oOut.N;
+         oo(oi).E1=oOut.E1;
+         oo(oi).alternatives=oOut.alternatives;
+         oo(oi).targetKind=oOut.targetKind;
+         oo(oi).eyes=oOut.eyes;
+         oo(oi).LMean=oOut.LMean;
+         oo(oi).targetDurationSec=oOut.targetDurationSec;
+         oo(oi).eccentricityXYDeg=oOut.eccentricityXYDeg;
+         oo(oi).targetCyclesPerDeg=oOut.targetCyclesPerDeg;
          oo(oi).data=oOut.data;
          oo(oi).psych=oOut.psych;
       end
@@ -173,7 +165,7 @@ if ~fakeRun && true
          break
       end
    end
-
+   
    %% PRINT THE RESULTS
    t=struct2table(oo(1:oi),'AsArray',true);
    rows=t.trials>0;
@@ -183,4 +175,24 @@ if ~fakeRun && true
    end
 end % Run the selected conditions
 
+%% PLOT IT
+close all % Get rid of any existing figures.
+figure(1)
+o=oo(1);
+plot(o.psych.t,o.psych.r' ./o.psych.trials);
+xlabel('Flanker contrast log c');
+ylabel('Proportion correct target identification');
+title([o.experiment '-' o.observer '.eps']);
+graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[o.experiment '-' o.observer '.eps']);
+saveas(gcf,graphFile,'epsc')
+fprintf('Plot saved as "%s".\n',graphFile);
 
+%% FIT PSYCHOMETRIC FUNCTION
+clear QUESTPlusFit % Clear the persistent variables.
+o.alternatives=9;
+o.questPlusLapseRates=0:0.01:0.05;
+o.questPlusGuessingRates=0:0.03:0.3;
+oOut=QUESTPlusFit(o);
+graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[o.experiment '-' o.observer '-QuestPlus' '.eps']);
+saveas(gcf,graphFile,'epsc')
+fprintf('Plot saved as "%s".\n',graphFile);
