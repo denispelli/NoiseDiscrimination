@@ -1,7 +1,7 @@
 function oOut=QUESTPlusFit(o)
 % oOut=QUESTPlusFit(o);
 % Input:         o:      struct of human test data.
-% Output:        oOut:   add fields: contrast,steepness,guessing,lapse
+% Output:        oOut:   o with added fields: contrast,steepness,guessing,lapse
 % Maximum likelihood estimate of parameters of psychometric function.
 % The code here computes both maximum posterior and maximum likelihood
 % estimates, but we return only the maximum likelihood estimate.
@@ -28,8 +28,14 @@ if isfield(o,'questPlusLapseRates')
 end
 contrastDB=20.*transpose(o.psych.t); % transform to dB
 contrastDBUnique=unique(contrastDB);
+if streq(o.thresholdParameter,'flankerContrast')
+   psychometricFunction=@qpPFCrowding;
+else
+   psychometricFunction=@qpPFWeibull;
+end
 questPlusData=qpInitialize('stimParamsDomainList',{contrastDBUnique},...,
    'psiParamsDomainList',{contrastDBUnique,steepnesses,guessingRates,lapseRates},...
+   'qpPF',psychometricFunction,...
    'noentropy',true); % Skip the (slow) entropy calculations.
 
 %% Pour in data
@@ -64,6 +70,7 @@ o.lapse=psiParamsFit(4);
 %% Return value
 oOut=o;
 
+%% Plot it
 o.plotSteepness=true;
 if o.plotSteepness
    persistent conditionName noteString observers 
@@ -94,7 +101,7 @@ if o.plotSteepness
    stimCounts=qpCounts(qpData(questPlusData.trialData),questPlusData.nOutcomes);
    stim=[stimCounts.stim];
    stimFine=linspace(-40,0,100)';
-   plotProportionsFit=qpPFWeibull(stimFine,psiParamsFit);
+   plotProportionsFit=psychometricFunction(stimFine,psiParamsFit);
    for cc=1:length(stimCounts)
       nTrials(cc)=sum(stimCounts(cc).outcomeCounts);
       pCorrect(cc)=stimCounts(cc).outcomeCounts(2)/nTrials(cc);
@@ -132,7 +139,6 @@ if o.plotSteepness
       o.observer,o.noiseSD,log10(o.contrast),o.steepness,o.guessing,o.lapse,o.trials);
    if newFigure
       hold on
-   else
       text(0.4,0.55,'noiseSD observer');
       legend('show','Location','southeast');
       legend('boxoff');
