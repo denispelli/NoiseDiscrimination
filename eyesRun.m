@@ -180,7 +180,10 @@ if ~fakeRun && 1
          o.questPlusPlot=true;
       end
       oOut=NoiseDiscrimination(o);
-      oo(oi).trials=oOut.trials; % Always defined.
+      oo(oi).trials=oOut.trials; 
+      if isempty(oo(oi).trials)
+         oo(oi).trials=0;
+      end
       %       fprintf(['%s: %.1f cd/m^2, luminanceFactor %.2f, filterTransmission %.3f\n'],...
       %          o.conditionName,oOut.luminance,oOut.luminanceFactor,oOut.filterTransmission);
       if isfield(oOut,'psych')
@@ -209,7 +212,16 @@ if ~fakeRun && 1
    end
    %% PRINT THE RESULTS
    t=struct2table(oo(1:oi),'AsArray',true);
-   rows=t.trials>0;
+   if iscell(t.trials)
+      % This case may never occur. Just in case.
+      clear rows
+      for i=1:length(t.trials)
+         trials=t.trials{i};
+         rows(i)=~isempty(trials) && trials>0;
+      end
+   else
+      rows=t.trials>0;
+   end
 %    vars={'condition' 'experiment' 'conditionName' ...
 %       'viewingDistanceCm' 'eyes'  ...
 %       'luminance' 'eccentricityXYDeg' ...
