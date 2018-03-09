@@ -15,7 +15,7 @@
 
 
 %% CREATE LIST OF CONDITIONS TO BE TESTED
-if ~exist('qpInitialize')
+if false && ~exist('qpInitialize')
    error('This script requires the QuestPLUS package. Please get it from github.')
 end
 if verLessThan('matlab','R2013b')
