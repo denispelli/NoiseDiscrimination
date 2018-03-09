@@ -16,9 +16,10 @@
 % monocular, temporal field, right eye
 
 %% CREATE LIST OF CONDITIONS TO BE TESTED
-clear all
-clear o oo
 fakeRun=false; % Enable fakeRun to check plotting before we have data.
+clear Screen PsychHID
+clear o oo
+addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
 
 % We list parameters here in the order that we want them to appear as
 % columns in the list. I don't think we use these values. This is just for

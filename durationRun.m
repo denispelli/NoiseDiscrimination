@@ -20,6 +20,7 @@ if verLessThan('matlab','R2013b')
 end
 clear o oo
 fakeRun=false; % Used to check plotting before we have data.
+addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
 
 % We list parameters here in the order that we want them to appear
 % as columns in the list.

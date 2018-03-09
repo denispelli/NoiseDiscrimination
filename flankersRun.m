@@ -19,6 +19,7 @@ if verLessThan('matlab','R2013b')
 end
 clear o oo
 fakeRun=false; % Enable fakeRun to check plotting before we have data.
+addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
 
 cal=OurScreenCalibrations(0);
 if false && ~streq(cal.macModelName,'MacBookPro14,3')
