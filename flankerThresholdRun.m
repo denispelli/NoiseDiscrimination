@@ -65,7 +65,7 @@ o.steepness=nan;
 %  o.minScreenWidthDeg=10;
 o.eyes='both';
 % for noiseSD=Shuffle([0 0.16])
-for noiseSD=[0.3 0 0.15 ]
+for noiseSD=[ 0.15 ]
    %          o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
    o.minScreenWidthDeg=1+o.targetHeightDeg*2;
    o.maxViewingDistanceCm=round(0.1*cal.screenWidthMm/(2*tand(o.minScreenWidthDeg/2)));
@@ -187,10 +187,9 @@ end % Run the selected conditions
 %% PLOT IT
 close all % Get rid of any existing figures.
 figure(1)
-o=oo(1);
-loglog(log10(o.flankerContrast),log10(o.noiseSD));
-ylabel('Flanker threshold contrast log');
-xlabel('NoiseSD contrast log');
+loglog(0.01+abs([oo.noiseSD]),abs([oo.flankerContrast]),'o');
+ylabel('Flanker threshold contrast');
+xlabel('NoiseSD contrast');
 title([o.experiment '-' o.observer '.eps']);
 graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[o.experiment '-' o.observer '.eps']);
 saveas(gcf,graphFile,'epsc')
