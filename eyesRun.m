@@ -214,7 +214,7 @@ if ~fakeRun && 1
    t=struct2table(oo(1:oi),'AsArray',true);
    if iscell(t.trials)
       % This case may never occur. Just in case.
-      clear rows
+      rows=false(size(t.trials));
       for i=1:length(t.trials)
          trials=t.trials{i};
          rows(i)=~isempty(trials) && trials>0;
