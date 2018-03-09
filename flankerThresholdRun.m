@@ -15,7 +15,8 @@
 
 
 %% CREATE LIST OF CONDITIONS TO BE TESTED
-if false && ~exist('qpInitialize')
+o.questPlusEnable=false;
+if questPlusEnable && ~exist('qpInitialize')
    error('This script requires the QuestPLUS package. Please get it from github.')
 end
 if verLessThan('matlab','R2013b')
@@ -133,9 +134,8 @@ if ~fakeRun && true
       o.moviePostSec=0.2;
       o.targetMarkDeg=1;
       o.fixationCrossDeg=3;
-      if false
+      if o.questPlusEnable
          % Use QuestPlus when we don't know all the parameters.
-         o.questPlusEnable=true;
          o.questPlusSteepnesses=1:0.1:5;
          o.questPlusGuessingRates=1/o.alternatives:0.02:0.5;
          o.questPlusLapseRates=0:0.01:0.05;
