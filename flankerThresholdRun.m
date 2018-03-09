@@ -15,15 +15,15 @@
 
 
 %% CREATE LIST OF CONDITIONS TO BE TESTED
+clear o oo
+fakeRun=false; % Enable fakeRun to check plotting before we have data.
 o.questPlusEnable=false;
-if questPlusEnable && ~exist('qpInitialize')
+if o.questPlusEnable && ~exist('qpInitialize','file')
    error('This script requires the QuestPLUS package. Please get it from github.')
 end
 if verLessThan('matlab','R2013b')
    error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
 end
-clear o oo
-fakeRun=false; % Enable fakeRun to check plotting before we have data.
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
 
 cal=OurScreenCalibrations(0);
@@ -65,7 +65,7 @@ o.steepness=nan;
 %  o.minScreenWidthDeg=10;
 o.eyes='both';
 % for noiseSD=Shuffle([0 0.16])
-for noiseSD=[0 0.1 0.2]
+for noiseSD=[0 0.15 0.3]
    %          o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
    o.minScreenWidthDeg=1+o.targetHeightDeg*2;
    o.maxViewingDistanceCm=round(0.1*cal.screenWidthMm/(2*tand(o.minScreenWidthDeg/2)));
@@ -185,14 +185,14 @@ if ~fakeRun && true
 end % Run the selected conditions
 
 %% PLOT IT
-% close all % Get rid of any existing figures.
-% figure(1)
-% o=oo(1);
-% plot(o.psych.t,o.psych.r' ./o.psych.trials);
-% xlabel('Flanker contrast log c');
-% ylabel('Proportion correct target identification');
-% title([o.experiment '-' o.observer '.eps']);
-% graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[o.experiment '-' o.observer '.eps']);
-% saveas(gcf,graphFile,'epsc')
-% fprintf('Plot saved as "%s".\n',graphFile);
+close all % Get rid of any existing figures.
+figure(1)
+o=oo(1);
+loglog(log10(o.flankerContrast),log10(o.noiseSD));
+ylabel('Flanker threshold contrast log');
+xlabel('NoiseSD contrast log');
+title([o.experiment '-' o.observer '.eps']);
+graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[o.experiment '-' o.observer '.eps']);
+saveas(gcf,graphFile,'epsc')
+fprintf('Plot saved as "%s".\n',graphFile);
 
