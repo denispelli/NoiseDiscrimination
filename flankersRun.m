@@ -13,6 +13,10 @@
 % luminance 250 cd/m2
 % monocular, temporal field, right eye
 
+if ~exist('qpInitialize')
+   error('This script requires the QuestPLUS package. Please get it from github.')
+end
+
 %% CREATE LIST OF CONDITIONS TO BE TESTED
 if verLessThan('matlab','R2013b')
    error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
