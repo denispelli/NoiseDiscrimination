@@ -490,6 +490,8 @@ o.questPlusLapseRates=[0:0.01:0.05];
 o.questPlusLogContrasts=-3:0.05:0.5;
 o.questPlusPrint=true;
 o.questPlusPlot=true;
+o.guess=nan;
+o.lapse=0.02;
 o.replicatePelli2006=false;
 o.clutMapLength=2048; % enough for 11-bit precision.
 o.useNative10Bit=false;
@@ -2321,12 +2323,16 @@ try
    end
    
    %% SET PARAMETERS FOR QUEST
-   o.lapse=0.02;
-   switch o.task
-      case '4afc'
-         o.guess=1/4;
-      case 'identify'
-         o.guess=1/o.alternatives;
+   if isempty(o.lapse) || isnan(o.lapse)
+      o.lapse=0.02;
+   end
+   if ~streq(o.thresholdParameter,'flankerContrast')
+      switch o.task
+         case '4afc'
+            o.guess=1/4;
+         case 'identify'
+            o.guess=1/o.alternatives;
+      end
    end
    if streq(o.targetModulates,'luminance')
       tGuess=-0.5;
@@ -2348,6 +2354,7 @@ try
       case 'flankerContrast'
          assert(o.useFlankers);
          o.thresholdPolarity=sign(o.flankerContrast);
+         assert(~isempty(o.guess));
       otherwise
          error('Unknown o.thresholdParameter "%s".',o.thresholdParameter);
    end
