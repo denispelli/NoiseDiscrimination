@@ -2006,9 +2006,10 @@ try
                   warning('You should set o.allowAnyFont=1 unless o.font=''Sloan''.');
                end
                oldFont=Screen('TextFont',scratchWindow,o.font);
+               Screen('DrawText',scratchWindow,o.alternatives(1),0,scratchRect(4)); % Must draw first to learn actual font used.
                font=Screen('TextFont',scratchWindow);
                if ~streq(font,o.font)
-                  error('Can''t find requested font. Desired vs. actual font: "%s", "%s"\n',o.font,font);
+                  error('Font missing! Requested font "%s", but got "%s". Please install the missing font.\n',o.font,font);
                end
                oldSize=Screen('TextSize',scratchWindow,round(o.targetHeightPix/o.targetCheckPix));
                oldStyle=Screen('TextStyle',scratchWindow,0);
@@ -2069,7 +2070,7 @@ try
                   end
                   Screen('DrawText',scratchWindow,signal(i).letter,x,y,black0,white1,1);
                   Screen('DrawingFinished',scratchWindow,[],1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
-                  WaitSecs(0.1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
+%                   WaitSecs(0.1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
                   letter=Screen('GetImage',scratchWindow,targetRect,'drawBuffer');
                   
                   % The scrambling sounds like something is going wrong in detiling of read
