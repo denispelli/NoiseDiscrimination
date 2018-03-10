@@ -13,11 +13,12 @@
 % luminance 250 cd/m2
 % monocular, temporal field, right eye
 
-if ~exist('qpInitialize')
+if ~exist('QUESTPlusFit')
    error('This script requires the QuestPLUS package. Please get it from github.')
 end
 
 %% CREATE LIST OF CONDITIONS TO BE TESTED
+% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 if verLessThan('matlab','R2013b')
    error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
 end
@@ -33,7 +34,6 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
    warning('PRETENDING THIS IS A 15" MacBook Pro 2017');
 end
 
-% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 o.useDynamicNoiseMovie=true;
 if true
    o.useFlankers=true;
