@@ -2384,12 +2384,12 @@ try
    %% DO A RUN
    o.data=[];
    if streq(o.thresholdParameter,'flankerContrast')
-      % Falling psychometric function for crowding of target as a function of
-      % flanker contrast. We assume that the observer makes a random finger
-      % error on fraction delta of the trials, and gets proportion gamma of
-      % those trials right. On the rest of the trials (no finger error) he
-      % gets it wrong only if he fails to guess it (prob. gamma) and fails
-      % to detect it (prob. exp...).
+      % Falling psychometric function for crowding of target as a function
+      % of flanker contrast. We assume that the observer makes a random
+      % finger error on fraction delta of the trials, and gets proportion
+      % gamma of those trials right. On the rest of the trials (no finger
+      % error) he gets it wrong only if he fails to guess it (prob. gamma)
+      % and fails to detect it (prob. exp...).
       q=QuestCreate(tGuess,tGuessSd,o.pThreshold,o.steepness,0,0); % Prob of detecting flanker.
       q.p2=o.lapse*o.guess+(1-o.lapse)*(1-(1-o.guess)*q.p2); % Prob of identifying target.
       q.s2=fliplr([1-q.p2;q.p2]);
@@ -2398,7 +2398,7 @@ try
    else
       q=QuestCreate(tGuess,tGuessSd,o.pThreshold,o.steepness,o.lapse,o.guess);
    end
-   q.normalizePdf=true; % adds a few ms per call to QuestUpdate, but otherwise the pdf will underflow after about 1000 trials.
+   q.normalizePdf=true; % Prevent underflow of pdf.
    wrongRight={'wrong', 'right'};
    timeZero=GetSecs;
    trialsRight=0;
