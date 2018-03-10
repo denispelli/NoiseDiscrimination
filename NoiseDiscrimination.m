@@ -2326,7 +2326,7 @@ try
    if isempty(o.lapse) || isnan(o.lapse)
       o.lapse=0.02;
    end
-   if ~streq(o.thresholdParameter,'flankerContrast')
+   if isempty(o.guess) || ~isfinite(o.guess)
       switch o.task
          case '4afc'
             o.guess=1/4;
@@ -2354,7 +2354,6 @@ try
       case 'flankerContrast'
          assert(o.useFlankers);
          o.thresholdPolarity=sign(o.flankerContrast);
-         assert(~isempty(o.guess));
       otherwise
          error('Unknown o.thresholdParameter "%s".',o.thresholdParameter);
    end
