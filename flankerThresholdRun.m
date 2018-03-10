@@ -193,16 +193,24 @@ c=c(i);
 loglog(0.01+n,c,'-o');
 ylabel('Flanker threshold contrast');
 xlabel('NoiseSD contrast');
+xlim([0.01 1]);
 ylim([0.01 1]);
-title([o.experiment '-' o.observer '.eps']);
+daspect([1 1 1]);
+name=[o.experiment '-' o.observer '-log.eps'];
+title(name);
+graphFile=fullfile(fileparts(mfilename('fullpath')),'data',name);
+saveas(gcf,graphFile,'epsc')
+fprintf('Plot saved as "%s".\n',graphFile);
 figure(2)
 plot(n,c,'-o');
 ylabel('Flanker threshold contrast');
 xlabel('NoiseSD contrast');
-xlim([0 1]);
-ylim([0 1]);
-title([o.experiment '-' o.observer '.eps']);
-graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[o.experiment '-' o.observer '.eps']);
+xlim([0 .5]);
+ylim([0 .5]);
+daspect([1 1 1]);
+name=[o.experiment '-' o.observer '.eps'];
+title(name);
+graphFile=fullfile(fileparts(mfilename('fullpath')),'data',name);
 saveas(gcf,graphFile,'epsc')
 fprintf('Plot saved as "%s".\n',graphFile);
 
