@@ -97,8 +97,8 @@ for i=1:length(oo)
 end
 t=struct2table(oo,'AsArray',true);
 % We list parameters here in the order that we want them to appear as
-% columns in the table, which we print in the Command Window. Currently we
-% do not save the table.
+% columns in the table, which we print in the Command Window. To reproduce
+% an old table, you must use its "seed" to set o.seed above.
 vars={'seed' 'condition' 'conditionName' 'noiseSD' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'guess'};
 t(:,vars) % Print the oo list of conditions.
 
@@ -107,9 +107,9 @@ if ~fakeRun && true
    % Typically, you'll select just a few of the conditions stored in oo
    % that you want to run now. Select them from the printout of "t" in your
    % Command Window.
-   % CAUTION: Conditions with the same conditionName are randonly
-   % shuffled every time you run this. To reproduce an old table, set
-   % o.seed, above, to the 'seed' used to generate the table.
+   % CAUTION: Conditions with the same conditionName are randonly shuffled
+   % every time you run this, unless you set o.seed, above, to the 'seed'
+   % used to generate the table you want to reproduce.
    clear oOut
    for oi=1:length(oo) % Edit this line to select which conditions to run now.
       o=oo(oi);
