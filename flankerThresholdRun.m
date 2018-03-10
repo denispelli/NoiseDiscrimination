@@ -1,18 +1,18 @@
 % flankerThresholdRun.m
 % Show target with flankers. Measure threshold contrast of flanker (with
 % and without noise) for reliable identification of the target.
-% To estimate equivalent input noise.
+% To estimate equivalent input noise of the crowding effect of flanker.
 % February, 2018
 % Denis Pelli
 
 % STANDARD CONDITION
-% Measure Neq.
+% Measure threshold contrast of flanker to barely identify the target.
+% Several noise levels.
 % Letter target surrounded by letter flankers.
-% Noise annulus on flankers only.
+% Static noise annulus on flankers only. 
 % P=0.75, assuming 9 alternatives
 % luminance 250 cd/m2
-% monocular, temporal field, right eye
-
+% binocular, 20 deg right
 
 %% CREATE LIST OF CONDITIONS TO BE TESTED
 clear o oo
@@ -35,13 +35,13 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
 end
 
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
-o.useDynamicNoiseMovie=true;
+o.useDynamicNoiseMovie=false;
 if true
    o.useFlankers=true;
    o.thresholdParameter='flankerContrast';
 end
 o.contrast=-0.2; % Fixed target contrast.
-o.flankerContrast=-0.85; % Negative for dark letters.
+o.flankerContrast=-1; % Negative for dark letters.
 % o.flankerContrast=nan; % Nan requests that flanker contrast always equal signal contrast.
 o.annularNoiseSD=0;
 o.flankerSpacingDeg=3;
@@ -50,7 +50,6 @@ o.annularNoiseEnvelopeRadiusDeg=o.flankerSpacingDeg;
 o.noiseEnvelopeSpaceConstantDeg=o.flankerSpacingDeg/2;
 o.annularNoiseBigRadiusDeg=inf;
 o.annularNoiseSmallRadiusDeg=0;
-% Two noise levels, noiseSD: 0 0.16
 o.experiment='flankerThreshold';
 o.conditionName='flanker threshold';
 o.eccentricityXYDeg=[20 0];
@@ -62,15 +61,15 @@ o.trialsPerRun=50;
 o.guess=0.19; % Crowded identification of 20%-contrast target at 20 deg.
 o.lapse=nan;
 o.steepness=nan;
+o.observer='';
 %  o.minScreenWidthDeg=10;
 o.eyes='both';
-% for noiseSD=Shuffle([0 0.16])
-for noiseSD=[ 0.15 ]
+for noiseSD=Shuffle([0 0.05 0.1 ])
    %          o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
    o.minScreenWidthDeg=1+o.targetHeightDeg*2;
    o.maxViewingDistanceCm=round(0.1*cal.screenWidthMm/(2*tand(o.minScreenWidthDeg/2)));
    o.viewingDistanceCm=min([o.maxViewingDistanceCm 40]);
-   o.noiseCheckDeg=o.targetHeightDeg/20;
+   o.noiseCheckDeg=o.targetHeightDeg/10;
    o.noiseSD=noiseSD;
    if ~exist('oo','var')
       oo=o;
@@ -187,9 +186,21 @@ end % Run the selected conditions
 %% PLOT IT
 close all % Get rid of any existing figures.
 figure(1)
-loglog(0.01+abs([oo.noiseSD]),abs([oo.flankerContrast]),'o');
+n=abs([oo.noiseSD]);
+c=abs([oo.flankerContrast]);
+[n,i]=sort(n);
+c=c(i);
+loglog(0.01+n,c,'-o');
 ylabel('Flanker threshold contrast');
 xlabel('NoiseSD contrast');
+ylim([0.01 1]);
+title([o.experiment '-' o.observer '.eps']);
+figure(2)
+plot(n,c,'-o');
+ylabel('Flanker threshold contrast');
+xlabel('NoiseSD contrast');
+xlim([0 1]);
+ylim([0 1]);
 title([o.experiment '-' o.observer '.eps']);
 graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[o.experiment '-' o.observer '.eps']);
 saveas(gcf,graphFile,'epsc')
