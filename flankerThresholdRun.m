@@ -1,23 +1,23 @@
 % flankerThresholdRun.m
+% Measure 6 thresholds.
 % Show target with flankers. Measure threshold contrast of flanker (with
 % and without noise) for reliable identification of the target. This allows
 % us to estimate equivalent input noise of the crowding effect of flanker.
-% February, 2018
-% Denis Pelli
-
-% STANDARD CONDITION
 % Measure threshold contrast of flanker to barely identify the target.
 % Several noise levels.
 % Letter target surrounded by letter flankers.
 % Static noise annulus on flankers only.
 % P=0.75, 9 alternatives
-% luminance 250 cd/m2
 % binocular, 20 deg right
+% March, 2018
+% Denis Pelli
 
-
-%% CREATE LIST OF CONDITIONS TO BE TESTED
+%% GET READY
 clear o oo
+% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 fakeRun=false; % Enable fakeRun to check plotting before we have data.
+o.seed=[]; % Fresh.
+% o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
 o.questPlusEnable=false;
 if o.questPlusEnable && ~exist('qpInitialize','file')
    error('This script requires the QuestPLUS package. Please get it from github.')
@@ -34,9 +34,7 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
    warning('PRETENDING THIS IS A 15" MacBook Pro 2017');
 end
 
-% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
-o.seed=[]; % Fresh.
-% o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
+%% CREATE LIST OF CONDITIONS TO BE TESTED
 o.useDynamicNoiseMovie=false;
 o.contrast=-0.2; % Fixed target contrast.
 o.flankerContrast=-1; % Negative for dark letters.
@@ -105,7 +103,7 @@ vars={'seed' 'condition' 'conditionName' 'noiseSD' 'flankerSpacingDeg' 'eccentri
 t(:,vars) % Print the oo list of conditions.
 
 %% RUN THE CONDITIONS
-if ~fakeRun && false
+if ~fakeRun && true
    % Typically, you'll select just a few of the conditions stored in oo
    % that you want to run now. Select them from the printout of "t" in your
    % Command Window.
