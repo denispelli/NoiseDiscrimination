@@ -461,7 +461,7 @@ addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same dire
 % if IsOSX && vStruct.major*1000+vStruct.minor*100+vStruct.point < 3013
 %    error('Your Mac OSX Psychtoolbox is too old. We need at least Version 3.0.13. Please run: UpdatePsychtoolbox');
 % end
-rng('default'); % Initialize random number generator with fresh seed.
+rng('shuffle'); % Use time to seed the random number generator.
 if ismac && ~ScriptingOkShowPermission
    error(['Please give MATLAB permission to control the computer. ',...
       'You''ll need admin privileges to do this.']);
@@ -2530,7 +2530,7 @@ try
                assert(o.noiseFrozenInRunSeed > 0 && isinteger(o.noiseFrozenInRunSeed))
                o.noiseListSeed=o.noiseFrozenInRunSeed;
             else
-               rng('shuffle'); % use time to seed the generator
+               rng('shuffle'); % Use time to seed the random number generator.
                generator=rng;
                o.noiseListSeed=generator.Seed;
             end
