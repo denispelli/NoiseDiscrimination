@@ -1,5 +1,5 @@
 % flankerThresholdRun.m
-% Measure 6 thresholds.
+% Measure 6 thresholds. About 1 hour.
 % Show target with flankers. Measure threshold contrast of flanker (with
 % and without noise) for reliable identification of the target. This allows
 % us to estimate equivalent input noise of the crowding effect of flanker.
@@ -91,17 +91,16 @@ for useFlankers=[true false]
    end
 end
 
-%% Number the conditions, and print the list.
+%% NUMBER THE CONDITIONS (I.E. ROWS) AND PRINT THE TABLE
 for i=1:length(oo)
    oo(i).condition=i;
 end
 t=struct2table(oo,'AsArray',true);
 % We list parameters here in the order that we want them to appear as
-% columns in the table, which we print in the Command Window. To reproduce
-% an old table, you must use its "seed" to set o.seed above.
+% columns in the table, which we print in the Command Window. 
 vars={'seed' 'condition' 'conditionName' 'noiseSD' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'guess'};
 t(:,vars) % Print the oo list of conditions.
-
+fprintf('To recreate this table, set your o.seed to the value of "seed" listed above.\n');
 %% RUN THE CONDITIONS
 if ~fakeRun && true
    % Typically, you'll select just a few of the conditions stored in oo
