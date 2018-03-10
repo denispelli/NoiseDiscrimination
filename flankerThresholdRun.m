@@ -9,7 +9,7 @@
 % Measure threshold contrast of flanker to barely identify the target.
 % Several noise levels.
 % Letter target surrounded by letter flankers.
-% Static noise annulus on flankers only. 
+% Static noise annulus on flankers only.
 % P=0.75, assuming 9 alternatives
 % luminance 250 cd/m2
 % binocular, 20 deg right
@@ -35,10 +35,6 @@ end
 
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 o.useDynamicNoiseMovie=false;
-if true
-   o.useFlankers=true;
-   o.thresholdParameter='flankerContrast';
-end
 o.contrast=-0.2; % Fixed target contrast.
 o.flankerContrast=-1; % Negative for dark letters.
 % o.flankerContrast=nan; % Nan requests that flanker contrast always equal signal contrast.
@@ -50,30 +46,40 @@ o.noiseEnvelopeSpaceConstantDeg=o.flankerSpacingDeg/2;
 o.annularNoiseBigRadiusDeg=inf;
 o.annularNoiseSmallRadiusDeg=0;
 o.experiment='flankerThreshold';
-o.conditionName='flanker threshold';
 o.eccentricityXYDeg=[20 0];
 o.targetHeightDeg=2;
 o.targetDurationSec=0.2;
 o.desiredLuminance=[];
 o.desiredLuminanceFactor=1;
 o.trialsPerRun=50;
-o.guess=0.19; % Crowded identification of 20%-contrast target at 20 deg.
 o.lapse=nan;
 o.steepness=nan;
 o.observer='';
 %  o.minScreenWidthDeg=10;
 o.eyes='both';
-for noiseSD=Shuffle([0 0.05 0.1 ])
-   %          o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
-   o.minScreenWidthDeg=1+o.targetHeightDeg*2;
-   o.maxViewingDistanceCm=round(0.1*cal.screenWidthMm/(2*tand(o.minScreenWidthDeg/2)));
-   o.viewingDistanceCm=min([o.maxViewingDistanceCm 40]);
-   o.noiseCheckDeg=o.targetHeightDeg/10;
-   o.noiseSD=noiseSD;
-   if ~exist('oo','var')
-      oo=o;
+for useFlankers=[true false]
+   o.useFlankers=useFlankers;
+   if o.useFlankers
+      o.thresholdParameter='flankerContrast';
+      o.conditionName='crowding threshold';
+      o.guess=0.19; % Crowded identification of 20%-contrast target at 20 deg.
    else
-      oo(end+1)=o;
+      o.thresholdParameter='contrast';
+      o.conditionName='identification threshold';
+      o.guess=nan;
+   end
+   for noiseSD=Shuffle([0 0.05 0.1 ])
+      %    o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
+      %    o.minScreenWidthDeg=1+o.targetHeightDeg*2;
+      %    o.maxViewingDistanceCm=round(0.1*cal.screenWidthMm/(2*tand(o.minScreenWidthDeg/2)));
+      %    o.viewingDistanceCm=min([o.maxViewingDistanceCm 40]);
+      o.noiseCheckDeg=o.targetHeightDeg/10;
+      o.noiseSD=noiseSD;
+      if ~exist('oo','var')
+         oo=o;
+      else
+         oo(end+1)=o;
+      end
    end
 end
 
@@ -90,7 +96,7 @@ t=struct2table(oo,'AsArray',true);
 %    'useFilter' 'filterTransmission' 'eccentricityXYDeg' ...
 %    'noiseSD' 'targetDurationSec' 'targetHeightDeg' ...
 %    'noiseCheckDeg'};
-vars={'condition' 'experiment' 'noiseSD' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'guess'};
+vars={'condition' 'conditionName' 'noiseSD' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'guess'};
 t(:,vars) % Print the oo list of conditions.
 
 %% RUN THE CONDITIONS
@@ -98,6 +104,8 @@ if ~fakeRun && true
    % Typically, you'll select just a few of the conditions stored in oo
    % that you want to run now. Select them from the printout of "t" in your
    % Command Window.
+   % CAUTION: Conditions with the same conditionName are randonly
+   % shuffled every time you run this.
    clear oOut
    for oi=1:length(oo) % Edit this line to select which conditions to run now.
       o=oo(oi);
@@ -180,36 +188,36 @@ if ~fakeRun && true
    if any(rows)
       t(rows,vars) % Print the oo list of conditions, with measured flanker threshold.
    end
+   
+   %% PLOT IT
+   close all % Get rid of any existing figures.
+   figure(1)
+   n=abs([oo.noiseSD]);
+   c=abs([oo.flankerContrast]);
+   [n,i]=sort(n);
+   c=c(i);
+   loglog(0.01+n,c,'-o');
+   ylabel('Flanker threshold contrast');
+   xlabel('NoiseSD contrast');
+   xlim([0.01 1]);
+   ylim([0.01 1]);
+   daspect([1 1 1]);
+   name=[o.experiment '-' o.observer '-log.eps'];
+   title(name);
+   graphFile=fullfile(fileparts(mfilename('fullpath')),'data',name);
+   saveas(gcf,graphFile,'epsc')
+   fprintf('Plot saved as "%s".\n',graphFile);
+   figure(2)
+   plot(n,c,'-o');
+   ylabel('Flanker threshold contrast');
+   xlabel('NoiseSD contrast');
+   xlim([0 .5]);
+   ylim([0 .5]);
+   daspect([1 1 1]);
+   name=[o.experiment '-' o.observer '.eps'];
+   title(name);
+   graphFile=fullfile(fileparts(mfilename('fullpath')),'data',name);
+   saveas(gcf,graphFile,'epsc')
+   fprintf('Plot saved as "%s".\n',graphFile);
 end % Run the selected conditions
-
-%% PLOT IT
-close all % Get rid of any existing figures.
-figure(1)
-n=abs([oo.noiseSD]);
-c=abs([oo.flankerContrast]);
-[n,i]=sort(n);
-c=c(i);
-loglog(0.01+n,c,'-o');
-ylabel('Flanker threshold contrast');
-xlabel('NoiseSD contrast');
-xlim([0.01 1]);
-ylim([0.01 1]);
-daspect([1 1 1]);
-name=[o.experiment '-' o.observer '-log.eps'];
-title(name);
-graphFile=fullfile(fileparts(mfilename('fullpath')),'data',name);
-saveas(gcf,graphFile,'epsc')
-fprintf('Plot saved as "%s".\n',graphFile);
-figure(2)
-plot(n,c,'-o');
-ylabel('Flanker threshold contrast');
-xlabel('NoiseSD contrast');
-xlim([0 .5]);
-ylim([0 .5]);
-daspect([1 1 1]);
-name=[o.experiment '-' o.observer '.eps'];
-title(name);
-graphFile=fullfile(fileparts(mfilename('fullpath')),'data',name);
-saveas(gcf,graphFile,'epsc')
-fprintf('Plot saved as "%s".\n',graphFile);
 
