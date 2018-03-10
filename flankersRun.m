@@ -1,31 +1,25 @@
 % flankersRun.m
-% Show target with flankers. Measure threshold contrast of flanker (with
-% and without noise) for reliable identification of the target.
-% To estimate equivalent input noise.
-% February, 2018
-% Denis Pelli
-
-% STANDARD CONDITION
-% Measure Neq.
+% Show target with flankers. Measure psychometric function: probability of
+% identifying the target as a function of flanker contrast. (with and
+% without noise).
 % Letter target surrounded by letter flankers.
 % Noise annulus on flankers only.
 % P=0.75, assuming 9 alternatives
 % luminance 250 cd/m2
-% monocular, temporal field, right eye
+% binocular, 20 deg right.
+% March, 2018
+% Denis Pelli
 
+%% CREATE LIST OF CONDITIONS TO BE TESTED
 if ~exist('QUESTPlusFit')
    error('This script requires the QuestPLUS package. Please get it from github.')
 end
-
-%% CREATE LIST OF CONDITIONS TO BE TESTED
-% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 if verLessThan('matlab','R2013b')
    error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
 end
 clear o oo
 fakeRun=false; % Enable fakeRun to check plotting before we have data.
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
-
 cal=OurScreenCalibrations(0);
 if false && ~streq(cal.macModelName,'MacBookPro14,3')
    % For debugging, if this isn't a 15" MacBook Pro 2017, pretend it is.
@@ -34,6 +28,7 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
    warning('PRETENDING THIS IS A 15" MacBook Pro 2017');
 end
 
+% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 o.useDynamicNoiseMovie=true;
 if true
    o.useFlankers=true;
@@ -41,7 +36,6 @@ if true
 end
 o.contrast=-0.2;
 o.flankerContrast=-0.85; % Negative for dark letters.
-% o.flankerContrast=nan; % Nan requests that flanker contrast always equal signal contrast.
 o.annularNoiseSD=0;
 o.flankerSpacingDeg=3;
 o.noiseRadiusDeg=inf;
@@ -49,7 +43,6 @@ o.annularNoiseEnvelopeRadiusDeg=o.flankerSpacingDeg;
 o.noiseEnvelopeSpaceConstantDeg=o.flankerSpacingDeg/2;
 o.annularNoiseBigRadiusDeg=inf;
 o.annularNoiseSmallRadiusDeg=0;
-% Two noise levels, noiseSD: 0 0.16
 o.experiment='flankers';
 o.conditionName='P target id. vs. flanker contrast';
 o.eccentricityXYDeg=[20 0];
@@ -58,16 +51,16 @@ o.targetDurationSec=0.2;
 o.desiredLuminance=[];
 o.desiredLuminanceFactor=1;
 o.constantStimuli=[-0.01 -0.03 -0.1 -0.3 -0.7];
-o.trialsPerRun=5*50;
+o.trialsPerRun=50*length(o.constantStimuli);
 o.useMethodOfConstantStimuli=true;
 %  o.minScreenWidthDeg=10;
 o.eyes='both';
 % for noiseSD=Shuffle([0 0.16])
 for noiseSD=[0]
-   %          o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
-   o.minScreenWidthDeg=1+o.targetHeightDeg*2;
-   o.maxViewingDistanceCm=round(0.1*cal.screenWidthMm/(2*tand(o.minScreenWidthDeg/2)));
-   o.viewingDistanceCm=min([o.maxViewingDistanceCm 40]);
+   %    o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
+   %    o.minScreenWidthDeg=1+o.targetHeightDeg*2;
+   %    o.maxViewingDistanceCm=round(0.1*cal.screenWidthMm/(2*tand(o.minScreenWidthDeg/2)));
+   %    o.viewingDistanceCm=min([o.maxViewingDistanceCm 40]);
    o.noiseCheckDeg=o.targetHeightDeg/20;
    o.noiseSD=noiseSD;
    if ~exist('oo','var')
@@ -85,11 +78,6 @@ t=struct2table(oo,'AsArray',true);
 % We list parameters here in the order that we want them to appear as
 % columns in the table, which we print in the Command Window. Currently we
 % do not save the table.
-% vars={'condition' 'experiment' 'conditionName' ...
-%    'viewingDistanceCm' 'eyes' 'desiredRetinalIlluminanceTd' ...
-%    'useFilter' 'filterTransmission' 'eccentricityXYDeg' ...
-%    'noiseSD' 'targetDurationSec' 'targetHeightDeg' ...
-%    'noiseCheckDeg'};
 vars={'condition' 'experiment' 'noiseSD' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast'};
 t(:,vars) % Print the oo list of conditions.
 
@@ -178,26 +166,27 @@ if ~fakeRun && true
    if any(rows)
       t(rows,vars) % Print the oo list of conditions, with measured flanker threshold.
    end
+   
+   %% PLOT IT
+   close all % Get rid of any existing figures.
+   figure(1)
+   o=oo(1);
+   plot(o.psych.t,o.psych.r' ./o.psych.trials);
+   xlabel('Flanker contrast log c');
+   ylabel('Proportion correct target identification');
+   title([o.experiment '-' o.observer '.eps']);
+   graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[o.experiment '-' o.observer '.eps']);
+   saveas(gcf,graphFile,'epsc')
+   fprintf('Plot saved as "%s".\n',graphFile);
+   
+   %% FIT PSYCHOMETRIC FUNCTION
+   clear QUESTPlusFit % Clear the persistent variables.
+   o.alternatives=9;
+   o.questPlusLapseRates=0:0.01:0.05;
+   o.questPlusGuessingRates=0:0.03:0.3;
+   oOut=QUESTPlusFit(o);
+   graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[o.experiment '-' o.observer '-QuestPlus' '.eps']);
+   saveas(gcf,graphFile,'epsc')
+   fprintf('Plot saved as "%s".\n',graphFile);
+   
 end % Run the selected conditions
-
-%% PLOT IT
-close all % Get rid of any existing figures.
-figure(1)
-o=oo(1);
-plot(o.psych.t,o.psych.r' ./o.psych.trials);
-xlabel('Flanker contrast log c');
-ylabel('Proportion correct target identification');
-title([o.experiment '-' o.observer '.eps']);
-graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[o.experiment '-' o.observer '.eps']);
-saveas(gcf,graphFile,'epsc')
-fprintf('Plot saved as "%s".\n',graphFile);
-
-%% FIT PSYCHOMETRIC FUNCTION
-clear QUESTPlusFit % Clear the persistent variables.
-o.alternatives=9;
-o.questPlusLapseRates=0:0.01:0.05;
-o.questPlusGuessingRates=0:0.03:0.3;
-oOut=QUESTPlusFit(o);
-graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[o.experiment '-' o.observer '-QuestPlus' '.eps']);
-saveas(gcf,graphFile,'epsc')
-fprintf('Plot saved as "%s".\n',graphFile);
