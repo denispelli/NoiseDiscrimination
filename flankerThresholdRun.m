@@ -14,6 +14,7 @@
 % luminance 250 cd/m2
 % binocular, 20 deg right
 
+
 %% CREATE LIST OF CONDITIONS TO BE TESTED
 clear o oo
 fakeRun=false; % Enable fakeRun to check plotting before we have data.
@@ -34,6 +35,8 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
 end
 
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+o.seed=[]; % Fresh.
+o.seed=uint32(1506476580); % Set to reproduce an old table of conditions.
 o.useDynamicNoiseMovie=false;
 o.contrast=-0.2; % Fixed target contrast.
 o.flankerContrast=-1; % Negative for dark letters.
@@ -57,6 +60,13 @@ o.steepness=nan;
 o.observer='';
 %  o.minScreenWidthDeg=10;
 o.eyes='both';
+if isempty(o.seed)
+   rng('shuffle'); % Use clock to seed the random number generator.
+   generator=rng;
+   o.seed=generator.Seed;
+else
+   rng(o.seed);
+end
 for useFlankers=[true false]
    o.useFlankers=useFlankers;
    if o.useFlankers
@@ -96,16 +106,17 @@ t=struct2table(oo,'AsArray',true);
 %    'useFilter' 'filterTransmission' 'eccentricityXYDeg' ...
 %    'noiseSD' 'targetDurationSec' 'targetHeightDeg' ...
 %    'noiseCheckDeg'};
-vars={'condition' 'conditionName' 'noiseSD' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'guess'};
+vars={'seed' 'condition' 'conditionName' 'noiseSD' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'guess'};
 t(:,vars) % Print the oo list of conditions.
 
 %% RUN THE CONDITIONS
-if ~fakeRun && true
+if ~fakeRun && false
    % Typically, you'll select just a few of the conditions stored in oo
    % that you want to run now. Select them from the printout of "t" in your
    % Command Window.
    % CAUTION: Conditions with the same conditionName are randonly
-   % shuffled every time you run this.
+   % shuffled every time you run this. To reproduce an old table, set
+   % o.seed, above, to the 'seed' used to generate the table.
    clear oOut
    for oi=1:length(oo) % Edit this line to select which conditions to run now.
       o=oo(oi);
