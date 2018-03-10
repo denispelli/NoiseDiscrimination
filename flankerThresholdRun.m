@@ -1,7 +1,7 @@
 % flankerThresholdRun.m
 % Show target with flankers. Measure threshold contrast of flanker (with
-% and without noise) for reliable identification of the target.
-% To estimate equivalent input noise of the crowding effect of flanker.
+% and without noise) for reliable identification of the target. This allows
+% us to estimate equivalent input noise of the crowding effect of flanker.
 % February, 2018
 % Denis Pelli
 
@@ -10,7 +10,7 @@
 % Several noise levels.
 % Letter target surrounded by letter flankers.
 % Static noise annulus on flankers only.
-% P=0.75, assuming 9 alternatives
+% P=0.75, 9 alternatives
 % luminance 250 cd/m2
 % binocular, 20 deg right
 
@@ -36,7 +36,7 @@ end
 
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 o.seed=[]; % Fresh.
-o.seed=uint32(1506476580); % Set to reproduce an old table of conditions.
+% o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
 o.useDynamicNoiseMovie=false;
 o.contrast=-0.2; % Fixed target contrast.
 o.flankerContrast=-1; % Negative for dark letters.
@@ -101,11 +101,6 @@ t=struct2table(oo,'AsArray',true);
 % We list parameters here in the order that we want them to appear as
 % columns in the table, which we print in the Command Window. Currently we
 % do not save the table.
-% vars={'condition' 'experiment' 'conditionName' ...
-%    'viewingDistanceCm' 'eyes' 'desiredRetinalIlluminanceTd' ...
-%    'useFilter' 'filterTransmission' 'eccentricityXYDeg' ...
-%    'noiseSD' 'targetDurationSec' 'targetHeightDeg' ...
-%    'noiseCheckDeg'};
 vars={'seed' 'condition' 'conditionName' 'noiseSD' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'guess'};
 t(:,vars) % Print the oo list of conditions.
 
