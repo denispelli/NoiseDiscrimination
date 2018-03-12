@@ -160,7 +160,7 @@ if ~fakeRun && 0
       o.moviePostSec=0.2;
       o.targetMarkDeg=1;
       o.fixationCrossDeg=3;
-      if 0
+      if false
          % We use QuestPlus to measure steepness.
          o.questPlusEnable=true;
          o.questPlusSteepnesses=1:0.1:5;
