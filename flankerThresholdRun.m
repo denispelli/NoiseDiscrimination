@@ -14,7 +14,7 @@
 
 %% GET READY
 clear o oo
-% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 fakeRun=false; % Enable fakeRun to check plotting before we have data.
 o.seed=[]; % Fresh.
 % o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
@@ -100,7 +100,7 @@ t=struct2table(oo,'AsArray',true);
 % columns in the table, which we print in the Command Window. 
 vars={'seed' 'condition' 'conditionName' 'noiseSD' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'guess'};
 t(:,vars) % Print the oo list of conditions.
-fprintf('To recreate this table, set your o.seed to the value of "seed" listed above.\n');
+fprintf('To recreate this table, set your o.seed to the value of "seed" listed in the table.\n');
 %% RUN THE CONDITIONS
 if ~fakeRun && true
    % Typically, you'll select just a few of the conditions stored in oo
@@ -178,13 +178,15 @@ if ~fakeRun && true
          oo(oi).guess=oOut.guess;
          oo(oi).lapse=oOut.lapse;
          oo(oi).steepness=oOut.steepness;
+         oo(oi).dataFilename=oOut.dataFilename;
+         oo(oi).dataFolder=oOut.dataFolder;
       end
       if oOut.quitSession
          break
       end
    end
    
-   %% PRINT THE RESULTS
+   %% PRINT SUMMARY OF RESULTS
    t=struct2table(oo(1:oi),'AsArray',true);
    rows=t.trials>0;
    vars={'observer' 'trials' 'noiseSD' 'N' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'flankerContrast' 'guess' 'lapse' 'steepness'};
@@ -192,6 +194,13 @@ if ~fakeRun && true
       t(rows,vars) % Print the oo list of conditions, with measured flanker threshold.
    end
    
+   %% SAVE SUMMARY OF RESULTS
+   o=oOut;
+   o.summaryFilename=[o.dataFilename '.summary' ];
+   writetable(t,[o.summaryFilename '.csv']);
+   save(fullfile(o.dataFolder,[o.summaryFilename '.mat']),'t','rows','vars','oo');
+   fprintf('Summary saved as "%s" with extensions ".csv" and ".mat".\n',o.summaryFilename);
+
    %% PLOT IT
    close all % Get rid of any existing figures.
    figure(1)
