@@ -656,7 +656,10 @@ o.labelAlternatives=[];
 o.trialsPerRun=40;
 o.runsDesired=1;
 o.eyes='both';
-% The user can only set fields that are initialized above. This is meant to
+o.readAlphabetFromDisk=false;
+o.borderLetter=[];
+o.seed=[];
+% The user can only set fields that are initialized above. Thixxxs is meant to
 % catch any mistakes where the user tries to set a field that isn't used
 % below. We ignore input fields that are known output fields. Any field
 % that is neither already initialized or a known output field is flagged as
@@ -1200,6 +1203,14 @@ try
       if ~success
          error('Failed attempt to create data folder: %s',o.dataFolder);
       end
+   end
+   st=dbstack('-completenames',1);
+   if ~isempty(st)
+      o.scriptName=st.name; % Save name of calling script.
+      o.script=fileread(st.file); % Save a copy of the calling script.
+   else
+      o.scriptName='';
+      o.script='';
    end
    dataFid=fopen(fullfile(o.dataFolder,[o.dataFilename '.txt']),'rt');
    if dataFid ~= -1
