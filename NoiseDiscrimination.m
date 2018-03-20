@@ -2395,6 +2395,11 @@ try
    
    %% DO A RUN
    o.data=[];
+   o.transcript.intensity=[];
+   o.transcript.isRight=[];
+   o.transcript.response=[];
+   o.transcript.target=[];
+   o.transcript.flankers={};
    if streq(o.thresholdParameter,'flankerContrast')
       % Falling psychometric function for crowding of target as a function
       % of flanker contrast. We assume that the observer makes a random
@@ -2702,7 +2707,8 @@ try
                         flankerImage(flankerImageIndex)=signal(whichFlanker(j)).image(:);
                      end
                      location(1).image=location(1).image+c*flankerImage; % Add flanker.
-                  end % for theta=0:90:270
+                  end % for j=1:4
+                  o.transcript.flankers{trial}=whichFlanker; % Save the whole array of 4 flankers.
                end % if o.useFlankers
             otherwise
                error('Unknown o.task "%s"',o.task);
@@ -3199,7 +3205,7 @@ try
                      % matrix. So we replace the string by 0.
                      response=0;
                   end
-                  [ok,response]=ismember(lower(response),lower(o.alphabet));
+                  [ok,isRight]=ismember(lower(response),lower(o.alphabet));
                   if ~ok
                      if o.speakInstructions
                         Speak('Try again. Or hit ESCAPE to quit.');
@@ -3242,12 +3248,14 @@ try
       end
       switch o.task % score as right or wrong
          case '4afc'
-            response=response == signalLocation;
+            isRight=response == signalLocation;
+            o.transcript.target(trial)=signalLocation;
          case 'identify'
-            response=response == whichSignal;
-      end
+            isRight=response == whichSignal;
+            o.transcript.target(trial)=whichSignal;
+     end
       if ~ismember(o.observer,algorithmicObservers)
-         if response
+         if isRight
             Snd('Play',rightBeep);
          else
             Snd('Play',wrongBeep);
@@ -3255,29 +3263,25 @@ try
       end
       switch o.thresholdParameter
          case 'spacing'
-            %             result=spacingDeg;
             spacingDeg=flankerSpacingPix/o.pixPerDeg;
             tTest=log10(spacingDeg);
          case 'size'
-            %             result=targetSizeDeg;
             targetSizeDeg=o.targetHeightPix/o.pixPerDeg;
             tTest=log10(targetSizeDeg);
          case 'contrast'
-            %             result=o.thresholdPolarity*10^tTest;
          case 'flankerContrast'
-            %             result=o.thresholdPolarity*10^tTest;
       end
-      %       results(n,1)=result;
-      %       results(n,2)=response;
-      %       n=n+1;
-      trialsRight=trialsRight+response;
-      q=QuestUpdate(q,tTest,response); % Add the new datum (actual test intensity and o.observer response) to the database.
+      trialsRight=trialsRight+isRight;
+      q=QuestUpdate(q,tTest,isRight); % Add the new datum (actual test intensity and observer isRight) to the database.
       if o.questPlusEnable
          stim=20*tTest;
-         outcome=response+1;
+         outcome=isRight+1;
          questPlusData=qpUpdate(questPlusData,stim,outcome);
       end
-      o.data(trial,1:2)=[tTest response];
+      o.data(trial,1:2)=[tTest isRight];
+      o.transcript.response(trial)=response;
+      o.transcript.intensity(trial)=tTest;
+      o.transcript.isRight(trial)=isRight;
       if cal.ScreenConfigureDisplayBrightnessWorks
          %          Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
          cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
@@ -3523,7 +3527,18 @@ try
    [~,neworder]=sort(lower(fieldnames(o)));
    o=orderfields(o,neworder);
    save(fullfile(o.dataFolder,[o.dataFilename '.mat']),'o','cal');
-   fprintf('Results saved in %s with extensions .txt and .mat\nin folder %s\n',o.dataFilename,o.dataFolder);
+   if exist('jsonencode','builtin')
+      json=jsonencode(o);
+   else
+      addpath(fullfile(fileparts(mfilename('fullpath')),'lib/jsonlab')); % folder in same directory as this M file
+      json=savejson('',o);
+   end
+   fid=fopen(fullfile(o.dataFolder,[o.dataFilename '.json']),'w');
+   fprintf(fid,'%s',json);
+   fclose(fid);
+   t=struct2table(o.transcript,'AsArray',false);
+   writetable(t,fullfile(o.dataFolder,[o.dataFilename '.transcript.csv']));
+   fprintf('Results saved in %s with extensions .txt, .mat, .json, and .transcript.csv \nin folder %s\n',o.dataFilename,o.dataFolder);
    Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
    oOld=o;
    oOld.secs=GetSecs; % Date for staleness.
