@@ -2395,11 +2395,16 @@ try
    
    %% DO A RUN
    o.data=[];
+   if isfield(o,'transcript')
+      o=rmfield(o,'transcript');
+   end
    o.transcript.intensity=[];
    o.transcript.isRight=[];
    o.transcript.response=[];
    o.transcript.target=[];
-   o.transcript.flankers={};
+   if o.useFlankers
+      o.transcript.flankers={};
+   end
    if streq(o.thresholdParameter,'flankerContrast')
       % Falling psychometric function for crowding of target as a function
       % of flanker contrast. We assume that the observer makes a random
@@ -3205,7 +3210,7 @@ try
                      % matrix. So we replace the string by 0.
                      response=0;
                   end
-                  [ok,isRight]=ismember(lower(response),lower(o.alphabet));
+                  [ok,response]=ismember(lower(response),lower(o.alphabet));
                   if ~ok
                      if o.speakInstructions
                         Speak('Try again. Or hit ESCAPE to quit.');
@@ -3527,22 +3532,41 @@ try
    [~,neworder]=sort(lower(fieldnames(o)));
    o=orderfields(o,neworder);
    save(fullfile(o.dataFolder,[o.dataFilename '.mat']),'o','cal');
-   if exist('jsonencode','builtin')
-      json=jsonencode(o);
-   else
-      addpath(fullfile(fileparts(mfilename('fullpath')),'lib/jsonlab')); % folder in same directory as this M file
-      json=savejson('',o);
-   end
-   fid=fopen(fullfile(o.dataFolder,[o.dataFilename '.json']),'w');
-   fprintf(fid,'%s',json);
-   fclose(fid);
-   t=struct2table(o.transcript,'AsArray',false);
-   writetable(t,fullfile(o.dataFolder,[o.dataFilename '.transcript.csv']));
+   try % save to .json file
+      if exist('jsonencode','builtin')
+         json=jsonencode(o);
+      else
+         addpath(fullfile(fileparts(mfilename('fullpath')),'lib/jsonlab')); 
+         json=savejson('',o);
+      end
+      fid=fopen(fullfile(o.dataFolder,[o.dataFilename '.json']),'w');
+      fprintf(fid,'%s',json);
+      fclose(fid);
+   catch e
+      warning('Failed to save .json file.');
+      e.stack(end)
+      warning(e.message);
+   end % save to .json file
+   try % save to .csv file
+      transcript=o.transcript;
+      f=fieldnames(transcript);
+      for i=1:length(f)
+         % turn row into column
+         transcript.(f{i})=transcript.(f{i})';
+      end
+      t=struct2table(transcript,'AsArray',false);
+      writetable(t,fullfile(o.dataFolder,[o.dataFilename '.transcript.csv']));
+   catch e
+      warning('Failed to save .transcript.csv file.');
+      o.transcript
+      e.stack(end)
+      warning(e.message);
+   end % save to .csv fil
    fprintf('Results saved in %s with extensions .txt, .mat, .json, and .transcript.csv \nin folder %s\n',o.dataFilename,o.dataFolder);
    Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
    oOld=o;
    oOld.secs=GetSecs; % Date for staleness.
-catch
+catch e
    %% MATLAB catch
    ListenChar;
    sca; % screen close all
@@ -3556,7 +3580,7 @@ catch
    end
    [~,neworder]=sort(lower(fieldnames(o)));
    o=orderfields(o,neworder);
-   psychrethrow(psychlasterror);
+   rethrow(e);
 end
 end % function o=NoiseDiscrimination(o)
 %% FUNCTION SaveSnapshot
