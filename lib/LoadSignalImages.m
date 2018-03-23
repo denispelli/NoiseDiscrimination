@@ -4,36 +4,26 @@ function [signalStruct,signalBounds]=LoadSignalImages(o)
 % Set o.borderLetter=[] if you don't need it.
 % Returns array "signalStruct" with one struct element per letter, plus
 % bounding box "signalBounds" that will hold any letter. Called by
-% NoiseDiscrimination.m. The font is o.targetFont.
-%
-% If o.readAlphabetFromDisk is false then the font is rendered by Screen
-% DrawText to create an image for each desired letter.
+% NoiseDiscrimination.m. The folder is o.signalImagesFolder.
 %
 % The font's TextSize is computed to yield the desired o.targetPix size in
 % the direction specified by o.targetSizeIsHeight (true for height, false
 % for width). However, if o.targetFontHeightOverNominalPtSize==nan then the
 % TextSize is set equal to o.targetPix.
 %
-% If o.readAlphabetFromDisk==1 then we look for a folder inside
-% NoiseDiscrimination/lib/signalImages/ whose name matches that of the desired
-% font. We give a fatal error if it's not found. The folder is very simple,
-% one image file per letter; the filename is the letter, URL-encoded to
-% cope with symbols, including a space.
+% We look for a folder o.signalImagesFolder inside
+% NoiseDiscrimination/lib/signalImages/. We give a fatal error if it's not
+% found. The folder is very simple, one image file per letter; the filename
+% is the letter, URL-encoded to cope with symbols, including a space.
 %
 % The "letter" images can be anything (e.g. photos of faces). The only
-% requirement is that all the images in a "font" must be the same size.
+% requirement is that all the images in a signalImagesFolder must be the
+% same size. Detailed run time checking will produce a fatal error if any
+% image is missing or has the wrong size.
 %
-
-% Checking of image size gives a detailed report if an error is detected,
-% for instance:
-% ERROR: Found a change in letter image size within the alphabet.
-% File "/Users/denispelli/Dropbox/CriticalSpacing/signalImages/Pelli/b.png".
-% Letter "b", 12 of 12, image size [0 0 1024 1024] differs from
-% the image size of the preceding letters [0 0 102 513].
-% Error using CreateLetterTextures (line 102)
-% All letters must have the same image size!
-% Error in CreateLetterTextures (line 102)
-%            error('All letters must have the same image size!');
+% I think monochrome and color images are handled correctly.
+%
+% denis.pelli@nyu.edu March, 2018
 
 if ~isfinite(o.targetHeightOverWidth)
    o.targetHeightOverWidth=1;
@@ -42,18 +32,18 @@ letters=[o.alphabet o.borderLetter];
 for i=1:length(letters)
    signalStruct(i).letter=letters(i);
 end
-canvasRect=[0 0 o.targetPix o.targetPix]*max(1,o.targetHeightOverWidth);
-black=0;
-white=255;
+% canvasRect=[0 0 o.targetPix o.targetPix]*max(1,o.targetHeightOverWidth);
+% black=0;
+% white=255;
 
 % Read from disk into "savedAlphabet".
 signalImagesFolder=fullfile(fileparts(fileparts(mfilename('fullpath'))),'signalImages'); % NoiseDiscrimination/signalImages/
 if ~exist(signalImagesFolder,'dir')
    error('Folder missing: "%s"',signalImagesFolder);
 end
-folder=fullfile(signalImagesFolder,urlencoding(o.targetFont));
+folder=fullfile(signalImagesFolder,urlencoding(o.signalImagesFolder));
 if ~exist(folder,'dir')
-   error('Folder missing: "%s". Target font "%s" has not been saved.',folder,o.targetFont);
+   error('Folder missing: "%s" for "%s".',folder,o.signalImagesFolder);
 end
 d=dir(folder);
 ok=~[d.isdir];
@@ -64,7 +54,7 @@ for i=1:length(ok)
 end
 d=d(ok);
 if length(d)<length(o.alphabet)
-   error('Sorry. Saved %s alphabet has only %d letters, and you requested %d letters.',o.targetFont,length(d),length(o.alphabet));
+   error('Sorry. Folder %s has only %d images, and you requested %d.',o.signalImagesFolder,length(d),length(o.alphabet));
 end
 savedAlphabet.letters=[];
 savedAlphabet.images={};
@@ -85,7 +75,7 @@ for i=1:length(d)
    end
    [~,name]=fileparts(urldecoding(d(i).name));
    if length(name)~=1
-      error('Saved "%s" alphabet letter image file "%s" must have a one-character filename after urldecoding.',o.targetFont,name);
+      error('Folder "%s" image file "%s" must have a one-character filename after urldecoding.',o.signalImagesFolder,name);
    end
    savedAlphabet.letters(i)=name;
    white=savedAlphabet.images{i}(1,1,2); % Use upper left pixel as definition of "white".
@@ -112,11 +102,11 @@ for i=1:length(d)
       b=savedAlphabet.imageRect;
       savedAlphabet.imageRect=UnionRect(savedAlphabet.imageRect,a);
       if ~all(a==b)
-         fprintf('\nERROR: Found a change in letter image size within the alphabet.\n');
-         fprintf(['File "%s".\nLetter "%s", %d of %d, image size [%d %d %d %d] differs from \n'...
-            'the image size of the preceding letters [%d %d %d %d].\n'],...
+         fprintf('\nERROR: Found a change in image size within the folder.\n');
+         fprintf(['File "%s".\nImage "%s", %d of %d, size [%d %d %d %d] differs from \n'...
+            'the size of the preceding images [%d %d %d %d].\n'],...
             filename,name,i,length(d),a,b);
-         error('All letters must have the same image size!');
+         error('All images must have the same size!');
       end
    end
 end
@@ -126,7 +116,7 @@ signalBounds=savedAlphabet.rect;
 for i=1:length(letters)
    which=strfind([savedAlphabet.letters],letters(i));
    if length(which)~=1
-      error('Letter %c is not in saved "%s" alphabet "%s".',letters(i),o.targetFont,savedAlphabet.letters);
+      error('Image %c is not in "%s" folder, which only has "%s".',letters(i),o.signalImagesFolder,savedAlphabet.letters);
    end
    assert(length(which)==1);
    r=savedAlphabet.rect;
@@ -139,12 +129,12 @@ end
 function u = urlencoding(s)
 u = '';
 
-for k = 1:length(s),
+for k = 1:length(s)
    if ~isempty(regexp(s(k), '[a-zA-Z0-9]', 'once'))
       u(end+1) = s(k);
    else
       u=[u,'%',dec2hex(s(k)+0)];
-   end;
+   end
 end
 end
 
