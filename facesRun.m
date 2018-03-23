@@ -64,7 +64,7 @@ for beautyTask=0:1
       end
    end
 end
-%% NUMBER THE CONDITIONS (I.E. ROWS) AND PRINT THE TABLE
+%% NUMBER THE CONDITIONS (ONE PER ROW) AND PRINT THE TABLE
 for i=1:length(oo)
    oo(i).condition=i;
 end
@@ -166,34 +166,25 @@ if ~fakeRun && true
    fprintf('Summary saved as "%s" with extensions ".csv" and ".mat".\n',o.summaryFilename);
 
    %% PLOT IT
-%    close all % Get rid of any existing figures.
-%    figure(1)
-%    n=abs([oo.noiseSD]);
-%    c=abs([oo.flankerContrast]);
-%    [n,i]=sort(n);
-%    c=c(i);
-%    loglog(0.01+n,c,'-o');
-%    ylabel('Flanker threshold contrast');
-%    xlabel('NoiseSD contrast');
-%    xlim([0.01 1]);
-%    ylim([0.01 1]);
-%    daspect([1 1 1]);
-%    name=[o.experiment '-' o.observer '-log.eps'];
-%    title(name);
-%    graphFile=fullfile(fileparts(mfilename('fullpath')),'data',name);
-%    saveas(gcf,graphFile,'epsc')
-%    fprintf('Plot saved as "%s".\n',graphFile);
-%    figure(2)
-%    plot(n,c,'-o');
-%    ylabel('Flanker threshold contrast');
-%    xlabel('NoiseSD contrast');
-%    xlim([0 .5]);
-%    ylim([0 .5]);
-%    daspect([1 1 1]);
-%    name=[o.experiment '-' o.observer '.eps'];
-%    title(name);
-%    graphFile=fullfile(fileparts(mfilename('fullpath')),'data',name);
-%    saveas(gcf,graphFile,'epsc')
-%    fprintf('Plot saved as "%s".\n',graphFile);
+   tBeauty=t(streq(t.task,'rate'),{'targetDurationSec' 'contrast'});
+   tBeauty=sortrows(tBeauty,'targetDurationSec');
+   tId=t(streq(t.task,'identify'),{'targetDurationSec' 'contrast'});
+   tId=sortrows(tId,'targetDurationSec');
+   close all % Get rid of any existing figures.
+   figure(1)
+   loglog(tId.targetDurationSec,tId.contrast,'r-o',tBeauty.targetDurationSec,tBeauty.contrast,'k-x');
+   ylabel('Threshold contrast');
+   xlabel('Duration (s)');
+   xlim([0.1 2]);
+   ylim([0.01 10]);
+   DecadesEqual(gca);
+   o.plotFilename=[o.dataFilename '.plot' ];
+   title(o.plotFilename);
+   legend('Identification','Beauty','Location','north');
+   legend boxoff
+   graphFile=fullfile(o.dataFolder,[o.plotFilename '.eps']);
+   saveas(gcf,graphFile,'epsc')
+   fprintf('Plot saved as "%s".\n',graphFile);
 end % Run the selected conditions
+
 
