@@ -463,7 +463,8 @@ addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same dire
 % end
 rng('shuffle'); % Use time to seed the random number generator.
 if ismac && ~ScriptingOkShowPermission
-   error(['Please give MATLAB permission to control the computer. ',...
+   error(['Please give MATLAB permission to control the computer. '...
+       'Use System Preferences:Security and Privacy:Privacy:Accessibility. '...
       'You''ll need admin privileges to do this.']);
 end
 plusMinusChar=char(177); % Use this instead of literal plus minus sign to prevent corruption of this non-ASCII character.
@@ -523,6 +524,7 @@ o.quitRun=false; % Returned value is true if the user aborts this run (i.e. thre
 o.quitSession=false; % Returned value is true if the observer wants to quit now; no more runs.
 o.targetKind='letter';
 % o.targetKind='gabor'; % one cycle within targetSize
+% o.targetKind='image'; % read from folder of images
 o.font='Sloan';
 % o.font='Bookman';
 % o.allowAnyFont=false; % Old code assumes Sloan font.
@@ -616,7 +618,6 @@ o.assessContrast=false; % diagnostic information
 o.measureContrast=false;
 o.usePhotometer=true; % use photometer or 8-bit model
 o.assessLoadGamma=false; % diagnostic information
-o.assessLowLuminance=false;
 o.assessGray=false; % For debugging. Diagnostic printout when we load gamma table.
 o.assessTargetLuminance=false;
 % o.observerQuadratic=-1.2; % estimated from old second harmonic data
@@ -659,7 +660,11 @@ o.eyes='both';
 o.readAlphabetFromDisk=false;
 o.borderLetter=[];
 o.seed=[];
-% The user can only set fields that are initialized above. Thixxxs is meant to
+o.targetHeightOverWidth=nan;
+o.symmetricLuminanceRange=false;
+o.printSignalImages=false;
+o.signalImagesFolder='';
+% The user can only set fields that are initialized above. This is meant to
 % catch any mistakes where the user tries to set a field that isn't used
 % below. We ignore input fields that are known output fields. Any field
 % that is neither already initialized or a known output field is flagged as
@@ -806,6 +811,8 @@ if isempty(o.labelAlternatives)
          o.labelAlternatives=true;
       case 'letter'
          o.labelAlternatives=false;
+      case 'image'
+         o.labelAlternatives=true;
    end
 end
 
@@ -1253,7 +1260,7 @@ try
    end
    o.targetCheckDeg=o.targetCheckPix/o.pixPerDeg;
    BackupCluts(o.screen);
-   LMean=(max(cal.old.L)+min(cal.old.L))/2;
+   LMean=o.luminanceFactor*(max(cal.old.L)+min(cal.old.L))/2;
    o.maxLRange=2*min(max(cal.old.L)-LMean,LMean-min(cal.old.L));
    % We use nearly the whole clut (entries 2 to 254) for stimulus generation.
    % We reserve first and last (0 and o.maxEntry), for black and white.
@@ -1330,6 +1337,12 @@ try
             %                                       % target height. That's good for gabors,
             %                                       % which are greatly diminished
             %                                       % at their edge.
+         case 'image'
+            o.blankingRadiusReTargetHeight=1.5; % Make blanking radius 1.5 times
+            %                                       % target height. That's a good
+            %                                       % value for images, which are
+            %                                       % strong right up to the edge of
+            %                                       % the target height.
       end
    end
    fixationCrossPix=round(o.fixationCrossDeg*o.pixPerDeg);
@@ -1506,16 +1519,10 @@ try
       ffprintf(ff,'RMS difference between identity and read-back of hardware CLUT (%dx%d): %.9f\n',...
          size(gammaRead),rms(delta));
       if exist('cal','var')
-         gray=mean([firstGrayClutEntry lastGrayClutEntry])/o.maxEntry; % CLUT color code for gray.
-         assert(gray*o.maxEntry == round(gray*o.maxEntry)); % Sum of first and last is even, so gray is integer.
          LMin=min(cal.old.L);
          LMax=max(cal.old.L);
-         LMean=mean([LMin, LMax]); % Desired background luminance.
+         LMean=o.luminanceFactor*mean([LMin, LMax]); % Desired background luminance.
          %          LMean=LMean*(1+(rand-0.5)/32); % Tiny jitter, ±1.5%
-         LMean=o.luminanceFactor*LMean;
-         if o.assessLowLuminance
-            LMean=0.8*LMin+0.2*LMax;
-         end
          % CLUT entry 1: o.gray1
          % First entry is black. Second entry is o.gray1. We have
          % two clut entries that produce the same gray. One (gray) is in
@@ -1541,7 +1548,12 @@ try
          cal.nLast=lastGrayClutEntry;
          cal=LinearizeClut(cal);
          ffprintf(ff,'Size of cal.gamma %d %d\n',size(cal.gamma));
-         
+         if o.symmetricLuminanceRange
+            % Choose "gray" in middle of CLUT.
+            gray=round(mean([firstGrayClutEntry lastGrayClutEntry]))/o.maxEntry; % CLUT color code for gray.
+         else
+            gray=IndexOfLuminance(cal,LMean)/o.maxEntry;
+         end        
          %          ffprintf(ff,'Non-stimulus background is %.1f cd/m^2 at CLUT entry %d (and %d).\n',LMean,o.gray1*o.maxEntry,gray*o.maxEntry);
          %          ffprintf(ff,'%.1f cd/m^2 at %d\n',LuminanceOfIndex(cal,gray*o.maxEntry),o.gray1*o.maxEntry);
          %          ffprintf(ff,'%.3f dac at %d; %.3f dac at %d\n',cal.gamma(o.gray1*o.maxEntry+1,2),o.gray1*o.maxEntry,cal.gamma(gray*o.maxEntry+1,2),gray*o.maxEntry);
@@ -1555,15 +1567,15 @@ try
          Screen('FillRect',window,gray,o.stimulusRect);
       else
          Screen('FillRect',window);
+         gray=0.5;
       end % if exist('cal')
       Screen('Flip',window); % Load gamma table
       if ~isfinite(window) || window == 0
          fprintf('error\n');
          error('Screen OpenWindow failed. Please try again.');
       end
-      black=0; % The CLUT color code for black.
-      white=1; % The CLUT color code for white.
-      gray=mean([firstGrayClutEntry lastGrayClutEntry])/o.maxEntry; % Will be a CLUT color code for gray.
+      black=0; % CLUT color code for black.
+      white=1; % CLUT color code for white.
       Screen('FillRect',window,o.gray1);
       Screen('FillRect',window,gray,o.stimulusRect);
       Screen('Flip',window); % Screen is now all gray, at LMean.
@@ -1783,6 +1795,8 @@ try
    switch o.targetKind
       case 'letter'
          ffprintf(ff,'o.font %s\n',o.font);
+      case 'image'
+         ffprintf(ff,'o.font %s\n',o.font);
       case 'gabor'
          ffprintf(ff,'o.targetGaborSpaceConstantCycles %.1f\n',o.targetGaborSpaceConstantCycles);
          ffprintf(ff,'o.targetGaborCycles %.1f\n',o.targetGaborCycles);
@@ -1850,10 +1864,7 @@ try
    o.canvasSize=(o.noiseCheckPix/o.targetCheckPix)*round(o.canvasSize*o.targetCheckPix/o.noiseCheckPix); % Make it a multiple of noiseCheckPix.
    ffprintf(ff,'Noise height %.2f deg. Noise hole %.2f deg. Height is %.2fT and hole is %.2fT, where T is target height.\n', ...
       o.annularNoiseBigRadiusDeg*o.targetHeightDeg,o.annularNoiseSmallRadiusDeg*o.targetHeightDeg,o.annularNoiseBigRadiusDeg,o.annularNoiseSmallRadiusDeg);
-   if o.assessLowLuminance
-      ffprintf(ff,'o.assessLowLuminance %d %% check out DAC limits at low end.\n',o.assessLowLuminance);
-   end
-   if o.useFlankers
+     if o.useFlankers
       ffprintf(ff,'Adding four flankers at center spacing of %.0f pix=%.1f deg=%.1fx letter height. Dark contrast %.3f (nan means same as target).\n',...
          flankerSpacingPix,flankerSpacingPix/o.pixPerDeg,flankerSpacingPix/o.targetHeightPix,o.flankerContrast);
    end
@@ -2002,147 +2013,176 @@ try
    black0=0;
    Screen('Preference','TextAntiAliasing',0);
    switch o.task % Compute masks and envelopes
-      case '4afc'
-         % boundsRect contains all 4 positions.
-         boundsRect=[-o.targetWidthPix, -o.targetHeightPix, o.targetWidthPix+gap, o.targetHeightPix+gap];
-         boundsRect=CenterRect(boundsRect,[o.targetXYPix o.targetXYPix]);
-         targetRect=round([0 0 o.targetHeightPix o.targetHeightPix]/o.targetCheckPix);
-         signal(1).image=ones(targetRect(3:4));
-      case 'identify'
-         switch o.targetKind
-            case 'letter'
-               scratchHeight=round(3*o.targetHeightPix/o.targetCheckPix);
-               [scratchWindow, scratchRect]=Screen('OpenOffscreenWindow',-1,[],[0 0 scratchHeight scratchHeight],8);
-               if ~streq(o.font,'Sloan') && ~o.allowAnyFont
-                  warning('You should set o.allowAnyFont=1 unless o.font=''Sloan''.');
-               end
-               oldFont=Screen('TextFont',scratchWindow,o.font);
-               Screen('DrawText',scratchWindow,o.alternatives(1),0,scratchRect(4)); % Must draw first to learn actual font used.
-               font=Screen('TextFont',scratchWindow);
-               if ~streq(font,o.font)
-                  error('Font missing! Requested font "%s", but got "%s". Please install the missing font.\n',o.font,font);
-               end
-               oldSize=Screen('TextSize',scratchWindow,round(o.targetHeightPix/o.targetCheckPix));
-               oldStyle=Screen('TextStyle',scratchWindow,0);
-               canvasRect=[0 0 o.canvasSize]; % o.canvasSize =[width height];
-               if o.allowAnyFont
-                  clear letters
-                  for i=1:o.alternatives
-                     letters{i}=signal(i).letter;
-                  end
-                  o.targetRectLocal=TextCenteredBounds(scratchWindow,letters,1);
-               else
-                  o.targetRectLocal=round([0 0 o.targetHeightPix o.targetHeightPix]/o.targetCheckPix);
-               end
-               r=TextBounds(scratchWindow,'x',1);
-               o.xHeightPix=RectHeight(r)*o.targetCheckPix;
-               o.xHeightDeg=o.xHeightPix/o.pixPerDeg;
-               r=TextBounds(scratchWindow,'H',1);
-               o.HHeightPix=RectHeight(r)*o.targetCheckPix;
-               o.HHeightDeg=o.HHeightPix/o.pixPerDeg;
-               ffprintf(ff,'o.xHeightDeg %.2f deg (traditional typographer''s x-height)\n',o.xHeightDeg);
-               ffprintf(ff,'o.HHeightDeg %.2f deg (capital H ascender height)\n',o.HHeightDeg);
-               alphabetHeightPix=RectHeight(o.targetRectLocal)*o.targetCheckPix;
-               o.alphabetHeightDeg=alphabetHeightPix/o.pixPerDeg;
-               ffprintf(ff,'o.alphabetHeightDeg %.2f deg (bounding box for letters used, including any ascenders and descenders)\n',o.alphabetHeightDeg);
-               if o.printTargetBounds
-                  fprintf('o.targetRectLocal [%d %d %d %d]\n',o.targetRectLocal);
-               end
-               for i=1:o.alternatives
-                  Screen('FillRect',scratchWindow,white1);
-                  rect=CenterRect(canvasRect,scratchRect);
-                  targetRect=CenterRect(o.targetRectLocal,rect);
-                  if ~o.allowAnyFont
-                     % Draw position is left at baseline
-                     % targetRect is just big enough to hold any Sloan letter.
-                     % targetRect=round([0 0 1 1]*o.targetHeightPix/o.targetCheckPix),
-                     x=targetRect(1);
-                     y=targetRect(4);
-                  else
-                     % Desired draw position is horizontal middle at baseline.
-                     % targetRect is just big enough to hold any letter.
-                     % targetRect allows for descenders and extension in any
-                     % direction.
-                     % targetRect=round([a b c d]*o.targetHeightPix/o.targetCheckPix),
-                     % where a b c and d depend on the font.
-                     x=(targetRect(1)+targetRect(3))/2; % horizontal middle
-                     y=targetRect(4)-o.targetRectLocal(4); % baseline
-                     % DrawText draws from left, so shift left by half letter width, to center letter at desired draw
-                     % position.
-                     bounds=Screen('TextBounds',scratchWindow,signal(i).letter,x,y,1);
-                     if o.printTargetBounds
-                        fprintf('%c bounds [%4.0f %4.0f %4.0f %4.0f]\n',signal(i).letter,bounds);
-                     end
-                     width=bounds(3);
-                     x=x-width/2;
-                  end
-                  if o.printTargetBounds
-                     fprintf('%c %4.0f, %4.0f\n',signal(i).letter,x,y);
-                  end
-                  Screen('DrawText',scratchWindow,signal(i).letter,x,y,black0,white1,1);
-                  Screen('DrawingFinished',scratchWindow,[],1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
-%                   WaitSecs(0.1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
-                  letter=Screen('GetImage',scratchWindow,targetRect,'drawBuffer');
-                  
-                  % The scrambling sounds like something is going wrong in detiling of read
-                  % back renderbuffer memory, maybe a race condition in the driver. Maybe
-                  % something else, in any case not really fixable by us, although the "wait
-                  % a bit and hope for the best" approach would the the most likely of all
-                  % awful approaches to work around it. Maybe add a Screen('DrawingFinished',
-                  % window, [], 1); before the 'getimage' and/or before the random wait.
-                  %
-                  % You could test a different machine, in case only one type of graphics
-                  % card or vendor has the driver bug.
-                  %
-                  % Or you could completely switch to the software renderer via
-                  % Screen('preference','Conservevram', 64). That would shutdown all hardware
-                  % acceleration and render very slowly on the cpu in main memory. However,
-                  % that renderer can't handle fullscreen windows afaik, and timing will also
-                  % be screwed. And there might be various other limitations or bugs,
-                  % including failure to work at all. If you! can live with that, worth a
-                  % try. If you run into trouble don't bother even reporting it. I'm
-                  % absolutely not interested.
-                  %
-                  % -mario (psychtoolbox forum december 13, 2015)
-                  
-                  Screen('FillRect',scratchWindow);
-                  letter=letter(:,:,1);
-                  signal(i).image=letter < (white1+black0)/2;
-                  % We have now drawn letter(i) into signal(i).image. The target
-                  % size is always given by o.targetRectLocal. This is a square
-                  % [0 0 1 1]*o.targetHeightPix/o.targetCheckPix only if
-                  % o.allowAnyFont=false. In general, it need not be square. Any code
-                  % that needs a bounding rect for the target should use
-                  % o.targetRectLocal, not o.targetHeightPix. In the letter
-                  % generation, targetHeightPix is used solely to set the nominal
-                  % font size ("points"), in pixels.
-               end
-               %             Screen('TextFont',scratchWindow,oldFont);
-               %             Screen('TextSize',scratchWindow,oldSize);
-               %             Screen('TextStyle',scratchWindow,oldStyle);
-               Screen('Close',scratchWindow);
-               scratchWindow=-1;
-            case 'gabor'
-               % o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
-               % o.targetGaborSpaceConstantCycles=1.5; % The 1/e space constant of the gaussian envelope in periods of the sinewave.
-               % o.targetGaborCycles=3; % cycles of the sinewave.
-               % o.targetGaborOrientationsDeg=[0 90]; % Orientations relative to vertical.
-               % o.targetGaborNames='VH';
-               targetRect=round([0 0 o.targetHeightPix o.targetHeightPix]/o.targetCheckPix);
-               o.targetRectLocal=targetRect;
-               widthChecks=RectWidth(targetRect)-1;
-               axisValues=-widthChecks/2:widthChecks/2; % axisValues is used in creating the meshgrid.
-               [x, y]=meshgrid(axisValues,axisValues);
-               spaceConstantChecks=o.targetGaborSpaceConstantCycles*(o.targetHeightPix/o.targetCheckPix)/o.targetGaborCycles;
-               cyclesPerCheck=o.targetGaborCycles/(o.targetHeightPix/o.targetCheckPix);
-               for i=1:o.alternatives
-                  a=cos(o.targetGaborOrientationsDeg(i)*pi/180)*2*pi*cyclesPerCheck;
-                  b=sin(o.targetGaborOrientationsDeg(i)*pi/180)*2*pi*cyclesPerCheck;
-                  signal(i).image=sin(a*x+b*y+o.targetGaborPhaseDeg*pi/180).*exp(-(x.^2+y.^2)/spaceConstantChecks^2);
-               end
-            otherwise
-               error('Unknown o.targetKind');
-         end
+       case '4afc'
+           % boundsRect contains all 4 positions.
+           boundsRect=[-o.targetWidthPix, -o.targetHeightPix, o.targetWidthPix+gap, o.targetHeightPix+gap];
+           boundsRect=CenterRect(boundsRect,[o.targetXYPix o.targetXYPix]);
+           targetRect=round([0 0 o.targetHeightPix o.targetHeightPix]/o.targetCheckPix);
+           signal(1).image=ones(targetRect(3:4));
+       case 'identify'
+           switch o.targetKind
+               case 'letter'
+                   scratchHeight=round(3*o.targetHeightPix/o.targetCheckPix);
+                   [scratchWindow, scratchRect]=Screen('OpenOffscreenWindow',-1,[],[0 0 scratchHeight scratchHeight],8);
+                   if ~streq(o.font,'Sloan') && ~o.allowAnyFont
+                       warning('You should set o.allowAnyFont=1 unless o.font=''Sloan''.');
+                   end
+                   oldFont=Screen('TextFont',scratchWindow,o.font);
+                   Screen('DrawText',scratchWindow,o.alternatives(1),0,scratchRect(4)); % Must draw first to learn actual font used.
+                   font=Screen('TextFont',scratchWindow);
+                   if ~streq(font,o.font)
+                       error('Font missing! Requested font "%s", but got "%s". Please install the missing font.\n',o.font,font);
+                   end
+                   oldSize=Screen('TextSize',scratchWindow,round(o.targetHeightPix/o.targetCheckPix));
+                   oldStyle=Screen('TextStyle',scratchWindow,0);
+                   canvasRect=[0 0 o.canvasSize]; % o.canvasSize =[width height];
+                   if o.allowAnyFont
+                       clear letters
+                       for i=1:o.alternatives
+                           letters{i}=signal(i).letter;
+                       end
+                       o.targetRectLocal=TextCenteredBounds(scratchWindow,letters,1);
+                   else
+                       o.targetRectLocal=round([0 0 o.targetHeightPix o.targetHeightPix]/o.targetCheckPix);
+                   end
+                   r=TextBounds(scratchWindow,'x',1);
+                   o.xHeightPix=RectHeight(r)*o.targetCheckPix;
+                   o.xHeightDeg=o.xHeightPix/o.pixPerDeg;
+                   r=TextBounds(scratchWindow,'H',1);
+                   o.HHeightPix=RectHeight(r)*o.targetCheckPix;
+                   o.HHeightDeg=o.HHeightPix/o.pixPerDeg;
+                   ffprintf(ff,'o.xHeightDeg %.2f deg (traditional typographer''s x-height)\n',o.xHeightDeg);
+                   ffprintf(ff,'o.HHeightDeg %.2f deg (capital H ascender height)\n',o.HHeightDeg);
+                   alphabetHeightPix=RectHeight(o.targetRectLocal)*o.targetCheckPix;
+                   o.alphabetHeightDeg=alphabetHeightPix/o.pixPerDeg;
+                   ffprintf(ff,'o.alphabetHeightDeg %.2f deg (bounding box for letters used, including any ascenders and descenders)\n',o.alphabetHeightDeg);
+                   if o.printTargetBounds
+                       fprintf('o.targetRectLocal [%d %d %d %d]\n',o.targetRectLocal);
+                   end
+                   for i=1:o.alternatives
+                       Screen('FillRect',scratchWindow,white1);
+                       rect=CenterRect(canvasRect,scratchRect);
+                       targetRect=CenterRect(o.targetRectLocal,rect);
+                       if ~o.allowAnyFont
+                           % Draw position is left at baseline
+                           % targetRect is just big enough to hold any Sloan letter.
+                           % targetRect=round([0 0 1 1]*o.targetHeightPix/o.targetCheckPix),
+                           x=targetRect(1);
+                           y=targetRect(4);
+                       else
+                           % Desired draw position is horizontal middle at baseline.
+                           % targetRect is just big enough to hold any letter.
+                           % targetRect allows for descenders and extension in any
+                           % direction.
+                           % targetRect=round([a b c d]*o.targetHeightPix/o.targetCheckPix),
+                           % where a b c and d depend on the font.
+                           x=(targetRect(1)+targetRect(3))/2; % horizontal middle
+                           y=targetRect(4)-o.targetRectLocal(4); % baseline
+                           % DrawText draws from left, so shift left by half letter width, to center letter at desired draw
+                           % position.
+                           bounds=Screen('TextBounds',scratchWindow,signal(i).letter,x,y,1);
+                           if o.printTargetBounds
+                               fprintf('%c bounds [%4.0f %4.0f %4.0f %4.0f]\n',signal(i).letter,bounds);
+                           end
+                           width=bounds(3);
+                           x=x-width/2;
+                       end
+                       if o.printTargetBounds
+                           fprintf('%c %4.0f, %4.0f\n',signal(i).letter,x,y);
+                       end
+                       Screen('DrawText',scratchWindow,signal(i).letter,x,y,black0,white1,1);
+                       Screen('DrawingFinished',scratchWindow,[],1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
+                       %                   WaitSecs(0.1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
+                       letter=Screen('GetImage',scratchWindow,targetRect,'drawBuffer');
+                       
+                       % The scrambling sounds like something is going wrong in detiling of read
+                       % back renderbuffer memory, maybe a race condition in the driver. Maybe
+                       % something else, in any case not really fixable by us, although the "wait
+                       % a bit and hope for the best" approach would the the most likely of all
+                       % awful approaches to work around it. Maybe add a Screen('DrawingFinished',
+                       % window, [], 1); before the 'getimage' and/or before the random wait.
+                       %
+                       % You could test a different machine, in case only one type of graphics
+                       % card or vendor has the driver bug.
+                       %
+                       % Or you could completely switch to the software renderer via
+                       % Screen('preference','Conservevram', 64). That would shutdown all hardware
+                       % acceleration and render very slowly on the cpu in main memory. However,
+                       % that renderer can't handle fullscreen windows afaik, and timing will also
+                       % be screwed. And there might be various other limitations or bugs,
+                       % including failure to work at all. If you! can live with that, worth a
+                       % try. If you run into trouble don't bother even reporting it. I'm
+                       % absolutely not interested.
+                       %
+                       % -mario (psychtoolbox forum december 13, 2015)
+                       
+                       Screen('FillRect',scratchWindow);
+                       letter=letter(:,:,1);
+                       signal(i).image=letter < (white1+black0)/2;
+                       % We have now drawn letter(i) into signal(i).image. The target
+                       % size is always given by o.targetRectLocal. This is a square
+                       % [0 0 1 1]*o.targetHeightPix/o.targetCheckPix only if
+                       % o.allowAnyFont=false. In general, it need not be square. Any code
+                       % that needs a bounding rect for the target should use
+                       % o.targetRectLocal, not o.targetHeightPix. In the letter
+                       % generation, targetHeightPix is used solely to set the nominal
+                       % font size ("points"), in pixels.
+                   end
+                   %             Screen('TextFont',scratchWindow,oldFont);
+                   %             Screen('TextSize',scratchWindow,oldSize);
+                   %             Screen('TextStyle',scratchWindow,oldStyle);
+                   Screen('Close',scratchWindow);
+                   scratchWindow=-1;
+               case 'gabor'
+                   % o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
+                   % o.targetGaborSpaceConstantCycles=1.5; % The 1/e space constant of the gaussian envelope in periods of the sinewave.
+                   % o.targetGaborCycles=3; % cycles of the sinewave.
+                   % o.targetGaborOrientationsDeg=[0 90]; % Orientations relative to vertical.
+                   % o.targetGaborNames='VH';
+                   targetRect=round([0 0 o.targetHeightPix o.targetHeightPix]/o.targetCheckPix);
+                   o.targetRectLocal=targetRect;
+                   widthChecks=RectWidth(targetRect)-1;
+                   axisValues=-widthChecks/2:widthChecks/2; % axisValues is used in creating the meshgrid.
+                   [x, y]=meshgrid(axisValues,axisValues);
+                   spaceConstantChecks=o.targetGaborSpaceConstantCycles*(o.targetHeightPix/o.targetCheckPix)/o.targetGaborCycles;
+                   cyclesPerCheck=o.targetGaborCycles/(o.targetHeightPix/o.targetCheckPix);
+                   for i=1:o.alternatives
+                       a=cos(o.targetGaborOrientationsDeg(i)*pi/180)*2*pi*cyclesPerCheck;
+                       b=sin(o.targetGaborOrientationsDeg(i)*pi/180)*2*pi*cyclesPerCheck;
+                       signal(i).image=sin(a*x+b*y+o.targetGaborPhaseDeg*pi/180).*exp(-(x.^2+y.^2)/spaceConstantChecks^2);
+                   end
+              case 'image'
+                 % Allow for color images.
+                 % Scale so range is -1 (black) to 1 (white).
+                 o.targetPix=round(o.targetHeightDeg/o.noiseCheckDeg);
+                 o.targetFont=o.font;
+                 o.showLineOfLetters=true;
+                 [signalStruct,bounds]=LoadSignalImages(o);
+                 o.targetRectLocal=bounds;
+                 sz=size(signalStruct(1).image);
+                 white=signalStruct(1).image(1,1,:);
+                 o.convertToGray=true;
+                 if o.convertToGray
+                    white=0.2989*white(1)+0.5870*white(2)+0.1140*white(3);
+                 end
+                 whiteImage=repmat(double(white),sz(1),sz(2));
+                 for i=1:length(signalStruct)
+                    %                     m=mean(mean(signalStruct(i).image(:,:,2)));
+                    %                     fprintf('Mean green %.1f raw. white %.1f\n',m,signalStruct(i).image(1,1,2));
+                    if ~o.convertToGray
+                       m=signalStruct(i).image;
+                    else
+                       m=0.2989*signalStruct(i).image(:,:,1)+0.5870*signalStruct(i).image(:,:,2)+0.1140*signalStruct(i).image(:,:,3);
+                    end
+                     imshow(uint8(m));
+                    signal(i).image=double(m)./whiteImage-1;
+                    imshow((signal(i).image+1));
+                    %                     m=mean(mean(signal(i).image(:,:,2)));
+                    %                     fprintf('Mean green %.1f normalized\n',m);
+                 end
+              otherwise
+                 error('Unknown o.targetKind');
+           end
          if o.printCrossCorrelation
             ffprintf(ff,'Cross-correlation of the letters.\n');
             for i=1:o.alternatives
@@ -2231,8 +2271,12 @@ try
    
    %% o.E1 is energy at unit contrast.
    power=1:length(signal);
-   for i=1:length(power)
-      power(i)=sum(signal(i).image(:).^2);
+   for i=1:length(signal)
+      m=signal(i).image;
+      if size(m,3)==3
+         m=0.2989*m(:,:,1)+0.5870*m(:,:,2)+0.1140*m(:,:,3);
+      end
+      power(i)=sum(m(:).^2);
       if streq(o.targetKind,'letter')
          ok=ismember(unique(signal(i).image(:)),[0 1]);
          assert(all(ok));
@@ -2449,7 +2493,7 @@ try
          tTest=log10(abs(c));
       end
       if ~isfinite(tTest)
-         ffprintf(ff,'WARNING: trial %d: tTest %f not finite. Setting to QuestMean.\n',trial,tTest);
+         ffprintf(ff,'WARNING: trial %d: tTest %f not finite. Setting to QuestMean %.2f.\n',trial,tTest,QuestMean(q));
          tTest=QuestMean(q);
       end
       if o.saveSnapshot
@@ -2471,6 +2515,9 @@ try
                o.contrast=o.thresholdPolarity*10^tTest; % negative contrast, dark letters
                if o.saveSnapshot && isfinite(o.snapshotContrast)
                   o.contrast=-o.snapshotContrast;
+               end
+               if streq(o.targetKind,'image')
+                  o.contrast=min([1 o.contrast]);
                end
             else
                r=1+10^tTest;
@@ -2661,20 +2708,28 @@ try
                end
                assert(IsRectInRect(sRect,canvasRect));
                signalImageIndex=logical(FillRectInMatrix(true,sRect,zeros(o.canvasSize)));
+               if size(signal(1).image,3)==3
+                  signalImageIndex=repmat(signalImageIndex,1,1,3);
+               end
                % figure(1);imshow(signalImageIndex);
-               signalImage=zeros(o.canvasSize);
+               signalImage=zeros(size(signalImageIndex)); % supports color
                if (iMovieFrame > o.moviePreFrames ...
                      && iMovieFrame <= o.moviePreFrames+o.movieSignalFrames)
                   % Add in signal only during the signal interval.
-                  signalImage(signalImageIndex)=signal(whichSignal).image(:);
+                  signalImage(signalImageIndex)=signal(whichSignal).image(:); % supports color
                end
                % figure(2);imshow(signalImage);
-               signalMask=logical(signalImage);
+               signalMask=true(size(signalImage(:,:,1)));  
+               for i=1:length(white) % support color
+                  signalMask=signalMask & signalImage(:,:,i)~=white(i);
+               end
+               signalMask=repmat(signalMask,1,1,length(white)); % support color
                switch o.targetModulates
                   case 'luminance'
-                     location(1).image=ones(o.canvasSize);
+                     location(1).image=ones(size(signalImage(:,:,1)));
                      location(1).image(centralNoiseMask)=1+(o.noiseSD/o.noiseListSd)*noise(centralNoiseMask);
                      location(1).image(annularNoiseMask)=1+(o.annularNoiseSD/o.noiseListSd)*noise(annularNoiseMask);
+                     location(1).image=repmat(location(1).image,1,1,length(white)); % support color
                      location(1).image=location(1).image+o.contrast*signalImage; % NOTE: noise and signal added here
                   case 'noise'
                      noise(signalMask)=r*noise(signalMask);
@@ -2755,21 +2810,28 @@ try
                o.flankerContrast=0;
             end
             if streq(o.targetModulates,'luminance')
-               cal.LFirst=cal.LFirst+LMean*min([0 o.contrast o.flankerContrast]);
-               cal.LLast=cal.LLast+LMean*max([0 o.contrast o.flankerContrast]);
+               if streq(o.targetKind,'image')
+                  cal.LFirst=cal.LFirst+LMean*min([0 -o.contrast]);
+                  cal.LLast=cal.LLast+LMean*max([0 -o.contrast]);
+               else
+                  cal.LFirst=cal.LFirst+LMean*min([0 o.contrast o.flankerContrast]);
+                  cal.LLast=cal.LLast+LMean*max([0 o.contrast o.flankerContrast]);
+               end
             end
             if o.annularNoiseBigRadiusDeg > o.annularNoiseSmallRadiusDeg
                cal.LFirst=min(cal.LFirst,LMean*(1-o.noiseListBound*r*o.annularNoiseSD/o.noiseListSd));
                cal.LLast=max(cal.LLast,LMean*(1+o.noiseListBound*r*o.annularNoiseSD/o.noiseListSd));
             end
-            % Range is centered on LMean and includes LFirst and LLast.
-            % Having a fixed index for "gray" (LMean) assures us that
-            % the gray areas (most of the screen) won't change when the
-            % CLUT is updated.
-            LRange=2*max(abs([cal.LLast-LMean LMean-cal.LFirst]));
-            LRange=min(LRange,o.maxLRange);
-            cal.LFirst=LMean-LRange/2;
-            cal.LLast=LMean+LRange/2;
+            if o.symmetricLuminanceRange
+               % Center range on LMean, including LFirst and LLast.
+               % Having a fixed index for "gray" (LMean) assures us that
+               % the gray areas (most of the screen) won't change when the
+               % CLUT is updated.
+               LRange=2*max(abs([cal.LLast-LMean LMean-cal.LFirst]));
+               LRange=min(LRange,o.maxLRange);
+               cal.LFirst=LMean-LRange/2;
+               cal.LLast=LMean+LRange/2;
+            end
             cal.nFirst=firstGrayClutEntry;
             cal.nLast=lastGrayClutEntry;
             if o.saveSnapshot
@@ -2787,11 +2849,15 @@ try
                cal.LLast=max(L);
             end
             cal=LinearizeClut(cal);
-            grayCheck=IndexOfLuminance(cal,LMean)/o.maxEntry;
-            if ~o.saveSnapshot && abs(grayCheck-gray)>0.001
-               ffprintf(ff,'The estimated gray index is %.4f (%.1f cd/m^2), not %.4f (%.1f cd/m^2).\n',...
-                  grayCheck,LuminanceOfIndex(cal,grayCheck*o.maxEntry),gray,LuminanceOfIndex(cal,gray*o.maxEntry));
-               warning('The gray index changed!');
+            if o.symmetricLuminanceRange
+               grayCheck=IndexOfLuminance(cal,LMean)/o.maxEntry;
+               if ~o.saveSnapshot && abs(grayCheck-gray)>0.001
+                  ffprintf(ff,'The estimated gray index is %.4f (%.1f cd/m^2), not %.4f (%.1f cd/m^2).\n',...
+                     grayCheck,LuminanceOfIndex(cal,grayCheck*o.maxEntry),gray,LuminanceOfIndex(cal,gray*o.maxEntry));
+                  warning('The gray index changed!');
+               end
+            else
+               gray=IndexOfLuminance(cal,LMean)/o.maxEntry;
             end
             assert(isfinite(gray));
          end % if o.newClutForEachImage
@@ -2900,7 +2966,7 @@ try
                      eraseRect=UnionRect(eraseRect,location(i).rect);
                   end
                   if o.showResponseNumbers
-                     % Label the o.alternatives 1 to 4. They are
+                     % Label the alternatives 1 to 4. They are
                      % placed to one side of the quadrant, centered
                      % vertically, with a one-space gap. Or half a
                      % letter space horizontally and vertically away
@@ -3085,7 +3151,9 @@ try
             case '4afc'
                leftEdgeOfResponse=screenRect(3);
             case 'identify'
-               % Draw the response o.alternatives
+               % Draw the response alternatives.
+               sz=size(signal(1).image);
+               o.targetWidthPix=round(o.targetHeightPix*sz(2)/sz(1));
                rect=[0 0 o.targetWidthPix o.targetHeightPix]/o.targetCheckPix; % size of signal(1).image
                switch o.alphabetPlacement
                   case 'right'
@@ -3096,17 +3164,18 @@ try
                      targetChecks=RectWidth(rect);
                end
                switch o.targetKind
-                  case 'letter'
-                     spacingFraction=0.25;
-                  case 'gabor'
-                     spacingFraction=0;
+                   case 'letter'
+                       spacingFraction=0.25;
+                   case 'gabor'
+                       spacingFraction=0;
+                   case 'image'
+                       spacingFraction=0;
                end
                if o.alternatives < 6
                   desiredLengthPix=desiredLengthPix*o.alternatives/6;
                end
                alphaSpaces=o.alternatives+spacingFraction*(o.alternatives+1);
                alphaPix=desiredLengthPix/alphaSpaces;
-               %                         alphaCheckPix=alphaPix/(targetChecks/o.targetCheckPix);
                alphaCheckPix=alphaPix/targetChecks;
                alphaGapPixCeil=(desiredLengthPix-o.alternatives*ceil(alphaCheckPix)*targetChecks)/(o.alternatives+1);
                alphaGapPixFloor=(desiredLengthPix-o.alternatives*floor(alphaCheckPix)*targetChecks)/(o.alternatives+1);
@@ -3136,6 +3205,8 @@ try
                for i=1:o.alternatives
                   if useExpand
                      img=Expand(signal(i).image,alphaCheckPix);
+%                      imshow(signal(i).image+1);
+%                      imshow(img+1);
                   else
                      if useImresize
                         img=imresize(signal(i).image,[RectHeight(rect), RectWidth(rect)]);
@@ -3148,12 +3219,16 @@ try
                      end
                   end
                   % NOTE: alphabet placement on top right
-                  texture=Screen('MakeTexture',window,(1-img)*gray,0,0,1);
+                  texture=Screen('MakeTexture',window,(0.01+0.99*(1+o.thresholdPolarity*img))*gray,0,0,1);
                   Screen('DrawTexture',window,texture,RectOfMatrix(img),rect);
                   Screen('Close',texture);
                   if o.labelAlternatives
                      Screen('TextSize',window,o.textSize);
-                     textRect=AlignRect([0 0 o.textSize o.textSize],rect,'center','top');
+                     if streq(o.targetKind,'gabor')
+                        textRect=AlignRect([0 0 o.textSize o.textSize],rect,'center','top');
+                     else
+                        textRect=AlignRect([0 0 o.textSize o.textSize],rect,'left','top');
+                     end
                      Screen('DrawText',window,o.alphabet(i),textRect(1),textRect(4),black,o.gray1,1);
                   end
                   rect=OffsetRect(rect,step(1),step(2));
