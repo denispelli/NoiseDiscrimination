@@ -540,7 +540,7 @@ o.targetGaborNames='VH';
 o.targetModulates='luminance'; % Display a luminance decrement.
 % o.targetModulates='entropy'; % Display an entropy increment.
 % o.targetModulates='noise';  % Display a noise increment.
-o.task='identify'; % 'identify' or '4afc'
+o.task='identify'; % 'identify' or '4afc' or 'rate'
 % o.thresholdParameter='size';
 % o.thresholdParameter='spacing';
 o.thresholdParameter='contrast'; % Use Quest to measure threshold 'contrast','size', 'spacing', or 'flankerContrast'.
@@ -969,7 +969,7 @@ try
    end
    black=0; % The CLUT color code for black.
    white=WhiteIndex(window); % Retrieves the CLUT color code for white.
-   o.gray1=mean([white black]);
+   o.gray1=white;
    o.deviceIndex=-3; % all keyboard and keypad devices
    o.speakEachLetter=false;
    o.useSpeech=false;
@@ -1245,7 +1245,7 @@ try
    o.stimulusRect=InsetRect(screenRect,0,o.lineSpacing*1.2*o.textSize);
    o.noiseCheckPix=round(o.noiseCheckDeg*o.pixPerDeg);
    switch o.task
-      case 'identify'
+      case {'identify' 'rate'}
          o.noiseCheckPix=min(o.noiseCheckPix,RectHeight(o.stimulusRect));
       case '4afc'
          o.noiseCheckPix=min(o.noiseCheckPix,floor(RectHeight(o.stimulusRect)/(2+o.gapFraction4afc)));
@@ -1285,17 +1285,18 @@ try
       end
    end
    o.stimulusRect=2*round(o.stimulusRect/2);
-   if streq(o.task,'identify')
-      o.targetHeightPix=2*round(0.5*o.targetHeightDeg/o.targetCheckDeg)*o.targetCheckPix; % even round multiple of check size
-      if o.targetHeightPix < o.minimumTargetHeightChecks*o.targetCheckPix
-         ffprintf(ff,'Increasing requested targetHeight checks from %d to %d, the minimum.\n',o.targetHeightPix/o.targetCheckPix,o.minimumTargetHeightChecks);
-         o.targetHeightPix=2*ceil(0.5*o.minimumTargetHeightChecks)*o.targetCheckPix;
-      end
-   else
-      o.targetHeightPix=round(o.targetHeightDeg/o.targetCheckDeg)*o.targetCheckPix; % round multiple of check size
+   switch o.task
+      case {'identify' 'rate'}
+         o.targetHeightPix=2*round(0.5*o.targetHeightDeg/o.targetCheckDeg)*o.targetCheckPix; % even round multiple of check size
+         if o.targetHeightPix < o.minimumTargetHeightChecks*o.targetCheckPix
+            ffprintf(ff,'Increasing requested targetHeight checks from %d to %d, the minimum.\n',o.targetHeightPix/o.targetCheckPix,o.minimumTargetHeightChecks);
+            o.targetHeightPix=2*ceil(0.5*o.minimumTargetHeightChecks)*o.targetCheckPix;
+         end
+      otherwise
+         o.targetHeightPix=round(o.targetHeightDeg/o.targetCheckDeg)*o.targetCheckPix; % round multiple of check size
    end
    switch o.task
-      case 'identify'
+      case {'identify' 'rate'}
          maxStimulusHeight=RectHeight(o.stimulusRect);
       case '4afc'
          maxStimulusHeight=RectHeight(o.stimulusRect)/(2+o.gapFraction4afc);
@@ -1371,7 +1372,7 @@ try
    switch o.task
       case '4afc'
          idealT64=-.90;
-      case 'identify'
+      case {'identify' 'rate'}
          idealT64=-0.30;
    end
    switch o.observer
@@ -1455,7 +1456,6 @@ try
       % experiment, in which to display stimuli. If o.observer is machine,
       % we need a screen only briefly, to create the targets to be
       % identified.
-      % openwindow was here
       if false
          % This code to enable dithering is what Mario suggested, but it
          % makes no difference at all. I get dithering on my MacBook Pro
@@ -1789,7 +1789,8 @@ try
    end
    
    ffprintf(ff,'o.pixPerDeg %.1f, o.viewingDistanceCm %.1f\n',o.pixPerDeg,o.viewingDistanceCm);
-   if streq(o.task,'identify')
+  switch o.task
+     case {'identify' 'rate'}
       ffprintf(ff,'Minimum letter resolution is %.0f checks.\n',o.minimumTargetHeightChecks);
    end
    switch o.targetKind
@@ -1824,7 +1825,7 @@ try
    ffprintf(ff,'\n');
    o.noiseSize=2*o.noiseRadiusDeg*[1, 1]*o.pixPerDeg/o.noiseCheckPix;
    switch o.task
-      case 'identify'
+      case {'identify' 'rate'}
          o.noiseSize=2*round(o.noiseSize/2); % Even numbers, so we can center it on letter.
       case '4afc'
          o.noiseSize=round(o.noiseSize);
@@ -1854,14 +1855,14 @@ try
       o.canvasSize=max(o.canvasSize,2*o.annularNoiseBigRadiusDeg*[1, 1]*o.pixPerDeg/o.noiseCheckPix);
    end
    switch o.task
-      case 'identify'
-         o.canvasSize=min(o.canvasSize,floor(RectHeight(o.stimulusRect)/o.targetCheckPix));
-         o.canvasSize=2*round(o.canvasSize/2); % Even number of checks, so we can center it on letter.
+      case {'identify' 'rate'}
+         o.canvasSize=min(o.canvasSize,floor([RectHeight(o.stimulusRect) RectWidth(o.stimulusRect)]/o.targetCheckPix));
+         o.canvasSize=2*ceil(o.canvasSize/2); % Even number of checks, so we can center it on letter.
       case '4afc'
-         o.canvasSize=min(o.canvasSize,floor(maxStimulusHeight/o.targetCheckPix));
-         o.canvasSize=round(o.canvasSize);
+         o.canvasSize=min(o.canvasSize,floor([maxStimulusHeight maxStimulusWidth]/o.targetCheckPix));
+         o.canvasSize=ceil(o.canvasSize);
    end
-   o.canvasSize=(o.noiseCheckPix/o.targetCheckPix)*round(o.canvasSize*o.targetCheckPix/o.noiseCheckPix); % Make it a multiple of noiseCheckPix.
+   o.canvasSize=(o.noiseCheckPix/o.targetCheckPix)*ceil(o.canvasSize*o.targetCheckPix/o.noiseCheckPix); % Make it a multiple of noiseCheckPix.
    ffprintf(ff,'Noise height %.2f deg. Noise hole %.2f deg. Height is %.2fT and hole is %.2fT, where T is target height.\n', ...
       o.annularNoiseBigRadiusDeg*o.targetHeightDeg,o.annularNoiseSmallRadiusDeg*o.targetHeightDeg,o.annularNoiseBigRadiusDeg,o.annularNoiseSmallRadiusDeg);
      if o.useFlankers
@@ -1945,6 +1946,7 @@ try
    temp=zeros(size(wrongBeep));
    temp(1:length(rightBeep))=rightBeep;
    rightBeep=temp; % extend rightBeep with silence to same length as wrongBeep
+   okBeep=[0.03*MakeBeep(1000,0.1) 0*MakeBeep(1000,0.3)];
    purr=MakeBeep(200,0.6);
    purr(end)=0;
    Snd('Open');
@@ -1953,7 +1955,7 @@ try
    switch o.task
       case '4afc'
          object='Square';
-      case 'identify'
+      case {'identify' 'rate'}
          object='Letter';
       otherwise
          error('Unknown task %d',o.task);
@@ -2019,7 +2021,7 @@ try
            boundsRect=CenterRect(boundsRect,[o.targetXYPix o.targetXYPix]);
            targetRect=round([0 0 o.targetHeightPix o.targetHeightPix]/o.targetCheckPix);
            signal(1).image=ones(targetRect(3:4));
-       case 'identify'
+       case {'identify' 'rate'}
            switch o.targetKind
                case 'letter'
                    scratchHeight=round(3*o.targetHeightPix/o.targetCheckPix);
@@ -2343,7 +2345,7 @@ try
          case '4afc'
             msg=[msg word ' click when ready to begin.'];
             fprintf('Please click when ready to begin.\n');
-         case 'identify'
+         case {'identify' 'rate'}
             msg=[msg word ' press the SPACE bar when ready to begin.'];
             fprintf('Please press the space bar when ready to begin.\n');
       end
@@ -2360,7 +2362,7 @@ try
       switch o.task
          case '4afc'
             GetClicks;
-         case 'identify'
+         case {'identify' 'rate'}
             fprintf('*Waiting for SPACE key to start first trial.\n');
             response=GetKeypress([spaceKeyCode escapeKeyCode graveAccentKeyCode]);
             % This keypress serves mainly to start the first trial, but we
@@ -2388,6 +2390,8 @@ try
             o.guess=1/4;
          case 'identify'
             o.guess=1/o.alternatives;
+         case 'rate'
+            o.guess=0;
       end
    end
    if streq(o.targetModulates,'luminance')
@@ -2407,9 +2411,15 @@ try
          tGuess=log10(2*nominalAcuityDeg);
       case 'contrast'
          o.thresholdPolarity=sign(o.contrast);
+         if ~isfinite(o.thresholdPolarity)
+            error('You must specify o.contrast to indicate + or - desired sign of contrast.');
+         end
       case 'flankerContrast'
          assert(o.useFlankers);
          o.thresholdPolarity=sign(o.flankerContrast);
+         if ~isfinite(o.thresholdPolarity)
+            error('You must specify o.flankerContrast to indicate + or - desired sign of contrast.');
+         end
       otherwise
          error('Unknown o.thresholdParameter "%s".',o.thresholdParameter);
    end
@@ -2678,7 +2688,7 @@ try
                      end
                   end
                end
-            case 'identify'
+            case {'identify' 'rate'}
                locations=1;
                rng('shuffle');
                if iMovieFrame == 1
@@ -2926,7 +2936,7 @@ try
          for iMovieFrame=1:o.movieFrames
             location=movieImage{iMovieFrame};
             switch o.task
-               case 'identify'
+               case {'identify' 'rate'}
                   locations=1;
                   % Convert to pixel values.
                   % PREPARE IMAGE DATA
@@ -3136,6 +3146,8 @@ try
                message='Please click 1 to 4 times for location 1 to 4, or more clicks to quit.';
             case 'identify'
                message=sprintf('Please type the letter: %s, or ESCAPE to quit.',o.alphabet(1:o.alternatives));
+            case 'rate'
+               message=sprintf('Please rate the beauty: 0 to 9, or ESCAPE to quit.');
          end
          bounds=Screen('TextBounds',window,message);
          ratio=RectWidth(bounds)/(0.93*RectWidth(screenRect));
@@ -3245,7 +3257,7 @@ try
                MFileLineNr,gray*o.maxEntry,LuminanceOfIndex(cal,gray*o.maxEntry),pp(1));
          end
          if trial == 1
-            WaitSecs(1); % First time is slow. Mario suggested a work around, explained at beginning of this file.
+            WaitSecs(0.5); % First time is slow. Mario suggested a work around, explained at beginning of this file.
          end
          Screen('Flip',window,0,1); % Display instructions.
          
@@ -3266,12 +3278,11 @@ try
                end
                response=clicks;
             case 'identify'
-               response=0;
-               while ~ismember(lower(response),lower(1:o.alternatives))
+               while 1
                   o.quitRun=false;
-                  response=GetKeypress;
-                  if ismember(response,[escapeChar,graveAccentChar])
-                     ffprintf(ff,'User typed ESCAPE. Run terminated.\n',response);
+                  responseChar=GetKeypress;
+                  if ismember(responseChar,[escapeChar,graveAccentChar])
+                     ffprintf(ff,'User typed ESCAPE. Run terminated.\n');
                      if o.speakInstructions
                         Speak('Run terminated.');
                      end
@@ -3279,19 +3290,51 @@ try
                      trial=trial-1;
                      break;
                   end
-                  if length(response) > 1
+                  if length(responseChar) > 1
                      % GetKeypress might return a multi-character string,
                      % but our code assumes the response is a scalar, not a
                      % matrix. So we replace the string by 0.
-                     response=0;
+                     responseChar=0;
                   end
-                  [ok,response]=ismember(lower(response),lower(o.alphabet));
-                  if ~ok
+                  [ok,response]=ismember(lower(responseChar),lower(o.alphabet));
+                  if ok
+                     break;
+                  else
                      if o.speakInstructions
                         Speak('Try again. Or hit ESCAPE to quit.');
                      end
                   end
-               end % while ~ismember
+               end % while 1
+            case 'rate'
+               ratings='0123456789';
+               while 1
+                  o.quitRun=false;
+                  responseChar=GetKeypress;
+                  if ismember(responseChar,[escapeChar,graveAccentChar])
+                     ffprintf(ff,'User typed ESCAPE. Run terminated.\n');
+                     if o.speakInstructions
+                        Speak('Run terminated.');
+                     end
+                     o.quitRun=true;
+                     trial=trial-1;
+                     break;
+                  end
+                  if length(responseChar) > 1
+                     % GetKeypress might return a multi-character string,
+                     % but our code assumes the response is a scalar, not a
+                     % matrix. So we replace the string by 0.
+                     responseChar=0;
+                  end
+                  [ok,response]=ismember(lower(responseChar),ratings);
+                  response=response-1;
+                  if ok
+                     break;
+                  else
+                     if o.speakInstructions
+                        Speak('Try again. Or hit ESCAPE to quit.');
+                     end
+                  end
+               end % while 1
          end % switch o.task
          if ~o.quitRun
             if ~isfinite(o.targetDurationSec)
@@ -3333,12 +3376,20 @@ try
          case 'identify'
             isRight=response == whichSignal;
             o.transcript.target(trial)=whichSignal;
-     end
-      if ~ismember(o.observer,algorithmicObservers)
-         if isRight
-            Snd('Play',rightBeep);
-         else
-            Snd('Play',wrongBeep);
+         case 'rate'
+            isRight=response>4;
+            o.transcript.target(trial)=whichSignal;
+    end
+    if ~ismember(o.observer,algorithmicObservers)
+         switch o.task
+            case 'rate'
+               Snd('Play',okBeep);
+            otherwise
+               if isRight
+                  Snd('Play',rightBeep);
+               else
+                  Snd('Play',wrongBeep);
+               end
          end
       end
       switch o.thresholdParameter
@@ -3751,7 +3802,7 @@ switch o.task
       answer=signalLocation;
       answerString=sprintf('%d',answer);
       caption{end+1}=sprintf('xyz%s',lower(answerString));
-   case 'identify'
+   case {'identify' 'rate'}
       answer=whichSignal;
       answerString=o.alphabet(answer);
       caption{end+1}=sprintf('xyz%s',lower(answerString));
@@ -4035,7 +4086,7 @@ switch o.observer
                case 'luminance'
                   for i=1:o.alternatives
                      im=zeros(size(signal(i).image));
-                     im(:)=location(1).image(signalImageIndex); % here be the signal
+                     im(:)=location(1).image(signalImageIndex); % the signal
                      d=im-1-o.contrast*signal(i).image;
                      likely(i)=-sum(d(:).^2);
                   end
