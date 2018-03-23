@@ -35,7 +35,7 @@ if nargin<3
    % e.g. 'escape', back to the single ASCII code. When KbName returns two
    % characters, e.g. for the '1!' key, Return only the initial character,
    % discarding the second,
-   returnOneChar = 1;
+   returnOneChar = true;
 end
 KbName('UnifyKeyNames');
 while KbCheck; end
