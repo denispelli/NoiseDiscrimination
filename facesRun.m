@@ -4,7 +4,7 @@
 
 %% GET READY
 clear o oo
-o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 fakeRun=false; % Enable fakeRun to check plotting before we have data.
 o.seed=[]; % Fresh.
 % o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
@@ -25,13 +25,15 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
 end
 
 %% CREATE LIST OF CONDITIONS TO BE TESTED
-o.contrast=nan;
+o.contrast=1; % Indicate polarity.
 o.useDynamicNoiseMovie=false;
 o.experiment='faces';
+o.task='rate';
+% o.task='identify';
 o.eccentricityXYDeg=[0 0];
-o.targetHeightDeg=4;
+o.targetHeightDeg=15;
 o.targetDurationSec=0.2;
-o.trialsPerRun=50;
+o.trialsPerRun=20;
 o.lapse=nan;
 o.steepness=nan;
 o.guess=nan;
@@ -47,12 +49,21 @@ end
 o.desiredLuminanceFactor=2; % Maximum brightness.
 o.thresholdParameter='contrast';
 o.conditionName='threshold';
-if ~exist('oo','var')
-    oo=o;
-else
-    oo(end+1)=o;
+for beautyTask=0:1
+   if beautyTask
+      o.task='rate';
+   else
+      o.task='identify';
+   end
+   for duration=[0.2 1]
+      o.targetDurationSec=duration;
+      if ~exist('oo','var')
+         oo=o;
+      else
+         oo(end+1)=o;
+      end
+   end
 end
-   
 %% NUMBER THE CONDITIONS (I.E. ROWS) AND PRINT THE TABLE
 for i=1:length(oo)
    oo(i).condition=i;
@@ -60,7 +71,7 @@ end
 t=struct2table(oo,'AsArray',true);
 % We list parameters here in the order that we want them to appear as
 % columns in the table, which we print in the Command Window. 
-vars={'seed' 'condition' 'conditionName' 'contrast' 'guess'};
+vars={'seed' 'condition' 'task' 'targetDurationSec' 'targetHeightDeg' };
 t(:,vars) % Print the oo list of conditions.
 fprintf('To recreate this table, set your o.seed to the value of "seed" listed in the table.\n');
 %% RUN THE CONDITIONS
@@ -140,8 +151,9 @@ if ~fakeRun && true
    
    %% PRINT SUMMARY OF RESULTS
    t=struct2table(oo(1:oi),'AsArray',true);
+   t.data=[];
    rows=t.trials>0;
-   vars={'observer' 'trials' 'contrast' 'guess' 'lapse' 'steepness'};
+   vars={'condition' 'observer' 'trials'  'task' 'targetDurationSec' 'targetHeightDeg' 'contrast' 'guess' 'lapse' 'steepness' 'seed' };
    if any(rows)
       t(rows,vars) % Print the oo list of conditions, with measured flanker threshold.
    end
