@@ -561,7 +561,7 @@ o.targetHeightDeg=2; % Target size, range 0 to inf. If you ask for too
 % project
 o.minimumTargetHeightChecks=8; % Minimum target resolution, in units of the check size.
 o.fullResolutionTarget=false; % True to render signal at full resolution (targetCheckPix=1). False to use noise resolution (targetCheckPix=noiseCheckPix).
-o.targetMargin=0.25; % Minimum from edge of target to edge of o.stimulusRect, as fraction of targetHeightDeg.
+o.targetMargin=0.25; % Minimum gap from edge of target to edge of o.stimulusRect, as fraction of o.targetHeightDeg.
 o.targetDurationSec=0.2; % Typically 0.2 or inf (wait indefinitely for response).
 o.contrast=1; % Default is positive contrast.
 o.useFlankers=false; % Enable for crowding experiments.
@@ -664,6 +664,7 @@ o.targetHeightOverWidth=nan;
 o.symmetricLuminanceRange=false;
 o.printSignalImages=false;
 o.signalImagesFolder='';
+o.convertSignalImageToGray=false;
 % The user can only set fields that are initialized above. This is meant to
 % catch any mistakes where the user tries to set a field that isn't used
 % below. We ignore input fields that are known output fields. Any field
@@ -2164,24 +2165,19 @@ try
                     o.targetRectLocal=bounds;
                     sz=size(signalStruct(1).image);
                     white=signalStruct(1).image(1,1,:);
-                    o.convertToGray=true;
-                    if o.convertToGray
+                    if o.convertSignalImageToGray
                         white=0.2989*white(1)+0.5870*white(2)+0.1140*white(3);
                     end
                     whiteImage=repmat(double(white),sz(1),sz(2));
                     for i=1:length(signalStruct)
-                        %                     m=mean(mean(signalStruct(i).image(:,:,2)));
-                        %                     fprintf('Mean green %.1f raw. white %.1f\n',m,signalStruct(i).image(1,1,2));
-                        if ~o.convertToGray
+                        if ~o.convertSignalImageToGray
                             m=signalStruct(i).image;
                         else
                             m=0.2989*signalStruct(i).image(:,:,1)+0.5870*signalStruct(i).image(:,:,2)+0.1140*signalStruct(i).image(:,:,3);
                         end
-                        imshow(uint8(m));
+%                         imshow(uint8(m));
                         signal(i).image=double(m)./whiteImage-1;
-                        imshow((signal(i).image+1));
-                        %                     m=mean(mean(signal(i).image(:,:,2)));
-                        %                     fprintf('Mean green %.1f normalized\n',m);
+%                         imshow((signal(i).image+1));
                     end
                 otherwise
                     error('Unknown o.targetKind');
@@ -4254,10 +4250,13 @@ o.nearPointXYPix=xy.*[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)];
 o.nearPointXYPix=o.nearPointXYPix+o.stimulusRect(1:2);
 % o.nearPointXYPix is screen coordinate.
 % Require margin between target and edge of stimulusRect.
-r=InsetRect(o.stimulusRect,(0.5+o.targetMargin)*o.targetHeightDeg*o.pixPerDeg,0.6*o.targetHeightDeg*o.pixPerDeg);
+r=InsetRect(o.stimulusRect,o.targetMargin*o.targetHeightDeg*o.pixPerDeg,o.targetMargin*o.targetHeightDeg*o.pixPerDeg);
 if ~all(r(1:2)<=r(3:4))
-    error('%.1f o.targetHeightDeg too big to fit (with %.2f o.targetMargin) in %.1f x %.1f deg screen. Reduce viewing distance or target size.',...
-        o.targetHeightDeg,o.targetMargin,[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)]/o.pixPerDeg);
+    error(['%.1f o.targetHeightDeg too big to fit (with %.2f o.targetMargin) in %.1f x %.1f deg screen. '...
+       'Reduce %.1f o.viewingDistanceCm or %.1f o.targetHeightDeg.'],...
+        o.targetHeightDeg,o.targetMargin,...
+        [RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)]/o.pixPerDeg,...
+        o.viewingDistanceCm,o.targetHeightDeg);
 end
 if ~IsXYInRect(o.nearPointXYPix,r)
     % Adjust position of near point so target fits on screen.
