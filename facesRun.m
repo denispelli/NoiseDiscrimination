@@ -38,6 +38,8 @@ else
    o.convertSignalImageToGray=false;
    o.alphabetPlacement='right'; % 'top' or 'right';
 end
+o.targetMargin=0;
+viewingDistanceCm=40;
 o.contrast=1; % Indicate polarity.
 o.useDynamicNoiseMovie=false;
 o.experiment='faces';
@@ -52,8 +54,6 @@ o.steepness=nan;
 o.guess=nan;
 o.observer='';
 o.noiseSD=0;
-o.targetMargin=0;
-viewingDistanceCm=40;
 if isempty(o.seed)
    rng('shuffle'); % Use clock to seed the random number generator.
    generator=rng;
