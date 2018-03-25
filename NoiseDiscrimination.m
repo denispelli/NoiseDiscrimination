@@ -71,7 +71,7 @@ function o=NoiseDiscrimination(oIn)
 % Pasting a grayscale image (128) on a background set to 1 resulted in
 % intermediate pixel values which were all darker than the background gray.
 % I fixed this by making the background be 128. Thus the background is
-% always gray LMean, but it's produced by a color index of 128 inside
+% always gray o.LMean, but it's produced by a color index of 128 inside
 % stimulusRect, and a color index of 1 outside it. This is drawn by calling
 % FillRect with 1 for the whole screen, and again with 128 for the
 % stimulusRect.
@@ -579,7 +579,7 @@ o.noiseEnvelopeSpaceConstantDeg=inf;
 o.noiseRaisedCosineEdgeThicknessDeg=0; % midpoint of raised cosine is at noiseRadiusDeg.
 o.noiseSpectrum='white'; % 'pink' or 'white'
 o.showBlackAnnulus=false;
-o.blackAnnulusContrast=-1; % (LBlack-LMean)/LMean. -1 for black line. >-1 for gray line.
+o.blackAnnulusContrast=-1; % (LBlack-o.LMean)/o.LMean. -1 for black line. >-1 for gray line.
 o.blackAnnulusSmallRadiusDeg=2;
 o.blackAnnulusThicknessDeg=0.1;
 o.annularNoiseBigRadiusDeg=inf; % Noise extent in deg, or inf.
@@ -708,6 +708,7 @@ else
       'deviceIndex' 'speakEachLetter' 'targetCheckDeg' 'targetCheckPix'...
       'textFont'  'LMean' 'targetCyclesPerDeg' 'contrast' ...
       'thresholdParameterValueList' 'noInputArgument' ...
+      'firstGrayClutEntry' 'lastGrayClutEntry' 'gray' 'r' ...
       };
    unknownFields={};
    for condition=1:conditions
@@ -792,9 +793,9 @@ if o.saveSnapshot
          case 'luminance'
             o.tSnapshot=-0.0; % log10(contrast)
          case 'noise'
-            o.tSnapshot=.3; % log10(r-1)
+            o.tSnapshot=.3; % log10(o.r-1)
          case 'entropy'
-            o.tSnapshot=0; % log10(r-1)
+            o.tSnapshot=0; % log10(o.r-1)
          otherwise
             error('Unknown o.targetModulates "%s".',o.targetModulates);
       end
@@ -1260,15 +1261,15 @@ try
    end
    o.targetCheckDeg=o.targetCheckPix/o.pixPerDeg;
    BackupCluts(o.screen);
-   LMean=o.luminanceFactor*(max(cal.old.L)+min(cal.old.L))/2;
-   o.maxLRange=2*min(max(cal.old.L)-LMean,LMean-min(cal.old.L));
+   o.LMean=o.luminanceFactor*(max(cal.old.L)+min(cal.old.L))/2;
+   o.maxLRange=2*min(max(cal.old.L)-o.LMean,o.LMean-min(cal.old.L));
    % We use nearly the whole clut (entries 2 to 254) for stimulus generation.
    % We reserve first and last (0 and o.maxEntry), for black and white.
-   firstGrayClutEntry=2;
-   lastGrayClutEntry=o.clutMapLength-2;
-   assert(lastGrayClutEntry<o.maxEntry);
-   assert(firstGrayClutEntry>1);
-   assert(mod(firstGrayClutEntry+lastGrayClutEntry,2) == 0) % Must be even, so middle is an integer.
+   o.firstGrayClutEntry=2;
+   o.lastGrayClutEntry=o.clutMapLength-2;
+   assert(o.lastGrayClutEntry<o.maxEntry);
+   assert(o.firstGrayClutEntry>1);
+   assert(mod(o.firstGrayClutEntry+o.lastGrayClutEntry,2) == 0) % Must be even, so middle is an integer.
    o.minLRange=0;
    
    %% SET SIZES OF SCREEN ELEMENTS: text, stimulusRect, etc.
@@ -1521,8 +1522,8 @@ try
       if exist('cal','var')
          LMin=min(cal.old.L);
          LMax=max(cal.old.L);
-         LMean=o.luminanceFactor*mean([LMin, LMax]); % Desired background luminance.
-         %          LMean=LMean*(1+(rand-0.5)/32); % Tiny jitter, ±1.5%
+         o.LMean=o.luminanceFactor*mean([LMin, LMax]); % Desired background luminance.
+         %          o.LMean=o.LMean*(1+(rand-0.5)/32); % Tiny jitter, ±1.5%
          % CLUT entry 1: o.gray1
          % First entry is black. Second entry is o.gray1. We have
          % two clut entries that produce the same gray. One (gray) is in
@@ -1531,11 +1532,11 @@ try
          % blending of letters written (as black=0) on that background by
          % Screen DrawText.
          o.gray1=1/o.maxEntry;
-         assert(o.gray1*o.maxEntry <= firstGrayClutEntry-1);
+         assert(o.gray1*o.maxEntry <= o.firstGrayClutEntry-1);
          % o.gray1 is between black and the darkest stimulus luminance.
          cal.gamma(1,1:3)=0; % Black.
-         cal.LFirst=LMean;
-         cal.LLast=LMean;
+         cal.LFirst=o.LMean;
+         cal.LLast=o.LMean;
          cal.nFirst=o.gray1*o.maxEntry;
          cal.nLast=o.gray1*o.maxEntry;
          cal=LinearizeClut(cal);
@@ -1543,20 +1544,20 @@ try
          % CLUT entries for stimulus.
          
          cal.LFirst=LMin;
-         cal.LLast=LMean+(LMean-LMin); % Symmetric about LMean.
-         cal.nFirst=firstGrayClutEntry;
-         cal.nLast=lastGrayClutEntry;
+         cal.LLast=o.LMean+(o.LMean-LMin); % Symmetric about o.LMean.
+         cal.nFirst=o.firstGrayClutEntry;
+         cal.nLast=o.lastGrayClutEntry;
          cal=LinearizeClut(cal);
          ffprintf(ff,'Size of cal.gamma %d %d\n',size(cal.gamma));
          if o.symmetricLuminanceRange
             % Choose "gray" in middle of CLUT.
-            gray=round(mean([firstGrayClutEntry lastGrayClutEntry]))/o.maxEntry; % CLUT color code for gray.
+            o.gray=round(mean([o.firstGrayClutEntry o.lastGrayClutEntry]))/o.maxEntry; % CLUT color code for gray.
          else
-            gray=IndexOfLuminance(cal,LMean)/o.maxEntry;
+            o.gray=IndexOfLuminance(cal,o.LMean)/o.maxEntry;
          end        
-         %          ffprintf(ff,'Non-stimulus background is %.1f cd/m^2 at CLUT entry %d (and %d).\n',LMean,o.gray1*o.maxEntry,gray*o.maxEntry);
-         %          ffprintf(ff,'%.1f cd/m^2 at %d\n',LuminanceOfIndex(cal,gray*o.maxEntry),o.gray1*o.maxEntry);
-         %          ffprintf(ff,'%.3f dac at %d; %.3f dac at %d\n',cal.gamma(o.gray1*o.maxEntry+1,2),o.gray1*o.maxEntry,cal.gamma(gray*o.maxEntry+1,2),gray*o.maxEntry);
+         %          ffprintf(ff,'Non-stimulus background is %.1f cd/m^2 at CLUT entry %d (and %d).\n',o.LMean,o.gray1*o.maxEntry,o.gray*o.maxEntry);
+         %          ffprintf(ff,'%.1f cd/m^2 at %d\n',LuminanceOfIndex(cal,o.gray*o.maxEntry),o.gray1*o.maxEntry);
+         %          ffprintf(ff,'%.3f dac at %d; %.3f dac at %d\n',cal.gamma(o.gray1*o.maxEntry+1,2),o.gray1*o.maxEntry,cal.gamma(o.gray*o.maxEntry+1,2),o.gray*o.maxEntry);
          
          Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
          if o.assessLoadGamma
@@ -1564,10 +1565,10 @@ try
                MFileLineNr,o.contrast,(cal.LLast-cal.LFirst)/(cal.LLast+cal.LFirst));
          end
          Screen('FillRect',window,o.gray1);
-         Screen('FillRect',window,gray,o.stimulusRect);
+         Screen('FillRect',window,o.gray,o.stimulusRect);
       else
          Screen('FillRect',window);
-         gray=0.5;
+         o.gray=0.5;
       end % if exist('cal')
       Screen('Flip',window); % Load gamma table
       if ~isfinite(window) || window == 0
@@ -1577,8 +1578,8 @@ try
       black=0; % CLUT color code for black.
       white=1; % CLUT color code for white.
       Screen('FillRect',window,o.gray1);
-      Screen('FillRect',window,gray,o.stimulusRect);
-      Screen('Flip',window); % Screen is now all gray, at LMean.
+      Screen('FillRect',window,o.gray,o.stimulusRect);
+      Screen('Flip',window); % Screen is now all gray, at o.LMean.
    else
       window=-1;
    end
@@ -2291,9 +2292,8 @@ try
       window=-1;
       LMin=0;
       LMax=200;
-      LMean=100;
+      o.LMean=100;
    end
-   o.LMean=LMean; % Save in our struct for later reference to trial data.
    % We are now done with the signal font (e.g. Sloan or Bookman), since we've saved our signals as images.
    if window ~= -1
       Screen('TextFont',window,textFont);
@@ -2305,21 +2305,21 @@ try
    end
    frameRect=InsetRect(boundsRect,-1,-1);
    if o.saveSnapshot
-      o.gray1=gray;
+      o.gray1=o.gray;
    end
    
    %% START NEW RUN, DISPLAYING STIMULI ON SCREEN
    if ~ismember(o.observer,algorithmicObservers) && ~o.assessBitDepth %&& ~o.saveSnapshot;
       Screen('FillRect',window,o.gray1);
-      Screen('FillRect',window,gray,o.stimulusRect);
-      fprintf('o.gray1*o.maxEntry %.1f, gray*o.maxEntry %.1f, o.maxEntry %.0f\n',o.gray1*o.maxEntry,gray*o.maxEntry,o.maxEntry);
+      Screen('FillRect',window,o.gray,o.stimulusRect);
+      fprintf('o.gray1*o.maxEntry %.1f, o.gray*o.maxEntry %.1f, o.maxEntry %.0f\n',o.gray1*o.maxEntry,o.gray*o.maxEntry,o.maxEntry);
       if o.showCropMarks
          TrimMarks(window,frameRect);
       end
       if ~isempty(fixationLines)
          Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
       end
-      Screen('Flip',window,0,1); % Show gray screen at LMean with fixation and crop marks. Don't clear buffer.
+      Screen('Flip',window,0,1); % Show gray screen at o.LMean with fixation and crop marks. Don't clear buffer.
       
       msg='Starting new run. ';
       if o.markTargetLocation
@@ -2521,7 +2521,7 @@ try
             o.targetWidthPix=o.targetHeightPix;
          case 'contrast'
             if streq(o.targetModulates,'luminance')
-               r=1;
+               o.r=1;
                o.contrast=o.thresholdPolarity*10^tTest; % negative contrast, dark letters
                if o.saveSnapshot && isfinite(o.snapshotContrast)
                   o.contrast=-o.snapshotContrast;
@@ -2530,7 +2530,7 @@ try
                   o.contrast=min([1 o.contrast]);
                end
             else
-               r=1+10^tTest;
+               o.r=1+10^tTest;
                o.contrast=0;
             end
          case 'flankerContrast'
@@ -2540,7 +2540,7 @@ try
                o.flankerContrast=-o.snapshotContrast;
             end
       end
-      a=(1-LMin/LMean)*o.noiseListSd/o.noiseListBound;
+      a=(1-LMin/o.LMean)*o.noiseListSd/o.noiseListBound;
       if o.noiseSD > a
          ffprintf(ff,'WARNING: Reducing o.noiseSD of %s noise to %.2f to avoid overflow.\n',o.noiseType,a);
          o.noiseSD=a;
@@ -2552,18 +2552,18 @@ try
       %% RESTRICT tTest TO PHYSICALLY POSSIBLE RANGE
       switch o.targetModulates
          case 'noise'
-            a=(1-LMin/LMean)/(o.noiseListBound*o.noiseSD/o.noiseListSd);
-            if r > a
-               r=a;
+            a=(1-LMin/o.LMean)/(o.noiseListBound*o.noiseSD/o.noiseListSd);
+            if o.r > a
+               o.r=a;
                if ~exist('rWarningCount','var') || rWarningCount == 0
-                  ffprintf(ff,'WARNING: Limiting r ratio of %s noises to upper bound %.2f to stay within luminance range.\n',o.noiseType,r);
+                  ffprintf(ff,'WARNING: Limiting o.r ratio of %s noises to upper bound %.2f to stay within luminance range.\n',o.noiseType,o.r);
                end
                rWarningCount=rWarningCount+1;
             end
-            tTest=log10(r-1);
+            tTest=log10(o.r-1);
          case 'luminance'
             % min negative contrast
-            a=(min(cal.old.L)-LMean)/LMean;
+            a=(min(cal.old.L)-o.LMean)/o.LMean;
             a=a+o.noiseListBound*o.noiseSD/o.noiseListSd;
             assert(a<0,'Need range for signal.');
             if o.contrast < a
@@ -2588,16 +2588,16 @@ try
             end
          case 'entropy'
             a=128/o.backgroundEntropyLevels;
-            if r > a
-               r=a;
+            if o.r > a
+               o.r=a;
                if ~exist('rWarningCount','var') || rWarningCount == 0
-                  ffprintf(ff,'WARNING: Limiting entropy of %s noise to upper bound %.1f bits.\n',o.noiseType,log2(r*o.backgroundEntropyLevels));
+                  ffprintf(ff,'WARNING: Limiting entropy of %s noise to upper bound %.1f bits.\n',o.noiseType,log2(o.r*o.backgroundEntropyLevels));
                end
                rWarningCount=rWarningCount+1;
             end
-            signalEntropyLevels=round(r*o.backgroundEntropyLevels);
-            r=signalEntropyLevels/o.backgroundEntropyLevels; % define r as ratio of number of levels
-            tTest=log10(r-1);
+            signalEntropyLevels=round(o.r*o.backgroundEntropyLevels);
+            o.r=signalEntropyLevels/o.backgroundEntropyLevels; % define o.r as ratio of number of levels
+            tTest=log10(o.r-1);
          otherwise
             error('Unknown o.targetModulates "%s"',o.targetModulates);
       end % switch o.targetModulates
@@ -2669,7 +2669,7 @@ try
                   if i == signalLocation
                      switch o.targetModulates
                         case 'noise'
-                           location(i).image=1+r*(o.noiseSD/o.noiseListSd)*noise;
+                           location(i).image=1+o.r*(o.noiseSD/o.noiseListSd)*noise;
                         case 'luminance'
                            location(i).image=1+(o.noiseSD/o.noiseListSd)*noise+o.contrast;
                         case 'entropy'
@@ -2742,7 +2742,7 @@ try
                      location(1).image=repmat(location(1).image,1,1,length(white)); % support color
                      location(1).image=location(1).image+o.contrast*signalImage; % NOTE: noise and signal added here
                   case 'noise'
-                     noise(signalMask)=r*noise(signalMask);
+                     noise(signalMask)=o.r*noise(signalMask);
                      location(1).image=ones(o.canvasSize);
                      location(1).image(centralNoiseMask)=1+(o.noiseSD/o.noiseListSd)*noise(centralNoiseMask);
                      location(1).image(annularNoiseMask)=1+(o.annularNoiseSD/o.noiseListSd)*noise(annularNoiseMask);
@@ -2764,12 +2764,12 @@ try
                      if iMovieFrame==1
                         whichFlanker(j)=randi(o.alternatives);
                      end
-                     r=RectOfMatrix(signal(whichFlanker(j)).image);
-                     r=CenterRect(r,canvasRect);
+                     o.r=RectOfMatrix(signal(whichFlanker(j)).image);
+                     o.r=CenterRect(o.r,canvasRect);
                      offset=round(flankerSpacingPix/o.targetCheckPix);
-                     r=OffsetRect(r,cosd(theta)*offset,sind(theta)*offset);
-                     assert(IsRectInRect(r,canvasRect));
-                     flankerImageIndex=logical(FillRectInMatrix(true,r,zeros(o.canvasSize)));
+                     o.r=OffsetRect(o.r,cosd(theta)*offset,sind(theta)*offset);
+                     assert(IsRectInRect(o.r,canvasRect));
+                     flankerImageIndex=logical(FillRectInMatrix(true,o.r,zeros(o.canvasSize)));
                      flankerImage=zeros(o.canvasSize);
                      if (iMovieFrame > o.moviePreFrames ...
                            && iMovieFrame <= o.moviePreFrames+o.movieSignalFrames)
@@ -2798,7 +2798,7 @@ try
             % Clear screen for first trial. After the first trial, the
             % screen is already ready for next trial.
             Screen('FillRect',window,o.gray1);
-            Screen('FillRect',window,gray,o.stimulusRect);
+            Screen('FillRect',window,o.gray,o.stimulusRect);
          end
          if ~isempty(fixationLines)
             Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
@@ -2808,74 +2808,13 @@ try
             % Compute CLUT for all possible noises and the given signal and
             % contrast. Note: The gray screen in the non-stimulus areas is
             % drawn with CLUT index n=1.
-            
-            % Noise
-            % Set up luminance range that allows for superposition of noise
-            % on target and on flanker. If the noise in fact does not
-            % superimpose target or flanker then this range may be broader
-            % than strictly necessary.
-            cal.LFirst=LMean*(1-o.noiseListBound*r*o.noiseSD/o.noiseListSd);
-            cal.LLast=LMean*(1+o.noiseListBound*r*o.noiseSD/o.noiseListSd);
-            if ~o.useFlankers
-               o.flankerContrast=0;
-            end
-            if streq(o.targetModulates,'luminance')
-               if streq(o.targetKind,'image')
-                  cal.LFirst=cal.LFirst+LMean*min([0 -o.contrast]);
-                  cal.LLast=cal.LLast+LMean*max([0 -o.contrast]);
-               else
-                  cal.LFirst=cal.LFirst+LMean*min([0 o.contrast o.flankerContrast]);
-                  cal.LLast=cal.LLast+LMean*max([0 o.contrast o.flankerContrast]);
-               end
-            end
-            if o.annularNoiseBigRadiusDeg > o.annularNoiseSmallRadiusDeg
-               cal.LFirst=min(cal.LFirst,LMean*(1-o.noiseListBound*r*o.annularNoiseSD/o.noiseListSd));
-               cal.LLast=max(cal.LLast,LMean*(1+o.noiseListBound*r*o.annularNoiseSD/o.noiseListSd));
-            end
-            if o.symmetricLuminanceRange
-               % Center range on LMean, including LFirst and LLast.
-               % Having a fixed index for "gray" (LMean) assures us that
-               % the gray areas (most of the screen) won't change when the
-               % CLUT is updated.
-               LRange=2*max(abs([cal.LLast-LMean LMean-cal.LFirst]));
-               LRange=min(LRange,o.maxLRange);
-               cal.LFirst=LMean-LRange/2;
-               cal.LLast=LMean+LRange/2;
-            end
-            cal.nFirst=firstGrayClutEntry;
-            cal.nLast=lastGrayClutEntry;
-            if o.saveSnapshot
-               cal.LFirst=min(cal.old.L);
-               cal.LLast=max(cal.old.L);
-               cal.nFirst=1;
-               cal.nLast=o.maxEntry;
-            end
-            if false % Compute clut for the specific image
-               L=[];
-               for i=1:locations
-                  L=[L location(i).image(:)*LMean];
-               end
-               cal.LFirst=min(L);
-               cal.LLast=max(L);
-            end
-            cal=LinearizeClut(cal);
-            if o.symmetricLuminanceRange
-               grayCheck=IndexOfLuminance(cal,LMean)/o.maxEntry;
-               if ~o.saveSnapshot && abs(grayCheck-gray)>0.001
-                  ffprintf(ff,'The estimated gray index is %.4f (%.1f cd/m^2), not %.4f (%.1f cd/m^2).\n',...
-                     grayCheck,LuminanceOfIndex(cal,grayCheck*o.maxEntry),gray,LuminanceOfIndex(cal,gray*o.maxEntry));
-                  warning('The gray index changed!');
-               end
-            else
-               gray=IndexOfLuminance(cal,LMean)/o.maxEntry;
-            end
-            assert(isfinite(gray));
+            o=ComputeCLUT(o);
          end % if o.newClutForEachImage
          if o.assessContrast
             AssessContrast(o);
          end
          if o.measureContrast
-            % fprintf('gray*o.maxEntry %d gamma %.3f, o.gray1*o.maxEntry %d gamma %.3f\n',gray*o.maxEntry,cal.gamma(gray*o.maxEntry+1,2),o.gray1*o.maxEntry,cal.gamma(o.gray1*o.maxEntry+1,2));
+            % fprintf('o.gray*o.maxEntry %d gamma %.3f, o.gray1*o.maxEntry %d gamma %.3f\n',o.gray*o.maxEntry,cal.gamma(o.gray*o.maxEntry+1,2),o.gray1*o.maxEntry,cal.gamma(o.gray1*o.maxEntry+1,2));
             Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
             Screen('Flip',window,0,1);
             o=MeasureContrast(o,MFileLineNr);
@@ -2894,10 +2833,10 @@ try
       
       if o.measureContrast
          location=movieImage{1};
-         fprintf('%d: luminance/LMean',MFileLineNr);
+         fprintf('%d: luminance/o.LMean',MFileLineNr);
          fprintf(' %.4f',unique(location(1).image(:)));
          fprintf('\n');
-         img=IndexOfLuminance(cal,location(1).image*LMean)/o.maxEntry;
+         img=IndexOfLuminance(cal,location(1).image*o.LMean)/o.maxEntry;
          index=unique(img(:));
          LL=LuminanceOfIndex(cal,index*o.maxEntry);
          fprintf('%d: index',MFileLineNr);
@@ -2942,7 +2881,7 @@ try
                   % PREPARE IMAGE DATA
                   img=location(1).image;
                   % ffprintf(ff,'signal rect height %.1f, image height %.0f, dst rect %d %d %d %d\n',RectHeight(rect),size(img,1),rect);
-                  img=IndexOfLuminance(cal,img*LMean)/o.maxEntry;
+                  img=IndexOfLuminance(cal,img*o.LMean)/o.maxEntry;
                   img=Expand(img,o.targetCheckPix);
                   if o.assessLinearity
                      AssessLinearity(o);
@@ -2969,7 +2908,7 @@ try
                   eraseRect=location(1).rect;
                   for i=1:locations
                      img=location(i).image;
-                     img=IndexOfLuminance(cal,img*LMean);
+                     img=IndexOfLuminance(cal,img*o.LMean);
                      img=Expand(img,o.targetCheckPix);
                      texture=Screen('MakeTexture',window,img/o.maxEntry,0,0,1); % FIXME: use one texture instead of 4
                      
@@ -2991,17 +2930,17 @@ try
                      % each trial.
                      if o.responseNumbersInCorners
                         % in corners
-                        r=[0 0 o.textSize 1.4*o.textSize];
+                        o.r=[0 0 o.textSize 1.4*o.textSize];
                         labelBounds=InsetRect(boundsRect,-1.1*o.textSize,-o.lineSpacing*o.textSize);
                      else
                         % on sides
-                        r=[0 0 o.textSize o.targetHeightPix];
+                        o.r=[0 0 o.textSize o.targetHeightPix];
                         labelBounds=InsetRect(boundsRect,-2*o.textSize,0);
                      end
-                     location(1).labelRect=AlignRect(r,labelBounds,'left','top');
-                     location(2).labelRect=AlignRect(r,labelBounds,'right','top');
-                     location(3).labelRect=AlignRect(r,labelBounds,'left','bottom');
-                     location(4).labelRect=AlignRect(r,labelBounds,'right','bottom');
+                     location(1).labelRect=AlignRect(o.r,labelBounds,'left','top');
+                     location(2).labelRect=AlignRect(o.r,labelBounds,'right','top');
+                     location(3).labelRect=AlignRect(o.r,labelBounds,'left','bottom');
+                     location(4).labelRect=AlignRect(o.r,labelBounds,'right','bottom');
                      for i=1:locations
                         [x, y]=RectCenter(location(i).labelRect);
                         Screen('DrawText',window,sprintf('%d',i),x-o.textSize/2,y+0.4*o.textSize,black,o.gray1,1);
@@ -3055,10 +2994,10 @@ try
                if o.blackAnnulusContrast == -1
                   color=0;
                else
-                  luminance=(1+o.blackAnnulusContrast)*LMean;
+                  luminance=(1+o.blackAnnulusContrast)*o.LMean;
                   luminance=max(min(luminance,cal.LLast),cal.LFirst);
                   color=IndexOfLuminance(cal,luminance);
-                  o.blackAnnulusContrast=LuminanceOfIndex(cal,color)/LMean-1;
+                  o.blackAnnulusContrast=LuminanceOfIndex(cal,color)/o.LMean-1;
                end
                Screen('FrameRect',window,color,annulusRect,thickness);
             end % if o.showBlackAnnulus
@@ -3109,7 +3048,7 @@ try
             %             o.actualStimulus(1:dy:end,1:dx:end,2)
          end
          if isfinite(o.targetDurationSec) % End the movie
-            Screen('FillRect',window,gray,dstRect); % Erase only the movie, sparing the rest of the screen.
+            Screen('FillRect',window,o.gray,dstRect); % Erase only the movie, sparing the rest of the screen.
             if o.useDynamicNoiseMovie
                Screen('Flip',window,0,1); % Clear stimulus at next frame.
             else
@@ -3231,7 +3170,7 @@ try
                      end
                   end
                   % NOTE: alphabet placement on top right
-                  texture=Screen('MakeTexture',window,(0.01+0.99*(1+o.thresholdPolarity*img))*gray,0,0,1);
+                  texture=Screen('MakeTexture',window,(0.01+0.99*(1+o.thresholdPolarity*img))*o.gray,0,0,1);
                   Screen('DrawTexture',window,texture,RectOfMatrix(img),rect);
                   Screen('Close',texture);
                   if o.labelAlternatives
@@ -3254,11 +3193,16 @@ try
          if o.assessGray
             pp=Screen('GetImage',window,[20 20 21 21]);
             ffprintf(ff,'Line %d: Gray index is %d (%.1f cd/m^2). Corner is %d.\n',...
-               MFileLineNr,gray*o.maxEntry,LuminanceOfIndex(cal,gray*o.maxEntry),pp(1));
+               MFileLineNr,o.gray*o.maxEntry,LuminanceOfIndex(cal,o.gray*o.maxEntry),pp(1));
          end
          if trial == 1
             WaitSecs(0.5); % First time is slow. Mario suggested a work around, explained at beginning of this file.
          end
+         saveContrast=o.contrast;
+         o.contrast=1;
+         o=ComputeCLUT(o);    
+         o.contrast=saveContrast;
+         Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
          Screen('Flip',window,0,1); % Display instructions.
          
          %% COLLECT RESPONSE
@@ -3532,7 +3476,7 @@ try
    o.targetDurationSecMean=mean(o.likelyTargetDurationSec,'omitnan');
    o.targetDurationSecSD=std(o.likelyTargetDurationSec,'omitnan');
    ffprintf(ff,['Mean target duration %.3f',plusMinusChar,'%.3f s (sd over %d trials).\n'],o.targetDurationSecMean,o.targetDurationSecSD,length(o.likelyTargetDurationSec));
-   ffprintf(ff,'Mean luminance %.1f cd/m^2, which filter reduces to %.2f cd/m^2.\n',LMean,o.luminance);
+   ffprintf(ff,'Mean luminance %.1f cd/m^2, which filter reduces to %.2f cd/m^2.\n',o.LMean,o.luminance);
    
    o.E=10^(2*o.questMean)*o.E1;
    if streq(o.targetModulates,'luminance')
@@ -3541,7 +3485,7 @@ try
          o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,o.thresholdPolarity*10^t,log10(o.EOverN),o.efficiency);
    else
       ffprintf(ff,['Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
-         'Threshold',plusMinusChar,'sd log(r-1) %.2f',plusMinusChar,'%.2f, approx required n %.0f\n'],...
+         'Threshold',plusMinusChar,'sd log(o.r-1) %.2f',plusMinusChar,'%.2f, approx required n %.0f\n'],...
          o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
    end
    if abs(trialsRight/trial-o.pThreshold) > 0.1
@@ -3589,15 +3533,15 @@ try
          o.r=10^t+1;
          o.approxRequiredNumber=64./10.^((t-idealT64)/0.55);
          o.logApproxRequiredNumber=log10(o.approxRequiredNumber);
-         ffprintf(ff,'r %.3f, approx required number %.0f\n',o.r,o.approxRequiredNumber);
+         ffprintf(ff,'o.r %.3f, approx required number %.0f\n',o.r,o.approxRequiredNumber);
          %              logNse=std(logApproxRequiredNumber)/sqrt(length(tSample));
-         %              ffprintf(ff,['SUMMARY: %s %d runs mean',plusMinusChar,'se: log(r-1) %.2f',plusMinusChar,'%.2f, log(approx required n) %.2f',plusMinusChar,'%.2f\n'],...
+         %              ffprintf(ff,['SUMMARY: %s %d runs mean',plusMinusChar,'se: log(o.r-1) %.2f',plusMinusChar,'%.2f, log(approx required n) %.2f',plusMinusChar,'%.2f\n'],...
          % o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
       case 'entropy'
          t=o.questMean;
          o.r=10^t+1;
          signalEntropyLevels=o.r*o.backgroundEntropyLevels;
-         ffprintf(ff,'Entropy levels: r %.2f, background levels %d, signal levels %.1f\n',o.r,o.backgroundEntropyLevels,signalEntropyLevels);
+         ffprintf(ff,'Entropy levels: o.r %.2f, background levels %d, signal levels %.1f\n',o.r,o.backgroundEntropyLevels,signalEntropyLevels);
    end
    switch o.targetModulates
       case 'entropy'
@@ -3818,7 +3762,7 @@ Screen('TextSize',window,saveSize);
 Screen('TextFont',window,saveFont);
 Screen('Flip',window,0,1); % Save image for snapshot. Show target, instructions, and fixation.
 img=Screen('GetImage',window,cropRect);
-%                         grayPixels=img==gray;
+%                         grayPixels=img==o.gray;
 %                         img(grayPixels)=128;
 freezing='';
 if o.noiseFrozenInTrial
@@ -3860,9 +3804,9 @@ switch o.targetModulates
    case 'luminance'
       ffprintf(ff,'log(contrast) %.2f\n',tTest);
    case 'noise'
-      ffprintf(ff,'approx required n %.0f, sd ratio r %.3f, log(r-1) %.2f\n',approxRequiredN,1+10^tTest,tTest);
+      ffprintf(ff,'approx required n %.0f, sd ratio o.r %.3f, log(o.r-1) %.2f\n',approxRequiredN,1+10^tTest,tTest);
    case 'entropy'
-      ffprintf(ff,'ratio r=signalLevels/backgroundLevels %.3f, log(r-1) %.2f\n',1+10^tTest,tTest);
+      ffprintf(ff,'ratio o.r=signalLevels/backgroundLevels %.3f, log(o.r-1) %.2f\n',1+10^tTest,tTest);
 end
 o.trialsPerRun=1;
 o.runsDesired=1;
@@ -3888,11 +3832,11 @@ function assessBitDepth(o)
 global cal
 LMin=min(cal.old.L);
 LMax=max(cal.old.L);
-LMean=(LMax+LMin)/2;
+o.LMean=(LMax+LMin)/2;
 cal.LFirst=LMin;
-cal.LLast=LMean+(LMean-LMin); % Symmetric about LMean.
-cal.nFirst=firstGrayClutEntry;
-cal.nLast=lastGrayClutEntry;
+cal.LLast=o.LMean+(o.LMean-LMin); % Symmetric about o.LMean.
+cal.nFirst=o.firstGrayClutEntry;
+cal.nLast=o.lastGrayClutEntry;
 cal=LinearizeClut(cal);
 img=cal.nFirst:cal.nLast;
 n=floor(RectWidth(screenRect)/length(img));
@@ -4006,13 +3950,13 @@ switch o.targetModulates
       ffprintf(ff,'Assess contrast: Desired o.contrast of %.3f will be rendered as %.3f (estimated).\n',o.contrast,diff(L)/L(1));
    otherwise
       noiseSDEstimate=std(imgEstimate(:))*o.noiseListSd/std(noise(:));
-      img=1+r*(o.noiseSD/o.noiseListSd)*noise;
+      img=1+o.r*(o.noiseSD/o.noiseListSd)*noise;
       img=IndexOfLuminance(cal,img*LMean);
       imgEstimate=EstimateLuminance(cal,img)/LMean;
       rEstimate=std(imgEstimate(:))*o.noiseListSd/std(noise(:))/noiseSDEstimate;
-      ffprintf(ff,'noiseSDEstimate %.3f (nom. %.3f), rEstimate %.3f (nom. %.3f)\n',noiseSDEstimate,o.noiseSD,rEstimate,r);
-      if abs(log10([noiseSDEstimate/o.noiseSD rEstimate/r])) > 0.5*log10(2)
-         ffprintf(ff,'WARNING: PLEASE TELL DENIS: noiseSDEstimate %.3f (nom. %.3f), rEstimate %.3f (nom. %.3f)\n',noiseSDEstimate,o.noiseSD,rEstimate,r);
+      ffprintf(ff,'noiseSDEstimate %.3f (nom. %.3f), rEstimate %.3f (nom. %.3f)\n',noiseSDEstimate,o.noiseSD,rEstimate,o.r);
+      if abs(log10([noiseSDEstimate/o.noiseSD rEstimate/o.r])) > 0.5*log10(2)
+         ffprintf(ff,'WARNING: PLEASE TELL DENIS: noiseSDEstimate %.3f (nom. %.3f), rEstimate %.3f (nom. %.3f)\n',noiseSDEstimate,o.noiseSD,rEstimate,o.r);
       end
 end
 end % function AssessContrast
@@ -4025,7 +3969,7 @@ function AssessLinearity(o)
 % argument and might need to be returned as an output. Note that if "o" is
 % modified here, it too may need to be returned as an output argument, or
 % made global.fprintf('Assess linearity.\n');
-gratingL=LMean*repmat([0.2 1.8],400,200); % 400x400 grating
+gratingL=o.LMean*repmat([0.2 1.8],400,200); % 400x400 grating
 gratingImg=IndexOfLuminance(cal,gratingL);
 texture=Screen('MakeTexture',window,gratingImg/o.maxEntry,0,0,1);
 r=RectOfMatrix(gratingImg);
@@ -4039,10 +3983,10 @@ subplot(2,2,1); imshow(uint8(gratingImg)); title('image written');
 subplot(2,2,2); imshow(peekImg); title('image read');
 subplot(2,2,3); imshow(uint8(gratingImg(1:4,1:4))); title('4x4 of image written')
 subplot(2,2,4); imshow(peekImg(1:4,1:4)); title('4x4 of image read');
-fprintf('desired normalized luminance: %.1f %.1f\n',gratingL(1,1:2)/LMean);
+fprintf('desired normalized luminance: %.1f %.1f\n',gratingL(1,1:2)/o.LMean);
 fprintf('grating written: %.1f %.1f\n',gratingImg(1,1:2));
 fprintf('grating read: %.1f %.1f\n',peekImg(1,1:2));
-fprintf('normalized luminance: %.1f %.1f\n',LuminanceOfIndex(cal,peekImg(1,1:2))/LMean);
+fprintf('normalized luminance: %.1f %.1f\n',LuminanceOfIndex(cal,peekImg(1,1:2))/o.LMean);
 end % function AssessLinearity(o)
 %% FUNCTION ModelObserver
 function response=ModelObserver(o)
@@ -4093,7 +4037,7 @@ switch o.observer
                otherwise
                   % calculate log likelihood of each possible letter
                   sdPaper=o.noiseSD;
-                  sdInk=r*o.noiseSD;
+                  sdInk=o.r*o.noiseSD;
                   for i=1:o.alternatives
                      signalMask=signal(i).image;
                      im=zeros(size(signal(i).image));
@@ -4454,4 +4398,69 @@ if o.fixationCrossBlankedNearTarget
 else
    ffprintf(ff,'Fixation cross is blanked during and until %.2f s after target. No selective blanking near target. \n',o.fixationCrossBlankedUntilSecAfterTarget);
 end
+end
+
+
+function o=ComputeCLUT(o)
+global cal
+% Set up luminance range that allows for superposition of noise on target
+% and on flanker. (We assume flanker does not overlap target.) If the noise
+% in fact does not superimpose target or flanker then this range may be
+% broader than strictly necessary.
+cal.LFirst=o.LMean*(1-o.noiseListBound*o.r*o.noiseSD/o.noiseListSd);
+cal.LLast=o.LMean*(1+o.noiseListBound*o.r*o.noiseSD/o.noiseListSd);
+if ~o.useFlankers
+   o.flankerContrast=0;
+end
+if streq(o.targetModulates,'luminance')
+   if streq(o.targetKind,'image')
+      cal.LFirst=cal.LFirst+o.LMean*min([0 -o.contrast]);
+      cal.LLast=cal.LLast+o.LMean*max([0 -o.contrast]);
+   else
+      cal.LFirst=cal.LFirst+o.LMean*min([0 o.contrast o.flankerContrast]);
+      cal.LLast=cal.LLast+o.LMean*max([0 o.contrast o.flankerContrast]);
+   end
+end
+if o.annularNoiseBigRadiusDeg > o.annularNoiseSmallRadiusDeg
+   cal.LFirst=min(cal.LFirst,o.LMean*(1-o.noiseListBound*o.r*o.annularNoiseSD/o.noiseListSd));
+   cal.LLast=max(cal.LLast,o.LMean*(1+o.noiseListBound*o.r*o.annularNoiseSD/o.noiseListSd));
+end
+if o.symmetricLuminanceRange
+   % Center range on o.LMean, including LFirst and LLast.
+   % Having a fixed index for "gray" (o.LMean) assures us that
+   % the gray areas (most of the screen) won't change when the
+   % CLUT is updated.
+   LRange=2*max(abs([cal.LLast-o.LMean o.LMean-cal.LFirst]));
+   LRange=min(LRange,o.maxLRange);
+   cal.LFirst=o.LMean-LRange/2;
+   cal.LLast=o.LMean+LRange/2;
+end
+cal.nFirst=o.firstGrayClutEntry;
+cal.nLast=o.lastGrayClutEntry;
+if o.saveSnapshot
+   cal.LFirst=min(cal.old.L);
+   cal.LLast=max(cal.old.L);
+   cal.nFirst=1;
+   cal.nLast=o.maxEntry;
+end
+if false % Compute clut for the specific image
+   L=[];
+   for i=1:locations
+      L=[L location(i).image(:)*o.LMean];
+   end
+   cal.LFirst=min(L);
+   cal.LLast=max(L);
+end
+cal=LinearizeClut(cal);
+if o.symmetricLuminanceRange
+   grayCheck=IndexOfLuminance(cal,o.LMean)/o.maxEntry;
+   if ~o.saveSnapshot && abs(grayCheck-o.gray)>0.001
+      ffprintf(ff,'The estimated o.gray index is %.4f (%.1f cd/m^2), not %.4f (%.1f cd/m^2).\n',...
+         grayCheck,LuminanceOfIndex(cal,grayCheck*o.maxEntry),o.gray,LuminanceOfIndex(cal,o.gray*o.maxEntry));
+      warning('The o.gray index changed!');
+   end
+else
+   o.gray=IndexOfLuminance(cal,o.LMean)/o.maxEntry;
+end
+assert(isfinite(o.gray));
 end
