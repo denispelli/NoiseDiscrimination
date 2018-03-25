@@ -10,7 +10,7 @@ o.seed=[]; % Fresh.
 % o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
 o.questPlusEnable=false;
 if o.questPlusEnable && ~exist('qpInitialize','file')
-   error('This script requires the QuestPLUS package. Please get it from github.')
+   error('This script requires the QuestPlus package. Please get it from https://github.com/BrainardLab/mQUESTPlus.')
 end
 if verLessThan('matlab','R2013b')
    error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
@@ -25,6 +25,19 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
 end
 
 %% CREATE LIST OF CONDITIONS TO BE TESTED
+if false
+   % Target letter
+   o.targetKind='letter';
+   o.font='Sloan';
+   o.alphabet='DHKNORSVZ';
+else
+   % Target faces
+   o.signalImagesFolder='faces';
+   o.targetKind='image';
+   o.alphabet='abcdefghijkl';
+   o.convertSignalImageToGray=false;
+   o.alphabetPlacement='right'; % 'top' or 'right';
+end
 o.contrast=1; % Indicate polarity.
 o.useDynamicNoiseMovie=false;
 o.experiment='faces';
@@ -39,6 +52,8 @@ o.steepness=nan;
 o.guess=nan;
 o.observer='';
 o.noiseSD=0;
+o.targetMargin=0;
+viewingDistanceCm=40;
 if isempty(o.seed)
    rng('shuffle'); % Use clock to seed the random number generator.
    generator=rng;
@@ -89,17 +104,6 @@ if ~fakeRun && true
          % Reuse answers from immediately preceding run.
          o.experimenter=oOut.experimenter;
          o.observer=oOut.observer;
-      end
-      if false
-         % Target letter
-         o.targetKind='letter';
-         o.font='Sloan';
-         o.alphabet='DHKNORSVZ';
-      else
-         % Target faces
-         o.signalImagesFolder='faces';
-         o.targetKind='image';
-         o.alphabet='abcd1234';
       end
       o.alternatives=length(o.alphabet);
       if all(o.eccentricityXYDeg==0)
@@ -178,9 +182,16 @@ if ~fakeRun && true
    xlim([0.1 2]);
    ylim([0.01 10]);
    DecadesEqual(gca);
-   o.plotFilename=[o.dataFilename '.plot' ];
+   o.plotFilename=[o.dataFilename '.plot'];
    title(o.plotFilename);
-   legend('Identification','Beauty','Location','north');
+   legendNames={};
+   if height(tId)>0
+      legendNames{end+1}='Identification';
+   end
+   if height(tBeauty)>0
+      legendNames{end+1}='Beauty';
+   end
+   legend(legendNames,'Location','north');
    legend boxoff
    graphFile=fullfile(o.dataFolder,[o.plotFilename '.eps']);
    saveas(gcf,graphFile,'epsc')
