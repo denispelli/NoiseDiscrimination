@@ -179,7 +179,7 @@ if ~fakeRun && true
    loglog(tId.targetDurationSec,tId.contrast,'r-o',tBeauty.targetDurationSec,tBeauty.contrast,'k-x');
    ylabel('Threshold contrast');
    xlabel('Duration (s)');
-   xlim([0.1 2]);
+   xlim([0.05 2]);
    ylim([0.01 10]);
    DecadesEqual(gca);
    o.plotFilename=[o.dataFilename '.plot'];
