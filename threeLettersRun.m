@@ -28,7 +28,7 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
    warning('PRETENDING THIS IS A 15" MacBook Pro 2017');
 end
 
-o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 o.symmetricLuminanceRange=true;
 o.useDynamicNoiseMovie=true;
 if true
@@ -52,7 +52,7 @@ o.annularNoiseBigRadiusDeg=inf;
 o.annularNoiseSmallRadiusDeg=0;
 o.experiment='flankers';
 o.conditionName='P target id. vs. flanker contrast';
-o.eccentricityXYDeg=[15 0];
+o.eccentricityXYDeg=[-15 0];
 o.targetHeightDeg=2;
 o.targetDurationSec=0.2;
 o.desiredLuminance=[];
@@ -208,7 +208,7 @@ if ~fakeRun && true
    end
    
     %% PRELIMINARY ANALYSIS
-    if isfield(o,'transcript')
+    if isfield(oo(1),'transcript')
        for oi=1:length(oo)
           o=oo(oi);
           n=length(o.transcript.response);
