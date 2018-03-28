@@ -451,7 +451,8 @@ global window fixationLines fixationCrossWeightPix labelBounds ...
 % This list of global variables is shared only with the several newly
 % created subroutines at the end of this file. The list is woefully
 % incomplete as the new routines haven't been tested as subroutines, and
-% many of their formerly locally variables need to be made global.
+% many of their formerly locally variables need to either be made global or
+% become fields of the o struct.
 global oOld % Saved from last run. Skip prompts that were the same in recent run.
 addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder in same directory as this M file
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
@@ -665,6 +666,8 @@ o.symmetricLuminanceRange=false;
 o.printSignalImages=false;
 o.signalImagesFolder='';
 o.convertSignalImageToGray=false;
+o.skipTrial=0;
+o.trialsSkipped=0;
 % The user can only set fields that are initialized above. This is meant to
 % catch any mistakes where the user tries to set a field that isn't used
 % below. We ignore input fields that are known output fields. Any field
@@ -950,106 +953,48 @@ try
    % end
    
    %% ASK EXPERIMENTER NAME
-   instructionalMarginPix=round(0.08*min(RectWidth(screenRect),RectHeight(screenRect)));
+   o.instructionalMarginPix=round(0.08*min(RectWidth(screenRect),RectHeight(screenRect)));
    o.textSize=39;
    o.textFont='Verdana';
-   if window
-      % Adjust textSize so our string fits on screen.
-      Screen('TextSize',window,o.textSize);
-      Screen('TextFont',window,o.textFont,0);
-      font=Screen('TextFont',window);
-      if ~streq(font,o.textFont)
-         warning off backtrace
-         warning('The o.textFont "%s" is not available. Using %s instead.',o.textFont,font);
-         warning on backtrace
-      end
-      instructionalTextLineSample='Please slowly type your name followed by RETURN. more.....more';
-      boundsRect=Screen('TextBounds',window,instructionalTextLineSample);
-      fraction=RectWidth(boundsRect)/(RectWidth(screenRect)-2*instructionalMarginPix);
-      % Adjust textSize so our line fits perfectly.
-      o.textSize=round(o.textSize/fraction);
-   end
    black=0; % The CLUT color code for black.
    white=WhiteIndex(window); % Retrieves the CLUT color code for white.
-   o.gray1=white;
+   o.gray1=white; % Temporary, until we LinearizeClut.
    o.deviceIndex=-3; % all keyboard and keypad devices
    o.speakEachLetter=false;
    o.useSpeech=false;
    if isempty(o.experimenter)
-      ListenChar(2); % no echo
-      Screen('FillRect',window,o.gray1);
-      Screen('TextSize',window,o.textSize);
-      Screen('TextFont',window,o.textFont,0);
-      Screen('DrawText',window,'Hello,',instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
-      Screen('DrawText',window,'Please slowly type the experimenter''s name followed by RETURN.',instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
-      Screen('TextSize',window,round(0.6*o.textSize));
-      Screen('DrawText',window,'I''ll remember your answers, to skip these questions on the next run.',instructionalMarginPix,screenRect(4)/2-1.5*o.textSize,black,o.gray1);
-      Screen('TextSize',window,round(o.textSize*0.35));
-      Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.'),instructionalMarginPix,screenRect(4)-0.5*instructionalMarginPix,black,o.gray1,1);
-      if IsWindows
-         background=[];
-      else
-         background=o.gray1;
-      end
-      Screen('TextSize',window,o.textSize);
+      text.big={'Hello,' 'Please slowly type the experimenter''s name followed by RETURN.'};
+      text.small='I''ll remember your answers, to skip these questions on the next run.';
+      text.fine='NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.';
+      text.question='Experimenter name:';
+      text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
       fprintf('*Waiting for experimenter name.\n');
-      [name,terminatorChar]=GetEchoString(window,'Experimenter name:',instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
-      if ismember(terminatorChar,[escapeChar graveAccentChar])
-         o.quitRun=true;
-         o.quitSession=OfferToQuitSession(window,o,instructionalMarginPix,screenRect);
-         if o.quitSession
-            ffprintf(ff,'*** User typed ESCAPE twice. Session terminated.\n');
-         else
-            ffprintf(ff,'*** User typed ESCAPE. Run terminated.\n');
-         end
+      [o.experimenter,o]=AskQuestion(window,o,text);
+      if o.quitRun
          ListenChar(0);
          ShowCursor;
          sca;
          return
       end
-      Screen('FillRect',window,o.gray1);
-      o.experimenter=name;
    end
    
    %% ASK OBSERVER NAME
    if isempty(o.observer)
-      ListenChar(2); % no echo
-      Screen('FillRect',window,o.gray1);
-      Screen('TextSize',window,o.textSize);
-      Screen('TextFont',window,o.textFont,0);
-      Screen('DrawText',window,'Hello Observer,',...
-         instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
-      Screen('DrawText',window,'Please slowly type your name followed by RETURN.',...
-         instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
-      Screen('TextSize',window,round(o.textSize*0.35));
-      Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.'),instructionalMarginPix,screenRect(4)-0.5*instructionalMarginPix,black,o.gray1,1);
-      Screen('TextSize',window,o.textSize);
-      if IsWindows
-         background=[];
-      else
-         background=o.gray1;
-      end
+      text.big={'Hello Observer,' 'Please slowly type your name followed by RETURN.'};
+      text.small='I''ll remember your answers, to skip these questions on the next run.';
+      text.fine='NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.';
+      text.question='Observer name:';
+      text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
       fprintf('*Waiting for observer name.\n');
-      [name,terminatorChar]=GetEchoString(window,'Observer name:',instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
-      if ismember(terminatorChar,[escapeChar graveAccentChar])
-         o.quitRun=true;
-         o.quitSession=OfferToQuitSession(window,o,instructionalMarginPix,screenRect);
-         if o.quitSession
-            ffprintf(ff,'*** User typed ESCAPE twice. Session terminated.\n');
-         else
-            ffprintf(ff,'*** User typed ESCAPE. Run terminated.\n');
-         end
+      [o.observer,o]=AskQuestion(window,o,text);
+      if o.quitRun
          ListenChar(0);
          ShowCursor;
          sca;
          return
       end
-      o.observer=name;
-      Screen('FillRect',window,o.gray1);
-      % Keep the temporary window open until we open the main one, so observer
-      % knows program is running.
-   end
-   
+end
+ 
    %% ASK FILTER TRANSMISSION
    persistent previousRunUsedFilter
    if ~o.useFilter
@@ -1062,11 +1007,11 @@ try
          Screen('TextSize',window,o.textSize);
          Screen('TextFont',window,o.textFont,0);
          Screen('DrawText',window,'Please remove any filter or sunglasses.',...
-            instructionalMarginPix,screenRect(4)/2-7*o.textSize,black,o.gray1);
+            o.instructionalMarginPix,screenRect(4)/2-7*o.textSize,black,o.gray1);
          Screen('DrawText',window,'Hit RETURN to continue.',...
-            instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
+            o.instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
          Screen('TextSize',window,round(o.textSize*0.35));
-         Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.'),instructionalMarginPix,screenRect(4)-0.5*instructionalMarginPix,black,o.gray1,1);
+         Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.'),o.instructionalMarginPix,screenRect(4)-0.5*o.instructionalMarginPix,black,o.gray1,1);
          Screen('TextSize',window,o.textSize);
          if IsWindows
             background=[];
@@ -1075,10 +1020,9 @@ try
          end
          fprintf('*Waiting for observer to remove sunglasses.\n');
          [~,terminatorChar]=GetEchoString(window,'',...
-            instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
+            o.instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
          if ismember(terminatorChar,[escapeChar graveAccentChar])
-            o.quitRun=true;
-            o.quitSession=OfferToQuitSession(window,o,instructionalMarginPix,screenRect);
+            [o.quitSession,o.quitRun]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
             if o.quitSession
                ffprintf(ff,'*** User typed ESCAPE twice. Session terminated.\n');
             else
@@ -1099,20 +1043,20 @@ try
       Screen('TextSize',window,o.textSize);
       Screen('TextFont',window,o.textFont,0);
       Screen('DrawText',window,'Please use a filter or sunglasses to reduce the luminance.',...
-         instructionalMarginPix,screenRect(4)/2-9*o.textSize,black,o.gray1);
+         o.instructionalMarginPix,screenRect(4)/2-9*o.textSize,black,o.gray1);
       Screen('DrawText',window,'(Our lab sunglasses transmit 0.115)',...
-         instructionalMarginPix,screenRect(4)/2-7*o.textSize,black,o.gray1);
+         o.instructionalMarginPix,screenRect(4)/2-7*o.textSize,black,o.gray1);
       Screen('DrawText',window,'Please slowly type its transmission (between 0.000 and 1.000)',...
-         instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
+         o.instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
       if isempty(o.filterTransmission)
          Screen('DrawText',window,'followed by RETURN.',...
-            instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
+            o.instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
       else
          Screen('DrawText',window,sprintf('followed by RETURN. Or just hit RETURN to say: %.3f',o.filterTransmission),...
-            instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
+            o.instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
       end
       Screen('TextSize',window,round(o.textSize*0.35));
-      Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.'),instructionalMarginPix,screenRect(4)-0.5*instructionalMarginPix,black,o.gray1,1);
+      Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.'),o.instructionalMarginPix,screenRect(4)-0.5*o.instructionalMarginPix,black,o.gray1,1);
       Screen('TextSize',window,o.textSize);
       if IsWindows
          background=[];
@@ -1121,7 +1065,7 @@ try
       end
       fprintf('*Waiting for observer to specify filter transmission.\n');
       [name,terminatorChar]=GetEchoString(window,'Filter transmission:',...
-         instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
+         o.instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
       if ~isempty(name)
          o.filterTransmission=str2num(name);
       end
@@ -1129,8 +1073,7 @@ try
          error('You must specify the filter transmission.');
       end
       if ismember(terminatorChar,[escapeChar graveAccentChar])
-         o.quitRun=true;
-         o.quitSession=OfferToQuitSession(window,o,instructionalMarginPix,screenRect);
+         [o.quitSession,o.quitRun]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
          if o.quitSession
             ffprintf(ff,'*** User typed ESCAPE twice. Session terminated.\n');
          else
@@ -1523,19 +1466,18 @@ try
       if exist('cal','var')
          LMin=min(cal.old.L);
          LMax=max(cal.old.L);
-         o.LMean=o.luminanceFactor*mean([LMin, LMax]); % Desired background luminance.
+         o.LMean=o.luminanceFactor*mean([LMin LMax]); % Desired background luminance.
          %          o.LMean=o.LMean*(1+(rand-0.5)/32); % Tiny jitter, ±1.5%
-         % CLUT entry 1: o.gray1
-         % First entry is black. Second entry is o.gray1. We have
-         % two clut entries that produce the same gray. One (gray) is in
-         % the middle of the CLUT and the other is at a low entry, near
-         % black. The benefit of having small o.gray1 is that we get better
-         % blending of letters written (as black=0) on that background by
-         % Screen DrawText.
+         % First entry is black. 
+         cal.gamma(1,1:3)=0; % Black.
+         % Second entry (CLUT entry 1) is o.gray1. We have two clut entries
+         % that produce the same gray. One (o.gray) is in the middle of the
+         % CLUT and the other is at a low entry, near black. The benefit of
+         % having small o.gray1 is that we get better blending of letters
+         % written (as black=0) on that background by Screen DrawText.
          o.gray1=1/o.maxEntry;
          assert(o.gray1*o.maxEntry <= o.firstGrayClutEntry-1);
          % o.gray1 is between black and the darkest stimulus luminance.
-         cal.gamma(1,1:3)=0; % Black.
          cal.LFirst=o.LMean;
          cal.LLast=o.LMean;
          cal.nFirst=o.gray1*o.maxEntry;
@@ -1600,9 +1542,9 @@ try
       Screen('TextSize',window,o.textSize);
       Screen('TextFont',window,'Verdana');
       Screen('FillRect',window,o.gray1);
-      string=sprintf('Confirming: Experimenter %s and observer %s.',o.experimenter,o.observer);
+      string=sprintf('Confirm experimenter "%s" and observer "%s"?',o.experimenter,o.observer);
       if o.useFilter
-         string=sprintf('%s With filter transmission %.3f.',string,o.filterTransmission);
+         string=sprintf('%s With filter transmission %.3f?',string,o.filterTransmission);
       end
       string=sprintf('%s Right?\nHit RETURN to continue, or ESCAPE to quit.',string);
       Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
@@ -1720,7 +1662,7 @@ try
       ffprintf(ff,'Observer is using %s eye.\n',o.eyes);
    end
    
-   %% PLACE FIXATION AND NEAR-POINT OF DISPLAY
+   %% LOCATE FIXATION AND NEAR-POINT OF DISPLAY
    % DISPLAY NEAR POINT
    % VIEWING GEOMETRY
    % o.nearPointXYInUnitSquare % rough location in o.stimulusRect re lower-left corner.
@@ -2304,79 +2246,7 @@ try
       o.gray1=o.gray;
    end
    
-   %% START NEW RUN, DISPLAYING STIMULI ON SCREEN
-   if ~ismember(o.observer,algorithmicObservers) && ~o.assessBitDepth %&& ~o.saveSnapshot;
-      Screen('FillRect',window,o.gray1);
-      Screen('FillRect',window,o.gray,o.stimulusRect);
-      fprintf('o.gray1*o.maxEntry %.1f, o.gray*o.maxEntry %.1f, o.maxEntry %.0f\n',o.gray1*o.maxEntry,o.gray*o.maxEntry,o.maxEntry);
-      if o.showCropMarks
-         TrimMarks(window,frameRect);
-      end
-      if ~isempty(fixationLines)
-         Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
-      end
-      Screen('Flip',window,0,1); % Show gray screen at o.LMean with fixation and crop marks. Don't clear buffer.
-      
-      msg='Starting new run. ';
-      if o.markTargetLocation
-         msg=[msg 'The X indicates target center. '];
-      end
-      if streq(o.eyes,'both')
-         eyeOrEyes='eyes';
-      else
-         eyeOrEyes='eye';
-      end
-      if o.useFixation
-         if o.fixationIsOffscreen
-            msg=sprintf('%sPlease fix your %s on your offscreen fixation mark, ',msg,eyeOrEyes);
-         else
-            xyCm=(XYPixOfXYDeg(o,[0 0])-XYPixOfXYDeg(o,o.eccentricityXYDeg))/o.pixPerCm;
-            msg=sprintf('%sPlease fix your %s the center of the fixation cross +, ',msg,eyeOrEyes);
-         end
-         word='and';
-      else
-         word='Please';
-      end
-      switch o.task
-         case '4afc'
-            msg=[msg word ' click when ready to begin.'];
-            fprintf('Please click when ready to begin.\n');
-         case {'identify' 'identifyAll' 'rate'}
-            msg=[msg word ' press the SPACE bar when ready to begin.'];
-            fprintf('Please press the space bar when ready to begin.\n');
-      end
-      Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
-      DrawFormattedText(window,msg,0.5*o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
-      Screen('Flip',window,0,1); % "Starting new run ..."
-      if o.speakInstructions
-         if ismac
-            msg=strrep(msg,'fix','fixh');
-            msg=strrep(msg,'space bar','spasebar');
-         end
-         Speak(msg);
-      end
-      switch o.task
-         case '4afc'
-            GetClicks;
-         case {'identify' 'identifyAll' 'rate'}
-            fprintf('*Waiting for SPACE key to start first trial.\n');
-            response=GetKeypress([spaceKeyCode escapeKeyCode graveAccentKeyCode]);
-            % This keypress serves mainly to start the first trial, but we
-            % quit if the user hits escape.
-            if ismember(response,[escapeChar,graveAccentChar])
-               if o.speakInstructions
-                  Speak('Quitting.');
-               end
-               o.quitRun=true;
-               o.quitSession=true;
-               sca;
-               ListenChar;
-               return
-            end
-      end
-   end
-   
-   %% SET PARAMETERS FOR QUEST
+    %% SET PARAMETERS FOR QUEST
    if isempty(o.lapse) || isnan(o.lapse)
       o.lapse=0.02;
    end
@@ -2480,7 +2350,28 @@ try
    trialsRight=0;
    rWarningCount=0;
    runStart=GetSecs;
-   for trial=1:o.trialsPerRun
+   o.skipTrial=false;
+   waitMessage='Starting new run. ';
+   trial=0;
+   while trial<o.trialsPerRun
+      trial=trial+1;
+      if (trial==1 || o.skipTrial) && ~ismember(o.observer,algorithmicObservers)
+         % WAIT UNTIL OBSERVER IS READY
+         if o.skipTrial
+            o.trialsSkipped=o.trialsSkipped+1;
+            o.skipTrial=false;
+         end
+         o=WaitUntilObserverIsReady(o,waitMessage);
+         waitMessage='Continuing. ';
+         if o.quitRun
+            trial=trial-1;
+            break
+         end
+         if o.skipTrial
+            trial=trial-1;
+            continue
+         end
+      end
       [~,neworder]=sort(lower(fieldnames(o)));
       o=orderfields(o,neworder);
       
@@ -2760,35 +2651,35 @@ try
                   else
                      c=o.contrast; % Same contrast as target.
                   end
-                  if iMovieFrame==1
-                     o.whichFlanker={[] [] [] []};
-                     o.flankerXYDeg={[] [] [] []};
-                  end
-                  switch o.flankerArrangement
+                 switch o.flankerArrangement
                      case 'radial'
-                        directions=[1 3];
+                        angle=[180 0];
                      case 'tangential'
-                        directions=[2 4];
+                        angle=[270 90];
                      case 'radialAndTangential'
-                        directions=1:4;
+                        angle=[270:-90:0];
                   end
-                  for j=directions
+                  if iMovieFrame==1
+                     o.whichFlanker=zeros(size(angle));
+                     o.flankerXYDeg=cell(size(angle));
+                  end
+                   for j=1:length(angle)
                      if ~all(o.eccentricityXYDeg==0)
                         theta=atan2d(o.eccentricityXYDeg(2),o.eccentricityXYDeg(1)); % Direction of target from fixation.
                      else
                         theta=90; % Default direction is up, for target at fixation.
                      end
-                     theta=theta+(j-1)*90; % The four compass directions, relative to the radius to target.
+                     theta=theta+angle(j); % The four compass directions, relative to the radius to target.
                      if iMovieFrame==1
-                        o.whichFlanker{j}=randi(o.alternatives);
+                        o.whichFlanker(j)=randi(o.alternatives);
                      end
                      assert(o.flankerSpacingDeg>0);
                      spacingDeg=o.flankerSpacingDeg;
                      eccDeg=sqrt(sum(o.eccentricityXYDeg.^2));
-                     switch j
-                        case 1
+                     switch theta
+                        case 0
                            % Outer radial flanker is at specified spacing.
-                        case 3
+                        case 180
                            if eccDeg>0
                               % Inner radial flanker position has same
                               % difference in log eccentricity from target
@@ -2797,7 +2688,7 @@ try
                            else
                               % Inner radial flanker is at specified spacing.
                            end
-                        case [2 4]
+                        case [90 270]
                            switch o.flankerArrangement
                               case 'tangential'
                                  % Tangential flankers are at specified
@@ -2816,8 +2707,9 @@ try
                      end
                      flankerOffsetXYDeg=spacingDeg*[cosd(theta) sind(theta)]; % offset deg
                      o.flankerXYDeg{j}=o.eccentricityXYDeg+flankerOffsetXYDeg; % location in deg
-                     flankerXYChecks=round(XYPixOfXYDeg(o,o.flankerXYDeg{j})/o.targetCheckPix); % location in targetCheckPix
-                     rect=RectOfMatrix(signal(o.whichFlanker{j}).image);
+                     flankerXYPix=XYPixOfXYDeg(o,o.flankerXYDeg{j})-o.stimulusRect(1:2); % location in pix in o.stimulusRect
+                     flankerXYChecks=round(flankerXYPix/o.targetCheckPix); % in checks
+                     rect=RectOfMatrix(signal(o.whichFlanker(j)).image);
                      rect=CenterRectOnPoint(rect,flankerXYChecks(1),flankerXYChecks(2));
                      assert(IsRectInRect(rect,canvasRect));
                      flankerImageIndex=logical(FillRectInMatrix(true,rect,zeros(o.canvasSize)));
@@ -2825,12 +2717,12 @@ try
                      if (iMovieFrame > o.moviePreFrames ...
                            && iMovieFrame <= o.moviePreFrames+o.movieSignalFrames)
                         % Add in flanker only during the signal interval.
-                        flankerImage(flankerImageIndex)=signal(o.whichFlanker{j}).image(:);
+                        flankerImage(flankerImageIndex)=signal(o.whichFlanker(j)).image(:);
                      end
                      location(1).image=location(1).image+c*flankerImage; % Add flanker.
-                  end % for j=directions
-                  o.transcript.flankers{trial}=o.whichFlanker; % Four flanker signal indices.
-                  o.transcript.flankerXYDeg{trial}=o.flankerXYDeg; % Four flanker eccentricities.
+                  end % for j=1:length(angle)
+                  o.transcript.flankers{trial}=o.whichFlanker; % The several flanker signal indices. 
+                  o.transcript.flankerXYDeg{trial}=o.flankerXYDeg; % The several flanker eccentricities.
                   o.transcript.eccentricityXYDeg{trial}=o.eccentricityXYDeg; % Target eccentricity.
               end % if o.useFlankers
             otherwise
@@ -3129,29 +3021,28 @@ try
          Screen('DrawText',window,message,o.textSize/2,o.textSize/2,black,o.gray1);
          
          % Print instructions in lower left corner.
-         textRect=[0, 0, o.textSize, 1.2*o.textSize];
-         textRect=AlignRect(textRect,screenRect,'left','bottom');
-         textRect=OffsetRect(textRect,o.textSize/2,-o.textSize/2); % inset from screen edges
-         textRect=round(textRect);
+         factor=1;
          switch o.task
             case '4afc'
                message='Please click 1 to 4 times for location 1 to 4, or more clicks to quit.';
             case 'identify'
-               message=sprintf('Please type the letter: %s, or ESCAPE to quit.',o.alphabet(1:o.alternatives));
+               message=sprintf('Please type the letter: %s, or ESCAPE to cancel a trial or quit the run.',o.alphabet(1:o.alternatives));
             case 'identifyAll'
-               message='';
-%                message=sprintf('Please type all three letters: %s, or ESCAPE to quit. (You''ll get feedback on the middle one.)',o.alphabet(1:o.alternatives));
+               message=sprintf('[Ignore case. DELETE to backspace. ESCAPE to cancel a trial or quit the run. You''ll get feedback on the middle letter.]');
+               factor=1.3;
             case 'rate'
-               message=sprintf('Please rate the beauty: 0 to 9, or ESCAPE to quit.');
+               message=sprintf('Please rate the beauty: 0 to 9, or ESCAPE to cancel a trial or quit the run.');
          end
-         bounds=Screen('TextBounds',window,message);
-         ratio=RectWidth(bounds)/(0.93*RectWidth(screenRect));
-         if ratio > 1
-            Screen('TextSize',window,floor(o.textSize/ratio));
-         end
-         Screen('FillRect',window,o.gray1,bottomCaptionRect);
-         Screen('DrawText',window,message,textRect(1),textRect(4),black,o.gray1,1);
-         Screen('TextSize',window,o.textSize);
+            textRect=[0 0 o.textSize 1.2*o.textSize];
+            textRect=AlignRect(textRect,bottomCaptionRect,'left','bottom');
+            textRect=OffsetRect(textRect,o.textSize/2,-o.textSize/2); % inset from screen edges
+            textRect=round(textRect);
+            bounds=Screen('TextBounds',window,message);
+            ratio=RectWidth(bounds)/(0.93*RectWidth(screenRect));
+            Screen('TextSize',window,floor(o.textSize/max([ratio factor])));
+            Screen('FillRect',window,o.gray1,bottomCaptionRect);
+            Screen('DrawText',window,message,textRect(1),textRect(4),black,o.gray1,1);
+            Screen('TextSize',window,o.textSize);
          
          %% DISPLAY RESPONSE ALTERNATIVES
          switch o.task
@@ -3282,13 +3173,19 @@ try
                   o.quitRun=false;
                   responseChar=GetKeypress;
                   if ismember(responseChar,[escapeChar,graveAccentChar])
-                     ffprintf(ff,'User typed ESCAPE. Run terminated.\n');
-                     if o.speakInstructions
-                        Speak('Run terminated.');
-                     end
-                     o.quitRun=true;
+                     [o.quitSession,o.quitRun,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
                      trial=trial-1;
-                     break;
+                     if o.quitRun
+                        ffprintf(ff,'*** User typed ESCAPE. Quitting run.\n');
+                        if o.speakInstructions
+                           Speak('Run terminated.');
+                        end
+                        break;
+                     end
+                     if o.skipTrial
+                        ffprintf(ff,'*** User typed ESCAPE. Skipping trial.\n');
+                         continue
+                     end
                   end
                   if length(responseChar) > 1
                      % GetKeypress might return a multi-character string,
@@ -3301,49 +3198,72 @@ try
                      break;
                   else
                      if o.speakInstructions
-                        Speak('Try again. Or hit ESCAPE to quit.');
+                        Speak('Try again. Or hit ESCAPE to quit the run.');
                      end
                   end
                end % while 1
             case 'identifyAll'
-               message=sprintf('Please type all three letters: %s, or ESCAPE to quit. (You''ll get feedback on the middle one.)',o.alphabet(1:o.alternatives));
+               message=sprintf('Please type all three letters (%s) followed by RETURN:',o.alphabet(1:o.alternatives));
+               textRect=[0, 0, o.textSize, 1.2*o.textSize];
+               textRect=AlignRect(textRect,bottomCaptionRect,'left','bottom');
+               textRect=OffsetRect(textRect,o.textSize/2,-1.5*o.textSize); % Inset from screen edges
+               textRect=round(textRect);
                bounds=Screen('TextBounds',window,message);
-               ratio=RectWidth(bounds)/(0.93*RectWidth(screenRect));
+               ratio=RectWidth(bounds)/(0.93*RectWidth(bottomCaptionRect));
                if ratio > 1
                   Screen('TextSize',window,floor(o.textSize/ratio));
                end
-               Screen('FillRect',window,o.gray1,bottomCaptionRect);
-               %                   Screen('DrawText',window,message,textRect(1),textRect(4),black,o.gray1,1);
-               [responseString,terminatorChar]=GetEchoString(window,message,textRect(1),textRect(4),black,gray,1,o.deviceIndex);
+               [responseString,terminatorChar]=GetEchoString(window,message,textRect(1),textRect(4)-o.textSize,black,o.gray,1,o.deviceIndex);
+%                Screen('FillRect',window,o.gray1,bottomCaptionRect);
                Screen('TextSize',window,o.textSize);
-               o.quitRun=ismember(terminatorChar,[escapeChar,graveAccentChar]);
-               if ~o.quitRun
-                  [ok,responses]=ismember(lower(responseString),lower(o.alphabet));
-                  if ~all(ok)
-                     warning('Some letters ''%s'' are not in alphabet %s.',responseString,o.alphabet);
-                  end
-                  response=responses(2);
-                  o.transcript.flankerResponse{trial}=responses([1 3]);
-               else
-                  ffprintf(ff,'User typed ESCAPE. Run terminated.\n');
-                  if o.speakInstructions
-                     Speak('Run terminated.');
-                  end
+               if ismember(terminatorChar,[escapeChar,graveAccentChar])
+                  [o.quitSession,o.quitRun,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
                   trial=trial-1;
+                  if o.quitRun
+                     ffprintf(ff,'*** User typed ESCAPE. Quitting run.\n');
+                     if o.speakInstructions
+                        Speak('Run terminated.');
+                     end
+                     break;
+                  end
+                  if o.skipTrial
+                     ffprintf(ff,'*** User typed ESCAPE. Skipping trial.\n');
+                     continue
+                  end
                end
+               [ok,responses]=ismember(lower(responseString),lower(o.alphabet));
+               if ~all(ok)
+                  warning('Some letters ''%s'' are not in alphabet %s.',responseString,o.alphabet);
+               end
+               if length(responses)~=3
+                  warning('Response must have 3 letters, not %d: "%s". Trial skipped.',length(responses),responseString);
+                  waitMessage=sprintf('Sorry. You must type 3 letters, but you typed %d: "%s". Trial ignored. Continuing. ',length(responses),responseString);
+                  o.skipTrial=true;
+                  trial=trial-1;
+                  continue
+               end
+               o.transcript.rawResponseString{trial}=responseString;
+               response=responses(2);
+               o.transcript.flankerResponse{trial}=responses([1 3]);
             case 'rate'
                ratings='0123456789';
                while 1
                   o.quitRun=false;
                   responseChar=GetKeypress;
                   if ismember(responseChar,[escapeChar,graveAccentChar])
-                     ffprintf(ff,'User typed ESCAPE. Run terminated.\n');
-                     if o.speakInstructions
-                        Speak('Run terminated.');
-                     end
-                     o.quitRun=true;
+                     [o.quitSession,o.quitRun,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
                      trial=trial-1;
-                     break;
+                     if o.quitRun
+                        ffprintf(ff,'*** User typed ESCAPE. Quitting run.\n');
+                        if o.speakInstructions
+                           Speak('Run terminated.');
+                        end
+                        break;
+                     end
+                     if o.skipTrial
+                        ffprintf(ff,'*** User typed ESCAPE. Skipping trial.\n');
+                        continue
+                     end
                   end
                   if length(responseChar) > 1
                      % GetKeypress might return a multi-character string,
@@ -3399,7 +3319,7 @@ try
          case '4afc'
             isRight=response == signalLocation;
             o.transcript.target(trial)=signalLocation;
-         case 'identify'
+         case {'identify' 'identifyAll'}
             isRight=response == whichSignal;
             o.transcript.target(trial)=whichSignal;
          case 'rate'
@@ -3450,10 +3370,7 @@ try
             error(string);
          end
       end
-   end % for trial=1:o.trialsPerRun
-   
-   o.quitSession=OfferToQuitSession(window,o,instructionalMarginPix,screenRect);
-   
+   end % while trial<o.trialsPerRun   
    
    %% DONE. REPORT THRESHOLD FOR THIS RUN.
    if ~isempty(o.data)
@@ -4509,10 +4426,9 @@ if o.annularNoiseBigRadiusDeg > o.annularNoiseSmallRadiusDeg
    cal.LLast=max(cal.LLast,o.LMean*(1+o.noiseListBound*o.r*o.annularNoiseSD/o.noiseListSd));
 end
 if o.symmetricLuminanceRange
-   % Center range on o.LMean, including LFirst and LLast.
-   % Having a fixed index for "gray" (o.LMean) assures us that
-   % the gray areas (most of the screen) won't change when the
-   % CLUT is updated.
+   % Use smallest range centered on o.LMean that includes LFirst and LLast.
+   % Having a fixed index for "gray" (o.LMean) assures us that the gray
+   % areas (most of the screen) won't change when the CLUT is updated.
    LRange=2*max(abs([cal.LLast-o.LMean o.LMean-cal.LFirst]));
    LRange=min(LRange,o.maxLRange);
    cal.LFirst=o.LMean-LRange/2;
@@ -4546,4 +4462,141 @@ else
    o.gray=IndexOfLuminance(cal,o.LMean)/o.maxEntry;
 end
 assert(isfinite(o.gray));
+end
+
+function [reply,o]=AskQuestion(window,o,text)
+% text.big, text.small, text.fine, text.question
+% We optionally return o which is  possibly modified from the input o in
+% o.textSize o.quitSession o.quitRun and o.skipTrial.
+% If "text" is provided then o.textSize is adjusted so make the line fit
+% horizontally within screenRect.
+%% ASK QUESTION
+global screenRect ff
+escapeChar=char(27);
+graveAccentChar='`';
+black=0;
+if isfield(text,'setTextSizeToMakeThisLineFit') && ~isempty(text.setTextSizeToMakeThisLineFit)
+   % Adjust o.textSize so our standard string just fits on screen.
+   Screen('TextSize',window,o.textSize);
+   Screen('TextFont',window,o.textFont,0);
+   font=Screen('TextFont',window);
+   if ~streq(font,o.textFont)
+      warning off backtrace
+      warning('The o.textFont "%s" is not available. Using %s instead.',o.textFont,font);
+      warning on backtrace
+   end
+   boundsRect=Screen('TextBounds',window,text.setTextSizeToMakeThisLineFit);
+   fraction=RectWidth(boundsRect)/(RectWidth(screenRect)-2*o.instructionalMarginPix);
+   % Adjust textSize so our line fits perfectly.
+   o.textSize=round(o.textSize/fraction);
+end
+ListenChar(2); % no echo
+Screen('FillRect',window,o.gray1);
+Screen('TextSize',window,o.textSize);
+Screen('TextFont',window,o.textFont,0);
+Screen('DrawText',window,text.big{1},o.instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
+Screen('DrawText',window,text.big{2},o.instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
+Screen('TextSize',window,round(0.6*o.textSize));
+Screen('DrawText',window,text.small,o.instructionalMarginPix,screenRect(4)/2-1.5*o.textSize,black,o.gray1);
+Screen('TextSize',window,round(o.textSize*0.35));
+Screen('DrawText',window,text.fine,o.instructionalMarginPix,screenRect(4)-0.5*o.instructionalMarginPix,black,o.gray1,1);
+Screen('TextSize',window,o.textSize);
+if IsWindows
+   background=[];
+else
+   background=o.gray1;
+end
+[reply,terminatorChar]=GetEchoString(window,text.question,o.instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
+if ismember(terminatorChar,[escapeChar graveAccentChar])
+   [o.quitSession,o.quitRun,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
+   if o.quitSession
+      ffprintf(ff,'*** User typed ESCAPE twice. Session terminated.\n');
+   else
+      ffprintf(ff,'*** User typed ESCAPE. Run terminated.\n');
+   end
+   return
+end
+Screen('FillRect',window,o.gray1);
+% Flip screen soon, to let observer know her answer was accepted.
+end % function AskQuestion
+
+function o=WaitUntilObserverIsReady(o,message)
+global window fixationLines fixationCrossWeightPix ff
+escapeChar=char(27);
+graveAccentChar='`';
+returnChar=char(13);
+spaceChar=' ';
+escapeKeyCode=KbName('escape');
+graveAccentKeyCode=KbName('`~');
+spaceKeyCode=KbName('space');
+returnKeyCode=KbName('return');
+Screen('FillRect',window,o.gray1);
+Screen('FillRect',window,o.gray1,o.stimulusRect);
+fprintf('o.gray1*o.maxEntry %.1f, o.gray*o.maxEntry %.1f, o.maxEntry %.0f\n',o.gray1*o.maxEntry,o.gray*o.maxEntry,o.maxEntry);
+if o.showCropMarks
+   TrimMarks(window,frameRect);
+end
+if ~isempty(fixationLines)
+   Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
+end
+Screen('Flip',window,0,1); % Show gray screen at o.LMean with fixation and crop marks. Don't clear buffer.
+
+readyString='';
+if o.markTargetLocation
+   readyString=[readyString 'The X indicates target center. '];
+end
+if streq(o.eyes,'both')
+   eyeOrEyes='eyes';
+else
+   eyeOrEyes='eye';
+end
+if o.useFixation
+   if o.fixationIsOffscreen
+      readyString=sprintf('%sPlease fix your %s on your offscreen fixation mark, ',readyString,eyeOrEyes);
+   else
+      readyString=sprintf('%sPlease fix your %s on the center of the cross +, ',readyString,eyeOrEyes);
+   end
+   word='and';
+else
+   word='Please';
+end
+switch o.task
+   case '4afc'
+      readyString=[readyString word ' CLICK when ready to proceed.'];
+      fprintf('Please CLICK when ready to proceed.\n');
+   case {'identify' 'identifyAll' 'rate'}
+      readyString=[readyString word ' press the SPACE bar when ready to proceed.'];
+      fprintf('Please press the SPACE bar when ready to proceed.\n');
+end
+
+msg=[message readyString];
+Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
+black=0;
+DrawFormattedText(window,msg,0.5*o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+Screen('Flip',window,0,1); % Proceeding to the trial.
+if o.speakInstructions
+   if ismac
+      msg=strrep(msg,'fix','fixh');
+      msg=strrep(msg,'space bar','spasebar');
+   end
+   Speak(msg);
+end
+switch o.task
+   case '4afc'
+      GetClicks;
+   case {'identify' 'identifyAll' 'rate'}
+      fprintf('*Waiting for SPACE bar to begin next trial.\n');
+      responseChar=GetKeypress([spaceKeyCode escapeKeyCode graveAccentKeyCode]);
+      % This keypress serves mainly to start the first trial, but we
+      % offer to quit if the user hits ESCAPE.
+      if ismember(responseChar,[escapeChar,graveAccentChar])
+         [o.quitSession,o.quitRun,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
+         if o.quitRun
+            ffprintf(ff,'*** User typed ESCAPE. Quitting run.\n');
+            if o.speakInstructions
+               Speak('Run terminated.');
+            end
+         end
+      end
+end
 end
