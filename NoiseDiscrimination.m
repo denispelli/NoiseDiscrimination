@@ -3215,8 +3215,12 @@ end
                if ratio > 1
                   Screen('TextSize',window,floor(o.textSize/ratio));
                end
-               [responseString,terminatorChar]=GetEchoString(window,message,textRect(1),textRect(4)-o.textSize,black,o.gray,1,o.deviceIndex);
-%                Screen('FillRect',window,o.gray1,bottomCaptionRect);
+               if all(o.alphabet==upper(o.alphabet))
+                  [responseString,terminatorChar]=GetEchoStringUppercase(window,message,textRect(1),textRect(4)-o.textSize,black,o.gray,1,o.deviceIndex);
+               else
+                  [responseString,terminatorChar]=GetEchoString(window,message,textRect(1),textRect(4)-o.textSize,black,o.gray,1,o.deviceIndex);
+               end
+               %                Screen('FillRect',window,o.gray1,bottomCaptionRect);
                Screen('TextSize',window,o.textSize);
                if ismember(terminatorChar,[escapeChar,graveAccentChar])
                   [o.quitSession,o.quitRun,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
