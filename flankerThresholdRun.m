@@ -49,7 +49,8 @@ o.annularNoiseSmallRadiusDeg=0;
 o.experiment='flankerThreshold';
 o.eccentricityXYDeg=[20 0];
 o.targetHeightDeg=2;
-o.targetDurationSec=0.2;
+o.targetDurationSec=2;
+% o.targetDurationSec=.2;
 o.desiredLuminance=[];
 o.desiredLuminanceFactor=1;
 o.trialsPerRun=50;
@@ -65,6 +66,7 @@ if isempty(o.seed)
 else
    rng(o.seed);
 end
+o.flankerArrangement='radialAndTangential';
 for useFlankers=[true false]
    o.useFlankers=useFlankers;
    if o.useFlankers
@@ -76,7 +78,8 @@ for useFlankers=[true false]
       o.conditionName='identification threshold';
       o.guess=nan;
    end
-   for noiseSD=Shuffle([0 0.05 0.1 ])
+%    for noiseSD=Shuffle([0 0.05 0.1 ])
+   for noiseSD=0
       %    o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
       %    o.minScreenWidthDeg=1+o.targetHeightDeg*2;
       %    o.maxViewingDistanceCm=round(0.1*cal.screenWidthMm/(2*tand(o.minScreenWidthDeg/2)));
