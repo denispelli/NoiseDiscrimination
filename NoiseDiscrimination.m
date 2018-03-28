@@ -3237,7 +3237,7 @@ end
                end
                if length(responses)~=3
                   warning('Response must have 3 letters, not %d: "%s". Trial skipped.',length(responses),responseString);
-                  waitMessage=sprintf('Sorry. You must type 3 letters, but you typed %d: "%s". Trial ignored. Continuing. ',length(responses),responseString);
+                  waitMessage=sprintf('Sorry. You must type 3 letters, but you typed %d: "%s". Trial ignored. Continuing.\n',length(responses),responseString);
                   o.skipTrial=true;
                   trial=trial-1;
                   continue
