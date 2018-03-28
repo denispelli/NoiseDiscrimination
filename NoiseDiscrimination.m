@@ -3244,9 +3244,18 @@ end
                   trial=trial-1;
                   continue
                end
-               o.transcript.rawResponseString{trial}=responseString;
                response=responses(2);
+               o.transcript.rawResponseString{trial}=responseString;
                o.transcript.flankerResponse{trial}=responses([1 3]);
+               if o.eccentricityXYDeg(1)<0
+                  % The ordering of arrays was in order of increasing
+                  % radial eccentricity. However, the observer responds in
+                  % order of increasing X eccentricity, so here we flip the
+                  % order of the flanker stimulus reports to match that of
+                  % the observer's response.
+                  o.transcript.flankers{trial}=fliplr(o.transcript.flankers{trial});
+                  o.transcript.flankerXYDeg{trial}=fliplr(o.transcript.flankerXYDeg{trial});
+               end
             case 'rate'
                ratings='0123456789';
                while 1
