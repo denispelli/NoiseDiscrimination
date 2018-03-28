@@ -11,7 +11,7 @@
 % Denis Pelli
 
 %% CREATE LIST OF CONDITIONS TO BE TESTED
-if ~exist('QUESTPlusFit')
+if ~exist('QUESTPlusFit','file')
    error('This script requires the QuestPLUS package. Please get it from github.')
 end
 if verLessThan('matlab','R2013b')
@@ -29,13 +29,18 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
 end
 
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+o.symmetricLuminanceRange=true;
 o.useDynamicNoiseMovie=true;
 if true
    o.useFlankers=true;
-   o.thresholdParameter='flankerContrast';
+   %    o.thresholdParameter='flankerContrast';
+   o.thresholdParameter='contrast';
+   o.task='identifyAll';
 end
 o.contrast=-0.2;
 o.flankerContrast=-0.85; % Negative for dark letters.
+o.flankerArrangement='radialAndTangential';
+o.flankerArrangement='radial';
 o.annularNoiseSD=0;
 o.flankerSpacingDeg=3;
 o.noiseRadiusDeg=inf;
@@ -45,7 +50,7 @@ o.annularNoiseBigRadiusDeg=inf;
 o.annularNoiseSmallRadiusDeg=0;
 o.experiment='flankers';
 o.conditionName='P target id. vs. flanker contrast';
-o.eccentricityXYDeg=[20 0];
+o.eccentricityXYDeg=[15 0];
 o.targetHeightDeg=2;
 o.targetDurationSec=0.2;
 o.desiredLuminance=[];
@@ -144,6 +149,7 @@ if ~fakeRun && true
          oo(oi).contrast=oOut.contrast;
          oo(oi).N=oOut.N;
          oo(oi).E1=oOut.E1;
+         oo(oi).alphabet=oOut.alphabet;
          oo(oi).alternatives=oOut.alternatives;
          oo(oi).targetKind=oOut.targetKind;
          oo(oi).eyes=oOut.eyes;
@@ -153,6 +159,7 @@ if ~fakeRun && true
          oo(oi).targetCyclesPerDeg=oOut.targetCyclesPerDeg;
          oo(oi).data=oOut.data;
          oo(oi).psych=oOut.psych;
+         oo(oi).transcript=oOut.transcript;
       end
       if oOut.quitSession
          break
