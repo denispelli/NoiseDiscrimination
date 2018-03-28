@@ -969,7 +969,8 @@ try
       text.question='Experimenter name:';
       text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
       fprintf('*Waiting for experimenter name.\n');
-      [o.experimenter,o]=AskQuestion(window,o,text);
+      reply=AskQuestion(window,o,text);
+      o.experimenter=reply;
       if o.quitRun
          ListenChar(0);
          ShowCursor;
@@ -986,7 +987,8 @@ try
       text.question='Observer name:';
       text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
       fprintf('*Waiting for observer name.\n');
-      [o.observer,o]=AskQuestion(window,o,text);
+      [reply,o]=AskQuestion(window,o,text);
+       o.observer=reply;
       if o.quitRun
          ListenChar(0);
          ShowCursor;
