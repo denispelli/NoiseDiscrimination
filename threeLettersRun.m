@@ -180,61 +180,52 @@ if ~fakeRun && true
    %% PRINT THE RESULTS
    t=struct2table(oo(1:oi),'AsArray',true);
    rows=t.trials>0;
-   vars={'observer' 'trials' 'noiseSD' 'N' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'flankerContrast'};
+   vars={'condition' 'observer' 'trials' 'noiseSD' 'N' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'flankerContrast'};
    if any(rows)
       t(rows,vars) % Print the oo list of conditions, with measured flanker threshold.
    end
    
-   %% PLOT IT
    close all % Get rid of any existing figures.
-   if isfield(o,'psych')
-      figure(1)
-      o=oo(1);
-      plot(o.psych.t,o.psych.r' ./ o.psych.trials);
-      xlabel('Flanker contrast log c');
-      ylabel('Proportion correct target identification');
-      title([o.experiment '-' o.observer '.eps']);
-      graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[o.experiment '-' o.observer '.eps']);
-      saveas(gcf,graphFile,'epsc')
-      fprintf('Plot saved as "%s".\n',graphFile);
+   for oi=1:length(oo)
+      o=oo(oi);
+      t(oi,vars)
+      %% FIT PSYCHOMETRIC FUNCTION
+      if isfield(o,'psych')
+         clear QUESTPlusFit % Clear the persistent variables.
+         o.alternatives=length(o.alphabet);
+         o.questPlusLapseRates=0:0.01:0.05;
+         o.questPlusGuessingRates=0:0.03:0.3;
+         oOut=QUESTPlusFit(o);
+         graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[o.experiment '-' o.observer '-QuestPlus' '.eps']);
+         saveas(gcf,graphFile,'epsc')
+         fprintf('Plot saved as "%s".\n',graphFile);
+      end
+      
+      %% PRELIMINARY ANALYSIS
+      if isfield(o,'transcript')
+         n=length(o.transcript.response);
+         left=zeros([1,n]);
+         middle=zeros([1,n]);
+         right=zeros([1,n]);
+         for i=1:n
+            left(i)=o.transcript.flankers{i}(1)==o.transcript.flankerResponse{i}(1);
+            middle(i)=o.transcript.target(i)==o.transcript.response(i);
+            right(i)=o.transcript.flankers{i}(2)==o.transcript.flankerResponse{i}(2);
+         end
+         outer=left | right;
+         fprintf('Run %d, %d trials. Proportion correct, by position: %.2f %.2f %.2f\n',oi,n,sum(left)/n,sum(middle)/n,sum(right)/n);
+         a=[left' middle' right' outer'];
+         [r,p] = corrcoef(a);
+         disp('Correlation matrix, left, middle, right, outer:')
+         disp(r)
+         disp('P value')
+         disp(p)
+         for i=1:n
+            left(i)=ismember(o.transcript.flankers{i}(1),[o.transcript.flankerResponse{i} o.transcript.response(i)]);
+            middle(i)=ismember(o.transcript.target(i),[o.transcript.flankerResponse{i} o.transcript.response(i)]);
+            right(i)=ismember(o.transcript.flankers{i}(2),[o.transcript.flankerResponse{i} o.transcript.response(i)]);
+         end
+         fprintf('Run %d, %d trials. Proportion correct, ignoring position errors: %.2f %.2f %.2f\n',oi,n,sum(left)/n,sum(middle)/n,sum(right)/n);
+      end
    end
-   %% FIT PSYCHOMETRIC FUNCTION
-   if isfield(o,'psych')
-      clear QUESTPlusFit % Clear the persistent variables.
-      o.alternatives=9;
-      o.questPlusLapseRates=0:0.01:0.05;
-      o.questPlusGuessingRates=0:0.03:0.3;
-      oOut=QUESTPlusFit(o);
-      graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[o.experiment '-' o.observer '-QuestPlus' '.eps']);
-      saveas(gcf,graphFile,'epsc')
-      fprintf('Plot saved as "%s".\n',graphFile);
-   end
-   
-    %% PRELIMINARY ANALYSIS
-    if isfield(oo(1),'transcript')
-       for oi=1:length(oo)
-          o=oo(oi);
-          n=length(o.transcript.response);
-          for i=1:n
-             left(i)=o.transcript.flankers{i}(1)==o.transcript.flankerResponse{i}(1);
-             middle(i)=o.transcript.target(i)==o.transcript.response(i);
-             right(i)=o.transcript.flankers{i}(2)==o.transcript.flankerResponse{i}(2);
-          end
-          outer=left | right;
-          fprintf('Run %d, %d trials. Proportion correct, by position: %.2f %.2f %.2f\n',oi,n,sum(left)/n,sum(middle)/n,sum(right)/n);
-          a=[left' middle' right' outer'];
-          [r,p] = corrcoef(a);
-          %       fprintf('Correlation of correct middle vs outer:
-          disp('Correlation matrix, left, middle, right, outer:')
-          disp(r)
-          disp('P value')
-          disp(p)
-          for i=1:n
-             left(i)=ismember(o.transcript.flankers{i}(1),[o.transcript.flankerResponse{i} o.transcript.response(i)]);
-             middle(i)=ismember(o.transcript.target(i),[o.transcript.flankerResponse{i} o.transcript.response(i)]);
-             right(i)=ismember(o.transcript.flankers{i}(2),[o.transcript.flankerResponse{i} o.transcript.response(i)]);
-          end
-          fprintf('Run %d, %d trials. Proportion correct, ignoring position errors: %.2f %.2f %.2f\n',oi,n,sum(left)/n,sum(middle)/n,sum(right)/n);
-       end
-    end
-end % Run the selected conditions
+end
