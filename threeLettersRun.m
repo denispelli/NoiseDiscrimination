@@ -195,6 +195,7 @@ if ~fakeRun && true
          o.alternatives=length(o.alphabet);
          o.questPlusLapseRates=0:0.01:0.05;
          o.questPlusGuessingRates=0:0.03:0.3;
+         o.questPlusSteepnesses=[1:0.5:5 6:10];
          oOut=QUESTPlusFit(o);
          graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[o.experiment '-' o.observer '-QuestPlus' '.eps']);
          saveas(gcf,graphFile,'epsc')
@@ -218,8 +219,6 @@ if ~fakeRun && true
          [r,p] = corrcoef(a);
          disp('Correlation matrix, left, middle, right, outer:')
          disp(r)
-         disp('P value')
-         disp(p)
          for i=1:n
             left(i)=ismember(o.transcript.flankers{i}(1),[o.transcript.flankerResponse{i} o.transcript.response(i)]);
             middle(i)=ismember(o.transcript.target(i),[o.transcript.flankerResponse{i} o.transcript.response(i)]);
