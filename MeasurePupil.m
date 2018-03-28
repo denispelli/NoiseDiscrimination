@@ -189,7 +189,7 @@ try
          [name,terminatorChar]=GetEchoString(window,'Observer name:',instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
          if ismember(terminatorChar,[escapeChar graveAccentChar])
             o.quitRun=true;
-            o.quitSession=OfferToQuitSession(window,o,instructionalMarginPix,screenRect);
+            o.quitSession=OfferEscapeOptions(window,o,instructionalMarginPix);
             if o.quitSession
                ffprintf(ff,'*** User typed ESCAPE twice. Session terminated.\n');
             else
@@ -378,7 +378,7 @@ try
             end
             if ismember(terminatorChar,[escapeChar graveAccentChar])
                o.quitRun=true;
-               o.quitSession=OfferToQuitSession(window,o,instructionalMarginPix,screenRect);
+               o.quitSession=OfferEscapeOptions(window,o,instructionalMarginPix);
                if o.quitSession
                   ffprintf(ff,'*** User typed ESCAPE twice. Session terminated.\n');
                else
