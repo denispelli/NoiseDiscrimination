@@ -4,6 +4,10 @@ function [string,terminatorChar] = GetEchoString(windowPtr, msg, x, y, textColor
 % Get a string typed at the keyboard. Entry is terminated by <return> or
 % <enter>.
 %
+% NOTE: This should be enhanced to assume or pass a flag to align text at
+% baseline. I also specify that when I call DrawText, and it's annoying and
+% inconsistent to lack it here.
+%
 % Typed characters are displayed in the window. The delete or backspace key
 % is handled correctly, ie., it erases the last typed character. Useful for
 % i/o in a Screen window.
