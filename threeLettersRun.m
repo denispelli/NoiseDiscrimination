@@ -62,7 +62,7 @@ if false
    o.trialsPerRun=50*length(o.constantStimuli);
    o.useMethodOfConstantStimuli=true;
 else
-   o.trialsPerRun=40;
+   o.trialsPerRun=200;
    o.constantStimuli=[];
    o.useMethodOfConstantStimuli=false;
 end
@@ -70,16 +70,19 @@ end
 o.eyes='both';
 % for noiseSD=Shuffle([0 0.16])
 for noiseSD=[0]
-   %    o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
-   %    o.minScreenWidthDeg=1+o.targetHeightDeg*2;
-   %    o.maxViewingDistanceCm=round(0.1*cal.screenWidthMm/(2*tand(o.minScreenWidthDeg/2)));
-   %    o.viewingDistanceCm=min([o.maxViewingDistanceCm 40]);
-   o.noiseCheckDeg=o.targetHeightDeg/20;
-   o.noiseSD=noiseSD;
-   if ~exist('oo','var')
-      oo=o;
-   else
-      oo(end+1)=o;
+   for ecc=[-15 15]
+      o.eccentricityXYDeg=[ecc,0];
+      %    o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
+      %    o.minScreenWidthDeg=1+o.targetHeightDeg*2;
+      %    o.maxViewingDistanceCm=round(0.1*cal.screenWidthMm/(2*tand(o.minScreenWidthDeg/2)));
+      %    o.viewingDistanceCm=min([o.maxViewingDistanceCm 40]);
+      o.noiseCheckDeg=o.targetHeightDeg/20;
+      o.noiseSD=noiseSD;
+      if ~exist('oo','var')
+         oo=o;
+      else
+         oo(end+1)=o;
+      end
    end
 end
 
