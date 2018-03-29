@@ -165,7 +165,7 @@ if ~fakeRun && true
    %% SAVE SUMMARY OF RESULTS
    o=oOut;
    o.summaryFilename=[o.dataFilename '.summary' ];
-   writetable(t,[o.summaryFilename '.csv']);
+   writetable(t,fullfile(o.dataFolder,[o.summaryFilename '.csv']));
    save(fullfile(o.dataFolder,[o.summaryFilename '.mat']),'t','rows','vars','oo');
    fprintf('Summary saved as "%s" with extensions ".csv" and ".mat".\n',o.summaryFilename);
 
