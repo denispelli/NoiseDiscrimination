@@ -29,7 +29,7 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
 end
 
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
-o.symmetricLuminanceRange=true;
+o.symmetricLuminanceRange=false;
 o.useDynamicNoiseMovie=true;
 if true
    o.useFlankers=true;
@@ -171,6 +171,9 @@ if ~fakeRun && true
          oo(oi).data=oOut.data;
          oo(oi).psych=oOut.psych;
          oo(oi).transcript=oOut.transcript;
+         oo(oi).dataFolder=oOut.dataFolder;
+         oo(oi).dataFilename=oOut.dataFilename;
+         oo(oi).trialsSkipped=oOut.trialsSkipped;
       end
       if oOut.quitSession
          break
@@ -180,26 +183,27 @@ if ~fakeRun && true
    %% PRINT THE RESULTS
    t=struct2table(oo(1:oi),'AsArray',true);
    rows=t.trials>0;
-   vars={'condition' 'observer' 'trials' 'noiseSD' 'N' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'flankerContrast'};
+   vars={'condition' 'observer' 'trials' 'trialsSkipped' 'noiseSD' 'N' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'flankerContrast'};
    if any(rows)
       t(rows,vars) % Print the oo list of conditions, with measured flanker threshold.
    end
    
    close all % Get rid of any existing figures.
-   for oi=1:length(oo)
+   for oi=1:height(t)
       o=oo(oi);
       t(oi,vars)
-      %% FIT PSYCHOMETRIC FUNCTION
-      if isfield(o,'psych')
+      % FIT PSYCHOMETRIC FUNCTION
+      if isfield(o,'psych') && isfield(o.psych,'t')
          clear QUESTPlusFit % Clear the persistent variables.
          o.alternatives=length(o.alphabet);
          o.questPlusLapseRates=0:0.01:0.05;
          o.questPlusGuessingRates=0:0.03:0.3;
          o.questPlusSteepnesses=[1:0.5:5 6:10];
          oOut=QUESTPlusFit(o);
-         graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[o.experiment '-' o.observer '-QuestPlus' '.eps']);
-         saveas(gcf,graphFile,'epsc')
-         fprintf('Plot saved as "%s".\n',graphFile);
+         o.plotFilename=[o.dataFilename '.plot'];
+         file=fullfile(o.dataFolder,[o.plotFilename '.eps']);
+         saveas(gcf,file,'epsc')
+         fprintf('Plot saved as "%s".\n',file);
       end
       
       %% PRELIMINARY ANALYSIS
