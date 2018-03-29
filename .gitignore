@@ -24,6 +24,7 @@ tmp.mat
 buggy.mat
 
 *.mat
+*.json
 *.*.*.*.*.*.txt
 octave-workspace
 *.Rproj.user
