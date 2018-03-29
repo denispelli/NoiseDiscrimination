@@ -29,7 +29,7 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
 end
 
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
-o.symmetricLuminanceRange=false;
+o.symmetricLuminanceRange=true;
 o.useDynamicNoiseMovie=true;
 if true
    o.useFlankers=true;
