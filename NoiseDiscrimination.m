@@ -405,7 +405,7 @@ function o=NoiseDiscrimination(oIn)
 
 %% INPUT ARGUMENT
 if exist('oIn','var') && isfield(oIn,'quitSession') && oIn.quitSession
-   % If the user wants to quit, then return immediately.
+   % If the user wants to quit the session, then return immediately.
    o=oIn;
    return
 end
@@ -670,9 +670,12 @@ o.skipTrial=0;
 o.trialsSkipped=0;
 % The user can only set fields that are initialized above. This is meant to
 % catch any mistakes where the user tries to set a field that isn't used
-% below. We ignore input fields that are known output fields. Any field
-% that is neither already initialized or a known output field is flagged as
-% a fatal error, so it gets fixed immediately.
+% below. We ignore input fields that are known output fields. Any field in
+% the input argument o that is neither already initialized (immediately
+% above) or a known output field is flagged as a fatal error, so it gets
+% fixed immediately. Typically the unrecognized input field is a typo, so
+% ignoring it would unhelpfully run a condition different from what the
+% experimenter wanted.
 
 %% READ USER-SUPPLIED o PARAMETERS
 if false
@@ -735,11 +738,6 @@ else
    unknownFields=unique(unknownFields);
    if ~isempty(unknownFields)
       error(['Unknown field(s) in input struct:' sprintf(' o.%s',unknownFields{:}) '.']);
-      %       warning off backtrace
-      %       warning(['ERROR: unknown o input fields:' sprintf(' %s',unknownFields{:}) '.']);
-      %       warning on backtrace
-      %       o.quitSession=true;
-      %       return
    end
    o=oo(1);
 end
@@ -972,7 +970,7 @@ try
       reply=AskQuestion(window,o,text);
       o.experimenter=reply;
       if o.quitRun
-         ListenChar(0);
+         ListenChar;
          ShowCursor;
          sca;
          return
@@ -990,7 +988,7 @@ try
       [reply,o]=AskQuestion(window,o,text);
        o.observer=reply;
       if o.quitRun
-         ListenChar(0);
+         ListenChar;
          ShowCursor;
          sca;
          return
@@ -1030,7 +1028,7 @@ end
             else
                ffprintf(ff,'*** User typed ESCAPE. Run terminated.\n');
             end
-            ListenChar(0);
+            ListenChar;
             ShowCursor;
             sca;
             return
@@ -1081,7 +1079,7 @@ end
          else
             ffprintf(ff,'*** User typed ESCAPE. Run terminated.\n');
          end
-         ListenChar(0);
+         ListenChar;
          ShowCursor;
          sca;
          return
@@ -1563,8 +1561,9 @@ end
          end
          o.quitRun=true;
          o.quitSession=true;
-         sca;
          ListenChar;
+         ShowCursor;
+         sca;
          return
       end
    end
@@ -1595,8 +1594,9 @@ end
             end
             o.quitRun=true;
             o.quitSession=true;
-            sca;
             ListenChar;
+            ShowCursor;
+            sca;
             return
          end
       end
@@ -1618,8 +1618,9 @@ end
             end
             o.quitRun=true;
             o.quitSession=true;
-            sca;
             ListenChar;
+            ShowCursor;
+            sca;
             return
          end
       end
@@ -1641,8 +1642,9 @@ end
             end
             o.quitRun=true;
             o.quitSession=true;
-            sca;
             ListenChar;
+            ShowCursor;
+            sca;
             return
          end
          response=upper(response);
@@ -1682,11 +1684,18 @@ end
    fprintf('*Waiting for observer to set viewing distance.\n');
    o=SetUpNearPoint(window,o);
    if o.quitSession
+      ListenChar;
+      ShowCursor;
+      sca;
       return
    end
    
+   fprintf('*Waiting for observer to set up fixation.\n');
    o=SetUpFixation(window,o,ff);
    if o.quitSession
+      ListenChar;
+      ShowCursor;
+      sca;
       return
    end
    
@@ -3825,10 +3834,11 @@ o.runsDesired=1;
 ffprintf(ff,'SUCCESS: o.saveSnapshot is done. Image saved, now returning.\n');
 fclose(dataFid);
 dataFid=-1;
-sca; % screen close all
 ListenChar;
+ShowCursor;
+sca; % screen close all
 AutoBrightness(cal.screen,1); % Restore autobrightness.
-return;
+return
 end % function SaveSnapshot
 %% FUNCTION assessBitDepth
 function assessBitDepth(o)
@@ -4529,6 +4539,12 @@ if ismember(terminatorChar,[escapeChar graveAccentChar])
    else
       ffprintf(ff,'*** User typed ESCAPE. Run terminated.\n');
    end
+   % I'm assuming that we haven't yet begun the run. If that's not
+   % generally true then this code should be in the calling program after
+   % the call to AskQuestion.
+   sca;
+   ListenChar;
+   ShowCursor;
    return
 end
 Screen('FillRect',window,o.gray1);
@@ -4555,35 +4571,35 @@ if ~isempty(fixationLines)
    Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
 end
 Screen('Flip',window,0,1); % Show gray screen at o.LMean with fixation and crop marks. Don't clear buffer.
-
 readyString='';
 if o.markTargetLocation
    readyString=[readyString 'The X indicates target center. '];
 end
-if streq(o.eyes,'both')
-   eyeOrEyes='eyes';
-else
-   eyeOrEyes='eye';
-end
-if o.useFixation
-   if o.fixationIsOffscreen
-      readyString=sprintf('%sPlease fix your %s on your offscreen fixation mark, ',readyString,eyeOrEyes);
+if true % Create readyString.
+   if streq(o.eyes,'both')
+      eyeOrEyes='eyes';
    else
-      readyString=sprintf('%sPlease fix your %s on the center of the cross +, ',readyString,eyeOrEyes);
+      eyeOrEyes='eye';
    end
-   word='and';
-else
-   word='Please';
+   if o.useFixation
+      if o.fixationIsOffscreen
+         readyString=sprintf('%sPlease fix your %s on your offscreen fixation mark, ',readyString,eyeOrEyes);
+      else
+         readyString=sprintf('%sPlease fix your %s on the center of the cross +, ',readyString,eyeOrEyes);
+      end
+      word='and';
+   else
+      word='Please';
+   end
+   switch o.task
+      case '4afc'
+         readyString=[readyString word ' CLICK when ready to proceed.'];
+         fprintf('Please CLICK when ready to proceed.\n');
+      case {'identify' 'identifyAll' 'rate'}
+         readyString=[readyString word ' press the SPACE bar when ready to proceed.'];
+         fprintf('Please press the SPACE bar when ready to proceed.\n');
+   end
 end
-switch o.task
-   case '4afc'
-      readyString=[readyString word ' CLICK when ready to proceed.'];
-      fprintf('Please CLICK when ready to proceed.\n');
-   case {'identify' 'identifyAll' 'rate'}
-      readyString=[readyString word ' press the SPACE bar when ready to proceed.'];
-      fprintf('Please press the SPACE bar when ready to proceed.\n');
-end
-
 msg=[message readyString];
 Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
 black=0;
