@@ -670,6 +670,8 @@ o.convertSignalImageToGray=false;
 o.skipTrial=0;
 o.trialsSkipped=0;
 o.fullContrastResponseAlternatives=true;
+o.transcript.responseTimeSec=[]; % Time of response re o.transcript.stimulusOnsetSec, for each trial.
+o.transcript.stimulusOnsetSec=[]; % Value of GetSecs at stimulus onset, for each trial.
 % The user can only set fields that are initialized above. This is meant to
 % catch any mistakes where the user tries to set a field that isn't used
 % below. We ignore input fields that are known output fields. Any field in
@@ -2991,6 +2993,7 @@ end
             Screen('Flip',window,0,1); % Display movie frame. Don't clear back buffer.
             o.movieFrameFlipSec(iMovieFrame,trial)=GetSecs;
          end % for iMovieFrame=1:o.movieFrames
+         o.transcript.stimulusOnsetSec(trial)=o.movieFrameFlipSec(o.moviePreFrames+1,trial);
          if o.saveSnapshot
             SaveSnapshot(o); % Closes window when done.
             return
@@ -3216,11 +3219,13 @@ end
                   o.quitRun=true;
                   break;
                end
+               o.transcript.responseTimeSec(trial)=GetSecs-o.transcript.stimulusOnsetSec(trial);
                response=clicks;
             case 'identify'
                while 1
                   o.quitRun=false;
                   responseChar=GetKeypress;
+                  o.transcript.responseTimeSec(trial)=GetSecs-o.transcript.stimulusOnsetSec(trial);
                   if ismember(responseChar,[escapeChar,graveAccentChar])
                      [o.quitSession,o.quitRun,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
                      trial=trial-1;
@@ -3267,6 +3272,7 @@ end
                else
                   [responseString,terminatorChar]=GetEchoString(window,message,textRect(1),textRect(4)-o.textSize,black,o.gray,1,o.deviceIndex);
                end
+               o.transcript.responseTimeSec(trial)=GetSecs-o.transcript.stimulusOnsetSec(trial);
                %                Screen('FillRect',window,o.gray1,bottomCaptionRect);
                Screen('TextSize',window,o.textSize);
                if ismember(terminatorChar,[escapeChar,graveAccentChar])
@@ -3312,6 +3318,7 @@ end
                while 1
                   o.quitRun=false;
                   responseChar=GetKeypress;
+                  o.transcript.responseTimeSec(trial)=GetSecs-o.transcript.stimulusOnsetSec(trial);
                   if ismember(responseChar,[escapeChar,graveAccentChar])
                      [o.quitSession,o.quitRun,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
                      trial=trial-1;
