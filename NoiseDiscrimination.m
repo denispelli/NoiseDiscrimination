@@ -3167,7 +3167,11 @@ end
                   end
                   % Note alphabet placement on top or right.
                   if o.signalIsBinary
-                     texture=Screen('MakeTexture',window,(1+o.thresholdPolarity*img)*o.gray1,0,0,1);
+                     if o.thresholdPolarity<0
+                        texture=Screen('MakeTexture',window,~img*o.gray1,0,0,1); % Uses only two clut entries: 0 1. Nicely antialiased.
+                     else
+                        texture=Screen('MakeTexture',window,(0.9*img+1)*o.gray,0,0,1);
+                     end
                   else
                      im=1+o.thresholdPolarity*img;
                      im=0.02+0.94*im; % 0.5% and 3% margins at bottom and top of range.
@@ -4592,6 +4596,7 @@ if IsWindows
 else
    background=o.gray1;
 end
+fprintf('%d: o.deviceIndex %.1f.\n',MFileLineNr,o.deviceIndex);
 [reply,terminatorChar]=GetEchoString(window,text.question,o.instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
 if ismember(terminatorChar,[escapeChar graveAccentChar])
    [o.quitSession,o.quitRun,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
