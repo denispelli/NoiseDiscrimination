@@ -28,7 +28,7 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
    warning('PRETENDING THIS IS A 15" MacBook Pro 2017');
 end
 
-% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 o.symmetricLuminanceRange=true;
 o.useDynamicNoiseMovie=true;
 if true
@@ -43,6 +43,7 @@ o.contrast=-0.16;
 o.flankerContrast=-0.06; % Negative for dark letters.
 o.flankerArrangement='radialAndTangential';
 o.flankerArrangement='radial';
+o.flankerArrangement='tangential';
 o.annularNoiseSD=0;
 o.flankerSpacingDeg=3;
 o.noiseRadiusDeg=inf;
@@ -52,8 +53,8 @@ o.annularNoiseBigRadiusDeg=inf;
 o.annularNoiseSmallRadiusDeg=0;
 o.experiment='flankers';
 o.conditionName='P target id. vs. flanker contrast';
-o.eccentricityXYDeg=[-15 0];
-o.targetHeightDeg=2;
+o.eccentricityXYDeg=[0 15];
+o.targetHeightDeg=1;
 o.targetDurationSec=0.2;
 o.desiredLuminance=[];
 o.desiredLuminanceFactor=1;
@@ -70,8 +71,8 @@ end
 o.eyes='both';
 % for noiseSD=Shuffle([0 0.16])
 for noiseSD=[0]
-   for ecc=[-15 15]
-      o.eccentricityXYDeg=[ecc,0];
+   for ecc=15
+      o.eccentricityXYDeg=[0,ecc];
       %    o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
       %    o.minScreenWidthDeg=1+o.targetHeightDeg*2;
       %    o.maxViewingDistanceCm=round(0.1*cal.screenWidthMm/(2*tand(o.minScreenWidthDeg/2)));
@@ -185,7 +186,7 @@ if ~fakeRun && true
    rows=t.trials>0;
    vars={'condition' 'observer' 'trials' 'trialsSkipped' 'noiseSD' 'N' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'flankerContrast'};
    if any(rows)
-      t(rows,vars) % Print the oo list of conditions, with measured flanker threshold.
+      disp(t(rows,vars)) % Print the oo list of conditions, with measured flanker threshold.
    end
    
    close all % Get rid of any existing figures.
