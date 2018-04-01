@@ -4406,13 +4406,13 @@ else
       ori=atan2d(-o.nearPointXYDeg(2),-o.nearPointXYDeg(1));
       rCm=2*sind(0.5*rDeg)*o.viewingDistanceCm;
       fixationOffsetXYCm=[cosd(ori) sind(ori)]*rCm;
-      if true
+      if false
          % check
          oriCheck=atan2d(fixationOffsetXYCm(2),fixationOffsetXYCm(1));
          rCmCheck=sqrt(sum(fixationOffsetXYCm.^2));
          rDegCheck=2*asind(0.5*rCm/o.viewingDistanceCm);
          xyDegCheck=[cosd(ori) sind(ori)]*rDeg;
-         fprintf('OFFSCREEN GEOMETRY: ori %.1f %.1f; rCm %.1f %.1f; rDeg %.1f %.1f; xyDeg [%.1f %.1f] [%.1f %.1f]\n',...
+         fprintf('CHECK OFFSCREEN GEOMETRY: ori %.1f %.1f; rCm %.1f %.1f; rDeg %.1f %.1f; xyDeg [%.1f %.1f] [%.1f %.1f]\n',...
             ori,oriCheck,rCm,rCmCheck,rDeg,rDegCheck,-o.nearPointXYDeg,xyDegCheck);
       end
       fixationOffsetXYCm(2)=-fixationOffsetXYCm(2); % Make y increase upward.
