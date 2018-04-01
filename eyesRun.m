@@ -17,8 +17,7 @@
 
 %% CREATE LIST OF CONDITIONS TO BE TESTED
 fakeRun=false; % Enable fakeRun to check plotting before we have data.
-clear Screen PsychHID
-clear o oo
+clear Screen PsychHID o oo
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
 
 % We list parameters here in the order that we want them to appear as
@@ -38,6 +37,7 @@ end
 % Two noise levels, noiseSD: 0 0.16
 %
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+o.fullContrastResponseAlternatives=false;
 o.experiment='eyes';
 o.condition=1;
 o.viewingDistanceCm=40;
