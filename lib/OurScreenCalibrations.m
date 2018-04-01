@@ -4766,7 +4766,7 @@ if IsOSX && streq(cal.macModelName,'MacBook10,1') && cal.screen==0 && cal.screen
 	cal.mfilename='CalibrateScreenLuminance';
 	cal.datestr='29-Mar-2018 19:12:06';
 	cal.photometer='Cambridge Research Systems Colorimeter';
-	cal.notes='FAKE: Copied from Veena''s MacBook Pro.';
+	cal.notes='FAKE CALIBRATION: Copied from Veena''s MacBook Pro.';
 	cal.calibratedBy='Veena Arvind';
 	cal.psychImagingOption='EnableNative11BitFramebuffer';
 	cal.displayCoreId='R600';
