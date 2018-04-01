@@ -669,7 +669,7 @@ o.signalImagesFolder='';
 o.convertSignalImageToGray=false;
 o.skipTrial=0;
 o.trialsSkipped=0;
-o.fullContrastResponseAlternatives=true;
+o.fullContrastResponseAlternatives=false; % Desirable but not fully tested. 
 o.transcript.responseTimeSec=[]; % Time of response re o.transcript.stimulusOnsetSec, for each trial.
 o.transcript.stimulusOnsetSec=[]; % Value of GetSecs at stimulus onset, for each trial.
 % The user can only set fields that are initialized above. This is meant to
@@ -1299,7 +1299,8 @@ end
    end
    fixationCrossPix=round(o.fixationCrossDeg*o.pixPerDeg);
    fixationCrossWeightPix=round(o.fixationCrossWeightDeg*o.pixPerDeg);
-   fixationCrossWeightPix=max(1,fixationCrossWeightPix);
+   [~,~,lineWidthMinMaxPix(1),lineWidthMinMaxPix(2)]=Screen('DrawLines', window);
+   fixationCrossWeightPix=round(max([min([fixationCrossWeightPix lineWidthMinMaxPix(2)]) lineWidthMinMaxPix(1)]));
    o.fixationCrossWeightDeg=fixationCrossWeightPix/o.pixPerDeg;
    
    % The entire screen is in screenRect. The stimulus is in stimulusRect,
@@ -1701,7 +1702,7 @@ end
    % 1. assign target ecc. to displayNearPoint
    % 2. pick a good (x,y) on the screen for the displayNearPoint.
    % 3. ask viewer to adjust display to adjust display distance so (x,y) is at desired viewing distance and orthogonal to line of sight from eye to (x,y).
-   % 4. If using off-screen fixation, put it at same distance from eye, and compute its position, left or right of (x,y) to put (x,y) at desired ecc.
+   % 4. If using off-screen fixation, put it at same distance (as near point) from eye, and compute its position, left or right of (x,y) to put (x,y) at desired ecc.
    
    % PLACE TARGET AT NEAR POINT
    o.nearPointXYDeg=o.eccentricityXYDeg;
@@ -4355,8 +4356,10 @@ DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength
 x=o.nearPointXYPix(1);
 y=o.nearPointXYPix(2);
 a=0.1*RectHeight(o.stimulusRect);
-Screen('DrawLine',window,black,x-a,y,x+a,y,a/20);
-Screen('DrawLine',window,black,x,y-a,x,y+a,a/20);
+[~,~,lineWidthMinMaxPix(1),lineWidthMinMaxPix(2)]=Screen('DrawLines', window);
+widthPix=max([min([a/20 lineWidthMinMaxPix(2)]) lineWidthMinMaxPix(1)]);
+Screen('DrawLine',window,black,x-a,y,x+a,y,widthPix);
+Screen('DrawLine',window,black,x,y-a,x,y+a,widthPix);
 Screen('Flip',window); % Display request.
 if o.speakInstructions
    string=strrep(string,'.0','');
@@ -4414,7 +4417,7 @@ else
       end
       fixationOffsetXYCm(2)=-fixationOffsetXYCm(2); % Make y increase upward.
       
-      string='Please set up a fixation mark';
+      string='OFF-SCREEN FIXATION! As indicated by the green arrows, please set up a fixation mark';
       if fixationOffsetXYCm(1)~=0
          if fixationOffsetXYCm(1) < 0
             string=sprintf('%s %.1f cm to the left of',string,-fixationOffsetXYCm(1));
@@ -4445,8 +4448,33 @@ else
       x=o.nearPointXYPix(1);
       y=o.nearPointXYPix(2);
       a=0.1*RectHeight(o.stimulusRect);
-      Screen('DrawLine',window,black,x-a,y,x+a,y,a/20);
-      Screen('DrawLine',window,black,x,y-a,x,y+a,a/20);
+      [~,~,lineWidthMinMaxPix(1),lineWidthMinMaxPix(2)]=Screen('DrawLines',window);
+      widthPix=max([min([a/20 lineWidthMinMaxPix(2)]) lineWidthMinMaxPix(1)]);
+      Screen('DrawLine',window,black,x-a,y,x+a,y,widthPix);
+      Screen('DrawLine',window,black,x,y-a,x,y+a,widthPix);
+      
+      % Draw two green arrows to desired location of offscreen fixation mark.
+      if o.fixationXYPix(2)>o.stimulusRect(4) || o.fixationXYPix(2)<o.stimulusRect(2) % Fixation below or above rect.
+          delta=[1,0]*RectWidth(o.stimulusRect)/3;
+      else
+          delta=[0,1]*RectHeight(o.stimulusRect)/3;
+      end
+      for s=[-1 1]
+          [x,y]=RectCenterd(o.stimulusRect);
+          baseXY=[x y]+s*delta;
+          tipXY=o.fixationXYPix;
+          [baseXY,tipXY]=ClipLineSegment2(baseXY,tipXY,o.stimulusRect);
+          Screen('DrawLine',window,[0 1 0],baseXY(1),baseXY(2),tipXY(1),tipXY(2),widthPix);
+          % arrow head
+          xy=baseXY-tipXY;
+          angle=atan2d(xy(2),xy(1));
+          length=0.5*o.fixationCrossDeg*o.pixPerDeg;
+          for rotation=[-30 30]
+              xy=tipXY+length*[cosd(angle+rotation) sind(angle+rotation)];
+              Screen('DrawLine',window,[0 1 0],xy(1),xy(2),tipXY(1),tipXY(2),widthPix);
+          end
+      end
+      
       Screen('Flip',window); % Display question.
       if o.speakInstructions
          Speak(string);
