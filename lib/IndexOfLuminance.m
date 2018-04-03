@@ -8,7 +8,8 @@ image=cal.nFirst+(cal.nLast-cal.nFirst)*(imageLuminance-cal.LFirst)/(cal.LLast-c
 image=round(image);
 ii=round(image(:))<cal.nFirst | round(image(:))>cal.nLast;
 if any(ii)
-    msg0=sprintf('Contrast too high? Luminances (mean %.1f) ranging %.1f to %.1f exceed linearized range %.1f to %.1f cd/m^2. ',mean(imageLuminance(:)),min(imageLuminance(:)),max(imageLuminance(:)),cal.LFirst,cal.LLast);
+    msg0=sprintf('Contrast too high? Luminances %dx%dx%d (mean %.1f) ranging %.1f to %.1f exceed linearized range %.1f to %.1f cd/m^2. ',...
+       size(imageLuminance,1),size(imageLuminance,2),size(imageLuminance,3),mean(imageLuminance(:)),min(imageLuminance(:)),max(imageLuminance(:)),cal.LFirst,cal.LLast);
     msg1=sprintf('%.0f out-of-range pixels, with values [',sum(ii));
     msg2=sprintf(' %.0f',unique(image(ii)));
     msg3=sprintf('], were bounded to the range %d to %d.',cal.nFirst,cal.nLast);
