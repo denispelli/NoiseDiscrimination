@@ -7,10 +7,10 @@
 
 mergeRuns=0;
 experiment='steepness';
-if ~exist('fakeRun')
-   fakeRun=0;
+if ~exist('skipDataCollection')
+   skipDataCollection=0;
 end
-if ~fakeRun
+if ~skipDataCollection
    % Read in all MAT data files for <experiment>.
    dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
    cd(dataFolder);
@@ -96,7 +96,7 @@ if ~fakeRun
    [~,ii]=sort(cc);
    data=data(ii);
    fprintf('Analyzing %d combinations of: experiment,observer,conditionName,noiseSD.\n',length(data));
-end % ~fakeRun
+end % ~skipDataCollection
 assert(~isempty(data))
 
 for i=1:length(data)

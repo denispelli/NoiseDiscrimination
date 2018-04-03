@@ -1,9 +1,9 @@
 %% Analyze the data collected by checkSizeRun.
 experiment='checkSize2';
-if ~exist('fakeRun')
-   fakeRun=0;
+if ~exist('skipDataCollection')
+   skipDataCollection=0;
 end
-if ~fakeRun
+if ~skipDataCollection
    dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
    cd(dataFolder);
    matFiles=dir(fullfile(dataFolder,[experiment 'Run*.mat']));

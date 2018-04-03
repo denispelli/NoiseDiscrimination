@@ -15,7 +15,7 @@
 %% GET READY
 clear o oo
 o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
-fakeRun=false; % Enable fakeRun to check plotting before we have data.
+skipDataCollection=false; % Enable skipDataCollection to check plotting before we have data.
 o.seed=[]; % Fresh.
 % o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
 o.questPlusEnable=false;
@@ -105,7 +105,7 @@ vars={'seed' 'condition' 'conditionName' 'noiseSD' 'flankerSpacingDeg' 'eccentri
 t(:,vars) % Print the oo list of conditions.
 fprintf('To recreate this table, set your o.seed to the value of "seed" listed in the table.\n');
 %% RUN THE CONDITIONS
-if ~fakeRun && true
+if ~skipDataCollection && true
    % Typically, you'll select just a few of the conditions stored in oo
    % that you want to run now. Select them from the printout of "t" in your
    % Command Window.

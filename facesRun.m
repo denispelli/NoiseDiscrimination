@@ -4,7 +4,7 @@
 
 %% GET READY
 clear o oo
-fakeRun=false; % Enable fakeRun to check plotting before we have data.
+skipDataCollection=false; % Enable skipDataCollection to check plotting before we have data.
 o.questPlusEnable=false;
 if verLessThan('matlab','R2017b')
    error('This MATLAB is too old. We need MATLAB 2017b or better to use the function "rgb2lin".');
@@ -33,7 +33,7 @@ if false
    o.font='Sloan';
    o.alphabet='DHKNORSVZ';
 else
-   % Target faces
+   % Target face
    o.signalImagesFolder='faces';
    o.signalImagesAreGammaCorrected=true; 
    o.targetKind='image';
@@ -92,7 +92,7 @@ vars={'seed' 'condition' 'task' 'targetDurationSec' 'targetHeightDeg' };
 disp(t(:,vars)) % Print the oo list of conditions.
 fprintf('To recreate this table, set your o.seed to the value of "seed" listed in the table.\n');
 %% RUN THE CONDITIONS
-if ~fakeRun && true
+if ~skipDataCollection && true
    % Typically, you'll select just a few of the conditions stored in oo
    % that you want to run now. Select them from the printout of "t" in your
    % Command Window.

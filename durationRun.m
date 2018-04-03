@@ -19,7 +19,7 @@ if verLessThan('matlab','R2013b')
    error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
 end
 clear o oo
-fakeRun=false; % Used to check plotting before we have data.
+skipDataCollection=false; % Used to check plotting before we have data.
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
 
 % We list parameters here in the order that we want them to appear
@@ -100,7 +100,7 @@ end
 t=struct2table(oo);
 t % Print the oo list of conditions.
 
-if fakeRun
+if skipDataCollection
    % NOT IMPLEMENTED.
    % PRODUCE FAKE RUN TO CHECK THE ANALYSIS & PLOTTING.
    data=table2struct(t);
@@ -116,7 +116,7 @@ if fakeRun
    end
    steepnessAnalyze(data);
 end
-if ~fakeRun && 0
+if ~skipDataCollection && 0
    %% RUN THE CONDITIONS
    % Typically, you'll select just a few of the conditions stored in oo
    % that you want to run now. Select them from the printout of "t" above.

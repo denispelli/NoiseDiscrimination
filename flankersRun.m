@@ -18,7 +18,7 @@ if verLessThan('matlab','R2013b')
    error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
 end
 clear o oo
-fakeRun=false; % Enable fakeRun to check plotting before we have data.
+skipDataCollection=false; % Enable skipDataCollection to check plotting before we have data.
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
 cal=OurScreenCalibrations(0);
 if false && ~streq(cal.macModelName,'MacBookPro14,3')
@@ -87,7 +87,7 @@ vars={'condition' 'experiment' 'noiseSD' 'flankerSpacingDeg' 'eccentricityXYDeg'
 t(:,vars) % Print the oo list of conditions.
 
 %% RUN THE CONDITIONS
-if ~fakeRun && true
+if ~skipDataCollection && true
    % Typically, you'll select just a few of the conditions stored in oo
    % that you want to run now. Select them from the printout of "t" in your
    % Command Window.

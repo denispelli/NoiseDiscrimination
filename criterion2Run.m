@@ -3,7 +3,7 @@ if verLessThan('matlab','R2013b')
    error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
 end
 clear o oo
-fakeRun=0; % Used to check plotting before we have data.
+skipDataCollection=0; % Used to check plotting before we have data.
 
 % We list parameters here in the order that we want them to appear
 % as columns in the list.
@@ -83,7 +83,7 @@ end
 t=struct2table(oo);
 t % Print the oo list of conditions.
 
-if fakeRun
+if skipDataCollection
    data=table2struct(t);
    for i=1:length(data)
       data(i).E=10*data(i).noiseSD+1e-5*(1+floor((i-1)/8));
