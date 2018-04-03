@@ -71,7 +71,7 @@ function o=NoiseDiscrimination(oIn)
 % Pasting a grayscale image (128) on a background set to 1 resulted in
 % intermediate pixel values which were all darker than the background gray.
 % I fixed this by making the background be 128. Thus the background is
-% always gray o.LMean, but it's produced by a color index of 128 inside
+% always gray o.LBackground, but it's produced by a color index of 128 inside
 % stimulusRect, and a color index of 1 outside it. This is drawn by calling
 % FillRect with 1 for the whole screen, and again with 128 for the
 % stimulusRect.
@@ -107,16 +107,12 @@ function o=NoiseDiscrimination(oIn)
 % 3. Ask viewer to adjust display so desired near point is at desired viewing distance and orthogonal to line of sight from eye.
 % 4. If using off-screen fixation, put it at same distance from eye, and compute its position relative to near point.
 
-%% CURRENT ISSUES
-% This happened more than once, but very rarely. I can't reliably reproduce it.
-% Warning: 245 out-of-range pixels, with values [ -9], were bounded to the range 2 to 2046.
-% > In IndexOfLuminance (line 14)
-%   In NoiseDiscrimination (line 2027)
-%
-% The estimated gray index is 0.5027 (161.8 cd/m^2), not 0.5002 (161.0 cd/m^2).
-% Warning: The gray index changed!
-% > In NoiseDiscrimination (line 2316)
-%   In khandakerThresholds (line 25)
+%% CURRENT ISSUES/BUGS
+% 1. Would like to add symbolic photos to the question screens, so you get the
+% idea even without reading.
+% 2. Fixation is visible only during the stimulus. We need it before the
+% response.
+ 
 
 %% EXTRA DOCUMENTATION
 
@@ -580,7 +576,7 @@ o.noiseEnvelopeSpaceConstantDeg=inf;
 o.noiseRaisedCosineEdgeThicknessDeg=0; % midpoint of raised cosine is at noiseRadiusDeg.
 o.noiseSpectrum='white'; % 'pink' or 'white'
 o.showBlackAnnulus=false;
-o.blackAnnulusContrast=-1; % (LBlack-o.LMean)/o.LMean. -1 for black line. >-1 for gray line.
+o.blackAnnulusContrast=-1; % (LBlack-o.LBackground)/o.LBackground. -1 for black line. >-1 for gray line.
 o.blackAnnulusSmallRadiusDeg=2;
 o.blackAnnulusThicknessDeg=0.1;
 o.annularNoiseBigRadiusDeg=inf; % Noise extent in deg, or inf.
@@ -652,7 +648,7 @@ o.desiredLuminance=[];
 o.desiredLuminanceFactor=1;
 o.luminanceFactor=1; % For max brightness, set this to to 2, and o.symmetricLuminanceRange=false;
 o.symmetricLuminanceRange=true; % For max brightness set this false and o.LuminanceFactor=2.
-o.luminance=[];
+o.luminanceAtEye=[];
 o.retinalIlluminanceTd=[];
 o.pupilDiameterMm=[];
 o.annularNoiseEnvelopeRadiusDeg=0;
@@ -669,9 +665,44 @@ o.signalImagesFolder='';
 o.convertSignalImageToGray=false;
 o.skipTrial=0;
 o.trialsSkipped=0;
-o.fullContrastResponseAlternatives=false; % Desirable but not fully tested. 
+o.responseScreenAbsoluteContrast=1; % Set to [] to maximize possible contrast using CLUT for o.contrast.
 o.transcript.responseTimeSec=[]; % Time of response re o.transcript.stimulusOnsetSec, for each trial.
 o.transcript.stimulusOnsetSec=[]; % Value of GetSecs at stimulus onset, for each trial.
+o.printImageStatistics=false;
+
+o.deviceIndex=-1; % -1 for all keyboards. 
+o.deviceIndex=-3; % -3 for all keyboard/keypad devices. 
+o.deviceIndex=3; % for my built-in keyboard, according to PsychHIDTest
+o.deviceIndex=6; % for my bluetooth wireless keyboard, according to PsychHIDTest
+o.deviceIndex=[]; % Default. This runs MUCH more reliably. Not sure why.
+% April, 2018. KbCheck([]) succeeds, but I'm experiencing a fatal error
+% when I call KbCheck(deviceIndex) with deviceIndex -1 or -3 or the
+% positive device index (2) of my built-in keyboard. The suprising error
+% message issued by PsychHID.mex is:
+%
+% Error in function KbCheck: 	Usage error
+% Specified device number is not a suitable keyboard type input device.
+%
+% With the not-empty deviceIndex, KbCheck(deviceIndex) fails. In that case
+% KbCheck calls PsychHID('KbCheck', i, ptb_kbcheck_enabledKeys); where i is
+% a list of one or more device indices of keyboards or keypads. KbCheck([])
+% succeeds. It calls PsychHID('KbCheck', [], ptb_kbcheck_enabledKeys);
+%
+% My temporary work-around is to call KbCheck([]), but this won't support
+% my wireless keyboards.
+
+% "In my experience the special negative device indexes have been flaky on
+% OS X for years. For example, when using an external Bluetooth keyboard, a
+% device index of -1 does not detect the external keyboard. Rather than
+% relying on the merged modes, I always interrogate the full device
+% structure at runtime to determine exactly which keyboard to use, based
+% upon the usageName, transport, and product info for each available
+% device." microfish@fishmonkey.com.au to [PSYCHTOOLBOX] Mar 29, 2018
+% d=PsychHID('Devices');
+% iKeyboards=ismember([d(:).usageValue],[6]); % Keyboard
+% dk=d(iKeyboards);
+% [dk.index] % Vector of indices of the keyboards.
+
 % The user can only set fields that are initialized above. This is meant to
 % catch any mistakes where the user tries to set a field that isn't used
 % below. We ignore input fields that are known output fields. Any field in
@@ -716,8 +747,8 @@ else
       'drawTextPlugin' 'fixationXYPix' 'maxEntry' 'nearPointXYDeg'...
       'nearPointXYPix' 'pixPerCm' 'psychtoolboxKernelDriverLoaded'...
       'targetXYPix' 'textLineLength' 'textSize' 'unknownFields'...
-      'deviceIndex' 'speakEachLetter' 'targetCheckDeg' 'targetCheckPix'...
-      'textFont'  'LMean' 'targetCyclesPerDeg' 'contrast' ...
+      'speakEachLetter' 'targetCheckDeg' 'targetCheckPix'...
+      'textFont'  'LBackground' 'targetCyclesPerDeg' 'contrast' ...
       'thresholdParameterValueList' 'noInputArgument' ...
       'firstGrayClutEntry' 'lastGrayClutEntry' 'gray' 'r' 'transcript'...
       'signalIsBinary'};
@@ -961,7 +992,6 @@ try
    black=0; % The CLUT color code for black.
    white=WhiteIndex(window); % Retrieves the CLUT color code for white.
    o.gray1=white; % Temporary, until we LinearizeClut.
-   o.deviceIndex=-3; % all keyboard and keypad devices
    o.speakEachLetter=false;
    o.useSpeech=false;
    if isempty(o.experimenter)
@@ -1141,8 +1171,8 @@ end
       o.luminanceFactor=o.desiredRetinalIlluminanceTd/td;
    end
    o.luminanceFactor=min([max(cal.old.L)/LStandard o.luminanceFactor]); % upper bound
-   o.luminance=o.luminanceFactor*o.filterTransmission*LStandard;
-   o.retinalIlluminanceTd=o.luminance*pi*o.pupilDiameterMm^2/4;
+   o.luminanceAtEye=o.luminanceFactor*o.filterTransmission*LStandard;
+   o.retinalIlluminanceTd=o.luminanceAtEye*pi*o.pupilDiameterMm^2/4;
    % Need to update all reports of luminance to include effect of filter.
    
    %% OPEN OUTPUT FILES
@@ -1211,8 +1241,8 @@ end
    end
    o.targetCheckDeg=o.targetCheckPix/o.pixPerDeg;
    BackupCluts(o.screen);
-   o.LMean=o.luminanceFactor*(max(cal.old.L)+min(cal.old.L))/2;
-   o.maxLRange=2*min(max(cal.old.L)-o.LMean,o.LMean-min(cal.old.L));
+   o.LBackground=o.luminanceFactor*(max(cal.old.L)+min(cal.old.L))/2;
+   o.maxLRange=2*min(max(cal.old.L)-o.LBackground,o.LBackground-min(cal.old.L));
    % We use nearly the whole clut (entries 2 to 254) for stimulus generation.
    % We reserve first and last (0 and o.maxEntry), for black and white.
    o.firstGrayClutEntry=2;
@@ -1473,8 +1503,8 @@ end
       if exist('cal','var')
          LMin=min(cal.old.L);
          LMax=max(cal.old.L);
-         o.LMean=o.luminanceFactor*mean([LMin LMax]); % Desired background luminance.
-         %          o.LMean=o.LMean*(1+(rand-0.5)/32); % Tiny jitter, ±1.5%
+         o.LBackground=o.luminanceFactor*mean([LMin LMax]); % Desired background luminance.
+         %          o.LBackground=o.LBackground*(1+(rand-0.5)/32); % Tiny jitter, ±1.5%
          % First entry is black. 
          cal.gamma(1,1:3)=0; % Black.
          % Second entry (CLUT entry 1) is o.gray1. We have two clut entries
@@ -1485,18 +1515,19 @@ end
          o.gray1=1/o.maxEntry;
          assert(o.gray1*o.maxEntry <= o.firstGrayClutEntry-1);
          % o.gray1 is between black and the darkest stimulus luminance.
-         cal.LFirst=o.LMean;
-         cal.LLast=o.LMean;
+         cal.LFirst=o.LBackground;
+         cal.LLast=o.LBackground;
          cal.nFirst=o.gray1*o.maxEntry;
          cal.nLast=o.gray1*o.maxEntry;
          cal=LinearizeClut(cal);
-         L1=LuminanceOfIndex(cal,o.gray1);
-         fprintf('o.gray1*o.maxEntry %.1f yields %.1f vs. LMean %.1f cd/m^2.\n',...
-            o.gray1*o.maxEntry,o.LMean,L1);
-         
+         L1=LuminanceOfIndex(cal,o.gray1*o.maxEntry);
+         ffprintf(ff,'%d: "gray1" %.3f *o.maxEntry= %.0f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
+             MFileLineNr,o.gray1,o.gray1*o.maxEntry,o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
+         fprintf('o.gray1*o.maxEntry %.1f yields %.1f vs. LBackground %.1f cd/m^2.\n',...
+            o.gray1*o.maxEntry,o.LBackground,L1);
          % CLUT entries for stimulus.
          cal.LFirst=LMin;
-         cal.LLast=o.LMean+(o.LMean-LMin); % Symmetric about o.LMean.
+         cal.LLast=o.LBackground+(o.LBackground-LMin); % Symmetric about o.LBackground.
          cal.nFirst=o.firstGrayClutEntry;
          cal.nLast=o.lastGrayClutEntry;
          cal=LinearizeClut(cal);
@@ -1510,12 +1541,12 @@ end
             else
                oldGray=[];
             end
-            o.gray=IndexOfLuminance(cal,o.LMean)/o.maxEntry;
+            o.gray=IndexOfLuminance(cal,o.LBackground)/o.maxEntry;
             if o.printGrayLuminance
                disp('line 1509');
                fprintf('o.gray old vs new %.2f %.2f\n',oldGray,o.gray);
-               fprintf('o.contrast %.2f, o.LMean %.0f cd/m^2, cal.old.L(end) %.0f cd/m^2\n',o.contrast,o.LMean,cal.old.L(end));
-               fprintf('o.LMean %.0f cd/m^2, cal.old.L(end) %.0f cd/m^2\n',o.LMean,cal.old.L(end));
+               fprintf('o.contrast %.2f, o.LBackground %.0f cd/m^2, cal.old.L(end) %.0f cd/m^2\n',o.contrast,o.LBackground,cal.old.L(end));
+               fprintf('o.LBackground %.0f cd/m^2, cal.old.L(end) %.0f cd/m^2\n',o.LBackground,cal.old.L(end));
                fprintf('%d: o.maxEntry*[o.gray1 o.gray]=[%.1f %.1f]\n',...
                   MFileLineNr,o.maxEntry*[o.gray1 o.gray]);
                disp('cal.gamma(1+[o.gray1 o.gray]*o.maxEntry,:)');
@@ -1525,7 +1556,7 @@ end
                disp(interp1(cal.old.G,cal.old.L,g,'pchip'));
             end
          end
-         %          ffprintf(ff,'Non-stimulus background is %.1f cd/m^2 at CLUT entry %d (and %d).\n',o.LMean,o.gray1*o.maxEntry,o.gray*o.maxEntry);
+         %          ffprintf(ff,'Non-stimulus background is %.1f cd/m^2 at CLUT entry %d (and %d).\n',o.LBackground,o.gray1*o.maxEntry,o.gray*o.maxEntry);
          %          ffprintf(ff,'%.1f cd/m^2 at %d\n',LuminanceOfIndex(cal,o.gray*o.maxEntry),o.gray1*o.maxEntry);
          %          ffprintf(ff,'%.3f dac at %d; %.3f dac at %d\n',cal.gamma(o.gray1*o.maxEntry+1,2),o.gray1*o.maxEntry,cal.gamma(o.gray*o.maxEntry+1,2),o.gray*o.maxEntry);
          Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);        
@@ -1548,7 +1579,7 @@ end
       white=1; % CLUT color code for white.
       Screen('FillRect',window,o.gray1);
       Screen('FillRect',window,o.gray,o.stimulusRect);
-      Screen('Flip',window); % Screen is now all gray, at o.LMean.
+      Screen('Flip',window); % Screen is now all gray, at o.LBackground.
    else
       window=-1;
    end
@@ -2266,7 +2297,7 @@ end
       window=-1;
       LMin=0;
       LMax=200;
-      o.LMean=100;
+      o.LBackground=100;
    end
    % We are now done with the signal font (e.g. Sloan or Bookman), since we've saved our signals as images.
    if window ~= -1
@@ -2413,9 +2444,11 @@ end
       
       %% SET TARGET LOG CONTRAST: tTest
       if o.questPlusEnable
-         tTest=qpQuery(questPlusData)/20; % Convert dB to log contrast.
+          % QuestPlus
+          tTest=qpQuery(questPlusData)/20; % Convert dB to log contrast.
       else
-         tTest=QuestQuantile(q);
+          % Quest
+          tTest=QuestQuantile(q);
       end
       if o.useMethodOfConstantStimuli
          % thresholdParameterValueList is used solely within this if block.
@@ -2468,7 +2501,7 @@ end
                o.flankerContrast=-o.snapshotContrast;
             end
       end
-      a=(1-LMin/o.LMean)*o.noiseListSd/o.noiseListBound;
+      a=(1-LMin/o.LBackground)*o.noiseListSd/o.noiseListBound;
       if o.noiseSD > a
          ffprintf(ff,'WARNING: Reducing o.noiseSD of %s noise to %.2f to avoid overflow.\n',o.noiseType,a);
          o.noiseSD=a;
@@ -2480,7 +2513,7 @@ end
       %% RESTRICT tTest TO PHYSICALLY POSSIBLE RANGE
       switch o.targetModulates
          case 'noise'
-            a=(1-LMin/o.LMean)/(o.noiseListBound*o.noiseSD/o.noiseListSd);
+            a=(1-LMin/o.LBackground)/(o.noiseListBound*o.noiseSD/o.noiseListSd);
             if o.r > a
                o.r=a;
                if ~exist('rWarningCount','var') || rWarningCount == 0
@@ -2491,7 +2524,7 @@ end
             tTest=log10(o.r-1);
          case 'luminance'
             % min negative contrast
-            a=(min(cal.old.L)-o.LMean)/o.LMean;
+            a=(min(cal.old.L)-o.LBackground)/o.LBackground;
             a=a+o.noiseListBound*o.noiseSD/o.noiseListSd;
             assert(a<0,'Need range for signal.');
             if o.contrast < a
@@ -2813,10 +2846,10 @@ end
       end % if ~ismember(o.observer,algorithmicObservers)
       if o.measureContrast
          location=movieImage{1};
-         fprintf('%d: luminance/o.LMean',MFileLineNr);
+         fprintf('%d: luminance/o.LBackground',MFileLineNr);
          fprintf(' %.4f',unique(location(1).image(:)));
          fprintf('\n');
-         img=IndexOfLuminance(cal,location(1).image*o.LMean)/o.maxEntry;
+         img=IndexOfLuminance(cal,location(1).image*o.LBackground)/o.maxEntry;
          index=unique(img(:));
          LL=LuminanceOfIndex(cal,index*o.maxEntry);
          fprintf('%d: index',MFileLineNr);
@@ -2861,7 +2894,7 @@ end
                   % PREPARE IMAGE DATA
                   img=location(1).image;
                   % ffprintf(ff,'signal rect height %.1f, image height %.0f, dst rect %d %d %d %d\n',RectHeight(rect),size(img,1),rect);
-                  img=IndexOfLuminance(cal,img*o.LMean)/o.maxEntry;
+                  img=IndexOfLuminance(cal,img*o.LBackground)/o.maxEntry;
                   img=Expand(img,o.targetCheckPix);
                   if o.assessLinearity
                      AssessLinearity(o);
@@ -2888,7 +2921,7 @@ end
                   eraseRect=location(1).rect;
                   for i=1:locations
                      img=location(i).image;
-                     img=IndexOfLuminance(cal,img*o.LMean);
+                     img=IndexOfLuminance(cal,img*o.LBackground);
                      img=Expand(img,o.targetCheckPix);
                      texture=Screen('MakeTexture',window,img/o.maxEntry,0,0,1); % FIXME: use one texture instead of 4
                      
@@ -2974,10 +3007,10 @@ end
                if o.blackAnnulusContrast == -1
                   color=0;
                else
-                  luminance=(1+o.blackAnnulusContrast)*o.LMean;
+                  luminance=(1+o.blackAnnulusContrast)*o.LBackground;
                   luminance=max(min(luminance,cal.LLast),cal.LFirst);
                   color=IndexOfLuminance(cal,luminance);
-                  o.blackAnnulusContrast=LuminanceOfIndex(cal,color)/o.LMean-1;
+                  o.blackAnnulusContrast=LuminanceOfIndex(cal,color)/o.LBackground-1;
                end
                Screen('FrameRect',window,color,annulusRect,thickness);
             end % if o.showBlackAnnulus
@@ -3049,15 +3082,14 @@ end
          for iMovieFrame=1:o.movieFrames
             Screen('Close',movieTexture(iMovieFrame));
          end
-         eraseRect=ClipRect(eraseRect,o.stimulusRect);
          eraseRect=dstRect; % Erase only the movie, sparing the rest of the screen
          % Print instruction in upper left corner.
-         if o.fullContrastResponseAlternatives
-            saveContrast=o.contrast;
-            o.contrast=1;
-            o=ComputeCLUT(o);
-            o.contrast=saveContrast;
-            Screen('FillRect',window,o.gray,o.stimulusRect);
+         if ~isempty(o.responseScreenAbsoluteContrast)
+             saveContrast=o.contrast;
+             o.contrast=o.responseScreenAbsoluteContrast;
+             o=ComputeCLUT(o);
+             o.contrast=saveContrast;
+             Screen('FillRect',window,o.gray,o.stimulusRect);
          end
          Screen('FillRect',window,o.gray1,topCaptionRect);
          message=sprintf('Trial %d of %d. Run %d of %d.',trial,o.trialsPerRun,o.runNumber,o.runsDesired);
@@ -3076,16 +3108,16 @@ end
             case 'rate'
                message=sprintf('Please rate the beauty: 0 to 9, or ESCAPE to cancel a trial or quit the run.');
          end
-            textRect=[0 0 o.textSize 1.2*o.textSize];
-            textRect=AlignRect(textRect,bottomCaptionRect,'left','bottom');
-            textRect=OffsetRect(textRect,o.textSize/2,-o.textSize/2); % inset from screen edges
-            textRect=round(textRect);
-            bounds=Screen('TextBounds',window,message);
-            ratio=RectWidth(bounds)/(0.93*RectWidth(screenRect));
-            Screen('TextSize',window,floor(o.textSize/max([ratio factor])));
-            Screen('FillRect',window,o.gray1,bottomCaptionRect);
-            Screen('DrawText',window,message,textRect(1),textRect(4),black,o.gray1,1);
-            Screen('TextSize',window,o.textSize);
+         textRect=[0 0 o.textSize 1.2*o.textSize];
+         textRect=AlignRect(textRect,bottomCaptionRect,'left','bottom');
+         textRect=OffsetRect(textRect,o.textSize/2,-o.textSize/2); % inset from screen edges
+         textRect=round(textRect);
+         bounds=Screen('TextBounds',window,message);
+         ratio=RectWidth(bounds)/(0.93*RectWidth(screenRect));
+         Screen('TextSize',window,floor(o.textSize/max([ratio factor])));
+         Screen('FillRect',window,o.gray1,bottomCaptionRect);
+         Screen('DrawText',window,message,textRect(1),textRect(4),black,o.gray1,1);
+         Screen('TextSize',window,o.textSize);
          
          %% DISPLAY RESPONSE ALTERNATIVES
          switch o.task
@@ -3166,18 +3198,54 @@ end
                         % below.
                      end
                   end
+                  if o.responseScreenAbsoluteContrast<0
+                     error('o.responseScreenAbsoluteContrast must be positive. Sign will track o.contrast.',o.responseScreenAbsoluteContrast);
+                  end
                   % Note alphabet placement on top or right.
                   if o.signalIsBinary
                      if o.thresholdPolarity<0
-                        texture=Screen('MakeTexture',window,~img*o.gray1,0,0,1); % Uses only two clut entries: 0 1. Nicely antialiased.
+                        if ~isempty(o.responseScreenAbsoluteContrast) && o.responseScreenAbsoluteContrast~=1
+                           ffprintf(ff,'Ignoring o.responseScreenAbsoluteContrast (%.2f). Response screen for negative contrast binary signals is always -100% contrast.',o.responseScreenAbsoluteContrast);
+                           error('Ignoring o.responseScreenAbsoluteContrast (%.2f). Please use default [].',o.responseScreenAbsoluteContrast);
+                        end
+                        texture=Screen('MakeTexture',window,~img*o.gray1,0,0,1); % Uses only two clut entries (0 1), nicely antialiased.
                      else
-                        texture=Screen('MakeTexture',window,(0.9*img+1)*o.gray,0,0,1);
+                        if isempty(o.responseScreenAbsoluteContrast)
+                           c=(cal.LLast-o.LBackground)/o.LBackground; % Max possible contrast.
+                           c=min(c,1);
+                        else
+                           c=o.responseScreenAbsoluteContrast;
+                        end
+                        texture=Screen('MakeTexture',window,(c*img+1)*o.gray,0,0,1);
                      end
                   else
-                     im=1+o.thresholdPolarity*img;
-                     im=0.02+0.94*im; % 0.5% and 3% margins at bottom and top of range.
-                     im=IndexOfLuminance(cal,im*o.LMean)/o.maxEntry;
-                     texture=Screen('MakeTexture',window,im,0,0,1);
+                      if o.printImageStatistics
+                          fprintf('%d: "signal alternatives(%d)" img: size %dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
+                              MFileLineNr,i,size(img),mean(img(:)),std(img(:)),min(img(:)),max(img(:)),o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
+                      end
+                      if isempty(o.responseScreenAbsoluteContrast)
+                         % Maximize absolute contrast.
+                         if o.thresholdPolarity>0
+                            c=(cal.LLast-o.LBackground)/o.LBackground; % Max possible contrast.
+                            c=min(c,1);
+                         else
+                            c=(cal.LFirst-o.LBackground)/o.LBackground; % Most negative possible contrast.
+                            c=max(c,-1);
+                         end
+                      else
+                         c=o.responseScreenAbsoluteContrast;
+                      end
+                      im=1+c*img;
+                      if o.printImageStatistics
+                         fprintf('%d: "1+signal  " im: size %dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f\n',...
+                            MFileLineNr,size(im),mean(im(:)),std(im(:)),min(im(:)),max(im(:)));
+                      end
+                      im=IndexOfLuminance(cal,im*o.LBackground)/o.maxEntry;
+                      if o.printImageStatistics
+                          fprintf('%d: "index         " im: size %dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f\n',...
+                              MFileLineNr,size(im),mean(im(:)),std(im(:)),min(im(:)),max(im(:)));
+                      end
+                      texture=Screen('MakeTexture',window,im,0,0,1);
                   end
                   Screen('DrawTexture',window,texture,RectOfMatrix(img),rect);
                   Screen('Close',texture);
@@ -3532,7 +3600,7 @@ end
          set(gca,'FontSize',12);
          o.targetCyclesPerDeg=o.targetGaborCycles/o.targetHeightDeg;
          noteString{1}=sprintf('%s: %s %.1f c/deg, ecc %.0f deg, %.1f s\n%.0f cd/m^2, eyes %s, trials %d',...
-            o.conditionName,o.targetKind,o.targetCyclesPerDeg,o.eccentricityXYDeg(1),o.targetDurationSec,o.LMean,o.eyes,o.trials);
+            o.conditionName,o.targetKind,o.targetCyclesPerDeg,o.eccentricityXYDeg(1),o.targetDurationSec,o.LBackground,o.eyes,o.trials);
          noteString{2}=sprintf('%8s %7s %5s %9s %8s %5s','observer','noiseSD','log c','steepness','guessing','lapse');
          noteString{end+1}=sprintf('%-8s %7.2f %5.2f %9.1f %8.2f %5.2f', ...
             o.observer,o.noiseSD,log10(o.qpContrast),o.qpSteepness,o.qpGuessing,o.qpLapse);
@@ -3549,7 +3617,7 @@ end
    o.targetDurationSecMean=mean(o.likelyTargetDurationSec,'omitnan');
    o.targetDurationSecSD=std(o.likelyTargetDurationSec,'omitnan');
    ffprintf(ff,['Mean target duration %.3f',plusMinusChar,'%.3f s (sd over %d trials).\n'],o.targetDurationSecMean,o.targetDurationSecSD,length(o.likelyTargetDurationSec));
-   ffprintf(ff,'Mean luminance %.1f cd/m^2, which filter reduces to %.2f cd/m^2.\n',o.LMean,o.luminance);
+   ffprintf(ff,'Background luminance %.1f cd/m^2, which filter reduces to %.2f cd/m^2.\n',o.LBackground,o.luminanceAtEye);
    
    o.E=10^(2*o.questMean)*o.E1;
    if streq(o.targetModulates,'luminance')
@@ -3904,9 +3972,9 @@ function assessBitDepth(o)
 global cal
 LMin=min(cal.old.L);
 LMax=max(cal.old.L);
-o.LMean=(LMax+LMin)/2;
+o.LBackground=(LMax+LMin)/2;
 cal.LFirst=LMin;
-cal.LLast=o.LMean+(o.LMean-LMin); % Symmetric about o.LMean.
+cal.LLast=o.LBackground+(o.LBackground-LMin); % Symmetric about o.LBackground.
 cal.nFirst=o.firstGrayClutEntry;
 cal.nLast=o.lastGrayClutEntry;
 cal=LinearizeClut(cal);
@@ -3957,25 +4025,25 @@ end % function assessBitDepth
 %% FUNCTION MeasureContrast
 function oOut=MeasureContrast(o,line)
 global window cal ff trial
-LMean=(cal.LLast+cal.LFirst)/2;
-fprintf('%d: LFirst %.1f, LMean %.1f, LLast %.1f cd/m^2\n',line,cal.LFirst,LMean,cal.LLast);
+LBackground=(cal.LLast+cal.LFirst)/2;
+fprintf('%d: LFirst %.1f, LBackground %.1f, LLast %.1f cd/m^2\n',line,cal.LFirst,LBackground,cal.LLast);
 % Measure signal luminance L
-index=IndexOfLuminance(cal,(1+o.contrast)*LMean);
+index=IndexOfLuminance(cal,(1+o.contrast)*LBackground);
 Screen('FillRect',window,index/o.maxEntry,o.stimulusRect);
 Screen('Flip',window,0,1);
 if o.usePhotometer
    L=GetLuminance;
 else
-   L=LMean*2*round(o.maxEntry*(1+o.contrast)/2)/o.maxEntry;
+   L=LBackground*2*round(o.maxEntry*(1+o.contrast)/2)/o.maxEntry;
 end
 % Measure background luminance L0
-index0=IndexOfLuminance(cal,LMean);
+index0=IndexOfLuminance(cal,LBackground);
 Screen('FillRect',window,index0/o.maxEntry,o.stimulusRect);
 Screen('Flip',window,0,1);
 if o.usePhotometer
    L0=GetLuminance;
 else
-   L0=LMean;
+   L0=LBackground;
 end
 % Compute contrast
 actualContrast=(L-L0)/L0;
@@ -3991,14 +4059,14 @@ function AssessContrast(o)
 % Estimate actual contrast on screen.
 % Reports by ffprintf. Returns nothing.
 global img cal ff
-LMean=(cal.LFirst+cal.LLast)/2;
-img=IndexOfLuminance(cal,LMean);
+LBackground=(cal.LFirst+cal.LLast)/2;
+img=IndexOfLuminance(cal,LBackground);
 img=img:o.maxEntry;
 L=EstimateLuminance(cal,img);
 dL=diff(L);
 i=find(dL,1); % index of first non-zero element in dL
 if isfinite(i)
-   contrastEstimate=dL(i)/L(i); % contrast of minimal increase near LMean
+   contrastEstimate=dL(i)/L(i); % contrast of minimal increase near LBackground
 else
    contrastEstimate=nan;
 end
@@ -4010,21 +4078,21 @@ switch o.targetModulates
       noise=Expand(noise,o.noiseCheckPix/o.targetCheckPix);
       img=1+noise*o.noiseSD/o.noiseListSd;
 end
-index=IndexOfLuminance(cal,img*LMean);
-imgEstimate=EstimateLuminance(cal,index)/LMean;
+index=IndexOfLuminance(cal,img*LBackground);
+imgEstimate=EstimateLuminance(cal,index)/LBackground;
 rmsContrastError=rms(img(:)-imgEstimate(:));
-% ffprintf(ff,'Assess contrast: At LMean, the minimum contrast step is %.4f, with rmsContrastError %.3f\n',contrastEstimate,rmsContrastError);
+% ffprintf(ff,'Assess contrast: At LBackground, the minimum contrast step is %.4f, with rmsContrastError %.3f\n',contrastEstimate,rmsContrastError);
 switch o.targetModulates
    case 'luminance'
       img=[1, 1+o.contrast];
-      img=IndexOfLuminance(cal,img*LMean);
+      img=IndexOfLuminance(cal,img*LBackground);
       L=EstimateLuminance(cal,img);
       ffprintf(ff,'Assess contrast: Desired o.contrast of %.3f will be rendered as %.3f (estimated).\n',o.contrast,diff(L)/L(1));
    otherwise
       noiseSDEstimate=std(imgEstimate(:))*o.noiseListSd/std(noise(:));
       img=1+o.r*(o.noiseSD/o.noiseListSd)*noise;
-      img=IndexOfLuminance(cal,img*LMean);
-      imgEstimate=EstimateLuminance(cal,img)/LMean;
+      img=IndexOfLuminance(cal,img*LBackground);
+      imgEstimate=EstimateLuminance(cal,img)/LBackground;
       rEstimate=std(imgEstimate(:))*o.noiseListSd/std(noise(:))/noiseSDEstimate;
       ffprintf(ff,'noiseSDEstimate %.3f (nom. %.3f), rEstimate %.3f (nom. %.3f)\n',noiseSDEstimate,o.noiseSD,rEstimate,o.r);
       if abs(log10([noiseSDEstimate/o.noiseSD rEstimate/o.r])) > 0.5*log10(2)
@@ -4041,7 +4109,7 @@ function AssessLinearity(o)
 % argument and might need to be returned as an output. Note that if "o" is
 % modified here, it too may need to be returned as an output argument, or
 % made global.fprintf('Assess linearity.\n');
-gratingL=o.LMean*repmat([0.2 1.8],400,200); % 400x400 grating
+gratingL=o.LBackground*repmat([0.2 1.8],400,200); % 400x400 grating
 gratingImg=IndexOfLuminance(cal,gratingL);
 texture=Screen('MakeTexture',window,gratingImg/o.maxEntry,0,0,1);
 r=RectOfMatrix(gratingImg);
@@ -4055,10 +4123,10 @@ subplot(2,2,1); imshow(uint8(gratingImg)); title('image written');
 subplot(2,2,2); imshow(peekImg); title('image read');
 subplot(2,2,3); imshow(uint8(gratingImg(1:4,1:4))); title('4x4 of image written')
 subplot(2,2,4); imshow(peekImg(1:4,1:4)); title('4x4 of image read');
-fprintf('desired normalized luminance: %.1f %.1f\n',gratingL(1,1:2)/o.LMean);
+fprintf('desired normalized luminance: %.1f %.1f\n',gratingL(1,1:2)/o.LBackground);
 fprintf('grating written: %.1f %.1f\n',gratingImg(1,1:2));
 fprintf('grating read: %.1f %.1f\n',peekImg(1,1:2));
-fprintf('normalized luminance: %.1f %.1f\n',LuminanceOfIndex(cal,peekImg(1,1:2))/o.LMean);
+fprintf('normalized luminance: %.1f %.1f\n',LuminanceOfIndex(cal,peekImg(1,1:2))/o.LBackground);
 end % function AssessLinearity(o)
 %% FUNCTION ModelObserver
 function response=ModelObserver(o)
@@ -4417,7 +4485,7 @@ else
       end
       fixationOffsetXYCm(2)=-fixationOffsetXYCm(2); % Make y increase upward.
       
-      string='OFF-SCREEN FIXATION! As indicated by the green arrows, please set up a fixation mark';
+      string='OFF-SCREEN FIXATION. As indicated by the green arrows, please set up a fixation mark';
       if fixationOffsetXYCm(1)~=0
          if fixationOffsetXYCm(1) < 0
             string=sprintf('%s %.1f cm to the left of',string,-fixationOffsetXYCm(1));
@@ -4440,6 +4508,11 @@ else
          string,o.viewingDistanceCm);
       string=[string ' Tilt and swivel the display so that the cross is orthogonal to the observer''s line of sight. '...
          'Then hit RETURN to proceed, or ESCAPE to quit. '];
+      string=[string sprintf(['\n\nEXPERT NOTE: You might be able to bring fixation back on-screen '...
+         'by quitting now and then '...
+         'pushing the target location (o.nearPointXYInUnitSquare [%.2f %.2f]) away from fixation, '...
+         'or reducing o.viewingDistanceCm (%.1f cm), or reducing the target''s o.eccentricityXYDeg [%.1f %.1f]).'],...
+         o.nearPointXYInUnitSquare,o.viewingDistanceCm,o.eccentricityXYDeg)];
       Screen('TextSize',window,o.textSize);
       Screen('TextFont',window,'Verdana');
       Screen('FillRect',window,o.gray1);
@@ -4487,8 +4560,8 @@ else
          ffprintf(ff,'Offscreen fixation mark (%.1f,%.1f) cm from near point of display.\n',fixationOffsetXYCm);
       else
          o.fixationIsOffscreen=false;
-         error('User refused off-screen fixation. Please reduce viewing distance (%.1f cm) or o.eccentricityXYDeg (%.1f %.1f).',...
-            o.viewingDistanceCm,o.eccentricityXYDeg);
+         error('User refused off-screen fixation. Please push the target location o.nearPointXYInUnitSquare [%.2f %.2f] away from fixation, or reduce o.viewingDistanceCm (%.1f cm), or reduce the target''s o.eccentricityXYDeg (%.1f %.1f).',...
+            o.nearPointXYInUnitSquare,o.viewingDistanceCm,o.eccentricityXYDeg);
       end
    else
       o.fixationIsOffscreen=false;
@@ -4509,32 +4582,33 @@ global cal
 % and on flanker. (We assume flanker does not overlap target.) If the noise
 % in fact does not superimpose target or flanker then this range may be
 % broader than strictly necessary.
-cal.LFirst=o.LMean*(1-o.noiseListBound*o.r*o.noiseSD/o.noiseListSd);
-cal.LLast=o.LMean*(1+o.noiseListBound*o.r*o.noiseSD/o.noiseListSd);
+cal.LFirst=o.LBackground*(1-o.noiseListBound*o.r*o.noiseSD/o.noiseListSd);
+cal.LLast=o.LBackground*(1+o.noiseListBound*o.r*o.noiseSD/o.noiseListSd);
 if ~o.useFlankers
    o.flankerContrast=0;
 end
 if streq(o.targetModulates,'luminance')
    if streq(o.targetKind,'image')
-      cal.LFirst=cal.LFirst+o.LMean*min([0 -o.contrast]);
-      cal.LLast=cal.LLast+o.LMean*max([0 -o.contrast]);
+      cal.LFirst=cal.LFirst+o.LBackground*min([0 -o.contrast]);
+      cal.LLast=cal.LLast+o.LBackground*max([0 -o.contrast]);
    else
-      cal.LFirst=cal.LFirst+o.LMean*min([0 o.contrast o.flankerContrast]);
-      cal.LLast=cal.LLast+o.LMean*max([0 o.contrast o.flankerContrast]);
+      cal.LFirst=cal.LFirst+o.LBackground*min([0 o.contrast o.flankerContrast]);
+      cal.LLast=cal.LLast+o.LBackground*max([0 o.contrast o.flankerContrast]);
    end
 end
 if o.annularNoiseBigRadiusDeg > o.annularNoiseSmallRadiusDeg
-   cal.LFirst=min(cal.LFirst,o.LMean*(1-o.noiseListBound*o.r*o.annularNoiseSD/o.noiseListSd));
-   cal.LLast=max(cal.LLast,o.LMean*(1+o.noiseListBound*o.r*o.annularNoiseSD/o.noiseListSd));
+   cal.LFirst=min(cal.LFirst,o.LBackground*(1-o.noiseListBound*o.r*o.annularNoiseSD/o.noiseListSd));
+   cal.LLast=max(cal.LLast,o.LBackground*(1+o.noiseListBound*o.r*o.annularNoiseSD/o.noiseListSd));
 end
 if o.symmetricLuminanceRange
-   % Use smallest range centered on o.LMean that includes LFirst and LLast.
-   % Having a fixed index for "gray" (o.LMean) assures us that the gray
-   % areas (most of the screen) won't change when the CLUT is updated.
-   LRange=2*max(abs([cal.LLast-o.LMean o.LMean-cal.LFirst]));
+   % Use smallest range centered on o.LBackground that includes LFirst and
+   % LLast. Having a fixed index for "gray" (o.LBackground) assures us that
+   % the gray areas (most of the screen) won't change when the CLUT is
+   % updated.
+   LRange=2*max(abs([cal.LLast-o.LBackground o.LBackground-cal.LFirst]));
    LRange=min(LRange,o.maxLRange);
-   cal.LFirst=o.LMean-LRange/2;
-   cal.LLast=o.LMean+LRange/2;
+   cal.LFirst=o.LBackground-LRange/2;
+   cal.LLast=o.LBackground+LRange/2;
 end
 cal.nFirst=o.firstGrayClutEntry;
 cal.nLast=o.lastGrayClutEntry;
@@ -4548,7 +4622,7 @@ if false
    % Compute clut for the specific noise.
    L=[];
    for i=1:locations
-      L=[L location(i).image(:)*o.LMean];
+      L=[L location(i).image(:)*o.LBackground];
    end
    cal.LFirst=min(L);
    cal.LLast=max(L);
@@ -4557,7 +4631,7 @@ else
 end
 cal=LinearizeClut(cal);
 if o.symmetricLuminanceRange
-   grayCheck=IndexOfLuminance(cal,o.LMean)/o.maxEntry;
+   grayCheck=IndexOfLuminance(cal,o.LBackground)/o.maxEntry;
    if ~o.saveSnapshot && abs(grayCheck-o.gray)>0.001
       ffprintf(ff,'The estimated o.gray index is %.4f (%.1f cd/m^2), not %.4f (%.1f cd/m^2).\n',...
          grayCheck,LuminanceOfIndex(cal,grayCheck*o.maxEntry),o.gray,LuminanceOfIndex(cal,o.gray*o.maxEntry));
@@ -4565,11 +4639,11 @@ if o.symmetricLuminanceRange
    end
 else
    oldGray=o.gray;
-   o.gray=IndexOfLuminance(cal,o.LMean)/o.maxEntry;
+   o.gray=IndexOfLuminance(cal,o.LBackground)/o.maxEntry;
    if o.printGrayLuminance
       disp('ComputeCLUT');
       fprintf('o.gray old vs new %.2f %.2f\n',oldGray,o.gray);
-      fprintf('o.contrast %.2f, o.LMean %.0f cd/m^2, cal.old.L(end) %.0f cd/m^2\n',o.contrast,o.LMean,cal.old.L(end));
+      fprintf('o.contrast %.2f, o.LBackground %.0f cd/m^2, cal.old.L(end) %.0f cd/m^2\n',o.contrast,o.LBackground,cal.old.L(end));
       fprintf('%d: o.maxEntry*[o.gray1 o.gray]=[%.1f %.1f]\n',...
          MFileLineNr,o.maxEntry*[o.gray1 o.gray]);
       disp('cal.gamma(1+[o.gray1 o.gray]*o.maxEntry,:)');
@@ -4624,7 +4698,7 @@ if IsWindows
 else
    background=o.gray1;
 end
-fprintf('%d: o.deviceIndex %.1f.\n',MFileLineNr,o.deviceIndex);
+fprintf('%d: o.deviceIndex %.0f.\n',MFileLineNr,o.deviceIndex);
 [reply,terminatorChar]=GetEchoString(window,text.question,o.instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
 if ismember(terminatorChar,[escapeChar graveAccentChar])
    [o.quitSession,o.quitRun,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
@@ -4664,7 +4738,7 @@ end
 if ~isempty(fixationLines)
    Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
 end
-Screen('Flip',window,0,1); % Show gray screen at o.LMean with fixation and crop marks. Don't clear buffer.
+Screen('Flip',window,0,1); % Show gray screen at o.LBackground with fixation and crop marks. Don't clear buffer.
 readyString='';
 if o.markTargetLocation
    readyString=[readyString 'The X indicates target center. '];
