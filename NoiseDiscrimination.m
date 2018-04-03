@@ -663,6 +663,7 @@ o.seed=[];
 o.targetHeightOverWidth=nan;
 o.printSignalImages=false;
 o.signalImagesFolder='';
+o.signalImagesAreGammaCorrected=true;
 o.convertSignalImageToGray=false;
 o.skipTrial=0;
 o.trialsSkipped=0;
