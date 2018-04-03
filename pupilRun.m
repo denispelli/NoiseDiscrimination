@@ -119,7 +119,7 @@ if fakeRun
       data(i).observer='Observer';
       data(i).targetKind='gabor';
       data(i).noiseType='gaussian';
-      data(i).LMean=280*data(i).luminanceFactor;
+      data(i).LBackground=280*data(i).luminanceFactor;
    end
    steepnessAnalyze(data);
 end

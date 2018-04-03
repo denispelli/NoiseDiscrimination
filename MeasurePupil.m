@@ -238,11 +238,11 @@ try
          assert(gray*o.maxEntry == round(gray*o.maxEntry)); % Sum of first and last is even, so gray is integer.
          LMin=min(cal.old.L);
          LMax=max(cal.old.L);
-         LMean=mean([LMin, LMax]); % Desired background luminance.
-         LMean=LMean*(1+(rand-0.5)/32); % Tiny jitter, ±1.5%
-         LMean=o.luminanceFactor*LMean;
+         LBackground=mean([LMin, LMax]); % Desired background luminance.
+         LBackground=LBackground*(1+(rand-0.5)/32); % Tiny jitter, ±1.5%
+         LBackground=o.luminanceFactor*LBackground;
          if o.assessLowLuminance
-            LMean=0.8*LMin+0.2*LMax;
+            LBackground=0.8*LMin+0.2*LMax;
          end
          % CLUT entry 1: o.gray1
          % First entry is black. Second entry is o.gray1. We have
@@ -255,15 +255,15 @@ try
          assert(o.gray1*o.maxEntry <= firstGrayClutEntry-1);
          % o.gray1 is between black and the darkest stimulus luminance.
          cal.gamma(1,1:3)=0; % Black.
-         cal.LFirst=LMean;
-         cal.LLast=LMean;
+         cal.LFirst=LBackground;
+         cal.LLast=LBackground;
          cal.nFirst=o.gray1*o.maxEntry;
          cal.nLast=o.gray1*o.maxEntry;
          cal=LinearizeClut(cal);
          
          % CLUT entries for stimulus.
          cal.LFirst=LMin;
-         cal.LLast=LMean+(LMean-LMin); % Symmetric about LMean.
+         cal.LLast=LBackground+(LBackground-LMin); % Symmetric about LBackground.
          cal.nFirst=firstGrayClutEntry;
          cal.nLast=lastGrayClutEntry;
          cal=LinearizeClut(cal);
@@ -283,7 +283,7 @@ try
       gray=mean([firstGrayClutEntry lastGrayClutEntry])/o.maxEntry; % Will be a CLUT color code for gray.
       Screen('FillRect',window,o.gray1);
       Screen('FillRect',window,gray,o.stimulusRect);
-      Screen('Flip',window); % Screen is now all gray, at LMean.
+      Screen('Flip',window); % Screen is now all gray, at LBackground.
       if window >= 0
          screenRect=Screen('Rect',window,1);
          screenWidthPix=RectWidth(screenRect);
@@ -433,8 +433,8 @@ try
             o.lineSpacing=1.5;
             o.stimulusRect=InsetRect(screenRect,0,o.lineSpacing*1.2*o.textSize);
             BackupCluts(o.screen);
-            LMean=(max(cal.old.L)+min(cal.old.L))/2;
-            o.maxLRange=2*min(max(cal.old.L)-LMean,LMean-min(cal.old.L));
+            LBackground=(max(cal.old.L)+min(cal.old.L))/2;
+            o.maxLRange=2*min(max(cal.old.L)-LBackground,LBackground-min(cal.old.L));
             % We use nearly the whole clut (entries 2 to 254) for stimulus generation.
             % We reserve first and last (0 and o.maxEntry), for black and white.
             firstGrayClutEntry=2;

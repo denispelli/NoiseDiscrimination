@@ -56,7 +56,7 @@ if ~fakeRun
          else
             j=1;
          end
-         data(j).LMean=mean([d.cal.LFirst d.cal.LLast]); % Compute from cal in case it's not in o.
+         data(j).LBackground=mean([d.cal.LFirst d.cal.LLast]); % Compute from cal in case it's not in o.
          data(j).luminanceFactor=1; % default value
          for field={'condition' 'experiment' 'dataFilename' 'experimenter' 'observer' 'trials' ...
                'alternatives' ...
@@ -65,7 +65,7 @@ if ~fakeRun
                'targetCheckDeg' 'fullResolutionTarget' ...
                'noiseType' 'noiseSD'  'noiseCheckDeg' ...
                'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' 'pThreshold' ...
-               'contrast' 'E' 'N' 'E1' 'luminanceFactor' 'LMean' 'conditionName' 'psych'}
+               'contrast' 'E' 'N' 'E1' 'luminanceFactor' 'LBackground' 'conditionName' 'psych'}
             if isfield(d.o,field{:})
                data(j).(field{:})=d.o.(field{:});
             else

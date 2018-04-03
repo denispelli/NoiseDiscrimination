@@ -11,7 +11,7 @@ if ~fakeRun
    for i = 1:length(matFiles)
       % Extract the desired fields into "data", one row per threshold.
       d = load(matFiles(i).name);
-      data(i).LMean=mean([d.cal.LFirst d.cal.LLast]); % Compute from cal in case it's not in o.
+      data(i).LBackground=mean([d.cal.LFirst d.cal.LLast]); % Compute from cal in case it's not in o.
       data(i).luminanceFactor=1; % default value
       for field={'condition' 'experiment' 'dataFilename' 'experimenter' 'observer' 'trials' ...
             'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' ...
@@ -19,7 +19,7 @@ if ~fakeRun
             'targetCheckDeg' 'fullResolutionTarget' ...
             'noiseType' 'noiseSD'  'noiseCheckDeg' ...
             'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
-            'contrast' 'E' 'N' 'LMean' 'conditionName'}
+            'contrast' 'E' 'N' 'LBackground' 'conditionName'}
          if isfield(d.o,field{:})
             data(i).(field{:})=d.o.(field{:});
          else

@@ -42,6 +42,9 @@ o.fullResolutionTarget=false;
 o.pThreshold=0.75;
 cal=OurScreenCalibrations(0);
 
+% o.printImageStatistics=true;
+o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+
 %% Psychometric steepness.
 % In each of the 3 domains:
 % noiseSD: 0 0.16
@@ -94,7 +97,7 @@ for i=1:length(oo)
    oo(i).condition=i;
 end
 t=struct2table(oo);
-t % Print the oo list of conditions.
+disp(t) % Print the oo list of conditions.
 
 if fakeRun
    % NOT IMPLEMENTED.
@@ -108,11 +111,11 @@ if fakeRun
       data(i).observer='Observer';
       data(i).targetKind='gabor';
       data(i).noiseType='gaussian';
-      data(i).LMean=280*data(i).luminanceFactor;
+      data(i).LBackground=280*data(i).luminanceFactor;
    end
    steepnessAnalyze(data);
 end
-if ~fakeRun && 0
+if ~fakeRun
    %% RUN THE CONDITIONS
    % Typically, you'll select just a few of the conditions stored in oo
    % that you want to run now. Select them from the printout of "t" above.

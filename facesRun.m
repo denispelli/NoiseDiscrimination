@@ -136,7 +136,7 @@ if ~fakeRun && true
          oo(oi).E1=oOut.E1;
          oo(oi).alternatives=oOut.alternatives;
          oo(oi).targetKind=oOut.targetKind;
-         oo(oi).LMean=oOut.LMean;
+         oo(oi).LBackground=oOut.LBackground;
          oo(oi).targetDurationSec=oOut.targetDurationSec;
          oo(oi).eccentricityXYDeg=oOut.eccentricityXYDeg;
          oo(oi).targetCyclesPerDeg=oOut.targetCyclesPerDeg;
