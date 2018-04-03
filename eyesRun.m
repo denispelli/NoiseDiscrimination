@@ -17,7 +17,7 @@
 
 %% CREATE LIST OF CONDITIONS TO BE TESTED
 fakeRun=false; % Enable fakeRun to check plotting before we have data.
-clear Screen PsychHID o oo
+clear Screen o oo
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
 
 % We list parameters here in the order that we want them to appear as
@@ -37,13 +37,13 @@ end
 % Two noise levels, noiseSD: 0 0.16
 %
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
-o.fullContrastResponseAlternatives=false;
+o.responseScreenContrast=1;
 o.experiment='eyes';
 o.condition=1;
 o.viewingDistanceCm=40;
 o.eyes='right';
 o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
-for domain=1:3
+for domain=3
    switch domain
       case 1
          % photon
@@ -69,6 +69,7 @@ for domain=1:3
          % ganglion
          o.conditionName='ganglion';
          o.eccentricityXYDeg=[30 0];
+         o.nearPointXYInUnitSquare=[0.80 0.5];
          o.targetCyclesPerDeg=0.5;
          o.targetDurationSec=0.2;
          o.desiredLuminance=[];
@@ -121,7 +122,7 @@ if fakeRun
       data(i).observer='Observer';
       data(i).targetKind='gabor';
       data(i).noiseType='gaussian';
-      data(i).LMean=280*data(i).luminanceFactor;
+      data(i).LBackground=280*data(i).luminanceFactor;
    end
    steepnessAnalyze(data);
 end
