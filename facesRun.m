@@ -25,6 +25,13 @@ end
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 o.seed=[]; % Fresh.
 % o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
+if isempty(o.seed)
+   rng('shuffle'); % Use clock to seed the random number generator.
+   generator=rng;
+   o.seed=generator.Seed;
+else
+   rng(o.seed);
+end
 o.symmetricLuminanceRange=false; % Allow maximum brightness.
 o.desiredLuminanceFactor=2; % Maximize brightness.
 if false
@@ -57,13 +64,6 @@ o.steepness=nan;
 o.guess=nan;
 o.observer='';
 o.noiseSD=0;
-if isempty(o.seed)
-   rng('shuffle'); % Use clock to seed the random number generator.
-   generator=rng;
-   o.seed=generator.Seed;
-else
-   rng(o.seed);
-end
 o.thresholdParameter='contrast';
 o.conditionName='threshold';
 o.condition=1;
@@ -88,7 +88,7 @@ end
 t=struct2table(oo,'AsArray',true);
 % We list parameters here in the order that we want them to appear as
 % columns in the table, which we print in the Command Window. 
-vars={'seed' 'condition' 'task' 'targetDurationSec' 'targetHeightDeg' };
+vars={'seed' 'condition' 'task' 'targetDurationSec' 'targetHeightDeg' 'noiseSD'};
 disp(t(:,vars)) % Print the oo list of conditions.
 fprintf('To recreate this table, set o.seed (in line 27) to the value of "seed" listed in the above table.\n');
 
@@ -97,7 +97,7 @@ if ~skipDataCollection && true
    % Typically, you'll select just a few of the conditions stored in oo
    % that you want to run now. Select them from the printout of "t" in your
    % Command Window.
-   % CAUTION: Conditions with the same conditionName are randonly shuffled
+   % NOTE: Conditions with the same conditionName are randonly shuffled
    % every time you run this, unless you set o.seed, above, to the 'seed'
    % used to generate the table you want to reproduce.
    clear oOut
