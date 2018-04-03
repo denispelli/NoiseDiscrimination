@@ -647,6 +647,7 @@ o.desiredRetinalIlluminanceTd=[];
 o.desiredLuminance=[];
 o.desiredLuminanceFactor=1;
 o.luminanceFactor=1; % For max brightness, set this to to 2, and o.symmetricLuminanceRange=false;
+% o.LBackground = o.luminanceFactor*mean([cal.LMin cal.LMax]);
 o.symmetricLuminanceRange=true; % For max brightness set this false and o.LuminanceFactor=2.
 o.luminanceAtEye=[];
 o.retinalIlluminanceTd=[];
@@ -732,7 +733,7 @@ else
    initializedFields=fieldnames(o);
    knownOutputFields={'labelAlternatives' 'beginningTime' ...
       'functionNames' 'dataFilename' 'dataFolder' 'cal' 'pixPerDeg' ...
-      'lineSpacing' 'stimulusRect' 'noiseCheckPix' 'maxLRange' ...
+      'lineSpacing' 'stimulusRect' 'noiseCheckPix' ...
       'minLRange' 'targetHeightPix' ...
       'contrast' 'targetWidthPix' 'checkSec' 'moviePreFrames'...
       'movieSignalFrames' 'moviePostFrames' 'movieFrames' 'noiseSize'...
@@ -1242,7 +1243,6 @@ end
    o.targetCheckDeg=o.targetCheckPix/o.pixPerDeg;
    BackupCluts(o.screen);
    o.LBackground=o.luminanceFactor*(max(cal.old.L)+min(cal.old.L))/2;
-   o.maxLRange=2*min(max(cal.old.L)-o.LBackground,o.LBackground-min(cal.old.L));
    % We use nearly the whole clut (entries 2 to 254) for stimulus generation.
    % We reserve first and last (0 and o.maxEntry), for black and white.
    o.firstGrayClutEntry=2;
@@ -1524,9 +1524,9 @@ end
          cal.nLast=o.gray1*o.maxEntry;
          cal=LinearizeClut(cal);
          L1=LuminanceOfIndex(cal,o.gray1*o.maxEntry);
-         ffprintf(ff,'%d: "gray1" %.3f *o.maxEntry= %.0f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
-             MFileLineNr,o.gray1,o.gray1*o.maxEntry,o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
-         fprintf('o.gray1*o.maxEntry %.1f yields %.1f vs. LBackground %.1f cd/m^2.\n',...
+         ffprintf(ff,'%d: o.gray1*o.maxEntry= %.0f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
+             MFileLineNr,o.gray1*o.maxEntry,o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
+         fprintf('o.gray1*o.maxEntry %.1f yields %.1f cd/m^2 vs. LBackground %.1f cd/m^2.\n',...
             o.gray1*o.maxEntry,o.LBackground,L1);
          % CLUT entries for stimulus.
          cal.LFirst=LMin;
@@ -1538,7 +1538,8 @@ end
          cal.nFirst=o.firstGrayClutEntry;
          cal.nLast=o.lastGrayClutEntry;
          cal=LinearizeClut(cal);
-         ffprintf(ff,'Size of cal.gamma %d %d\n',size(cal.gamma));
+
+          ffprintf(ff,'Size of cal.gamma %d %d\n',size(cal.gamma));
          if o.symmetricLuminanceRange
             % Choose "gray" in middle of CLUT.
             o.gray=round(mean([o.firstGrayClutEntry o.lastGrayClutEntry]))/o.maxEntry; % CLUT color code for gray.
@@ -1637,7 +1638,9 @@ end
       error('o.eyes==''%s'' is not allowed. It must be ''left'',''right'', or ''both''.',o.eyes);
    end
    if ~exist('oOld','var') || ~isfield(oOld,'eyes') || GetSecs-oOld.secs>5*60 || ~streq(oOld.eyes,o.eyes)
-      Screen('TextSize',window,o.textSize);
+
+      
+       Screen('TextSize',window,o.textSize);
       Screen('TextFont',window,'Verdana');
       Screen('FillRect',window,o.gray1);
       switch o.eyes
@@ -2225,6 +2228,25 @@ end
          boundsRect=CenterRect(targetRect,[o.targetXYPix o.targetXYPix]);
          % targetRect not used. boundsRect used solely for the snapshot.
    end % switch o.task
+   
+   % Compute o.signalIsBinary, o.signalMin, o.signalMax
+   % Image will be (o.contrast*signal+1)*o.LBackground
+   v=[];
+%    vv=[];
+   for i=1:o.alternatives
+      img=signal(i).image;
+%       rect=[0 0 o.targetWidthPix o.targetHeightPix]/o.targetCheckPix; % size of signal(1).image
+%       rect=round(rect*alphaCheckPix);
+      v=unique([v img(:)']); % Combine all components, R,G,B, regardless.
+%       if alphaCheckPix ~= round(alphaCheckPix) && useImresize
+%          img=imresize(img,[RectHeight(rect), RectWidth(rect)]);
+%       end
+%       vv=unique([vv img(:)']); % Combine all components, R,G,B, regardless.
+   end
+   o.signalIsBinary=all(ismember(v,[0 1]));
+   o.signalMin=min(v);
+   o.signalMax=max(v);
+
    Screen('Preference','TextAntiAliasing',1);
    
    % Compute hard-edged annular noise mask
@@ -2829,7 +2851,7 @@ end
             % Compute CLUT for all possible noises and the given signal and
             % contrast. Note: The gray screen in the non-stimulus areas is
             % drawn with CLUT index n=1.
-            o=ComputeClut(o);
+            [cal,o]=ComputeClut(cal,o);
          end % if o.newClutForEachImage
          if o.assessContrast
             AssessContrast(o);
@@ -3090,14 +3112,15 @@ end
             Screen('Close',movieTexture(iMovieFrame));
          end
          eraseRect=dstRect; % Erase only the movie, sparing the rest of the screen
-         % Print instruction in upper left corner.
          if ~isempty(o.responseScreenAbsoluteContrast)
-             saveContrast=o.contrast;
-             o.contrast=o.responseScreenAbsoluteContrast;
-             o=ComputeClut(o);
-             o.contrast=saveContrast;
-             Screen('FillRect',window,o.gray,o.stimulusRect);
+            % Set contrast of response screen.
+            saveContrast=o.contrast;
+            o.contrast=o.responseScreenAbsoluteContrast;
+            [cal,o]=ComputeClut(cal,o);
+            o.contrast=saveContrast;
+            Screen('FillRect',window,o.gray,o.stimulusRect);
          end
+         % Print instruction in upper left corner.
          Screen('FillRect',window,o.gray1,topCaptionRect);
          message=sprintf('Trial %d of %d. Run %d of %d.',trial,o.trialsPerRun,o.runNumber,o.runsDesired);
          Screen('DrawText',window,message,o.textSize/2,o.textSize/2,black,o.gray1);
@@ -3182,31 +3205,34 @@ end
                      step=[RectWidth(rect)+alphaGapPix 0];
                      rect=OffsetRect(rect,-(o.alternatives-1)*step(1),0);
                end
-               v=[];
                for i=1:o.alternatives
-                  v=unique([v signal(i).image(:)']);
-               end
-               o.signalIsBinary=length(v)==2 && all(v==[0 1]);
-               for i=1:o.alternatives
+                  img=signal(i).image;
+                  if o.printImageStatistics
+                     fprintf('%d: signal(%d).image: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
+                        MFileLineNr,i,size(img,1),size(img,2),size(img,3),mean(img(:)),std(img(:)),min(img(:)),max(img(:)),o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
+                  end
                   if useExpand
                      img=Expand(signal(i).image,alphaCheckPix);
-                     if false
-                        imshow(~signal(i).image);figure(1);
-                        imshow(~img);figure(1);
-                     end
-                  else
+                   else
                      if useImresize
-                        img=imresize(signal(i).image,[RectHeight(rect), RectWidth(rect)]);
+                        % We use 'bilinear' method to make sure that all
+                        % new values are within the old range. That's
+                        % important because we set up the CLUT with the old
+                        % range.
+                        img=imresize(signal(i).image,[RectHeight(rect), RectWidth(rect)],'bilinear');
                      else
                         img=signal(i).image;
                         % If the imresize function (in Image Processing
                         % Toolbox) is not available then the image resizing
-                        % will then be done by the DrawTexture command
-                        % below.
+                        % by the DrawTexture command below.
                      end
                   end
+                  if o.printImageStatistics
+                     fprintf('%d: signal(%d) img: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
+                        MFileLineNr,i,size(img,1),size(img,2),size(img,3),mean(img(:)),std(img(:)),min(img(:)),max(img(:)),o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
+                  end
                   if o.responseScreenAbsoluteContrast<0
-                     error('o.responseScreenAbsoluteContrast must be positive. Sign will track o.contrast.',o.responseScreenAbsoluteContrast);
+                     error('o.responseScreenAbsoluteContrast %.2f must be positive. Sign will track o.contrast.',o.responseScreenAbsoluteContrast);
                   end
                   % Note alphabet placement on top or right.
                   if o.signalIsBinary
@@ -3226,10 +3252,12 @@ end
                         texture=Screen('MakeTexture',window,(c*img+1)*o.gray,0,0,1);
                      end
                   else
-                      if o.printImageStatistics
-                          fprintf('%d: "signal alternatives(%d)" img: size %dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
-                              MFileLineNr,i,size(img),mean(img(:)),std(img(:)),min(img(:)),max(img(:)),o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
-                      end
+                     if o.printImageStatistics
+                        fprintf('%d: o.signalMin %.2f, o.signalMax %.2f\n',...
+                           MFileLineNr,o.signalMin,o.signalMax);
+                        fprintf('%d: "signal(%d)" img: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
+                           MFileLineNr,i,size(img,1),size(img,2),size(img,3),mean(img(:)),std(img(:)),min(img(:)),max(img(:)),o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
+                     end
                       if isempty(o.responseScreenAbsoluteContrast)
                          % Maximize absolute contrast.
                          if o.thresholdPolarity>0
@@ -3244,13 +3272,17 @@ end
                       end
                       im=1+c*img;
                       if o.printImageStatistics
-                         fprintf('%d: "1+signal  " im: size %dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f\n',...
-                            MFileLineNr,size(im),mean(im(:)),std(im(:)),min(im(:)),max(im(:)));
+                         fprintf('%d: c %.2f, 1+c*o.signalMin %.2f, 1+c*o.signalMax %.2f\n',...
+                            MFileLineNr,c,1+c*o.signalMin,1+c*o.signalMax);
+                         fprintf('%d: o.LBackground %.1f, LB*(1+c*o.signalMin) %.2f, LB*(1+c*o.signalMax) %.2f\n',...
+                            MFileLineNr,o.LBackground,o.LBackground*(1+c*[o.signalMin o.signalMax]));
+                         fprintf('%d: "1+signal  " im: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f\n',...
+                            MFileLineNr,size(im,1),size(im,2),size(im,3),mean(im(:)),std(im(:)),min(im(:)),max(im(:)));
                       end
                       im=IndexOfLuminance(cal,im*o.LBackground)/o.maxEntry;
                       if o.printImageStatistics
-                          fprintf('%d: "index         " im: size %dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f\n',...
-                              MFileLineNr,size(im),mean(im(:)),std(im(:)),min(im(:)),max(im(:)));
+                         fprintf('%d: "index         " im: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f\n',...
+                            MFileLineNr,size(im,1),size(im,2),size(im,3),mean(im(:)),std(im(:)),min(im(:)),max(im(:)));
                       end
                       texture=Screen('MakeTexture',window,im,0,0,1);
                   end
@@ -4583,8 +4615,7 @@ end
 end
 
 
-function o=ComputeClut(o)
-global cal
+function [cal,o]=ComputeClut(cal,o)
 % Set up luminance range that allows for superposition of noise on target
 % and on flanker. (We assume flanker does not overlap target.) If the noise
 % in fact does not superimpose target or flanker then this range may be
@@ -4596,8 +4627,9 @@ if ~o.useFlankers
 end
 if streq(o.targetModulates,'luminance')
    if streq(o.targetKind,'image')
-      cal.LFirst=cal.LFirst+o.LBackground*min([0 -o.contrast]);
-      cal.LLast=cal.LLast+o.LBackground*max([0 -o.contrast]);
+      assert(o.contrast>=0);
+      cal.LFirst=cal.LFirst+o.LBackground*o.contrast*o.signalMin;
+      cal.LLast=cal.LLast+o.LBackground*o.contrast*o.signalMax;
    else
       cal.LFirst=cal.LFirst+o.LBackground*min([0 o.contrast o.flankerContrast]);
       cal.LLast=cal.LLast+o.LBackground*max([0 o.contrast o.flankerContrast]);
@@ -4613,7 +4645,8 @@ if o.symmetricLuminanceRange
    % the gray areas (most of the screen) won't change when the CLUT is
    % updated.
    LRange=2*max(abs([cal.LLast-o.LBackground o.LBackground-cal.LFirst]));
-   LRange=min(LRange,o.maxLRange);
+   maxLRange=2*min(max(cal.old.L)-o.LBackground,o.LBackground-min(cal.old.L));
+   LRange=min(LRange,maxLRange);
    cal.LFirst=o.LBackground-LRange/2;
    cal.LLast=o.LBackground+LRange/2;
 end
@@ -4661,7 +4694,7 @@ else
    end
 end
 assert(isfinite(o.gray));
-end
+end % function ComputeClut
 
 function [reply,o]=AskQuestion(window,o,text)
 % text.big, text.small, text.fine, text.question
@@ -4669,7 +4702,7 @@ function [reply,o]=AskQuestion(window,o,text)
 % o.textSize o.quitSession o.quitRun and o.skipTrial.
 % If "text" is provided then o.textSize is adjusted so make the line fit
 % horizontally within screenRect.
-%% ASK QUESTION
+% ASK QUESTION
 global screenRect ff
 escapeChar=char(27);
 graveAccentChar='`';
