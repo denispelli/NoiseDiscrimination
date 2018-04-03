@@ -6,8 +6,8 @@
 clear o oo
 fakeRun=false; % Enable fakeRun to check plotting before we have data.
 o.questPlusEnable=false;
-if verLessThan('matlab','R2013b')
-   error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
+if verLessThan('matlab','R2017b')
+   error('This MATLAB is too old. We need MATLAB 2017b or better to use the function "rgb2lin".');
 end
 if o.questPlusEnable && ~exist('qpInitialize','file')
    error('This script requires the QuestPlus package. Please get it from https://github.com/BrainardLab/mQUESTPlus.')
@@ -35,6 +35,7 @@ if false
 else
    % Target faces
    o.signalImagesFolder='faces';
+   o.signalImagesAreGammaCorrected=true; 
    o.targetKind='image';
    o.alphabet='abcdefghijkl';
    o.convertSignalImageToGray=false;
