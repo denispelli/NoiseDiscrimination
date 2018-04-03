@@ -494,9 +494,9 @@ o.replicatePelli2006=false;
 o.clutMapLength=2048; % enough for 11-bit precision.
 o.useNative10Bit=false;
 o.useNative11Bit=true;
-o.ditherCLUT=61696; % Use this only on Denis's PowerBook Pro and iMac 5k.
-o.ditherCLUT=false; % As of June 28, 2017, there is no measurable effect of this dither control.
-o.enableCLUTMapping=true; % Required. Using software CLUT.
+o.ditherClut=61696; % Use this only on Denis's PowerBook Pro and iMac 5k.
+o.ditherClut=false; % As of June 28, 2017, there is no measurable effect of this dither control.
+o.enableClutMapping=true; % Required. Using software CLUT.
 o.assessBitDepth=false;
 o.useFractionOfScreen=false; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 o.viewingDistanceCm=50; % viewing distance
@@ -942,9 +942,9 @@ try
       PsychImaging('AddTask','General','EnableNative11BitFramebuffer');
    end
    PsychImaging('AddTask','General','NormalizedHighresColorRange',1);
-   if o.enableCLUTMapping
+   if o.enableClutMapping
       o.maxEntry=o.clutMapLength-1; % moved here on Feb. 4, 2018
-      PsychImaging('AddTask','AllViews','EnableCLUTMapping',o.clutMapLength,1); % clutSize, high res
+      PsychImaging('AddTask','AllViews','EnableClutMapping',o.clutMapLength,1); % clutSize, high res
       cal.gamma=repmat((0:o.maxEntry)'/o.maxEntry,1,3); % Identity
       % Set hardware CLUT to identity, without assuming we know the
       % size. On Windows, the only allowed gamma table size is 256.
@@ -953,9 +953,9 @@ try
       gamma(:,1:3)=repmat((0:maxEntry)'/maxEntry,1,3);
       Screen('LoadNormalizedGammaTable',cal.screen,gamma,0);
    else
-      warning('You need EnableCLUTMapping to control contrast.');
+      warning('You need EnableClutMapping to control contrast.');
    end
-   if o.enableCLUTMapping % How we use LoadNormalizedGammaTable
+   if o.enableClutMapping % How we use LoadNormalizedGammaTable
       loadOnNextFlip=2; % Load software CLUT at flip.
    else
       loadOnNextFlip=true; % Load hardware CLUT: 0. now; 1. on flip.
@@ -1457,11 +1457,11 @@ end
                      % Examples:
                      % AMD Radeon R9 M290X in MacBook Pro (Retina, 15-inch, Mid 2015)
                      % AMD Radeon R9 M370X in iMac (Retina 5K, 27-inch, Late 2014)
-                     o.ditherCLUT=61696;
+                     o.ditherClut=61696;
                   case 8
                      o.displayGPUFamily='Sea Islands';
                      % Used in hp Z Book laptop.
-                     o.ditherCLUT=59648; % Untested.
+                     o.ditherClut=59648; % Untested.
                      % MARIO: Another number you could try is 59648. This
                      % would enable dithering for a native 8 bit panel, which
                      % is the wrong thing to do for the laptops 10 bit panel,
@@ -1469,7 +1469,7 @@ end
                      % knows?
                end
          end
-         Screen('ConfigureDisplay','Dithering',cal.screen,o.ditherCLUT);
+         Screen('ConfigureDisplay','Dithering',cal.screen,o.ditherClut);
       end % if false
       
       % Recommended by Mario Kleiner, July 2017.
@@ -1500,6 +1500,9 @@ end
       delta=gammaRead(:,2)-gamma(:,2);
       ffprintf(ff,'RMS difference between identity and read-back of hardware CLUT (%dx%d): %.9f\n',...
          size(gammaRead),rms(delta));
+      
+      % Load a linear CLUT. Perhaps I could simply call ComputeClut
+      % instead.
       if exist('cal','var')
          LMin=min(cal.old.L);
          LMax=max(cal.old.L);
@@ -1527,7 +1530,11 @@ end
             o.gray1*o.maxEntry,o.LBackground,L1);
          % CLUT entries for stimulus.
          cal.LFirst=LMin;
-         cal.LLast=o.LBackground+(o.LBackground-LMin); % Symmetric about o.LBackground.
+         if o.symmetricLuminanceRange
+            cal.LLast=o.LBackground+(o.LBackground-LMin); % Symmetric about o.LBackground.
+         else
+            cal.LLast=LMax; 
+         end
          cal.nFirst=o.firstGrayClutEntry;
          cal.nLast=o.lastGrayClutEntry;
          cal=LinearizeClut(cal);
@@ -2822,7 +2829,7 @@ end
             % Compute CLUT for all possible noises and the given signal and
             % contrast. Note: The gray screen in the non-stimulus areas is
             % drawn with CLUT index n=1.
-            o=ComputeCLUT(o);
+            o=ComputeClut(o);
          end % if o.newClutForEachImage
          if o.assessContrast
             AssessContrast(o);
@@ -3087,7 +3094,7 @@ end
          if ~isempty(o.responseScreenAbsoluteContrast)
              saveContrast=o.contrast;
              o.contrast=o.responseScreenAbsoluteContrast;
-             o=ComputeCLUT(o);
+             o=ComputeClut(o);
              o.contrast=saveContrast;
              Screen('FillRect',window,o.gray,o.stimulusRect);
          end
@@ -4576,7 +4583,7 @@ end
 end
 
 
-function o=ComputeCLUT(o)
+function o=ComputeClut(o)
 global cal
 % Set up luminance range that allows for superposition of noise on target
 % and on flanker. (We assume flanker does not overlap target.) If the noise
@@ -4641,7 +4648,7 @@ else
    oldGray=o.gray;
    o.gray=IndexOfLuminance(cal,o.LBackground)/o.maxEntry;
    if o.printGrayLuminance
-      disp('ComputeCLUT');
+      disp('ComputeClut');
       fprintf('o.gray old vs new %.2f %.2f\n',oldGray,o.gray);
       fprintf('o.contrast %.2f, o.LBackground %.0f cd/m^2, cal.old.L(end) %.0f cd/m^2\n',o.contrast,o.LBackground,cal.old.L(end));
       fprintf('%d: o.maxEntry*[o.gray1 o.gray]=[%.1f %.1f]\n',...
