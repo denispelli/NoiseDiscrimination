@@ -108,8 +108,8 @@ function o=NoiseDiscrimination(oIn)
 % 4. If using off-screen fixation, put it at same distance from eye, and compute its position relative to near point.
 
 %% CURRENT ISSUES/BUGS
-% 1. Would like to add symbolic photos to the question screens, so you get the
-% idea even without reading.
+% 1. Would like to add symbolic photos to the question screens, so you get
+% the idea even without reading.
 % 2. Fixation is visible only during the stimulus. We need it before the
 % response.
  
@@ -666,7 +666,7 @@ o.signalImagesFolder='';
 o.convertSignalImageToGray=false;
 o.skipTrial=0;
 o.trialsSkipped=0;
-o.responseScreenAbsoluteContrast=1; % Set to [] to maximize possible contrast using CLUT for o.contrast.
+o.responseScreenAbsoluteContrast=0.99; % Set to [] to maximize possible contrast using CLUT for o.contrast.
 o.transcript.responseTimeSec=[]; % Time of response re o.transcript.stimulusOnsetSec, for each trial.
 o.transcript.stimulusOnsetSec=[]; % Value of GetSecs at stimulus onset, for each trial.
 o.printImageStatistics=false;
