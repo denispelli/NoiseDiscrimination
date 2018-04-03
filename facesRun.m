@@ -43,7 +43,7 @@ else
 end
 o.targetMargin=0;
 viewingDistanceCm=40;
-o.contrast=1; % Indicate polarity.
+o.contrast=1; % Select contrast polarity.
 o.useDynamicNoiseMovie=false;
 o.experiment='faces';
 o.task='rate';
@@ -66,6 +66,7 @@ else
 end
 o.thresholdParameter='contrast';
 o.conditionName='threshold';
+o.condition=1;
 for beautyTask=0:1
    if beautyTask
       o.task='rate';
@@ -73,24 +74,24 @@ for beautyTask=0:1
       o.task='identify';
    end
    for duration=[0.2 1]
-      o.targetDurationSec=duration;
-      if ~exist('oo','var')
-         oo=o;
-      else
-         oo(end+1)=o;
-      end
+       o.targetDurationSec=duration;
+       if ~exist('oo','var')
+           oo=o;
+       else
+           oo(o.condition)=o;
+       end
+       o.condition=1+o.condition;
    end
 end
-%% NUMBER THE CONDITIONS (ONE PER ROW) AND PRINT THE TABLE
-for i=1:length(oo)
-   oo(i).condition=i;
-end
+
+%% PRINT THE TABLE, ONE CONDITION PER ROW
 t=struct2table(oo,'AsArray',true);
 % We list parameters here in the order that we want them to appear as
 % columns in the table, which we print in the Command Window. 
 vars={'seed' 'condition' 'task' 'targetDurationSec' 'targetHeightDeg' };
 disp(t(:,vars)) % Print the oo list of conditions.
-fprintf('To recreate this table, set your o.seed to the value of "seed" listed in the table.\n');
+fprintf('To recreate this table, set o.seed (in line 27) to the value of "seed" listed in the above table.\n');
+
 %% RUN THE CONDITIONS
 if ~skipDataCollection && true
    % Typically, you'll select just a few of the conditions stored in oo
@@ -157,8 +158,10 @@ if ~skipDataCollection && true
    
    %% PRINT SUMMARY OF RESULTS
    t=struct2table(oo(1:oi),'AsArray',true);
-   t.data=[];
    rows=t.trials>0;
+   if ~rows
+      return
+   end
    vars={'condition' 'observer' 'trials'  'task' 'targetDurationSec' 'targetHeightDeg' 'contrast' 'guess' 'lapse' 'steepness' 'seed' };
    if any(rows)
       disp(t(rows,vars)) % Print the oo list of conditions, with measured flanker threshold.
@@ -198,6 +201,4 @@ if ~skipDataCollection && true
    graphFile=fullfile(o.dataFolder,[o.plotFilename '.eps']);
    saveas(gcf,graphFile,'epsc')
    fprintf('Plot saved as "%s".\n',graphFile);
-end % Run the selected conditions
-
-
+end % if ~skipDataCollection && true
