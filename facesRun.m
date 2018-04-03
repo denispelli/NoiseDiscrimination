@@ -5,14 +5,12 @@
 %% GET READY
 clear o oo
 fakeRun=false; % Enable fakeRun to check plotting before we have data.
-o.seed=[]; % Fresh.
-% o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
 o.questPlusEnable=false;
-if o.questPlusEnable && ~exist('qpInitialize','file')
-   error('This script requires the QuestPlus package. Please get it from https://github.com/BrainardLab/mQUESTPlus.')
-end
 if verLessThan('matlab','R2013b')
    error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
+end
+if o.questPlusEnable && ~exist('qpInitialize','file')
+   error('This script requires the QuestPlus package. Please get it from https://github.com/BrainardLab/mQUESTPlus.')
 end
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
 cal=OurScreenCalibrations(0);
@@ -25,10 +23,10 @@ end
 
 %% CREATE LIST OF CONDITIONS TO BE TESTED
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
-o.symmetricLuminanceRange=false;
-o.desiredLuminanceFactor=2; % Maximum brightness.
-o.responseScreenAbsoluteContrast=0.99;
-% o.printImageStatistics=true;
+o.seed=[]; % Fresh.
+% o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
+o.symmetricLuminanceRange=false; % Allow maximum brightness.
+o.desiredLuminanceFactor=2; % Maximize brightness.
 if false
    % Target letter
    o.targetKind='letter';
@@ -90,7 +88,7 @@ t=struct2table(oo,'AsArray',true);
 % We list parameters here in the order that we want them to appear as
 % columns in the table, which we print in the Command Window. 
 vars={'seed' 'condition' 'task' 'targetDurationSec' 'targetHeightDeg' };
-t(:,vars) % Print the oo list of conditions.
+disp(t(:,vars)) % Print the oo list of conditions.
 fprintf('To recreate this table, set your o.seed to the value of "seed" listed in the table.\n');
 %% RUN THE CONDITIONS
 if ~fakeRun && true
@@ -162,7 +160,7 @@ if ~fakeRun && true
    rows=t.trials>0;
    vars={'condition' 'observer' 'trials'  'task' 'targetDurationSec' 'targetHeightDeg' 'contrast' 'guess' 'lapse' 'steepness' 'seed' };
    if any(rows)
-      t(rows,vars) % Print the oo list of conditions, with measured flanker threshold.
+      disp(t(rows,vars)) % Print the oo list of conditions, with measured flanker threshold.
    end
    
    %% SAVE SUMMARY OF RESULTS
