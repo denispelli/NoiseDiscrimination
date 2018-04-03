@@ -6,6 +6,10 @@ function [signalStruct,signalBounds]=LoadSignalImages(o)
 % bounding box "signalBounds" that will hold any letter. Called by
 % NoiseDiscrimination.m. The folder is o.signalImagesFolder.
 %
+% Setting o.signalImagesAreGammaCorrected=true alerts MATLAB that your
+% images are gamma corrected, so it linearizes them before displaying them
+% on our linearized display.
+%
 % The font's TextSize is computed to yield the desired o.targetPix size in
 % the direction specified by o.targetSizeIsHeight (true for height, false
 % for width). However, if o.targetFontHeightOverNominalPtSize==nan then the
@@ -18,8 +22,8 @@ function [signalStruct,signalBounds]=LoadSignalImages(o)
 %
 % The "letter" images can be anything (e.g. photos of faces). The only
 % requirement is that all the images in a signalImagesFolder must be the
-% same size. Detailed run time checking will produce a fatal error if any
-% image is missing or has the wrong size.
+% same size. Detailed run-time checking produces a fatal error message if
+% any image is missing or has the wrong size.
 %
 % I think monochrome and color images are handled correctly.
 %
@@ -72,6 +76,13 @@ for i=1:length(d)
    end
    if isempty(savedAlphabet.images{i})
       error('Cannot read image file "%s".',filename);
+   end
+   if o.signalImagesAreGammaCorrected
+       if verLessThan('matlab','R2017b')
+           error('This MATLAB is too old. We need MATLAB 2017b or better to use the function "rgb2lin".');
+       end
+       im = rgb2lin(savedAlphabet.images{i},'OutputType','double');
+       savedAlphabet.images{i}=im;
    end
    [~,name]=fileparts(urldecoding(d(i).name));
    if length(name)~=1
