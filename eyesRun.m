@@ -15,28 +15,31 @@
 % luminance 250 cd/m2
 % monocular, temporal field, right eye
 
-%% CREATE LIST OF CONDITIONS TO BE TESTED
+%% GET READY
+clear o oo
 fakeRun=false; % Enable fakeRun to check plotting before we have data.
-clear Screen o oo
+o.questPlusEnable=false;
+if verLessThan('matlab','R2013b')
+    error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
+end
+if o.questPlusEnable && ~exist('qpInitialize','file')
+   error('This script requires the QuestPlus package. Please get it from https://github.com/BrainardLab/mQUESTPlus.')
+end
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
-
-% We list parameters here in the order that we want them to appear as
-% columns in the list. I don't think we use these values. This is just for
-% the cosmetic ordering of the fields in the struct, which later determines
-% the order of the columns in the table.
-
 cal=OurScreenCalibrations(0);
-if ~streq(cal.macModelName,'MacBookPro14,3')
-   % For debugging, if I don't actually have a 15" MacBook Pro, pretend I do.
+if false && ~streq(cal.macModelName,'MacBookPro14,3')
+   % For debugging, if this isn't a 15" MacBook Pro 2017, pretend it is.
    cal.screenWidthMm=330; % 13"
    cal.screenHeightMm=206; % 8.1"
+   warning('PRETENDING THIS IS A 15" MacBook Pro 2017');
 end
 
-%% THREE DOMAINS
+%% CREATE LIST OF CONDITIONS TO BE TESTED
+% THREE DOMAINS
 % In each of the 3 domains: photon, cortical, ganglion
 % Two noise levels, noiseSD: 0 0.16
 %
-o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 o.responseScreenAbsoluteContrast=1;
 o.experiment='eyes';
 o.condition=1;
