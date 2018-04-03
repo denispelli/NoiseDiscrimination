@@ -10,15 +10,16 @@
 % March, 2018
 % Denis Pelli
 
-%% CREATE LIST OF CONDITIONS TO BE TESTED
-if ~exist('QUESTPlusFit','file')
-    error('This script requires the QuestPLUS package. Please get it from github.')
-end
+%% GET READY
+clear o oo
+fakeRun=false; % Enable fakeRun to check plotting before we have data.
+o.questPlusEnable=false;
 if verLessThan('matlab','R2013b')
     error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
 end
-clear o oo
-fakeRun=false; % Enable fakeRun to check plotting before we have data.
+if o.questPlusEnable && ~exist('qpInitialize','file')
+   error('This script requires the QuestPlus package. Please get it from https://github.com/BrainardLab/mQUESTPlus.')
+end
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
 cal=OurScreenCalibrations(0);
 if false && ~streq(cal.macModelName,'MacBookPro14,3')
@@ -28,7 +29,10 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
     warning('PRETENDING THIS IS A 15" MacBook Pro 2017');
 end
 
+%% CREATE LIST OF CONDITIONS TO BE TESTED
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+o.seed=[]; % Fresh.
+% o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
 o.symmetricLuminanceRange=true;
 o.useDynamicNoiseMovie=true;
 if true
@@ -98,7 +102,7 @@ t=struct2table(oo,'AsArray',true);
 % columns in the table, which we print in the Command Window. Currently we
 % do not save the table.
 vars={'condition' 'experiment' 'noiseSD' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'constantStimuli' 'thresholdParameter'};
-t(:,vars) % Print the oo list of conditions.
+disp(t(:,vars)) % Print the oo list of conditions.
 
 %% RUN THE CONDITIONS
 if ~fakeRun && true
