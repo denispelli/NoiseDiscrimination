@@ -3675,7 +3675,7 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 0.9922 0.9922 0.9922;0.9932 0.9932 0.9932;0.9941 0.9941 0.9941;0.9951 0.9951 0.9951;0.9961 0.9961 0.9961;...
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
-if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==599 && cal.screenHeightMm==340 && streq(cal.localHostName,'iMac5k-PelliLab')
+if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==602 && cal.screenHeightMm==341 && streq(cal.localHostName,'iMac5k-PelliLab')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='iMac';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -3685,7 +3685,7 @@ if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWid
 	cal.mfilename='CalibrateScreenLuminance';
 	cal.datestr='27-Feb-2018 18:28:58';
 	cal.photometer='Cambridge Research Systems Colorimeter';
-	cal.notes='denis, in lab, room lights on';
+	cal.notes='denis, in lab, room lights on; Edited the screenHeightMm values to match. Formly ResX, now coarsest res in Apple Displays.';
 	cal.calibratedBy='Denis Pelli';
 	cal.psychImagingOption='EnableNative11BitFramebuffer';
 	cal.displayCoreId='AMD';
