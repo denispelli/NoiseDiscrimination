@@ -110,17 +110,7 @@ function o=NoiseDiscrimination(oIn)
 %% CURRENT ISSUES/BUGS
 % 1. Would like to add symbolic photos to the question screens, so you get
 % the idea even without reading.
-% 2. no flankers when I run threeLettersRun; one flanker in wrong position when I run flankersRun
-% The problem is due to setting o.nearPointXYInUnitSquare=[0.8 0.5];
-% That feature works correctly for target but has strange effect on flanker
-% positions.
-% The displacement of flankers from center of screen produced by
-% o.nearPointXYInUnitSquare is correct for target and doubled for flankers.
-% The spacing of flankers is conserved; they are dispaced, as a group, from
-% the target.
-% I think the issue is what is the offset from coordinates of
-% o.stimulusRect to canvasRect. I know that o.stimulusRect is in screen
-% pixels, and the canvasRect is in targetCheck. I don't know the offset.
+
 
 %% EXTRA DOCUMENTATION
 
@@ -1746,19 +1736,39 @@ try
     end
     
     %% LOCATE FIXATION AND NEAR-POINT OF DISPLAY
-    % DISPLAY NEAR POINT
-    % VIEWING GEOMETRY
-    % o.nearPointXYInUnitSquare % Rough location in o.stimulusRect re lower-left corner.
-    % o.nearPointXYPix % Near point screen coordinate.
+    % VIEWING GEOMETRY: DISPLAY NEAR POINT
+    % o.nearPointXYInUnitSquare % Usually the desired target location in o.stimulusRect re lower-left corner.
+    % o.nearPointXYPix % Near-point screen coordinate. 
     % o.viewingDistanceCm % Distance from eye to near point.
     % o.nearPointXYDeg % (x,y) eccentricity of near point.
-    % 1. Assign target ecc. to displayNearPoint.
-    % 2. Pick a good (x,y) on the screen for the displayNearPoint.
-    % 3. Ask viewer to adjust display to adjust display distance so (x,y) is at desired viewing distance and orthogonal to line of sight from eye to (x,y).
-    % 4. If using off-screen fixation, put it at same distance (as near point) from eye, and compute its position, left or right of (x,y) to put (x,y) at desired ecc.
+    % 1. Assign target ecc. to display near point. 
+    % 2. Pick a good (x,y) on the screen for the display near point.
+    % 3. Ask viewer to adjust display to adjust display distance from
+    % viewer's eye so (x,y) is at desired viewing distance and orthogonal
+    % to line of sight from eye to (x,y).
+    % 4. If using off-screen fixation, put it at same distance (as near
+    % point) from eye, and compute its position, left or right of (x,y) to
+    % put (x,y) at desired ecc.
+    
+    % THE CANVAS: o.canvasSize & canvasRect. The arrays that hold the noise
+    % and the stimulus all have size o.canvasSize. canvasRect is just [0 0
+    % canvasSize(2) canvasSize(1)]. o.canvasSize is clipped (if necessary)
+    % to fit in o.stimulusRect. Each pixel represents a targetCheck (each
+    % with size [o.targetCheckPix o.targetCheckPix]).  The target is
+    % centered in the canvasRect-sized array. I think (not sure) the
+    % canvasRect-sized array is centered in o.stimulusRect. If true, that
+    % seems an obsolete strategy, now that we designate an arbitrary point
+    % on the screen as the near point. It seems more appropiate to center
+    % the canvasRect on the target position, o.eccentricityXYDeg.
+    % denis.pelli@nyu.edu April 4, 2018.
     
     % PLACE TARGET AT NEAR POINT
-    o.nearPointXYDeg=o.eccentricityXYDeg; % It would be fine to be not quite equal.
+    % Imaging is best (highest resolution) at the near point, so it's a
+    % good idea to place the target at or near the near point. However, I
+    % believe none of this program assumes any particular relation between
+    % the two, other that the statement immediately below that locates the
+    % target at the near point.
+    o.nearPointXYDeg=o.eccentricityXYDeg; 
     
     fprintf('*Waiting for observer to set viewing distance.\n');
     o=SetUpNearPoint(window,o);
@@ -1877,8 +1887,11 @@ try
     o.annularNoiseBigRadiusDeg=0.5*o.annularNoiseBigSize(1)/(o.pixPerDeg/o.noiseCheckPix);
     
     % Make o.canvasSize just big enough to hold everything we're showing,
-    % including signal, flankers, and noise. We limit o.canvasSize to fit in
-    % o.stimulusRect.
+    % including signal, flankers, and noise. o.canvasSize is in units of
+    % targetChecks. We limit o.canvasSize to fit in o.stimulusRect (after
+    % converting targetChecks to pixels). Note that o.canvasSize is [height
+    % width], a MATLAB convention, whereas canvasRect is [0 0 width
+    % height], an Apple convention.
     o.canvasSize=[o.targetHeightPix o.targetWidthPix]/o.targetCheckPix;
     o.canvasSize=2*o.canvasSize; % Denis. For extended noise background.
     if o.useFlankers
@@ -1886,10 +1899,18 @@ try
     end
     o.canvasSize=max(o.canvasSize,o.noiseSize*o.noiseCheckPix/o.targetCheckPix);
     if o.annularNoiseBigRadiusDeg > o.annularNoiseSmallRadiusDeg
-        o.canvasSize=max(o.canvasSize,2*o.annularNoiseBigRadiusDeg*[1, 1]*o.pixPerDeg/o.noiseCheckPix);
+        % April 2018, Denis changed denominator to targetCheckPix.
+        o.canvasSize=max(o.canvasSize,2*o.annularNoiseBigRadiusDeg*[1, 1]*o.pixPerDeg/o.targetCheckPix);
     end
     switch o.task
         case {'identify' 'identifyAll' 'rate'}
+            % Clip o.canvasSize to fit inside o.stimulusRect (after
+            % converting targetChecks to pixels). The target will be
+            % centered in the canvas, so the code below to constrain the
+            % canvas size ought to assume it's centered on the target, but
+            % instead it seems to assume that the canvas is centered in
+            % o.stimulusRect. This is not currently causing problems, so
+            % I'm letting this sleeping dog lie.
             o.canvasSize=min(o.canvasSize,floor([RectHeight(o.stimulusRect) RectWidth(o.stimulusRect)]/o.targetCheckPix));
             o.canvasSize=2*ceil(o.canvasSize/2); % Even number of checks, so we can center it on letter.
         case '4afc'
@@ -2070,7 +2091,7 @@ try
                     end
                     oldSize=Screen('TextSize',scratchWindow,round(o.targetHeightPix/o.targetCheckPix));
                     oldStyle=Screen('TextStyle',scratchWindow,0);
-                    canvasRect=[0 0 o.canvasSize]; % o.canvasSize =[width height] in units of noiseCheck;
+                    canvasRect=[0 0 o.canvasSize(2) o.canvasSize(1)]; % o.canvasSize =[height width] in units of targetCheck;
                     if o.allowAnyFont
                         clear letters
                         for i=1:o.alternatives
@@ -2709,10 +2730,13 @@ try
                     end
                     noise=PsychRandSample(noiseList,o.canvasSize*o.targetCheckPix/o.noiseCheckPix);
                     noise=Expand(noise,o.noiseCheckPix/o.targetCheckPix);
+                    % Each pixel in "noise" now represents a targetCheck.
                     noise(~centralNoiseMask & ~annularNoiseMask)=0;
                     noise(centralNoiseMask)=centralNoiseEnvelope(centralNoiseMask).*noise(centralNoiseMask);
-                    canvasRect=RectOfMatrix(noise);
-                    sRect=RectOfMatrix(signal(1).image);
+                    canvasRect=RectOfMatrix(noise); % units of targetChecks
+                    assert(all(canvasRect==[0 0 o.canvasSize(2) o.canvasSize(1)]));
+                    sRect=RectOfMatrix(signal(1).image); % units of targetChecks
+                    % The target is centered in canvasRect. 
                     sRect=round(CenterRect(sRect,canvasRect));
                     if ~IsRectInRect(sRect,canvasRect)
                         ffprintf(ff,'sRect [%d %d %d %d] exceeds canvasRect [%d %d %d %d].\n',sRect,canvasRect);
@@ -2720,28 +2744,31 @@ try
                     assert(IsRectInRect(sRect,canvasRect));
                     signalImageIndex=logical(FillRectInMatrix(true,sRect,zeros(o.canvasSize)));
                     if size(signal(1).image,3)==3
-                        signalImageIndex=repmat(signalImageIndex,1,1,3);
+                        signalImageIndex=repmat(signalImageIndex,1,1,3); % Support color.
                     end
                     % figure(1);imshow(signalImageIndex);
-                    signalImage=zeros(size(signalImageIndex)); % supports color
+                    signalImage=zeros(size(signalImageIndex)); % Support color.
                     if (iMovieFrame > o.moviePreFrames ...
                             && iMovieFrame <= o.moviePreFrames+o.movieSignalFrames)
                         % Add in signal only during the signal interval.
-                        signalImage(signalImageIndex)=signal(whichSignal).image(:); % supports color
+                        signalImage(signalImageIndex)=signal(whichSignal).image(:); % Support color.
                     end
                     % figure(2);imshow(signalImage);
                     signalMask=true(size(signalImage(:,:,1)));
                     for i=1:length(white) % support color
                         signalMask=signalMask & signalImage(:,:,i)~=white(i);
                     end
-                    signalMask=repmat(signalMask,1,1,length(white)); % support color
+                    signalMask=repmat(signalMask,1,1,length(white)); % Support color.
                     switch o.targetModulates
                         case 'luminance'
+                            % location(1).image has size canvasSize. Each
+                            % pixel represents one targetCheck. Target is
+                            % centered in that image.
                             location(1).image=ones(size(signalImage(:,:,1)));
                             location(1).image(centralNoiseMask)=1+(o.noiseSD/o.noiseListSd)*noise(centralNoiseMask);
                             location(1).image(annularNoiseMask)=1+(o.annularNoiseSD/o.noiseListSd)*noise(annularNoiseMask);
-                            location(1).image=repmat(location(1).image,1,1,length(white)); % support color
-                            location(1).image=location(1).image+o.contrast*signalImage; % add signal to noise
+                            location(1).image=repmat(location(1).image,1,1,length(white)); % Support color.
+                            location(1).image=location(1).image+o.contrast*signalImage; % Add signal to noise.
                         case 'noise'
                             noise(signalMask)=o.r*noise(signalMask);
                             location(1).image=ones(o.canvasSize);
@@ -2814,12 +2841,13 @@ try
                                             error('Illegal o.flankerArrangement ''%s''.',o.flankerArrangement);
                                     end
                             end
-                            flankerOffsetXYDeg=spacingDeg*[cosd(theta) sind(theta)]; % offset deg
-                            o.flankerXYDeg{j}=o.eccentricityXYDeg+flankerOffsetXYDeg; % location in deg
-                            flankerXYPix=XYPixOfXYDeg(o,o.flankerXYDeg{j})-o.stimulusRect(1:2); % location in pix in o.stimulusRect
-                            flankerXYChecks=round(flankerXYPix/o.targetCheckPix); % location in checks in o.stimulusRect
-                            rect=RectOfMatrix(signal(o.whichFlanker(j)).image);
-                            rect=CenterRectOnPoint(rect,flankerXYChecks(1),flankerXYChecks(2));
+                            flankerOffsetXYDeg=spacingDeg*[cosd(theta) sind(theta)]; % x y offset deg
+                            o.flankerXYDeg{j}=o.eccentricityXYDeg+flankerOffsetXYDeg; % x y location in deg
+                            offsetXYPix=XYPixOfXYDeg(o,o.flankerXYDeg{j})-XYPixOfXYDeg(o,o.eccentricityXYDeg);
+                            offsetXYChecks=offsetXYPix/o.targetCheckPix; % flanker offset from target, in targetChecks
+                            rect=RectOfMatrix(signal(o.whichFlanker(j)).image); % flanker rect
+                            rect=CenterRect(rect,canvasRect); % This is target location.
+                            rect=OffsetRect(rect,offsetXYChecks(1),offsetXYChecks(2)); % This is flanker location.
                             if ~IsRectInRect(rect,canvasRect)
                                 error('Sorry, flanker rect [%d %d %d %d] does not fit in canvasRect [%d %d %d %d].',rect, canvasRect);
                             end
