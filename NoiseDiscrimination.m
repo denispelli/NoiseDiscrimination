@@ -110,9 +110,7 @@ function o=NoiseDiscrimination(oIn)
 %% CURRENT ISSUES/BUGS
 % 1. Would like to add symbolic photos to the question screens, so you get
 % the idea even without reading.
-% 2. Fixation is visible only during the stimulus. We need it before the
-% response.
- 
+
 
 %% EXTRA DOCUMENTATION
 
@@ -591,14 +589,14 @@ o.useFixation=true;
 o.fixationIsOffscreen=false;
 o.fixationCrossDeg=inf; % Typically 1 or inf. Make this at least 4 deg for scotopic testing, since the fovea is blind scotopically.
 o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
-o.fixationCrossBlankedNearTarget=true; % 0 or 1.
+o.fixationCrossBlankedNearTarget=true; 
 o.fixationCrossBlankedUntilSecAfterTarget=0.6; % Pause after stimulus before display of fixation. Skipped when fixationCrossBlankedNearTarget. Not needed when eccentricity is bigger than the target.
 o.blankingRadiusReTargetHeight= nan;
 o.blankingRadiusReEccentricity= 0.5;
 o.textSizeDeg=0.6;
 o.saveSnapshot=false; % 0 or 1.  If true (1), take snapshot for public presentation.;
 o.snapshotContrast=0.2; % nan to request program default. If set, this determines o.tSnapshot.;
-o.tSnapshot=nan; % nan to request program defaults.;
+o.tSnapshot=nan; % log intensity, nan to request program defaults.;
 o.cropSnapshot=false; % If true (1), show only the target and noise, without unnecessary gray background.;
 o.snapshotCaptionTextSizeDeg=0.5;
 o.snapshotShowsFixationBefore=true;
@@ -1737,13 +1735,13 @@ end
    %% LOCATE FIXATION AND NEAR-POINT OF DISPLAY
    % DISPLAY NEAR POINT
    % VIEWING GEOMETRY
-   % o.nearPointXYInUnitSquare % rough location in o.stimulusRect re lower-left corner.
-   % o.nearPointXYPix % near point screen coordinate.
+   % o.nearPointXYInUnitSquare % Rough location in o.stimulusRect re lower-left corner.
+   % o.nearPointXYPix % Near point screen coordinate.
    % o.viewingDistanceCm % Distance from eye to near point.
    % o.nearPointXYDeg % (x,y) eccentricity of near point.
-   % 1. assign target ecc. to displayNearPoint
-   % 2. pick a good (x,y) on the screen for the displayNearPoint.
-   % 3. ask viewer to adjust display to adjust display distance so (x,y) is at desired viewing distance and orthogonal to line of sight from eye to (x,y).
+   % 1. Assign target ecc. to displayNearPoint.
+   % 2. Pick a good (x,y) on the screen for the displayNearPoint.
+   % 3. Ask viewer to adjust display to adjust display distance so (x,y) is at desired viewing distance and orthogonal to line of sight from eye to (x,y).
    % 4. If using off-screen fixation, put it at same distance (as near point) from eye, and compute its position, left or right of (x,y) to put (x,y) at desired ecc.
    
    % PLACE TARGET AT NEAR POINT
@@ -1893,7 +1891,7 @@ end
          o.flankerArrangement,flankerSpacingPix,flankerSpacingPix/o.pixPerDeg,flankerSpacingPix/o.targetHeightPix,o.flankerContrast);
    end
    if o.useFixation
-      fix.markTargetLocation= o.markTargetLocation;
+      fix.markTargetLocation=o.markTargetLocation;
       fixationXYPix=round(XYPixOfXYDeg(o,[0 0])); % location of fixation
       fix.xy=fixationXYPix;            %  location of fixation on screen.
       fix.eccentricityXYPix=o.targetXYPix-fixationXYPix;  % xy offset of target from fixation.
@@ -3086,7 +3084,7 @@ end
             end
             ffprintf(ff,', contrast %.4f\n',c);
             ffprintf(ff,'\n');
-            %             print stimulus as table of numbers
+            %             Print stimulus as table of numbers.
             %             dx=round(size(o.actualStimulus,2)/10);
             %             dy=round(dx*0.7);
             %             o.actualStimulus(1:dy:end,1:dx:end,2)
@@ -3119,7 +3117,6 @@ end
             o.contrast=o.responseScreenAbsoluteContrast;
             [cal,o]=ComputeClut(cal,o);
             o.contrast=saveContrast;
-            Screen('FillRect',window,o.gray,o.stimulusRect);
          end
          % Print instruction in upper left corner.
          Screen('FillRect',window,o.gray1,topCaptionRect);
@@ -3227,7 +3224,7 @@ end
                         % Toolbox) is not available then the image resizing
                         % by the DrawTexture command below.
                      end
-                  end
+                  end % if useExpand
                   if o.printImageStatistics
                      fprintf('%d: signal(%d) img: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
                         MFileLineNr,i,size(img,1),size(img,2),size(img,3),mean(img(:)),std(img(:)),min(img(:)),max(img(:)),o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
@@ -3238,8 +3235,10 @@ end
                   % Note alphabet placement on top or right.
                   if o.signalIsBinary
                      if o.thresholdPolarity<0
-                        if ~isempty(o.responseScreenAbsoluteContrast) && o.responseScreenAbsoluteContrast~=1
-                           ffprintf(ff,'Ignoring o.responseScreenAbsoluteContrast (%.2f). Response screen for negative contrast binary signals is always -100% contrast.',o.responseScreenAbsoluteContrast);
+                        if ~isempty(o.responseScreenAbsoluteContrast) && ~ismember(o.responseScreenAbsoluteContrast,[0.99 1])
+                           ffprintf(ff,['Ignoring o.responseScreenAbsoluteContrast (%.2f). '...
+                              'Response screen for negative contrast binary signals is always nearly 100% contrast.\n'],...
+                              o.responseScreenAbsoluteContrast);
                            error('Ignoring o.responseScreenAbsoluteContrast (%.2f). Please use default [].',o.responseScreenAbsoluteContrast);
                         end
                         texture=Screen('MakeTexture',window,~img*o.gray1,0,0,1); % Uses only two clut entries (0 1), nicely antialiased.
@@ -3299,7 +3298,7 @@ end
                      Screen('DrawText',window,o.alphabet(i),textRect(1),textRect(4),black,o.gray1,1);
                   end
                   rect=OffsetRect(rect,step(1),step(2));
-               end
+               end % for i=1:o.alternatives
                leftEdgeOfResponse=rect(1);
          end % switch o.task
          if o.assessLoadGamma
