@@ -110,6 +110,8 @@ function o=NoiseDiscrimination(oIn)
 %% CURRENT ISSUES/BUGS
 % 1. Would like to add symbolic photos to the question screens, so you get
 % the idea even without reading.
+% 2. no flankers when I run threeLettersRun
+% 3. one flanker in wrong position when I run flankersRun
 
 
 %% EXTRA DOCUMENTATION
@@ -440,7 +442,7 @@ end
 
 %% GLOBALS, FILES
 global window fixationLines fixationCrossWeightPix labelBounds ...
-   screenRect tTest idealT64 leftEdgeOfResponse checks img cal ...
+   screenRect tTest idealT64 leftEdgeOfResponse img cal ...
    ff whichSignal dataFid trial
 % This list of global variables is shared only with the several newly
 % created subroutines at the end of this file. The list is woefully
@@ -751,7 +753,7 @@ else
       'textFont'  'LBackground' 'targetCyclesPerDeg' 'contrast' ...
       'thresholdParameterValueList' 'noInputArgument' ...
       'firstGrayClutEntry' 'lastGrayClutEntry' 'gray' 'r' 'transcript'...
-      'signalIsBinary'};
+      'signalIsBinary' 'targetXYInUnitSquare'};
    unknownFields={};
    for condition=1:conditions
       oo(condition)=o;
@@ -1223,9 +1225,9 @@ end
    o.textSizeDeg=o.textSize/o.pixPerDeg;
    o.textLineLength=floor(1.9*RectWidth(screenRect)/o.textSize);
    o.lineSpacing=1.5;
-   o.stimulusRect=InsetRect(screenRect,0,o.lineSpacing*1.2*o.textSize);
+   o.stimulusRect=InsetRect(screenRect,0,o.lineSpacing*1.2*o.textSize); % Allow room for captions at top and bottom of screen.
    if streq(o.task,'identifyAll')
-      o.stimulusRect(4)=o.stimulusRect(4)-o.lineSpacing*0.8*o.textSize;
+      o.stimulusRect(4)=o.stimulusRect(4)-o.lineSpacing*0.8*o.textSize; % Allow extra room for this 2-line bottom caption.
    end
    o.noiseCheckPix=round(o.noiseCheckDeg*o.pixPerDeg);
    switch o.task
@@ -1984,7 +1986,6 @@ end
       otherwise
          error('Unknown task %d',o.task);
    end
-   checks=o.targetHeightPix/o.noiseCheckPix;
    ffprintf(ff,'Target height %.1f deg is %.1 targetChecks or %.1f noiseChecks.\n',...
       o.targetHeightDeg,o.targetHeightPix/o.targetCheckPix,o.targetHeightPix/o.noiseCheckPix);
    ffprintf(ff,'%s size %.1f deg, targetCheck %.3f deg, noiseCheck %.3f deg.\n',...
@@ -2007,10 +2008,10 @@ end
          ffprintf(ff,'No response numbers. Assuming o.observer already knows them.\n');
       end
    end
-   fixationXYPix=(o.targetXYPix-o.stimulusRect(1:2))./[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)];
-   fixationXYPix(2)=1-fixationXYPix(2);
+   o.targetXYInUnitSquare=(o.targetXYPix-o.stimulusRect(1:2))./[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)];
+   o.targetXYInUnitSquare(2)=1-o.targetXYInUnitSquare(2);
    string=sprintf('Target is at (%.1f %.1f) deg, (%.2f %.2f) in unit square. ',...
-      o.eccentricityXYDeg,fixationXYPix);
+      o.eccentricityXYDeg,o.targetXYInUnitSquare);
    if o.useFixation
       if o.fixationIsOffscreen
          string=[string 'Using off-screen fixation mark.'];
@@ -2061,7 +2062,7 @@ end
                end
                oldSize=Screen('TextSize',scratchWindow,round(o.targetHeightPix/o.targetCheckPix));
                oldStyle=Screen('TextStyle',scratchWindow,0);
-               canvasRect=[0 0 o.canvasSize]; % o.canvasSize =[width height];
+               canvasRect=[0 0 o.canvasSize]; % o.canvasSize =[width height] in units of noiseCheck;
                if o.allowAnyFont
                   clear letters
                   for i=1:o.alternatives
@@ -2732,7 +2733,7 @@ end
                      location(1).image(centralNoiseMask)=1+(o.noiseSD/o.noiseListSd)*noise(centralNoiseMask);
                      location(1).image(annularNoiseMask)=1+(o.annularNoiseSD/o.noiseListSd)*noise(annularNoiseMask);
                      location(1).image=repmat(location(1).image,1,1,length(white)); % support color
-                     location(1).image=location(1).image+o.contrast*signalImage; % NOTE: noise and signal added here
+                     location(1).image=location(1).image+o.contrast*signalImage; % add signal to noise
                   case 'noise'
                      noise(signalMask)=o.r*noise(signalMask);
                      location(1).image=ones(o.canvasSize);
@@ -2751,7 +2752,7 @@ end
                   else
                      c=o.contrast; % Same contrast as target.
                   end
-                 switch o.flankerArrangement
+                  switch o.flankerArrangement
                      case 'radial'
                         angle=[180 0];
                      case 'tangential'
@@ -2795,8 +2796,8 @@ end
                                  % spacing.
                               case 'radialAndTangential'
                                  % When both radial and tangential are
-                                 % present, the tangential spacing
-                                 % equals half the outer radial spacing.
+                                 % present, the tangential spacing equals
+                                 % half the outer radial spacing.
                                  if eccDeg>0
                                     spacingDeg=eccDeg-eccDeg^2/(eccDeg+spacingDeg);
                                     spacingDeg=0.5*spacingDeg;
@@ -2808,12 +2809,12 @@ end
                      flankerOffsetXYDeg=spacingDeg*[cosd(theta) sind(theta)]; % offset deg
                      o.flankerXYDeg{j}=o.eccentricityXYDeg+flankerOffsetXYDeg; % location in deg
                      flankerXYPix=XYPixOfXYDeg(o,o.flankerXYDeg{j})-o.stimulusRect(1:2); % location in pix in o.stimulusRect
-                     flankerXYChecks=round(flankerXYPix/o.targetCheckPix); % in checks
+                     flankerXYChecks=round(flankerXYPix/o.targetCheckPix); % location in checks in o.stimulusRect
                      rect=RectOfMatrix(signal(o.whichFlanker(j)).image);
                      rect=CenterRectOnPoint(rect,flankerXYChecks(1),flankerXYChecks(2));
                      assert(IsRectInRect(rect,canvasRect));
-                     flankerImageIndex=logical(FillRectInMatrix(true,rect,zeros(o.canvasSize)));
                      flankerImage=zeros(o.canvasSize);
+                     flankerImageIndex=logical(FillRectInMatrix(true,rect,flankerImage));
                      if (iMovieFrame > o.moviePreFrames ...
                            && iMovieFrame <= o.moviePreFrames+o.movieSignalFrames)
                         % Add in flanker only during the signal interval.
@@ -3837,7 +3838,7 @@ end % function o=NoiseDiscrimination(o)
 %% FUNCTION SaveSnapshot
 function SaveSnapshot(o)
 global window fixationLines fixationCrossWeightPix labelBounds location screenRect ...
-   tTest idealT64 leftEdgeOfResponse checks img cal ff whichSignal dataFid
+   tTest idealT64 leftEdgeOfResponse img cal ff whichSignal dataFid
 % Hasn't been tested since it became a subroutine. It may need more of its
 % variables to be declared "global". A more elegant solution, more
 % transparent that "global" would be to put all the currently global
@@ -3913,11 +3914,11 @@ switch o.targetModulates
       caption{2}=sprintf('noise sd %.3f',o.noiseSD);
    case 'noise'
       caption{1}=sprintf('noise sd %.3f',o.noiseSD);
-      caption{end+1}=sprintf('n %.0f',checks);
+      caption{end+1}=sprintf('n %.0f',o.targetHeightPix/o.noiseCheckPix);
    case 'entropy'
       caption{1}=sprintf('ratio # lum. %.3f',1+10^tTest);
       caption{2}=sprintf('noise sd %.3f',o.noiseSD);
-      caption{end+1}=sprintf('n %.0f',checks);
+      caption{end+1}=sprintf('n %.0f',o.targetHeightPix/o.noiseCheckPix);
    otherwise
       caption{1}=sprintf('sd ratio %.3f',1+10^tTest);
       caption{2}=sprintf('approx required n %.0f',approxRequiredN);
@@ -3960,9 +3961,9 @@ switch o.targetModulates
 end
 switch o.targetModulates
    case 'luminance'
-      filename=sprintf('%s_%s_%s%s_%.3fc_%.0fpix_%s',signalDescription,o.task,o.noiseType,freezing,o.thresholdPolarity*10^tTest,checks,answerString);
+      filename=sprintf('%s_%s_%s%s_%.3fc_%.0fpix_%s',signalDescription,o.task,o.noiseType,freezing,o.thresholdPolarity*10^tTest,o.targetHeightPix/o.noiseCheckPix,answerString);
    case {'noise', 'entropy'}
-      filename=sprintf('%s_%s_%s%s_%.3fr_%.0fpix_%.0freq_%s',signalDescription,o.task,o.noiseType,freezing,1+10^tTest,checks,approxRequiredN,answerString);
+      filename=sprintf('%s_%s_%s%s_%.3fr_%.0fpix_%.0freq_%s',signalDescription,o.task,o.noiseType,freezing,1+10^tTest,o.targetHeightPix/o.noiseCheckPix,approxRequiredN,answerString);
 end
 mypath=fileparts(mfilename('fullpath'));
 saveSnapshotFid=fopen(fullfile(mypath,[filename '.png']),'rt');
@@ -4456,8 +4457,8 @@ if ~IsXYInRect(o.nearPointXYPix,r)
       o.nearPointXYInUnitSquare,xy,o.targetHeightDeg,o.targetMargin);
    o.nearPointXYInUnitSquare=xy;
 end
-string=sprintf('Please adjust the viewing distance so the cross is %.1f cm from the observer''s eye. ',o.viewingDistanceCm);
-string=[string 'Tilt and swivel the display so the cross is orthogonal to the line of sight. Then hit RETURN to continue.\n'];
+string=sprintf('Please adjust the viewing distance so the X is %.1f cm from the observer''s eye. ',o.viewingDistanceCm);
+string=[string 'Tilt and swivel the display so the X is orthogonal to the line of sight. Then hit RETURN to continue.\n'];
 Screen('TextSize',window,o.textSize);
 Screen('TextFont',window,'Verdana');
 Screen('FillRect',window,o.gray1);
@@ -4465,11 +4466,11 @@ Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
 DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
 x=o.nearPointXYPix(1);
 y=o.nearPointXYPix(2);
-a=0.1*RectHeight(o.stimulusRect);
-[~,~,lineWidthMinMaxPix(1),lineWidthMinMaxPix(2)]=Screen('DrawLines', window);
+a=0.05*RectHeight(o.stimulusRect);
+[~,~,lineWidthMinMaxPix(1),lineWidthMinMaxPix(2)]=Screen('DrawLines',window);
 widthPix=max([min([a/20 lineWidthMinMaxPix(2)]) lineWidthMinMaxPix(1)]);
-Screen('DrawLine',window,black,x-a,y,x+a,y,widthPix);
-Screen('DrawLine',window,black,x,y-a,x,y+a,widthPix);
+Screen('DrawLine',window,black,x-a,y-a,x+a,y+a,widthPix);
+Screen('DrawLine',window,black,x+a,y-a,x-a,y+a,widthPix);
 Screen('Flip',window); % Display request.
 if o.speakInstructions
    string=strrep(string,'.0','');
@@ -4511,7 +4512,7 @@ else
       o.fixationIsOffscreen=true;
       % o.fixationXYPix is in plane of display. Off-screen fixation is
       % not! It is the same distance from the eye as the near point.
-      % fixationOffsetXYCm is vector from near point to fixation.
+      % fixationOffsetXYCm is the vector from near point to fixation.
       rDeg=sqrt(sum(o.nearPointXYDeg.^2));
       ori=atan2d(-o.nearPointXYDeg(2),-o.nearPointXYDeg(1));
       rCm=2*sind(0.5*rDeg)*o.viewingDistanceCm;
@@ -4545,10 +4546,10 @@ else
             string=sprintf('%s %.1f cm lower than',string,fixationOffsetXYCm(2));
          end
       end
-      string=[string ' the cross +.'];
-      string=sprintf('%s Adjust the viewing distances so both your fixation mark and the cross + below are %.1f cm from the observer''s eye.',...
+      string=[string ' the X.'];
+      string=sprintf('%s Adjust the viewing distances so both your fixation mark and the X below are %.1f cm from the observer''s eye.',...
          string,o.viewingDistanceCm);
-      string=[string ' Tilt and swivel the display so that the cross is orthogonal to the observer''s line of sight. '...
+      string=[string ' Tilt and swivel the display so that the X is orthogonal to the observer''s line of sight. '...
          'Then hit RETURN to proceed, or ESCAPE to quit. '];
       string=[string sprintf(['\n\nEXPERT NOTE: You might be able to bring fixation back on-screen '...
          'by quitting now and then '...
@@ -4565,8 +4566,8 @@ else
       a=0.1*RectHeight(o.stimulusRect);
       [~,~,lineWidthMinMaxPix(1),lineWidthMinMaxPix(2)]=Screen('DrawLines',window);
       widthPix=max([min([a/20 lineWidthMinMaxPix(2)]) lineWidthMinMaxPix(1)]);
-      Screen('DrawLine',window,black,x-a,y,x+a,y,widthPix);
-      Screen('DrawLine',window,black,x,y-a,x,y+a,widthPix);
+      Screen('DrawLine',window,black,x-a,y-a,x+a,y+a,widthPix);
+      Screen('DrawLine',window,black,x+a,y-a,x-a,y+a,widthPix);
       
       % Draw two green arrows to desired location of offscreen fixation mark.
       if o.fixationXYPix(2)>o.stimulusRect(4) || o.fixationXYPix(2)<o.stimulusRect(2) % Fixation below or above rect.
