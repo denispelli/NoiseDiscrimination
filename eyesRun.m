@@ -57,6 +57,7 @@ for domain=3
          o.desiredLuminance=2.5; % cd/m^2
          o.desiredLuminanceFactor=[];
          o.useFilter=true;
+         o.fixationCrossWeightDeg=0.1; % Typically 0.03. Make it much thicker for scotopic testing.
          % o.minScreenWidthDeg=30; % Big to determine pupil size.
       case 2
          % cortical
@@ -67,6 +68,7 @@ for domain=3
          o.desiredLuminance=[];
          o.desiredLuminanceFactor=1;
          o.useFilter=false;
+         o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
          %  o.minScreenWidthDeg=10;
       case 3
          % ganglion
@@ -78,6 +80,7 @@ for domain=3
          o.desiredLuminance=[];
          o.desiredLuminanceFactor=1;
          o.useFilter=false;
+         o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
          % o.minScreenWidthDeg=10;
    end
    for eyes=Shuffle({'right' 'both'})
@@ -115,7 +118,7 @@ t(:,vars) % Print the oo list of conditions.
 
 if skipDataCollection
    % NOT IMPLEMENTED.
-   % PRODUCE FAKE RUN TO CHECK THE ANALYSIS & PLOTTING.
+   % FAKE SOME DATA TO CHECK THE ANALYSIS & PLOTTING.
    data=table2struct(t);
    for i=1:length(data)
       data(i).E=10*data(i).noiseSD+1e-5*(1+floor((i-1)/8));
@@ -129,7 +132,7 @@ if skipDataCollection
    end
    steepnessAnalyze(data);
 end
-if ~skipDataCollection && 1
+if ~skipDataCollection && true
    %% RUN THE CONDITIONS
    % Typically, you'll select just a few of the conditions stored in oo
    % that you want to run now. Select them from the printout of "t" above.
@@ -215,6 +218,7 @@ if ~skipDataCollection && 1
          break
       end
    end
+   
    %% PRINT THE RESULTS
    t=struct2table(oo(1:oi),'AsArray',true);
    if iscell(t.trials)
