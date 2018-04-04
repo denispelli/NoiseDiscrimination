@@ -1224,6 +1224,9 @@ end
    o.textLineLength=floor(1.9*RectWidth(screenRect)/o.textSize);
    o.lineSpacing=1.5;
    o.stimulusRect=InsetRect(screenRect,0,o.lineSpacing*1.2*o.textSize);
+   if streq(o.task,'identifyAll')
+      o.stimulusRect(4)=o.stimulusRect(4)-o.lineSpacing*0.8*o.textSize;
+   end
    o.noiseCheckPix=round(o.noiseCheckDeg*o.pixPerDeg);
    switch o.task
       case {'identify' 'identifyAll' 'rate'}
@@ -1333,9 +1336,9 @@ end
    o.fixationCrossWeightDeg=fixationCrossWeightPix/o.pixPerDeg;
    
    % The entire screen is in screenRect. The stimulus is in stimulusRect,
-   % which is within screenRect. Every pixel not in stimulusRect is in one or
-   % more of the caption rects, which form a border on three sides of the
-   % screen. The caption rects overlap each other.
+   % which is within screenRect. Every pixel not in stimulusRect is in one
+   % or more of the caption rects, which form a border on three sides of
+   % the screen. The caption rects overlap at the corners of the screen.
    topCaptionRect=screenRect;
    topCaptionRect(4)=o.stimulusRect(2); % top caption (trial number)
    bottomCaptionRect=screenRect;
