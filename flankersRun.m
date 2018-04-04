@@ -10,15 +10,16 @@
 % March, 2018
 % Denis Pelli
 
-%% CREATE LIST OF CONDITIONS TO BE TESTED
-if ~exist('QUESTPlusFit','file')
-   error('This script requires the QuestPLUS package. Please get it from github.')
-end
+%% GET READY
+clear o oo
+skipDataCollection=false; % Enable skipDataCollection to check plotting before we have data.
+o.questPlusEnable=false;
 if verLessThan('matlab','R2013b')
    error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
 end
-clear o oo
-skipDataCollection=false; % Enable skipDataCollection to check plotting before we have data.
+if o.questPlusEnable && ~exist('qpInitialize','file')
+   error('This script requires the QuestPlus package. Please get it from https://github.com/BrainardLab/mQUESTPlus.')
+end
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
 cal=OurScreenCalibrations(0);
 if false && ~streq(cal.macModelName,'MacBookPro14,3')
@@ -28,7 +29,10 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
    warning('PRETENDING THIS IS A 15" MacBook Pro 2017');
 end
 
-% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+%% CREATE LIST OF CONDITIONS TO BE TESTED
+o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+o.seed=[]; % Fresh.
+% o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
 o.symmetricLuminanceRange=true;
 o.useDynamicNoiseMovie=true;
 if true
@@ -51,6 +55,7 @@ o.annularNoiseSmallRadiusDeg=0;
 o.experiment='flankers';
 o.conditionName='P target id. vs. flanker contrast';
 o.eccentricityXYDeg=[15 0];
+o.nearPointXYInUnitSquare=[0.8 0.5];
 o.targetHeightDeg=2;
 o.targetDurationSec=0.2;
 o.desiredLuminance=[];
@@ -61,30 +66,26 @@ o.useMethodOfConstantStimuli=true;
 %  o.minScreenWidthDeg=10;
 o.eyes='both';
 % for noiseSD=Shuffle([0 0.16])
+o.condition=1;
 for noiseSD=[0]
-   %    o.minScreenWidthDeg=1+abs(o.eccentricityXYDeg(1))+o.targetHeightDeg*0.75;
-   %    o.minScreenWidthDeg=1+o.targetHeightDeg*2;
-   %    o.maxViewingDistanceCm=round(0.1*cal.screenWidthMm/(2*tand(o.minScreenWidthDeg/2)));
-   %    o.viewingDistanceCm=min([o.maxViewingDistanceCm 40]);
    o.noiseCheckDeg=o.targetHeightDeg/20;
    o.noiseSD=noiseSD;
-   if ~exist('oo','var')
+   if o.condition==1
       oo=o;
    else
-      oo(end+1)=o;
+      oo(o.condition)=o;
    end
+   o.condition=o.condition+1;
 end
 
-%% Number the conditions, and print the list.
-for i=1:length(oo)
-   oo(i).condition=i;
-end
+
+%% PRINT THE LIST OF CONDITIONS (ONE PER ROW)
 t=struct2table(oo,'AsArray',true);
 % We list parameters here in the order that we want them to appear as
 % columns in the table, which we print in the Command Window. Currently we
 % do not save the table.
 vars={'condition' 'experiment' 'noiseSD' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'constantStimuli' 'thresholdParameter'};
-t(:,vars) % Print the oo list of conditions.
+disp(t(:,vars)) % Print the oo list of conditions.
 
 %% RUN THE CONDITIONS
 if ~skipDataCollection && true
@@ -160,40 +161,41 @@ if ~skipDataCollection && true
          oo(oi).data=oOut.data;
          oo(oi).psych=oOut.psych;
          oo(oi).transcript=oOut.transcript;
+         oo(oi).dataFolder=oOut.dataFolder;
+         oo(oi).dataFilename=oOut.dataFilename;
+         oo(oi).trialsSkipped=oOut.trialsSkipped;
       end
       if oOut.quitSession
          break
       end
    end
+   fprintf('\n');
    
    %% PRINT THE RESULTS
    t=struct2table(oo(1:oi),'AsArray',true);
    rows=t.trials>0;
-   vars={'observer' 'trials' 'noiseSD' 'N' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'flankerContrast'};
+   vars={'condition' 'observer' 'trials' 'trialsSkipped' 'noiseSD' 'N' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'flankerContrast'};
    if any(rows)
-      t(rows,vars) % Print the oo list of conditions, with measured flanker threshold.
+      disp(t(rows,vars)) % Print the oo list of conditions, with measured flanker threshold.
    end
    
    %% PLOT IT
-   close all % Get rid of any existing figures.
-   figure(1)
-   o=oo(1);
-   plot(o.psych.t,o.psych.r' ./o.psych.trials);
-   xlabel('Flanker contrast log c');
-   ylabel('Proportion correct target identification');
-   title([o.experiment '-' o.observer '.eps']);
-   graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[o.experiment '-' o.observer '.eps']);
-   saveas(gcf,graphFile,'epsc')
-   fprintf('Plot saved as "%s".\n',graphFile);
-   
-   %% FIT PSYCHOMETRIC FUNCTION
-   clear QUESTPlusFit % Clear the persistent variables.
-   o.alternatives=9;
-   o.questPlusLapseRates=0:0.01:0.05;
-   o.questPlusGuessingRates=0:0.03:0.3;
-   oOut=QUESTPlusFit(o);
-   graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[o.experiment '-' o.observer '-QuestPlus' '.eps']);
-   saveas(gcf,graphFile,'epsc')
-   fprintf('Plot saved as "%s".\n',graphFile);
-   
-end % Run the selected conditions
+   if isfield(oo(1),'psych') && isfield(oo(1).psych,'t')
+      close all % Get rid of any existing figures.
+      for oi=1:length(oo)
+         o=oo(oi);
+         disp(t(oi,vars))
+         % FIT PSYCHOMETRIC FUNCTION
+         clear QUESTPlusFit % Clear the persistent variables.
+         o.alternatives=length(o.alphabet);
+         o.questPlusLapseRates=0:0.01:0.05;
+         o.questPlusGuessingRates=0:0.03:0.3;
+         o.questPlusSteepnesses=[1:0.5:5 6:10];
+         oOut=QUESTPlusFit(o);
+         o.plotFilename=[o.dataFilename '.plot'];
+         file=fullfile(o.dataFolder,[o.plotFilename '.eps']);
+         saveas(gcf,file,'epsc')
+         fprintf('Plot saved as "%s".\n',file);
+      end
+   end % if isfield(oo(1),'psych') && isfield(o.psych,'t')
+end
