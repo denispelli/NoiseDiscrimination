@@ -30,7 +30,7 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
 end
 
 %% CREATE LIST OF CONDITIONS TO BE TESTED
-o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 o.seed=[]; % Fresh.
 % o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
 o.symmetricLuminanceRange=true;
