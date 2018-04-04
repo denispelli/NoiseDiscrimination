@@ -35,6 +35,7 @@ o.seed=[]; % Fresh.
 % o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
 o.symmetricLuminanceRange=true;
 o.useDynamicNoiseMovie=true;
+o.alphabetPlacement='right'; % 'top' or 'right';
 if true
    o.useFlankers=true;
    o.thresholdParameter='flankerContrast';
@@ -45,11 +46,11 @@ else
 end
 o.contrast=-0.16;
 o.flankerContrast=-0.6; % Negative for dark letters.
-o.flankerArrangement='radialAndTangential';
-o.flankerArrangement='radial';
+% o.flankerArrangement='radialAndTangential';
+% o.flankerArrangement='radial';
 o.flankerArrangement='tangential';
 o.annularNoiseSD=0;
-o.flankerSpacingDeg=3;
+o.flankerSpacingDeg=15;
 o.noiseRadiusDeg=inf;
 o.annularNoiseEnvelopeRadiusDeg=o.flankerSpacingDeg;
 o.noiseEnvelopeSpaceConstantDeg=o.flankerSpacingDeg/2;
@@ -58,8 +59,8 @@ o.annularNoiseSmallRadiusDeg=0;
 o.experiment='flankers';
 o.conditionName='P target id. vs. flanker contrast';
 o.eccentricityXYDeg=[0 15];
-o.targetHeightDeg=1;
-o.targetDurationSec=0.2;
+o.targetHeightDeg=1.5;
+o.targetDurationSec=10;
 o.desiredLuminance=[];
 o.desiredLuminanceFactor=1;
 if false
@@ -67,7 +68,7 @@ if false
    o.trialsPerRun=50*length(o.constantStimuli);
    o.useMethodOfConstantStimuli=true;
 else
-   o.trialsPerRun=200;
+   o.trialsPerRun=300;
    o.constantStimuli=[];
    o.useMethodOfConstantStimuli=false;
 end
@@ -77,7 +78,7 @@ o.eyes='both';
 o.condition=1;
 for noiseSD=[0]
    o.viewingDistanceCm=40;
-   o.nearPointXYInUnitSquare=[0.3 0.9];
+   o.nearPointXYInUnitSquare=[0.5 0.9];
    for ecc=15
       o.eccentricityXYDeg=[0,ecc];
       o.noiseCheckDeg=o.targetHeightDeg/20;
