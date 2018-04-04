@@ -186,6 +186,7 @@ if ~skipDataCollection && true
             break
         end
     end
+    fprintf('\n');
     
     %% PRINT THE RESULTS
     t=struct2table(oo(1:oi),'AsArray',true);
@@ -198,7 +199,7 @@ if ~skipDataCollection && true
     close all % Get rid of any existing figures.
     for oi=1:height(t)
         o=oo(oi);
-        t(oi,vars)
+        disp(t(oi,vars))
         % FIT PSYCHOMETRIC FUNCTION
         if isfield(o,'psych') && isfield(o.psych,'t')
             clear QUESTPlusFit % Clear the persistent variables.
