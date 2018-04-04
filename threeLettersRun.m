@@ -30,7 +30,7 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
 end
 
 %% CREATE LIST OF CONDITIONS TO BE TESTED
-o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 o.seed=[]; % Fresh.
 % o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
 o.symmetricLuminanceRange=true;
@@ -192,11 +192,16 @@ if ~skipDataCollection && true
    end
    
    %% PLOT IT
-   if isfield(oo(1),'psych') && isfield(o.psych,'t')
+   if isfield(oo(1),'psych') && isfield(oo(1).psych,'t')
       close all % Get rid of any existing figures.
       for oi=1:length(oo)
+          if(~rows(oi))
+              continue % Skip conditions with zero trials.
+          end
          o=oo(oi);
-         disp(t(oi,vars))
+         if sum(rows)>1
+             disp(t(oi,vars))
+         end
          
          % FIT PSYCHOMETRIC FUNCTION
          clear QUESTPlusFit % Clear the persistent variables.
