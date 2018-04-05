@@ -1002,13 +1002,13 @@ try
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
         fprintf('*Waiting for experimenter name.\n');
         [reply,o]=AskQuestion(window,o,text);
-        o.experimenter=reply;
         if o.quitRun
             ListenChar;
             ShowCursor;
             sca;
             return
         end
+        o.experimenter=reply;
     end
     
     %% ASK OBSERVER NAME
@@ -1020,13 +1020,13 @@ try
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
         fprintf('*Waiting for observer name.\n');
         [reply,o]=AskQuestion(window,o,text);
-        o.observer=reply;
         if o.quitRun
             ListenChar;
             ShowCursor;
             sca;
             return
         end
+        o.observer=reply;
     end
     
     %% ASK FILTER TRANSMISSION
@@ -4800,16 +4800,11 @@ if ismember(terminatorChar,[escapeChar graveAccentChar])
     [o.quitSession,o.quitRun,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
     if o.quitSession
         ffprintf(ff,'*** User typed ESCAPE twice. Session terminated.\n');
-    else
+    elseif o.quitRun
         ffprintf(ff,'*** User typed ESCAPE. Run terminated.\n');
+    else
+        ffprintf(ff,'*** User typed ESCAPE, but chose to continue.\n');
     end
-    % I'm assuming that we haven't yet begun the run. If that's not
-    % generally true then this code should be in the calling program after
-    % the call to AskQuestion.
-    sca;
-    ListenChar;
-    ShowCursor;
-    return
 end
 Screen('FillRect',window,o.gray1);
 % Flip screen soon, to let observer know her answer was accepted.
