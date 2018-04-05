@@ -1,5 +1,5 @@
 function [quitSession,quitRun,skipTrial]=OfferEscapeOptions(window,oo,instructionalMarginPix)
-% quitSession=OfferEscapeOptions(window,o,instructionalMargin)
+% [quitSession,quitRun,skipTrial]=OfferEscapeOptions(window,o,instructionalMargin)
 if oo(1).speakEachLetter && oo(1).useSpeech
    Speak('Escape');
 end
@@ -19,7 +19,7 @@ Screen('TextSize',window,oo(1).textSize);
 % Set background color for DrawFormattedText.
 Screen('DrawText',window,' ',0,0,black,backgroundColor,1);
 if nargout==3
-   string='You escaped. Hit ESCAPE again to quit the whole session. Or hit RETURN to proceed with the next run. Or hit SPACE to proceed to the next trial.';
+   string='You escaped. Any incomplete trial was canceled. Hit ESCAPE again to quit the whole session. Or hit RETURN to proceed with the next run. Or hit SPACE to proceed to the next trial.';
 else
    string='You escaped. Hit ESCAPE again to quit the whole session. Or hit RETURN to proceed with the next run.';
 end
@@ -30,11 +30,13 @@ quitSession=ismember(answer,[escapeChar,graveAccentChar]);
 quitRun=ismember(answer,returnChar)||quitSession;
 skipTrial=ismember(answer,' ');
 if oo(1).useSpeech
-   if quitSession
-      Speak('Escape. Done.');
-   else
-      Speak('Proceeding to next run.');
-   end
+    if quitSession
+        Speak('Done.');
+    elseif quitRun
+        Speak('Proceeding to next run.');
+    elseif skipTrial
+        Speak('Proceeding to next trial.');
+    end
 end
 Screen('FillRect',window);
 end
