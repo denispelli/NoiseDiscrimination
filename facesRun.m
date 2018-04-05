@@ -28,6 +28,7 @@ end
 %% SPECIFY BASIC CONDITION
 o.symmetricLuminanceRange=false; % Allow maximum brightness.
 o.desiredLuminanceFactor=2; % Maximize brightness.
+o.responseScreenAbsoluteContrast=0.9;
 if false
     % Target letter
     o.targetKind='letter';
@@ -190,5 +191,5 @@ if ~skipDataCollection
     legend boxoff
     graphFile=fullfile(o.dataFolder,[o.plotFilename '.eps']);
     saveas(gcf,graphFile,'epsc')
-    fprintf('Plot saved as "%s".\n',graphFile);
+    fprintf('Plot saved in data folder as "%s".\n',[o.plotFilename '.eps']);
 end % if ~skipDataCollection && true
