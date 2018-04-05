@@ -2793,7 +2793,7 @@ try
                             case 'tangential'
                                 angle=[270 90];
                             case 'radialAndTangential'
-                                angle=[270:-90:0];
+                                angle=270:-90:0;
                         end
                         if iMovieFrame==1
                             o.whichFlanker=zeros(size(angle));
@@ -2803,16 +2803,20 @@ try
                             if ~all(o.eccentricityXYDeg==0)
                                 theta=atan2d(o.eccentricityXYDeg(2),o.eccentricityXYDeg(1)); % Direction of target from fixation.
                             else
-                                theta=90; % Default direction is up, for target at fixation.
+                                theta=90; % For target at fixation, default direction is up, .
                             end
-                            theta=theta+angle(j); % The four compass directions, relative to the radius to target.
+                            % "theta" is the angle of the vector from
+                            % fixation to target.
+                            % "angle" is the angle of the displacement from
+                            % target to flanker, relative to theta.
+                            theta=theta+angle(j); % Add "angle" to angle of direction from radius to target.
                             if iMovieFrame==1
                                 o.whichFlanker(j)=randi(o.alternatives);
                             end
                             assert(o.flankerSpacingDeg>0);
                             spacingDeg=o.flankerSpacingDeg;
                             eccDeg=sqrt(sum(o.eccentricityXYDeg.^2));
-                            switch theta
+                            switch angle(j)
                                 case 0
                                     % Outer radial flanker is at specified spacing.
                                 case 180
@@ -2824,10 +2828,10 @@ try
                                     else
                                         % Inner radial flanker is at specified spacing.
                                     end
-                                case [90 270]
+                                case {90 270}
                                     switch o.flankerArrangement
                                         case 'tangential'
-                                            % Tangential flankers are at specified
+                                            % Both tangential flankers are at specified
                                             % spacing.
                                         case 'radialAndTangential'
                                             % When both radial and tangential are
@@ -2840,6 +2844,8 @@ try
                                         otherwise
                                             error('Illegal o.flankerArrangement ''%s''.',o.flankerArrangement);
                                     end
+                                otherwise
+                                    error('Illegal flanker angle %.0f re radial vector from fixation to target.',angle(j));
                             end
                             flankerOffsetXYDeg=spacingDeg*[cosd(theta) sind(theta)]; % x y offset deg
                             o.flankerXYDeg{j}=o.eccentricityXYDeg+flankerOffsetXYDeg; % x y location in deg
@@ -3379,7 +3385,6 @@ try
                     while 1
                         o.quitRun=false;
                         responseChar=GetKeypress;
-                        o.transcript.responseTimeSec(trial)=GetSecs-o.transcript.stimulusOnsetSec(trial);
                         if ismember(responseChar,[escapeChar,graveAccentChar])
                             [o.quitSession,o.quitRun,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
                             trial=trial-1;
@@ -3388,13 +3393,14 @@ try
                                 if o.speakInstructions
                                     Speak('Run terminated.');
                                 end
-                                break;
+                                break
                             end
                             if o.skipTrial
                                 ffprintf(ff,'*** User typed ESCAPE. Skipping trial.\n');
-                                continue
+                                break
                             end
                         end
+                        o.transcript.responseTimeSec(trial)=GetSecs-o.transcript.stimulusOnsetSec(trial);
                         if length(responseChar) > 1
                             % GetKeypress might return a multi-character string,
                             % but our code assumes the response is a scalar, not a
@@ -3410,6 +3416,12 @@ try
                             end
                         end
                     end % while 1
+                    if o.skipTrial
+                        continue
+                    end
+                    if o.quitRun
+                        break
+                    end
                 case 'identifyAll'
                     message=sprintf('Please type all three letters (%s) followed by RETURN:',o.alphabet(1:o.alternatives));
                     textRect=[0, 0, o.textSize, 1.2*o.textSize];
@@ -4495,8 +4507,10 @@ if ~IsXYInRect(o.nearPointXYPix,r)
         o.nearPointXYInUnitSquare,xy,o.targetHeightDeg,o.targetMargin);
     o.nearPointXYInUnitSquare=xy;
 end
-string=sprintf('Please adjust the viewing distance so the X is %.1f cm from the observer''s eye. ',o.viewingDistanceCm);
-string=[string 'Tilt and swivel the display so the X is orthogonal to the line of sight. Then hit RETURN to continue.\n'];
+string=sprintf('Please adjust the viewing distance so the X is %.1f cm from the observer''s eye. ',...
+    o.viewingDistanceCm);
+string=[string 'Tilt and swivel the display so the X is orthogonal to the observer''s line of sight. '...
+    'Then hit RETURN to continue.\n'];
 Screen('TextSize',window,o.textSize);
 Screen('TextFont',window,'Verdana');
 Screen('FillRect',window,o.gray1);
