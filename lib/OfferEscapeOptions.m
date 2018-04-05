@@ -1,6 +1,7 @@
 function [quitSession,quitRun,skipTrial]=OfferEscapeOptions(window,oo,instructionalMarginPix)
-% [quitSession,quitRun,skipTrial]=OfferEscapeOptions(window,o,instructionalMargin)
-if oo(1).speakEachLetter && oo(1).useSpeech
+% [quitSession,quitRun,skipTrial]=OfferEscapeOptions(window,o,instructionalMargin);
+o=oo(1);
+if o.speakEachLetter && o.useSpeech
    Speak('Escape');
 end
 escapeKeyCode=KbName('ESCAPE');
@@ -10,26 +11,34 @@ graveAccentKeyCode=KbName('`~');
 escapeChar=char(27);
 returnChar=char(13);
 graveAccentChar='`';
-backgroundColor=oo(1).gray1;
+backgroundColor=o.gray1;
 Screen('FillRect',window,backgroundColor);
-Screen('TextFont',window,oo(1).textFont,0);
+Screen('TextFont',window,o.textFont,0);
 black=0;
 Screen('Preference','TextAntiAliasing',0);
-Screen('TextSize',window,oo(1).textSize);
+Screen('TextSize',window,o.textSize);
 % Set background color for DrawFormattedText.
 Screen('DrawText',window,' ',0,0,black,backgroundColor,1);
-if nargout==3
-   string='You escaped. Any incomplete trial was canceled. Hit ESCAPE again to quit the whole session. Or hit RETURN to proceed with the next run. Or hit SPACE to proceed to the next trial.';
+lastRun=isfield(o,'runNumber') && isfield(o,'runsDesired') && o.runNumber>=o.runsDesired;
+if lastRun
+    nextRunMsg='';
 else
-   string='You escaped. Hit ESCAPE again to quit the whole session. Or hit RETURN to proceed with the next run.';
+    nextRunMsg='Or hit RETURN to proceed with the next run. ';
 end
-DrawFormattedText(window,string,instructionalMarginPix,instructionalMarginPix+0.5*oo(1).textSize,black,60,[],[],1.1);
+if nargout==3
+   nextTrialMsg='Or hit SPACE to proceed to the next trial.';
+else
+   nextTrialMsg='';
+end
+string=['You escaped. Any incomplete trial was canceled. Hit ESCAPE again to quit the whole session. '...
+    nextRunMsg nextTrialMsg];
+DrawFormattedText(window,string,instructionalMarginPix,instructionalMarginPix+0.5*o.textSize,black,60,[],[],1.1);
 Screen('Flip',window);
-answer=GetKeypress([spaceKeyCode returnKeyCode escapeKeyCode graveAccentKeyCode],oo(1).deviceIndex);
+answer=GetKeypress([spaceKeyCode returnKeyCode escapeKeyCode graveAccentKeyCode],o.deviceIndex);
 quitSession=ismember(answer,[escapeChar,graveAccentChar]);
 quitRun=ismember(answer,returnChar)||quitSession;
 skipTrial=ismember(answer,' ');
-if oo(1).useSpeech
+if o.useSpeech
     if quitSession
         Speak('Done.');
     elseif quitRun
