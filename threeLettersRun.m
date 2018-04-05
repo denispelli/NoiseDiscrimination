@@ -1,14 +1,11 @@
 % flankersRun.m
-% Show target with flankers. Measure psychometric function: probability of
-% identifying the target as a function of flanker contrast. (with and
-% without noise).
-% Letter target surrounded by letter flankers.
-% Noise annulus on flankers only.
+% Show target with two flankers. Report all three. Measure "threshold"
+% contrast of flankers to bring target identification to 75% correct.
 % P=0.75, assuming 9 alternatives
 % luminance 250 cd/m2
-% binocular, 20 deg right.
-% March, 2018
-% Denis Pelli
+% binocular, 15 deg up.
+% April 4, 2018
+% Denis Pelli for project in collaboration with Katerina Malakhova.
 
 %% GET READY
 clear o oo
@@ -20,7 +17,7 @@ end
 if o.questPlusEnable && ~exist('qpInitialize','file')
    error('This script requires the QuestPlus package. Please get it from https://github.com/BrainardLab/mQUESTPlus.')
 end
-addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
+addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % Folder in same directory as this M file.
 cal=OurScreenCalibrations(0);
 if false && ~streq(cal.macModelName,'MacBookPro14,3')
    % For debugging, if this isn't a 15" MacBook Pro 2017, pretend it is.
@@ -28,41 +25,18 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
    cal.screenHeightMm=206; % 8.1"
    warning('PRETENDING THIS IS A 15" MacBook Pro 2017');
 end
-
-%% CREATE LIST OF CONDITIONS TO BE TESTED
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 o.seed=[]; % Fresh.
 % o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
+
+%% CREATE LIST OF CONDITIONS TO BE TESTED
 o.symmetricLuminanceRange=true;
 o.useDynamicNoiseMovie=true;
 o.alphabetPlacement='right'; % 'top' or 'right';
-if true
-   o.useFlankers=true;
-   o.thresholdParameter='flankerContrast';
-   %    o.thresholdParameter='contrast';
-   o.task='identifyAll';
-else
-   o.thresholdParameter='contrast';
-end
-o.contrast=-0.16;
-o.flankerContrast=-0.6; % Negative for dark letters.
-% o.flankerArrangement='radialAndTangential';
-% o.flankerArrangement='radial';
-o.flankerArrangement='tangential';
 o.annularNoiseSD=0;
-o.flankerSpacingDeg=15;
 o.noiseRadiusDeg=inf;
-o.annularNoiseEnvelopeRadiusDeg=o.flankerSpacingDeg;
-o.noiseEnvelopeSpaceConstantDeg=o.flankerSpacingDeg/2;
 o.annularNoiseBigRadiusDeg=inf;
 o.annularNoiseSmallRadiusDeg=0;
-o.experiment='flankers';
-o.conditionName='P target id. vs. flanker contrast';
-o.eccentricityXYDeg=[0 15];
-o.targetHeightDeg=1.5;
-o.targetDurationSec=10;
-o.desiredLuminance=[];
-o.desiredLuminanceFactor=1;
 if false
    o.constantStimuli=[-0.06];
    o.trialsPerRun=50*length(o.constantStimuli);
@@ -72,24 +46,51 @@ else
    o.constantStimuli=[];
    o.useMethodOfConstantStimuli=false;
 end
-%  o.minScreenWidthDeg=10;
+o.experiment='flankers';
+o.targetHeightDeg=2;
+o.targetDurationSec=0.2;
 o.eyes='both';
-% for noiseSD=Shuffle([0 0.16])
+o.contrast=-0.16;
+o.flankerContrast=-0.6; % Negative for dark letters.
+o.flankerArrangement='tangential'; % 'radial' 'radialAndTangential'
+o.viewingDistanceCm=40;
+o.flankerSpacingDeg=2;
+o.eccentricityXYDeg=[0,15];
+o.nearPointXYInUnitSquare=[0.5 0.9];
+o.annularNoiseEnvelopeRadiusDeg=o.flankerSpacingDeg;
+o.noiseEnvelopeSpaceConstantDeg=o.flankerSpacingDeg/2;
+o.fixationCrossWeightDeg=0.09;
 o.condition=1;
+if true
+    o.conditionName='Target threshold contrast, no flankers';
+    o.useFlankers=false;
+    o.thresholdParameter='contrast';
+    o.task='identify';
+    o.nearPointXYInUnitSquare=[0.5 0.9];
+    o.eccentricityXYDeg=[0,ecc];
+    o.noiseCheckDeg=o.targetHeightDeg/20;
+    o.noiseSD=noiseSD;
+    if o.condition==1
+        oo=o;
+    else
+        oo(o.condition)=o;
+    end
+    o.condition=o.condition+1;
+end
+o.conditionName='Flanker threshold contrast for crowding of target';
+o.useFlankers=true;
+o.thresholdParameter='flankerContrast';
+o.task='identifyAll';
+% for noiseSD=Shuffle([0 0.16])
 for noiseSD=[0]
-   o.viewingDistanceCm=40;
-   o.nearPointXYInUnitSquare=[0.5 0.9];
-   for ecc=15
-      o.eccentricityXYDeg=[0,ecc];
-      o.noiseCheckDeg=o.targetHeightDeg/20;
-      o.noiseSD=noiseSD;
-      if o.condition==1
-         oo=o;
-      else
-         oo(o.condition)=o;
-      end
-      o.condition=o.condition+1;
-   end
+    o.noiseCheckDeg=o.targetHeightDeg/20;
+    o.noiseSD=noiseSD;
+    if o.condition==1
+        oo=o;
+    else
+        oo(o.condition)=o;
+    end
+    o.condition=o.condition+1;
 end
 
 %% PRINT THE LIST OF CONDITIONS (ONE PER ROW)
@@ -101,7 +102,7 @@ vars={'condition' 'experiment' 'noiseSD' 'flankerSpacingDeg' 'eccentricityXYDeg'
 disp(t(:,vars)) % Print the oo list of conditions.
 
 %% RUN THE CONDITIONS
-if ~skipDataCollection && true
+if ~skipDataCollection
    % Typically, you'll select just a few of the conditions stored in oo
    % that you want to run now. Select them from the printout of "t" in your
    % Command Window.
@@ -183,24 +184,27 @@ if ~skipDataCollection && true
       end
    end
    fprintf('\n');
-   
+end % if ~skipDataCollection
+    
    %% PRINT THE RESULTS
-   t=struct2table(oo(1:oi),'AsArray',true);
-   rows=t.trials>0;
+   t=struct2table(oo,'AsArray',true);
+   for i=1:height(t)
+       goodRows(i)=~isempty(t.trials{i}) && t.trials{i}>0;
+   end
    vars={'condition' 'observer' 'trials' 'trialsSkipped' 'noiseSD' 'N' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'flankerContrast'};
-   if any(rows)
-      disp(t(rows,vars)) % Print the oo list of conditions, with measured flanker threshold.
+   if any(goodRows)
+      disp(t(goodRows,vars)) % Print the oo list of conditions, with measured flanker threshold.
    end
    
    %% PLOT IT
    if isfield(oo(1),'psych') && isfield(oo(1).psych,'t')
       close all % Get rid of any existing figures.
       for oi=1:length(oo)
-          if(~rows(oi))
+          if(~goodRows(oi))
               continue % Skip conditions with zero trials.
           end
          o=oo(oi);
-         if sum(rows)>1
+         if sum(goodRows)>1
              disp(t(oi,vars))
          end
          
@@ -214,7 +218,7 @@ if ~skipDataCollection && true
          o.plotFilename=[o.dataFilename '.plot'];
          file=fullfile(o.dataFolder,[o.plotFilename '.eps']);
          saveas(gcf,file,'epsc')
-         fprintf('Plot saved as "%s".\n',file);
+         fprintf('Plot saved in data folder as "%s".\n',[o.plotFilename '.eps']);
       end
       
       %% PRELIMINARY ANALYSIS
@@ -242,4 +246,4 @@ if ~skipDataCollection && true
          fprintf('Run %d, %d trials. Proportion correct, ignoring position errors: %.2f %.2f %.2f\n',oi,n,sum(left)/n,sum(middle)/n,sum(right)/n);
       end
    end
-end
+
