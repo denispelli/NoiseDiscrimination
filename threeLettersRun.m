@@ -32,8 +32,8 @@ o.seed=[]; % Fresh.
 %% CREATE LIST OF CONDITIONS TO BE TESTED
 o.experiment='threeLetters';
 o.nearPointXYInUnitSquare=[0.5 0.9];
-o.eccentricityXYDeg=[0,ecc];
-o.flankerSpacingDeg=2;
+o.eccentricityXYDeg=[0,15];
+o.flankerSpacingDeg=3;
 o.targetHeightDeg=2;
 o.noiseCheckDeg=o.targetHeightDeg/20;
 o.targetDurationSec=0.2;
@@ -122,7 +122,7 @@ end
 
 %% PRINT THE LIST OF CONDITIONS (ONE PER ROW)
 % All these vars must be defined in every condition.
-vars={'condition' 'conditionName' 'trialsPerRun' 'noiseSD' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'thresholdParameter'};
+vars={'condition' 'conditionName' 'trialsPerRun' 'noiseSD' 'targetHeightDeg' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'thresholdParameter'};
 tt=table;
 for i=1:length(oo)
     t=struct2table(oo{i},'AsArray',true);
@@ -170,7 +170,7 @@ end % if ~skipDataCollection
 
 %% PRINT THE LIST OF CONDITIONS (ONE PER ROW)
 % All these vars must be defined in every condition.
-vars={'condition' 'experiment' 'conditionName' 'noiseSD' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'thresholdParameter'};
+vars={'condition' 'experiment' 'conditionName' 'noiseSD' 'targetHeightDeg' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'thresholdParameter'};
 tt=table;
 for i=1:length(oo)
     t=struct2table(oo{i},'AsArray',true);
@@ -180,7 +180,7 @@ disp(tt) % Print list of conditions.
 
 %% PRINT THE RESULTS
 % We skip any condition without all these fields.
-vars={'condition' 'conditionName' 'observer' 'trials' 'trialsSkipped' 'noiseSD' 'N' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'flankerContrast'};
+vars={'condition' 'conditionName' 'observer' 'trials' 'trialsSkipped' 'noiseSD' 'N' 'targetHeightDeg' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'flankerContrast'};
 tt=table;
 for oi=1:length(oo)
     t=struct2table(oo{oi},'AsArray',true);
