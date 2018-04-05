@@ -19,8 +19,8 @@
 clear o oo
 skipDataCollection=false; % Enable skipDataCollection to check plotting before we have data.
 o.questPlusEnable=false;
-if verLessThan('matlab','R2013b')
-    error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
+if ~exist('struct2table','file')
+    error('This MATLAB %s is too old. We need MATLAB 2013b or better to use the function "struct2table".',version('-release'));
 end
 if o.questPlusEnable && ~exist('qpInitialize','file')
     error('This script requires the QuestPlus package. Please get it from https://github.com/BrainardLab/mQUESTPlus.')
@@ -35,6 +35,13 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
 end
 o.seed=[]; % Fresh.
 % o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
+if isempty(o.seed)
+    rng('shuffle'); % Use clock to seed the random number generator.
+    generator=rng;
+    o.seed=generator.Seed;
+else
+    rng(o.seed);
+end
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 
 %% CREATE LIST OF CONDITIONS TO BE TESTED
