@@ -11,8 +11,8 @@
 clear o oo
 skipDataCollection=false; % Enable skipDataCollection to check plotting before we have data.
 o.questPlusEnable=false;
-if verLessThan('matlab','R2013b')
-    error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
+if ~exist('struct2table','file')
+    error('This MATLAB %s is too old. We need MATLAB 2013b or better to use the function "struct2table".',version('-release'));
 end
 if o.questPlusEnable && ~exist('qpInitialize','file')
     error('This script requires the QuestPlus package. Please get it from https://github.com/BrainardLab/mQUESTPlus.')
@@ -25,9 +25,9 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
     cal.screenHeightMm=206; % 8.1"
     warning('PRETENDING THIS IS A 15" MacBook Pro 2017');
 end
-% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 o.seed=[]; % Fresh.
 % o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
+% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 
 %% CREATE LIST OF CONDITIONS TO BE TESTED
 o.experiment='threeLetters';
@@ -63,12 +63,14 @@ if true
     o.targetKind='letter';
     o.font='Sloan';
     o.alphabet='DHKNORSVZ';
+    o.contrast=-1; % negative contrast.
 else
     % Target gabor
     o.targetKind='gabor';
     o.targetGaborOrientationsDeg=[0 45 90 135];
     o.targetGaborNames='1234';
     o.alphabet=o.targetGaborNames;
+    o.contrast=1; % positive contrast.
 end
 if false
     % Use QuestPlus to measure steepness.
@@ -80,11 +82,11 @@ if false
     o.questPlusPrint=true;
     o.questPlusPlot=true;
 end
+o.noiseSD=0;
+o.thresholdParameter='contrast';
 
 %% SAVE CONDITIONS IN oo
 oo={};
-o.noiseSD=0;
-o.thresholdParameter='contrast';
 if false
     o.conditionName='Target letter, fixed contrast';
     o.trialsPerRun=50;
@@ -117,7 +119,7 @@ if true
     end
 end
 for i=1:length(oo)
-    oo{i}.condition=i;
+    oo{i}.condition=i; % Number the conditions
 end
 
 %% PRINT THE LIST OF CONDITIONS (ONE PER ROW)
@@ -184,7 +186,7 @@ vars={'condition' 'conditionName' 'observer' 'trials' 'trialsSkipped' 'noiseSD' 
 tt=table;
 for oi=1:length(oo)
     t=struct2table(oo{oi},'AsArray',true);
-    if ~all(ismember({'trials' 'transcript'},t.Properties.VariableNames)) || isempty(t.trials) || t.trials==0
+    if ~all(ismember({'trials' 'contrast' 'transcript'},t.Properties.VariableNames)) || isempty(t.trials) || t.trials==0
         % Skip condition without data.
         continue
     end
@@ -206,16 +208,14 @@ for oi=1:length(oo)
         end
     end
     tt(end+1,:)=t(1,vars);
-end
+end % for oi=1:length(oo)
 disp(tt) % Print the list of conditions, with results.
 
 close all % Get rid of any existing figures.
 for ti=1:height(tt)
-    %% PLOT IT
     o=oo{tt.condition(ti)};
-%     disp(tt(ti,:))
     
-    % FIT PSYCHOMETRIC FUNCTION
+    %% FIT PSYCHOMETRIC FUNCTION
     clear QUESTPlusFit % Clear the persistent variables.
     o.alternatives=length(o.alphabet);
     o.questPlusLapseRates=0:0.01:0.05;
