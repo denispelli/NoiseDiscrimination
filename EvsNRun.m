@@ -17,8 +17,8 @@
 clear o oo
 skipDataCollection=false; % Enable skipDataCollection to check plotting before we have data.
 o.questPlusEnable=false;
-if verLessThan('matlab','R2013b')
-    error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
+if ~exist('struct2table','file')
+    error('This MATLAB %s is too old. We need MATLAB 2013b or better to use the function "struct2table".',version('-release'));
 end
 if o.questPlusEnable && ~exist('qpInitialize','file')
     error('This script requires the QuestPlus package. Please get it from https://github.com/BrainardLab/mQUESTPlus.')
