@@ -27,6 +27,13 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
 end
 o.seed=[]; % Fresh.
 % o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
+if isempty(o.seed)
+    rng('shuffle'); % Use clock to seed the random number generator.
+    generator=rng;
+    o.seed=generator.Seed;
+else
+    rng(o.seed);
+end
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 
 %% CREATE LIST OF CONDITIONS TO BE TESTED
@@ -124,7 +131,7 @@ end
 
 %% PRINT THE LIST OF CONDITIONS (ONE PER ROW)
 % All these vars must be defined in every condition.
-vars={'condition' 'conditionName' 'trialsPerRun' 'noiseSD' 'targetHeightDeg' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'thresholdParameter'};
+vars={'condition' 'conditionName' 'trialsPerRun' 'noiseSD' 'targetHeightDeg' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'thresholdParameter' 'seed'};
 tt=table;
 for i=1:length(oo)
     t=struct2table(oo{i},'AsArray',true);
@@ -182,7 +189,7 @@ disp(tt) % Print list of conditions.
 
 %% PRINT THE RESULTS
 % We skip any condition without all these fields.
-vars={'condition' 'conditionName' 'observer' 'trials' 'trialsSkipped' 'noiseSD' 'N' 'targetHeightDeg' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'flankerContrast'};
+vars={'condition' 'conditionName' 'observer' 'trials' 'trialsSkipped' 'noiseSD' 'N' 'targetHeightDeg' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'flankerContrast' 'seed'};
 tt=table;
 for oi=1:length(oo)
     t=struct2table(oo{oi},'AsArray',true);
@@ -190,22 +197,12 @@ for oi=1:length(oo)
         % Skip condition without data.
         continue
     end
-    if false
-        % Create empty cell for every missing field in the condition.
-        missing=~ismember(vars,t.Properties.VariableNames);
-        missingNames=vars(missing);
-        for i=1:length(missingNames)
-            name=missingNames{i};
-            t.(name)=[];
-        end
-    else
-        % Warn, skip the condition, and report which fields were missing.
-        ok=ismember(vars,t.Properties.VariableNames);
-        if ~all(ok)
-            missing=join(vars(~ok),' ');
-            warning('Skipping incomplete condition %d, because it lacks: %s',i,missing{1});
-            continue
-        end
+    % Warn, skip the condition, and report which fields were missing.
+    ok=ismember(vars,t.Properties.VariableNames);
+    if ~all(ok)
+        missing=join(vars(~ok),' ');
+        warning('Skipping incomplete condition %d, because it lacks: %s',i,missing{1});
+        continue
     end
     tt(end+1,:)=t(1,vars);
 end % for oi=1:length(oo)
