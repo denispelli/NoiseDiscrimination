@@ -58,15 +58,6 @@ o.moviePreSec=0.2;
 o.moviePostSec=0.2;
 o.targetMarkDeg=2;
 o.fixationCrossDeg=3;
-% if false
-%     o.constantStimuli=[-0.06];
-%     o.trialsPerRun=50*length(o.constantStimuli);
-%     o.useMethodOfConstantStimuli=true;
-% else
-%     o.trialsPerRun=300;
-%     o.constantStimuli=[];
-%     o.useMethodOfConstantStimuli=false;
-% end
 if true
     % Target letter
     o.targetKind='letter';
@@ -90,10 +81,20 @@ if false
     o.questPlusPlot=true;
 end
 
-%% LOOPS TO CREATE SEVERAL CONDITIONS
+%% SAVE CONDITIONS IN oo
 oo={};
+o.noiseSD=0;
+o.thresholdParameter='contrast';
+if false
+    o.conditionName='Target letter, fixed contrast';
+    o.trialsPerRun=50;
+    o.constantStimuli=[-0.30];
+    o.useMethodOfConstantStimuli=true;
+    oo{end+1}=o;
+end
+o.useMethodOfConstantStimuli=false;
 if true
-    o.conditionName='Target threshold contrast, no flankers';
+    o.conditionName='Threshold contrast';
     o.trialsPerRun=50;
     o.useFlankers=false;
     o.thresholdParameter='contrast';
@@ -102,9 +103,10 @@ if true
     oo{end+1}=o;
 end
 if true
-    o.conditionName='Flanker threshold contrast for crowding of target';
+    o.conditionName='Threshold contrast of crowding';
     o.trialsPerRun=300;
     o.useFlankers=true;
+    o.contrast=-0.3;
     o.thresholdParameter='flankerContrast';
     o.task='identifyAll';
     % for noiseSD=Shuffle([0 0.16])
@@ -225,7 +227,7 @@ for ti=1:height(tt)
     saveas(gcf,file,'epsc')
     fprintf('Plot saved in data folder as "%s".\n',[o.plotFilename '.eps']);
     
-    %% PRELIMINARY ANALYSIS
+    %% PRELIMINARY ANALYSIS OF FLANKER DATA
     if isfield(o,'transcript') && isfield(o.transcript,'flankers') && isfield(o.transcript,'flankerResponse')
         n=length(o.transcript.response);
         left=zeros([1,n]);
