@@ -36,7 +36,7 @@ else
 end
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 
-%% CREATE LIST OF CONDITIONS TO BE TESTED
+%% SPECIFY BASIC CONDITION
 % In each of the 3 domains: photon, cortical, ganglion
 % Two noise levels, noiseSD: 0 0.16
 o.experiment='EvsN';
@@ -135,7 +135,7 @@ for i=1:length(oo)
     oo{i}.condition=i; % Number the conditions
 end
 
-%% PRINT THE LIST OF CONDITIONS (ONE PER ROW)
+%% PRINT THE CONDITIONS
 % All these vars must be defined in every condition.
 vars={'condition' 'experiment' 'conditionName' ...
     'useFilter' 'eccentricityXYDeg' ...
