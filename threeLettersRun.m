@@ -36,7 +36,7 @@ else
 end
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 
-%% CREATE LIST OF CONDITIONS TO BE TESTED
+%% SPECIFY BASIC CONDITION
 o.experiment='threeLetters';
 o.nearPointXYInUnitSquare=[0.5 0.9];
 o.eccentricityXYDeg=[0,15];
