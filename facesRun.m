@@ -25,7 +25,7 @@ else
 end
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 
-%% CREATE LIST OF CONDITIONS TO BE TESTED
+%% SPECIFY BASIC CONDITION
 o.symmetricLuminanceRange=false; % Allow maximum brightness.
 o.desiredLuminanceFactor=2; % Maximize brightness.
 if false
@@ -60,6 +60,15 @@ o.observer='';
 o.noiseSD=0;
 o.thresholdParameter='contrast';
 o.conditionName='threshold';
+o.blankingRadiusReTargetHeight=0;
+o.targetMarkDeg=1;
+o.fixationCrossDeg=3;
+o.alternatives=length(o.alphabet);
+if all(o.eccentricityXYDeg==0)
+    o.markTargetLocation=false;
+else
+    o.markTargetLocation=true;
+end
 if false
     % Use QuestPlus to measure steepness.
     o.questPlusEnable=true;
@@ -70,15 +79,6 @@ if false
     o.questPlusPrint=true;
     o.questPlusPlot=true;
 end
-if all(o.eccentricityXYDeg==0)
-    o.markTargetLocation=false;
-else
-    o.markTargetLocation=true;
-end
-o.blankingRadiusReTargetHeight=0;
-o.targetMarkDeg=1;
-o.fixationCrossDeg=3;
-o.alternatives=length(o.alphabet);
 
 %% SAVE CONDITIONS IN oo
 oo={};
