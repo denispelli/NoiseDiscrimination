@@ -1,9 +1,9 @@
-% flankersRun.m
-% Show target with two flankers. Report all three. Measure "threshold"
+% threeLettersRun.m
+% Show target with two flankers. Report all three. Measure threshold
 % contrast of flankers to bring target identification to 75% correct.
 % P=0.75, assuming 9 alternatives
 % luminance 250 cd/m2
-% binocular, 15 deg up.
+% binocular, 15 deg vertical eccentricity.
 % April 4, 2018
 % Denis Pelli for project in collaboration with Katerina Malakhova.
 
@@ -19,12 +19,6 @@ if o.questPlusEnable && ~exist('qpInitialize','file')
 end
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % Folder in same directory as this M file.
 cal=OurScreenCalibrations(0);
-if false && ~streq(cal.macModelName,'MacBookPro14,3')
-    % For debugging, if this isn't a 15" MacBook Pro 2017, pretend it is.
-    cal.screenWidthMm=330; % 13"
-    cal.screenHeightMm=206; % 8.1"
-    warning('PRETENDING THIS IS A 15" MacBook Pro 2017');
-end
 o.seed=[]; % Fresh.
 % o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
 if isempty(o.seed)
@@ -92,7 +86,7 @@ end
 o.noiseSD=0;
 o.thresholdParameter='contrast';
 
-%% SAVE CONDITIONS IN oo
+%% SAVE THE CONDITIONS IN STRUCT oo
 oo={};
 if false
     o.conditionName='Target letter, fixed contrast';
@@ -125,11 +119,20 @@ if true
         oo{end+1}=o;
     end
 end
-for i=1:length(oo)
-    oo{i}.condition=i; % Number the conditions
+% POLISH THE LIST OF CONDITIONS
+for oi=1:length(oo)
+    o=oo{oi};
+    o.condition=oi; % Number the conditions
+    o.alternatives=length(o.alphabet);
+    if all(o.eccentricityXYDeg==0)
+        o.markTargetLocation=false;
+    else
+        o.markTargetLocation=true;
+    end
+    oo{oi}=o;
 end
 
-%% PRINT THE LIST OF CONDITIONS (ONE PER ROW)
+%% PRINT THE CONDITIONS (ONE PER ROW) AS TABLE TT
 % All these vars must be defined in every condition.
 vars={'condition' 'conditionName' 'trialsPerRun' 'noiseSD' 'targetHeightDeg' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'thresholdParameter' 'seed'};
 tt=table;
@@ -142,43 +145,30 @@ disp(tt) % Print the oo list of conditions.
 %% RUN THE CONDITIONS
 if ~skipDataCollection
     % Typically, you'll select just a few of the conditions stored in oo
-    % that you want to run now. Select them from the printout of "tt" in your
-    % Command Window.
+    % that you want to run now. Select them from the above printing of "tt"
+    % in your Command Window.
     clear oOut
-    for oi=1:length(oo) % Edit this line to select which conditions to run now.
+    for oi=1:length(oo) % Edit this line to select conditions to run now.
         o=oo{oi};
+        if oi>1
+            % Reuse answers from immediately preceding run.
+            o.experimenter=oo{oi-1}.experimenter;
+            o.observer=oo{oi-1}.observer;
+            % Setting o.useFilter false forces o.filterTransmission=1.
+            o.filterTransmission=oo{oi-1}.filterTransmission;
+        end
         o.runNumber=oi;
         o.runsDesired=length(oo);
-        o.alternatives=length(o.alphabet);
-        if exist('oOut','var')
-            % Reuse answers from immediately preceding run.
-            o.experimenter=oOut.experimenter;
-            o.observer=oOut.observer;
-            % Setting o.useFilter false forces o.filterTransmission=1.
-            o.filterTransmission=oOut.filterTransmission;
-        end
-        if all(o.eccentricityXYDeg==0)
-            o.markTargetLocation=false;
-        else
-            o.markTargetLocation=true;
-        end
-        oOut=NoiseDiscrimination(o); % RUN THE EXPERIMENT!
-        oo{oi}=oOut; % Save results in oo.
-        if isfield(oOut,'psych')
-            fprintf(['<strong>%s: noiseSD %.2f, log N %.2f, flankerSpacingDeg %.1f, '...
-                'target contrast %.3f, threshold flankerContrast %.3f</strong>\n'],...
-                oOut.conditionName,oOut.noiseSD,log10(oOut.N),oOut.flankerSpacingDeg,...
-                oOut.contrast,oOut.flankerContrast);
-        end
-        if oOut.quitSession
+        oo{oi}=NoiseDiscrimination(o); % RUN THE EXPERIMENT!
+        if oo{oi}.quitSession
             break
         end
     end
     fprintf('\n');
 end % if ~skipDataCollection
 
-%% PRINT THE RESULTS
-% We skip any condition without all these fields.
+%% PRINT SUMMARY OF RESULTS AS TABLE TT
+% Include whatever you're intersted in. We skip rows missing any value.
 vars={'condition' 'conditionName' 'observer' 'trials' 'trialsSkipped' 'noiseSD' 'N' 'targetHeightDeg' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'flankerContrast' 'seed'};
 tt=table;
 for oi=1:length(oo)
@@ -197,6 +187,9 @@ for oi=1:length(oo)
     tt(end+1,:)=t(1,vars);
 end % for oi=1:length(oo)
 disp(tt) % Print the list of conditions, with results.
+if isempty(tt)
+    return
+end
 
 close all % Get rid of any existing figures.
 for ti=1:height(tt)
