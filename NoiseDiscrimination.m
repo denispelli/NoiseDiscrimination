@@ -1002,6 +1002,8 @@ try
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
         fprintf('*Waiting for experimenter name.\n');
         [reply,o]=AskQuestion(window,o,text);
+        persistent textSizeThatFits
+        textSizeThatFits=o.textSize; % Save for later use.
         if o.quitRun
             ListenChar;
             ShowCursor;
@@ -1036,94 +1038,44 @@ try
         if previousRunUsedFilter
             % If the preceding run had a filter, and this run does not, we ask
             % the observer to remove the filter or sunglasses.
-            ListenChar(2); % no echo
-            Screen('FillRect',window,o.gray1);
-            Screen('TextSize',window,o.textSize);
-            Screen('TextFont',window,o.textFont,0);
-            Screen('DrawText',window,'Please remove any filter or sunglasses.',...
-                o.instructionalMarginPix,screenRect(4)/2-7*o.textSize,black,o.gray1);
-            Screen('DrawText',window,'Hit RETURN to continue.',...
-                o.instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
-            Screen('TextSize',window,round(o.textSize*0.35));
-            Screen('DrawText',window,'NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.',...
-                o.instructionalMarginPix,screenRect(4)-0.5*o.instructionalMarginPix,black,o.gray1,1);
-            Screen('TextSize',window,o.textSize);
-            if IsWindows
-                background=[];
-            else
-                background=o.gray1;
-            end
+            text.big={'Please remove any filter or sunglasses. Hit RETURN to continue.'};
+            text.small='';
+            text.fine='';
+            text.question='';
+            text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
             fprintf('*Waiting for observer to remove sunglasses.\n');
-            [~,terminatorChar]=GetEchoString(window,'',...
-                o.instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
-            if ismember(terminatorChar,[escapeChar graveAccentChar])
-                [o.quitSession,o.quitRun]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
-                if o.quitSession
-                    ffprintf(ff,'*** User typed ESCAPE twice. Session terminated.\n');
-                else
-                    ffprintf(ff,'*** User typed ESCAPE. Run terminated.\n');
-                end
-                ListenChar;
-                ShowCursor;
-                sca;
-                return
-            end
-            Screen('FillRect',window,o.gray1);
-            % Keep the temporary window open until we open the main one, so
-            % observer knows program is running.
+            [~,o]=AskQuestion(window,o,text);
         end
     else % if ~o.useFilter
-        ListenChar(2); % no echo
-        Screen('FillRect',window,o.gray1);
-        Screen('TextSize',window,o.textSize);
-        Screen('TextFont',window,o.textFont,0);
-        Screen('DrawText',window,'Please use a filter or sunglasses to reduce the luminance.',...
-            o.instructionalMarginPix,screenRect(4)/2-9*o.textSize,black,o.gray1);
-        Screen('DrawText',window,'(Our lab sunglasses transmit 0.115)',...
-            o.instructionalMarginPix,screenRect(4)/2-7*o.textSize,black,o.gray1);
-        Screen('DrawText',window,'Please slowly type its transmission (between 0.000 and 1.000)',...
-            o.instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
+        text.big={'Please use a filter or sunglasses to reduce the luminance.' '(Our lab sunglasses transmit 0.115)' 'Please slowly type its transmission (between 0.000 and 1.000)' 'followed by RETURN.'};
         if isempty(o.filterTransmission)
-            Screen('DrawText',window,'followed by RETURN.',...
-                o.instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
+            text.big{end}='followed by RETURN.';
         else
-            Screen('DrawText',window,sprintf('followed by RETURN. Or just hit RETURN to say: %.3f',o.filterTransmission),...
-                o.instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
+            text.big{end}=sprintf('followed by RETURN. Or just hit RETURN to say: %.3f',o.filterTransmission);
         end
-        Screen('TextSize',window,round(o.textSize*0.35));
-        Screen('DrawText',window,'NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.',...
-            o.instructionalMarginPix,screenRect(4)-0.5*o.instructionalMarginPix,black,o.gray1,1);
-        Screen('TextSize',window,o.textSize);
-        if IsWindows
-            background=[];
-        else
-            background=o.gray1;
-        end
-        fprintf('*Waiting for observer to specify filter transmission.\n');
-        [name,terminatorChar]=GetEchoString(window,'Filter transmission:',...
-            o.instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
-        if ~isempty(name)
-            o.filterTransmission=str2num(name);
-        end
-        if isempty(o.filterTransmission)
-            error('You must specify the filter transmission.');
-        end
-        if ismember(terminatorChar,[escapeChar graveAccentChar])
-            [o.quitSession,o.quitRun]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
-            if o.quitSession
-                ffprintf(ff,'*** User typed ESCAPE twice. Session terminated.\n');
-            else
-                ffprintf(ff,'*** User typed ESCAPE. Run terminated.\n');
+        text.small='';
+        text.fine='';
+        text.question='Filter transmission:';
+        text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
+        [reply,o]=AskQuestion(window,o,text);
+        if ~o.quitRun
+            if ~isempty(reply)
+                o.filterTransmission=str2num(reply);
             end
-            ListenChar;
-            ShowCursor;
-            sca;
-            return
+            if isempty(o.filterTransmission)
+                error('Sorry. You must specify the filter transmission.');
+            end
         end
-        Screen('FillRect',window,o.gray1);
-        % Keep the temporary window open until we open the main one, so observer
-        % knows program is running.
-    end % if previousRunUsedFilter
+    end % if ~o.useFilter
+    if o.quitRun
+        ListenChar;
+        ShowCursor;
+        sca;
+        return
+    end
+    Screen('FillRect',window,o.gray1);
+    % Keep the temporary window open until we open the main one, so observer
+    % knows program is running.
     previousRunUsedFilter=o.useFilter;
     
     %% PUPIL SIZE
@@ -4753,12 +4705,12 @@ assert(isfinite(o.gray));
 end % function ComputeClut
 
 function [reply,o]=AskQuestion(window,o,text)
-% text.big, text.small, text.fine, text.question
-% We optionally return o which is  possibly modified from the input o in
-% o.textSize o.quitSession o.quitRun and o.skipTrial.
-% If "text" is provided then o.textSize is adjusted so make the line fit
-% horizontally within screenRect.
-% ASK QUESTION
+% Last argument is a struct with several fields: text.big, text.small,
+% text.fine, text.question, text.setTextSizeToMakeThisLineFit. We
+% optionally return "o" which is  possibly modified from the input o in
+% o.textSize o.quitSession o.quitRun and o.skipTrial. If "text" has the
+% field text.setTextSizeToMakeThisLineFit then o.textSize is adjusted to
+% make the line fit horizontally within screenRect.
 global screenRect ff
 escapeChar=char(27);
 graveAccentChar='`';
@@ -4782,10 +4734,14 @@ ListenChar(2); % no echo
 Screen('FillRect',window,o.gray1);
 Screen('TextSize',window,o.textSize);
 Screen('TextFont',window,o.textFont,0);
-Screen('DrawText',window,text.big{1},o.instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
-Screen('DrawText',window,text.big{2},o.instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
+y=screenRect(4)/2-(1+2*length(text.big))*o.textSize;
+for i=1:length(text.big)
+    Screen('DrawText',window,text.big{i},o.instructionalMarginPix,y,black,o.gray1);
+    y=y+2*o.textSize;
+end
+y=y-0.5*o.textSize;
 Screen('TextSize',window,round(0.6*o.textSize));
-Screen('DrawText',window,text.small,o.instructionalMarginPix,screenRect(4)/2-1.5*o.textSize,black,o.gray1);
+Screen('DrawText',window,text.small,o.instructionalMarginPix,y,black,o.gray1);
 Screen('TextSize',window,round(o.textSize*0.35));
 Screen('DrawText',window,text.fine,o.instructionalMarginPix,screenRect(4)-0.5*o.instructionalMarginPix,black,o.gray1,1);
 Screen('TextSize',window,o.textSize);
