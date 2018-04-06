@@ -1002,8 +1002,6 @@ try
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
         fprintf('*Waiting for experimenter name.\n');
         [reply,o]=AskQuestion(window,o,text);
-        persistent textSizeThatFits
-        textSizeThatFits=o.textSize; % Save for later use.
         if o.quitRun
             ListenChar;
             ShowCursor;
@@ -1097,12 +1095,14 @@ try
     end
     
     %% LUMINANCE
-    % LStandard is the highest luminance at which we can display a sinusoid
-    % at maximum contrast (nearly 1). I have done most of my experiments at
-    % that luminance.
+    % LStandard is the highest o.LBackground luminance at which we can
+    % display a sinusoid at maximum contrast (nearly 1). I have done most
+    % of my experiments at that luminance.
     LStandard=mean([min(cal.old.L) max(cal.old.L)]);
     if 1 ~= ~isempty(o.desiredRetinalIlluminanceTd)+~isempty(o.desiredLuminance)+~isempty(o.desiredLuminanceFactor)
-        error('You must specify one and only one of o.desiredLuminanceFactor, o.desiredLuminance, and o.desiredRetinalIlluminanceTd.');
+        error(['You must specify one and only one of o.desiredLuminanceFactor, '...
+            'o.desiredLuminance, and o.desiredRetinalIlluminanceTd.'...
+            'The default is o.desiredLuminanceFactor=1']);
     end
     if ~isempty(o.desiredLuminance)
         o.luminanceFactor=o.desiredLuminance/(LStandard*o.filterTransmission);
