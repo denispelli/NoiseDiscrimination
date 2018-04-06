@@ -177,16 +177,6 @@ if ~skipDataCollection
     fprintf('\n');
 end % if ~skipDataCollection
 
-%% PRINT THE LIST OF CONDITIONS (ONE PER ROW)
-% All these vars must be defined in every condition.
-vars={'condition' 'experiment' 'conditionName' 'noiseSD' 'targetHeightDeg' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'thresholdParameter'};
-tt=table;
-for i=1:length(oo)
-    t=struct2table(oo{i},'AsArray',true);
-    tt(i,:)=t(1,vars);
-end
-disp(tt) % Print list of conditions.
-
 %% PRINT THE RESULTS
 % We skip any condition without all these fields.
 vars={'condition' 'conditionName' 'observer' 'trials' 'trialsSkipped' 'noiseSD' 'N' 'targetHeightDeg' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'flankerContrast' 'seed'};
