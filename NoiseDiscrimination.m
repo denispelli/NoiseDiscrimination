@@ -1558,6 +1558,8 @@ try
     %% CONFIRM OLD ANSWERS IF STALE OR OBSERVER CHANGED
     if ~isempty(oOld) && (GetSecs-oOld.secs>10*60 || ~streq(oOld.observer,o.observer))
         Screen('Preference','TextAntiAliasing',1);
+        % o.textSize=TextSizeToFit(window); % Nicer size, but text would
+        % need wrapping.
         Screen('TextSize',window,o.textSize);
         Screen('TextFont',window,'Verdana');
         Screen('FillRect',window,o.gray1);
@@ -4715,21 +4717,7 @@ global screenRect ff
 escapeChar=char(27);
 graveAccentChar='`';
 black=0;
-if isfield(text,'setTextSizeToMakeThisLineFit') && ~isempty(text.setTextSizeToMakeThisLineFit)
-    % Adjust o.textSize so our standard string just fits on screen.
-    Screen('TextSize',window,o.textSize);
-    Screen('TextFont',window,o.textFont,0);
-    font=Screen('TextFont',window);
-    if ~streq(font,o.textFont)
-        warning off backtrace
-        warning('The o.textFont "%s" is not available. Using %s instead.',o.textFont,font);
-        warning on backtrace
-    end
-    boundsRect=Screen('TextBounds',window,text.setTextSizeToMakeThisLineFit);
-    fraction=RectWidth(boundsRect)/(RectWidth(screenRect)-2*o.instructionalMarginPix);
-    % Adjust textSize so our line fits perfectly.
-    o.textSize=round(o.textSize/fraction);
-end
+o.textSize=TextSizeToFit(window);
 ListenChar(2); % no echo
 Screen('FillRect',window,o.gray1);
 Screen('TextSize',window,o.textSize);
