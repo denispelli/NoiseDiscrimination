@@ -53,14 +53,14 @@ if ~isfield(fix,'blankingRadiusPix')
    fix.blankingRadiusPix=fix.blankingRadiusReEccentricity*eccentricityPix; % 0 for no blanking.
    fix.blankingRadiusPix=max(fix.blankingRadiusPix,fix.blankingRadiusReTargetHeight*fix.targetHeightPix);
 end
-if 2*fix.blankingRadiusPix>=fix.targetMarkPix
+if 2*fix.blankingRadiusPix>=fix.targetMarkPix % 2* converts radius to diameter.
    fix.markTargetLocation=0;
 end
 % Compute a list of four lines to draw a cross at fixation and an X at the
 % target location. We clip with the (screen) clipRect. We then define a
 % blanking rect around the target and use it to ErasePartOfLineSegment for
 % every line in the list. This may increase or decrease the list length.
-fix.xy=round(fix.xy); % printout is more readable for integers.
+fix.xy=round(fix.xy); % Printout is more readable for integers.
 x0=fix.xy(1); % fixation
 y0=fix.xy(2);
 % Two lines create a cross at fixation.
