@@ -4,13 +4,10 @@
 % April 5, 2018
 % Denis Pelli
 
-% STANDARD CONDITION
-% January 31, 2018
 % Measure each Neq twice.
 % Six observers.
 % gabor target at 1 of 4 orientations
 % P=0.75, assuming 4 alternatives
-% luminance 250 cd/m2
 % monocular, temporal field, right eye
 
 %% MAX SD OF EACH NOISE TYPE
@@ -61,6 +58,20 @@ o.fixationCrossDeg=3;
 o.blankingRadiusReEccentricity=0;
 o.blankingRadiusReTargetHeight=0;
 o.targetMarkDeg=1;
+o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
+if 0
+    % Target letter
+    o.targetKind='letter';
+    o.font='Sloan';
+    o.alphabet='DHKNORSVZ';
+else
+    % Target gabor
+    o.targetKind='gabor';
+    o.targetGaborOrientationsDeg=[0 45 90 135];
+    o.targetGaborNames='1234';
+    o.alphabet=o.targetGaborNames;
+end
+o.alternatives=length(o.alphabet);
 if false
     % Use QuestPlus to measure steepness.
     o.questPlusEnable=true;
@@ -71,9 +82,8 @@ if false
     o.questPlusPrint=true;
     o.questPlusPlot=true;
 end
-o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
 
-%% SAVE CONDITIONS IN oo
+%% SAVE CONDITIONS IN oo STRUCT
 oo={};
 % THREE DOMAINS: photon, cortical, ganglion
 for domain=0:3
@@ -128,19 +138,6 @@ for domain=0:3
             o.noiseType='binary';
     end
     o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
-    if 0
-        % Target letter
-        o.targetKind='letter';
-        o.font='Sloan';
-        o.alphabet='DHKNORSVZ';
-    else
-        % Target gabor
-        o.targetKind='gabor';
-        o.targetGaborOrientationsDeg=[0 45 90 135];
-        o.targetGaborNames='1234';
-        o.alphabet=o.targetGaborNames;
-    end
-    o.alternatives=length(o.alphabet);
     if all(o.eccentricityXYDeg==0)
         o.markTargetLocation=false;
         o.fixationCrossDeg=inf;
@@ -168,7 +165,7 @@ for i=1:length(oo)
     oo{i}.condition=i; % Number the conditions
 end
 
-%% PRINT THE CONDITIONS
+%% PRINT THE CONDITIONS (ONE PER ROW) AS TABLE TT
 % All these vars must be defined in every condition.
 vars={'condition' 'experiment' 'conditionName' ...
     'useFilter' 'eccentricityXYDeg' ...
@@ -184,13 +181,13 @@ disp(tt) % Print list of conditions.
 %% RUN THE CONDITIONS
 if ~skipDataCollection
     % Typically, you'll select just a few of the conditions stored in oo
-    % that you want to run now. Select them from the printout of "tt" in your
-    % Command Window.
-    % NOTE: Typically, conditions with the same conditionName are randonly shuffled
-    % every time you run this, unless you set o.seed, above, to the 'seed'
-    % used to generate the table you want to reproduce.
+    % that you want to run now. Select them from the printout of "tt" in
+    % your Command Window.
+    % NOTE: Typically, conditions with the same conditionName are randonly
+    % shuffled every time you run this, unless you set o.seed, above, to
+    % the 'seed' used to generate the table you want to reproduce.
     clear oOut
-    for oi=1:length(oo) % Edit this line to select which conditions to run now.
+    for oi=1:length(oo) % Edit this line to select conditions to run now.
         o=oo{oi};
         o.runNumber=oi;
         o.runsDesired=length(oo);
@@ -202,7 +199,7 @@ if ~skipDataCollection
             o.filterTransmission=oOut.filterTransmission;
         end
         oOut=NoiseDiscrimination(o); % RUN THE EXPERIMENT!
-        oo{oi}=oOut; % Save results in oo.
+        oo{oi}=oOut; % Save results in cell array oo.
         if oOut.quitSession
             break
         end
@@ -210,15 +207,18 @@ if ~skipDataCollection
     end % for oi=1:length(oo)
 end % if ~skipDataCollection
 
-%% PRINT SUMMARY OF RESULTS
-% All these vars must be defined in every condition.
+%% PRINT SUMMARY OF RESULTS AS TABLE TT
+% Include whatever you're intersted in. We skip rows missing any value.
 vars={'condition' 'experiment' 'conditionName' ...
     'useFilter' 'luminanceAtEye' 'eccentricityXYDeg' ...
     'targetDurationSec' 'targetCyclesPerDeg' ...
-    'targetHeightDeg' 'targetGaborCycles' 'noiseSD' 'N' 'noiseType' 'E' 'contrast'};
+    'targetHeightDeg' 'targetGaborCycles' ...
+    'noiseSD' 'N' 'noiseType' 'E' 'contrast'};
 tt=table;
 for i=1:length(oo)
+    % Grab the variables we want into a one-row table.
     t=struct2table(oo{i},'AsArray',true);
+    % Skip incomplete rows.
     if ~all(ismember({'trials' 'contrast' 'transcript'},t.Properties.VariableNames)) || isempty(t.trials) || t.trials==0
         % Skip condition without data.
         continue
@@ -230,15 +230,18 @@ for i=1:length(oo)
         warning('Skipping incomplete condition %d, because it lacks: %s',i,missing{1});
         continue
     end
-    tt(i,:)=t(1,vars);
+    % Add the complete row to our session table, with all conditions
+    % completed.
+    tt(end+1,:)=t(1,vars);
 end
 disp(tt) % Print summary.
+if isempty(tt)
+    return
+end
 
 %% SAVE SUMMARY OF RESULTS
-o=oOut;
-if isfield(o,'dataFilename')
-    o.summaryFilename=[o.dataFilename '.summary'];
-    writetable(tt,fullfile(o.dataFolder,[o.summaryFilename '.csv']));
-    save(fullfile(o.dataFolder,[o.summaryFilename '.mat']),'tt','oo');
-    fprintf('Summary saved in data folder as "%s" with extensions ".csv" and ".mat".\n',o.summaryFilename);
-end
+o=oo{1};
+o.summaryFilename=[o.dataFilename '.summary'];
+writetable(tt,fullfile(o.dataFolder,[o.summaryFilename '.csv']));
+save(fullfile(o.dataFolder,[o.summaryFilename '.mat']),'tt','oo');
+fprintf('Summary saved in data folder as "%s" with extensions ".csv" and ".mat".\n',o.summaryFilename);
