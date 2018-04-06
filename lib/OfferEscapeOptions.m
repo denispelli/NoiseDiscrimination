@@ -17,6 +17,13 @@ Screen('FillRect',window,backgroundColor);
 Screen('TextFont',window,o.textFont,0);
 black=0;
 Screen('Preference','TextAntiAliasing',0);
+if isfield(o,'trials')&&isfield(o,'trialsPerRun')&&isfield(o,'runNumber')&&isfield(o,'runsDesired')&&isfield(o,'textSize')
+    message=sprintf('Trial %d of %d. Run %d of %d.',o.trials,o.trialsPerRun,o.runNumber,o.runsDesired);
+    Screen('DrawText',window,message,o.textSize/2,o.textSize/2,black,backgroundColor);
+    y=o.textSize;
+else
+    y=0;
+end
 Screen('TextSize',window,o.textSize);
 % Set background color for DrawFormattedText.
 Screen('DrawText',window,' ',0,0,black,backgroundColor,1);
@@ -33,7 +40,7 @@ else
 end
 string=['You escaped. Any incomplete trial was canceled. Hit ESCAPE again to quit the whole session. '...
     nextRunMsg nextTrialMsg];
-DrawFormattedText(window,string,instructionalMarginPix,instructionalMarginPix+0.5*o.textSize,black,60,[],[],1.1);
+DrawFormattedText(window,string,instructionalMarginPix,instructionalMarginPix+0.5*o.textSize+y,black,60,[],[],1.1);
 Screen('Flip',window);
 answer=GetKeypress([spaceKeyCode returnKeyCode escapeKeyCode graveAccentKeyCode],o.deviceIndex);
 quitSession=ismember(answer,[escapeChar,graveAccentChar]);
