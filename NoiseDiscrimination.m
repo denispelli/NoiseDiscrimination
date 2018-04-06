@@ -455,7 +455,7 @@ end
 %% GLOBALS, FILES
 global window fixationLines fixationCrossWeightPix labelBounds ...
     screenRect tTest idealT64 leftEdgeOfResponse img cal ...
-    ff whichSignal dataFid trial
+    ff whichSignal dataFid 
 % This list of global variables is shared only with the several newly
 % created subroutines at the end of this file. The list is woefully
 % incomplete as the new routines haven't been tested as subroutines, and
@@ -2449,8 +2449,10 @@ try
     o.skipTrial=false;
     waitMessage='Starting new run. ';
     trial=0;
+    o.trials=trial;
     while trial<o.trialsPerRun
         trial=trial+1;
+        o.trials=trial;
         if (trial==1 || o.skipTrial) && ~ismember(o.observer,algorithmicObservers)
             % WAIT UNTIL OBSERVER IS READY
             if o.skipTrial
