@@ -4,6 +4,7 @@ o=oo(1);
 if o.speakEachLetter && o.useSpeech
    Speak('Escape');
 end
+o.textSize=TextSizeToFit(window); % Set optimum text size.
 escapeKeyCode=KbName('ESCAPE');
 spaceKeyCode=KbName('space');
 returnKeyCode=KbName('return');
