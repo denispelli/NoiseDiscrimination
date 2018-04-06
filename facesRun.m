@@ -81,7 +81,7 @@ if false
     o.questPlusPlot=true;
 end
 
-%% SAVE CONDITIONS IN oo
+%% SAVE CONDITIONS IN STRUCT oo
 oo={};
 for beautyTask=Shuffle(0:1)
     if beautyTask
@@ -98,8 +98,8 @@ for i=1:length(oo)
     oo{i}.condition=i; % Number the conditions
 end
 
-%% PRINT THE LIST OF CONDITIONS (ONE PER ROW)
-% All these vars must be defined in every condition.
+%% PRINT THE CONDITIONS (ONE PER ROW) AS TABLE TT
+% Include whatever's interesting. All these vars must be defined in every condition.
 vars={'seed' 'condition' 'task' 'targetDurationSec' 'targetHeightDeg' 'noiseSD'};
 tt=table;
 for i=1:length(oo)
@@ -111,34 +111,30 @@ disp(tt) % Print list of conditions.
 %% RUN THE CONDITIONS
 if ~skipDataCollection
     % Typically, you'll select just a few of the conditions stored in oo
-    % that you want to run now. Select them from the printout of "tt" in your
-    % Command Window.
-    % NOTE: Typically, conditions with the same conditionName are randonly shuffled
-    % every time you run this, unless you set o.seed, above, to the 'seed'
-    % used to generate the table you want to reproduce.
+    % that you want to run now. Select them from the above printing of "tt"
+    % in your Command Window.
     clear oOut
-    for oi=1:length(oo) % Edit this line to select which conditions to run now.
+    for oi=1:length(oo) % Edit this line to select conditions to run now.
         o=oo{oi};
+        if oi>1
+            % Reuse answers from immediately preceding run.
+            o.experimenter=oo{oi-1}.experimenter;
+            o.observer=oo{oi-1}.observer;
+            % Setting o.useFilter false forces o.filterTransmission=1.
+            o.filterTransmission=oo{oi-1}.filterTransmission;
+        end
         o.runNumber=oi;
         o.runsDesired=length(oo);
-        if exist('oOut','var')
-            % Reuse answers from immediately preceding run.
-            o.experimenter=oOut.experimenter;
-            o.observer=oOut.observer;
-        end
-        oOut=NoiseDiscrimination(o); % RUN THE EXPERIMENT!
-        oo{oi}=oOut; % Save results in oo.
-        if oOut.quitSession
+        oo{oi}=NoiseDiscrimination(o); % RUN THE EXPERIMENT!
+        if oo{oi}.quitSession
             break
         end
-        fprintf('\n');
     end
-    for i=1:length(oo)
-        oo{i}.condition=i; % Number the conditions
-    end
-    
-    %% PRINT SUMMARY OF RESULTS
-    % All these vars must be defined in every condition.
+    fprintf('\n');
+end % if ~skipDataCollection
+
+    %% PRINT SUMMARY OF RESULTS AS TABLE TT
+    % Include whatever you're intersted in. We skip rows missing any value.
     vars={'condition' 'observer' 'trials'  'task' 'targetDurationSec' 'targetHeightDeg' 'contrast' 'guess' 'lapse' 'steepness' 'seed' };
     tt=table;
     for i=1:length(oo)
@@ -157,6 +153,9 @@ if ~skipDataCollection
         tt(i,:)=t(1,vars);
     end
     disp(tt) % Print summary.
+    if isempty(tt)
+        return
+    end
     
     %% SAVE SUMMARY OF RESULTS
     o=oOut;
@@ -192,4 +191,4 @@ if ~skipDataCollection
     graphFile=fullfile(o.dataFolder,[o.plotFilename '.eps']);
     saveas(gcf,graphFile,'epsc')
     fprintf('Plot saved in data folder as "%s".\n',[o.plotFilename '.eps']);
-end % if ~skipDataCollection && true
+end % if ~skipDataCollection
