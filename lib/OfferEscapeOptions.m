@@ -31,7 +31,7 @@ lastRun=isfield(o,'runNumber') && isfield(o,'runsDesired') && o.runNumber>=o.run
 if lastRun
     nextRunMsg='';
 else
-    nextRunMsg='Or hit RETURN to proceed with the next run. ';
+    nextRunMsg='Or hit RETURN to proceed to the next run. ';
 end
 if nargout==3
    nextTrialMsg='Or hit SPACE to proceed to the next trial.';
