@@ -13,6 +13,18 @@
 % luminance 250 cd/m2
 % monocular, temporal field, right eye
 
+%% COMPARE NOISE TYPES
+% Conclusion: with the same bound, we can reach 3 times higher noiseSd
+% using binary instead of gaussian noise. In the code below, we use steps
+% of 2^0.5, so i increase noiseSd by a factor of 2^1.5 when using binary
+% noise.
+sdOverBound.gaussian=0.43;
+sdOverBound.uniform=0.58;
+sdOverBound.binary=1.41;
+maxBound=0.37; % Rule of thumb based on experience with gaussian.
+maxSd=struct('gaussian',maxBound*sdOverBound.gaussian,'uniform',maxBound*sdOverBound.uniform,'binary',maxBound*sdOverBound.binary);
+maxSd
+
 %% GET READY
 clear o oo
 skipDataCollection=false; % Enable skipDataCollection to check plotting before we have data.
@@ -37,8 +49,6 @@ end
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 
 %% SPECIFY BASIC CONDITION
-% In each of the 3 domains: photon, cortical, ganglion
-% Two noise levels, noiseSD: 0 0.16
 o.experiment='EvsN';
 o.eyes='right';
 o.viewingDistanceCm=40;
@@ -61,23 +71,9 @@ if false
 end
 o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
 
-
-%% COMPARE NOISE TYPES
-% Conclusion: with the same bound, we can reach 3 times higher noiseSd
-% using binary instead of gaussian noise. In the code below, we use steps
-% of 2^0.5, so i increase noiseSd by a factor of 2^1.5 when using binary
-% noise.
-sdOverBound=struct;
-sdOverBound.gaussian=0.43;
-sdOverBound.uniform=0.58;
-sdOverBound.binary=1.41;
-maxBound=0.37; % Rule of thumb based on experience with gaussian.
-maxSd=struct('gaussian',maxBound*sdOverBound.gaussian,'binary',maxBound*sdOverBound.binary,'uniform',maxBound*sdOverBound.uniform);
-maxSd
-
 %% SAVE CONDITIONS IN oo
 oo={};
-% THREE DOMAINS
+% THREE DOMAINS: photon, cortical, ganglion
 for domain=0:3
     o.blankingRadiusReTargetHeight=nan;
     switch domain
@@ -131,7 +127,7 @@ for domain=0:3
     end
     o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
     o.eyes='right'; % 'left', 'right', 'both'.
-    o.blankingRadiusReEccentricity=0; % No blanking.
+    o.blankingRadiusReEccentricity=0; 
     if 0
         % Target letter
         o.targetKind='letter';
@@ -162,7 +158,7 @@ for domain=0:3
             maxNoiseSD=0.16*2^2;
             p2=2;
     end
-    for noiseSD=[0 2.^(-4:1.5:p2)*0.16]
+    for noiseSD=Shuffle([0 2.^(-4:1.5:p2)*0.16])
         o.noiseSD=noiseSD;
         o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
         o.noiseCheckDeg=o.targetHeightDeg/20;
