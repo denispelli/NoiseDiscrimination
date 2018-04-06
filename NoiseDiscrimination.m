@@ -111,7 +111,7 @@ function o=NoiseDiscrimination(oIn)
 % 1. Would like to add symbolic photos to the question screens, so you get
 % the idea even without reading.
 % 2. It would be nice to make more use of AskQuestion, since its page is
-% easier to read that most of my current question pages. 
+% easier to read than most of my current question pages. 
 % 3. I'm unsure whether the question pages should be dim, like the
 % experiment, to maintain dark adaptation, or bright for readability.
 % 4. It's annoying that the window closes between runs. It should remain
@@ -122,8 +122,17 @@ function o=NoiseDiscrimination(oIn)
 % remains open, preventing use of the screen. Safety would demand
 % installing a try-catch block around every program that calls
 % NoiseDiscrimination. That's doable, but a bit ugly. I wonder if it's
-% possible to install and error callback that automatically closes the
-% window when an error occurs in the calling program.
+% possible to install an error callback that automatically closes the
+% window when an error occurs in the calling program. Yes! Each script that
+% calls NoiseDiscrimination could first call onCleanup to ensure that
+% Control-C (i.e. any termination of the calling script) will provoke
+% "sca". I think this is all I need:
+% cleanupObject = onCleanup(@()sca;ListenChar;));
+% However, if a window remains open when NoiseDiscrimination has closed,
+% then the call to onCleanup must be in the script that calls
+% NoiseDiscrimination. Oh damn! OnCleanup only works in a function, not a
+% script. So the script must be converted to a function. Ugh. I'd rather
+% use try-catch. Damn.
 
 
 %% EXTRA DOCUMENTATION
