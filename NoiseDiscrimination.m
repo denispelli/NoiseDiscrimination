@@ -110,6 +110,20 @@ function o=NoiseDiscrimination(oIn)
 %% CURRENT ISSUES/BUGS
 % 1. Would like to add symbolic photos to the question screens, so you get
 % the idea even without reading.
+% 2. It would be nice to make more use of AskQuestion, since its page is
+% easier to read that most of my current question pages. 
+% 3. I'm unsure whether the question pages should be dim, like the
+% experiment, to maintain dark adaptation, or bright for readability.
+% 4. It's annoying that the window closes between runs. It should remain
+% open until the end of the session. This would look better, and would
+% eliminate waiting (30 s?) for Screen to re-initialize while opening the 
+% first window. However, if the calling program for any reason fails to call
+% NoiseDiscrimination back for the next run in the session, the window
+% remains open, preventing use of the screen. Safety would demand
+% installing a try-catch block around every program that calls
+% NoiseDiscrimination. That's doable, but a bit ugly. I wonder if it's
+% possible to install and error callback that automatically closes the
+% window when an error occurs in the calling program.
 
 
 %% EXTRA DOCUMENTATION
