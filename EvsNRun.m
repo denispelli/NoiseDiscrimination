@@ -13,11 +13,11 @@
 % luminance 250 cd/m2
 % monocular, temporal field, right eye
 
-%% COMPARE NOISE TYPES
-% Conclusion: with the same bound, we can reach 3 times higher noiseSd
-% using binary instead of gaussian noise. In the code below, we use steps
-% of 2^0.5, so i increase noiseSd by a factor of 2^1.5 when using binary
-% noise.
+%% MAX SD OF EACH NOISE TYPE
+% With the same bound on range, we can reach 3.3 times higher noiseSd using
+% binary instead of gaussian noise. In the code below, we use steps of
+% 2^0.5=1.4, so i increase noiseSd by a factor of 2^1.5=2.8 when using
+% binary noise.
 sdOverBound.gaussian=0.43;
 sdOverBound.uniform=0.58;
 sdOverBound.binary=1.41;
@@ -50,15 +50,17 @@ end
 
 %% SPECIFY BASIC CONDITION
 o.experiment='EvsN';
-o.eyes='right';
+o.eyes='right'; % 'left', 'right', 'both'.
 o.viewingDistanceCm=40;
 o.targetGaborCycles=3;
 o.pThreshold=0.75;
-o.blankingRadiusReTargetHeight=0;
+o.useDynamicNoiseMovie=true;
 o.moviePreSec=0.2;
 o.moviePostSec=0.2;
-o.targetMarkDeg=1;
 o.fixationCrossDeg=3;
+o.blankingRadiusReEccentricity=0;
+o.blankingRadiusReTargetHeight=0;
+o.targetMarkDeg=1;
 if false
     % Use QuestPlus to measure steepness.
     o.questPlusEnable=true;
@@ -126,8 +128,6 @@ for domain=0:3
             o.noiseType='binary';
     end
     o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
-    o.eyes='right'; % 'left', 'right', 'both'.
-    o.blankingRadiusReEccentricity=0; 
     if 0
         % Target letter
         o.targetKind='letter';
@@ -141,7 +141,6 @@ for domain=0:3
         o.alphabet=o.targetGaborNames;
     end
     o.alternatives=length(o.alphabet);
-    o.useDynamicNoiseMovie=true;
     if all(o.eccentricityXYDeg==0)
         o.markTargetLocation=false;
         o.fixationCrossDeg=inf;
