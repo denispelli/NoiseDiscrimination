@@ -41,11 +41,8 @@ end
 % Two noise levels, noiseSD: 0 0.16
 o.experiment='EvsN';
 o.eyes='right';
-o.targetDurationSec=0.2;
-o.targetCyclesPerDeg=3;
 o.viewingDistanceCm=40;
 o.targetGaborCycles=3;
-o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
 o.pThreshold=0.75;
 o.blankingRadiusReTargetHeight=0;
 o.moviePreSec=0.2;
@@ -62,13 +59,30 @@ if false
     o.questPlusPrint=true;
     o.questPlusPlot=true;
 end
+o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
+
+
+%% COMPARE NOISE TYPES
+% Conclusion: with the same bound, we can reach 3 times higher noiseSd
+% using binary instead of gaussian noise. In the code below, we use steps
+% of 2^0.5, so i increase noiseSd by a factor of 2^1.5 when using binary
+% noise.
+sdOverBound=struct;
+sdOverBound.gaussian=0.43;
+sdOverBound.uniform=0.58;
+sdOverBound.binary=1.41;
+maxBound=0.37; % Rule of thumb based on experience with gaussian.
+maxSd=struct('gaussian',maxBound*sdOverBound.gaussian,'binary',maxBound*sdOverBound.binary,'uniform',maxBound*sdOverBound.uniform);
+maxSd
 
 %% SAVE CONDITIONS IN oo
 oo={};
-for domain=1:3
+% THREE DOMAINS
+for domain=0:3
+    o.blankingRadiusReTargetHeight=nan;
     switch domain
-        case 1
-            % photon
+        case 0
+            % photon, binary noise
             o.conditionName='photon';
             o.eccentricityXYDeg=[0 0];
             o.targetCyclesPerDeg=4;
@@ -76,7 +90,21 @@ for domain=1:3
             o.desiredLuminance=2.5; % cd/m^2
             o.desiredLuminanceFactor=[];
             o.useFilter=true;
-            o.fixationCrossWeightDeg=0.1; % Typically 0.03. Make it much thicker for scotopic testing.
+            o.fixationCrossWeightDeg=0.05; % Typically 0.03. Use 0.05 for scotopic testing.
+            o.blankingRadiusReTargetHeight=3;
+            o.noiseType='gaussian';
+        case 1
+            % photon, gaussian noise
+            o.conditionName='photon';
+            o.eccentricityXYDeg=[0 0];
+            o.targetCyclesPerDeg=4;
+            o.targetDurationSec=0.1;
+            o.desiredLuminance=2.5; % cd/m^2
+            o.desiredLuminanceFactor=[];
+            o.useFilter=true;
+            o.fixationCrossWeightDeg=0.05; % Typically 0.03. Use 0.05 for scotopic testing.
+            o.blankingRadiusReTargetHeight=3;
+            o.noiseType='binary';
         case 2
             % cortical
             o.conditionName='cortical';
@@ -86,7 +114,8 @@ for domain=1:3
             o.desiredLuminance=[];
             o.desiredLuminanceFactor=1;
             o.useFilter=false;
-            o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
+            o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it thicker for scotopic testing.
+            o.noiseType='binary';
         case 3
             % ganglion
             o.conditionName='ganglion';
@@ -97,8 +126,10 @@ for domain=1:3
             o.desiredLuminance=[];
             o.desiredLuminanceFactor=1;
             o.useFilter=false;
-            o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
+            o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it thicker for scotopic testing.
+            o.noiseType='binary';
     end
+    o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
     o.eyes='right'; % 'left', 'right', 'both'.
     o.blankingRadiusReEccentricity=0; % No blanking.
     if 0
@@ -117,17 +148,24 @@ for domain=1:3
     o.useDynamicNoiseMovie=true;
     if all(o.eccentricityXYDeg==0)
         o.markTargetLocation=false;
-        o.blankingRadiusReTargetHeight=2;
-        o.fixationCrossDeg=10;
+        o.fixationCrossDeg=inf;
     else
         o.markTargetLocation=true;
         o.blankingRadiusReTargetHeight=0;
         o.fixationCrossDeg=3;
     end
-    for noiseSD=Shuffle([0 2^-2 2^-1.5 2^-1 2^-0.5 2^0]*0.16)
+    switch o.noiseType
+        case 'gaussian'
+            maxNoiseSD=0.16*2^0.5;
+            p2=0.5;
+        case 'binary'
+            maxNoiseSD=0.16*2^2;
+            p2=2;
+    end
+    for noiseSD=[0 2.^(-4:1.5:p2)*0.16]
+        o.noiseSD=noiseSD;
         o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
         o.noiseCheckDeg=o.targetHeightDeg/20;
-        o.noiseSD=noiseSD;
         oo{end+1}=o;
     end
 end
@@ -140,7 +178,7 @@ end
 vars={'condition' 'experiment' 'conditionName' ...
     'useFilter' 'eccentricityXYDeg' ...
     'targetDurationSec' 'targetCyclesPerDeg' ...
-    'targetHeightDeg' 'targetGaborCycles' 'noiseSD' };
+    'targetHeightDeg' 'targetGaborCycles' 'noiseSD' 'noiseType'};
 tt=table;
 for i=1:length(oo)
     t=struct2table(oo{i},'AsArray',true);
@@ -180,9 +218,9 @@ end % if ~skipDataCollection
 %% PRINT SUMMARY OF RESULTS
 % All these vars must be defined in every condition.
 vars={'condition' 'experiment' 'conditionName' ...
-    'useFilter' 'eccentricityXYDeg' ...
+    'useFilter' 'luminanceAtEye' 'eccentricityXYDeg' ...
     'targetDurationSec' 'targetCyclesPerDeg' ...
-    'targetHeightDeg' 'targetGaborCycles' 'noiseSD' };
+    'targetHeightDeg' 'targetGaborCycles' 'noiseSD' 'N' 'noiseType' 'E' 'contrast'};
 tt=table;
 for i=1:length(oo)
     t=struct2table(oo{i},'AsArray',true);
@@ -203,7 +241,9 @@ disp(tt) % Print summary.
 
 %% SAVE SUMMARY OF RESULTS
 o=oOut;
-o.summaryFilename=[o.dataFilename '.summary' ];
-writetable(tt,fullfile(o.dataFolder,[o.summaryFilename '.csv']));
-save(fullfile(o.dataFolder,[o.summaryFilename '.mat']),'tt','oo');
-fprintf('Summary saved in data folder as "%s" with extensions ".csv" and ".mat".\n',o.summaryFilename);
+if isfield(o,'dataFilename')
+    o.summaryFilename=[o.dataFilename '.summary'];
+    writetable(tt,fullfile(o.dataFolder,[o.summaryFilename '.csv']));
+    save(fullfile(o.dataFolder,[o.summaryFilename '.mat']),'tt','oo');
+    fprintf('Summary saved in data folder as "%s" with extensions ".csv" and ".mat".\n',o.summaryFilename);
+end
