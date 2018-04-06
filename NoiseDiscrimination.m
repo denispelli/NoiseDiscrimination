@@ -3818,7 +3818,7 @@ try
         warning('Failed to save .transcript.json file.');
         warning(e.message);
     end % save transcript to .json file
-    fprintf('Results saved in %s with extensions .txt, .mat, and .json \nin folder %s\n',o.dataFilename,o.dataFolder);
+    fprintf('Results saved as %s with extensions .txt, .mat, and .json \nin the data folder: %s/\n',o.dataFilename,o.dataFolder);
     Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
     oOld=o;
     oOld.secs=GetSecs; % Date for staleness.
