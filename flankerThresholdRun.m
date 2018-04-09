@@ -116,7 +116,7 @@ if ~skipDataCollection && true
    for oi=1:length(oo) % Edit this line to select which conditions to run now.
       o=oo(oi);
       if exist('oOut','var')
-         % Reuse answers from immediately preceding run.
+         % Reuse answers from immediately preceding block.
          o.experimenter=oOut.experimenter;
          o.observer=oOut.observer;
          % Setting o.useFilter false forces o.filterTransmission=1.

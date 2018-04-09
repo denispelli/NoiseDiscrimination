@@ -133,7 +133,7 @@ if ~skipDataCollection && 1
       % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
       o.trialsPerBlock=40;
       if exist('oOut','var')
-         % Copy answers from immediately preceding run.
+         % Copy answers from immediately preceding block.
          o.experimenter=oOut.experimenter;
          o.observer=oOut.observer;
          % Setting o.useFilter false forces o.filterTransmission=1.
