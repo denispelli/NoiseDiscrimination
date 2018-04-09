@@ -444,7 +444,7 @@ end
 % variable: o.centralNoiseEnvelopeE1DegDeg
 
 %% PERSISTENT
-global window windowIsOpen % Allows us to keep window open when this function exits.
+global window % Allows us to keep window open when this function exits.
 %% GLOBALS, FILES
 global fixationLines fixationCrossWeightPix labelBounds ...
     screenRect tTest idealT64 leftEdgeOfResponse img cal ...
@@ -546,6 +546,7 @@ o.task='identify'; % 'identify', 'identifyAll' or '4afc' or 'rate'
 % o.thresholdParameter='size';
 % o.thresholdParameter='spacing';
 o.thresholdParameter='contrast'; % Use Quest to measure threshold 'contrast','size', 'spacing', or 'flankerContrast'.
+o.thresholdResponseTo='target'; % 'target' 'flankers'
 o.constantStimuli=[];
 o.useMethodOfConstantStimuli=false;
 o.thresholdPolarity=1; % Must be -1 or 1;
@@ -676,9 +677,6 @@ o.responseScreenAbsoluteContrast=0.99; % Set to [] to maximize possible contrast
 o.transcript.responseTimeSec=[]; % Time of response re o.transcript.stimulusOnsetSec, for each trial.
 o.transcript.stimulusOnsetSec=[]; % Value of GetSecs at stimulus onset, for each trial.
 o.printImageStatistics=false;
-if isempty(windowIsOpen)
-   windowIsOpen=false;
-end
 
 o.deviceIndex=-1; % -1 for all keyboards.
 o.deviceIndex=-3; % -3 for all keyboard/keypad devices.
@@ -826,7 +824,7 @@ end
 % end
 
 %% SET UP MISCELLANEOUS
-%onCleanupInstance=onCleanup(@()listenchar;sca); % clears screen and restores keyboard when function terminated.
+%onCleanupInstance=onCleanup(@()ListenChar;sca;window=[];); % clears screen and restores keyboard when function terminated.
 useImresize=exist('imresize','file'); % Requires the Image Processing Toolbox.
 if isnan(o.annularNoiseSD)
     o.annularNoiseSD=o.noiseSD;
@@ -881,16 +879,16 @@ if ~isfield(cal,'old') || ~isfield(cal.old,'L')
     error('This screen has not yet been calibrated. Please use CalibrateScreenLuminance to calibrate it.\n');
 end
 
-% THE GLOBAL windowIsOpen might be stale, if previous block terminated with
+% THE GLOBAL window might be stale, if previous block terminated with
 % an error that was not caught by a try-catch. So we assume that window is
 % closed before the first block.
 if o.blockNumber==1
    sca;
-   windowIsOpen=false;
+   window=[];
 end
 
 %% Only call Brightness while no window is open.
-if ~windowIsOpen
+if isempty(window)
    useBrightnessFunction=true;
    if useBrightnessFunction
       Brightness(cal.screen,cal.brightnessSetting); % Set brightness.
@@ -938,7 +936,7 @@ if ~windowIsOpen
       AutoBrightness(cal.screen,0);
       ffprintf(ff,'Turning autobrightness off. Setting "brightness" to %.2f, on a scale of 0.0 to 1.0;\n',cal.brightnessSetting);
    end
-end % if ~windowIsOpen
+end % if isempty(window)
 
 %% TRY-CATCH BLOCK CONTAINS ALL CODE IN WHICH WINDOW IS OPEN
 try
@@ -948,7 +946,7 @@ try
     if o.useFractionOfScreen
         ffprintf(ff,'Using tiny window for debugging.\n');
     end
-    if ~windowIsOpen
+    if isempty(window)
        PsychImaging('PrepareConfiguration');
        if o.flipScreenHorizontally
           PsychImaging('AddTask','AllViews','FlipHorizontal');
@@ -988,7 +986,6 @@ try
        %     ffprintf(ff,'We are using it in its native %d x %d resolution.\n',resolution.width,resolution.height);
        %     ffprintf(ff,'You can use Switch Res X (http://www.madrau.com/) to select a pure resolution, not HiDPI.\n');
        % end
-       windowIsOpen=true;
     end
     if o.enableClutMapping
        o.maxEntry=o.clutMapLength-1; % moved here on Feb. 4, 2018
@@ -1031,6 +1028,7 @@ try
             ListenChar;
             ShowCursor;
             sca;
+            window=[];
             return
         end
         o.experimenter=reply;
@@ -1049,6 +1047,7 @@ try
             ListenChar;
             ShowCursor;
             sca;
+            window=[];
             return
         end
         o.observer=reply;
@@ -1094,6 +1093,7 @@ try
         ListenChar;
         ShowCursor;
         sca;
+        window=[];
         return
     end
     Screen('FillRect',window,o.gray1);
@@ -1171,8 +1171,13 @@ try
     end
     st=dbstack('-completenames',1);
     if ~isempty(st)
-        o.scriptName=st.name; % Save name of calling script.
-        o.script=fileread(st.file); % Save a copy of the calling script.
+       for i=1:2
+          o.scriptName=st(i).name; % Save name of calling script.
+          o.script=fileread(st(i).file); % Save a copy of the calling script.
+          if ~streq(o.scriptName,'RunNoiseDiscrimiationExperiment.m')
+             break
+          end
+       end
     else
         o.scriptName='';
         o.script='';
@@ -1610,6 +1615,7 @@ try
             ListenChar;
             ShowCursor;
             sca;
+            window=[];
             return
         end
     end
@@ -1645,6 +1651,7 @@ try
                     ListenChar;
                     ShowCursor;
                     sca;
+                    window=[];
                     return
                 end
             case {'left','right'}
@@ -1668,6 +1675,7 @@ try
                     ListenChar;
                     ShowCursor;
                     sca;
+                    window=[];
                     return
                 end
         end
@@ -1692,6 +1700,7 @@ try
                 ListenChar;
                 ShowCursor;
                 sca;
+                window=[];
                 return
             end
             response=upper(response);
@@ -1755,6 +1764,7 @@ try
         ListenChar;
         ShowCursor;
         sca;
+        window=[];
         return
     end
     
@@ -1764,6 +1774,7 @@ try
         ListenChar;
         ShowCursor;
         sca;
+        window=[];
         return
     end
     
@@ -2334,7 +2345,7 @@ try
     ffprintf(ff,'log E1/deg^2 %.2f, where E1 is energy at unit contrast.\n',log10(o.E1));
     if ismember(o.observer,algorithmicObservers)
         Screen('CloseAll');
-        window=-1;
+        window=[];
         LMin=0;
         LMax=200;
         o.LBackground=100;
@@ -2426,17 +2437,18 @@ try
         o=rmfield(o,'transcript');
     end
     o.transcript.intensity=[];
-    o.transcript.isRight=[];
+    o.transcript.isRight={};
     o.transcript.rawResponseString={};
-    o.transcript.response=[];
+    o.transcript.response={};
     o.transcript.target=[];
     if o.useFlankers
         o.transcript.flankers={};
     end
     if streq(o.task,'identifyAll')
         o.transcript.flankerResponse={};
+        o.transcript.targetResponse={}; % Regardless of o.thresholdResponseTo.
     end
-    if streq(o.thresholdParameter,'flankerContrast')
+    if streq(o.thresholdParameter,'flankerContrast') && streq(o.thresholdResponseTo,'target')
         % Falling psychometric function for crowding of target as a function
         % of flanker contrast. We assume that the observer makes a random
         % finger error on fraction delta of the trials, and gets proportion
@@ -3451,15 +3463,22 @@ try
                         trial=trial-1;
                         continue
                     end
-                    response=responses(2);
+                    switch o.thresholdResponseTo
+                        case 'target'
+                            response=responses(2);
+                        case 'flankers'
+                            response=responses([1 3]);
+                    end
                     o.transcript.rawResponseString{trial}=responseString;
                     o.transcript.flankerResponse{trial}=responses([1 3]);
-                    if o.eccentricityXYDeg(1)<0
-                        % The ordering of arrays was in order of increasing
-                        % radial eccentricity. However, the observer responds in
-                        % order of increasing X eccentricity, so here we flip the
-                        % order of the flanker stimulus reports to match that of
-                        % the observer's response.
+                    [~,o.transcript.targetResponse{trial}]=ismember(o.transcript.rawResponseString{trial}(2),o.alphabet);
+                    if length(o.transcript.flankerXYDeg{trial})>1 && o.transcript.flankerXYDeg{trial}{1}(1)>o.transcript.flankerXYDeg{trial}{2}(1)
+                        % The flankers are created in order of increasing
+                        % radial eccentricity. However, the observer
+                        % responds in order of increasing X eccentricity,
+                        % so here, if necessary, we flip the order of the
+                        % flanker stimulus reports to match that of the
+                        % observer's response.
                         o.transcript.flankers{trial}=fliplr(o.transcript.flankers{trial});
                         o.transcript.flankerXYDeg{trial}=fliplr(o.transcript.flankerXYDeg{trial});
                     end
@@ -3539,8 +3558,16 @@ try
                 isRight=response == signalLocation;
                 o.transcript.target(trial)=signalLocation;
             case {'identify' 'identifyAll'}
-                isRight=response == whichSignal;
                 o.transcript.target(trial)=whichSignal;
+                switch o.thresholdResponseTo
+                    case 'target'
+                        isRight=response == whichSignal;
+                    case 'flankers'
+                        % There are two flankers, so, in this case,
+                        % isRight, response, and flankers are all 1x2
+                        % arrays.
+                        isRight=response == o.transcript.flankers{trial};
+                end
             case 'rate'
                 isRight=response>4;
                 o.transcript.target(trial)=whichSignal;
@@ -3550,7 +3577,7 @@ try
                 case 'rate'
                     Snd('Play',okBeep);
                 otherwise
-                    if isRight
+                    if any(isRight)
                         Snd('Play',rightBeep);
                     else
                         Snd('Play',wrongBeep);
@@ -3567,17 +3594,19 @@ try
             case 'contrast'
             case 'flankerContrast'
         end
-        trialsRight=trialsRight+isRight;
-        q=QuestUpdate(q,tTest,isRight); % Add the new datum (actual test intensity and observer isRight) to the database.
-        if o.questPlusEnable
-            stim=20*tTest;
-            outcome=isRight+1;
-            questPlusData=qpUpdate(questPlusData,stim,outcome);
+        trialsRight=trialsRight+sum(isRight);
+        for i=1:size(isRight)
+            q=QuestUpdate(q,tTest,isRight(i)); % Add the new datum (actual test intensity and observer isRight) to the database.
+            if o.questPlusEnable
+                stim=20*tTest;
+                outcome=isRight(i)+1;
+                questPlusData=qpUpdate(questPlusData,stim,outcome);
+            end
         end
-        o.data(trial,1:2)=[tTest isRight];
-        o.transcript.response(trial)=response;
+        o.data(trial,1:1+length(isRight))=[tTest isRight];
+        o.transcript.response{trial}=response;
         o.transcript.intensity(trial)=tTest;
-        o.transcript.isRight(trial)=isRight;
+        o.transcript.isRight{trial}=isRight;
         if cal.ScreenConfigureDisplayBrightnessWorks
             %          Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
             cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
@@ -3787,12 +3816,12 @@ try
     end
     ListenChar(0); % flush
     ListenChar;
-    if windowIsOpen && (o.quitExperiment || o.blockNumber >= o.blocksDesired)
+    if ~isempty(window) && (o.quitExperiment || o.blockNumber >= o.blocksDesired)
        sca; % Screen('CloseAll'); ShowCursor;
        if ismac
           AutoBrightness(cal.screen,1); % Restore autobrightness.
        end
-       windowIsOpen=false;
+       window=[];
     end
     % This applescript "activate" command provokes a screen refresh (by
     % selecting MATLAB). My computers each have only one display, upon which
@@ -3858,6 +3887,7 @@ catch e
     %% MATLAB catch
     ListenChar;
     sca; % screen close all
+    window=[];
     if exist('cal','var') && isfield(cal,'old') && isfield(cal.old,'gamma')
         Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
     end
@@ -4034,6 +4064,7 @@ dataFid=-1;
 ListenChar;
 ShowCursor;
 sca; % screen close all
+window=[];
 AutoBrightness(cal.screen,1); % Restore autobrightness.
 return
 end % function SaveSnapshot
@@ -4523,6 +4554,7 @@ if ismember(response,[escapeChar,graveAccentChar])
     o.quitBlock=true;
     o.quitExperiment=true;
     sca;
+    window=[];
     ListenChar;
     return
 end
