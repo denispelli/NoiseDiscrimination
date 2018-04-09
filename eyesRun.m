@@ -173,7 +173,7 @@ if ~skipDataCollection
         o.blocksDesired=length(oo);
         o.alternatives=length(o.alphabet);
         if exist('oOut','var')
-            % Reuse answers from immediately preceding run.
+            % Reuse answers from immediately preceding block.
             o.experimenter=oOut.experimenter;
             o.observer=oOut.observer;
             % Setting o.useFilter false forces o.filterTransmission=1.
