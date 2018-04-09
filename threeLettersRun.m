@@ -14,7 +14,11 @@ o.questPlusEnable=false;
 if ~exist('struct2table','file')
     error('This MATLAB %s is too old. We need MATLAB 2013b or better to use the function "struct2table".',version('-release'));
 end
-if o.questPlusEnable && ~exist('qpInitialize','file')
+if ~exist('qpInitialize','file')
+    addpath('~/Dropbox/mQuestPlus');
+    addpath('~/DropboxmQuestPlus/questplus');
+end
+if ~exist('qpInitialize','file')
     error('This script requires the QuestPlus package. Please get it from https://github.com/BrainardLab/mQUESTPlus.')
 end
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % Folder in same directory as this M file.
@@ -86,7 +90,7 @@ end
 o.noiseSD=0;
 o.thresholdParameter='contrast';
 
-%% SAVE THE CONDITIONS IN STRUCT oo
+%% SAVE THE EXPERIMENT'S CONDITIONS IN STRUCT oo
 oo={};
 if false
     o.conditionName='Target letter, fixed contrast';
@@ -96,7 +100,7 @@ if false
     oo{end+1}=o;
 end
 o.useMethodOfConstantStimuli=false;
-if true
+if false
     o.conditionName='Threshold contrast';
     o.trialsPerBlock=50;
     o.useFlankers=false;
@@ -111,6 +115,7 @@ if true
     o.useFlankers=true;
     o.contrast=-0.3;
     o.thresholdParameter='flankerContrast';
+    o.thresholdResponseTo='flankers';
     o.task='identifyAll';
     % for noiseSD=Shuffle([0 0.16])
     for noiseSD=[0]
@@ -119,7 +124,8 @@ if true
         oo{end+1}=o;
     end
 end
-% POLISH THE LIST OF CONDITIONS
+
+%% POLISH THE LIST OF CONDITIONS
 for oi=1:length(oo)
     o=oo{oi};
     o.condition=oi; % Number the conditions
@@ -130,6 +136,54 @@ for oi=1:length(oo)
         o.markTargetLocation=true;
     end
     oo{oi}=o;
+end
+
+%% SIGNATURE OF THIS EXPERIMENT RUNNING ON THIS COMPUTER
+signature=sprintf('%s-%s',mfilename,cal.localHostName);
+
+%% LOOK FOR INCOMPLETE RUNS OF THIS EXPERIMENT
+useSavedList=false;
+dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
+cd(dataFolder);
+matFiles=dir(fullfile(dataFolder,[signature '-*.mat']));
+if ~isempty(matFiles)
+   clear d n
+   for i = 1:length(matFiles)
+      % Load each into one element of d.
+      d(i)=load(matFiles(i).name,'oo');
+      n(i)=matFiles(i).datenum;
+   end
+   [~,index]=sort(n,'descend');
+   matFiles=matFiles(index);
+   d=d(index);
+   fprintf('Found %d old data files for this experiment.\n',length(matFiles));
+   fprintf('For each file, indicate: Y to resume an unfinished experiment; hit RETURN to pass; or hit DELETE key to delete it.\n');
+   escapeKeyCode=KbName('escape');
+   graveAccentKeyCode=KbName('`~');
+   spaceKeyCode=KbName('space');
+   returnKeyCode=KbName('return');
+   returnChar=13;
+   for i=1:length(d)
+      o=d(i).oo{1};
+      if ~isfield(o,'observer') || ~isfield(o,'trials') || isempty(o.observer) || o.trials<2
+         continue
+      end
+      fprintf('%s, %s, Observer: %s\n',matFiles(i).name,matFiles(i).date,o.observer);
+      fprintf('Type Y for yes. Hit RETURN to ignore it, or DELETE to delete it:\n');
+      responseChar=GetKeypress([KbName('y') KbName('delete') returnKeyCode escapeKeyCode graveAccentKeyCode]);
+      switch responseChar
+         case 'y'
+            oo=d(i).oo;
+            useSavedList=true;
+            break
+         case 'delete'
+            delete(matFiles(i).name);
+            fprintf('Deleted file %s\n',matFiles(i).name);
+         case returnChar
+            fprintf('Skipping file %s\n',matFiles(i).name);
+            continue
+      end
+   end
 end
 
 %% PRINT THE CONDITIONS (ONE PER ROW) AS TABLE TT
@@ -144,28 +198,28 @@ disp(tt) % Print the oo list of conditions.
 
 %% RUN THE CONDITIONS
 if ~skipDataCollection
-    % Typically, you'll select just a few of the conditions stored in oo
-    % that you want to run now. Select them from the above printing of "tt"
-    % in your Command Window.
-    clear oOut
-    for oi=1:length(oo) % Edit this line to select conditions to run now.
-        o=oo{oi};
-        if oi>1
-            % Reuse answers from immediately preceding run.
-            o.experimenter=oo{oi-1}.experimenter;
-            o.observer=oo{oi-1}.observer;
-            % Setting o.useFilter false forces o.filterTransmission=1.
-            o.filterTransmission=oo{oi-1}.filterTransmission;
-        end
-        o.blockNumber=oi;
-        o.blocksDesired=length(oo);
-        oo{oi}=NoiseDiscrimination(o); % RUN THE EXPERIMENT!
-        if oo{oi}.quitExperiment
-            break
-        end
-    end
-    fprintf('\n');
+    oo=RunExperiment(oo);
 end % if ~skipDataCollection
+
+%% SAVE ALL THE RESULTS IN ONE EXPERIMENT FILE
+n=0;
+for oi=1:length(oo)
+    if isfield(oo{oi},'trials') && oo{oi}.trials>=30
+        observer=oo{oi}.observer;
+        n=n+1;
+    end
+end
+if n<length(oo)
+    partialString='-partial';
+else
+    partialString='';
+end
+if n>0
+    experimentFilename=sprintf('%s-%s.%d.%d.%d.%d.%d.%d.mat',signature,[observer partialString],round(datevec(now)));
+    dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
+    save(fullfile(dataFolder,experimentFilename),'oo');
+    fprintf('Saved the experiment (completed %d of %d blocks) in %s in data folder.\n',n,length(oo),experimentFilename);
+end
 
 %% PRINT SUMMARY OF RESULTS AS TABLE TT
 % Include whatever you're intersted in. We skip rows missing any value.
@@ -215,7 +269,12 @@ for ti=1:height(tt)
         right=zeros([1,n]);
         for i=1:n
             left(i)=o.transcript.flankers{i}(1)==o.transcript.flankerResponse{i}(1);
-            middle(i)=o.transcript.target(i)==o.transcript.response(i);
+            switch o.thresholdResponseTo
+                case 'target'
+                    middle(i)=o.transcript.target(i)==o.transcript.response{i};
+                case 'flankers'
+                    middle(i)=o.transcript.target(i)==o.transcript.targetResponse{i};
+            end
             right(i)=o.transcript.flankers{i}(2)==o.transcript.flankerResponse{i}(2);
         end
         outer=left | right;
@@ -225,9 +284,9 @@ for ti=1:height(tt)
         disp('Correlation matrix, left, middle, right, outer:')
         disp(r)
         for i=1:n
-            left(i)=ismember(o.transcript.flankers{i}(1),[o.transcript.flankerResponse{i} o.transcript.response(i)]);
-            middle(i)=ismember(o.transcript.target(i),[o.transcript.flankerResponse{i} o.transcript.response(i)]);
-            right(i)=ismember(o.transcript.flankers{i}(2),[o.transcript.flankerResponse{i} o.transcript.response(i)]);
+            left(i)=ismember(o.transcript.flankers{i}(1),[o.transcript.flankerResponse{i} o.transcript.targetResponse{i}]);
+            middle(i)=ismember(o.transcript.target(i),[o.transcript.flankerResponse{i} o.transcript.targetResponse{i}]);
+            right(i)=ismember(o.transcript.flankers{i}(2),[o.transcript.flankerResponse{i} o.transcript.targetResponse{i}]);
         end
         fprintf('Run %d, %d trials. Proportion correct, ignoring position errors: %.2f %.2f %.2f\n',...
             o.condition,n,sum(left)/n,sum(middle)/n,sum(right)/n);
