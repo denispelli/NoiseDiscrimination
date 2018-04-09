@@ -90,7 +90,7 @@ o.thresholdParameter='contrast';
 oo={};
 if false
     o.conditionName='Target letter, fixed contrast';
-    o.trialsPerRun=50;
+    o.trialsPerBlock=50;
     o.constantStimuli=[-0.30];
     o.useMethodOfConstantStimuli=true;
     oo{end+1}=o;
@@ -98,7 +98,7 @@ end
 o.useMethodOfConstantStimuli=false;
 if true
     o.conditionName='Threshold contrast';
-    o.trialsPerRun=50;
+    o.trialsPerBlock=50;
     o.useFlankers=false;
     o.thresholdParameter='contrast';
     o.task='identify';
@@ -107,7 +107,7 @@ if true
 end
 if true
     o.conditionName='Threshold contrast of crowding';
-    o.trialsPerRun=300;
+    o.trialsPerBlock=300;
     o.useFlankers=true;
     o.contrast=-0.3;
     o.thresholdParameter='flankerContrast';
@@ -134,7 +134,7 @@ end
 
 %% PRINT THE CONDITIONS (ONE PER ROW) AS TABLE TT
 % All these vars must be defined in every condition.
-vars={'condition' 'conditionName' 'trialsPerRun' 'noiseSD' 'targetHeightDeg' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'thresholdParameter' 'seed'};
+vars={'condition' 'conditionName' 'trialsPerBlock' 'noiseSD' 'targetHeightDeg' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'thresholdParameter' 'seed'};
 tt=table;
 for i=1:length(oo)
     t=struct2table(oo{i},'AsArray',true);
@@ -157,10 +157,10 @@ if ~skipDataCollection
             % Setting o.useFilter false forces o.filterTransmission=1.
             o.filterTransmission=oo{oi-1}.filterTransmission;
         end
-        o.runNumber=oi;
-        o.runsDesired=length(oo);
+        o.blockNumber=oi;
+        o.blocksDesired=length(oo);
         oo{oi}=NoiseDiscrimination(o); % RUN THE EXPERIMENT!
-        if oo{oi}.quitSession
+        if oo{oi}.quitExperiment
             break
         end
     end

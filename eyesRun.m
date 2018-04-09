@@ -51,7 +51,7 @@ o.experiment='eyes';
 o.thresholdParameter='contrast';
 o.viewingDistanceCm=40;
 o.eyes='right';
-o.trialsPerRun=40;
+o.trialsPerBlock=40;
 o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
 o.blankingRadiusReEccentricity=0; % No blanking.
 o.moviePreSec=0.3;
@@ -169,8 +169,8 @@ if ~skipDataCollection
     clear oOut
     for oi=1:length(oo) % Edit this line to select which conditions to run now.
         o=oo{oi};
-        o.runNumber=oi;
-        o.runsDesired=length(oo);
+        o.blockNumber=oi;
+        o.blocksDesired=length(oo);
         o.alternatives=length(o.alphabet);
         if exist('oOut','var')
             % Reuse answers from immediately preceding run.
@@ -181,7 +181,7 @@ if ~skipDataCollection
         end
         oOut=NoiseDiscrimination(o); % RUN THE EXPERIMENT!
         oo{oi}=oOut; % Save results in oo.
-        if oOut.quitSession
+        if oOut.quitExperiment
             break
         end
         fprintf('\n');

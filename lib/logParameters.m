@@ -2,12 +2,12 @@ clear all
 %% Last Google Doc page 1:1, MAX:1
 
 %Script to test effects of outside noise vs. inside noise. 
-o.runNumber=0;
-% o.runsDesired = 14;
-o.runsDesired = 1;
+o.blockNumber=0;
+% o.blocksDesired = 14;
+o.blocksDesired = 1;
 saveData = 1;
 maskType = 'GeneralMask'; %choose from 'GeneralMask', 'OverlapMask', 'Crowding';
-for run=1:o.runsDesired
+for run=1:o.blocksDesired
 %     for noiseContrast = Shuffle([0 0 .01 .01 .02 .02 .04 .04 .08 .08 .16 .16 .32 .32])
         for noiseContrast = Shuffle([.16])
 
@@ -18,7 +18,7 @@ for run=1:o.runsDesired
         acuityDeg = .029*(o.eccentricityDeg + 2.72);
         criticalSpacingDeg = .3*(o.eccentricityDeg + .45);
 
-        o.runNumber= o.runNumber + 1;
+        o.blockNumber= o.blockNumber + 1;
         o.useTinyWindow = 0;
         o.measureBeta = 0;
         o.beta = 1.7;
@@ -28,8 +28,8 @@ for run=1:o.runsDesired
         o.durationSec=inf;
         o.noiseType='gaussian';
         o.noiseCheckDeg=(1/10)*o.targetHeightDeg;
-%         o.trialsPerRun =70 ; 
-        o.trialsPerRun =50; 
+%         o.trialsPerBlock =70 ; 
+        o.trialsPerBlock =50; 
         o.useFlankers=0;
 
                 noiseRadiusDeg=0;

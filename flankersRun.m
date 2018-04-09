@@ -61,7 +61,7 @@ o.targetDurationSec=0.2;
 o.desiredLuminance=[];
 o.desiredLuminanceFactor=1;
 o.constantStimuli=[-0.01 -0.03 -0.1 -0.3 -0.7];
-o.trialsPerRun=50*length(o.constantStimuli);
+o.trialsPerBlock=50*length(o.constantStimuli);
 o.useMethodOfConstantStimuli=true;
 %  o.minScreenWidthDeg=10;
 o.eyes='both';
@@ -165,7 +165,7 @@ if ~skipDataCollection && true
          oo(oi).dataFilename=oOut.dataFilename;
          oo(oi).trialsSkipped=oOut.trialsSkipped;
       end
-      if oOut.quitSession
+      if oOut.quitExperiment
          break
       end
    end

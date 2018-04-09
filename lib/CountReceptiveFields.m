@@ -32,11 +32,11 @@ o.trials=40;
 o.observer='junk';
 % You can call NoiseDiscrimination several times, with different conditions
 % for each call. It is suggested that you set in advance the number of
-% runsDesired and that you increment the runNumber from run to run. These
+% blocksDesired and that you increment the blockNumber from run to run. These
 % two numbers are displayed at the top of the screen during every trial to
 % keep the observer informed of progress. NoiseDiscrimination says
 % "congratulations" at the end of the last run (i.e. when
-% runNumber==runsDesired).
-o.runNumber=1;
-o.runsDesired=1;
+% blockNumber==blocksDesired).
+o.blockNumber=1;
+o.blocksDesired=1;
 o=NoiseDiscrimination(o);

@@ -2,10 +2,10 @@
 % Written by Denis Pelli June 24, 205 to confirm that IdealP is working
 % properly. Looks fine.
 clear all
-o.runNumber=0;
-o.runsDesired=1;
+o.blockNumber=0;
+o.blocksDesired=1;
 for height=2
-    o.runNumber=o.runNumber+1;
+    o.blockNumber=o.blockNumber+1;
     o.signalKind='luminance'; % display a luminance decrement instead of a noise increment.
     o.noiseSD=.2;
     o.noiseType='gaussian';
@@ -25,7 +25,7 @@ for height=2
             o.idealEOverNThreshold = nan;
     end
     o.observer='ideal';
-    o.trialsPerRun=1000;
+    o.trialsPerBlock=1000;
     o.replicatePelli2006=1;
     o=NoiseDiscrimination(o);
     if 0

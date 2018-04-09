@@ -244,11 +244,11 @@ o.observer = 'junk'; % Name of person or existing algorithm.
 algorithmicObservers = {'ideal', 'brightnessSeeker', 'blackshot', 'maximum'};
 o.eyes='both'; % 'left', 'right', 'both', or 'one', which asks user to specify at runtime.
 o.luminanceTransmission=1; % Less than one for dark glasses or neutral density filter.
-o.trialsPerRun = 40; % Typically 40.
-o.runNumber = 1; % For display only, indicate the run number. When o.runNumber==runsDesired this program says "Congratulations" before returning.
-o.runsDesired = 1; % How many runs you to plan to do, used solely for display (and congratulations).
+o.trialsPerBlock = 40; % Typically 40.
+o.blockNumber = 1; % For display only, indicate the run number. When o.blockNumber==blocksDesired this program says "Congratulations" before returning.
+o.blocksDesired = 1; % How many runs you to plan to do, used solely for display (and congratulations).
 o.speakInstructions = 0;
-o.congratulateWhenDone = 1; % 0 or 1. Spoken after last run (i.e. when o.runNumber==o.runsDesired). You can turn this off.
+o.congratulateWhenDone = 1; % 0 or 1. Spoken after last run (i.e. when o.blockNumber==o.blocksDesired). You can turn this off.
 o.runAborted = 0; % 0 or 1. Returned value is 1 if the user aborts this run (i.e. threshold).
 o.quitNow = 0; % 0 or 1. Returned value is 1 if the observer wants to quit now; no more runs.
 o.targetKind = 'letter';
@@ -443,7 +443,7 @@ end
 %     % https://psych.nyu.edu/pelli/papers.html
 %     o.idealEOverNThreshold = 10^(-2.59--3.60); % from Table A of Pelli et al. 2006
 %     o.observer = 'ideal';
-%     o.trialsPerRun = 1000;
+%     o.trialsPerBlock = 1000;
 %     o.alphabet = 'CDHKNORSVZ'; % As in Pelli et al. (2006)
 %     o.alternatives = 10; % As in Pelli et al. (2006).
 %     o.pThreshold = 0.64; % As in Pelli et al. (2006).
@@ -697,18 +697,18 @@ switch o.observer
       if ~isfield(o,'beta') || ~isfinite(o.beta)
          o.beta = 1.7;
       end
-      if ~isfield(o,'trialsPerRun') || ~isfinite(o.trialsPerRun)
-         o.trialsPerRun = 1000;
+      if ~isfield(o,'trialsPerBlock') || ~isfinite(o.trialsPerBlock)
+         o.trialsPerBlock = 1000;
       end
-      if ~isfield(o,'runsDesired') || ~isfinite(o.runsDesired)
-         o.runsDesired = 10;
+      if ~isfield(o,'blocksDesired') || ~isfinite(o.blocksDesired)
+         o.blocksDesired = 10;
       end
       %         degPerCm=57/o.distanceCm;
       %         o.pixPerCm=45; % for MacBook at native resolution.
       %         o.pixPerDeg=o.pixPerCm/degPerCm;
    otherwise
       if o.measureBeta
-         o.trialsPerRun = max(200,o.trialsPerRun);
+         o.trialsPerBlock = max(200,o.trialsPerBlock);
       end
       if ~isfield(o,'beta') || ~isfinite(o.beta)
          switch o.targetModulates
@@ -1372,7 +1372,7 @@ try
       temporal,o.NUnits,log10(o.N),o.NUnits);
    ffprintf(ff,'pThreshold %.2f, beta %.1f\n',o.pThreshold,o.beta);
    ffprintf(ff,'Your (log) guess is %.2f +/- %.2f\n',o.tGuess,o.tGuessSd);
-   ffprintf(ff,'o.trialsPerRun %.0f\n',o.trialsPerRun);
+   ffprintf(ff,'o.trialsPerBlock %.0f\n',o.trialsPerBlock);
    white1 = 1;
    black0 = 0;
    switch o.task % Compute masks and envelopes
@@ -1726,7 +1726,7 @@ try
    trialsRight = 0;
    rWarningCount = 0;
    runStart = GetSecs;
-   for trial = 1:o.trialsPerRun
+   for trial = 1:o.trialsPerBlock
       %% SET TARGET LOG CONTRAST: tTest
       tTest = QuestQuantile(q);
       if o.measureBeta
@@ -2297,7 +2297,7 @@ try
          
          % Print instruction in upper left corner.
          Screen('FillRect',window,gray1,topCaptionRect);
-         message = sprintf('Trial %d of %d. Run %d of %d.',trial,o.trialsPerRun,o.runNumber,o.runsDesired);
+         message = sprintf('Trial %d of %d. Run %d of %d.',trial,o.trialsPerBlock,o.blockNumber,o.blocksDesired);
          Screen('DrawText',window,message,textSize/2,textSize/2,black,gray1);
          
          % Print instructions in lower left corner.
@@ -2534,7 +2534,7 @@ try
             error('Screen brighness changed. Please disable System Preferences:Displays:"Automatically adjust brightness".');
          end
       end
-   end % for trial=1:o.trialsPerRun
+   end % for trial=1:o.trialsPerBlock
    %% DONE. REPORT THRESHOLD FOR THIS RUN.
    if ~isempty(o.data)
       psych.t = unique(o.data(:,1));
@@ -2574,9 +2574,9 @@ try
    
    o.E = 10^(2*o.questMean)*o.E1;
    if streq(o.targetModulates,'luminance')
-      ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold+/-sd log(contrast) %.2f+/-%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
+      ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold+/-sd log(contrast) %.2f+/-%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.blockNumber,o.blocksDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
    else
-      ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold+/-sd log(r-1) %.2f+/-%.2f, approx required n %.0f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
+      ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold+/-sd log(r-1) %.2f+/-%.2f, approx required n %.0f\n',o.blockNumber,o.blocksDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
    end
    if abs(trialsRight/trial-o.pThreshold) > 0.1
       ffprintf(ff,'WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.\n');
@@ -2655,7 +2655,7 @@ try
             end
          end
    end
-   if o.runAborted && o.runNumber < o.runsDesired
+   if o.runAborted && o.blockNumber < o.blocksDesired
       Speak('Please type period to skip the rest and quit now, or space to continue with next run.');
       response = 0;
       while 1
@@ -2675,7 +2675,7 @@ try
          end
       end
    end
-   if o.runNumber == o.runsDesired && o.congratulateWhenDone && ~ismember(o.observer,algorithmicObservers)
+   if o.blockNumber == o.blocksDesired && o.congratulateWhenDone && ~ismember(o.observer,algorithmicObservers)
       Speak('Congratulations. End of run.');
    end
    if Screen(window,'WindowKind') == 1
@@ -2890,8 +2890,8 @@ switch o.targetModulates
    case 'entropy',
       ffprintf(ff,'ratio r=signalLevels/backgroundLevels %.3f, log(r-1) %.2f\n',1+10^tTest,tTest);
 end
-o.trialsPerRun = 1;
-o.runsDesired = 1;
+o.trialsPerBlock = 1;
+o.blocksDesired = 1;
 ffprintf(ff,'SUCCESS: o.saveSnapshot is done. Image saved, now returning.\n');
 fclose(dataFid);
 dataFid=-1;

@@ -102,11 +102,11 @@ o.observer='junk'; % Name of person or existing algorithm.
 % o.observer='brightnessSeeker'; % Existing algorithm instead of person.
 % o.observer='maximum'; % Existing algorithm instead of person.
 % o.observer='ideal'; % Existing algorithm instead of person.
-o.trialsPerRun=40; % Typically 40.
-o.runNumber=1; % For display only, indicate the run number. When o.runNumber==runsDesired this program says "Congratulations" before returning.
-o.runsDesired=1; % How many runs you to plan to do, used solely for display (and congratulations).
+o.trialsPerBlock=40; % Typically 40.
+o.blockNumber=1; % For display only, indicate the run number. When o.blockNumber==blocksDesired this program says "Congratulations" before returning.
+o.blocksDesired=1; % How many runs you to plan to do, used solely for display (and congratulations).
 o.speakInstructions=1;
-o.congratulateWhenDone=1; % 0 or 1. Spoken after last run (i.e. when o.runNumber==0.runsDesired). You can turn this off.
+o.congratulateWhenDone=1; % 0 or 1. Spoken after last run (i.e. when o.blockNumber==0.blocksDesired). You can turn this off.
 o.runAborted=0; % 0 or 1. Returned value is 1 if the user aborts this run (i.e. threshold).
 o.quitNow=0; % 0 or 1. Returned value is 1 if the observer wants to quit now; no more runs.
 % o.signalKind='noise';  % Display a noise increment.
@@ -190,7 +190,7 @@ if o.replicatePelli2006 || isfield(oIn,'replicatePelli2006') && oIn.replicatePel
     % https://psych.nyu.edu/pelli/papers.html
     o.idealEOverNThreshold=10^(-2.59 - -3.60); % from Table A of Pelli et al. 2006
     o.observer='ideal';
-    o.trialsPerRun=1000;
+    o.trialsPerBlock=1000;
     o.alphabet='CDHKNORSVZ'; % As in Pelli et al. (2006)
     o.alternatives=10; % As in Pelli et al. (2006).
     o.pThreshold=0.64; % As in Pelli et al. (2006).
@@ -387,18 +387,18 @@ switch o.observer
         if ~isfield(o,'beta') || ~isfinite(o.beta)
             o.beta=1.7;
         end
-        if ~isfield(o,'trialsPerRun') || ~isfinite(o.trialsPerRun)
-            o.trialsPerRun=1000;
+        if ~isfield(o,'trialsPerBlock') || ~isfinite(o.trialsPerBlock)
+            o.trialsPerBlock=1000;
         end
-        if ~isfield(o,'runsDesired') || ~isfinite(o.runsDesired)
-            o.runsDesired=10;
+        if ~isfield(o,'blocksDesired') || ~isfinite(o.blocksDesired)
+            o.blocksDesired=10;
         end
         %         degPerCm=57/o.distanceCm;
         %         pixPerCm=45; % for MacBook at native resolution.
         %         cal.pixPerDeg=pixPerCm/degPerCm;
     otherwise
         if o.measureBeta
-            o.trialsPerRun=max(200,o.trialsPerRun);
+            o.trialsPerBlock=max(200,o.trialsPerBlock);
         end
         if ~isfield(o,'beta') || ~isfinite(o.beta)
             switch o.signalKind
@@ -845,7 +845,7 @@ try
         tGuessSd=4;
     end
     ffprintf(ff,'Your (log) guess is %.2f ± %.2f\n',tGuess,tGuessSd);
-    ffprintf(ff,'o.trialsPerRun %.0f\n',o.trialsPerRun);
+    ffprintf(ff,'o.trialsPerBlock %.0f\n',o.trialsPerBlock);
     
     switch o.task
         case '4afc'
@@ -963,7 +963,7 @@ try
         end
     end
     frameRect=InsetRect(boundsRect,-1,-1);
-    % for o.runNumber=1:o.runsDesired
+    % for o.blockNumber=1:o.blocksDesired
     if ~ismember(o.observer,{'ideal','brightnessSeeker','maximum'}) %&& ~o.saveSnapshot;
         Screen('FillRect',window,gray1);
         Screen('FillRect',window,gray,o.stimulusRect);
@@ -1053,7 +1053,7 @@ try
     trialsRight=0;
     sigmaWarningCount=0;
     runStart=GetSecs;
-    for trial=1:o.trialsPerRun
+    for trial=1:o.trialsPerBlock
         tTest=QuestQuantile(q);
         if o.measureBeta
             offsetToMeasureBeta=Shuffle(offsetToMeasureBeta);
@@ -1575,7 +1575,7 @@ try
                 end
                 eraseRect=ClipRect(eraseRect,o.stimulusRect);
                 Screen('FillRect',window,gray1,topCaptionRect);
-                message=sprintf('Trial %d of %d. Run %d of %d.',trial,o.trialsPerRun,o.runNumber,o.runsDesired);
+                message=sprintf('Trial %d of %d. Run %d of %d.',trial,o.trialsPerBlock,o.blockNumber,o.blocksDesired);
                 Screen('DrawText',window,message,textSize/2,textSize/2,black);
                 
                 % Print instructions in lower left corner.
@@ -1807,8 +1807,8 @@ try
                         case {'noise','entropy'},
                             ffprintf(ff,'approx required n %.0f, sd ratio %.3f, log(sd-1) %.2f\n',approxRequiredN,1+10^tTest,tTest);
                     end
-                    o.trialsPerRun=1;
-                    o.runsDesired=1;
+                    o.trialsPerBlock=1;
+                    o.blocksDesired=1;
 %                     throw(MException('o.saveSnapshot:Done','SUCCESS: Image saved, now returning.'));
                     error('NOT AN ERROR: o.saveSnapshot is done. SUCCESS: Image saved, now returning.');
                 end
@@ -1944,9 +1944,9 @@ try
     o.EOverN=10^(2*o.questMean)*E1/N;
     o.efficiency = o.idealEOverNThreshold/o.EOverN;
     if streq(o.signalKind,'luminance')
-        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold±sd log(contrast) %.2f±%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
+        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold±sd log(contrast) %.2f±%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.blockNumber,o.blocksDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
     else
-        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold±sd log(sigma-1) %.2f±%.2f, approx required n %.0f\n',o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
+        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold±sd log(sigma-1) %.2f±%.2f, approx required n %.0f\n',o.blockNumber,o.blocksDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
     end
     if abs(trialsRight/trial-o.pThreshold)>0.1
         ffprintf(ff,'WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.\n');
@@ -2010,7 +2010,7 @@ try
             %              logNse=std(logApproxRequiredNumber)/sqrt(length(tSample));
             %              ffprintf(ff,'SUMMARY: %s %d runs mean±se: log(sigma-1) %.2f±%.2f, log(approx required n) %.2f±%.2f\n',o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
     end
-    if o.runAborted && o.runNumber<o.runsDesired
+    if o.runAborted && o.blockNumber<o.blocksDesired
         Speak('Please type period to skip the rest and quit now, or space to continue with next run.');
         FlushEvents('keyDown');
         response=0;
@@ -2035,7 +2035,7 @@ try
             end
         end
     end
-    if o.runNumber==o.runsDesired && o.congratulateWhenDone && ~ismember(o.observer,{'ideal','brightnessSeeker','maximum'})
+    if o.blockNumber==o.blocksDesired && o.congratulateWhenDone && ~ismember(o.observer,{'ideal','brightnessSeeker','maximum'})
         Speak('Congratulations. You are done.');
     end
     if Screen(window,'WindowKind')==1;

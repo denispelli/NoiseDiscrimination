@@ -188,10 +188,10 @@ try
          end
          [name,terminatorChar]=GetEchoString(window,'Observer name:',instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
          if ismember(terminatorChar,[escapeChar graveAccentChar])
-            o.quitRun=true;
-            o.quitSession=OfferEscapeOptions(window,o,instructionalMarginPix);
-            if o.quitSession
-               ffprintf(ff,'*** User typed ESCAPE twice. Session terminated.\n');
+            o.quitBlock=true;
+            o.quitExperiment=OfferEscapeOptions(window,o,instructionalMarginPix);
+            if o.quitExperiment
+               ffprintf(ff,'*** User typed ESCAPE twice. Experiment terminated.\n');
             else
                ffprintf(ff,'*** User typed ESCAPE. Run terminated.\n');
             end
@@ -317,8 +317,8 @@ try
                if o.speakInstructions
                   Speak('Quitting.');
                end
-               o.quitRun=true;
-               o.quitSession=true;
+               o.quitBlock=true;
+               o.quitExperiment=true;
                sca;
                ListenChar;
                return
@@ -339,8 +339,8 @@ try
                if o.speakInstructions
                   Speak('Quitting.');
                end
-               o.quitRun=true;
-               o.quitSession=true;
+               o.quitBlock=true;
+               o.quitExperiment=true;
                sca;
                ListenChar;
                return
@@ -377,10 +377,10 @@ try
                o.pupilDiameterMm=str2num(name);
             end
             if ismember(terminatorChar,[escapeChar graveAccentChar])
-               o.quitRun=true;
-               o.quitSession=OfferEscapeOptions(window,o,instructionalMarginPix);
-               if o.quitSession
-                  ffprintf(ff,'*** User typed ESCAPE twice. Session terminated.\n');
+               o.quitBlock=true;
+               o.quitExperiment=OfferEscapeOptions(window,o,instructionalMarginPix);
+               if o.quitExperiment
+                  ffprintf(ff,'*** User typed ESCAPE twice. Experiment terminated.\n');
                else
                   ffprintf(ff,'*** User typed ESCAPE. Run terminated.\n');
                end

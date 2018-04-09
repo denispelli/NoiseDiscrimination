@@ -117,7 +117,7 @@ if 1
       o.targetMarkDeg=1;
       o.fixationCrossDeg=3;
       oOut=NoiseDiscrimination(o);
-      if oOut.quitSession
+      if oOut.quitExperiment
          break
       end
    end

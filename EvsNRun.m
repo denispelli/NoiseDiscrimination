@@ -178,34 +178,37 @@ for i=1:length(oo)
 end
 disp(tt) % Print list of conditions.
 
-%% RUN THE CONDITIONS
-if ~skipDataCollection
-    % Typically, you'll select just a few of the conditions stored in oo
-    % that you want to run now. Select them from the printout of "tt" in
-    % your Command Window.
-    % NOTE: Typically, conditions with the same conditionName are randonly
-    % shuffled every time you run this, unless you set o.seed, above, to
-    % the 'seed' used to generate the table you want to reproduce.
-    clear oOut
-    for oi=1:length(oo) % Edit this line to select conditions to run now.
-        o=oo{oi};
-        o.runNumber=oi;
-        o.runsDesired=length(oo);
-        if exist('oOut','var')
-            % Reuse answers from immediately preceding run.
-            o.experimenter=oOut.experimenter;
-            o.observer=oOut.observer;
-            % Setting o.useFilter false forces o.filterTransmission=1.
-            o.filterTransmission=oOut.filterTransmission;
-        end
-        oOut=NoiseDiscrimination(o); % RUN THE EXPERIMENT!
-        oo{oi}=oOut; % Save results in cell array oo.
-        if oOut.quitSession
-            break
-        end
-        fprintf('\n');
-    end % for oi=1:length(oo)
-end % if ~skipDataCollection
+if true
+else
+    %% RUN THE CONDITIONS
+    if ~skipDataCollection
+        % Typically, you'll select just a few of the conditions stored in oo
+        % that you want to run now. Select them from the printout of "tt" in
+        % your Command Window.
+        % NOTE: Typically, conditions with the same conditionName are randonly
+        % shuffled every time you run this, unless you set o.seed, above, to
+        % the 'seed' used to generate the table you want to reproduce.
+        clear oOut
+        for oi=1:length(oo) % Edit this line to select conditions to run now.
+            o=oo{oi};
+            o.blockNumber=oi;
+            o.blocksDesired=length(oo);
+            if exist('oOut','var')
+                % Reuse answers from immediately preceding run.
+                o.experimenter=oOut.experimenter;
+                o.observer=oOut.observer;
+                % Setting o.useFilter false forces o.filterTransmission=1.
+                o.filterTransmission=oOut.filterTransmission;
+            end
+            oOut=NoiseDiscrimination(o); % RUN THE EXPERIMENT!
+            oo{oi}=oOut; % Save results in cell array oo.
+            if oOut.quitExperiment
+                break
+            end
+            fprintf('\n');
+        end % for oi=1:length(oo)
+    end % if ~skipDataCollection
+end
 
 %% PRINT SUMMARY OF RESULTS AS TABLE TT
 % Include whatever you're intersted in. We skip rows missing any value.

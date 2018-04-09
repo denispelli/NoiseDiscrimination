@@ -8,7 +8,7 @@ if verLessThan('matlab','R2013b')
    error('This MATLAB is too old. We need MATLAB 2013b or better to use the function "struct2table".');
 end
 o.durationSec=0.5; % signal duration. [0.05, 0.5]
-o.trialsPerRun=50;
+o.trialsPerBlock=50;
 
 % NOISE
 o.useDynamicNoiseMovie = 1; % 0 for static noise

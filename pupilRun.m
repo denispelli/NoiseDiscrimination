@@ -113,7 +113,7 @@ if skipDataCollection
    data=table2struct(t);
    for i=1:length(data)
       data(i).E=10*data(i).noiseSD+1e-5*(1+floor((i-1)/8));
-      data(i).trialsPerRun=40;
+      data(i).trialsPerBlock=40;
       data(i).N=data(i).noiseSD;
       data(i).experimenter='Experimenter';
       data(i).observer='Observer';
@@ -131,7 +131,7 @@ if ~skipDataCollection && 1
    for oi=1:length(oo) % Edit this line to select the conditions you want to run now.
       o=oo(oi);
       % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
-      o.trialsPerRun=40;
+      o.trialsPerBlock=40;
       if exist('oOut','var')
          % Copy answers from immediately preceding run.
          o.experimenter=oOut.experimenter;
@@ -179,7 +179,7 @@ if ~skipDataCollection && 1
          'desiredRetinalIlluminance %.1f, retinalIlluminanceTd %.1f\n'],...
          o.conditionName,oOut.pupilDiameterMm,oOut.filterTransmission,oOut.luminanceFactor,...
          oOut.desiredRetinalIlluminanceTd,oOut.retinalIlluminanceTd);
-      if oOut.quitSession
+      if oOut.quitExperiment
          break
       end
    end

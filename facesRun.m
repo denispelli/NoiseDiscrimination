@@ -53,7 +53,7 @@ o.task='rate';
 o.eccentricityXYDeg=[0 0];
 o.targetHeightDeg=15;
 o.targetDurationSec=0.2;
-o.trialsPerRun=20;
+o.trialsPerBlock=20;
 o.lapse=nan;
 o.steepness=nan;
 o.guess=nan;
@@ -123,10 +123,10 @@ if ~skipDataCollection
             % Setting o.useFilter false forces o.filterTransmission=1.
             o.filterTransmission=oo{oi-1}.filterTransmission;
         end
-        o.runNumber=oi;
-        o.runsDesired=length(oo);
+        o.blockNumber=oi;
+        o.blocksDesired=length(oo);
         oo{oi}=NoiseDiscrimination(o); % RUN THE EXPERIMENT!
-        if oo{oi}.quitSession
+        if oo{oi}.quitExperiment
             break
         end
     end

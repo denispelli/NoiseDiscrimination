@@ -53,7 +53,7 @@ o.targetDurationSec=2;
 % o.targetDurationSec=.2;
 o.desiredLuminance=[];
 o.desiredLuminanceFactor=1;
-o.trialsPerRun=50;
+o.trialsPerBlock=50;
 o.lapse=nan;
 o.steepness=nan;
 o.observer='';
@@ -184,7 +184,7 @@ if ~skipDataCollection && true
          oo(oi).dataFilename=oOut.dataFilename;
          oo(oi).dataFolder=oOut.dataFolder;
       end
-      if oOut.quitSession
+      if oOut.quitExperiment
          break
       end
    end

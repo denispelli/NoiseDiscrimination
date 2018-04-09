@@ -8,7 +8,7 @@ o.observer='Chen'; % use your name
 o.weightIdealWithNoise=0;
 o.distanceCm=60; % viewing distance
 o.durationSec=0.2;
-o.trialsPerRun=80;
+o.trialsPerBlock=80;
 
 
 %For noise with Gaussian envelope (soft)

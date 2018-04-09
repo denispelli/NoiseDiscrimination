@@ -5,10 +5,10 @@
 % to run it before each human session.
 clear all
 eccentricities=[0 4 8 16 32];
-o.runNumber=0;
-o.runsDesired=length(eccentricities);
+o.blockNumber=0;
+o.blocksDesired=length(eccentricities);
 for eccentricity=Shuffle(eccentricities)
-    o.runNumber=o.runNumber+1;
+    o.blockNumber=o.blockNumber+1;
     o.eccentricityDeg=eccentricity;
     o.distanceCm=50; % viewing distance
     o.signalKind='luminance'; % display a luminance decrement instead of a noise increment.
@@ -33,11 +33,11 @@ for eccentricity=Shuffle(eccentricities)
     end
     if ~isfield(o,'idealEOverNThreshold') || ~isfinite(o.idealEOverNThreshold)
         o.observer='ideal';
-        o.trialsPerRun=1000;
+        o.trialsPerBlock=1000;
         o=NoiseDiscrimination(o);
         o.idealEOverNThreshold=o.EOverN;
     end
-    o.trialsPerRun=40;
+    o.trialsPerBlock=40;
     o.observer='jacob';
     o.observer='nick';
     o.observer='junk';
