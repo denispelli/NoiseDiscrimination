@@ -23,7 +23,7 @@ if isempty(o.seed)
 else
     rng(o.seed);
 end
-% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 
 %% SPECIFY BASIC CONDITION
 o.symmetricLuminanceRange=false; % Allow maximum brightness.
@@ -110,28 +110,7 @@ disp(tt) % Print list of conditions.
 
 %% RUN THE CONDITIONS
 if ~skipDataCollection
-    % Typically, you'll select just a few of the conditions stored in oo
-    % that you want to run now. Select them from the above printing of "tt"
-    % in your Command Window.
-    clear oOut
-    for oi=1:length(oo) % Edit this line to select conditions to run now.
-        o=oo{oi};
-        if oi>1
-            % Reuse answers from immediately preceding run.
-            o.experimenter=oo{oi-1}.experimenter;
-            o.observer=oo{oi-1}.observer;
-            % Setting o.useFilter false forces o.filterTransmission=1.
-            o.filterTransmission=oo{oi-1}.filterTransmission;
-        end
-        o.blockNumber=oi;
-        o.blocksDesired=length(oo);
-        oo{oi}=NoiseDiscrimination(o); % RUN THE EXPERIMENT!
-        if oo{oi}.quitExperiment
-            break
-        end
-    end
-    fprintf('\n');
-end % if ~skipDataCollection
+    oo=RunExperiment(oo);
 
     %% PRINT SUMMARY OF RESULTS AS TABLE TT
     % Include whatever you're intersted in. We skip rows missing any value.
