@@ -1,5 +1,5 @@
-function oo=RunNoiseDiscriminationExperiment(oo)
-% oo=RunNoiseDiscriminationExperiment(oo);
+function oOut=RunExperiment(oo)
+% oo=RunExperiment(oo);
 % The first time we call NoiseDiscrimination it will open a window. That
 % window typically fills the whole screen, unless you've set
 % o.useFractionOfScreen less than 1. That window stays open when
@@ -35,25 +35,30 @@ cleanup=onCleanup(@() myCleanupFunction);
 % Typically, you'll select just a few of the conditions stored in oo
 % that you want to run now. Select them from the above printing of "tt"
 % in your Command Window.
+oPrior=[];
 for oi=1:length(oo)
     o=oo{oi};
     o.blockNumber=oi;
     o.blocksDesired=length(oo);
-    if oi>1
-        % Reuse answers from immediately preceding run.
-        o.experimenter=oo{oi-1}.experimenter;
-        o.observer=oo{oi-1}.observer;
+    if ~isempty(oPrior)
+        % Reuse answers from immediately preceding block.
+        o.experimenter=oPrior.experimenter;
+        o.observer=oPrior.observer;
+        o.filterTransmission=oPrior.filterTransmission;
         % Setting o.useFilter false forces o.filterTransmission=1.
-        o.filterTransmission=oo{oi-1}.filterTransmission;
     end
-    oo{oi}=RunNoiseDiscriminationExperiment(o); % Run one condition.
-    if oo{oi}.quitExperiment
+    oPrior=NoiseDiscrimination(o); % Run one condition.
+    oo{oi}=oPrior;
+    if oPrior.quitExperiment
         break
     end
 end
+oOut=oo;
 end
 function myCleanupFunction()
-% Close any open windows and re-enable keyboard.
+% Close window opened by Psychtoolbox Screen command, and re-enable keyboard.
+global window
 sca;
+window=[];
 ListenChar;
 end
