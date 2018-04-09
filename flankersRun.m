@@ -22,12 +22,6 @@ if o.questPlusEnable && ~exist('qpInitialize','file')
 end
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
 cal=OurScreenCalibrations(0);
-if false && ~streq(cal.macModelName,'MacBookPro14,3')
-   % For debugging, if this isn't a 15" MacBook Pro 2017, pretend it is.
-   cal.screenWidthMm=330; % 13"
-   cal.screenHeightMm=206; % 8.1"
-   warning('PRETENDING THIS IS A 15" MacBook Pro 2017');
-end
 
 %% CREATE LIST OF CONDITIONS TO BE TESTED
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
@@ -96,7 +90,7 @@ if ~skipDataCollection && true
    for oi=1:length(oo) % Edit this line to select which conditions to run now.
       o=oo(oi);
       if exist('oOut','var')
-         % Reuse answers from immediately preceding run.
+         % Reuse answers from immediately preceding block.
          o.experimenter=oOut.experimenter;
          o.observer=oOut.observer;
          % Setting o.useFilter false forces o.filterTransmission=1.
