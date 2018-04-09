@@ -10,7 +10,7 @@ function o=NoiseDiscrimination(oIn)
 % "o" struct and calls o=NoiseDiscrimination(o). Within your script it's
 % fine to keep reusing o, with little or no change. However, at the
 % beginning of your script, I recommend calling "clear o" to make sure that
-% you don't carry over any values from a prior session.
+% you don't carry over any values from a prior experiment.
 %
 % OFF THE NYU CAMPUS: If you have an NYU netid and you're using the NYU
 % MATLAB license server then you can work from off campus if you install
@@ -114,25 +114,7 @@ function o=NoiseDiscrimination(oIn)
 % easier to read than most of my current question pages. 
 % 3. I'm unsure whether the question pages should be dim, like the
 % experiment, to maintain dark adaptation, or bright for readability.
-% 4. It's annoying that the window closes between runs. It should remain
-% open until the end of the session. This would look better, and would
-% eliminate waiting (30 s?) for Screen to re-initialize while opening the 
-% first window. However, if the calling program for any reason fails to call
-% NoiseDiscrimination back for the next run in the session, the window
-% remains open, preventing use of the screen. Safety would demand
-% installing a try-catch block around every program that calls
-% NoiseDiscrimination. That's doable, but a bit ugly. I wonder if it's
-% possible to install an error callback that automatically closes the
-% window when an error occurs in the calling program. Yes! Each script that
-% calls NoiseDiscrimination could first call onCleanup to ensure that
-% Control-C (i.e. any termination of the calling script) will provoke
-% "sca". I think this is all I need:
-% cleanupObject = onCleanup(@()sca;ListenChar;));
-% However, if a window remains open when NoiseDiscrimination has closed,
-% then the call to onCleanup must be in the script that calls
-% NoiseDiscrimination. Oh damn! OnCleanup only works in a function, not a
-% script. So the script must be converted to a function. Ugh. I'd rather
-% use try-catch. Damn.
+% 4. 
 
 
 %% EXTRA DOCUMENTATION
@@ -421,8 +403,8 @@ function o=NoiseDiscrimination(oIn)
 % -mario
 
 %% INPUT ARGUMENT
-if exist('oIn','var') && isfield(oIn,'quitSession') && oIn.quitSession
-    % If the user wants to quit the session, then return immediately.
+if exist('oIn','var') && isfield(oIn,'quitExperiment') && oIn.quitExperiment
+    % If the user wants to quit the experiment, then return immediately.
     o=oIn;
     return
 end
@@ -461,8 +443,10 @@ end
 % same "area" as the Gaussian annulus. This "area" is reported in a new
 % variable: o.centralNoiseEnvelopeE1DegDeg
 
+%% PERSISTENT
+global window windowIsOpen % Allows us to keep window open when this function exits.
 %% GLOBALS, FILES
-global window fixationLines fixationCrossWeightPix labelBounds ...
+global fixationLines fixationCrossWeightPix labelBounds ...
     screenRect tTest idealT64 leftEdgeOfResponse img cal ...
     ff whichSignal dataFid 
 % This list of global variables is shared only with the several newly
@@ -470,7 +454,7 @@ global window fixationLines fixationCrossWeightPix labelBounds ...
 % incomplete as the new routines haven't been tested as subroutines, and
 % many of their formerly locally variables need to either be made global or
 % become fields of the o struct.
-global oOld % Saved from last run. Skip prompts that were the same in recent run.
+global oOld % Saved from previous block. Skip prompts that were the same in previous block.
 addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder in same directory as this M file
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
 % echo_executing_commands(2, 'local');
@@ -532,14 +516,14 @@ o.experimenter='';
 o.experiment='';
 o.eyes='both'; % 'left', 'right', 'both', or 'one', which asks user to specify at runtime.
 o.luminanceTransmission=1; % Less than one for dark glasses or neutral density filter.
-o.trialsPerRun=40; % Typically 40.
+o.trialsPerBlock=40; % Typically 40.
 o.trials=0; % Initialize trial counter so it's defined even if user quits early.
-o.runNumber=1; % For display only, indicate the run number. When o.runNumber==runsDesired this program says "Congratulations" before returning.
-o.runsDesired=1; % How many runs you to plan to do, used solely for display (and congratulations).
+o.blockNumber=1; % For display only, indicate the block number. When o.blockNumber==blocksDesired this program says "Congratulations" before returning.
+o.blocksDesired=1; % How many blocks you to plan to run? Used solely for display and congratulations and keeping window open until last block.
 o.speakInstructions=false;
-o.congratulateWhenDone=true; % 0 or 1. Spoken after last run (i.e. when o.runNumber==o.runsDesired). You can turn this off.
-o.quitRun=false; % Returned value is true if the user aborts this run (i.e. threshold).
-o.quitSession=false; % Returned value is true if the observer wants to quit now; no more runs.
+o.congratulateWhenDone=true; % 0 or 1. Spoken after final block (i.e. when o.blockNumber==o.blocksDesired). You can turn this off.
+o.quitBlock=false; % Returned value is true if the user aborts this block.
+o.quitExperiment=false; % Returned value is true if the observer wants to quit whole experiment now; no more blocks.
 o.targetKind='letter';
 % o.targetKind='gabor'; % one cycle within targetSize
 % o.targetKind='image'; % read from folder of images
@@ -604,8 +588,8 @@ o.annularNoiseBigRadiusDeg=inf; % Noise extent in deg, or inf.
 o.annularNoiseSmallRadiusDeg=inf; % Hole extent or 0 (no hole).
 o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
 o.noiseFrozenInTrial=false; % 0 or 1.  If true (1), use same noise at all locations
-o.noiseFrozenInRun=false; % 0 or 1.  If true (1), use same noise on every trial
-o.noiseFrozenInRunSeed=0; % 0 or positive integer. If o.noiseFrozenInRun, then any nonzero positive integer will be used as the seed for the run.
+o.noiseFrozenInBlock=false; % 0 or 1.  If true (1), use same noise on every trial
+o.noiseFrozenInBlockSeed=0; % 0 or positive integer. If o.noiseFrozenInBlock, then any nonzero positive integer will be used as the seed for the block.
 o.markTargetLocation=false; % Is there a mark designating target position?
 o.targetMarkDeg=1;
 o.useFixation=true;
@@ -675,8 +659,8 @@ o.retinalIlluminanceTd=[];
 o.pupilDiameterMm=[];
 o.annularNoiseEnvelopeRadiusDeg=0;
 o.labelAlternatives=[];
-o.trialsPerRun=40;
-o.runsDesired=1;
+o.trialsPerBlock=40;
+o.blocksDesired=1;
 o.eyes='both';
 o.readAlphabetFromDisk=false;
 o.borderLetter=[];
@@ -692,6 +676,9 @@ o.responseScreenAbsoluteContrast=0.99; % Set to [] to maximize possible contrast
 o.transcript.responseTimeSec=[]; % Time of response re o.transcript.stimulusOnsetSec, for each trial.
 o.transcript.stimulusOnsetSec=[]; % Value of GetSecs at stimulus onset, for each trial.
 o.printImageStatistics=false;
+if isempty(windowIsOpen)
+   windowIsOpen=false;
+end
 
 o.deviceIndex=-1; % -1 for all keyboards.
 o.deviceIndex=-3; % -3 for all keyboard/keypad devices.
@@ -824,7 +811,7 @@ end
 %     % https://psych.nyu.edu/pelli/papers.html
 %     o.idealEOverNThreshold=10^(-2.59--3.60); % from Table A of Pelli et al. 2006
 %     o.observer='ideal';
-%     o.trialsPerRun=1000;
+%     o.trialsPerBlock=1000;
 %     o.alphabet='CDHKNORSVZ'; % As in Pelli et al. (2006)
 %     o.alternatives=10; % As in Pelli et al. (2006).
 %     o.pThreshold=0.64; % As in Pelli et al. (2006).
@@ -887,61 +874,71 @@ if cal.screen > 0
     fprintf('Using external monitor.\n');
 end
 cal.clutMapLength=o.clutMapLength;
+o.maxEntry=o.clutMapLength-1; % copied here on April. 8, 2018
 o.cal=cal;
 if ~isfield(cal,'old') || ~isfield(cal.old,'L')
     fprintf('This screen has not yet been calibrated. Please use CalibrateScreenLuminance to calibrate it.\n');
     error('This screen has not yet been calibrated. Please use CalibrateScreenLuminance to calibrate it.\n');
 end
 
-%% Must call Brightness while no window is open.
-useBrightnessFunction=true;
-if useBrightnessFunction
-    Brightness(cal.screen,cal.brightnessSetting); % Set brightness.
-    cal.brightnessReading=Brightness(cal.screen); % Read brightness.
-    if cal.brightnessReading==-1
-        % If it failed, try again. The first attempt sometimes fails.
-        % Not sure why. Maybe it times out.
-        cal.brightnessReading=Brightness(cal.screen); % Read brightness.
-    end
-    if isfinite(cal.brightnessReading) && abs(cal.brightnessSetting-cal.brightnessReading)>0.01
-        error('Set brightness to %.2f, but read back %.2f',cal.brightnessSetting,cal.brightnessReading);
-    end
+% THE GLOBAL windowIsOpen might be stale, if previous block terminated with
+% an error that was not caught by a try-catch. So we assume that window is
+% closed before the first block.
+if o.blockNumber==1
+   sca;
+   windowIsOpen=false;
 end
-if ~useBrightnessFunction
-    try
-        % Caution: Screen ConfigureDisplay Brightness gives a fatal error
-        % if not supported, and is unsupported on many devices, including
-        % a video projector under macOS. We use try-catch to recover.
-        % NOTE: It was my impression in summer 2017 that the Brightness
-        % function (which uses AppleScript to control the System
-        % Preferences Display panel) is currently more reliable than the
-        % Screen ConfigureDisplay Brightness feature (which uses a macOS
-        % call). The Screen call adjusts the brightness, but not the
-        % slider in the Preferences Display panel, and macOS later
-        % unpredictably resets the brightness to the level of the slider,
-        % not what we asked for. This is a macOS bug in the Apple call
-        % used by Screen.
-        for i=1:3
+
+%% Only call Brightness while no window is open.
+if ~windowIsOpen
+   useBrightnessFunction=true;
+   if useBrightnessFunction
+      Brightness(cal.screen,cal.brightnessSetting); % Set brightness.
+      cal.brightnessReading=Brightness(cal.screen); % Read brightness.
+      if cal.brightnessReading==-1
+         % If it failed, try again. The first attempt sometimes fails.
+         % Not sure why. Maybe it times out.
+         cal.brightnessReading=Brightness(cal.screen); % Read brightness.
+      end
+      if isfinite(cal.brightnessReading) && abs(cal.brightnessSetting-cal.brightnessReading)>0.01
+         error('Set brightness to %.2f, but read back %.2f',cal.brightnessSetting,cal.brightnessReading);
+      end
+   end
+   if ~useBrightnessFunction
+      try
+         % Caution: Screen ConfigureDisplay Brightness gives a fatal error
+         % if not supported, and is unsupported on many devices, including
+         % a video projector under macOS. We use try-catch to recover.
+         % NOTE: It was my impression in summer 2017 that the Brightness
+         % function (which uses AppleScript to control the System
+         % Preferences Display panel) is currently more reliable than the
+         % Screen ConfigureDisplay Brightness feature (which uses a macOS
+         % call). The Screen call adjusts the brightness, but not the
+         % slider in the Preferences Display panel, and macOS later
+         % unpredictably resets the brightness to the level of the slider,
+         % not what we asked for. This is a macOS bug in the Apple call
+         % used by Screen.
+         for i=1:3
             Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
             cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
             %          Brightness(cal.screen,cal.brightnessSetting);
             %          cal.brightnessReading=Brightness(cal.screen);
             if abs(cal.brightnessSetting-cal.brightnessReading)<0.01
-                break;
+               break;
             elseif i==3
-                error('Tried three times to set brightness to %.2f, but read back %.2f',...
-                    cal.brightnessSetting,cal.brightnessReading);
+               error('Tried three times to set brightness to %.2f, but read back %.2f',...
+                  cal.brightnessSetting,cal.brightnessReading);
             end
-        end
-    catch
-        cal.brightnessReading=NaN;
-    end
-end
-if cal.ScreenConfigureDisplayBrightnessWorks
-    AutoBrightness(cal.screen,0);
-    ffprintf(ff,'Turning autobrightness off. Setting "brightness" to %.2f, on a scale of 0.0 to 1.0;\n',cal.brightnessSetting);
-end
-
+         end
+      catch
+         cal.brightnessReading=NaN;
+      end
+   end
+   if cal.ScreenConfigureDisplayBrightnessWorks
+      AutoBrightness(cal.screen,0);
+      ffprintf(ff,'Turning autobrightness off. Setting "brightness" to %.2f, on a scale of 0.0 to 1.0;\n',cal.brightnessSetting);
+   end
+end % if ~windowIsOpen
 
 %% TRY-CATCH BLOCK CONTAINS ALL CODE IN WHICH WINDOW IS OPEN
 try
@@ -951,63 +948,68 @@ try
     if o.useFractionOfScreen
         ffprintf(ff,'Using tiny window for debugging.\n');
     end
-    PsychImaging('PrepareConfiguration');
-    if o.flipScreenHorizontally
-        PsychImaging('AddTask','AllViews','FlipHorizontal');
+    if ~windowIsOpen
+       PsychImaging('PrepareConfiguration');
+       if o.flipScreenHorizontally
+          PsychImaging('AddTask','AllViews','FlipHorizontal');
+       end
+       if cal.hiDPIMultiple ~= 1
+          PsychImaging('AddTask','General','UseRetinaResolution');
+       end
+       if o.useNative10Bit
+          PsychImaging('AddTask','General','EnableNative10BitFramebuffer');
+       end
+       if o.useNative11Bit
+          PsychImaging('AddTask','General','EnableNative11BitFramebuffer');
+       end
+       PsychImaging('AddTask','General','NormalizedHighresColorRange',1);
+       if o.enableClutMapping
+          PsychImaging('AddTask','AllViews','EnableClutMapping',o.clutMapLength,1); % clutSize, high res
+       else
+          warning('You need EnableClutMapping to control contrast.');
+       end
+       if ~o.useFractionOfScreen
+          [window,screenRect]=PsychImaging('OpenWindow',cal.screen,1.0);
+       else
+          r=round(o.useFractionOfScreen*screenBufferRect);
+          r=AlignRect(r,screenBufferRect,'right','bottom');
+          [window,screenRect]=PsychImaging('OpenWindow',cal.screen,1.0,r);
+       end
+       % if cal.hiDPIMultiple~=1
+       %     ffprintf(ff,'HiDPI: It doesn''t matter, but you might be curious to know.\n');
+       %     if ismac
+       %         str='Your Retina display';
+       %     else
+       %         str='Your display';
+       %     end
+       %     ffprintf(ff,'%s is in dual-resolution HiDPI mode. Display resolution is %.2fx buffer resolution.\n',str,cal.hiDPIMultiple);
+       %     ffprintf(ff,'Draw buffer is %d x %d. ',screenBufferRect(3:4));
+       %     ffprintf(ff,'Display is %d x %d.\n',screenRect(3:4));
+       %     ffprintf(ff,'We are using it in its native %d x %d resolution.\n',resolution.width,resolution.height);
+       %     ffprintf(ff,'You can use Switch Res X (http://www.madrau.com/) to select a pure resolution, not HiDPI.\n');
+       % end
+       windowIsOpen=true;
     end
-    if cal.hiDPIMultiple ~= 1
-        PsychImaging('AddTask','General','UseRetinaResolution');
-    end
-    if o.useNative10Bit
-        PsychImaging('AddTask','General','EnableNative10BitFramebuffer');
-    end
-    if o.useNative11Bit
-        PsychImaging('AddTask','General','EnableNative11BitFramebuffer');
-    end
-    PsychImaging('AddTask','General','NormalizedHighresColorRange',1);
     if o.enableClutMapping
-        o.maxEntry=o.clutMapLength-1; % moved here on Feb. 4, 2018
-        PsychImaging('AddTask','AllViews','EnableClutMapping',o.clutMapLength,1); % clutSize, high res
-        cal.gamma=repmat((0:o.maxEntry)'/o.maxEntry,1,3); % Identity
-        % Set hardware CLUT to identity, without assuming we know the
-        % size. On Windows, the only allowed gamma table size is 256.
-        gamma=Screen('ReadNormalizedGammaTable',cal.screen);
-        maxEntry=length(gamma)-1;
-        gamma(:,1:3)=repmat((0:maxEntry)'/maxEntry,1,3);
-        Screen('LoadNormalizedGammaTable',cal.screen,gamma,0);
-    else
-        warning('You need EnableClutMapping to control contrast.');
+       o.maxEntry=o.clutMapLength-1; % moved here on Feb. 4, 2018
+       cal.gamma=repmat((0:o.maxEntry)'/o.maxEntry,1,3); % Identity.
+       % Set hardware CLUT to identity, without assuming we know the
+       % size. On Windows, the only allowed gamma table size is 256.
+       gamma=Screen('ReadNormalizedGammaTable',cal.screen);
+       maxEntry=length(gamma)-1;
+       gamma(:,1:3)=repmat((0:maxEntry)'/maxEntry,1,3);
+       Screen('LoadNormalizedGammaTable',cal.screen,gamma,0);
     end
     if o.enableClutMapping % How we use LoadNormalizedGammaTable
-        loadOnNextFlip=2; % Load software CLUT at flip.
+       loadOnNextFlip=2; % Load software CLUT at flip.
     else
-        loadOnNextFlip=true; % Load hardware CLUT: 0. now; 1. on flip.
-    end
-    if ~o.useFractionOfScreen
-        [window,screenRect]=PsychImaging('OpenWindow',cal.screen,1.0);
-    else
-        r=round(o.useFractionOfScreen*screenBufferRect);
-        r=AlignRect(r,screenBufferRect,'right','bottom');
-        [window,screenRect]=PsychImaging('OpenWindow',cal.screen,1.0,r);
+       loadOnNextFlip=true; % Load hardware CLUT: 0. now; 1. on flip.
     end
     screenRect=Screen('Rect',cal.screen,1); % screen rect in UseRetinaResolution mode
     if o.useFractionOfScreen
-        screenRect=round(o.useFractionOfScreen*screenRect);
+       screenRect=round(o.useFractionOfScreen*screenRect);
     end
-    % if cal.hiDPIMultiple~=1
-    %     ffprintf(ff,'HiDPI: It doesn''t matter, but you might be curious to know.\n');
-    %     if ismac
-    %         str='Your Retina display';
-    %     else
-    %         str='Your display';
-    %     end
-    %     ffprintf(ff,'%s is in dual-resolution HiDPI mode. Display resolution is %.2fx buffer resolution.\n',str,cal.hiDPIMultiple);
-    %     ffprintf(ff,'Draw buffer is %d x %d. ',screenBufferRect(3:4));
-    %     ffprintf(ff,'Display is %d x %d.\n',screenRect(3:4));
-    %     ffprintf(ff,'We are using it in its native %d x %d resolution.\n',resolution.width,resolution.height);
-    %     ffprintf(ff,'You can use Switch Res X (http://www.madrau.com/) to select a pure resolution, not HiDPI.\n');
-    % end
-    
+  
     %% ASK EXPERIMENTER NAME
     o.instructionalMarginPix=round(0.08*min(RectWidth(screenRect),RectHeight(screenRect)));
     o.textSize=39;
@@ -1019,13 +1021,13 @@ try
     o.useSpeech=false;
     if isempty(o.experimenter)
         text.big={'Hello,' 'Please slowly type the experimenter''s name followed by RETURN.'};
-        text.small='I''ll remember your answers, to skip these questions on the next run.';
+        text.small='I''ll remember your answers, to skip these questions on the next block.';
         text.fine='NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.';
         text.question='Experimenter name:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
         fprintf('*Waiting for experimenter name.\n');
         [reply,o]=AskQuestion(window,o,text);
-        if o.quitRun
+        if o.quitBlock
             ListenChar;
             ShowCursor;
             sca;
@@ -1037,13 +1039,13 @@ try
     %% ASK OBSERVER NAME
     if isempty(o.observer)
         text.big={'Hello Observer,' 'Please slowly type your name followed by RETURN.'};
-        text.small='I''ll remember your answers, to skip these questions on the next run.';
+        text.small='I''ll remember your answers, to skip these questions on the next block.';
         text.fine='NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.';
         text.question='Observer name:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
         fprintf('*Waiting for observer name.\n');
         [reply,o]=AskQuestion(window,o,text);
-        if o.quitRun
+        if o.quitBlock
             ListenChar;
             ShowCursor;
             sca;
@@ -1053,11 +1055,11 @@ try
     end
     
     %% ASK FILTER TRANSMISSION
-    persistent previousRunUsedFilter
+    persistent previousBlockUsedFilter
     if ~o.useFilter
         o.filterTransmission=1;
-        if previousRunUsedFilter
-            % If the preceding run had a filter, and this run does not, we ask
+        if previousBlockUsedFilter
+            % If the preceding block had a filter, and this block does not, we ask
             % the observer to remove the filter or sunglasses.
             text.big={'Please remove any filter or sunglasses. Hit RETURN to continue.'};
             text.small='';
@@ -1079,7 +1081,7 @@ try
         text.question='Filter transmission:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
         [reply,o]=AskQuestion(window,o,text);
-        if ~o.quitRun
+        if ~o.quitBlock
             if ~isempty(reply)
                 o.filterTransmission=str2num(reply);
             end
@@ -1088,7 +1090,7 @@ try
             end
         end
     end % if ~o.useFilter
-    if o.quitRun
+    if o.quitBlock
         ListenChar;
         ShowCursor;
         sca;
@@ -1097,7 +1099,7 @@ try
     Screen('FillRect',window,o.gray1);
     % Keep the temporary window open until we open the main one, so observer
     % knows program is running.
-    previousRunUsedFilter=o.useFilter;
+    previousBlockUsedFilter=o.useFilter;
     
     %% PUPIL SIZE
     % Measured December 2017 by Darshan.
@@ -1339,11 +1341,11 @@ try
             if isempty(o.steepness) || ~isfinite(o.steepness)
                 o.steepness=1.7;
             end
-            if isempty(o.trialsPerRun) || ~isfinite(o.trialsPerRun)
-                o.trialsPerRun=1000;
+            if isempty(o.trialsPerBlock) || ~isfinite(o.trialsPerBlock)
+                o.trialsPerBlock=1000;
             end
-            if isempty(o.runsDesired) || ~isfinite(o.runsDesired)
-                o.runsDesired=10;
+            if isempty(o.blocksDesired) || ~isfinite(o.blocksDesired)
+                o.blocksDesired=10;
             end
             %         degPerCm=57/o.viewingDistanceCm;
             %         o.pixPerCm=45; % for MacBook at native resolution.
@@ -1603,8 +1605,8 @@ try
             if o.speakInstructions
                 Speak('Quitting.');
             end
-            o.quitRun=true;
-            o.quitSession=true;
+            o.quitBlock=true;
+            o.quitExperiment=true;
             ListenChar;
             ShowCursor;
             sca;
@@ -1638,8 +1640,8 @@ try
                     if o.speakInstructions
                         Speak('Quitting.');
                     end
-                    o.quitRun=true;
-                    o.quitSession=true;
+                    o.quitBlock=true;
+                    o.quitExperiment=true;
                     ListenChar;
                     ShowCursor;
                     sca;
@@ -1661,8 +1663,8 @@ try
                     if o.speakInstructions
                         Speak('Quitting.');
                     end
-                    o.quitRun=true;
-                    o.quitSession=true;
+                    o.quitBlock=true;
+                    o.quitExperiment=true;
                     ListenChar;
                     ShowCursor;
                     sca;
@@ -1685,8 +1687,8 @@ try
                 if o.speakInstructions
                     Speak('Quitting.');
                 end
-                o.quitRun=true;
-                o.quitSession=true;
+                o.quitBlock=true;
+                o.quitExperiment=true;
                 ListenChar;
                 ShowCursor;
                 sca;
@@ -1749,7 +1751,7 @@ try
     
     fprintf('*Waiting for observer to set viewing distance.\n');
     o=SetUpNearPoint(window,o);
-    if o.quitSession
+    if o.quitExperiment
         ListenChar;
         ShowCursor;
         sca;
@@ -1758,7 +1760,7 @@ try
     
     fprintf('*Waiting for observer to set up fixation.\n');
     o=SetUpFixation(window,o,ff);
-    if o.quitSession
+    if o.quitExperiment
         ListenChar;
         ShowCursor;
         sca;
@@ -1840,8 +1842,8 @@ try
     if o.noiseFrozenInTrial
         ffprintf(ff,', frozenInTrial');
     end
-    if o.noiseFrozenInRun
-        ffprintf(ff,', frozenInRun');
+    if o.noiseFrozenInBlock
+        ffprintf(ff,', frozenInBlock');
     end
     ffprintf(ff,'\n');
     o.noiseSize=2*o.noiseRadiusDeg*[1, 1]*o.pixPerDeg/o.noiseCheckPix;
@@ -2039,7 +2041,7 @@ try
     ffprintf(ff,'%s noise power spectral density N %s log=%.2f\n', ...
         temporal,o.NUnits,log10(o.N));
     ffprintf(ff,'pThreshold %.2f, steepness %.1f\n',o.pThreshold,o.steepness);
-    ffprintf(ff,'o.trialsPerRun %.0f\n',o.trialsPerRun);
+    ffprintf(ff,'o.trialsPerBlock %.0f\n',o.trialsPerBlock);
     
     %% COMPUTE signal(i).image FOR ALL i.
     white1=1;
@@ -2418,7 +2420,7 @@ try
         questPlusData=qpInitialize(questPlusData);
     end
     
-    %% DO A RUN
+    %% DO A BLOCK
     o.data=[];
     if isfield(o,'transcript')
         o=rmfield(o,'transcript');
@@ -2454,12 +2456,12 @@ try
     timeZero=GetSecs;
     trialsRight=0;
     rWarningCount=0;
-    runStart=GetSecs;
+    blockStart=GetSecs;
     o.skipTrial=false;
-    waitMessage='Starting new run. ';
+    waitMessage='Starting new block. ';
     trial=0;
     o.trials=trial;
-    while trial<o.trialsPerRun
+    while trial<o.trialsPerBlock
         trial=trial+1;
         o.trials=trial;
         if (trial==1 || o.skipTrial) && ~ismember(o.observer,algorithmicObservers)
@@ -2470,7 +2472,7 @@ try
             end
             o=WaitUntilObserverIsReady(o,waitMessage);
             waitMessage='Continuing. ';
-            if o.quitRun
+            if o.quitBlock
                 trial=trial-1;
                 break
             end
@@ -2495,7 +2497,7 @@ try
             if trial==1
                 assert(size(o.constantStimuli,1)==1)
                 o.thresholdParameterValueList=...
-                    repmat(o.constantStimuli,1,ceil(o.trialsPerRun/length(o.constantStimuli)));
+                    repmat(o.constantStimuli,1,ceil(o.trialsPerBlock/length(o.constantStimuli)));
                 o.thresholdParameterValueList=Shuffle(o.thresholdParameterValueList);
             end
             c=o.thresholdParameterValueList(trial);
@@ -2603,11 +2605,11 @@ try
                 error('Unknown o.targetModulates "%s"',o.targetModulates);
         end % switch o.targetModulates
         
-        if o.noiseFrozenInRun
+        if o.noiseFrozenInBlock
             if trial == 1
-                if o.noiseFrozenInRunSeed
-                    assert(o.noiseFrozenInRunSeed > 0 && isinteger(o.noiseFrozenInRunSeed))
-                    o.noiseListSeed=o.noiseFrozenInRunSeed;
+                if o.noiseFrozenInBlockSeed
+                    assert(o.noiseFrozenInBlockSeed > 0 && isinteger(o.noiseFrozenInBlockSeed))
+                    o.noiseListSeed=o.noiseFrozenInBlockSeed;
                 else
                     rng('shuffle'); % Use time to seed the random number generator.
                     generator=rng;
@@ -2615,7 +2617,7 @@ try
                 end
             end
             rng(o.noiseListSeed);
-        end % if o.noiseFrozenInRun
+        end % if o.noiseFrozenInBlock
         
         %% RESTRICT tTest TO LEGAL VALUE IN QUESTPLUS
         if o.questPlusEnable
@@ -2704,7 +2706,7 @@ try
                     else
                         whichSignal=movieSaveWhich;
                     end
-                    if o.noiseFrozenInRun
+                    if o.noiseFrozenInBlock
                         rng(o.noiseListSeed);
                     end
                     noise=PsychRandSample(noiseList,o.canvasSize*o.targetCheckPix/o.noiseCheckPix);
@@ -3147,7 +3149,10 @@ try
             end
             % Print instruction in upper left corner.
             Screen('FillRect',window,o.gray1,topCaptionRect);
-            message=sprintf('Trial %d of %d. Run %d of %d.',trial,o.trialsPerRun,o.runNumber,o.runsDesired);
+            message=sprintf('Trial %d of %d. Block %d of %d.',trial,o.trialsPerBlock,o.blockNumber,o.blocksDesired);
+            if isfield(o,'experiment')
+               message=[message ' Experiment "' o.experiment '".'];
+            end
             Screen('DrawText',window,message,o.textSize/2,o.textSize/2,black,o.gray1);
             
             % Print instructions in lower left corner.
@@ -3156,12 +3161,12 @@ try
                 case '4afc'
                     message='Please click 1 to 4 times for location 1 to 4, or more clicks to quit.';
                 case 'identify'
-                    message=sprintf('Please type the letter: %s, or ESCAPE to cancel a trial or quit the run.',o.alphabet(1:o.alternatives));
+                    message=sprintf('Please type the letter: %s, or ESCAPE to cancel a trial or quit.',o.alphabet(1:o.alternatives));
                 case 'identifyAll'
-                    message=sprintf('[Ignore case. DELETE to backspace. ESCAPE to cancel a trial or quit the run. You''ll get feedback on the middle letter.]');
+                    message=sprintf('[Ignore case. DELETE to backspace. ESCAPE to cancel a trial or quit. You''ll get feedback on the middle letter.]');
                     factor=1.3;
                 case 'rate'
-                    message=sprintf('Please rate the beauty: 0 to 9, or ESCAPE to cancel a trial or quit the run.');
+                    message=sprintf('Please rate the beauty: 0 to 9, or ESCAPE to cancel a trial or quit.');
             end
             textRect=[0 0 o.textSize 1.2*o.textSize];
             textRect=AlignRect(textRect,bottomCaptionRect,'left','bottom');
@@ -3350,27 +3355,27 @@ try
                     ptb_mouseclick_timeout=0.8;
                     clicks=GetClicks;
                     if ~ismember(clicks,1:locations)
-                        ffprintf(ff,'*** %d clicks. Run terminated.\n',clicks);
+                        ffprintf(ff,'*** %d clicks. Block terminated.\n',clicks);
                         if o.speakInstructions
-                            Speak('Run terminated.');
+                            Speak('Block terminated.');
                         end
                         trial=trial-1;
-                        o.quitRun=true;
+                        o.quitBlock=true;
                         break;
                     end
                     o.transcript.responseTimeSec(trial)=GetSecs-o.transcript.stimulusOnsetSec(trial);
                     response=clicks;
                 case 'identify'
                     while 1
-                        o.quitRun=false;
+                        o.quitBlock=false;
                         responseChar=GetKeypress;
                         if ismember(responseChar,[escapeChar,graveAccentChar])
-                            [o.quitSession,o.quitRun,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
+                            [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
                             trial=trial-1;
-                            if o.quitRun
-                                ffprintf(ff,'*** User typed ESCAPE. Quitting run.\n');
+                            if o.quitBlock
+                                ffprintf(ff,'*** User typed ESCAPE. Quitting block.\n');
                                 if o.speakInstructions
-                                    Speak('Run terminated.');
+                                    Speak('Block terminated.');
                                 end
                                 break
                             end
@@ -3391,14 +3396,14 @@ try
                             break;
                         else
                             if o.speakInstructions
-                                Speak('Try again. Or hit ESCAPE to quit the run.');
+                                Speak('Try again. Or hit ESCAPE to quit.');
                             end
                         end
                     end % while 1
                     if o.skipTrial
                         continue
                     end
-                    if o.quitRun
+                    if o.quitBlock
                         break
                     end
                 case 'identifyAll'
@@ -3421,12 +3426,12 @@ try
                     %                Screen('FillRect',window,o.gray1,bottomCaptionRect);
                     Screen('TextSize',window,o.textSize);
                     if ismember(terminatorChar,[escapeChar,graveAccentChar])
-                        [o.quitSession,o.quitRun,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
+                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
                         trial=trial-1;
-                        if o.quitRun
-                            ffprintf(ff,'*** User typed ESCAPE. Quitting run.\n');
+                        if o.quitBlock
+                            ffprintf(ff,'*** User typed ESCAPE. Quitting block.\n');
                             if o.speakInstructions
-                                Speak('Run terminated.');
+                                Speak('Block terminated.');
                             end
                             break;
                         end
@@ -3461,16 +3466,16 @@ try
                 case 'rate'
                     ratings='0123456789';
                     while 1
-                        o.quitRun=false;
+                        o.quitBlock=false;
                         responseChar=GetKeypress;
                         o.transcript.responseTimeSec(trial)=GetSecs-o.transcript.stimulusOnsetSec(trial);
                         if ismember(responseChar,[escapeChar,graveAccentChar])
-                            [o.quitSession,o.quitRun,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
+                            [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
                             trial=trial-1;
-                            if o.quitRun
-                                ffprintf(ff,'*** User typed ESCAPE. Quitting run.\n');
+                            if o.quitBlock
+                                ffprintf(ff,'*** User typed ESCAPE. Quitting block.\n');
                                 if o.speakInstructions
-                                    Speak('Run terminated.');
+                                    Speak('Block terminated.');
                                 end
                                 break;
                             end
@@ -3496,7 +3501,7 @@ try
                         end
                     end % while 1
             end % switch o.task
-            if ~o.quitRun
+            if ~o.quitBlock
                 if ~isfinite(o.targetDurationSec)
                     % Signal persists until response, so we measure response time.
                     o.movieFrameFlipSec(iMovieFrame+1,trial)=GetSecs;
@@ -3526,7 +3531,7 @@ try
         else
             response=ModelObserver(o);
         end % if ~ismember(o.observer,algorithmicObservers)
-        if o.quitRun
+        if o.quitBlock
             break;
         end
         switch o.task % score as right or wrong
@@ -3584,9 +3589,9 @@ try
                 error(string);
             end
         end
-    end % while trial<o.trialsPerRun
+    end % while trial<o.trialsPerBlock
     
-    %% DONE. REPORT THRESHOLD FOR THIS RUN.
+    %% DONE. REPORT THRESHOLD FOR THIS BLOCK.
     if ~isempty(o.data)
         psych.t=unique(o.data(:,1));
         psych.r=1+10.^psych.t;
@@ -3693,24 +3698,23 @@ try
     
     o.E=10^(2*o.questMean)*o.E1;
     if streq(o.targetModulates,'luminance')
-        ffprintf(ff,['Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
+        ffprintf(ff,['Block %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
             'Threshold',plusMinusChar,'sd log contrast %.2f',plusMinusChar,'%.2f, contrast %.4f, log E/N %.2f, efficiency %.5f\n'],...
-            o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,o.thresholdPolarity*10^t,log10(o.EOverN),o.efficiency);
+            o.blockNumber,o.blocksDesired,trial,100*trialsRight/trial,(GetSecs-blockStart)/trial,t,sd,o.thresholdPolarity*10^t,log10(o.EOverN),o.efficiency);
     else
-        ffprintf(ff,['Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
+        ffprintf(ff,['Block %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
             'Threshold',plusMinusChar,'sd log(o.r-1) %.2f',plusMinusChar,'%.2f, approx required n %.0f\n'],...
-            o.runNumber,o.runsDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
+            o.blockNumber,o.blocksDesired,trial,100*trialsRight/trial,(GetSecs-blockStart)/trial,t,sd,approxRequiredN);
     end
     if abs(trialsRight/trial-o.pThreshold) > 0.1
         ffprintf(ff,'WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.\n');
     end
-    % end
     
     %     t=mean(tSample);
     %     tse=std(tSample)/sqrt(length(tSample));
     %     switch o.targetModulates
     %         case 'luminance',
-    %         ffprintf(ff,['SUMMARY: %s %d runs mean',plusMinusChar,'se: log(contrast) %.2f',plusMinusChar,'%.2f, contrast %.3f\n'],...
+    %         ffprintf(ff,['SUMMARY: %s %d blocks mean',plusMinusChar,'se: log(contrast) %.2f',plusMinusChar,'%.2f, contrast %.3f\n'],...
     %             o.observer,length(tSample),mean(tSample),tse,10^mean(tSample));
     %         %         efficiency=(o.idealEOverNThreshold^2) / (10^(2*t));
     %         %         ffprintf(ff,'Efficiency=%f\n', efficiency);
@@ -3748,7 +3752,7 @@ try
             o.logApproxRequiredNumber=log10(o.approxRequiredNumber);
             ffprintf(ff,'o.r %.3f, approx required number %.0f\n',o.r,o.approxRequiredNumber);
             %              logNse=std(logApproxRequiredNumber)/sqrt(length(tSample));
-            %              ffprintf(ff,['SUMMARY: %s %d runs mean',plusMinusChar,'se: log(o.r-1) %.2f',plusMinusChar,'%.2f, log(approx required n) %.2f',plusMinusChar,'%.2f\n'],...
+            %              ffprintf(ff,['SUMMARY: %s %d blocks mean',plusMinusChar,'se: log(o.r-1) %.2f',plusMinusChar,'%.2f, log(approx required n) %.2f',plusMinusChar,'%.2f\n'],...
             % o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
         case 'entropy'
             t=o.questMean;
@@ -3767,11 +3771,11 @@ try
             end
     end
     if o.speakInstructions
-        if o.quitSession && ~ismember(o.observer,algorithmicObservers)
+        if o.quitExperiment && ~ismember(o.observer,algorithmicObservers)
             Speak('QUITTING now. Done.');
         else
-            if ~o.quitRun && o.runNumber == o.runsDesired && o.congratulateWhenDone && ~ismember(o.observer,algorithmicObservers)
-                Speak('Congratulations. End of run.');
+            if ~o.quitBlock && o.blockNumber == o.blocksDesired && o.congratulateWhenDone && ~ismember(o.observer,algorithmicObservers)
+                Speak('Congratulations. End of block.');
             end
         end
     end
@@ -3783,7 +3787,13 @@ try
     end
     ListenChar(0); % flush
     ListenChar;
-    sca; % Screen('CloseAll'); ShowCursor;
+    if windowIsOpen && (o.quitExperiment || o.blockNumber >= o.blocksDesired)
+       sca; % Screen('CloseAll'); ShowCursor;
+       if ismac
+          AutoBrightness(cal.screen,1); % Restore autobrightness.
+       end
+       windowIsOpen=false;
+    end
     % This applescript "activate" command provokes a screen refresh (by
     % selecting MATLAB). My computers each have only one display, upon which
     % my MATLAB programs open a Psychtoolbox window. This applescript
@@ -3799,10 +3809,6 @@ try
     % denis.pelli@nyu.edu, June 18, 2015
     if ismac
         status=system('osascript -e ''tell application "MATLAB" to activate''');
-    end
-    RestoreCluts;
-    if ismac
-        AutoBrightness(cal.screen,1); % Restore autobrightness.
     end
     if window >= 0
         Screen('Preference','VisualDebugLevel',oldVisualDebugLevel);
@@ -3844,6 +3850,7 @@ try
         warning(e.message);
     end % save transcript to .json file
     fprintf('Results saved as %s with extensions .txt, .mat, and .json \nin the data folder: %s/\n',o.dataFilename,o.dataFolder);
+%     RestoreCluts;
     Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
     oOld=o;
     oOld.secs=GetSecs; % Date for staleness.
@@ -3979,8 +3986,8 @@ freezing='';
 if o.noiseFrozenInTrial
     freezing='_frozenInTrial';
 end
-if o.noiseFrozenInRun
-    freezing=[freezing '_frozenInRun'];
+if o.noiseFrozenInBlock
+    freezing=[freezing '_frozenInBlock'];
 end
 switch o.targetModulates
     case 'entropy'
@@ -4019,8 +4026,8 @@ switch o.targetModulates
     case 'entropy'
         ffprintf(ff,'ratio o.r=signalLevels/backgroundLevels %.3f, log(o.r-1) %.2f\n',1+10^tTest,tTest);
 end
-o.trialsPerRun=1;
-o.runsDesired=1;
+o.trialsPerBlock=1;
+o.blocksDesired=1;
 ffprintf(ff,'SUCCESS: o.saveSnapshot is done. Image saved, now returning.\n');
 fclose(dataFid);
 dataFid=-1;
@@ -4513,8 +4520,8 @@ if ismember(response,[escapeChar,graveAccentChar])
     if o.speakInstructions
         Speak('Quitting.');
     end
-    o.quitRun=true;
-    o.quitSession=true;
+    o.quitBlock=true;
+    o.quitExperiment=true;
     sca;
     ListenChar;
     return
@@ -4735,7 +4742,7 @@ function [reply,o]=AskQuestion(window,o,text)
 % Last argument is a struct with several fields: text.big, text.small,
 % text.fine, text.question, text.setTextSizeToMakeThisLineFit. We
 % optionally return "o" which is  possibly modified from the input o in
-% o.textSize o.quitSession o.quitRun and o.skipTrial. If "text" has the
+% o.textSize o.quitExperiment o.quitBlock and o.skipTrial. If "text" has the
 % field text.setTextSizeToMakeThisLineFit then o.textSize is adjusted to
 % make the line fit horizontally within screenRect.
 global screenRect ff
@@ -4766,11 +4773,11 @@ end
 fprintf('%d: o.deviceIndex %.0f.\n',MFileLineNr,o.deviceIndex);
 [reply,terminatorChar]=GetEchoString(window,text.question,o.instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
 if ismember(terminatorChar,[escapeChar graveAccentChar])
-    [o.quitSession,o.quitRun,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
-    if o.quitSession
-        ffprintf(ff,'*** User typed ESCAPE twice. Session terminated.\n');
-    elseif o.quitRun
-        ffprintf(ff,'*** User typed ESCAPE. Run terminated.\n');
+    [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
+    if o.quitExperiment
+        ffprintf(ff,'*** User typed ESCAPE twice. Experiment terminated.\n');
+    elseif o.quitBlock
+        ffprintf(ff,'*** User typed ESCAPE. Block terminated.\n');
     else
         ffprintf(ff,'*** User typed ESCAPE, but chose to continue.\n');
     end
@@ -4831,6 +4838,7 @@ end
 msg=[message readyString];
 Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
 black=0;
+Screen(window,'TextSize',o.textSize);
 DrawFormattedText(window,msg,0.5*o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
 Screen('Flip',window,0,1); % Proceeding to the trial.
 if o.speakInstructions
@@ -4849,11 +4857,11 @@ switch o.task
         % This keypress serves mainly to start the first trial, but we
         % offer to quit if the user hits ESCAPE.
         if ismember(responseChar,[escapeChar,graveAccentChar])
-            [o.quitSession,o.quitRun,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
-            if o.quitRun
-                ffprintf(ff,'*** User typed ESCAPE. Quitting run.\n');
+            [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
+            if o.quitBlock
+                ffprintf(ff,'*** User typed ESCAPE. Quitting block.\n');
                 if o.speakInstructions
-                    Speak('Run terminated.');
+                    Speak('Block terminated.');
                 end
             end
         end
