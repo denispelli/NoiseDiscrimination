@@ -89,7 +89,10 @@ for i=1:length(d)
       error('Folder "%s" image file "%s" must have a one-character filename after urldecoding.',o.signalImagesFolder,name);
    end
    savedAlphabet.letters(i)=name;
-   white=savedAlphabet.images{i}(1,1,2); % Use upper left pixel as definition of "white".
+   white=savedAlphabet.images{i}(1,1,2); 
+   % Use upper left pixel, green channel value, as definition of "white".
+   % "white" is used solely to measure the image bounds, i.e. the bounding
+   % rect of the non-white pixels.
    o.targetPix=round(o.targetPix);
    sz=size(savedAlphabet.images{i});
    rows=o.targetPix;
