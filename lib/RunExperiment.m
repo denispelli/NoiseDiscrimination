@@ -31,6 +31,13 @@ function oOut=RunExperiment(oo)
 % in any function called from here, or the user hitting control-C.
 cleanup=onCleanup(@() myCleanupFunction);
 
+if isfield(oo{1},'localHostName')
+    localHostName=oo{1}.localHostName;
+else
+    cal=OurScreenCalibrations(0);
+    localHostName=cal.localHostName;
+end
+
 %% RUN THE CONDITIONS
 % Typically, you'll select just a few of the conditions stored in oo
 % that you want to run now. Select them from the above printing of "tt"
@@ -40,6 +47,7 @@ for oi=1:length(oo)
     o=oo{oi};
     o.blockNumber=oi;
     o.blocksDesired=length(oo);
+    o.localHostName=localHostName;
     if ~isempty(oPrior)
         % Reuse answers from immediately preceding block.
         o.experimenter=oPrior.experimenter;
@@ -56,6 +64,7 @@ end
 oOut=oo;
 
 %% SAVE ALL THE RESULTS IN AN EXPERIMENT MAT FILE
+%% THAT SUPPORTS LATER RESUMING A PARTIALLY DONE EXPERIMENT.
 % If no block has been completed, then save nothing. If we have at least
 % one block done, then save the whole experiment. If at least one, but not
 % all, the blocks have been done, then the observer can resume and finish
