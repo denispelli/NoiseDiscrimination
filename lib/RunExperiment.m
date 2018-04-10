@@ -24,7 +24,7 @@ function oOut=RunExperiment(oo)
 % observer name. when the script starts it could offer to resume an
 % unfinished session, if it finds one. That would allow resuming with no
 % editing. Currently you'd have to paste in the seed and specify condition
-% numbers. 
+% numbers.
 
 % myCleanupFunction will run (closing open windows) when this function
 % terminates, whether by reaching the end, the flagging of an error here or
@@ -54,7 +54,38 @@ for oi=1:length(oo)
     end
 end
 oOut=oo;
+
+%% SAVE ALL THE RESULTS IN AN EXPERIMENT MAT FILE
+% If no block has been completed, then save nothing. If we have at least
+% one block done, then save the whole experiment. If at least one, but not
+% all, the blocks have been done, then the observer can resume and finish
+% the experiment. The criterion for "done" should be a reasonable number of
+% trials. For testing, I've set it to 2 trials, but I expect to raise that
+% to 20 trials.
+n=0;
+for oi=1:length(oo)
+    if isfield(oo{oi},'trials') && oo{oi}.trials>=2
+        % Gather components of filename.
+        o.experiment=oo{oi}.experiment;
+        o.observer=oo{oi}.observer;
+        n=n+1;
+    end
 end
+if n<length(oo)
+    partialString='-partial';
+else
+    partialString='';
+end
+if n>0
+    experimentFilename=sprintf('%s-%s-%s%s.%d.%d.%d.%d.%d.%d.mat',o.experiment,o.observer,o.localHostName,partialString,round(datevec(now)));
+    dataFolder=fullfile(fileparts(fileparts(mfilename('fullpath'))),'data');
+    save(fullfile(dataFolder,experimentFilename),'oo');
+    fprintf('Saved the experiment (completed %d of %d blocks) in %s in data folder.\n',n,length(oo),experimentFilename);
+end
+
+end % function
+
+%% CLEANUP
 function myCleanupFunction()
 % Close window opened by Psychtoolbox Screen command, and re-enable keyboard.
 global window
