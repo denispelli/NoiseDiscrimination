@@ -23,6 +23,7 @@ if ~exist('qpInitialize','file')
 end
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % Folder in same directory as this M file.
 cal=OurScreenCalibrations(0);
+o.localHostName=cal.localHostName;
 o.seed=[]; % Fresh.
 % o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
 if isempty(o.seed)
@@ -90,7 +91,7 @@ end
 o.noiseSD=0;
 o.thresholdParameter='contrast';
 
-%% SAVE THE EXPERIMENT'S CONDITIONS IN STRUCT oo
+%% PUT THE EXPERIMENT'S CONDITIONS IN STRUCT oo
 oo={};
 if false
     o.conditionName='Target letter, fixed contrast';
@@ -138,52 +139,49 @@ for oi=1:length(oo)
     oo{oi}=o;
 end
 
-%% SIGNATURE OF THIS EXPERIMENT RUNNING ON THIS COMPUTER
-signature=sprintf('%s-%s',mfilename,cal.localHostName);
-
-%% LOOK FOR INCOMPLETE RUNS OF THIS EXPERIMENT
+%% LOOK FOR PARTIAL RUNS OF THIS EXPERIMENT
 useSavedList=false;
 dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
-cd(dataFolder);
-matFiles=dir(fullfile(dataFolder,[signature '-*.mat']));
+matFiles=dir(fullfile(dataFolder,[o.experiment '-*-' cal.localHostName '-partial*.mat']));
 if ~isempty(matFiles)
-   clear d n
-   for i = 1:length(matFiles)
-      % Load each into one element of d.
-      d(i)=load(matFiles(i).name,'oo');
-      n(i)=matFiles(i).datenum;
-   end
-   [~,index]=sort(n,'descend');
-   matFiles=matFiles(index);
-   d=d(index);
-   fprintf('Found %d old data files for this experiment.\n',length(matFiles));
-   fprintf('For each file, indicate: Y to resume an unfinished experiment; hit RETURN to pass; or hit DELETE key to delete it.\n');
-   escapeKeyCode=KbName('escape');
-   graveAccentKeyCode=KbName('`~');
-   spaceKeyCode=KbName('space');
-   returnKeyCode=KbName('return');
-   returnChar=13;
-   for i=1:length(d)
-      o=d(i).oo{1};
-      if ~isfield(o,'observer') || ~isfield(o,'trials') || isempty(o.observer) || o.trials<2
-         continue
-      end
-      fprintf('%s, %s, Observer: %s\n',matFiles(i).name,matFiles(i).date,o.observer);
-      fprintf('Type Y for yes. Hit RETURN to ignore it, or DELETE to delete it:\n');
-      responseChar=GetKeypress([KbName('y') KbName('delete') returnKeyCode escapeKeyCode graveAccentKeyCode]);
-      switch responseChar
-         case 'y'
-            oo=d(i).oo;
-            useSavedList=true;
-            break
-         case 'delete'
-            delete(matFiles(i).name);
-            fprintf('Deleted file %s\n',matFiles(i).name);
-         case returnChar
-            fprintf('Skipping file %s\n',matFiles(i).name);
+    cd(dataFolder);
+    clear expt n
+    for i = 1:length(matFiles)
+        % Load each experiment into one cell of expt.
+        expt{i}=load(matFiles(i).name,'oo');
+        n(i)=matFiles(i).datenum;
+    end
+    [~,index]=sort(n,'descend');
+    matFiles=matFiles(index);
+    expt=expt{index};
+    fprintf('Found %d partial runs of this experiment on this computer.\n',length(matFiles));
+    fprintf('For each file, type: Y to resume that unfinished experiment; or hit RETURN to pass; or hit DELETE to delete it.\n');
+    escapeKeyCode=KbName('escape');
+    graveAccentKeyCode=KbName('`~');
+    spaceKeyCode=KbName('space');
+    returnKeyCode=KbName('return');
+    returnChar=13;
+    for i=1:length(expt)
+        o=expt{i}.oo{1};
+        if ~isfield(o,'observer') || ~isfield(o,'trials') || isempty(o.observer) || o.trials<2
             continue
-      end
-   end
+        end
+        fprintf('%s, %s, Observer: %s\n',matFiles(i).name,matFiles(i).date,o.observer);
+        fprintf('Type Y for yes use it. Hit RETURN to ignore it, or DELETE to delete it:\n');
+        responseChar=GetKeypress([KbName('y') KbName('delete') returnKeyCode escapeKeyCode graveAccentKeyCode]);
+        switch responseChar
+            case 'y'
+                oo=expt{i}.oo;
+                useSavedList=true;
+                break
+            case 'delete'
+                delete(matFiles(i).name);
+                fprintf('Deleted file %s\n',matFiles(i).name);
+            case returnChar
+                fprintf('Skipping file %s\n',matFiles(i).name);
+                continue
+        end
+    end
 end
 
 %% PRINT THE CONDITIONS (ONE PER ROW) AS TABLE TT
@@ -201,37 +199,18 @@ if ~skipDataCollection
     oo=RunExperiment(oo);
 end % if ~skipDataCollection
 
-%% SAVE ALL THE RESULTS IN ONE EXPERIMENT FILE
-n=0;
-for oi=1:length(oo)
-    if isfield(oo{oi},'trials') && oo{oi}.trials>=30
-        observer=oo{oi}.observer;
-        n=n+1;
-    end
-end
-if n<length(oo)
-    partialString='-partial';
-else
-    partialString='';
-end
-if n>0
-    experimentFilename=sprintf('%s-%s.%d.%d.%d.%d.%d.%d.mat',signature,[observer partialString],round(datevec(now)));
-    dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
-    save(fullfile(dataFolder,experimentFilename),'oo');
-    fprintf('Saved the experiment (completed %d of %d blocks) in %s in data folder.\n',n,length(oo),experimentFilename);
-end
-
 %% PRINT SUMMARY OF RESULTS AS TABLE TT
-% Include whatever you're intersted in. We skip rows missing any value.
-vars={'condition' 'conditionName' 'observer' 'trials' 'trialsSkipped' 'noiseSD' 'N' 'targetHeightDeg' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'flankerContrast' 'seed'};
+% Include whatever you're intersted in. We skip rows missing any specified variable.
+vars={'condition' 'conditionName' 'observer' 'trials' 'trialsSkipped' ...
+    'noiseSD' 'N' 'targetHeightDeg' 'flankerSpacingDeg' ...
+    'eccentricityXYDeg' 'contrast' 'flankerContrast' 'seed'};
 tt=table;
 for oi=1:length(oo)
     t=struct2table(oo{oi},'AsArray',true);
-    if ~all(ismember({'trials' 'contrast' 'transcript'},t.Properties.VariableNames)) || isempty(t.trials) || t.trials==0
-        % Skip condition without data.
-        continue
+    if ~all(ismember({'trials' 'contrast' 'transcript'},t.Properties.VariableNames)) || isempty(t.trials) || t.trials<2
+        continue % Skip condition without data.
     end
-    % Warn, skip the condition, and report which fields were missing.
+    % Report missing fields.
     ok=ismember(vars,t.Properties.VariableNames);
     if ~all(ok)
         missing=join(vars(~ok),' ');
@@ -245,11 +224,10 @@ if isempty(tt)
     return
 end
 
+%% FIT PSYCHOMETRIC FUNCTION
 close all % Get rid of any existing figures.
 for ti=1:height(tt)
     o=oo{tt.condition(ti)};
-    
-    %% FIT PSYCHOMETRIC FUNCTION
     clear QUESTPlusFit % Clear the persistent variables.
     o.alternatives=length(o.alphabet);
     o.questPlusLapseRates=0:0.01:0.05;
