@@ -677,6 +677,7 @@ o.responseScreenAbsoluteContrast=0.99; % Set to [] to maximize possible contrast
 o.transcript.responseTimeSec=[]; % Time of response re o.transcript.stimulusOnsetSec, for each trial.
 o.transcript.stimulusOnsetSec=[]; % Value of GetSecs at stimulus onset, for each trial.
 o.printImageStatistics=false;
+o.localHostName=''; % Copy this from cal.localHostName
 
 o.deviceIndex=-1; % -1 for all keyboards.
 o.deviceIndex=-3; % -3 for all keyboard/keypad devices.
@@ -1156,10 +1157,13 @@ try
     o.beginningTime=now;
     t=datevec(o.beginningTime);
     stack=dbstack;
-    if length(stack) == 1
+    switch length(stack)
+        case 1
         o.functionNames=stack.name;
-    else
+        case 2
         o.functionNames=[stack(2).name '-' stack(1).name];
+        case 3
+        o.functionNames=[stack(3).name '-' stack(1).name]; % Omit 'RunExperiment'
     end
     o.dataFilename=sprintf('%s-%s.%d.%d.%d.%d.%d.%d',o.functionNames,o.observer,round(t));
     o.dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
@@ -1828,9 +1832,7 @@ try
             ffprintf(ff,'Minimum letter resolution is %.0f checks.\n',o.minimumTargetHeightChecks);
     end
     switch o.targetKind
-        case 'letter'
-            ffprintf(ff,'o.font %s\n',o.font);
-        case 'image'
+        case {'letter' 'image'}
             ffprintf(ff,'o.font %s\n',o.font);
         case 'gabor'
             ffprintf(ff,'o.targetGaborSpaceConstantCycles %.1f\n',o.targetGaborSpaceConstantCycles);
@@ -2198,7 +2200,7 @@ try
                     end
                 case 'image'
                     % Allow for color images.
-                    % Scale so range is -1 (black) to 1 (white).
+                    % Scale to range -1 (black) to 1 (white).
                     o.targetPix=round(o.targetHeightDeg/o.noiseCheckDeg);
                     o.targetFont=o.font;
                     o.showLineOfLetters=true;
@@ -2888,9 +2890,9 @@ try
             end
             rect=[0 0 1 1]*2*o.annularNoiseBigRadiusDeg*o.pixPerDeg/o.noiseCheckPix;
             if o.newClutForEachImage % Usually enabled.
-                % Compute CLUT for all possible noises and the given signal and
-                % contrast. Note: The gray screen in the non-stimulus areas is
-                % drawn with CLUT index n=1.
+                % Compute CLUT for all possible noises and the given signal
+                % and contrast. Note: The gray screen in the non-stimulus
+                % areas is drawn with CLUT index n=1.
                 [cal,o]=ComputeClut(cal,o);
             end % if o.newClutForEachImage
             if o.assessContrast
@@ -3316,6 +3318,8 @@ try
                             end
                             im=1+c*img;
                             if o.printImageStatistics
+                                fprintf('%d: o.signalMin %.2f, o.signalMax %.2f\n',...
+                                    MFileLineNr,o.signalMin,o.signalMax);
                                 fprintf('%d: c %.2f, 1+c*o.signalMin %.2f, 1+c*o.signalMax %.2f\n',...
                                     MFileLineNr,c,1+c*o.signalMin,1+c*o.signalMax);
                                 fprintf('%d: o.LBackground %.1f, LB*(1+c*o.signalMin) %.2f, LB*(1+c*o.signalMax) %.2f\n',...
