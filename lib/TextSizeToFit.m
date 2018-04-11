@@ -8,7 +8,7 @@ if nargin<2
     lineOfText='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
 end
 if nargin<3
-    o.instructionalMarginPix=round(0.08*min(RectWidth(screenRect),RectHeight(screenRect)));
+    o.textMarginPix=round(0.08*min(RectWidth(screenRect),RectHeight(screenRect)));
     o.textSize=39;
     o.textFont='Verdana';
 end
@@ -21,7 +21,7 @@ if ~streq(font,o.textFont)
     warning on backtrace
 end
 boundsRect=Screen('TextBounds',window,lineOfText);
-fraction=RectWidth(boundsRect)/(RectWidth(screenRect)-2*o.instructionalMarginPix);
+fraction=RectWidth(boundsRect)/(RectWidth(screenRect)-2*o.textMarginPix);
 % Adjust textSize so our line fits perfectly.
 textSize=round(o.textSize/fraction);
 Screen('TextSize',window,textSize);
