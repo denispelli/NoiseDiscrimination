@@ -101,9 +101,9 @@ if false
     oo{end+1}=o;
 end
 o.useMethodOfConstantStimuli=false;
-if false
+if true
     o.conditionName='Threshold contrast';
-    o.trialsPerBlock=50;
+    o.trialsPerBlock=40;
     o.useFlankers=false;
     o.thresholdParameter='contrast';
     o.task='identify';
@@ -114,7 +114,7 @@ if true
     o.conditionName='Threshold contrast of crowding';
     o.trialsPerBlock=300;
     o.useFlankers=true;
-    o.contrast=-0.3;
+    o.contrast=-0.2;
     o.thresholdParameter='flankerContrast';
     o.thresholdResponseTo='flankers';
     o.task='identifyAll';
