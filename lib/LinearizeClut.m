@@ -117,7 +117,13 @@ assert(rem(cal.nFirst,1)==0 && rem(cal.nLast,1)==0);
 assert(cal.nFirst<=cal.nLast);
 cal.n=cal.nFirst:cal.nLast; % nFirst:nLast
 cal.LFirst=min(cal.LFirst,max(cal.old.L));
+if cal.LFirst-min(cal.old.L)<-0.1 % Ignore clipping of less than 0.1 cd/m^2 
+    warning('Requested cal.LFirst %.1f clipped to %.1f cd/m^2.',cal.LFirst,min(cal.old.L));
+end
 cal.LFirst=max(cal.LFirst,min(cal.old.L));
+if cal.LLast-max(cal.old.L)>0.1 % Ignore clipping of less than 0.1 cd/m^2 
+    warning('Requested cal.LLast %.1f clipped to %.1f cd/m^2.',cal.LFirst,max(cal.old.L));
+end
 cal.LLast=min(cal.LLast,max(cal.old.L));
 cal.LLast=max(cal.LLast,min(cal.old.L));
 if cal.nLast==cal.nFirst
