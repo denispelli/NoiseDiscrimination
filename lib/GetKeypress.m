@@ -8,18 +8,23 @@ function response = GetKeypress(enableKeys,deviceIndex,returnOneChar)
 % full descriptive output of KbName is returned, unmodified, e.g. 'a',
 % '1!', 'ESCAPE', or 'left_shift'.
 %
+% To specify a number key on a regular keyboard, use both characters on the
+% key, e.g. KbName('1!'). Using KbName('1') specifies the '1' key on a
+% numeric key pad.
+%
 % First version was written by Hormet Yiltiz, October 2015, as
 % "checkResponse". Renamed "GetKeypress" by Denis Pelli, November 2015, and
 % enhanced.
 
 printLog = 0;
-if nargin >= 1
+if nargin >= 1 
    % enableKeys should be a vector of key codes returned by KbName.
-   restrictKeys=1;
+   % If enableKeys is empty, [], then all keys are enabled.
+   restrictKeys=true;
    oldEnableKeys=RestrictKeysForKbCheck(enableKeys);
    if printLog; disp('Enabled keys list is:'); disp(enableKeys); end
 else
-   restrictKeys=0;
+   restrictKeys=false;
 end
 if nargin<2
    % Accept input from all keyboards and keypads.
