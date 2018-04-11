@@ -25,7 +25,7 @@ function [signalStruct,signalBounds]=LoadSignalImages(o)
 % same size. Detailed run-time checking produces a fatal error message if
 % any image is missing or has the wrong size.
 %
-% I think monochrome and color images are handled correctly.
+% I think both monochrome and color images are handled correctly.
 %
 % denis.pelli@nyu.edu March, 2018
 
@@ -40,7 +40,7 @@ end
 % black=0;
 % white=255;
 
-% Read from disk into "savedAlphabet".
+% List the filenames in the specified folder.
 signalImagesFolder=fullfile(fileparts(fileparts(mfilename('fullpath'))),'signalImages'); % NoiseDiscrimination/signalImages/
 if ~exist(signalImagesFolder,'dir')
    error('Folder missing: "%s"',signalImagesFolder);
@@ -60,6 +60,8 @@ d=d(ok);
 if length(d)<length(o.alphabet)
    error('Sorry. Folder %s has only %d images, and you requested %d.',o.signalImagesFolder,length(d),length(o.alphabet));
 end
+
+% Read from disk into "savedAlphabet".
 savedAlphabet.letters=[];
 savedAlphabet.images={};
 savedAlphabet.rect=[];
@@ -71,11 +73,17 @@ for i=1:length(d)
       savedAlphabet.images{i}=imread(filename);
    catch e
       sca;
+      ListenChar;
       e.message
       error('Cannot read image file "%s".',filename);
    end
    if isempty(savedAlphabet.images{i})
       error('Cannot read image file "%s".',filename);
+   end
+   if o.printImageStatistics
+       img=savedAlphabet.images{i};
+       fprintf('LoadSignalImages %d: image %d "%s" %dx%dx%d, min %.2f, max %.2f.\n',...
+           MFileLineNr,i,d(i).name,size(img,1),size(img,2),size(img,3),min(img(:)),max(img(:)));
    end
    if o.signalImagesAreGammaCorrected
        if verLessThan('matlab','R2017b')
@@ -83,6 +91,11 @@ for i=1:length(d)
        end
        im = rgb2lin(savedAlphabet.images{i},'OutputType','double');
        savedAlphabet.images{i}=im;
+       if o.printImageStatistics
+           img=savedAlphabet.images{i};
+           fprintf('LoadSignalImages %d: gamma-corrected image %d "%s" %dx%dx%d, min %.2f, max %.2f.\n',...
+               MFileLineNr,i,d(i).name,size(img,1),size(img,2),size(img,3),min(img(:)),max(img(:)));
+       end
    end
    [~,name]=fileparts(urldecoding(d(i).name));
    if length(name)~=1
@@ -97,12 +110,20 @@ for i=1:length(d)
    sz=size(savedAlphabet.images{i});
    rows=o.targetPix;
    cols=round(o.targetPix*sz(2)/sz(1));
-   savedAlphabet.images{i}=imresize(savedAlphabet.images{i},[rows cols]);
+   savedAlphabet.images{i}=imresize(savedAlphabet.images{i},[rows cols],'bilinear');
+   if o.printImageStatistics
+       img=savedAlphabet.images{i};
+       fprintf('LoadSignalImages %d: resized image %d "%s" %dx%dx%d, min %.2f, max %.2f.\n',...
+           MFileLineNr,i,d(i).name,size(img,1),size(img,2),size(img,3),min(img(:)),max(img(:)));
+   end
    savedAlphabet.bounds{i}=ImageBounds(savedAlphabet.images{i},white);
    savedAlphabet.imageRects{i}=RectOfMatrix(savedAlphabet.images{i});
    if o.printSignalImages
-      fprintf('%d: LoadSignalImages "%c" image(%d) width %d, ',o.condition,savedAlphabet.letters(i),i,RectWidth(savedAlphabet.bounds{i}));
-      fprintf('bounds %d %d %d %d, image %d %d %d %d.\n',savedAlphabet.bounds{i},savedAlphabet.imageRects{i});
+      fprintf('%d: LoadSignalImages "%c" image(%d) width %d, ',...
+          o.condition,savedAlphabet.letters(i),i,RectWidth(savedAlphabet.bounds{i}));
+      fprintf('bounds %d %d %d %d, image %d %d %d %d. min %.2f, max %.2f\n',...
+          savedAlphabet.bounds{i},savedAlphabet.imageRects{i},...
+          min(savedAlphabet.images{i}(:)),max(savedAlphabet.images{i}(:)));
    end
    if isempty(savedAlphabet.rect)
       savedAlphabet.rect=savedAlphabet.bounds{i};
