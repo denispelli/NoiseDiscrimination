@@ -2796,6 +2796,7 @@ try
                         fprintf('%d: IMAGE STATS before flanker added. signal(%d).image: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
                             MFileLineNr,i,size(img,1),size(img,2),size(img,3),mean(img(:)),std(img(:)),min(img(:)),max(img(:)),o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
                     end
+                    
                     %% ADD FLANKERS, EACH A RANDOM LETTER LIKE THE TARGET
                     if o.useFlankers && streq(o.targetModulates,'luminance')
                         if isfinite(o.flankerContrast)
@@ -3409,7 +3410,7 @@ try
                 case 'identify'
                     o.quitBlock=false;
                     [~,i]=ismember(lower(o.alphabet),'abcdefghijklmnopqrstuvwxyz');
-                    responseChar=GetKeypress([letterKeyCodes(i) escapeKeyCode graveAccentKeyCode],o.deviceIndex); 
+                    responseChar=GetKeypress([letterKeyCodes(i) escapeKeyCode graveAccentKeyCode],o.deviceIndex);
                     if ismember(responseChar,[escapeChar,graveAccentChar])
                         [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.textMarginPix);
                         trial=trial-1;
@@ -3440,13 +3441,6 @@ try
                         responseChar=0;
                     end
                     [ok,response]=ismember(lower(responseChar),lower(o.alphabet));
-                    if ok
-                        break;
-                    else
-                        if o.speakInstructions
-                            Speak('Try again. Or hit ESCAPE to quit.');
-                        end
-                    end
                 case 'identifyAll'
                     message=sprintf('Please type all three letters (%s) followed by RETURN:',o.alphabet(1:o.alternatives));
                     textRect=[0, 0, o.textSize, 1.2*o.textSize];
@@ -3554,14 +3548,6 @@ try
                     end
                     [ok,response]=ismember(lower(responseChar),ratings);
                     response=response-1;
-                    if ok
-                        break;
-                    else
-                        if o.speakInstructions
-                            Speak('Try again. Or hit ESCAPE to quit.');
-                        end
-                    end
-                    end % while 1
             end % switch o.task
             if ~o.quitBlock
                 if ~isfinite(o.targetDurationSec)
