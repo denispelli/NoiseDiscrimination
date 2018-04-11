@@ -23,11 +23,12 @@ if isempty(o.seed)
 else
     rng(o.seed);
 end
-o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+% o.printImageStatistics=true;
 
 %% SPECIFY BASIC CONDITION
 o.symmetricLuminanceRange=false; % Allow maximum brightness.
-o.desiredLuminanceFactor=2; % Maximize brightness.
+o.desiredLuminanceFactor=1.8; % Maximize brightness.
 o.responseScreenAbsoluteContrast=0.9;
 if false
     % Target letter
@@ -83,7 +84,8 @@ end
 
 %% SAVE CONDITIONS IN STRUCT oo
 oo={};
-for beautyTask=Shuffle(0:1)
+% for beautyTask=Shuffle(0:1)
+for beautyTask=1
     if beautyTask
         o.task='rate';
     else
@@ -109,65 +111,65 @@ end
 disp(tt) % Print list of conditions.
 
 %% RUN THE CONDITIONS
-if ~skipDataCollection
-    oo=RunExperiment(oo);
+oo=RunExperiment(oo);
 
-    %% PRINT SUMMARY OF RESULTS AS TABLE TT
-    % Include whatever you're intersted in. We skip rows missing any value.
-    vars={'condition' 'observer' 'trials'  'task' 'targetDurationSec' 'targetHeightDeg' 'contrast' 'guess' 'lapse' 'steepness' 'seed' };
-    tt=table;
-    for i=1:length(oo)
-        t=struct2table(oo{i},'AsArray',true);
-        if ~all(ismember({'trials' 'contrast' 'transcript'},t.Properties.VariableNames)) || isempty(t.trials) || t.trials==0
-            % Skip condition without data.
-            continue
-        end
-        % Warn, skip the condition, and report which fields were missing.
-        ok=ismember(vars,t.Properties.VariableNames);
-        if ~all(ok)
-            missing=join(vars(~ok),' ');
-            warning('Skipping incomplete condition %d, because it lacks: %s',i,missing{1});
-            continue
-        end
-        tt(i,:)=t(1,vars);
+%% PRINT SUMMARY OF RESULTS AS TABLE TT
+% Include whatever you're intersted in. We skip rows missing any value.
+vars={'condition' 'observer' 'trials'  'task' 'targetDurationSec' 'targetHeightDeg' 'contrast' 'guess' 'lapse' 'steepness' 'seed' };
+tt=table;
+for i=1:length(oo)
+    t=struct2table(oo{i},'AsArray',true);
+    if ~all(ismember({'trials' 'contrast' 'transcript'},t.Properties.VariableNames)) || isempty(t.trials) || t.trials==0
+        % Skip condition without data.
+        continue
     end
-    disp(tt) % Print summary.
-    if isempty(tt)
-        return
+    % Warn, skip the condition, and report which fields were missing.
+    ok=ismember(vars,t.Properties.VariableNames);
+    if ~all(ok)
+        missing=join(vars(~ok),' ');
+        warning('Skipping incomplete condition %d, because it lacks: %s',i,missing{1});
+        continue
     end
-    
-    %% SAVE SUMMARY OF RESULTS
-    o=oOut;
-    o.summaryFilename=[o.dataFilename '.summary' ];
-    writetable(tt,fullfile(o.dataFolder,[o.summaryFilename '.csv']));
-    save(fullfile(o.dataFolder,[o.summaryFilename '.mat']),'tt','oo');
-    fprintf('Summary saved in data folder as "%s" with extensions ".csv" and ".mat".\n',o.summaryFilename);
-    
-    %% PLOT IT
-    tBeauty=t(streq(t.task,'rate'),{'targetDurationSec' 'contrast'});
-    tBeauty=sortrows(tBeauty,'targetDurationSec');
-    tId=t(streq(t.task,'identify'),{'targetDurationSec' 'contrast'});
-    tId=sortrows(tId,'targetDurationSec');
-    close all % Get rid of any existing figures.
-    figure(1)
-    loglog(tId.targetDurationSec,tId.contrast,'r-o',tBeauty.targetDurationSec,tBeauty.contrast,'k-x');
-    ylabel('Threshold contrast');
-    xlabel('Duration (s)');
-    xlim([0.05 2]);
-    ylim([0.01 10]);
-    DecadesEqual(gca);
-    o.plotFilename=[o.dataFilename '.plot'];
-    title(o.plotFilename);
-    legendNames={};
-    if height(tId)>0
-        legendNames{end+1}='Identification';
-    end
-    if height(tBeauty)>0
-        legendNames{end+1}='Beauty';
-    end
-    legend(legendNames,'Location','north');
-    legend boxoff
-    graphFile=fullfile(o.dataFolder,[o.plotFilename '.eps']);
-    saveas(gcf,graphFile,'epsc')
-    fprintf('Plot saved in data folder as "%s".\n',[o.plotFilename '.eps']);
-end % if ~skipDataCollection
+    tt(i,:)=t(1,vars);
+end
+disp(tt) % Print summary.
+if isempty(tt)
+    return
+end
+
+%% SAVE SUMMARY OF RESULTS
+o=oo{1};
+o.summaryFilename=[o.dataFilename '.summary' ];
+writetable(tt,fullfile(o.dataFolder,[o.summaryFilename '.csv']));
+save(fullfile(o.dataFolder,[o.summaryFilename '.mat']),'tt','oo');
+fprintf('Summary saved in data folder as "%s" with extensions ".csv" and ".mat".\n',o.summaryFilename);
+
+return
+
+%% PLOT IT
+tBeauty=t(streq(t.task,'rate'),{'targetDurationSec' 'contrast'});
+tBeauty=sortrows(tBeauty,'targetDurationSec');
+tId=t(streq(t.task,'identify'),{'targetDurationSec' 'contrast'});
+tId=sortrows(tId,'targetDurationSec');
+close all % Get rid of any existing figures.
+figure(1)
+loglog(tId.targetDurationSec,tId.contrast,'r-o',tBeauty.targetDurationSec,tBeauty.contrast,'k-x');
+ylabel('Threshold contrast');
+xlabel('Duration (s)');
+xlim([0.05 2]);
+ylim([0.01 10]);
+DecadesEqual(gca);
+o.plotFilename=[o.dataFilename '.plot'];
+title(o.plotFilename);
+legendNames={};
+if height(tId)>0
+    legendNames{end+1}='Identification';
+end
+if height(tBeauty)>0
+    legendNames{end+1}='Beauty';
+end
+legend(legendNames,'Location','north');
+legend boxoff
+graphFile=fullfile(o.dataFolder,[o.plotFilename '.eps']);
+saveas(gcf,graphFile,'epsc')
+fprintf('Plot saved in data folder as "%s".\n',[o.plotFilename '.eps']);
