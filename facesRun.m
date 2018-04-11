@@ -1,5 +1,5 @@
 % facesRun.m
-% March, 2018
+% April 11, 2018
 % Denis Pelli
 
 %% GET READY
@@ -84,8 +84,7 @@ end
 
 %% SAVE CONDITIONS IN STRUCT oo
 oo={};
-% for beautyTask=Shuffle(0:1)
-for beautyTask=1
+for beautyTask=Shuffle(0:1)
     if beautyTask
         o.task='rate';
     else
@@ -143,8 +142,6 @@ o.summaryFilename=[o.dataFilename '.summary' ];
 writetable(tt,fullfile(o.dataFolder,[o.summaryFilename '.csv']));
 save(fullfile(o.dataFolder,[o.summaryFilename '.mat']),'tt','oo');
 fprintf('Summary saved in data folder as "%s" with extensions ".csv" and ".mat".\n',o.summaryFilename);
-
-return
 
 %% PLOT IT
 tBeauty=t(streq(t.task,'rate'),{'targetDurationSec' 'contrast'});
