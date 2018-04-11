@@ -454,7 +454,7 @@ global fixationLines fixationCrossWeightPix labelBounds ...
 % incomplete as the new routines haven't been tested as subroutines, and
 % many of their formerly locally variables need to either be made global or
 % become fields of the o struct.
-global oOld % Saved from previous block. Skip prompts that were the same in previous block.
+persistent oOld % Saved from previous block. Skip prompts that were the same in previous block.
 addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder in same directory as this M file
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
 % echo_executing_commands(2, 'local');
@@ -478,6 +478,11 @@ escapeKeyCode=KbName('escape');
 graveAccentKeyCode=KbName('`~');
 spaceKeyCode=KbName('space');
 returnKeyCode=KbName('return');
+numberKeyCodes=KbName({'0)' '1!' '2@' '3#' '4$' ...
+    '5%' '6^' '7&' '8*' '9(' ...
+    '0' '1' '2' '3' '4' '5' '6' '7' '8' '9'});
+letterKeyCodes=KbName({'a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm'...
+    'n' 'o' 'p' 'q' 'r' 's' 't' 'u' 'v' 'w' 'x' 'y' 'z'});
 ff=1; % Once we open a data file, ff will print to both screen and data file.
 
 %% DEFAULT VALUE FOR EVERY "o" PARAMETER
@@ -681,8 +686,8 @@ o.localHostName=''; % Copy this from cal.localHostName
 
 o.deviceIndex=-1; % -1 for all keyboards.
 o.deviceIndex=-3; % -3 for all keyboard/keypad devices.
-o.deviceIndex=3; % for my built-in keyboard, according to PsychHIDTest
-o.deviceIndex=6; % for my bluetooth wireless keyboard, according to PsychHIDTest
+% o.deviceIndex=3; % for my built-in keyboard, according to PsychHIDTest
+% o.deviceIndex=6; % for my bluetooth wireless keyboard, according to PsychHIDTest
 o.deviceIndex=[]; % Default. This runs MUCH more reliably. Not sure why.
 % April, 2018. KbCheck([]) succeeds, but I'm experiencing a fatal error
 % when I call KbCheck(deviceIndex) with deviceIndex -1 or -3 or the
@@ -1009,7 +1014,7 @@ try
     end
   
     %% ASK EXPERIMENTER NAME
-    o.instructionalMarginPix=round(0.08*min(RectWidth(screenRect),RectHeight(screenRect)));
+    o.textMarginPix=round(0.08*min(RectWidth(screenRect),RectHeight(screenRect)));
     o.textSize=39;
     o.textFont='Verdana';
     black=0; % The CLUT color code for black.
@@ -1539,8 +1544,7 @@ try
                 end
                 o.gray=IndexOfLuminance(cal,o.LBackground)/o.maxEntry;
                 if o.printGrayLuminance
-                    disp('line 1509');
-                    fprintf('o.gray old vs new %.2f %.2f\n',oldGray,o.gray);
+                    fprintf('%d: o.gray old vs new %.2f %.2f\n',MFileLineNr,oldGray,o.gray);
                     fprintf('o.contrast %.2f, o.LBackground %.0f cd/m^2, cal.old.L(end) %.0f cd/m^2\n',o.contrast,o.LBackground,cal.old.L(end));
                     fprintf('o.LBackground %.0f cd/m^2, cal.old.L(end) %.0f cd/m^2\n',o.LBackground,cal.old.L(end));
                     fprintf('%d: o.maxEntry*[o.gray1 o.gray]=[%.1f %.1f]\n',...
@@ -1589,38 +1593,40 @@ try
     degPerCm=57/o.viewingDistanceCm;
     o.pixPerDeg=o.pixPerCm/degPerCm;
     
-    %% CONFIRM OLD ANSWERS IF STALE OR OBSERVER CHANGED
-    if ~isempty(oOld) && (GetSecs-oOld.secs>10*60 || ~streq(oOld.observer,o.observer))
-        Screen('Preference','TextAntiAliasing',1);
-        % o.textSize=TextSizeToFit(window); % Nicer size, but text would
-        % need wrapping.
-        Screen('TextSize',window,o.textSize);
-        Screen('TextFont',window,'Verdana');
-        Screen('FillRect',window,o.gray1);
-        string=sprintf('Confirm experimenter "%s" and observer "%s"?',o.experimenter,o.observer);
-        if o.useFilter
-            string=sprintf('%s With filter transmission %.3f?',string,o.filterTransmission);
-        end
-        string=sprintf('%s Right?\nHit RETURN to continue, or ESCAPE to quit.',string);
-        Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
-        DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
-        Screen('Flip',window); % Display request.
-        if o.speakInstructions
-            Speak(sprintf('Observer %s, right? If ok, hit RETURN to continue, otherwise hit ESCAPE to quit.',o.observer));
-        end
-        fprintf('*Confirming observer name.\n');
-        response=GetKeypress([escapeKeyCode graveAccentKeyCode returnKeyCode]);
-        if ismember(response,[escapeChar,graveAccentChar])
-            if o.speakInstructions
-                Speak('Quitting.');
+    if false
+        %% CONFIRM OLD ANSWERS IF STALE OR OBSERVER CHANGED
+        if ~isempty(oOld) && (GetSecs-oOld.secs>10*60 || ~streq(oOld.observer,o.observer))
+            Screen('Preference','TextAntiAliasing',1);
+            % o.textSize=TextSizeToFit(window); % Nicer size, but text would
+            % need wrapping.
+            Screen('TextSize',window,o.textSize);
+            Screen('TextFont',window,'Verdana');
+            Screen('FillRect',window,o.gray1);
+            string=sprintf('Confirm experimenter "%s" and observer "%s"?',o.experimenter,o.observer);
+            if o.useFilter
+                string=sprintf('%s With filter transmission %.3f?',string,o.filterTransmission);
             end
-            o.quitBlock=true;
-            o.quitExperiment=true;
-            ListenChar;
-            ShowCursor;
-            sca;
-            window=[];
-            return
+            string=sprintf('%s Right?\nHit RETURN to continue, or ESCAPE to quit.',string);
+            Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
+            DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+            Screen('Flip',window); % Display request.
+            if o.speakInstructions
+                Speak(sprintf('Observer %s, right? If ok, hit RETURN to continue, otherwise hit ESCAPE to quit.',o.observer));
+            end
+            fprintf('*Confirming observer name.\n');
+            response=GetKeypress([escapeKeyCode graveAccentKeyCode returnKeyCode],o.deviceIndex);
+            if ismember(response,[escapeChar,graveAccentChar])
+                if o.speakInstructions
+                    Speak('Quitting.');
+                end
+                o.quitBlock=true;
+                o.quitExperiment=true;
+                ListenChar;
+                ShowCursor;
+                sca;
+                window=[];
+                return
+            end
         end
     end
     
@@ -1628,9 +1634,7 @@ try
     if ~ismember(o.eyes,{'left','right','both'})
         error('o.eyes==''%s'' is not allowed. It must be ''left'',''right'', or ''both''.',o.eyes);
     end
-    if ~exist('oOld','var') || ~isfield(oOld,'eyes') || GetSecs-oOld.secs>5*60 || ~streq(oOld.eyes,o.eyes)
-        
-        
+    if ~isfield(oOld,'eyes') || GetSecs-oOld.secs>5*60 || ~streq(oOld.eyes,o.eyes)  
         Screen('TextSize',window,o.textSize);
         Screen('TextFont',window,'Verdana');
         Screen('FillRect',window,o.gray1);
@@ -1645,7 +1649,7 @@ try
                     Speak('Please use both eyes. Hit RETURN to continue, or ESCAPE to quit.');
                 end
                 fprintf('*Asking which eye(s).\n');
-                response=GetKeypress([escapeKeyCode graveAccentKeyCode returnKeyCode]);
+                response=GetKeypress([escapeKeyCode graveAccentKeyCode returnKeyCode],o.deviceIndex);
                 if ismember(response,[escapeChar,graveAccentChar])
                     if o.speakInstructions
                         Speak('Quitting.');
@@ -1669,7 +1673,7 @@ try
                     Speak(string);
                 end
                 fprintf('*Telling observer which eye(s) to use.\n');
-                response=GetKeypress([escapeKeyCode graveAccentKeyCode returnKeyCode]);
+                response=GetKeypress([escapeKeyCode graveAccentKeyCode returnKeyCode],o.deviceIndex);
                 if ismember(response,[escapeChar,graveAccentChar])
                     if o.speakInstructions
                         Speak('Quitting.');
@@ -1694,7 +1698,7 @@ try
                 Speak(string);
             end
             fprintf('*Asking observer which eye(s).\n');
-            response=GetKeypress([KbName('L') KbName('R') escapeKeyCode graveAccentKeyCode]);
+            response=GetKeypress([KbName('L') KbName('R') escapeKeyCode graveAccentKeyCode],o.deviceIndex);
             if ismember(response,[escapeChar,graveAccentChar])
                 if o.speakInstructions
                     Speak('Quitting.');
@@ -2057,6 +2061,7 @@ try
     ffprintf(ff,'o.trialsPerBlock %.0f\n',o.trialsPerBlock);
     
     %% COMPUTE signal(i).image FOR ALL i.
+    tic
     white1=1;
     black0=0;
     Screen('Preference','TextAntiAliasing',0);
@@ -2201,6 +2206,11 @@ try
                 case 'image'
                     % Allow for color images.
                     % Scale to range -1 (black) to 1 (white).
+                    Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
+                    string=sprintf('Reading images from disk ...');
+                    DrawFormattedText(window,string,...
+                        o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+                    Screen('Flip',window); % Display request.
                     o.targetPix=round(o.targetHeightDeg/o.noiseCheckDeg);
                     o.targetFont=o.font;
                     o.showLineOfLetters=true;
@@ -2252,24 +2262,23 @@ try
             boundsRect=CenterRect(targetRect,[o.targetXYPix o.targetXYPix]);
             % targetRect not used. boundsRect used solely for the snapshot.
     end % switch o.task
+    fprintf('%d: prepare the %d signals, each %dx%d. ',MFileLineNr,o.alternatives,size(signal(1).image,1),size(signal(1).image,2));
+    toc
     
-    % Compute o.signalIsBinary, o.signalMin, o.signalMax
-    % Image will be (o.contrast*signal+1)*o.LBackground
+    % Compute o.signalIsBinary, o.signalMin, o.signalMax.
+    % Image will be (o.contrast*signal+1)*o.LBackground.
+    fprintf('%d: compute o.signalMin etc. ',MFileLineNr);
+    tic;
     v=[];
-    %    vv=[];
     for i=1:o.alternatives
         img=signal(i).image;
-        %       rect=[0 0 o.targetWidthPix o.targetHeightPix]/o.targetCheckPix; % size of signal(1).image
-        %       rect=round(rect*alphaCheckPix);
         v=unique([v img(:)']); % Combine all components, R,G,B, regardless.
-        %       if alphaCheckPix ~= round(alphaCheckPix) && useImresize
-        %          img=imresize(img,[RectHeight(rect), RectWidth(rect)]);
-        %       end
-        %       vv=unique([vv img(:)']); % Combine all components, R,G,B, regardless.
     end
     o.signalIsBinary=all(ismember(v,[0 1]));
     o.signalMin=min(v);
     o.signalMax=max(v);
+    toc
+    fprintf('%d: o.signalMin %.2f, o.signalMax %.2f\n',MFileLineNr,o.signalMin,o.signalMax);
     
     Screen('Preference','TextAntiAliasing',1);
     
@@ -2764,6 +2773,14 @@ try
                             location(1).image(annularNoiseMask)=1+(o.annularNoiseSD/o.noiseListSd)*noise(annularNoiseMask);
                             location(1).image=repmat(location(1).image,1,1,length(white)); % Support color.
                             location(1).image=location(1).image+o.contrast*signalImage; % Add signal to noise.
+                            if o.printImageStatistics
+                                img=signalImage;
+                                fprintf('%d: IMAGE STATS signalImage. signal(%d).image: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
+                                    MFileLineNr,i,size(img,1),size(img,2),size(img,3),mean(img(:)),std(img(:)),min(img(:)),max(img(:)),o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
+                                img=location(1).image;
+                                fprintf('%d: IMAGE STATS location(1).image. signal(%d).image: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
+                                    MFileLineNr,i,size(img,1),size(img,2),size(img,3),mean(img(:)),std(img(:)),min(img(:)),max(img(:)),o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
+                            end
                         case 'noise'
                             noise(signalMask)=o.r*noise(signalMask);
                             location(1).image=ones(o.canvasSize);
@@ -2774,6 +2791,10 @@ try
                             noise(signalMask)=(0.5+floor(noise(signalMask)*0.499999*signalEntropyLevels))/(0.5*signalEntropyLevels);
                             noise(~signalMask)=(0.5+floor(noise(~signalMask)*0.499999*o.backgroundEntropyLevels))/(0.5*o.backgroundEntropyLevels);
                             location(1).image=1+(o.noiseSD/o.noiseListSd)*noise;
+                    end
+                    if o.printImageStatistics
+                        fprintf('%d: IMAGE STATS before flanker added. signal(%d).image: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
+                            MFileLineNr,i,size(img,1),size(img,2),size(img,3),mean(img(:)),std(img(:)),min(img(:)),max(img(:)),o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
                     end
                     %% ADD FLANKERS, EACH A RANDOM LETTER LIKE THE TARGET
                     if o.useFlankers && streq(o.targetModulates,'luminance')
@@ -2952,7 +2973,7 @@ try
                 c=(LL(2)-LL(1))/LL(1);
             end
             fprintf(', contrast %.4f\n',c);
-        end
+        end % if o.measureContrast
         
         %% CONVERT IMAGE MOVIE TO TEXTURE MOVIE
         if ~ismember(o.observer,algorithmicObservers)
@@ -2964,7 +2985,11 @@ try
                         % Convert to pixel values.
                         % PREPARE IMAGE DATA
                         img=location(1).image;
-                        % ffprintf(ff,'signal rect height %.1f, image height %.0f, dst rect %d %d %d %d\n',RectHeight(rect),size(img,1),rect);
+                        if o.printImageStatistics
+                            fprintf('%d: IMAGE STATS before IndexOfLuminance. signal(%d).image: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
+                                MFileLineNr,i,size(img,1),size(img,2),size(img,3),mean(img(:)),std(img(:)),min(img(:)),max(img(:)),o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
+                        end
+                        fprintf('%d: o.signalMin %.2f, o.signalMax %.2f\n',MFileLineNr,o.signalMin,o.signalMax);
                         img=IndexOfLuminance(cal,img*o.LBackground)/o.maxEntry;
                         img=Expand(img,o.targetCheckPix);
                         if o.assessLinearity
@@ -3252,7 +3277,7 @@ try
                     for i=1:o.alternatives
                         img=signal(i).image;
                         if o.printImageStatistics
-                            fprintf('%d: signal(%d).image: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
+                            fprintf('%d: IMAGE STATS. signal(%d).image: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
                                 MFileLineNr,i,size(img,1),size(img,2),size(img,3),mean(img(:)),std(img(:)),min(img(:)),max(img(:)),o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
                         end
                         if useExpand
@@ -3382,45 +3407,45 @@ try
                     o.transcript.responseTimeSec(trial)=GetSecs-o.transcript.stimulusOnsetSec(trial);
                     response=clicks;
                 case 'identify'
-                    while 1
-                        o.quitBlock=false;
-                        responseChar=GetKeypress;
-                        if ismember(responseChar,[escapeChar,graveAccentChar])
-                            [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
-                            trial=trial-1;
-                            if o.quitBlock
-                                ffprintf(ff,'*** User typed ESCAPE. Quitting block.\n');
-                                if o.speakInstructions
-                                    Speak('Block terminated.');
-                                end
-                                break
-                            end
-                            if o.skipTrial
-                                ffprintf(ff,'*** User typed ESCAPE. Skipping trial.\n');
-                                break
-                            end
+                    o.quitBlock=false;
+                    [~,i]=ismember(lower(o.alphabet),'abcdefghijklmnopqrstuvwxyz');
+                    responseChar=GetKeypress([letterKeyCodes(i) escapeKeyCode graveAccentKeyCode],o.deviceIndex); 
+                    if ismember(responseChar,[escapeChar,graveAccentChar])
+                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.textMarginPix);
+                        trial=trial-1;
+                    end
+                    if o.quitExperiment
+                        ffprintf(ff,'*** User typed ESCAPE twice. Quitting experiment.\n');
+                        if o.speakInstructions
+                            Speak('Done.');
                         end
-                        o.transcript.responseTimeSec(trial)=GetSecs-o.transcript.stimulusOnsetSec(trial);
-                        if length(responseChar) > 1
-                            % GetKeypress might return a multi-character string,
-                            % but our code assumes the response is a scalar, not a
-                            % matrix. So we replace the string by 0.
-                            responseChar=0;
-                        end
-                        [ok,response]=ismember(lower(responseChar),lower(o.alphabet));
-                        if ok
-                            break;
-                        else
-                            if o.speakInstructions
-                                Speak('Try again. Or hit ESCAPE to quit.');
-                            end
-                        end
-                    end % while 1
-                    if o.skipTrial
-                        continue
+                        break;
                     end
                     if o.quitBlock
-                        break
+                        ffprintf(ff,'*** User typed ESCAPE. Proceeding to next block.\n');
+                        if o.speakInstructions
+                            Speak('Proceeding to next block.');
+                        end
+                        break;
+                    end
+                    if o.skipTrial
+                        ffprintf(ff,'*** User typed ESCAPE. Proceeding to next trial.\n');
+                        continue
+                    end
+                    o.transcript.responseTimeSec(trial)=GetSecs-o.transcript.stimulusOnsetSec(trial);
+                    if length(responseChar) > 1
+                        % GetKeypress might return a multi-character string,
+                        % but our code assumes the response is a scalar, not a
+                        % matrix. So we replace the string by 0.
+                        responseChar=0;
+                    end
+                    [ok,response]=ismember(lower(responseChar),lower(o.alphabet));
+                    if ok
+                        break;
+                    else
+                        if o.speakInstructions
+                            Speak('Try again. Or hit ESCAPE to quit.');
+                        end
                     end
                 case 'identifyAll'
                     message=sprintf('Please type all three letters (%s) followed by RETURN:',o.alphabet(1:o.alternatives));
@@ -3441,20 +3466,27 @@ try
                     o.transcript.responseTimeSec(trial)=GetSecs-o.transcript.stimulusOnsetSec(trial);
                     %                Screen('FillRect',window,o.gray1,bottomCaptionRect);
                     Screen('TextSize',window,o.textSize);
-                    if ismember(terminatorChar,[escapeChar,graveAccentChar])
-                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
+                    if ismember(responseChar,[escapeChar,graveAccentChar])
+                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.textMarginPix);
                         trial=trial-1;
-                        if o.quitBlock
-                            ffprintf(ff,'*** User typed ESCAPE. Quitting block.\n');
-                            if o.speakInstructions
-                                Speak('Block terminated.');
-                            end
-                            break;
+                    end
+                    if o.quitExperiment
+                        ffprintf(ff,'*** User typed ESCAPE twice. Quitting experiment.\n');
+                        if o.speakInstructions
+                            Speak('Done.');
                         end
-                        if o.skipTrial
-                            ffprintf(ff,'*** User typed ESCAPE. Skipping trial.\n');
-                            continue
+                        break;
+                    end
+                    if o.quitBlock
+                        ffprintf(ff,'*** User typed ESCAPE. Proceeding to next block.\n');
+                        if o.speakInstructions
+                            Speak('Proceeding to next block.');
                         end
+                        break;
+                    end
+                    if o.skipTrial
+                        ffprintf(ff,'*** User typed ESCAPE. Proceeding to next trial.\n');
+                        continue
                     end
                     [ok,responses]=ismember(lower(responseString),lower(o.alphabet));
                     if ~all(ok)
@@ -3488,40 +3520,47 @@ try
                     end
                 case 'rate'
                     ratings='0123456789';
-                    while 1
-                        o.quitBlock=false;
-                        responseChar=GetKeypress;
-                        o.transcript.responseTimeSec(trial)=GetSecs-o.transcript.stimulusOnsetSec(trial);
-                        if ismember(responseChar,[escapeChar,graveAccentChar])
-                            [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
-                            trial=trial-1;
-                            if o.quitBlock
-                                ffprintf(ff,'*** User typed ESCAPE. Quitting block.\n');
-                                if o.speakInstructions
-                                    Speak('Block terminated.');
-                                end
-                                break;
-                            end
-                            if o.skipTrial
-                                ffprintf(ff,'*** User typed ESCAPE. Skipping trial.\n');
-                                continue
-                            end
+                    o.quitBlock=false;
+                    responseChar=GetKeypress([numberKeyCodes ...
+                        escapeKeyCode graveAccentKeyCode],o.deviceIndex);
+                    o.transcript.responseTimeSec(trial)=GetSecs-o.transcript.stimulusOnsetSec(trial);
+                    if ismember(responseChar,[escapeChar,graveAccentChar])
+                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.textMarginPix);
+                        trial=trial-1;
+                    end
+                    if o.quitExperiment
+                        ffprintf(ff,'*** User typed ESCAPE twice. Quitting experiment.\n');
+                        if o.speakInstructions
+                            Speak('Done.');
                         end
-                        if length(responseChar) > 1
-                            % GetKeypress might return a multi-character string,
-                            % but our code assumes the response is a scalar, not a
-                            % matrix. So we replace the string by 0.
-                            responseChar=0;
+                        break;
+                    end
+                    if o.quitBlock
+                        ffprintf(ff,'*** User typed ESCAPE. Proceeding to next block.\n');
+                        if o.speakInstructions
+                            Speak('Proceeding to next block.');
                         end
-                        [ok,response]=ismember(lower(responseChar),ratings);
-                        response=response-1;
-                        if ok
-                            break;
-                        else
-                            if o.speakInstructions
-                                Speak('Try again. Or hit ESCAPE to quit.');
-                            end
+                        break;
+                    end
+                    if o.skipTrial
+                        ffprintf(ff,'*** User typed ESCAPE. Proceeding to next trial.\n');
+                        continue
+                    end
+                    if length(responseChar) > 1
+                        % GetKeypress might return a multi-character string,
+                        % but our code assumes the response is a scalar, not a
+                        % matrix. So we replace the string by 0.
+                        responseChar=0;
+                    end
+                    [ok,response]=ismember(lower(responseChar),ratings);
+                    response=response-1;
+                    if ok
+                        break;
+                    else
+                        if o.speakInstructions
+                            Speak('Try again. Or hit ESCAPE to quit.');
                         end
+                    end
                     end % while 1
             end % switch o.task
             if ~o.quitBlock
@@ -3727,7 +3766,11 @@ try
     o.targetDurationSecMean=mean(o.likelyTargetDurationSec,'omitnan');
     o.targetDurationSecSD=std(o.likelyTargetDurationSec,'omitnan');
     ffprintf(ff,['Mean target duration %.3f',plusMinusChar,'%.3f s (sd over %d trials).\n'],o.targetDurationSecMean,o.targetDurationSecSD,length(o.likelyTargetDurationSec));
-    ffprintf(ff,'Background luminance %.1f cd/m^2, which filter reduces to %.2f cd/m^2.\n',o.LBackground,o.luminanceAtEye);
+    if o.useFilter
+        ffprintf(ff,'Background luminance %.1f cd/m^2, which filter reduces to %.2f cd/m^2.\n',o.LBackground,o.luminanceAtEye);
+    else
+        ffprintf(ff,'Background luminance %.1f cd/m^2.\n',o.LBackground);
+    end
     
     o.E=10^(2*o.questMean)*o.E1;
     if streq(o.targetModulates,'luminance')
@@ -3812,11 +3855,16 @@ try
             end
         end
     end
+%     RestoreCluts;
     if Screen(window,'WindowKind') == 1
-        % Screen takes many seconds to close. This gives us a white screen
-        % while we wait.
+        % Tell observer what's happening.
+        Screen('LoadNormalizedGammaTable',window,cal.old.gamma,loadOnNextFlip);
         Screen('FillRect',window);
-        Screen('Flip',window); % White screen
+        Screen('DrawText',window,' ',0,0,1,1,1); % Set background color.
+        string=sprintf('Saving results to disk ...');
+        DrawFormattedText(window,string,...
+            o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+        Screen('Flip',window); % Display message.
     end
     ListenChar(0); % flush
     ListenChar;
@@ -3855,12 +3903,20 @@ try
     o=orderfields(o,neworder);
     save(fullfile(o.dataFolder,[o.dataFilename '.mat']),'o','cal');
     try % save to .json file
+        if streq(o.targetKind,'image')
+            % json encoding of 12 faces takes 60 s, which is unbearable.
+            % So we omit the signals from the json file.
+            o1=rmfield(o,'signal');
+        else
+            o1=o;
+        end
         if exist('jsonencode','builtin')
-            json=jsonencode(o);
+            json=jsonencode(o1);
         else
             addpath(fullfile(fileparts(mfilename('fullpath')),'lib/jsonlab'));
-            json=savejson('',o);
+            json=savejson('',o1);
         end
+        clear o1
         fid=fopen(fullfile(o.dataFolder,[o.dataFilename '.json']),'w');
         fprintf(fid,'%s',json);
         fclose(fid);
@@ -3883,9 +3939,10 @@ try
         warning(e.message);
     end % save transcript to .json file
     fprintf('Results saved as %s with extensions .txt, .mat, and .json \nin the data folder: %s/\n',o.dataFilename,o.dataFolder);
-%     RestoreCluts;
-    Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
-    oOld=o;
+    oOld.observer=o.observer;
+    oOld.experimenter=o.experimenter;
+    oOld.eyes=o.eyes;
+    oOld.filterTransmission=o.filterTransmission;
     oOld.secs=GetSecs; % Date for staleness.
 catch e
     %% MATLAB catch
@@ -4550,7 +4607,7 @@ if o.speakInstructions
     string=strrep(string,'\n','');
     Speak(string);
 end
-response=GetKeypress([returnKeyCode escapeKeyCode graveAccentKeyCode]);
+response=GetKeypress([returnKeyCode escapeKeyCode graveAccentKeyCode],o.deviceIndex);
 if ismember(response,[escapeChar,graveAccentChar])
     if o.speakInstructions
         Speak('Quitting.');
@@ -4669,7 +4726,7 @@ else
         if o.speakInstructions
             Speak(string);
         end
-        answer=GetKeypress([returnKeyCode escapeKeyCode graveAccentKeyCode]);
+        answer=GetKeypress([returnKeyCode escapeKeyCode graveAccentKeyCode],o.deviceIndex);
         Screen('FillRect',window,white);
         Screen('Flip',window); % Blank, to acknowledge response.
         if ismember(answer,returnChar)
@@ -4792,14 +4849,14 @@ Screen('TextSize',window,o.textSize);
 Screen('TextFont',window,o.textFont,0);
 y=screenRect(4)/2-(1+2*length(text.big))*o.textSize;
 for i=1:length(text.big)
-    Screen('DrawText',window,text.big{i},o.instructionalMarginPix,y,black,o.gray1);
+    Screen('DrawText',window,text.big{i},o.textMarginPix,y,black,o.gray1);
     y=y+2*o.textSize;
 end
 y=y-0.5*o.textSize;
 Screen('TextSize',window,round(0.6*o.textSize));
-Screen('DrawText',window,text.small,o.instructionalMarginPix,y,black,o.gray1);
+Screen('DrawText',window,text.small,o.textMarginPix,y,black,o.gray1);
 Screen('TextSize',window,round(o.textSize*0.35));
-Screen('DrawText',window,text.fine,o.instructionalMarginPix,screenRect(4)-0.5*o.instructionalMarginPix,black,o.gray1,1);
+Screen('DrawText',window,text.fine,o.textMarginPix,screenRect(4)-0.5*o.textMarginPix,black,o.gray1,1);
 Screen('TextSize',window,o.textSize);
 if IsWindows
     background=[];
@@ -4807,9 +4864,9 @@ else
     background=o.gray1;
 end
 fprintf('%d: o.deviceIndex %.0f.\n',MFileLineNr,o.deviceIndex);
-[reply,terminatorChar]=GetEchoString(window,text.question,o.instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
+[reply,terminatorChar]=GetEchoString(window,text.question,o.textMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
 if ismember(terminatorChar,[escapeChar graveAccentChar])
-    [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
+    [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.textMarginPix);
     if o.quitExperiment
         ffprintf(ff,'*** User typed ESCAPE twice. Experiment terminated.\n');
     elseif o.quitBlock
@@ -4889,11 +4946,11 @@ switch o.task
         GetClicks;
     case {'identify' 'identifyAll' 'rate'}
         fprintf('*Waiting for SPACE bar to begin next trial.\n');
-        responseChar=GetKeypress([spaceKeyCode escapeKeyCode graveAccentKeyCode]);
+        responseChar=GetKeypress([spaceKeyCode escapeKeyCode graveAccentKeyCode],o.deviceIndex);
         % This keypress serves mainly to start the first trial, but we
         % offer to quit if the user hits ESCAPE.
         if ismember(responseChar,[escapeChar,graveAccentChar])
-            [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.instructionalMarginPix);
+            [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.textMarginPix);
             if o.quitBlock
                 ffprintf(ff,'*** User typed ESCAPE. Quitting block.\n');
                 if o.speakInstructions
