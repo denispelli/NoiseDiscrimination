@@ -1,5 +1,5 @@
-function [quitExperiment,quitBlock,skipTrial]=OfferEscapeOptions(window,oo,instructionalMarginPix)
-% [quitExperiment,quitBlock,skipTrial]=OfferEscapeOptions(window,o,instructionalMargin);
+function [quitExperiment,quitBlock,skipTrial]=OfferEscapeOptions(window,oo,textMarginPix)
+% [quitExperiment,quitBlock,skipTrial]=OfferEscapeOptions(window,o,textMarginPix);
 o=oo(1);
 if o.speakEachLetter && o.useSpeech
    Speak('Escape');
@@ -43,7 +43,7 @@ else
 end
 string=['You escaped. Any incomplete trial was canceled. Hit ESCAPE again to quit the whole experiment. '...
     nextRunMsg nextTrialMsg];
-DrawFormattedText(window,string,instructionalMarginPix,instructionalMarginPix+0.5*o.textSize+y,black,60,[],[],1.1);
+DrawFormattedText(window,string,textMarginPix,textMarginPix+0.5*o.textSize+y,black,60,[],[],1.1);
 Screen('Flip',window);
 answer=GetKeypress([spaceKeyCode returnKeyCode escapeKeyCode graveAccentKeyCode],o.deviceIndex);
 quitExperiment=ismember(answer,[escapeChar,graveAccentChar]);
