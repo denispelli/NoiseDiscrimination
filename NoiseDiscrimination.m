@@ -3203,8 +3203,13 @@ try
                 case 'identify'
                     message=sprintf('Please type the letter: %s, or ESCAPE to cancel a trial or quit.',o.alphabet(1:o.alternatives));
                 case 'identifyAll'
-                    message=sprintf('[Ignore case. DELETE to backspace. ESCAPE to cancel a trial or quit. You''ll get feedback on the middle letter.]');
                     factor=1.3;
+                    switch o.thresholdResponseTo
+                        case 'target'
+                            message=sprintf('[Ignore case. DELETE to backspace. ESCAPE to cancel a trial or quit. You''ll get feedback on the middle letter.]');
+                        case 'flankers'
+                            message=sprintf('[Ignore case. DELETE to backspace. ESCAPE to cancel a trial or quit. You''ll get feedback on the outer letters.]');
+                    end
                 case 'rate'
                     message=sprintf('Please rate the beauty: 0 to 9, or ESCAPE to cancel a trial or quit.');
             end
@@ -3460,7 +3465,7 @@ try
                     o.transcript.responseTimeSec(trial)=GetSecs-o.transcript.stimulusOnsetSec(trial);
                     %                Screen('FillRect',window,o.gray1,bottomCaptionRect);
                     Screen('TextSize',window,o.textSize);
-                    if ismember(responseChar,[escapeChar,graveAccentChar])
+                    if ismember(terminatorChar,[escapeChar,graveAccentChar])
                         [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.textMarginPix);
                         trial=trial-1;
                     end
@@ -4151,8 +4156,6 @@ for bits=1:11
     % it's not compatible with high-res color, but that may be fixed in the
     % next release.
     Screen('PutImage',window,img,r);
-    %               msg=sprintf('o.assessBitDepth: Now alternating with quantization to %d bits. Hit SPACE bar to continue.',bits);
-    %               newGamma=floor(cal.gamma*(2^bits-1))/(2^bits-1);
     msg=sprintf(' Now alternately clearing video DAC bit %d. Hit SPACE bar to continue. ',bits);
     newGamma=bitset(round(cal.gamma*(2^17-1)),17-bits,0)/(2^17-1);
     Screen('DrawText',window,' o.assessBitDepth: Testing bits 1 to 11. ',100,100,0,1,1);
@@ -4899,7 +4902,7 @@ if true % Create readyString.
         if o.fixationIsOffscreen
             readyString=sprintf('%sPlease fix your %s on your offscreen fixation mark, ',readyString,eyeOrEyes);
         else
-            readyString=sprintf('%sPlease fix your %s on the center of the cross +, ',readyString,eyeOrEyes);
+            readyString=sprintf('%sPlease fix your %s on the center of the fixation cross +, ',readyString,eyeOrEyes);
         end
         word='and';
     else
@@ -4912,6 +4915,11 @@ if true % Create readyString.
         case {'identify' 'identifyAll' 'rate'}
             readyString=[readyString word ' press the SPACE bar when ready to proceed.'];
             fprintf('Please press the SPACE bar when ready to proceed.\n');
+            if IsOSX && ismember(MacModelName,{'MacBook10,1' 'MacBookAir6,2' 'MacBookPro11,5' ... % Mine, without touch bar, just to test this code.
+                    'MacBookPro13,2' 'MacBookPro13,3' ... % 2016 with touch bar.
+                    'MacBookPro14,1' 'MacBookPro14,2' 'MacBookPro14,3'}) % 2017 with touch bar.
+                readyString=['[For your convenience, hitting the accent grave tilde key "`~" is equivalent to hitting the ESCAPE key immediately above it.] ' readyString];
+            end
     end
 end
 msg=[message readyString];
