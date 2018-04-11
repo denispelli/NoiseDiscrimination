@@ -175,21 +175,21 @@ try
          Screen('TextSize',window,o.textSize);
          Screen('TextFont',window,o.textFont,0);
          Screen('DrawText',window,'Hello Observer,',...
-            instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
+            textMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
          Screen('DrawText',window,'Please slowly type your name followed by RETURN.',...
-            instructionalMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
+            textMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
          Screen('TextSize',window,round(o.textSize*0.35));
-         Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.'),instructionalMarginPix,screenRect(4)-0.5*instructionalMarginPix,black,o.gray1,1);
+         Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.'),textMarginPix,screenRect(4)-0.5*textMarginPix,black,o.gray1,1);
          Screen('TextSize',window,o.textSize);
          if IsWindows
             background=[];
          else
             background=o.gray1;
          end
-         [name,terminatorChar]=GetEchoString(window,'Observer name:',instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
+         [name,terminatorChar]=GetEchoString(window,'Observer name:',textMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
          if ismember(terminatorChar,[escapeChar graveAccentChar])
             o.quitBlock=true;
-            o.quitExperiment=OfferEscapeOptions(window,o,instructionalMarginPix);
+            o.quitExperiment=OfferEscapeOptions(window,o,textMarginPix);
             if o.quitExperiment
                ffprintf(ff,'*** User typed ESCAPE twice. Experiment terminated.\n');
             else
@@ -363,22 +363,22 @@ try
             Screen('TextSize',window,o.textSize);
             Screen('TextFont',window,o.textFont,0);
             Screen('DrawText',window,'Please provide your current estimate of pupil diameter in mm,',...
-               instructionalMarginPix,screenRect(4)/2-7*o.textSize,black,o.gray1);
+               textMarginPix,screenRect(4)/2-7*o.textSize,black,o.gray1);
             Screen('DrawText',window,'followed by RETURN. Please type slowly. (Just RETURN for default value.)',...
-               instructionalMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
+               textMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
             if IsWindows
                background=[];
             else
                background=o.gray1;
             end
             [name,terminatorChar]=GetEchoString(window,'Pupil diameter (mm):',...
-               instructionalMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
+               textMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
             if ~isempty(name)
                o.pupilDiameterMm=str2num(name);
             end
             if ismember(terminatorChar,[escapeChar graveAccentChar])
                o.quitBlock=true;
-               o.quitExperiment=OfferEscapeOptions(window,o,instructionalMarginPix);
+               o.quitExperiment=OfferEscapeOptions(window,o,textMarginPix);
                if o.quitExperiment
                   ffprintf(ff,'*** User typed ESCAPE twice. Experiment terminated.\n');
                else
