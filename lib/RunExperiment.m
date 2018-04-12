@@ -39,12 +39,15 @@ else
 end
 
 %% RUN THE CONDITIONS
-% Typically, you'll select just a few of the conditions stored in oo
-% that you want to run now. Select them from the above printing of "tt"
-% in your Command Window.
+% We run every condition that has less than the desired number of trials.
+% When we run a condition, we discard any old trials.
 oPrior=[];
 for oi=1:length(oo)
     o=oo{oi};
+    if isfield(o,'trials') && o.trials>=o.trialsPerBlock
+        % Skip any condition that already has the desired trials.
+        continue
+    end
     o.blockNumber=oi;
     o.blocksDesired=length(oo);
     o.localHostName=localHostName;
