@@ -526,7 +526,7 @@ o.trials=0; % Initialize trial counter so it's defined even if user quits early.
 o.blockNumber=1; % For display only, indicate the block number. When o.blockNumber==blocksDesired this program says "Congratulations" before returning.
 o.blocksDesired=1; % How many blocks you to plan to run? Used solely for display and congratulations and keeping window open until last block.
 o.speakInstructions=false;
-o.congratulateWhenDone=true; % 0 or 1. Spoken after final block (i.e. when o.blockNumber==o.blocksDesired). You can turn this off.
+o.congratulateWhenDone=true; % true or false. Speak after final block (i.e. when o.blockNumber==o.blocksDesired). 
 o.quitBlock=false; % Returned value is true if the user aborts this block.
 o.quitExperiment=false; % Returned value is true if the observer wants to quit whole experiment now; no more blocks.
 o.targetKind='letter';
@@ -683,6 +683,9 @@ o.transcript.responseTimeSec=[]; % Time of response re o.transcript.stimulusOnse
 o.transcript.stimulusOnsetSec=[]; % Value of GetSecs at stimulus onset, for each trial.
 o.printImageStatistics=false;
 o.localHostName=''; % Copy this from cal.localHostName
+o.dataFilename='';
+o.dataFolder='';
+o.textMarginPix=0;
 
 o.deviceIndex=-1; % -1 for all keyboards.
 o.deviceIndex=-3; % -3 for all keyboard/keypad devices.
@@ -745,7 +748,7 @@ else
     conditions=1;
     initializedFields=fieldnames(o);
     knownOutputFields={'labelAlternatives' 'beginningTime' ...
-        'functionNames' 'dataFilename' 'dataFolder' 'cal' 'pixPerDeg' ...
+        'functionNames' 'cal' 'pixPerDeg' ...
         'lineSpacing' 'stimulusRect' 'noiseCheckPix' ...
         'minLRange' 'targetHeightPix' ...
         'contrast' 'targetWidthPix' 'checkSec' 'moviePreFrames'...
@@ -765,7 +768,12 @@ else
         'textFont'  'LBackground' 'targetCyclesPerDeg' 'contrast' ...
         'thresholdParameterValueList' 'noInputArgument' ...
         'firstGrayClutEntry' 'lastGrayClutEntry' 'gray' 'r' 'transcript'...
-        'signalIsBinary' 'targetXYInUnitSquare'};
+        'signalIsBinary' 'targetXYInUnitSquare'...
+        'gray1' 'resumeExperiment' 'script' 'scriptName' ...
+        'showLineOfLetters' 'signalMax' 'signalMin' ...
+        'targetFont' 'targetPix' 'useSpeech'...
+        'instructionalMarginPix' 'quitRun' ... % obsolete, to be removed.
+        };
     unknownFields={};
     for condition=1:conditions
         oo(condition)=o;
@@ -1168,7 +1176,11 @@ try
         case 2
         o.functionNames=[stack(2).name '-' stack(1).name];
         case 3
-        o.functionNames=[stack(3).name '-' stack(1).name]; % Omit 'RunExperiment'
+            if streq(stack(2).name,'RunExperiment.m')
+                o.functionNames=[stack(3).name '-' stack(1).name]; % Omit 'RunExperiment'
+            else
+                o.functionNames=[stack(3).name '-' stack(2).name '-' stack(1).name];
+            end
     end
     o.dataFilename=sprintf('%s-%s.%d.%d.%d.%d.%d.%d',o.functionNames,o.observer,round(t));
     o.dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
@@ -4918,7 +4930,7 @@ if true % Create readyString.
             if IsOSX && ismember(MacModelName,{'MacBook10,1' 'MacBookAir6,2' 'MacBookPro11,5' ... % Mine, without touch bar, just to test this code.
                     'MacBookPro13,2' 'MacBookPro13,3' ... % 2016 with touch bar.
                     'MacBookPro14,1' 'MacBookPro14,2' 'MacBookPro14,3'}) % 2017 with touch bar.
-                readyString=['[For your convenience, hitting the accent grave tilde key "`~" is equivalent to hitting the ESCAPE key immediately above it.] ' readyString];
+                readyString=['[For your convenience, hitting the accent grave tilde key "`~" is equivalent to hitting the ESCAPE key immediately above it.]\n' readyString];
             end
     end
 end
