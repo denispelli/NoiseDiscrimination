@@ -172,7 +172,7 @@ vars={'condition' 'experiment' 'conditionName' ...
     'targetDurationSec' 'targetCyclesPerDeg' ...
     'targetHeightDeg' 'targetGaborCycles' 'noiseSD' 'noiseType'};
 tt=table;
-for i=1:length(oo)
+for i=14:length(oo)
     t=struct2table(oo{i},'AsArray',true);
     tt(i,:)=t(1,vars);
 end

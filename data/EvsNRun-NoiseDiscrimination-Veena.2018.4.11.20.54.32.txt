@@ -1,0 +1,10 @@
+EvsNRun-NoiseDiscrimination-Veena.2018.4.11.20.54.32
+EvsNRun-NoiseDiscrimination 11-Apr-2018 20:54:31
+observer Veena, task identify, alternatives 4,  steepness ,
+Reducing requested o.noiseRadiusDeg (Inf deg) to 24.4 deg, the max possible.
+Computer Veenas-MacBook-Pro, MacBookPro14,3, screen 0, 3360x2100, 33.0x20.6 cm
+Computer account Veena Arvind.
+Veenas-MacBook-Pro MacBookPro14,3 calibrated by Veena Arvind on 29-Mar-2018 19:12:06.
+Veena in Denis's lab with celling lights on
+cal.ScreenConfigureDisplayBrightnessWorks=0;
+cal.profile='Color LCD';
