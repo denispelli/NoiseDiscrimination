@@ -140,49 +140,7 @@ for oi=1:length(oo)
 end
 
 %% LOOK FOR PARTIAL RUNS OF THIS EXPERIMENT
-useSavedList=false;
-dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
-matFiles=dir(fullfile(dataFolder,[o.experiment '-*-' cal.localHostName '-partial*.mat']));
-if ~isempty(matFiles)
-    cd(dataFolder);
-    clear expt n
-    for i = 1:length(matFiles)
-        % Load each experiment into one cell of expt.
-        expt{i}=load(matFiles(i).name,'oo');
-        n(i)=matFiles(i).datenum;
-    end
-    [~,index]=sort(n,'descend');
-    matFiles=matFiles(index);
-    expt=expt{index};
-    fprintf('Found %d partial runs of this experiment on this computer.\n',length(matFiles));
-    fprintf('For each file, type: Y to resume that unfinished experiment; or hit RETURN to pass; or hit DELETE to delete it.\n');
-    escapeKeyCode=KbName('escape');
-    graveAccentKeyCode=KbName('`~');
-    spaceKeyCode=KbName('space');
-    returnKeyCode=KbName('return');
-    returnChar=13;
-    for i=1:length(expt)
-        o=expt{i}.oo{1};
-        if ~isfield(o,'observer') || ~isfield(o,'trials') || isempty(o.observer) || o.trials<2
-            continue
-        end
-        fprintf('%s, %s, Observer: %s\n',matFiles(i).name,matFiles(i).date,o.observer);
-        fprintf('Type Y for yes use it. Hit RETURN to ignore it, or DELETE to delete it:\n');
-        responseChar=GetKeypress([KbName('y') KbName('delete') returnKeyCode escapeKeyCode graveAccentKeyCode]);
-        switch responseChar
-            case 'y'
-                oo=expt{i}.oo;
-                useSavedList=true;
-                break
-            case 'delete'
-                delete(matFiles(i).name);
-                fprintf('Deleted file %s\n',matFiles(i).name);
-            case returnChar
-                fprintf('Skipping file %s\n',matFiles(i).name);
-                continue
-        end
-    end
-end
+oo=OfferToResumeExperiment(oo);
 
 %% PRINT THE CONDITIONS (ONE PER ROW) AS TABLE TT
 % All these vars must be defined in every condition.
@@ -203,22 +161,8 @@ end % if ~skipDataCollection
 % Include whatever you're intersted in. We skip rows missing any specified variable.
 vars={'condition' 'conditionName' 'observer' 'trials' 'trialsSkipped' ...
     'noiseSD' 'N' 'targetHeightDeg' 'flankerSpacingDeg' ...
-    'eccentricityXYDeg' 'contrast' 'flankerContrast' 'seed'};
-tt=table;
-for oi=1:length(oo)
-    t=struct2table(oo{oi},'AsArray',true);
-    if ~all(ismember({'trials' 'contrast' 'transcript'},t.Properties.VariableNames)) || isempty(t.trials) || t.trials<2
-        continue % Skip condition without data.
-    end
-    % Report missing fields.
-    ok=ismember(vars,t.Properties.VariableNames);
-    if ~all(ok)
-        missing=join(vars(~ok),' ');
-        warning('Skipping incomplete condition %d, because it lacks: %s',i,missing{1});
-        continue
-    end
-    tt(end+1,:)=t(1,vars);
-end % for oi=1:length(oo)
+    'eccentricityXYDeg' 'contrast' 'flankerContrast' };
+tt=Experiment2Table(oo,vars);
 disp(tt) % Print the list of conditions, with results.
 if isempty(tt)
     return
