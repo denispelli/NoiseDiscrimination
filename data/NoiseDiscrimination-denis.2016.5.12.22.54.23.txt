@@ -1,0 +1,30 @@
+NoiseDiscrimination-denis.2016.5.12.22.54.23
+NoiseDiscrimination 12-May-2016 22:54:23
+observer denis, task identify, alternatives 9,  beta 1.8,
+Computer Santayana, MacBookAir6,2, screen 0, 1280x800, 29.0x17.9 cm
+Computer account Denis Pelli.
+Santayana MacBookAir6,2 calibrated by Denis Pelli on 14-May-2015 15:52:44.
+denis in lab
+cal.ScreenConfigureDisplayBrightnessWorks=1;
+cal.profile='Color LCD';
+Turning autobrightness off. Setting "brightness" to 1.00, on a scale of 0.0 to 1.0;
+Fixation cross is blanked near target. No delay in showing fixation after target.
+Frame rate 60.0 Hz.
+o.pixPerDeg 38.7, o.distanceCm 50.0
+Minimum letter resolution is 8 checks.
+o.targetHeightPix 34, o.noiseCheckPix 1, o.durationSec 0.20 s
+o.targetModulates luminance
+o.noiseType gaussian, o.noiseSD 0.200, o.annularNoiseSD 0.000
+Noise height 28.53 deg. Noise hole 28.53 deg. Height is 32.49T and hole is 32.49T, where T is target height.
+Target height is 34.0 checks, 0.9 deg.
+Letter size 0.88 deg, central check size 0.026 deg.
+No crop marks.
+Eccentricity 0.0 deg. Using fixation mark. Target offset 0.00 of screen width.
+log N/deg^2 -4.57, where N is power spectral density
+pThreshold 0.75, beta 1.8
+Your (log) guess is NaN ± NaN
+o.trialsPerRun 40
+log E1/deg^2 -0.37, where E1 is energy at unit contrast.
+*** '.' response. Run terminated.
+Run    1 of 2.  24 trials. 75% right. 2.226 s/trial. Threshold±sd log(contrast) -1.03±0.08, contrast 0.09292, log E/N 2.14, efficiency NaN
+*** '.' response. Quitting now.

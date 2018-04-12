@@ -1,0 +1,37 @@
+khandakerThresholds-NoiseDiscrimination-Khandaker.2017.6.29.17.48.17
+khandakerThresholds-NoiseDiscrimination 29-Jun-2017 17:48:16
+observer Khandaker, task identify, alternatives 9,  beta NaN,
+Reducing requested o.noiseRadiusDeg (Inf deg) to 20.4 deg, the max possible.
+Computer Denis's MacBook Pro 5K, MacBookPro11,5, screen 0, 864x540, 33.1x20.6 cm
+Computer account Denis Pelli.
+Denis's MacBook Pro 5K MacBookPro11,5 calibrated by Denis Pelli on 24-Feb-2017 02:58:01.
+denis in room 406, room lights on, at night.
+cal.ScreenConfigureDisplayBrightnessWorks=1;
+cal.profile='Color LCD';
+Turning autobrightness off. Setting "brightness" to 1.00, on a scale of 0.0 to 1.0;
+Using tiny window for debugging.
+RMS difference between identity and read-back of hardware CLUT (1024x3): 0.000000013
+Size of cal.gamma 256 3
+Observer is using both eyes.
+Fixation cross is blanked during and until 0.60 s after target. No selective blanking near target. 
+Frame rate 60.0 Hz.
+o.pixPerDeg 22.9, o.viewingDistanceCm 50.0
+Minimum letter resolution is 8 checks.
+o.font Sloan
+o.targetHeightPix 180, o.noiseCheckPix 9, o.durationSec 0.20 s
+o.targetModulates luminance
+o.noiseType gaussian, o.noiseSD 0.160, o.annularNoiseSD 0.160
+Noise height 296.64 deg. Noise hole 296.64 deg. Height is 37.73T and hole is 37.73T, where T is target height.
+Target height is 20.0 checks, 7.9 deg.
+Letter size 7.9 deg, check size 0.393 deg.
+Nominal letter size is 7.86 deg. See o.alphabetHeightDeg below for actual size. 
+No crop marks.
+Target is at (0.0,0.0) deg, (0.50 0.50) in unit square. Using on-screen fixation mark.
+Static noise log N/(deg^2)=-2.40, where N is power spectral density in deg^2.
+pThreshold 0.75, beta 3.5
+Your (log) guess is NaN +/- NaN
+o.trialsPerRun 50
+o.xHeightDeg 7.86 deg (traditional typographer's x-height)
+o.HHeightDeg 7.86 deg (capital H ascender height)
+o.alphabetHeightDeg 7.86 deg (bounding box for letters used, including any ascenders and descenders)
+log E1/deg^2 1.53, where E1 is energy at unit contrast.

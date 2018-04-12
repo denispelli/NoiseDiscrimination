@@ -1,0 +1,29 @@
+sizeBug-NoiseDiscrimination-michelle.2016.4.14.17.0.9
+sizeBug-NoiseDiscrimination 14-Apr-2016 17:00:08
+observer michelle, task 4afc, alternatives 9,  beta 3.0,
+Reducing requested o.targetHeightDeg (11.0 deg) to 10.9 deg, the max possible.
+Computer Denis's MacBook Pro 5K, MacBookPro11,5, screen 0, 768x480, 33.1x20.7 cm
+Computer account Denis Pelli.
+Denis's MacBook Pro 5K MacBookPro11,5 calibrated by nobody on none.
+none
+cal.ScreenConfigureDisplayBrightnessWorks=1;
+Turning autobrightness off. Setting "brightness" to 1.00, on a scale of 0.0 to 1.0;
+Using tiny window for debugging.
+Fixation cross is blanked near target. No delay in showing fixation after target.
+Frame rate 60.0 Hz.
+o.pixPerDeg 20.4, o.distanceCm 50.0
+o.targetHeightPix 224, o.noiseCheckPix 7, o.durationSec Inf s
+o.targetModulates luminance
+o.noiseType gaussian, o.noiseSD 0.200, o.annularNoiseSD 0.200
+Noise height 412.65 deg. Noise hole 412.65 deg. Height is 37.83T and hole is 37.83T, where T is target height.
+Target height is 32.0 checks, 10.9 deg.
+Square size 10.97 deg, central check size 0.344 deg.
+o.gapFraction4afc 0.03, gap 0.33 deg
+No crop marks.
+Showing response numbers.
+Eccentricity 0.0 deg. Using fixation mark. Target offset 0.00 of screen width.
+log N/deg^2 -2.33, where N is power spectral density
+pThreshold 0.70, beta 3.0
+Your (log) guess is -1.50 ± 2.00
+o.trialsPerRun 40
+log E1/deg^2 2.08, where E1 is energy at unit contrast.

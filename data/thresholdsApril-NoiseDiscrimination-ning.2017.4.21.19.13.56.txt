@@ -1,0 +1,3 @@
+thresholdsApril-NoiseDiscrimination-ning.2017.4.21.19.13.56
+thresholdsApril-NoiseDiscrimination 21-Apr-2017 19:13:55
+observer ning, task identify, alternatives 9,  beta NaN,

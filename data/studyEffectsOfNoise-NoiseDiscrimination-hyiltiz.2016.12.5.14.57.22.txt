@@ -1,0 +1,27 @@
+studyEffectsOfNoise-NoiseDiscrimination-hyiltiz.2016.12.5.14.57.22
+studyEffectsOfNoise-NoiseDiscrimination 05-Dec-2016 14:57:22
+observer hyiltiz, task identify, alternatives 9,  beta NaN,
+Reducing requested o.noiseRadiusDeg (Inf deg) to 14.3 deg, the max possible.
+Computer Denis's MacBook Pro 5K, MacBookPro11,5, screen 0, 2560x1600, 33.1x20.7 cm
+Computer account Denis Pelli.
+Denis's MacBook Pro 5K MacBookPro11,5 calibrated by nobody on none.
+none
+cal.ScreenConfigureDisplayBrightnessWorks=1;
+Turning autobrightness off. Setting "brightness" to 1.00, on a scale of 0.0 to 1.0;
+Fixation cross is blanked during and until 0.60 s after target. No selective blanking near target. 
+Frame rate 60.0 Hz.
+o.pixPerDeg 95.0, o.distanceCm 70.0
+Minimum letter resolution is 8 checks.
+o.targetHeightPix 700, o.noiseCheckPix 35, o.durationSec 0.50 s
+o.targetModulates luminance
+o.noiseType gaussian, o.noiseSD 0.160, o.annularNoiseSD 0.160
+Noise height 198.25 deg. Noise hole 198.25 deg. Height is 26.90T and hole is 26.90T, where T is target height.
+Target height is 20.0 checks, 7.4 deg.
+Letter size 7.36 deg, central check size 0.368 deg.
+No crop marks.
+Eccentricity 16.0 deg. Using fixation mark. Target offset 0.15 of screen width.
+log N/deg^2 -2.46, where N is power spectral density
+pThreshold 0.75, beta 3.5
+Your (log) guess is NaN ± NaN
+o.trialsPerRun 40
+log E1/deg^2 1.48, where E1 is energy at unit contrast.

@@ -23,9 +23,6 @@ tmp.m
 tmp.mat
 buggy.mat
 
-*.mat
-*.json
-*.*.*.*.*.*.txt
 octave-workspace
 *.Rproj.user
 *.Rdata
@@ -33,14 +30,13 @@ octave-workspace
 *.Rproj
 
 *.numbers
-*.png
+
 *.zip
-*.csv
-~$*.docx
+
 .Rproj.user
 
 # Hidden file for Apple Finder
 *.DS_Store
 
 # Graphs of our results
-*.eps
+

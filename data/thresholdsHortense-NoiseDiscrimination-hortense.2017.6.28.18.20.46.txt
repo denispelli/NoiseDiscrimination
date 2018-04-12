@@ -1,0 +1,11 @@
+thresholdsHortense-NoiseDiscrimination-hortense.2017.6.28.18.20.46
+thresholdsHortense-NoiseDiscrimination 28-Jun-2017 18:20:45
+observer hortense, task identify, alternatives 9,  beta NaN,
+Reducing requested o.noiseRadiusDeg (Inf deg) to 12.2 deg, the max possible.
+Computer Santayana, MacBookAir6,2, screen 0, 1440x900, 28.5x17.8 cm
+Computer account Denis Pelli.
+Santayana MacBookAir6,2 calibrated by Denis Pelli on 14-May-2015 15:52:44.
+denis in lab. Added gamma table Feb 22, 2017. Estimated G from gamma table.
+cal.ScreenConfigureDisplayBrightnessWorks=1;
+cal.profile='Color LCD';
+Turning autobrightness off. Setting "brightness" to 1.00, on a scale of 0.0 to 1.0;

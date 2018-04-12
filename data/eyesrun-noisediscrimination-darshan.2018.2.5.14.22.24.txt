@@ -1,0 +1,16 @@
+eyesRun-NoiseDiscrimination-darshan.2018.2.5.14.22.24
+eyesRun-NoiseDiscrimination 05-Feb-2018 14:22:24
+observer darshan, task identify, alternatives 4,  steepness NaN,
+Reducing requested o.noiseRadiusDeg (Inf deg) to 16.5 deg, the max possible.
+Computer Santayana-MacBookAir, MacBookAir6,2, screen 0, 1440x900, 28.5x17.8 cm
+Computer account Denis Pelli.
+Santayana-MacBookAir MacBookAir6,2 calibrated by no one on 22-Nov-2017.
+**NOT CALIBRATED** just copied from MacBookPro
+cal.ScreenConfigureDisplayBrightnessWorks=0;
+cal.profile='Color LCD';
+o.drawTextPlugin=1 % 1 needed for accurate text rendering.
+o.beamPositionQueries=0 % 1 for best timing.
+o.psychtoolboxKernelDriverLoaded=0 % 1 for best timing.
+RMS difference between identity and read-back of hardware CLUT (1024x3): 0.009520725
+Size of cal.gamma 2048 3
+Observer is using right eye.

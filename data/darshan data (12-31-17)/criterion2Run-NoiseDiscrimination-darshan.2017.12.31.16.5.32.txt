@@ -1,0 +1,41 @@
+criterion2Run-NoiseDiscrimination-darshan.2017.12.31.16.5.32
+criterion2Run-NoiseDiscrimination 31-Dec-2017 16:05:32
+observer darshan, task identify, alternatives 4,  beta NaN,
+Reducing requested o.noiseRadiusDeg (Inf deg) to 22.6 deg, the max possible.
+Computer Pellis-MacBook-Pro-Darshan, MacBookPro14,3, screen 0, 3840x2400, 33.0x20.7 cm
+Computer account Pelli Lab 4.
+Pellis-MacBook-Pro-Darshan MacBookPro14,3 calibrated by Pelli Lab 4 on 08-Dec-2017 16:54:10.
+darshan
+cal.ScreenConfigureDisplayBrightnessWorks=0;
+cal.profile='Color LCD';
+o.drawTextPlugin=0 % 1 needed for accurate text rendering.
+o.beamPositionQueries=0 % 1 for best timing.
+o.psychtoolboxKernelDriverLoaded=0 % 1 for best timing.
+RMS difference between identity and read-back of hardware CLUT (1024x3): 0.002255826
+Size of cal.gamma 2048 3
+Observer is using right eye.
+Offscreen fixation mark (-22.3,0.0) cm from near point of display.
+Fixation cross is blanked near target. No delay in showing fixation after target.
+Frame rate 60.2 Hz.
+o.pixPerDeg 87.8, o.viewingDistanceCm 43.0
+Minimum letter resolution is 8 checks.
+o.targetGaborSpaceConstantCycles 0.8
+o.targetGaborCycles 3.0
+o.targetGaborOrientationsDeg [ 0 45 90 135]
+o.targetHeightPix 1320, o.targetCheckPix 66, o.noiseCheckPix 66, o.targetDurationSec 0.20 s
+o.targetModulates luminance
+o.noiseType gaussian, o.noiseSD 0.000, o.annularNoiseSD 0.000
+Noise height 655.73 deg. Noise hole 655.73 deg. Height is 43.61T and hole is 43.61T, where T is target height.
+Target height 15.0 deg is Letter size 15.0 deg, targetCheck 0.752 deg, noiseCheck 0.752 deg.
+Nominal letter size is 15.04 deg. See o.alphabetHeightDeg below for actual size. 
+No crop marks.
+Target is at (30.0,0.0) deg, (0.50 0.50) in unit square. Using off-screen fixation mark.
+Dynamic noise log N/(s deg^2)=-Inf, where N is power spectral density in s deg^2.
+pThreshold 0.95, beta 3.5
+Your (log) guess is NaN +/- NaN
+o.trialsPerRun 40
+log E1/deg^2 1.05, where E1 is energy at unit contrast.
+Mean target duration 0.199 +/- 0.000 s (sd over 40 trials).
+Mean luminance 271.5 cd/m^2
+Run    1 of 1.  40 trials. 82% right. 3.647 s/trial. Threshold+/-sd log(contrast) -1.01+/-0.05, contrast 0.09743, log E/N Inf, efficiency NaN
+WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.

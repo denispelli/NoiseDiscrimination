@@ -1,0 +1,158 @@
+testDynamicNoise-NoiseDiscrimination-denis.2017.3.29.15.44.3
+testDynamicNoise-NoiseDiscrimination 29-Mar-2017 15:44:03
+observer denis, task identify, alternatives 9,  beta NaN,
+Reducing requested o.noiseRadiusDeg (Inf deg) to 14.3 deg, the max possible.
+Computer Denis's MacBook Pro 5K, MacBookPro11,5, screen 0, 2880x1800, 33.1x20.6 cm
+Computer account Denis Pelli.
+Denis's MacBook Pro 5K MacBookPro11,5 calibrated by Denis Pelli on 24-Feb-2017 02:58:01.
+denis in room 406, room lights on, at night.
+cal.ScreenConfigureDisplayBrightnessWorks=1;
+cal.profile='Color LCD';
+Turning autobrightness off. Setting "brightness" to 1.00, on a scale of 0.0 to 1.0;
+Size of cal.gamma 256 3
+Fixation cross is blanked near target. No delay in showing fixation after target.
+Frame rate 59.8 Hz.
+o.pixPerDeg 106.9, o.distanceCm 70.0
+Minimum letter resolution is 8 checks.
+o.font Sloan
+o.targetHeightPix 820, o.noiseCheckPix 10, o.durationSec 0.20 s
+o.targetModulates luminance
+o.noiseType binary, o.noiseSD 0.000, o.annularNoiseSD 0.000
+Noise height 206.84 deg. Noise hole 206.84 deg. Height is 26.95T and hole is 26.95T, where T is target height.
+Target height is 82.0 checks, 7.7 deg.
+Letter size 7.66 deg, central check size 0.094 deg (corrected for perspective).
+Nominal letter size is 7.67 deg. See o.alphabetHeightDeg below for actual size. 
+No crop marks.
+Eccentricity 0.0 deg. Using fixation mark. Target offset 0.00 of screen width.
+Dynamic noise log N/(s deg^2)=-Inf, where N is power spectral density in s deg^2.
+pThreshold 0.75, beta 3.5
+Your (log) guess is NaN +/- NaN
+o.trialsPerRun 40
+o.xHeightDeg 7.67 deg (traditional typographer's x-height)
+o.HHeightDeg 7.67 deg (capital H ascender height)
+o.alphabetHeightDeg 7.67 deg (bounding box for letters used, including any ascenders and descenders)
+log E1/deg^2 1.50, where E1 is energy at unit contrast.
+Assess contrast: Desired o.contrast of -0.416 will be rendered as -0.416 (estimated).
+Contrast nominal -0.4160, est. -0.4159, actual -0.4141; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.060 will be rendered as -0.060 (estimated).
+Contrast nominal -0.0599, est. -0.0599, actual -0.0625; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.017 will be rendered as -0.017 (estimated).
+Contrast nominal -0.0169, est. -0.0165, actual -0.0156; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.007 will be rendered as -0.007 (estimated).
+Contrast nominal -0.0071, est. -0.0068, actual -0.0078; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.004 will be rendered as -0.004 (estimated).
+Contrast nominal -0.0039, est. -0.0038, actual -0.0078; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.003 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0026, est. -0.0023, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.002 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0020, est. -0.0015, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.003 will be rendered as -0.003 (estimated).
+Contrast nominal -0.0029, est. -0.0030, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.003 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0026, est. -0.0023, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.002 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0024, est. -0.0023, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.002 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0022, est. -0.0023, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.002 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0021, est. -0.0023, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.002 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0020, est. -0.0023, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.002 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0019, est. -0.0015, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.002 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0018, est. -0.0015, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.002 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0017, est. -0.0015, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.002 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0017, est. -0.0015, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.002 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0016, est. -0.0015, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.002 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0018, est. -0.0015, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.002 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0017, est. -0.0015, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.002 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0017, est. -0.0015, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.002 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0016, est. -0.0015, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.002 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0016, est. -0.0015, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.002 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0016, est. -0.0015, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.002 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0015, est. -0.0015, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.001 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0015, est. -0.0015, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.001 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0015, est. -0.0015, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.001 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0014, est. -0.0015, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.001 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0014, est. -0.0015, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.001 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0013, est. -0.0015, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.001 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0013, est. -0.0015, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.001 will be rendered as -0.002 (estimated).
+Contrast nominal -0.0013, est. -0.0015, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.001 will be rendered as -0.001 (estimated).
+Contrast nominal -0.0012, est. -0.0008, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.001 will be rendered as -0.001 (estimated).
+Contrast nominal -0.0012, est. -0.0008, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.001 will be rendered as -0.001 (estimated).
+Contrast nominal -0.0012, est. -0.0008, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.001 will be rendered as -0.001 (estimated).
+Contrast nominal -0.0011, est. -0.0008, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.001 will be rendered as -0.001 (estimated).
+Contrast nominal -0.0011, est. -0.0008, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.001 will be rendered as -0.001 (estimated).
+Contrast nominal -0.0011, est. -0.0008, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.001 will be rendered as -0.001 (estimated).
+Contrast nominal -0.0011, est. -0.0008, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Assess contrast: Desired o.contrast of -0.001 will be rendered as -0.001 (estimated).
+Contrast nominal -0.0011, est. -0.0008, actual 0.0000; luminance nominal 154.4, actual 154
+Signal duration requested 0.201 s, measured 0.200 s, and likely 0.201 s, an excess of 0 frames.
+Mean duration 0.201 +/- 0.000 s (sd over 40 trials).
+Mean luminance 154.4 cd/m^2
+Run    1 of 1.  40 trials. 95% right. 2.672 s/trial. Threshold+/-sd log(contrast) -2.97+/-0.03, contrast 0.00108, log E/N Inf, efficiency NaN
+WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.
