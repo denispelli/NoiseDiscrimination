@@ -43,6 +43,7 @@ if ~isempty(matFiles)
     fprintf('For each file, type: Y to resume that old experiment; or hit RETURN to pass it; or hit DELETE to delete it; or ESCAPE to run a fresh new experiment.\n');
     try
         ListenChar(2); % no echo
+        resumeExperiment=false;
         for i=1:length(expt)
             o=expt{i}.oo{1};
 %             if isempty(o.observer) || o.trials<o.trialsPerBlock
@@ -56,11 +57,12 @@ if ~isempty(matFiles)
                 case 'y'
                     oo=expt{i}.oo;
                     for j=1:length(oo)
+                        % In each block, reset the quit flags.
                         oo{j}.quitRun=false;
                         oo{j}.quitExperiment=false;
-                        oo{j}.resumeExperiment=true;
                     end
-                    fprintf('Ok. Resuming old experiment.\n');
+                    fprintf('Ok. Resuming partial old experiment.\n');
+                    resumeExperiment=true;
                     break
                 case 'delete'
                     delete(matFiles(i).name);
@@ -73,7 +75,9 @@ if ~isempty(matFiles)
             end
         end %  i=1:length(expt)
         ListenChar;
-        fprintf('Running your new experiment.\n');
+        if ~resumeExperiment
+            fprintf('Running your fresh new experiment.\n');
+        end
     catch e
         %     sca; % screen close all
         ListenChar;
