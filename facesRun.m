@@ -54,7 +54,7 @@ o.task='rate';
 o.eccentricityXYDeg=[0 0];
 o.targetHeightDeg=15;
 o.targetDurationSec=0.2;
-o.trialsPerBlock=20;
+o.trialsPerBlock=40;
 o.lapse=nan;
 o.steepness=nan;
 o.guess=nan;
@@ -97,11 +97,12 @@ for beautyTask=Shuffle(0:1)
 end
 for i=1:length(oo)
     oo{i}.condition=i; % Number the conditions
+    oo{i}.trials=0;
 end
 
 %% PRINT THE CONDITIONS (ONE PER ROW) AS TABLE TT
-% Include whatever's interesting. All these vars must be defined in every condition.
-vars={'seed' 'condition' 'task' 'targetDurationSec' 'targetHeightDeg' 'noiseSD'};
+% Include whatever's interesting. All the fields named in vars must be defined in every condition.
+vars={'condition' 'trials' 'task' 'targetDurationSec' 'targetHeightDeg' 'noiseSD'};
 tt=table;
 for i=1:length(oo)
     t=struct2table(oo{i},'AsArray',true);
@@ -109,28 +110,16 @@ for i=1:length(oo)
 end
 disp(tt) % Print list of conditions.
 
+%% LOOK FOR PARTIAL RUNS OF THIS EXPERIMENT
+oo=OfferToResumeExperiment(oo);
+
 %% RUN THE CONDITIONS
 oo=RunExperiment(oo);
 
 %% PRINT SUMMARY OF RESULTS AS TABLE TT
 % Include whatever you're intersted in. We skip rows missing any value.
-vars={'condition' 'observer' 'trials'  'task' 'targetDurationSec' 'targetHeightDeg' 'contrast' 'guess' 'lapse' 'steepness' 'seed' };
-tt=table;
-for i=1:length(oo)
-    t=struct2table(oo{i},'AsArray',true);
-    if ~all(ismember({'trials' 'contrast' 'transcript'},t.Properties.VariableNames)) || isempty(t.trials) || t.trials==0
-        % Skip condition without data.
-        continue
-    end
-    % Warn, skip the condition, and report which fields were missing.
-    ok=ismember(vars,t.Properties.VariableNames);
-    if ~all(ok)
-        missing=join(vars(~ok),' ');
-        warning('Skipping incomplete condition %d, because it lacks: %s',i,missing{1});
-        continue
-    end
-    tt(i,:)=t(1,vars);
-end
+vars={'condition' 'observer' 'trials'  'task' 'targetDurationSec' 'targetHeightDeg' 'contrast' 'guess' 'lapse' 'steepness'};
+tt=Experiment2Table(oo,vars);
 disp(tt) % Print summary.
 if isempty(tt)
     return
