@@ -1,0 +1,42 @@
+thresholdsApril-NoiseDiscrimination-satrianna.2017.5.3.4.58.4
+thresholdsApril-NoiseDiscrimination 03-May-2017 04:58:04
+observer satrianna, task identify, alternatives 9,  beta NaN,
+Reducing requested o.noiseRadiusDeg (Inf deg) to 14.3 deg, the max possible.
+Computer Denis's MacBook Pro 5K, MacBookPro11,5, screen 0, 864x540, 33.1x20.6 cm
+Computer account Denis Pelli.
+Denis's MacBook Pro 5K MacBookPro11,5 calibrated by Denis Pelli on 24-Feb-2017 02:58:01.
+denis in room 406, room lights on, at night.
+cal.ScreenConfigureDisplayBrightnessWorks=1;
+cal.profile='Color LCD';
+Turning autobrightness off. Setting "brightness" to 1.00, on a scale of 0.0 to 1.0;
+Using tiny window for debugging.
+Difference between identity and read-back of hardware CLUT (1024x3): mean -0.000000000, sd 0.000000021
+Size of cal.gamma 2048 3
+Observer is using left eye.
+NOTE: Adjusting o.nearPointXYInUnitSquare from [0.95 0.50] to [0.77 0.50] to fit 8.1 deg target (with 0.25 o.targetMargin) on screen.Offscreen fixation mark (-70.0,0.0) cm from near point of display.
+Fixation cross is blanked during and until 0.60 s after target. No selective blanking near target. 
+Frame rate 60.3 Hz.
+o.pixPerDeg 32.1, o.distanceCm 70.0
+Minimum letter resolution is 8 checks.
+o.font Sloan
+o.targetHeightPix 260, o.noiseCheckPix 13, o.durationSec 0.20 s
+o.targetModulates luminance
+o.noiseType gaussian, o.noiseSD 0.000, o.annularNoiseSD 0.000
+Noise height 217.09 deg. Noise hole 217.09 deg. Height is 26.77T and hole is 26.77T, where T is target height.
+Target height is 20.0 checks, 8.1 deg.
+Letter size 8.1 deg, check size 0.406 deg.
+Nominal letter size is 8.11 deg. See o.alphabetHeightDeg below for actual size. 
+No crop marks.
+Target is at (60.0,0.0) deg, (0.77 0.50) in unit square. Using off-screen fixation mark.
+Dynamic noise log N/(s deg^2)=-Inf, where N is power spectral density in s deg^2.
+pThreshold 0.75, beta 3.5
+Your (log) guess is NaN +/- NaN
+o.trialsPerRun 40
+o.xHeightDeg 8.11 deg (traditional typographer's x-height)
+o.HHeightDeg 8.11 deg (capital H ascender height)
+o.alphabetHeightDeg 8.11 deg (bounding box for letters used, including any ascenders and descenders)
+log E1/deg^2 1.56, where E1 is energy at unit contrast.
+*** '.' response. Run terminated.
+Mean duration NaN +/- NaN s (sd over 0 trials).
+Mean luminance 154.4 cd/m^2
+Run    1 of 1.  0 trials. NaN% right. Inf s/trial. Threshold+/-sd log(contrast) -0.50+/-1.30, contrast 0.31623, log E/N Inf, efficiency NaN

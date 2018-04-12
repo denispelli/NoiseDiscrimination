@@ -1,0 +1,38 @@
+measurePeripheralThresholds-NoiseDiscrimination-Chen.2017.3.29.13.53.9
+measurePeripheralThresholds-NoiseDiscrimination 29-Mar-2017 13:53:09
+observer Chen, task identify, alternatives 9,  beta NaN,
+Reducing requested o.noiseRadiusDeg (Inf deg) to 14.3 deg, the max possible.
+Computer Denis's MacBook Pro 5K, MacBookPro11,5, screen 0, 2880x1800, 33.1x20.6 cm
+Computer account Denis Pelli.
+Denis's MacBook Pro 5K MacBookPro11,5 calibrated by Denis Pelli on 24-Feb-2017 02:58:01.
+denis in room 406, room lights on, at night.
+cal.ScreenConfigureDisplayBrightnessWorks=1;
+cal.profile='Color LCD';
+Turning autobrightness off. Setting "brightness" to 1.00, on a scale of 0.0 to 1.0;
+Size of cal.gamma 256 3
+Fixation cross is blanked during and until 0.60 s after target. No selective blanking near target. 
+Frame rate 60.0 Hz.
+o.pixPerDeg 106.9, o.distanceCm 70.0
+Minimum letter resolution is 8 checks.
+o.font Sloan
+o.targetHeightPix 110, o.noiseCheckPix 5, o.durationSec 0.50 s
+o.targetModulates luminance
+o.noiseType gaussian, o.noiseSD 0.000, o.annularNoiseSD 0.000
+Noise height 27.75 deg. Noise hole 27.75 deg. Height is 26.95T and hole is 26.95T, where T is target height.
+Target height is 22.0 checks, 1.0 deg.
+Letter size 1.03 deg, central check size 0.047 deg (corrected for perspective).
+Nominal letter size is 1.03 deg. See o.alphabetHeightDeg below for actual size. 
+No crop marks.
+Eccentricity 0.0 deg. Using fixation mark. Target offset 0.00 of screen width.
+Dynamic noise log N/(s deg^2)=-Inf, where N is power spectral density in s deg^2.
+pThreshold 0.75, beta 3.5
+Your (log) guess is NaN +/- NaN
+o.trialsPerRun 80
+o.xHeightDeg 1.03 deg (traditional typographer's x-height)
+o.HHeightDeg 1.03 deg (capital H ascender height)
+o.alphabetHeightDeg 1.03 deg (bounding box for letters used, including any ascenders and descenders)
+log E1/deg^2 -0.25, where E1 is energy at unit contrast.
+*** '.' response. Run terminated.
+Mean duration NaN +/- NaN s (sd over 0 trials).
+Mean luminance 154.4 cd/m^2
+Run    1 of 1.  0 trials. NaN% right. Inf s/trial. Threshold+/-sd log(contrast) -0.50+/-1.30, contrast 0.31623, log E/N Inf, efficiency NaN

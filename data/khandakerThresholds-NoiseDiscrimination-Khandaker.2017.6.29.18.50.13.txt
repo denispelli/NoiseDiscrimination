@@ -1,0 +1,14 @@
+khandakerThresholds-NoiseDiscrimination-Khandaker.2017.6.29.18.50.13
+khandakerThresholds-NoiseDiscrimination 29-Jun-2017 18:50:12
+observer Khandaker, task identify, alternatives 9,  beta NaN,
+Reducing requested o.noiseRadiusDeg (Inf deg) to 20.4 deg, the max possible.
+Computer Denis's MacBook Pro 5K, MacBookPro11,5, screen 0, 864x540, 33.1x20.6 cm
+Computer account Denis Pelli.
+Denis's MacBook Pro 5K MacBookPro11,5 calibrated by Denis Pelli on 24-Feb-2017 02:58:01.
+denis in room 406, room lights on, at night.
+cal.ScreenConfigureDisplayBrightnessWorks=1;
+cal.profile='Color LCD';
+Turning autobrightness off. Setting "brightness" to 1.00, on a scale of 0.0 to 1.0;
+Using tiny window for debugging.
+RMS difference between identity and read-back of hardware CLUT (1024x3): 0.000000013
+Size of cal.gamma 256 3

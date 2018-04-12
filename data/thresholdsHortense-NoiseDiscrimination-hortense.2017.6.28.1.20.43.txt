@@ -1,0 +1,42 @@
+thresholdsHortense-NoiseDiscrimination-hortense.2017.6.28.1.20.43
+thresholdsHortense-NoiseDiscrimination 28-Jun-2017 01:20:43
+observer hortense, task identify, alternatives 9,  beta NaN,
+Reducing requested o.noiseRadiusDeg (Inf deg) to 12.2 deg, the max possible.
+Computer Santayana, MacBookAir6,2, screen 0, 576x360, 28.5x17.8 cm
+Computer account Denis Pelli.
+Santayana MacBookAir6,2 calibrated by Denis Pelli on 14-May-2015 15:52:44.
+denis in lab. Added gamma table Feb 22, 2017. Estimated G from gamma table.
+cal.ScreenConfigureDisplayBrightnessWorks=1;
+cal.profile='Color LCD';
+Turning autobrightness off. Setting "brightness" to 1.00, on a scale of 0.0 to 1.0;
+Using tiny window for debugging.
+RMS difference between identity and read-back of hardware CLUT (1024x3): 0.000563956
+Size of cal.gamma 2048 3
+Observer is using right eye.
+Offscreen fixation mark (70.0,0.0) cm from near point of display.
+Fixation cross is blanked near target. No delay in showing fixation after target.
+Frame rate 59.9 Hz.
+o.pixPerDeg 24.8, o.viewingDistanceCm 70.0
+Minimum letter resolution is 8 checks.
+o.font Sloan
+o.targetHeightPix 200, o.noiseCheckPix 10, o.durationSec 0.20 s
+o.targetModulates luminance
+o.noiseType gaussian, o.noiseSD 0.160, o.annularNoiseSD 0.160
+Noise height 188.30 deg. Noise hole 188.30 deg. Height is 23.37T and hole is 23.37T, where T is target height.
+Target height is 20.0 checks, 8.1 deg.
+Letter size 8.1 deg, check size 0.403 deg.
+Nominal letter size is 8.06 deg. See o.alphabetHeightDeg below for actual size. 
+No crop marks.
+Target is at (-60.0,0.0) deg, (0.50 0.50) in unit square. Using off-screen fixation mark.
+Dynamic noise log N/(s deg^2)=-4.16, where N is power spectral density in s deg^2.
+pThreshold 0.75, beta 3.5
+Your (log) guess is NaN +/- NaN
+o.trialsPerRun 40
+o.xHeightDeg 8.06 deg (traditional typographer's x-height)
+o.HHeightDeg 8.06 deg (capital H ascender height)
+o.alphabetHeightDeg 8.06 deg (bounding box for letters used, including any ascenders and descenders)
+log E1/deg^2 1.55, where E1 is energy at unit contrast.
+User typed ESCAPE. Run terminated.
+Mean duration 0.200 +/- 0.000 s (sd over 3 trials).
+Mean luminance 156.0 cd/m^2
+Run    1 of 1.  3 trials. 67% right. 6.679 s/trial. Threshold+/-sd log(contrast) -0.79+/-0.45, contrast 0.16360, log E/N 4.14, efficiency NaN

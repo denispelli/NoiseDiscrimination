@@ -1,0 +1,66 @@
+thresholdsAprilBug-NoiseDiscrimination-satrianna.2017.5.30.19.23.6
+thresholdsAprilBug-NoiseDiscrimination 30-May-2017 19:23:06
+observer satrianna, task identify, alternatives 9,  beta NaN,
+Reducing requested o.noiseRadiusDeg (Inf deg) to 14.3 deg, the max possible.
+Computer Denis's MacBook Pro 5K, MacBookPro11,5, screen 0, 1728x1080, 33.1x20.6 cm
+Computer account Denis Pelli.
+Denis's MacBook Pro 5K MacBookPro11,5 calibrated by Denis Pelli on 24-Feb-2017 02:58:01.
+denis in room 406, room lights on, at night.
+cal.ScreenConfigureDisplayBrightnessWorks=1;
+cal.profile='Color LCD';
+Turning autobrightness off. Setting "brightness" to 1.00, on a scale of 0.0 to 1.0;
+Using tiny window for debugging.
+Difference between identity and read-back of hardware CLUT (1024x3): mean 0.000000010, sd 0.000000016
+Size of cal.gamma 256 3
+Line 907: o.contrast NaN, LoadNormalizedGammaTable 0.5*range/mean=0.987
+Observer is using right eye.
+NOTE: Adjusting o.nearPointXYInUnitSquare from [0.05 0.50] to [0.11 0.50] to fit 4.1 deg target (with 0.25 o.targetMargin) on screen.Offscreen fixation mark (36.2,0.0) cm from near point of display.
+Fixation cross is blanked during and until 0.60 s after target. No selective blanking near target. 
+Frame rate 59.9 Hz.
+o.pixPerDeg 64.1, o.distanceCm 70.0
+Minimum letter resolution is 8 checks.
+o.font Sloan
+o.targetHeightPix 260, o.noiseCheckPix 13, o.durationSec 0.20 s
+o.targetModulates luminance
+o.noiseType gaussian, o.noiseSD 0.160, o.annularNoiseSD 0.160
+Noise height 109.37 deg. Noise hole 109.37 deg. Height is 26.97T and hole is 26.97T, where T is target height.
+Target height is 20.0 checks, 4.1 deg.
+Letter size 4.1 deg, check size 0.203 deg.
+Nominal letter size is 4.06 deg. See o.alphabetHeightDeg below for actual size. 
+No crop marks.
+Target is at (-30.0,0.0) deg, (0.11 0.50) in unit square. Using off-screen fixation mark.
+Dynamic noise log N/(s deg^2)=-4.76, where N is power spectral density in s deg^2.
+pThreshold 0.75, beta 3.5
+Your (log) guess is NaN +/- NaN
+o.trialsPerRun 50
+o.xHeightDeg 4.06 deg (traditional typographer's x-height)
+o.HHeightDeg 4.06 deg (capital H ascender height)
+o.alphabetHeightDeg 4.06 deg (bounding box for letters used, including any ascenders and descenders)
+log E1/deg^2 0.96, where E1 is energy at unit contrast.
+Assess contrast: Desired o.contrast of -0.416 will be rendered as -0.415 (estimated).
+Line 2442: o.contrast -0.416, LoadNormalizedGammaTable 0.5*range/mean=0.781
+Assess contrast: Desired o.contrast of -0.060 will be rendered as -0.061 (estimated).
+Line 2442: o.contrast -0.060, LoadNormalizedGammaTable 0.5*range/mean=0.425
+Assess contrast: Desired o.contrast of -0.265 will be rendered as -0.265 (estimated).
+Line 2442: o.contrast -0.265, LoadNormalizedGammaTable 0.5*range/mean=0.631
+Assess contrast: Desired o.contrast of -0.167 will be rendered as -0.169 (estimated).
+Line 2442: o.contrast -0.167, LoadNormalizedGammaTable 0.5*range/mean=0.533
+Assess contrast: Desired o.contrast of -0.126 will be rendered as -0.125 (estimated).
+Line 2442: o.contrast -0.126, LoadNormalizedGammaTable 0.5*range/mean=0.491
+Assess contrast: Desired o.contrast of -0.103 will be rendered as -0.104 (estimated).
+Line 2442: o.contrast -0.103, LoadNormalizedGammaTable 0.5*range/mean=0.469
+Assess contrast: Desired o.contrast of -0.089 will be rendered as -0.090 (estimated).
+Line 2442: o.contrast -0.089, LoadNormalizedGammaTable 0.5*range/mean=0.454
+Assess contrast: Desired o.contrast of -0.079 will be rendered as -0.078 (estimated).
+Line 2442: o.contrast -0.079, LoadNormalizedGammaTable 0.5*range/mean=0.444
+Assess contrast: Desired o.contrast of -0.071 will be rendered as -0.073 (estimated).
+Line 2442: o.contrast -0.071, LoadNormalizedGammaTable 0.5*range/mean=0.437
+Assess contrast: Desired o.contrast of -0.065 will be rendered as -0.065 (estimated).
+Line 2442: o.contrast -0.065, LoadNormalizedGammaTable 0.5*range/mean=0.430
+Assess contrast: Desired o.contrast of -0.058 will be rendered as -0.057 (estimated).
+Line 2442: o.contrast -0.058, LoadNormalizedGammaTable 0.5*range/mean=0.424
+*** '.' response. Run terminated.
+Mean duration 0.200 +/- 0.000 s (sd over 10 trials).
+Mean luminance 156.0 cd/m^2
+Run    1 of 1.  10 trials. 90% right. 4.026 s/trial. Threshold+/-sd log(contrast) -1.48+/-0.51, contrast 0.03273, log E/N 2.74, efficiency NaN
+WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.

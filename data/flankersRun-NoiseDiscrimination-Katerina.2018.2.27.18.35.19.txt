@@ -1,0 +1,44 @@
+flankersRun-NoiseDiscrimination-Katerina.2018.2.27.18.35.19
+flankersRun-NoiseDiscrimination 27-Feb-2018 18:35:18
+observer Katerina, task identify, alternatives 9,  steepness ,
+Reducing requested o.noiseRadiusDeg (Inf deg) to 42.2 deg, the max possible.
+Computer iMac5k-PelliLab, iMac15,1, screen 0, 5120x2880, 59.9x34.0 cm
+Computer account Denis Pelli.
+iMac5k-PelliLab iMac15,1 calibrated by Denis Pelli on 27-Feb-2018 18:28:58.
+denis, in lab, room lights on
+cal.ScreenConfigureDisplayBrightnessWorks=0;
+cal.profile='iMac';
+o.drawTextPlugin true % Need true for accurate text rendering.
+o.beamPositionQueries true % true for best timing.
+o.psychtoolboxKernelDriverLoaded true % true for best timing.
+RMS difference between identity and read-back of hardware CLUT (256x3): 0.000000013
+Size of cal.gamma 2048 3
+Observer is using right eye.
+Fixation cross is blanked near target. No delay in showing fixation after target.
+Frame rate 60.0 Hz.
+o.pixPerDeg 60.0, o.viewingDistanceCm 40.0
+Minimum letter resolution is 8 checks.
+o.font Sloan
+o.targetHeightPix 120, o.targetCheckPix 6, o.noiseCheckPix 6, o.targetDurationSec 0.20 s
+o.targetModulates luminance
+o.thresholdParameter flankerContrast
+o.noiseType gaussian, o.noiseSD 0.000, o.annularNoiseSD 0.000
+Noise height 170.70 deg. Noise hole 84.45 deg. Height is 85.32T and hole is 42.21T, where T is target height.
+Adding four flankers at center spacing of 180 pix=3.0 deg=1.5x letter height. Dark contrast -0.850 (nan means same as target).
+Target height 2.0 deg is Letter size 2.0 deg, targetCheck 0.100 deg, noiseCheck 0.100 deg.
+Nominal letter size is 2.00 deg. See o.alphabetHeightDeg below for actual size. 
+No crop marks.
+Target is at (20.0 0.0) deg, (0.50 0.50) in unit square. Using on-screen fixation mark.
+Dynamic noise power spectral density N s deg^2 log=-Inf
+pThreshold 0.75, steepness 3.5
+o.trialsPerRun 40
+o.xHeightDeg 2.00 deg (traditional typographer's x-height)
+o.HHeightDeg 2.00 deg (capital H ascender height)
+o.alphabetHeightDeg 2.00 deg (bounding box for letters used, including any ascenders and descenders)
+log E1/deg^2 0.34, where E1 is energy at unit contrast.
+Log guess -0.50±2.00
+WARNING: Signal duration requested 0.200 s, measured 0.217 s, and likely 0.217 s, an excess of 1 frames.
+Mean target duration 0.200±0.003 s (sd over 40 trials).
+Mean luminance 241.6 cd/m^2, which filter reduces to 241.60 cd/m^2.
+Run    1 of 1.  40 trials. 25% right. 4.972 s/trial. Threshold±sd log contrast -0.55±0.36, contrast -0.2849, log E/N Inf, efficiency NaN
+WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.

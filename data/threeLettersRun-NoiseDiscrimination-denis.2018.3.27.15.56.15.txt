@@ -1,0 +1,83 @@
+threeLettersRun-NoiseDiscrimination-denis.2018.3.27.15.56.15
+threeLettersRun-NoiseDiscrimination 27-Mar-2018 15:56:14
+observer denis, task identifyAll, alternatives 9,  steepness ,
+Reducing requested o.noiseRadiusDeg (Inf deg) to 20.4 deg, the max possible.
+Computer Deniss-MacBook-Pro-5K, MacBookPro11,5, screen 0, 2880x1800, 33.1x20.6 cm
+Computer account Denis Pelli.
+Deniss-MacBook-Pro-5K MacBookPro11,5 calibrated by Denis Pelli on 20-Nov-2017 18:55:04.
+denis, my office, room lights on
+cal.ScreenConfigureDisplayBrightnessWorks=0;
+cal.profile='CIE RGB';
+o.drawTextPlugin true % Need true for accurate text rendering.
+o.beamPositionQueries true % true for best timing.
+o.psychtoolboxKernelDriverLoaded true % true for best timing.
+RMS difference between identity and read-back of hardware CLUT (1024x3): 0.000000013
+Size of cal.gamma 2048 3
+Observer is using both eyes.
+Fixation cross is blanked near target. No delay in showing fixation after target.
+Frame rate 58.8 Hz.
+o.pixPerDeg 76.3, o.viewingDistanceCm 50.0
+Minimum letter resolution is 8 checks.
+o.font Sloan
+o.targetHeightPix 160, o.targetCheckPix 8, o.noiseCheckPix 8, o.targetDurationSec 0.20 s
+o.targetModulates luminance
+o.thresholdParameter flankerContrast
+o.noiseType gaussian, o.noiseSD 0.000, o.annularNoiseSD 0.000
+Noise height 79.10 deg. Noise hole 42.85 deg. Height is 37.73T and hole is 20.44T, where T is target height.
+Adding radial flankers with nominal spacing of 229 pix=3.0 deg=1.4x letter height. Dark contrast -0.060 (nan means same as target).
+Target height 2.1 deg is Letter size 2.1 deg, targetCheck 0.105 deg, noiseCheck 0.105 deg.
+Nominal letter size is 2.10 deg. See o.alphabetHeightDeg below for actual size. 
+No crop marks.
+Target is at (15.0 0.0) deg, (0.50 0.50) in unit square. Using on-screen fixation mark.
+Dynamic noise power spectral density N s deg^2 log=-Inf
+pThreshold 0.75, steepness 3.5
+o.trialsPerRun 40
+o.xHeightDeg 2.10 deg (traditional typographer's x-height)
+o.HHeightDeg 2.10 deg (capital H ascender height)
+o.alphabetHeightDeg 2.10 deg (bounding box for letters used, including any ascenders and descenders)
+log E1/deg^2 0.38, where E1 is energy at unit contrast.
+Log guess -0.50±2.00
+WARNING: Signal duration requested 0.204 s, measured 0.160 s, and likely 0.153 s, an excess of -3 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.168 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.166 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.166 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.164 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.165 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.168 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.167 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.166 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.165 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.169 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.167 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.169 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.167 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.165 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.164 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.166 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.164 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.166 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.164 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.167 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.162 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.164 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.168 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.166 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.170 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.164 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.165 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.166 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.165 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.165 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.166 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.167 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.166 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.166 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.169 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.167 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.166 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.164 s, and likely 0.170 s, an excess of -2 frames.
+WARNING: Signal duration requested 0.204 s, measured 0.167 s, and likely 0.170 s, an excess of -2 frames.
+Mean target duration 0.170±0.003 s (sd over 40 trials).
+Mean luminance 134.2 cd/m^2, which filter reduces to 134.16 cd/m^2.
+Run    1 of 1.  40 trials. 32% right. 8.521 s/trial. Threshold±sd log contrast -0.93±0.04, contrast -0.1188, log E/N Inf, efficiency NaN
+WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.

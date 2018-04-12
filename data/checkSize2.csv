@@ -1,0 +1,11 @@
+condition,experiment,eccentricityXYDeg_1,eccentricityXYDeg_2,noiseSD,pThreshold,noiseType,noiseCheckDeg,eyes,viewingDistanceCm,targetHeightDeg,targetGaborCycles,targetDurationSec,fullResolutionTarget,targetGaborPhaseDeg,E,trials,N,experimenter,observer,targetKind,E0,EE0N,Neq,targetCyclesPerDeg
+1,checkSize,0,0,0.2,0.75,gaussian,0.6,both,80,6,3,0.1,0,-90,2.03,40,0.2,Experimenter,Observer,gabor,0.03,10,0.003,0.5
+2,checkSize,0,0,0.2,0.75,gaussian,0.15,both,80,6,3,0.1,0,-90,2.03,40,0.2,Experimenter,Observer,gabor,0.03,10,0.003,0.5
+3,checkSize,0,0,0.2,0.75,gaussian,0.0375,both,80,6,3,0.1,0,-90,2.03,40,0.2,Experimenter,Observer,gabor,0.03,10,0.003,0.5
+4,checkSize,0,0,0.2,0.75,gaussian,0.01875,both,80,6,3,0.1,0,-90,2.03,40,0.2,Experimenter,Observer,gabor,0.03,10,0.003,0.5
+5,checkSize,0,0,0,0.75,gaussian,0.6,both,80,6,3,0.1,0,-90,0.03,40,0,Experimenter,Observer,gabor,,,,
+6,checkSize,0,0,0.2,0.75,gaussian,0.6,both,80,6,3,0.1,1,-90,2.03,40,0.2,Experimenter,Observer,gabor,1.03,5,0.206,0.5
+7,checkSize,0,0,0.2,0.75,gaussian,0.15,both,80,6,3,0.1,1,-90,2.03,40,0.2,Experimenter,Observer,gabor,1.03,5,0.206,0.5
+8,checkSize,0,0,0.2,0.75,gaussian,0.0375,both,80,6,3,0.1,1,-90,2.03,40,0.2,Experimenter,Observer,gabor,1.03,5,0.206,0.5
+9,checkSize,0,0,0.2,0.75,gaussian,0.01875,both,80,6,3,0.1,1,-90,3.03,40,0.2,Experimenter,Observer,gabor,1.03,10,0.103,0.5
+10,checkSize,0,0,0,0.75,gaussian,0.6,both,80,6,3,0.1,1,-90,1.03,40,0,Experimenter,Observer,gabor,,,,

@@ -1,0 +1,14 @@
+thresholdsHortense-NoiseDiscrimination-hortense.2017.7.17.18.34.54
+thresholdsHortense-NoiseDiscrimination 17-Jul-2017 18:34:54
+observer hortense, task identify, alternatives 9,  beta NaN,
+Reducing requested o.noiseRadiusDeg (Inf deg) to 23.7 deg, the max possible.
+Computer pelliamdimac, iMac15,1, screen 0, 1280x720, 60.2x34.1 cm
+Computer account Denis Pelli.
+pelliamdimac iMac15,1 calibrated by Lab on 22-Feb-2017 11:13:36.
+Done by Ning, Feb.22.2017
+cal.ScreenConfigureDisplayBrightnessWorks=1;
+cal.profile='iMac';
+Turning autobrightness off. Setting "brightness" to 1.00, on a scale of 0.0 to 1.0;
+Using tiny window for debugging.
+RMS difference between identity and read-back of hardware CLUT (256x3): 0.002257484
+Size of cal.gamma 2048 3

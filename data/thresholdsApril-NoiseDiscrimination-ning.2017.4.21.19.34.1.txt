@@ -1,0 +1,10 @@
+thresholdsApril-NoiseDiscrimination-ning.2017.4.21.19.34.1
+thresholdsApril-NoiseDiscrimination 21-Apr-2017 19:34:00
+observer ning, task identify, alternatives 9,  beta 3.5,
+Reducing requested o.noiseRadiusDeg (12.2 deg) to 12.2 deg, the max possible.
+Computer Santayana, MacBookAir6,2, screen 0, 1440x900, 28.5x17.8 cm
+Computer account Denis Pelli.
+Santayana MacBookAir6,2 calibrated by Denis Pelli on 14-May-2015 15:52:44.
+denis in lab. Added gamma table Feb 22, 2017. Estimated G from gamma table.
+cal.ScreenConfigureDisplayBrightnessWorks=1;
+cal.profile='Color LCD';

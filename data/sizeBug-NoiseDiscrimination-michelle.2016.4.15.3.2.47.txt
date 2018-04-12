@@ -1,0 +1,31 @@
+sizeBug-NoiseDiscrimination-michelle.2016.4.15.3.2.47
+sizeBug-NoiseDiscrimination 15-Apr-2016 03:02:46
+observer michelle, task 4afc, alternatives 9,  beta NaN,
+Computer pelliamdimac, iMac15,1, screen 0, 3200x1800, 60.2x34.1 cm
+Computer account Denis Pelli.
+pelliamdimac iMac15,1 calibrated by Lab on 28-Aug-2015 17:45:04.
+calibration done by Michelle Qiu at 5:45 PM on August 28, 2015
+cal.ScreenConfigureDisplayBrightnessWorks=1;
+cal.profile='iMac';
+Turning autobrightness off. Setting "brightness" to 1.00, on a scale of 0.0 to 1.0;
+Fixation cross is blanked near target. No delay in showing fixation after target.
+Frame rate 60.0 Hz.
+o.pixPerDeg 46.6, o.distanceCm 50.0
+o.targetHeightPix 510, o.noiseCheckPix 17, o.durationSec 0.20 s
+o.targetModulates luminance
+o.noiseType gaussian, o.noiseSD 0.200, o.annularNoiseSD 0.200
+Noise height 749.69 deg. Noise hole 749.69 deg. Height is 68.54T and hole is 68.54T, where T is target height.
+Target height is 30.0 checks, 10.9 deg.
+Square size 10.90 deg, central check size 0.365 deg.
+o.gapFraction4afc 0.03, gap 0.33 deg
+No crop marks.
+Showing response numbers.
+Eccentricity 0.0 deg. Using fixation mark. Target offset 0.00 of screen width.
+log N/deg^2 -2.27, where N is power spectral density
+pThreshold 0.75, beta 3.5
+Your (log) guess is NaN ± NaN
+o.trialsPerRun 40
+log E1/deg^2 2.08, where E1 is energy at unit contrast.
+*** 5 clicks. Run terminated.
+Run    1 of 1.  4 trials. 50% right. 7.821 s/trial. Threshold±sd log(contrast) 0.05±0.66, contrast 1.11850, log E/N 4.45, efficiency NaN
+WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.

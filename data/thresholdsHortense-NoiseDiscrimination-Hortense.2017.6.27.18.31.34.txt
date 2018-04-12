@@ -1,0 +1,9 @@
+thresholdsHortense-NoiseDiscrimination-Hortense.2017.6.27.18.31.34
+thresholdsHortense-NoiseDiscrimination 27-Jun-2017 18:31:34
+observer Hortense, task identify, alternatives 9,  beta NaN,
+Computer Santayana, MacBookAir6,2, screen 0, 1440x900, 28.5x17.8 cm
+Computer account Denis Pelli.
+Santayana MacBookAir6,2 calibrated by Denis Pelli on 14-May-2015 15:52:44.
+denis in lab. Added gamma table Feb 22, 2017. Estimated G from gamma table.
+cal.ScreenConfigureDisplayBrightnessWorks=1;
+cal.profile='Color LCD';
