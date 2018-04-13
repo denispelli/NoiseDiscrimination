@@ -731,7 +731,7 @@ o.deviceIndex=[]; % Default. This runs MUCH more reliably. Not sure why.
 
 %% READ USER-SUPPLIED o PARAMETERS
 if false
-    % ACCEPT ALL o PARAMETERS.
+    % ACCEPT ALL o FIELDS.
     % All fields in the user-supplied "oIn" overwrite corresponding fields in "o".
     fields=fieldnames(oIn);
     for i=1:length(fields)
@@ -739,7 +739,7 @@ if false
         o.(field)=oIn.(field);
     end
 else
-    % ACCEPT ONLY KNOWN o PARAMETERS.
+    % ACCEPT ONLY KNOWN o FIELDS.
     % For each condition, all fields in the user-supplied "oIn" overwrite
     % corresponding fields in "o". We ignore any field in oIn that is not
     % already defined in o. If the ignored field is a known output field,
@@ -774,7 +774,9 @@ else
         'targetFont' 'targetPix' 'useSpeech'...
         'instructionalMarginPix' 'quitRun' ... % obsolete, to be removed.
         };
-    unknownFields={};
+    % Currently "conditions" is always 1, but in the future I'd like to
+    % pass several conditions at once to be run randomly interleaved.
+    % CriticalSpacing already supports this feature, and it works well.
     for condition=1:conditions
         oo(condition)=o;
         inputFields=fieldnames(oIn(condition));
@@ -785,16 +787,15 @@ else
                 % Overwrite initial value.
                 oo(condition).(inputFields{i})=oIn(condition).(inputFields{i});
             elseif ~ismember(inputFields{i},knownOutputFields)
-                % Report unknown field
-                unknownFields{end+1}=inputFields{i};
+                % Record unknown field, and issue error below, with a
+                % complete list of unknown fields in the input struct.
                 oo(condition).unknownFields{end+1}=inputFields{i};
             end
         end
         oo(condition).unknownFields=unique(oo(condition).unknownFields);
     end
-    unknownFields=unique(unknownFields);
-    if ~isempty(unknownFields)
-        error(['Unknown field(s) in input struct:' sprintf(' o.%s',unknownFields{:}) '.']);
+    if ~isempty(o.unknownFields)
+        error(['Unknown field(s) in input struct:' sprintf(' o.%s',o.unknownFields{:}) '.']);
     end
     o=oo(1);
 end
