@@ -1,4 +1,8 @@
 %% Analyze the data collected by EvsNRun.
+% It seems that NoiseDiscrimination only saves "o" and "cal" in MAT files,
+% but Veena's data have "oo". Is "oo" saved by EvsNRUN? Looking at EvsNRun,
+% I see it saves "oo" and "cal" in a *summary.MAT file, but Veena doesn't
+% seem to have such files.
 experiment='EvsN';
 if ~exist('skipDataCollection')
    skipDataCollection=false;
