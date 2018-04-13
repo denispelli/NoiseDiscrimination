@@ -777,6 +777,7 @@ else
     % Currently "conditions" is always 1, but in the future I'd like to
     % pass several conditions at once to be run randomly interleaved.
     % CriticalSpacing already supports this feature, and it works well.
+    unknownFields={};
     for condition=1:conditions
         oo(condition)=o;
         inputFields=fieldnames(oIn(condition));
@@ -793,9 +794,10 @@ else
             end
         end
         oo(condition).unknownFields=unique(oo(condition).unknownFields);
-    end
-    if ~isempty(o.unknownFields)
-        error(['Unknown field(s) in input struct:' sprintf(' o.%s',o.unknownFields{:}) '.']);
+        unknownFields=unique([unknownFields oo(condition).unknownFields]);
+    end % for condition=1:conditions
+    if ~isempty(unknownFields)
+        error(['Unknown field(s) in input struct:' sprintf(' o.%s',unknownFields{:}) '.']);
     end
     o=oo(1);
 end
