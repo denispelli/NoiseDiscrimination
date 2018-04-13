@@ -1,12 +1,12 @@
 %% Analyze the data collected by EvsNRun.
 experiment='EvsN';
 if ~exist('skipDataCollection')
-   skipDataCollection=0;
+   skipDataCollection=false;
 end
 if ~skipDataCollection
    dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
    cd(dataFolder);
-   matFiles=dir(fullfile(dataFolder,[experiment 'Run*.mat']));
+   matFiles=dir(fullfile(dataFolder,[experiment 'Run-NoiseDiscrimination*.mat']));
    clear data;
    for i = 1:length(matFiles)
       % Extract the desired fields into "data", one row per threshold.
