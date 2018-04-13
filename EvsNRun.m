@@ -83,7 +83,7 @@ if false
     o.questPlusPlot=true;
 end
 
-%% SAVE CONDITIONS IN oo STRUCT
+%% SPECIFY CONDITIONS IN oo STRUCT
 oo={};
 % THREE DOMAINS: photon, cortical, ganglion
 for domain=0:3
@@ -172,7 +172,7 @@ vars={'condition' 'experiment' 'conditionName' ...
     'targetDurationSec' 'targetCyclesPerDeg' ...
     'targetHeightDeg' 'targetGaborCycles' 'noiseSD' 'noiseType'};
 tt=table;
-for i=14:length(oo)
+for i=1:length(oo)
     t=struct2table(oo{i},'AsArray',true);
     tt(i,:)=t(1,vars);
 end
