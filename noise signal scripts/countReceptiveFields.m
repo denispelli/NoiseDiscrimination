@@ -23,7 +23,7 @@ o.eccentricityXYDeg=[0 0];
 o.noiseCheckDeg=0.37; % gives noiseCheckPix==13 on MacBook Air
 o.targetHeightDeg=30*o.noiseCheckDeg;
 o.noiseRadiusDeg=o.targetHeightDeg/2;
-o.annularNoiseSD=0; % Typically nan (i.e. use o.noiseSD) or 0.2. 
+o.annularNoiseSD=0; % Typically nan (i.e. use o.noiseSD) or 0.2.
 o.viewingDistanceCm=45;
 o.noiseSD=0.2;
 o.noiseType='gaussian';
@@ -41,7 +41,7 @@ o.idealEOverNThreshold=10^1.12;
 % end
 o.speakInstructions=0;
 % o.trialsPerRun=1000;
-logEOverN=nan;
+o.fixationCrossDrawnOnStimulus=true;
 
 %% THE oo ARRAY STRUCT HAS ONE ELEMENT PER CONDITION
 oo={};
@@ -52,7 +52,6 @@ if true
     o.targetKind='letter';
     o.targetModulates='noise';  % Display a noise increment.
     o.contrast=-1;
-    o.fixationCrossDrawnOnStimulus=true;
     o.fixationCrossDeg=inf; % Typically 1 or inf. Make this at least 2 deg for scotopic testing, since the fovea is blind scotopically.
     o.fixationCrossBlankedNearTarget=true; % false or true.
     o.blankingRadiusReTargetHeight=0.5;
@@ -65,7 +64,7 @@ o.targetModulates='noise';  % Display a noise increment.
 o.fixationCrossDrawnOnStimulus=true;
 o.fixationCrossDeg=1; % Typically 1 or inf. Make this at least 2 deg for scotopic testing, since the fovea is blind scotopically.
 o.fixationCrossBlankedNearTarget=false; % false or true.
-    o.blankingRadiusReTargetHeight=0;
+o.blankingRadiusReTargetHeight=0;
 oo{end+1}=o;
 
 o.condition='4afc luminance';
@@ -74,6 +73,7 @@ o.targetModulates='luminance'; % Display a luminance decrement.
 o.fixationCrossDrawnOnStimulus=true;
 o.fixationCrossDeg=1; % Typically 1 or inf. Make this at least 2 deg for scotopic testing, since the fovea is blind scotopically.
 o.fixationCrossBlankedNearTarget=false; % false or true.
+o.blankingRadiusReTargetHeight=0;
 oo{end+1}=o;
 
 for oi=1:length(oo)
@@ -85,31 +85,32 @@ for oi=1:length(oo)
 end
 
 %% RUN THE EXPERIMENT
-    oo=RunExperiment(oo);
-    
-    %% COLLECT STATS
-    i=1;
-    for oi=1:length(oo)
-        o=oo{oi};
-        switch o.targetModulates
-            case 'noise'
-                if isfield(o,'logApproxRequiredNumber')
-                    logApproxRequiredNumber(i)=o.logApproxRequiredNumber;
-                    o.efficiency=10^(o.logApproxRequiredNumber-3.11);
-                else
-                    logApproxRequiredNumber(i)=nan;
-                    o.efficiency=nan;
-                end
-            case 'luminance'
-                if isfield(o,'EOverN')
-                    logEOverN(i)=log10(o.EOverN);
-                else
-                    logEOverN(i)=nan;
-                end
-        end
-        oo{oi}=o;
+oo=RunExperiment(oo);
+
+%% COLLECT STATS
+clear logEOverN approxRequiredNumber logApproxRequiredNumber
+i=1;
+for oi=1:length(oo)
+    o=oo{oi};
+    switch o.targetModulates
+        case 'noise'
+            if isfield(o,'logApproxRequiredNumber')
+                logApproxRequiredNumber(i)=o.logApproxRequiredNumber;
+                o.efficiency=10^(o.logApproxRequiredNumber-3.11);
+            else
+                logApproxRequiredNumber(i)=nan;
+                o.efficiency=nan;
+            end
+        case 'luminance'
+            if isfield(o,'EOverN')
+                logEOverN(i)=log10(o.EOverN);
+            else
+                logEOverN(i)=nan;
+            end
     end
-    
+    oo{oi}=o;
+end
+
 
 %% PRINT RESULTS
 fprintf('log n %.2f ± %.2f\n',nanmean(logApproxRequiredNumber),std(logApproxRequiredNumber)/sqrt(length(logApproxRequiredNumber)));
