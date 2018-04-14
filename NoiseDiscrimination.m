@@ -119,6 +119,8 @@ function o=NoiseDiscrimination(oIn)
 % when I access it in a subrouting, it's empty or undefined (i don't
 % remember), even though it's declared as global in both. Several other
 % variables are also declared global and work as expected.
+% 5. ModelObserver is sort of working, but is typically getting much less
+% than 50% right. 
 
 
 %% EXTRA DOCUMENTATION
