@@ -3,6 +3,11 @@
 clear o
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 
+% o.experimenter='junk';
+% o.observer='junk';
+% o.observer='ideal';
+o.trialsPerBlock=40;
+
 o.experiment='countReceptiveFields';
 o.blankingRadiusReTargetHeight= 0;
 o.blankingRadiusReEccentricity= 0;
@@ -37,9 +42,6 @@ o.idealEOverNThreshold=10^1.12;
 %         o.idealEOverNThreshold=o.EOverN;
 %     end
 % end
-o.experimenter='junk';
-o.observer='junk';
-o.observer='ideal';
 o.speakInstructions=0;
 % o.trialsPerRun=1000;
 logEOverN=nan;
