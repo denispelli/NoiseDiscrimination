@@ -45,6 +45,7 @@ else
 end
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 % o.observer='ideal';
+% o.trialsPerBlock=100;
 
 %% SPECIFY BASIC CONDITION
 o.experiment='EvsN';
