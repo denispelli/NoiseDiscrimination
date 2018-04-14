@@ -460,20 +460,15 @@ global window fixationLines fixationCrossWeightPix labelBounds ...
 % many of their formerly locally variables need to either be made global or
 % become fields of the o struct.
 persistent oOld % Saved from previous block. Skip prompts that were the same in previous block.
-addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder in same directory as this M file
-addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
+addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % Takes 0.1 s. Folder in same directory as this M file. .
+addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % Takes 0.1 s. Folder in same directory as this M file
 % echo_executing_commands(2, 'local');
 % diary ./diary.log
 % [~, vStruct]=PsychtoolboxVersion;
 % if IsOSX && vStruct.major*1000+vStruct.minor*100+vStruct.point < 3013
 %    error('Your Mac OSX Psychtoolbox is too old. We need at least Version 3.0.13. Please run: UpdatePsychtoolbox');
 % end
-rng('shuffle'); % Use time to seed the random number generator.
-if ismac && ~ScriptingOkShowPermission
-    error(['Please give MATLAB permission to control the computer. '...
-        'Use System Preferences:Security and Privacy:Privacy:Accessibility. '...
-        'You''ll need admin privileges to do this.']);
-end
+rng('shuffle'); % Use time to seed the random number generator. TAKES 0.01 s.
 plusMinusChar=char(177); % Use this instead of literal plus minus sign to prevent corruption of this non-ASCII character.
 escapeChar=char(27);
 graveAccentChar='`';
@@ -534,7 +529,7 @@ o.observer=''; % Name of person or algorithm.
 % o.observer='blackshot'; % Existing algorithm instead of person.
 % o.observer='maximum'; % Existing algorithm instead of person.
 % o.observer='ideal'; % Existing algorithm instead of person.
-algorithmicObservers={'ideal', 'brightnessSeeker', 'blackshot', 'maximum'};
+o.algorithmicObservers={'ideal', 'brightnessSeeker', 'blackshot', 'maximum'};
 o.experimenter='';
 o.eyes='both'; % 'left', 'right', 'both', or 'one', which asks user to specify at runtime.
 o.luminanceTransmission=1; % Less than one for dark glasses or neutral density filter.
@@ -860,6 +855,11 @@ end
 % end
 
 %% SET UP MISCELLANEOUS
+if ~ismember(o.observer,o.algorithmicObservers) && ismac && ~ScriptingOkShowPermission
+    error(['Please give MATLAB permission to control the computer. '...
+        'Use System Preferences:Security and Privacy:Privacy:Accessibility. '...
+        'You''ll need admin privileges to do this.']);
+end
 %onCleanupInstance=onCleanup(@()ListenChar;sca;window=[];); % clears screen and restores keyboard when function terminated.
 useImresize=exist('imresize','file'); % Requires the Image Processing Toolbox.
 if isnan(o.annularNoiseSD)
@@ -921,12 +921,12 @@ end
 % an error that was not caught by a try-catch. So we assume that window is
 % closed before the first block.
 if o.blockNumber==1
-   sca;
+%    sca; % TAKES 0.3 s.
    window=[];
 end
 
 %% Only call Brightness while no window is open.
-if isempty(window)
+if isempty(window) && ~ismember(o.observer,o.algorithmicObservers)
    useBrightnessFunction=true;
    if useBrightnessFunction
       Brightness(cal.screen,cal.brightnessSetting); % Set brightness.
@@ -984,7 +984,7 @@ try
     if o.useFractionOfScreen
         ffprintf(ff,'Using tiny window for debugging.\n');
     end
-    if isempty(window) && ~ismember(o.observer,algorithmicObservers)
+    if isempty(window) && ~ismember(o.observer,o.algorithmicObservers)
         % If the observer is human, we need an open window.
         PsychImaging('PrepareConfiguration');
         if o.flipScreenHorizontally
@@ -1398,7 +1398,7 @@ try
             idealT64=-0.30;
     end
     switch o.observer
-        case algorithmicObservers
+        case o.algorithmicObservers
             if isempty(o.steepness) || ~isfinite(o.steepness)
                 o.steepness=1.7;
             end
@@ -1446,7 +1446,7 @@ try
     ffprintf(ff,'%s %s calibrated by %s on %s.\n',cal.localHostName,cal.macModelName,cal.calibratedBy,cal.datestr);
     ffprintf(ff,'%s\n',cal.notes);
     ffprintf(ff,'cal.ScreenConfigureDisplayBrightnessWorks=%.0f;\n',cal.ScreenConfigureDisplayBrightnessWorks);
-    if ismac && isfield(cal,'profile')
+    if ~ismember(o.observer,o.algorithmicObservers) && ismac && isfield(cal,'profile')
         ffprintf(ff,'cal.profile=''%s'';\n',cal.profile);
         oldProfile=ScreenProfile(cal.screen);
         if streq(oldProfile,cal.profile)
@@ -2066,7 +2066,7 @@ try
         ffprintf(ff,'Nominal letter size is %.2f deg. See o.alphabetHeightDeg below for actual size. \n',o.targetHeightDeg);
     end
     if streq(o.task,'4afc')
-        ffprintf(ff,'o.gapFraction4afc %.2f, gapPix %.2f deg\n',o.gapFraction4afc,gapPix/o.pixPerDeg);
+        ffprintf(ff,'o.gapFraction4afc %.2f, gapPix %.1f %.2f deg\n',o.gapFraction4afc,gapPix,gapPix/o.pixPerDeg);
     end
     if o.showCropMarks
         ffprintf(ff,'Showing crop marks.\n');
@@ -2324,12 +2324,12 @@ try
             boundsRect=CenterRect(targetRect,[o.targetXYPix o.targetXYPix]);
             % targetRect not used. boundsRect used solely for the snapshot.
     end % switch o.task
-    fprintf('%d: prepare the %d signals, each %dx%d. ',MFileLineNr,o.alternatives,size(signal(1).image,1),size(signal(1).image,2));
+    fprintf('%d: Prepare the %d signals, each %dx%d. ',MFileLineNr,o.alternatives,size(signal(1).image,1),size(signal(1).image,2));
     toc
     
     % Compute o.signalIsBinary, o.signalMin, o.signalMax.
     % Image will be (o.contrast*signal+1)*o.LBackground.
-    fprintf('%d: compute o.signalMin etc. ',MFileLineNr);
+    fprintf('%d: Compute o.signalMin etc. ',MFileLineNr);
     tic;
     v=[];
     for i=1:o.alternatives
@@ -2416,7 +2416,7 @@ try
     end
     o.E1=mean(power)*(o.targetCheckPix/o.pixPerDeg)^2;
     ffprintf(ff,'log E1/deg^2 %.2f, where E1 is energy at unit contrast.\n',log10(o.E1));
-    if ismember(o.observer,algorithmicObservers)
+    if ismember(o.observer,o.algorithmicObservers)
         Screen('CloseAll');
         window=[];
         LMin=0;
@@ -2549,7 +2549,7 @@ try
     while trial<o.trialsPerBlock
         trial=trial+1;
         o.trials=trial;
-        if (trial==1 || o.skipTrial) && ~ismember(o.observer,algorithmicObservers)
+        if (trial==1 || o.skipTrial) && ~ismember(o.observer,o.algorithmicObservers)
             % WAIT UNTIL OBSERVER IS READY
             if o.skipTrial
                 o.trialsSkipped=o.trialsSkipped+1;
@@ -2727,7 +2727,7 @@ try
                     signalImageIndex=logical(FillRectInMatrix(true,sRect,zeros(o.canvasSize)));
                     locations=4;
                     location=struct('image',{[] [] [] []});
-                    rng('shuffle');
+%                     rng('shuffle'); TAKES 0.01 s.
                     if iMovieFrame == 1
                         signalLocation=randi(locations);
                         movieSaveWhich=signalLocation;
@@ -2781,7 +2781,7 @@ try
                 case {'identify' 'identifyAll' 'rate'}
                     locations=1;
                     location=struct('image',[]);
-                    rng('shuffle');
+%                     rng('shuffle'); % THIS CALL TAKES 3 ms.
                     if iMovieFrame == 1
                         whichSignal=randi(o.alternatives);
                         movieSaveWhich=whichSignal;
@@ -2797,11 +2797,11 @@ try
                     if o.noiseFrozenInBlock
                         rng(o.noiseListSeed);
                     end
-                    noise=PsychRandSample(noiseList,o.canvasSize*o.targetCheckPix/o.noiseCheckPix);
+                    noise=PsychRandSample(noiseList,o.canvasSize*o.targetCheckPix/o.noiseCheckPix);% TAKES 2 ms.
                     noise=Expand(noise,o.noiseCheckPix/o.targetCheckPix);
                     % Each pixel in "noise" now represents a targetCheck.
                     noise(~centralNoiseMask & ~annularNoiseMask)=0;
-                    noise(centralNoiseMask)=centralNoiseEnvelope(centralNoiseMask).*noise(centralNoiseMask);
+                    noise(centralNoiseMask)=centralNoiseEnvelope(centralNoiseMask).*noise(centralNoiseMask); % TAKES 1 ms.
                     canvasRect=RectOfMatrix(noise); % units of targetChecks
                     assert(all(canvasRect==[0 0 o.canvasSize(2) o.canvasSize(1)]));
                     sRect=RectOfMatrix(signal(1).image); % units of targetChecks
@@ -2839,7 +2839,7 @@ try
                             % pixel represents one targetCheck. Target is
                             % centered in that image.
                             location(1).image=ones(size(signalImage(:,:,1)));
-                            location(1).image(centralNoiseMask)=1+(o.noiseSD/o.noiseListSd)*noise(centralNoiseMask);
+                            location(1).image(centralNoiseMask)=1+(o.noiseSD/o.noiseListSd)*noise(centralNoiseMask); % TAKES 2 ms.
                             location(1).image(annularNoiseMask)=1+(o.annularNoiseSD/o.noiseListSd)*noise(annularNoiseMask);
                             location(1).image=repmat(location(1).image,1,1,length(white)); % Support color.
                             location(1).image=location(1).image+o.contrast*signalImage; % Add signal to noise.
@@ -2971,10 +2971,10 @@ try
         end
         
         %% COMPUTE CLUT
-        if ~ismember(o.observer,algorithmicObservers)
+        if ~ismember(o.observer,o.algorithmicObservers)
             if trial==1
-                % Clear screen for first trial. After the first trial, the
-                % screen is already ready for next trial.
+                % Clear screen before first trial. After the first trial,
+                % the screen is already ready for next trial.
                 Screen('FillRect',window,o.gray1);
                 Screen('FillRect',window,o.gray,o.stimulusRect);
             end
@@ -3007,7 +3007,7 @@ try
             if o.saveSnapshot && o.snapshotShowsFixationBefore && ~isempty(fixationLines)
                 Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
             end
-        end % if ~ismember(o.observer,algorithmicObservers)
+        end % if ~ismember(o.observer,o.algorithmicObservers)
         if o.measureContrast
             location=movieImage{1};
             fprintf('%d: luminance/o.LBackground',MFileLineNr);
@@ -3048,7 +3048,7 @@ try
         end % if o.measureContrast
         
         %% CONVERT IMAGE MOVIE TO TEXTURE MOVIE
-        if ~ismember(o.observer,algorithmicObservers)
+        if ~ismember(o.observer,o.algorithmicObservers)
             for iMovieFrame=1:o.movieFrames
                 location=movieImage{iMovieFrame};
                 switch o.task
@@ -3062,7 +3062,7 @@ try
                             fprintf('%d: IMAGE STATS before IndexOfLuminance. signal(%d).image: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
                                 MFileLineNr,i,size(img,1),size(img,2),size(img,3),mean(img(:)),std(img(:)),min(img(:)),max(img(:)),o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
                         end
-                        fprintf('%d: o.signalMin %.2f, o.signalMax %.2f\n',MFileLineNr,o.signalMin,o.signalMax);
+%                         fprintf('%d: o.signalMin %.2f, o.signalMax %.2f\n',MFileLineNr,o.signalMin,o.signalMax);
                         img=IndexOfLuminance(cal,img*o.LBackground)/o.maxEntry;
                         img=Expand(img,o.targetCheckPix);
                         if o.assessLinearity
@@ -3140,7 +3140,7 @@ try
                         end
                 end % switch o.task
             end % for iMovieFrame=1:o.movieFrames
-        end % if ~ismember(o.observer,algorithmicObservers)
+        end % if ~ismember(o.observer,o.algorithmicObservers)
         if o.measureContrast
             rect=Screen('Rect',movieTexture(1));
             img=Screen('GetImage',movieTexture(1),rect,'frontBuffer',1); % 1 for float, not int, colors.
@@ -3172,7 +3172,7 @@ try
         %% PLAY MOVIE
         if ~isempty(window)
             Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
-            if ~ismember(o.observer,algorithmicObservers)
+            if ~ismember(o.observer,o.algorithmicObservers)
                 Snd('Play',purr); % Pre-announce that image is up, awaiting response.
                 o.movieFrameFlipSec(1:o.movieFrames+1,trial)=nan;
                 for iMovieFrame=1:o.movieFrames
@@ -3699,7 +3699,7 @@ try
             end
         else
             response=ModelObserver(o,signal);
-        end % if ~ismember(o.observer,algorithmicObservers)
+        end % if ~ismember(o.observer,o.algorithmicObservers)
         if o.quitBlock
             break;
         end
@@ -3722,7 +3722,7 @@ try
                 isRight=response>4;
                 o.transcript.target(trial)=whichSignal;
         end
-        if ~ismember(o.observer,algorithmicObservers)
+        if ~ismember(o.observer,o.algorithmicObservers)
             switch o.task
                 case 'rate'
                     Snd('Play',okBeep);
@@ -3757,7 +3757,7 @@ try
         o.transcript.response{trial}=response;
         o.transcript.intensity(trial)=tTest;
         o.transcript.isRight{trial}=isRight;
-        if cal.ScreenConfigureDisplayBrightnessWorks
+        if cal.ScreenConfigureDisplayBrightnessWorks && ~ismember(o.observer,o.algorithmicObservers)
             %          Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
             cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
             %          Brightness(cal.screen,cal.brightnessSetting);
@@ -3872,7 +3872,7 @@ try
     
     o.targetDurationSecMean=mean(o.likelyTargetDurationSec,'omitnan');
     o.targetDurationSecSD=std(o.likelyTargetDurationSec,'omitnan');
-    if ~ismember(o.observer,algorithmicObservers)
+    if ~ismember(o.observer,o.algorithmicObservers)
         ffprintf(ff,['Mean target duration %.3f',plusMinusChar,'%.3f s (sd over %d trials).\n'],o.targetDurationSecMean,o.targetDurationSecSD,length(o.likelyTargetDurationSec));
     end
     if o.useFilter
@@ -3956,10 +3956,10 @@ try
             end
     end
     if o.speakInstructions
-        if o.quitExperiment && ~ismember(o.observer,algorithmicObservers)
+        if o.quitExperiment && ~ismember(o.observer,o.algorithmicObservers)
             Speak('QUITTING now. Done.');
         else
-            if ~o.quitBlock && o.blockNumber == o.blocksDesired && o.congratulateWhenDone && ~ismember(o.observer,algorithmicObservers)
+            if ~o.quitBlock && o.blockNumber == o.blocksDesired && o.congratulateWhenDone && ~ismember(o.observer,o.algorithmicObservers)
                 Speak('Congratulations. End of block.');
             end
         end
@@ -3997,7 +3997,8 @@ try
     % several computers, the problem is always present in MATLAB 2014a and
     % never in MATLAB 2015a. (All computers are running Mavericks.)
     % denis.pelli@nyu.edu, June 18, 2015
-    if ismac
+    if ismac && false 
+        % I disabled this in April 2018 because it takes 0.1 s.
         status=system('osascript -e ''tell application "MATLAB" to activate''');
     end
     if ~isempty(window)
