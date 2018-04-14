@@ -34,6 +34,8 @@ else
     rng(o.seed);
 end
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+o.observer='junk';
+o.experimenter='junk';
 
 %% SPECIFY BASIC CONDITION
 o.experiment='threeLetters';
@@ -53,10 +55,12 @@ o.useDynamicNoiseMovie=true;
 o.alphabetPlacement='right'; % 'top' or 'right';
 o.annularNoiseSD=0;
 o.noiseRadiusDeg=inf;
-o.annularNoiseBigRadiusDeg=inf;
-o.annularNoiseSmallRadiusDeg=0;
-o.annularNoiseEnvelopeRadiusDeg=o.flankerSpacingDeg;
-o.noiseEnvelopeSpaceConstantDeg=o.flankerSpacingDeg/2;
+if false
+    o.annularNoiseBigRadiusDeg=inf;
+    o.annularNoiseSmallRadiusDeg=0;
+    o.annularNoiseEnvelopeRadiusDeg=o.flankerSpacingDeg;
+    o.noiseEnvelopeSpaceConstantDeg=o.flankerSpacingDeg/2;
+end
 o.fixationCrossWeightDeg=0.09;
 o.blankingRadiusReEccentricity=0; % No blanking.
 o.blankingRadiusReTargetHeight=0;
@@ -101,7 +105,7 @@ if false
     oo{end+1}=o;
 end
 o.useMethodOfConstantStimuli=false;
-if true
+if false
     o.conditionName='Threshold contrast';
     o.trialsPerBlock=40;
     o.useFlankers=false;
