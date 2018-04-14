@@ -3,8 +3,8 @@
 clear o
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 
-% o.experimenter='junk';
-% o.observer='junk';
+o.experimenter='junk';
+o.observer='junk';
 % o.observer='ideal';
 o.trialsPerBlock=40;
 
