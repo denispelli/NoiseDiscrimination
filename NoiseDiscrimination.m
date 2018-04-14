@@ -449,7 +449,7 @@ end
 
 %% GLOBALS, FILES
 global window fixationLines fixationCrossWeightPix labelBounds ...
-    screenRect tTest idealT64 leftEdgeOfResponse img cal ...
+    screenRect tTest idealT64 leftEdgeOfResponse cal ...
     ff whichSignal dataFid ...
      signalImageIndex signalMask location % for function ModelObserver
 % "global window" makes window persistent, which allows us to keep the
@@ -2769,12 +2769,12 @@ try
                             end
                         else
                             switch o.targetModulates
+                                case {'noise' 'luminance'}
+                                    location(i).image=1+(o.noiseSD/o.noiseListSd)*noise;
                                 case 'entropy'
                                     q.noiseList=(0.5+floor(noiseList*0.499999*o.backgroundEntropyLevels))/(0.5*o.backgroundEntropyLevels);
                                     q.sd=std(q.noiseList);
                                     location(i).image=1+(o.noiseSD/q.sd)*(0.5+floor(noise*0.499999*o.backgroundEntropyLevels))/(0.5*o.backgroundEntropyLevels);
-                                otherwise
-                                    location(i).image=1+(o.noiseSD/o.noiseListSd)*noise;
                             end
                         end
                     end
@@ -3054,7 +3054,7 @@ try
                 switch o.task
                     case {'identify' 'identifyAll' 'rate'}
                         locations=1;
-                        location=struct('image',[]);
+                        assert(length(location)==1);
                         % Convert to pixel values.
                         % PREPARE IMAGE DATA
                         img=location(1).image;
@@ -4074,7 +4074,7 @@ end % function o=NoiseDiscrimination(o)
 %% FUNCTION SaveSnapshot
 function SaveSnapshot(o)
 global window fixationLines fixationCrossWeightPix labelBounds location screenRect ...
-    tTest idealT64 leftEdgeOfResponse img cal ff whichSignal dataFid
+    tTest idealT64 leftEdgeOfResponse cal ff whichSignal dataFid
 % Hasn't been tested since it became a subroutine. It may need more of its
 % variables to be declared "global". A more elegant solution, more
 % transparent that "global" would be to put all the currently global
@@ -4336,7 +4336,7 @@ end % MeasureContrast
 function AssessContrast(o)
 % Estimate actual contrast on screen.
 % Reports by ffprintf. Returns nothing.
-global img cal ff
+global cal ff
 LBackground=(cal.LFirst+cal.LLast)/2;
 img=IndexOfLuminance(cal,LBackground);
 img=img:o.maxEntry;
