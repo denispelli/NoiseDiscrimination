@@ -27,9 +27,9 @@ end
 if nargin==1
 	dims=[1 1];
 end
-i=ceil(length(list)*rand(dims)); % equivalent to calling Randi.
+i=ceil(length(list)*rand(dims)); % equivalent to calling Randi. % TAKES 1.5 ms.
 if iscell(list)
-	x=reshape({list{i(:)}},dims);
+	x=reshape({list{i(:)}},dims); % ?
 else
-	x=reshape(list(i(:)),dims);
+	x=reshape(list(i(:)),dims); % TAKES 1 ms.
 end
