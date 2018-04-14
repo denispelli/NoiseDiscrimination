@@ -66,7 +66,7 @@ end
 if nargin>1
     command=sprintf('%s "%s"',command,newProfileName);
 end
-[status,oldProfileName]=system(command);
+[status,oldProfileName]=system(command); % THIS LINE TAKES 2.7 s ON MY MACBOOK PRO!!
 oldProfileName=deblank(oldProfileName); % strip off trailing <return> character
 end
 
