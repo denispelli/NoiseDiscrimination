@@ -118,7 +118,7 @@ end
 if nargin > 1
     command = [command,' ',num2str(newLevel)];
 end
-[status,oldString] = system(command);
+[status,oldString] = system(command); % THIS LINE TAKES 4.7 s ON MY MACBOOK PRO!
 oldLevel=str2double(oldString);
 if isempty(oldLevel)
    error('Brightness applescript error: %s',oldString);
