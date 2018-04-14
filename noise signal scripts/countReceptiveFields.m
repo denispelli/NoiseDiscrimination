@@ -27,11 +27,8 @@ o.annularNoiseSD=0; % Typically nan (i.e. use o.noiseSD) or 0.2.
 o.viewingDistanceCm=45;
 o.noiseSD=0.2;
 o.noiseType='gaussian';
-o.fixationCrossDeg=1; % Typically 1 or inf. Make this at least 2 deg for scotopic testing, since the fovea is blind scotopically.
 o.fixationCrossWeightDeg=0.05; % Typically 0.05. This should be much thicker for scotopic testing.
-o.fixationCrossBlankedNearTarget=false; % false or true.
 o.fixationCrossBlankedUntilSecAfterTarget=0;
-o.fixationCrossDrawnOnStimulus=true;
 o.idealEOverNThreshold=10^1.12;
 % if  ~isfield(o,'idealEOverNThreshold') || ~isfinite(o.idealEOverNThreshold)
 %     o.observer='ideal';
@@ -49,23 +46,34 @@ logEOverN=nan;
 %% THE oo ARRAY STRUCT HAS ONE ELEMENT PER CONDITION
 oo={};
 
-if 0
+if true
     o.condition='letter noise';
     o.task='identify';
     o.targetKind='letter';
     o.targetModulates='noise';  % Display a noise increment.
     o.contrast=-1;
+    o.fixationCrossDrawnOnStimulus=true;
+    o.fixationCrossDeg=inf; % Typically 1 or inf. Make this at least 2 deg for scotopic testing, since the fovea is blind scotopically.
+    o.fixationCrossBlankedNearTarget=true; % false or true.
+    o.blankingRadiusReTargetHeight=0.5;
     oo{end+1}=o;
 end
 
 o.condition='4afc noise';
 o.task='4afc';
 o.targetModulates='noise';  % Display a noise increment.
+o.fixationCrossDrawnOnStimulus=true;
+o.fixationCrossDeg=1; % Typically 1 or inf. Make this at least 2 deg for scotopic testing, since the fovea is blind scotopically.
+o.fixationCrossBlankedNearTarget=false; % false or true.
+    o.blankingRadiusReTargetHeight=0;
 oo{end+1}=o;
 
 o.condition='4afc luminance';
 o.task='4afc';
 o.targetModulates='luminance'; % Display a luminance decrement.
+o.fixationCrossDrawnOnStimulus=true;
+o.fixationCrossDeg=1; % Typically 1 or inf. Make this at least 2 deg for scotopic testing, since the fovea is blind scotopically.
+o.fixationCrossBlankedNearTarget=false; % false or true.
 oo{end+1}=o;
 
 for oi=1:length(oo)
