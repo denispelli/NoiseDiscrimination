@@ -2797,11 +2797,11 @@ try
                     if o.noiseFrozenInBlock
                         rng(o.noiseListSeed);
                     end
-                    noise=PsychRandSample(noiseList,o.canvasSize*o.targetCheckPix/o.noiseCheckPix);% TAKES 2 ms.
+                    noise=PsychRandSample(noiseList,o.canvasSize*o.targetCheckPix/o.noiseCheckPix);% TAKES 3 ms.
                     noise=Expand(noise,o.noiseCheckPix/o.targetCheckPix);
                     % Each pixel in "noise" now represents a targetCheck.
                     noise(~centralNoiseMask & ~annularNoiseMask)=0;
-                    noise(centralNoiseMask)=centralNoiseEnvelope(centralNoiseMask).*noise(centralNoiseMask); % TAKES 1 ms.
+                    noise(centralNoiseMask)=centralNoiseEnvelope(centralNoiseMask).*noise(centralNoiseMask); % TAKES 2 ms.
                     canvasRect=RectOfMatrix(noise); % units of targetChecks
                     assert(all(canvasRect==[0 0 o.canvasSize(2) o.canvasSize(1)]));
                     sRect=RectOfMatrix(signal(1).image); % units of targetChecks
@@ -2811,7 +2811,7 @@ try
                         ffprintf(ff,'sRect [%d %d %d %d] exceeds canvasRect [%d %d %d %d].\n',sRect,canvasRect);
                     end
                     assert(IsRectInRect(sRect,canvasRect));
-                    signalImageIndex=logical(FillRectInMatrix(true,sRect,zeros(o.canvasSize)));
+                    signalImageIndex=logical(FillRectInMatrix(true,sRect,zeros(o.canvasSize))); % TAKES 0.5 ms
                     if size(signal(1).image,3)==3
                         signalImageIndex=repmat(signalImageIndex,1,1,3); % Support color.
                     end
@@ -2823,12 +2823,12 @@ try
                         signalImage(signalImageIndex)=signal(whichSignal).image(:); % Support color.
                     end
                     % figure(2);imshow(signalImage);
-                    signalMask=true(size(signalImage(:,:,1)));
+                    signalMask=true(size(signalImage(:,:,1))); % TAKES 0.3 ms
                     if o.signalIsBinary
                         signalMask=signalMask & signalImage;
                     else
                         for i=1:length(white) % support color
-                            signalMask=signalMask & signalImage(:,:,i)~=white(i);
+                            signalMask=signalMask & signalImage(:,:,i)~=white(i); % TAKES 0.3 ms
                         end
                     end
                     signalMask=repmat(signalMask,1,1,length(white)); % Support color.
@@ -2838,8 +2838,8 @@ try
                             % location(1).image has size canvasSize. Each
                             % pixel represents one targetCheck. Target is
                             % centered in that image.
-                            location(1).image=ones(size(signalImage(:,:,1)));
-                            location(1).image(centralNoiseMask)=1+(o.noiseSD/o.noiseListSd)*noise(centralNoiseMask); % TAKES 2 ms.
+                            location(1).image=ones(size(signalImage(:,:,1))); % TAKES 0.3 ms.
+                            location(1).image(centralNoiseMask)=1+(o.noiseSD/o.noiseListSd)*noise(centralNoiseMask); % TAKES 1 ms.
                             location(1).image(annularNoiseMask)=1+(o.annularNoiseSD/o.noiseListSd)*noise(annularNoiseMask);
                             location(1).image=repmat(location(1).image,1,1,length(white)); % Support color.
                             location(1).image=location(1).image+o.contrast*signalImage; % Add signal to noise.
@@ -3097,6 +3097,7 @@ try
                             texture=Screen('MakeTexture',window,img/o.maxEntry,0,0,1);
                             rect=OffsetRect(location(i).rect,-boundsRect(1),-boundsRect(2));
                             Screen('DrawTexture',movieTexture(iMovieFrame),texture,RectOfMatrix(img),rect);
+                            Screen('Close',texture);
                             eraseRect=UnionRect(eraseRect,location(i).rect);
                         end
                         if any(any(boundsRect~=eraseRect))
