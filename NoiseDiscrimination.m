@@ -453,7 +453,7 @@ end
 global window fixationLines fixationCrossWeightPix labelBounds ...
     screenRect tTest idealT64 leftEdgeOfResponse cal ...
     ff whichSignal dataFid ...
-     signalImageIndex signalMask location % for function ModelObserver
+     signalImageIndex signalMask % for function ModelObserver
 % "global window" makes window persistent, which allows us to keep the
 % Psychtoolbox window open when this function exits.
 % This list of global variables is shared only with the several newly
@@ -1199,8 +1199,6 @@ try
     % Need to update all reports of luminance to include effect of filter.
     
     %% OPEN OUTPUT FILES
-    o.beginningTime=now;
-    t=datevec(o.beginningTime);
     stack=dbstack;
     switch length(stack)
         case 1
@@ -1214,13 +1212,25 @@ try
                 o.functionNames=[stack(3).name '-' stack(2).name '-' stack(1).name];
             end
     end
-    o.dataFilename=sprintf('%s-%s.%d.%d.%d.%d.%d.%d',o.functionNames,o.observer,round(t));
     o.dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
     if ~exist(o.dataFolder,'dir')
         success=mkdir(o.dataFolder);
         if ~success
             error('Failed attempt to create data folder: %s',o.dataFolder);
         end
+    end
+    o.beginningTime=now;
+    while 1
+        % If necessary increment by 1 sec to find an unused file name, as
+        % many times as required.
+        t=datevec(o.beginningTime);
+        o.dataFilename=sprintf('%s-%s.%d.%d.%d.%d.%d.%d',o.functionNames,o.observer,round(t));
+        dataFid=fopen(fullfile(o.dataFolder,[o.dataFilename '.txt']),'rt');
+        if dataFid==-1
+            break
+        end
+        fclose(dataFid);
+        o.beginningTime=o.beginningTime+1/24/60/60;
     end
     st=dbstack('-completenames',1);
     if ~isempty(st)
@@ -1316,9 +1326,9 @@ try
     switch o.task
         case {'identify' 'identifyAll' 'rate'}
             maxStimulusHeight=RectHeight(o.stimulusRect);
+            maxStimulusWidth=RectWidth(o.stimulusRect);
         case '4afc'
-            maxStimulusHeight=RectHeight(o.stimulusRect)/(2+o.gapFraction4afc);
-            maxStimulusHeight=floor(maxStimulusHeight);
+            maxStimulusHeight=floor(RectHeight(o.stimulusRect)/(2+o.gapFraction4afc));
             maxStimulusWidth=floor(RectWidth(o.stimulusRect)/(2+o.gapFraction4afc));
         otherwise
             error('Unknown o.task "%s".',o.task);
@@ -1945,7 +1955,7 @@ try
     o.canvasSize=max(o.canvasSize,o.noiseSize*o.noiseCheckPix/o.targetCheckPix);
     if o.annularNoiseBigRadiusDeg > o.annularNoiseSmallRadiusDeg
         % April 2018, Denis changed denominator to targetCheckPix.
-        o.canvasSize=max(o.canvasSize,2*o.annularNoiseBigRadiusDeg*[1, 1]*o.pixPerDeg/o.targetCheckPix);
+        o.canvasSize=max(o.canvasSize,2*o.annularNoiseBigRadiusDeg*[1 1]*o.pixPerDeg/o.targetCheckPix);
     end
     switch o.task
         case {'identify' 'identifyAll' 'rate'}
@@ -2624,7 +2634,7 @@ try
                         o.contrast=0;
                 end
             case 'flankerContrast'
-                assert(streq(o.targetModulates,'luminance'))
+                assert(streq(o.targetModulates,'luminance'),'The flanker software assumes o.targetModulates is ''luminance''.');
                 o.r=1;
                 o.flankerContrast=o.thresholdPolarity*10^tTest;
                 if o.saveSnapshot && isfinite(o.snapshotContrast)
@@ -2725,7 +2735,7 @@ try
                     canvasRect=[0 0 o.canvasSize(2) o.canvasSize(1)];
                     sRect=RectOfMatrix(signal(1).image);
                     sRect=round(CenterRect(sRect,canvasRect));
-                    assert(IsRectInRect(sRect,canvasRect));
+                    assert(IsRectInRect(sRect,canvasRect),'There isn''t enough room for four targets. Reduce o.targetHeightDeg or o.viewingDistanceCm.');
                     signalImageIndex=logical(FillRectInMatrix(true,sRect,zeros(o.canvasSize)));
                     locations=4;
                     location=struct('image',{[] [] [] []});
@@ -2736,16 +2746,16 @@ try
                     else
                         signalLocation=movieSaveWhich;
                     end
-                    for i=1:locations
+                    for loc=1:locations
                         if o.noiseFrozenInTrial
-                            if i == 1
+                            if loc == 1
                                 generator=rng;
                                 o.noiseListSeed=generator.Seed;
                             end
                             rng(o.noiseListSeed);
                         end
-                        noise=PsychRandSample(noiseList,o.canvasSize*o.targetCheckPix/o.noiseCheckPix);
-                        noise=Expand(noise,o.noiseCheckPix/o.targetCheckPix);
+                        noise=PsychRandSample(noiseList,o.canvasSize*o.targetCheckPix/o.noiseCheckPix); % One number per noiseCheck.
+                        noise=Expand(noise,o.noiseCheckPix/o.targetCheckPix); % One number per targetCheck.
                         if o.noiseIsFiltered
                             if any(mtf(:) ~= 1)
                                 if any(mtf(:) ~= 0)
@@ -2757,29 +2767,30 @@ try
                                     noise=zeros(size(noise));
                                 end
                             end
-                        end
-                        if i == signalLocation
+                        end % if o.noiseIsFiltered
+                        if loc == signalLocation
                             switch o.targetModulates
                                 case 'noise'
-                                    location(i).image=1+o.r*(o.noiseSD/o.noiseListSd)*noise;
+                                    location(loc).image=1+o.r*(o.noiseSD/o.noiseListSd)*noise;
                                 case 'luminance'
-                                    location(i).image=1+(o.noiseSD/o.noiseListSd)*noise+o.contrast;
+                                    location(loc).image=1+(o.noiseSD/o.noiseListSd)*noise+o.contrast;
                                 case 'entropy'
                                     q.noiseList=(0.5+floor(noiseList*0.499999*signalEntropyLevels))/(0.5*signalEntropyLevels);
                                     q.sd=std(q.noiseList);
-                                    location(i).image=1+(o.noiseSD/q.sd)*(0.5+floor(noise*0.499999*signalEntropyLevels))/(0.5*signalEntropyLevels);
+                                    location(loc).image=1+(o.noiseSD/q.sd)*(0.5+floor(noise*0.499999*signalEntropyLevels))/(0.5*signalEntropyLevels);
                             end
                         else
                             switch o.targetModulates
                                 case {'noise' 'luminance'}
-                                    location(i).image=1+(o.noiseSD/o.noiseListSd)*noise;
+                                    location(loc).image=1+(o.noiseSD/o.noiseListSd)*noise;
                                 case 'entropy'
                                     q.noiseList=(0.5+floor(noiseList*0.499999*o.backgroundEntropyLevels))/(0.5*o.backgroundEntropyLevels);
                                     q.sd=std(q.noiseList);
-                                    location(i).image=1+(o.noiseSD/q.sd)*(0.5+floor(noise*0.499999*o.backgroundEntropyLevels))/(0.5*o.backgroundEntropyLevels);
+                                    location(loc).image=1+(o.noiseSD/q.sd)*(0.5+floor(noise*0.499999*o.backgroundEntropyLevels))/(0.5*o.backgroundEntropyLevels);
                             end
                         end
-                    end
+                    end % for loc=1:locations
+                    assert(length(location)==4,'length(location) should be 4.');
                 case {'identify' 'identifyAll' 'rate'}
                     locations=1;
                     location=struct('image',[]);
@@ -2799,25 +2810,28 @@ try
                     if o.noiseFrozenInBlock
                         rng(o.noiseListSeed);
                     end
-                    noise=PsychRandSample(noiseList,o.canvasSize*o.targetCheckPix/o.noiseCheckPix);% TAKES 3 ms.
-                    noise=Expand(noise,o.noiseCheckPix/o.targetCheckPix);
+                    noise=PsychRandSample(noiseList,o.canvasSize*o.targetCheckPix/o.noiseCheckPix);% TAKES 3 ms. One number per noiseCheck.
+                    noise=Expand(noise,o.noiseCheckPix/o.targetCheckPix); % One number per targetCheck.
                     % Each pixel in "noise" now represents a targetCheck.
                     noise(~centralNoiseMask & ~annularNoiseMask)=0;
                     noise(centralNoiseMask)=centralNoiseEnvelope(centralNoiseMask).*noise(centralNoiseMask); % TAKES 2 ms.
                     canvasRect=RectOfMatrix(noise); % units of targetChecks
                     assert(all(canvasRect==[0 0 o.canvasSize(2) o.canvasSize(1)]));
                     sRect=RectOfMatrix(signal(1).image); % units of targetChecks
-                    % The target is centered in canvasRect. 
-                    sRect=round(CenterRect(sRect,canvasRect));
+                    % Center the target in canvasRect. 
+                    sRect=CenterRect(sRect,canvasRect);
                     if ~IsRectInRect(sRect,canvasRect)
-                        ffprintf(ff,'sRect [%d %d %d %d] exceeds canvasRect [%d %d %d %d].\n',sRect,canvasRect);
+                        error('sRect [%d %d %d %d] exceeds canvasRect [%d %d %d %d].\n',sRect,canvasRect);
                     end
-                    assert(IsRectInRect(sRect,canvasRect));
+                    % signalImageIndex is true for every number in
+                    % canvasRect that is in the centered signal rect.
                     signalImageIndex=logical(FillRectInMatrix(true,sRect,zeros(o.canvasSize))); % TAKES 0.5 ms
                     if size(signal(1).image,3)==3
                         signalImageIndex=repmat(signalImageIndex,1,1,3); % Support color.
                     end
                     % figure(1);imshow(signalImageIndex);
+                    % signalImage embeds the signal in a background of
+                    % zeros with size canvasRect.
                     signalImage=zeros(size(signalImageIndex)); % Support color.
                     if (iMovieFrame > o.moviePreFrames ...
                             && iMovieFrame <= o.moviePreFrames+o.movieSignalFrames)
@@ -2827,8 +2841,10 @@ try
                     % figure(2);imshow(signalImage);
                     signalMask=true(size(signalImage(:,:,1))); % TAKES 0.3 ms
                     if o.signalIsBinary
+                        % signalMask is true where the signal is true.
                         signalMask=signalMask & signalImage;
                     else
+                        % signalMask is true where the signal is not white.
                         for i=1:length(white) % support color
                             signalMask=signalMask & signalImage(:,:,i)~=white(i); % TAKES 0.3 ms
                         end
@@ -3010,6 +3026,8 @@ try
                 Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
             end
         end % if ~ismember(o.observer,o.algorithmicObservers)
+        
+        %% MEASURE CONTRAST (TO CHECK THE PROGRAM)
         if o.measureContrast
             location=movieImage{1};
             fprintf('%d: luminance/o.LBackground',MFileLineNr);
@@ -3316,6 +3334,7 @@ try
                 Screen('DrawText',window,message,textRect(1),textRect(4),black,o.gray1,1);
                 Screen('TextSize',window,o.textSize);
             end
+            
             %% DISPLAY RESPONSE ALTERNATIVES
             if ~isempty(window)
                 switch o.task
@@ -3701,7 +3720,7 @@ try
                 end
             end
         else
-            response=ModelObserver(o,signal);
+            response=ModelObserver(o,signal,movieImage{o.moviePreFrames+1});
         end % if ~ismember(o.observer,o.algorithmicObservers)
         if o.quitBlock
             break;
@@ -3873,6 +3892,7 @@ try
         end % if o.questPlusPlot
     end % if o.questPlusEnable
     
+    %% TIMING AND LUMINANCE
     o.targetDurationSecMean=mean(o.likelyTargetDurationSec,'omitnan');
     o.targetDurationSecSD=std(o.likelyTargetDurationSec,'omitnan');
     if ~ismember(o.observer,o.algorithmicObservers)
@@ -3884,15 +3904,17 @@ try
         ffprintf(ff,'Background luminance %.1f cd/m^2.\n',o.LBackground);
     end
     
+    %% PRINT BOLD SUMMARY 
     o.E=10^(2*o.questMean)*o.E1;
-    if streq(o.targetModulates,'luminance')
-        ffprintf(ff,['<strong>Block %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
-            'Threshold',plusMinusChar,'sd log contrast %.2f',plusMinusChar,'%.2f, contrast %.4f, log E/N %.2f, efficiency %.5f\n</strong>'],...
-            o.blockNumber,o.blocksDesired,trial,100*trialsRight/trial,(GetSecs-blockStartSecs)/trial,t,sd,o.thresholdPolarity*10^t,log10(o.EOverN),o.efficiency);
-    else
-        ffprintf(ff,['<strong>Block %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
-            'Threshold',plusMinusChar,'sd log(o.r-1) %.2f',plusMinusChar,'%.2f, approxRequiredNumber %.0f\n</strong>'],...
-            o.blockNumber,o.blocksDesired,trial,100*trialsRight/trial,(GetSecs-blockStartSecs)/trial,t,sd,o.approxRequiredNumber);
+    switch o.targetModulates
+        case 'luminance'
+            ffprintf(ff,['<strong>Block %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
+                'Threshold',plusMinusChar,'sd log contrast %.2f',plusMinusChar,'%.2f, contrast %.4f, log E/N %.2f, efficiency %.5f</strong>\n'],...
+                o.blockNumber,o.blocksDesired,trial,100*trialsRight/trial,(GetSecs-blockStartSecs)/trial,t,sd,o.thresholdPolarity*10^t,log10(o.EOverN),o.efficiency);
+        case {'noise' 'entropy'}
+            ffprintf(ff,['<strong>Block %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
+                'Threshold',plusMinusChar,'sd log(o.r-1) %.2f',plusMinusChar,'%.2f, approxRequiredNumber %.0f</strong>\n'],...
+                o.blockNumber,o.blocksDesired,trial,100*trialsRight/trial,(GetSecs-blockStartSecs)/trial,t,sd,o.approxRequiredNumber);
     end
     if abs(trialsRight/trial-o.pThreshold) > 0.1
         ffprintf(ff,'WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.\n');
@@ -4411,33 +4433,36 @@ fprintf('grating read: %.1f %.1f\n',peekImg(1,1:2));
 fprintf('normalized luminance: %.1f %.1f\n',LuminanceOfIndex(cal,peekImg(1,1:2))/o.LBackground);
 end % function AssessLinearity(o)
 %% FUNCTION ModelObserver
-function response=ModelObserver(o,signal)
-global signalImageIndex signalMask location % for function ModelObserver
-% Hasn't been fully tested since it became a subroutine. It may need more
-% of its variables to be declared "global". A more elegant solution, more
-% transparent that "global", would be to put all the currently global
-% variables into a new struct called "my". It would be received as an
-% argument and might need to be returned as an output. Note that if "o" is
-% modified here, it too may need to be returned as an output argument, or
-% made global.
+function response=ModelObserver(o,signal,location)
+global signalImageIndex signalMask  
+% ModelObserver now works for identifying a luminance/noise/entropy letter
+% in noise. Hasn't yet been critically tested to see if its performance
+% matches theoretical benchmarks. But the thresholds seem reasonable, and
+% quest succesfully homes in on 75%. Instead of globals, we could put 
+% the currently global variables into a new struct called "model".
 switch o.observer
     case 'ideal'
-        clear likely
         switch o.task
             case '4afc'
+                assert(length(location)==4);
+                likely=nan(1,length(location));
                 switch o.targetModulates
                     case 'luminance'
                         % pick darkest
                         for i=1:length(location)
+                            % signalImageIndex selects the pixels that
+                            % contain the signal rect.
                             im=location(i).image(signalImageIndex);
-                            likely(i)=-sum((im(:)-1));
+                            likely(i)=-mean((im(:)-1));
                         end
-                    otherwise
+                    case {'noise' 'entropy'}
                         % The maximum likelihood choice is the one with
                         % greatest power.
                         for i=1:length(location)
+                            % signalImageIndex selects the pixels that
+                            % contain the signal rect.
                             im=location(i).image(signalImageIndex);
-                            likely(i)=sum((im(:)-1).^2);
+                            likely(i)=mean((im(:)-1).^2);
                             if o.printLikelihood
                                 im=im(:)-1;
                                 im
@@ -4447,33 +4472,43 @@ switch o.observer
                             likely
                             signalLocation
                         end
-                end
-            case 'identify'
+                    otherwise
+                        error('Illegal o.targetModulates "%s".',o.targetModulates);
+                end % switch o.targetModulates
+            case {'identify' 'identifyAll'}
+                assert(length(location)==1);
+                likely=nan(1,o.alternatives);
                 switch o.targetModulates
                     case 'luminance'
+                        % THIS WORKS.
+                        im=zeros(size(signal(1).image));
+                        % signalImageIndex selects the pixels in the
+                        % signal rect.
+                        im(:)=location(1).image(signalImageIndex); % the signal
                         for i=1:o.alternatives
-                            im=zeros(size(signal(i).image));
-                            im(:)=location(1).image(signalImageIndex); % the signal
-                            d=im-1-o.contrast*signal(i).image;
-                            likely(i)=-sum(d(:).^2);
+                            d=im-(1+o.contrast*signal(i).image);
+                            likely(i)=-mean(d(:).^2);
                         end
-                    otherwise
-                        % calculate log likelihood of each possible letter
+                    case {'noise' 'entropy'}
+                        % Calculate log likelihood of each possible letter.
                         sdPaper=o.noiseSD;
                         sdInk=o.r*o.noiseSD;
+                        im=zeros(size(signal(1).image));
+                        im(:)=location(1).image(signalImageIndex);
                         for i=1:o.alternatives
                             signalMask=signal(i).image;
-                            im=zeros(size(signal(i).image));
-                            im(:)=location(1).image(signalImageIndex);
                             ink=im(signalMask)-1;
                             paper=im(~signalMask)-1;
                             likely(i)=-length(ink)*log(sdInk*sqrt(2*pi))-sum(0.5*(ink/sdInk).^2);
                             likely(i)=likely(i)-length(paper)*log(sdPaper*sqrt(2*pi))-sum(0.5*(paper/sdPaper).^2);
-%                             save buggy
                         end
-                end
+                    otherwise
+                        error('Illegal o.targetModulates "%s".',o.targetModulates);
+                end % switch o.targetModulates
+            otherwise
+                error('Illegal o.task "%s".',o.task);
         end % switch o.task
-        [~, response]=max(likely);
+        [~,response]=max(likely);
         if o.printLikelihood
             response
         end
@@ -4594,7 +4629,7 @@ switch o.observer
     otherwise % human o.observer
         % Only human observers requires stimulus presentation.
 end % switch
-end % function ModelObserver(o)
+end % function ModelObserver(o,signal,location)
 
 function xyPix=XYPixOfXYDeg(o,xyDeg)
 % Convert position from deg (relative to fixation) to (x,y) coordinate in
@@ -4654,6 +4689,7 @@ end
 
 %% SET UP NEAR POINT at correct slant and viewing distance.
 function o=SetUpNearPoint(window,o)
+global ff
 black=0; % The CLUT color code for black.
 white=1; % The CLUT color code for white.
 escapeChar=char(27);
