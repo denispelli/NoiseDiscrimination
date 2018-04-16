@@ -703,8 +703,7 @@ o.localHostName=''; % Copy this from cal.localHostName
 o.dataFilename='';
 o.dataFolder='';
 o.textMarginPix=0;
-o.ratingThreshold=4; % Our threshold for beauty.
-
+o.ratingThreshold=4*ones(1,10); % One value per element of o.alphabet.
 
 o.deviceIndex=-1; % -1 for all keyboards.
 o.deviceIndex=-3; % -3 for all keyboard/keypad devices.
@@ -3745,7 +3744,7 @@ try
                         isRight=response == o.transcript.flankers{trial};
                 end
             case 'rate'
-                isRight=response>o.ratingThreshold;
+                isRight=response>=o.ratingThreshold(whichSignal);
                 o.transcript.target(trial)=whichSignal;
         end
         if ~ismember(o.observer,o.algorithmicObservers)
