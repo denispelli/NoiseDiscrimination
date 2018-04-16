@@ -284,7 +284,7 @@ try
       Screen('FillRect',window,o.gray1);
       Screen('FillRect',window,gray,o.stimulusRect);
       Screen('Flip',window); % Screen is now all gray, at LBackground.
-      if window >= 0
+      if ~isempty(window)
          screenRect=Screen('Rect',window,1);
          screenWidthPix=RectWidth(screenRect);
       else
@@ -461,7 +461,7 @@ try
          if ismac
             AutoBrightness(cal.screen,1); % Restore autobrightness.
          end
-         if window >= 0
+         if ~isempty(window)
             Screen('Preference','VisualDebugLevel',oldVisualDebugLevel);
             Screen('Preference','SuppressAllWarnings',oldSupressAllWarnings);
          end

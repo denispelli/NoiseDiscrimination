@@ -44,6 +44,8 @@ else
     rng(o.seed);
 end
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+% o.observer='ideal';
+% o.trialsPerBlock=100;
 
 %% SPECIFY BASIC CONDITION
 o.experiment='EvsN';
@@ -83,7 +85,7 @@ if false
     o.questPlusPlot=true;
 end
 
-%% SAVE CONDITIONS IN oo STRUCT
+%% SPECIFY CONDITIONS IN oo STRUCT
 oo={};
 % THREE DOMAINS: photon, cortical, ganglion
 for domain=0:3

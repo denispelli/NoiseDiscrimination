@@ -27,11 +27,11 @@ if ~IsOSX
 end
 script='ScriptingOkShowPermission.applescript';
 scriptPath=which(script);
-if length(scriptPath)==0
+if isempty(scriptPath)
     error('Cannot find %s within the MATLAB path.',script);
 end
 command=sprintf('osascript "%s"',scriptPath);
-[status,ok]=system(command);
+[status,ok]=system(command); % THIS LINE TAKES 1.9 s ON MY MACBOOK PRO!
 ok=streq(deblank(ok),'true');
 end
 
