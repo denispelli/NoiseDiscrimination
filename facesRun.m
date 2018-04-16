@@ -27,6 +27,7 @@ end
 % o.printImageStatistics=true;
 
 %% SPECIFY BASIC CONDITION
+o.ratingThreshold=4; % Our threshold for beauty.
 o.symmetricLuminanceRange=false; % Allow maximum brightness.
 o.desiredLuminanceFactor=1.8; % Maximize brightness.
 o.responseScreenAbsoluteContrast=0.9;
