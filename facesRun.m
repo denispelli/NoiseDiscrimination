@@ -41,7 +41,7 @@ else
     o.signalImagesFolder='faces';
     o.signalImagesAreGammaCorrected=true;
     o.targetKind='image';
-    o.alphabet='abcdefghijkl';
+    o.alphabet='abcdefg';
     o.convertSignalImageToGray=false;
     o.alphabetPlacement='right'; % 'top' or 'right';
 end
