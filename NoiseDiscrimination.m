@@ -119,8 +119,9 @@ function o=NoiseDiscrimination(oIn)
 % when I access it in a subrouting, it's empty or undefined (i don't
 % remember), even though it's declared as global in both. Several other
 % variables are also declared global and work as expected.
-% 5. ModelObserver is sort of working, but is typically getting much less
-% than 50% right. 
+% 5. ModelObserver works fine for luminance and noise. 
+% 6. Martin noticed that when identifying luminance letter in noise, the
+% noise level changed from trial to trial. Oops!!
 
 
 %% EXTRA DOCUMENTATION
@@ -1320,7 +1321,9 @@ try
         case {'identify' 'identifyAll' 'rate'}
             o.targetHeightPix=2*round(0.5*o.targetHeightDeg/o.targetCheckDeg)*o.targetCheckPix; % even round multiple of check size
             if o.targetHeightPix < o.minimumTargetHeightChecks*o.targetCheckPix
-                ffprintf(ff,'Increasing requested targetHeight checks from %d to %d, the minimum.\n',o.targetHeightPix/o.targetCheckPix,o.minimumTargetHeightChecks);
+                msg=sprintf('Increasing requested targetHeight checks from %d to %d, the minimum.\n',o.targetHeightPix/o.targetCheckPix,o.minimumTargetHeightChecks);
+                warning(msg);
+                fprintf(ff(end),msg);
                 o.targetHeightPix=2*ceil(0.5*o.minimumTargetHeightChecks)*o.targetCheckPix;
             end
         otherwise
