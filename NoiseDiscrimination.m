@@ -2522,7 +2522,7 @@ try
         questPlusData=qpInitialize(questPlusData);
     end
     
-    %% DO A BLOCK
+    %% GET READY TO DO A BLOCK
     o.data=[];
     if isfield(o,'transcript')
         o=rmfield(o,'transcript');
@@ -2564,6 +2564,8 @@ try
     waitMessage='Starting new block. ';
     trial=0;
     o.trials=trial;
+    
+    %% DO A BLOCK OF TRIALS.
     while trial<o.trialsPerBlock
         trial=trial+1;
         o.trials=trial;
@@ -2656,6 +2658,7 @@ try
             ffprintf(ff,'WARNING: Reducing o.annularNoiseSD of %s noise to %.2f to avoid overflow.\n',o.noiseType,a);
             o.annularNoiseSD=a;
         end
+        
         %% RESTRICT tTest TO PHYSICALLY POSSIBLE RANGE
         switch o.targetModulates
             case 'noise'
@@ -2733,7 +2736,6 @@ try
         movieImage={};
         movieSaveWhich=[];
         movieFrameComputeStartSec=GetSecs;
-        
         for iMovieFrame=1:o.movieFrames
             % On each new frame, retain the (static) signal and regenerate the (dynamic) noise.
             switch o.task % add noise to signal
