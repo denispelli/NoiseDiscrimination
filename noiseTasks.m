@@ -20,7 +20,7 @@ end
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % Folder in same directory as this M file.
 cal=OurScreenCalibrations(0);
 o.localHostName=cal.localHostName;
-o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 o.observer='ideal';
 o.observer='junk';
 o.experimenter='junk';
@@ -33,7 +33,7 @@ o.targetHeightDeg=2;
 o.noiseCheckDeg=o.targetHeightDeg/20;
 o.targetDurationSec=0.2;
 o.eyes='both';
-o.contrast=-0.16;
+o.contrast=-0.1;
 o.viewingDistanceCm=40;
 o.symmetricLuminanceRange=true;
 o.alphabetPlacement='right'; % 'top' or 'right';
@@ -71,19 +71,21 @@ o.trialsPerBlock=40;
 
 %% PUT THE EXPERIMENT'S CONDITIONS IN STRUCT oo
 oo={};
-if true
+if false
     o.conditionName='Noise letter';
     o.task='identify';
     o.targetModulates='noise';
     o.targetKind='letter';
-    o.targetHeightDeg=20;
-    o.noiseCheckDeg=o.targetHeightDeg/20;
-    o.noiseSD=0.3;
-    o.targetDurationSec=1;
+    o.targetHeightDeg=11;
+    o.noiseCheckDeg=o.targetHeightDeg/100;
+    o.noiseSD=0.2;
+    o.targetDurationSec=0.2;
     o.contrast=-1;
+    o.eccentricityXYDeg=[5.6 5.6];
     oo{end+1}=o;
+    o.eccentricityXYDeg=[0 0];
 end
-if true
+if false
     o.conditionName='Luminance letter';
     o.task='identify';
     o.targetModulates='luminance';
@@ -93,24 +95,30 @@ if true
     o.conditionName='Entropy letter';
     o.task='identify';
     o.targetModulates='entropy';
-    o.backgroundEntropyLevels=3;
+    o.backgroundEntropyLevels=2;
+    o.targetHeightDeg=11;
+    o.noiseCheckDeg=o.targetHeightDeg/20;
+    o.targetDurationSec=inf;
+    o.noiseSD=0.2;
+    oo{end+1}=o;
+    o.noiseSD=0.05;
     oo{end+1}=o;
 end
-if true
+if false
     o.conditionName='4afc noise';
     o.task='4afc';
     o.targetModulates='noise';
-    o.targetHeightDeg=10;
-    o.noiseCheckDeg=o.targetHeightDeg/20;
+%     o.targetHeightDeg=8;
+%     o.noiseCheckDeg=o.targetHeightDeg/100;
     oo{end+1}=o;
 end
-if true
+if false
     o.conditionName='4afc luminance';
     o.task='4afc';
     o.targetModulates='luminance';
     oo{end+1}=o;
 end
-if true
+if false
     o.conditionName='4afc entropy';
     o.task='4afc';
     o.targetModulates='entropy';
