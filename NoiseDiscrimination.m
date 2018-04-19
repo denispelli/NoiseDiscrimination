@@ -451,22 +451,22 @@ end
 % variable: o.centralNoiseEnvelopeE1DegDeg
 
 %% PERSISTENT
-global window % Allows us to keep window open when this function exits.
+persistent window % Retain pointer to open window when this function exits and is called again.
+persistent oOld % Saved from previous block to skip prompts that were already answered in the previous block.
+
 %% GLOBALS, FILES
-global window fixationLines fixationCrossWeightPix labelBounds ...
+global fixationLines fixationCrossWeightPix labelBounds ...
     screenRect tTest idealT64 leftEdgeOfResponse cal ...
     ff whichSignal dataFid ...
      signalImageIndex signalMask % for function ModelObserver
-% "global window" makes window persistent, which allows us to keep the
-% Psychtoolbox window open when this function exits.
-% This list of global variables is shared only with the several newly
-% created subroutines at the end of this file. The list is woefully
-% incomplete as the new routines haven't been tested as subroutines, and
-% many of their formerly locally variables need to either be made global or
-% become fields of the o struct.
-persistent oOld % Saved from previous block. Skip prompts that were the same in previous block.
-addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % Takes 0.1 s. Folder in same directory as this M file. .
-addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % Takes 0.1 s. Folder in same directory as this M file
+% This list of global variables is shared only with the several subroutines
+% at the end of this file. The list may be incomplete as the new routines
+% haven't yet been tested as subroutines, and some of their formerly
+% locally variables need to either be made global or become fields of the o
+% struct.
+myPath=fileparts(mfilename('fullpath')); % Takes 0.1 s.
+addpath(fullfile(myPath,'AutoBrightness')); % Folder in same directory as this M file. .
+addpath(fullfile(myPath,'lib')); % Folder in same directory as this M file.
 % echo_executing_commands(2, 'local');
 % diary ./diary.log
 % [~, vStruct]=PsychtoolboxVersion;
@@ -541,7 +541,7 @@ o.luminanceTransmission=1; % Less than one for dark glasses or neutral density f
 o.trialsPerBlock=40; % Typically 40.
 o.trials=0; % Initialize trial counter so it's defined even if user quits early.
 o.blockNumber=1; % For display only, indicate the block number. When o.blockNumber==blocksDesired this program says "Congratulations" before returning.
-o.blocksDesired=1; % How many blocks you to plan to run? Used solely for display and congratulations and keeping window open until last block.
+o.blocksDesired=1; % How many blocks you to plan to run? Used solely for display and congratulations and keeping o.window open until last block.
 o.experiment='';
 o.conditionName='';
 o.condition=1;
@@ -773,7 +773,7 @@ else
         'contrast' 'targetWidthPix' 'checkSec' 'moviePreFrames'...
         'movieSignalFrames' 'moviePostFrames' 'movieFrames' 'noiseSize'...
         'annularNoiseSmallSize' 'annularNoiseBigSize' 'canvasSize'...
-        'noiseListBound' 'noiseIsFiltered' 'noiseListSd' 'N' 'NUnits' ...
+        'noiseListMin' 'noiseListMax' 'noiseIsFiltered' 'noiseListSd' 'N' 'NUnits' ...
         'targetRectLocal' 'xHeightPix' 'xHeightDeg' 'HHeightPix' ...
         'HHeightDeg' 'alphabetHeightDeg' 'annularNoiseEnvelopeRadiusDeg' ...
         'centralNoiseEnvelopeE1DegDeg' 'E1' 'data' 'psych' 'questMean'...
@@ -866,7 +866,7 @@ if ~ismember(o.observer,o.algorithmicObservers) && ismac && ~ScriptingOkShowPerm
         'Use System Preferences:Security and Privacy:Privacy:Accessibility. '...
         'You''ll need admin privileges to do this.']);
 end
-%onCleanupInstance=onCleanup(@()ListenChar;sca;window=[];); % clears screen and restores keyboard when function terminated.
+%onCleanupInstance=onCleanup(@()ListenChar;sca;window=[];o.window=[];); % clears screen and restores keyboard when function terminated.
 useImresize=exist('imresize','file'); % Requires the Image Processing Toolbox.
 if isnan(o.annularNoiseSD)
     o.annularNoiseSD=o.noiseSD;
@@ -923,16 +923,15 @@ if ~isfield(cal,'old') || ~isfield(cal.old,'L')
     error('This screen has not yet been calibrated. Please use CalibrateScreenLuminance to calibrate it.\n');
 end
 
-% THE GLOBAL window might be stale, if previous block terminated with
-% an error that was not caught by a try-catch. So we assume that window is
-% closed before the first block.
-if o.blockNumber==1
-%    sca; % TAKES 0.3 s.
+% Check the persistent "window" pointer and discard it unless it's valid.
+if Screen(window,'WindowKind')~=1
    window=[];
 end
+% From here on, assume that a nonempty window is valid.
+o.window=window;
 
 %% Only call Brightness while no window is open.
-if isempty(window) && ~ismember(o.observer,o.algorithmicObservers)
+if isempty(o.window) && ~ismember(o.observer,o.algorithmicObservers)
    useBrightnessFunction=true;
    if useBrightnessFunction
       Brightness(cal.screen,cal.brightnessSetting); % Set brightness.
@@ -980,9 +979,9 @@ if isempty(window) && ~ismember(o.observer,o.algorithmicObservers)
       AutoBrightness(cal.screen,0);
       ffprintf(ff,'Turning autobrightness off. Setting "brightness" to %.2f, on a scale of 0.0 to 1.0;\n',cal.brightnessSetting);
    end
-end % if isempty(window)
+end % if isempty(o.window)
 
-%% TRY-CATCH BLOCK CONTAINS ALL CODE IN WHICH WINDOW IS OPEN
+%% TRY-CATCH BLOCK CONTAINS ALL CODE IN WHICH THE WINDOW IS OPEN
 try
     %% OPEN WINDOW
     Screen('Preference', 'SkipSyncTests',1);
@@ -990,7 +989,7 @@ try
     if o.useFractionOfScreen
         ffprintf(ff,'Using tiny window for debugging.\n');
     end
-    if isempty(window) && ~ismember(o.observer,o.algorithmicObservers)
+    if isempty(o.window) && ~ismember(o.observer,o.algorithmicObservers)
         % If the observer is human, we need an open window.
         PsychImaging('PrepareConfiguration');
         if o.flipScreenHorizontally
@@ -1018,6 +1017,7 @@ try
             r=AlignRect(r,screenBufferRect,'right','bottom');
             [window,screenRect]=PsychImaging('OpenWindow',cal.screen,1.0,r);
         end
+        o.window=window;
         % if cal.hiDPIMultiple~=1
         %     ffprintf(ff,'HiDPI: It doesn''t matter, but you might be curious to know.\n');
         %     if ismac
@@ -1032,7 +1032,7 @@ try
         %     ffprintf(ff,'You can use Switch Res X (http://www.madrau.com/) to select a pure resolution, not HiDPI.\n');
         % end
     end
-    if ~isempty(window)
+    if ~isempty(o.window)
         if o.enableClutMapping
             o.maxEntry=o.clutMapLength-1;
             cal.gamma=repmat((0:o.maxEntry)'/o.maxEntry,1,3); % Identity.
@@ -1071,12 +1071,13 @@ try
         text.question='Experimenter name:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
         fprintf('*Waiting for experimenter name.\n');
-        [reply,o]=AskQuestion(window,o,text);
+        [reply,o]=AskQuestion(o,text);
         if o.quitBlock
             ListenChar;
             ShowCursor;
             sca;
             window=[];
+            o.window=[];
             return
         end
         o.experimenter=reply;
@@ -1090,12 +1091,13 @@ try
         text.question='Observer name:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
         fprintf('*Waiting for observer name.\n');
-        [reply,o]=AskQuestion(window,o,text);
+        [reply,o]=AskQuestion(o,text);
         if o.quitBlock
             ListenChar;
             ShowCursor;
             sca;
             window=[];
+            o.window=[];
             return
         end
         o.observer=reply;
@@ -1114,7 +1116,7 @@ try
             text.question='';
             text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
             fprintf('*Waiting for observer to remove sunglasses.\n');
-            [~,o]=AskQuestion(window,o,text);
+            [~,o]=AskQuestion(o,text);
         end
     else % if ~o.useFilter
         text.big={'Please use a filter or sunglasses to reduce the luminance.' '(Our lab sunglasses transmit 0.115)' 'Please slowly type its transmission (between 0.000 and 1.000)' 'followed by RETURN.'};
@@ -1127,7 +1129,7 @@ try
         text.fine='';
         text.question='Filter transmission:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
-        [reply,o]=AskQuestion(window,o,text);
+        [reply,o]=AskQuestion(o,text);
         if ~o.quitBlock
             if ~isempty(reply)
                 o.filterTransmission=str2num(reply);
@@ -1142,12 +1144,13 @@ try
         ShowCursor;
         sca;
         window=[];
+        o.window=[];
         return
     end
-    if ~isempty(window)
-        Screen('FillRect',window,o.gray1);
-        % Keep the temporary window open until we open the main one, so observer
-        % knows program is running.
+    if ~isempty(o.window)
+        Screen('FillRect',o.window,o.gray1);
+        % Keep the temporary window open until we open the main one, so
+        % observer knows program is running.
     end
     previousBlockUsedFilter=o.useFilter;
     
@@ -1216,7 +1219,7 @@ try
                 o.functionNames=[stack(3).name '-' stack(2).name '-' stack(1).name];
             end
     end
-    o.dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
+    o.dataFolder=fullfile(myPath,'data');
     if ~exist(o.dataFolder,'dir')
         success=mkdir(o.dataFolder);
         if ~success
@@ -1381,10 +1384,10 @@ try
                 %                                       % the target height.
         end
     end
-    if ~isempty(window)
+    if ~isempty(o.window)
         fixationCrossPix=round(o.fixationCrossDeg*o.pixPerDeg);
         fixationCrossWeightPix=round(o.fixationCrossWeightDeg*o.pixPerDeg);
-        [~,~,lineWidthMinMaxPix(1),lineWidthMinMaxPix(2)]=Screen('DrawLines', window);
+        [~,~,lineWidthMinMaxPix(1),lineWidthMinMaxPix(2)]=Screen('DrawLines',o.window);
         fixationCrossWeightPix=round(max([min([fixationCrossWeightPix lineWidthMinMaxPix(2)]) lineWidthMinMaxPix(1)]));
         o.fixationCrossWeightDeg=fixationCrossWeightPix/o.pixPerDeg;
     else
@@ -1481,7 +1484,7 @@ try
     oldSupressAllWarnings=Screen('Preference','SuppressAllWarnings',1);
     
     %% GET DETAILS OF OPEN WINDOW
-    if ~isempty(window)
+    if ~isempty(o.window)
         % ListenChar(2) sets no-echo mode that allows us to collect
         % keyboard responses without any danger of inadvertenly writing to
         % the MATLAB command window or the program's text.
@@ -1498,7 +1501,7 @@ try
             % MacBook Air, but that's irrelevant since its screen is too
             % viewing-angle dependent for use in measuring threshold, which is
             % why I need dithering.
-            windowInfo=Screen('GetWindowInfo',window);
+            windowInfo=Screen('GetWindowInfo',o.window);
             o.displayCoreId=windowInfo.DisplayCoreId;
             switch(o.displayCoreId)
                 case 'AMD'
@@ -1526,7 +1529,7 @@ try
         
         % Recommended by Mario Kleiner, July 2017.
         % The first 'DrawText' call triggers loading of the plugin, but may fail.
-        Screen('DrawText',window,' ',0,0,0,1,1);
+        Screen('DrawText',o.window,' ',0,0,0,1,1);
         o.drawTextPlugin=Screen('Preference','TextRenderer')>0;
         if ~o.drawTextPlugin
             warning('The DrawText plugin failed to load. See warning above.');
@@ -1534,7 +1537,7 @@ try
         ffprintf(ff,'o.drawTextPlugin %s %% Need true for accurate text rendering.\n',mat2str(o.drawTextPlugin));
         
         % Recommended by Mario Kleiner, July 2017.
-        winfo=Screen('GetWindowInfo', window);
+        winfo=Screen('GetWindowInfo', o.window);
         o.beamPositionQueriesAvailable= winfo.Beamposition ~= -1 && winfo.VBLEndline ~= -1;
         ffprintf(ff,'o.beamPositionQueries %s %% true for best timing.\n',mat2str(o.beamPositionQueriesAvailable));
         if ismac
@@ -1546,7 +1549,7 @@ try
         end
         
         % Compare hardware CLUT with identity.
-        gammaRead=Screen('ReadNormalizedGammaTable',window);
+        gammaRead=Screen('ReadNormalizedGammaTable',o.window);
         maxEntry=size(gammaRead,1)-1;
         gamma=repmat(((0:maxEntry)/maxEntry)',1,3);
         delta=gammaRead(:,2)-gamma(:,2);
@@ -1618,56 +1621,56 @@ try
             %          ffprintf(ff,'Non-stimulus background is %.1f cd/m^2 at CLUT entry %d (and %d).\n',o.LBackground,o.gray1*o.maxEntry,o.gray*o.maxEntry);
             %          ffprintf(ff,'%.1f cd/m^2 at %d\n',LuminanceOfIndex(cal,o.gray*o.maxEntry),o.gray1*o.maxEntry);
             %          ffprintf(ff,'%.3f dac at %d; %.3f dac at %d\n',cal.gamma(o.gray1*o.maxEntry+1,2),o.gray1*o.maxEntry,cal.gamma(o.gray*o.maxEntry+1,2),o.gray*o.maxEntry);
-            Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
+            Screen('LoadNormalizedGammaTable',o.window,cal.gamma,loadOnNextFlip);
             if o.assessLoadGamma
                 ffprintf(ff,'Line %d: o.contrast %.3f, LoadNormalizedGammaTable 0.5*range/mean=%.3f\n', ...
                     MFileLineNr,o.contrast,(cal.LLast-cal.LFirst)/(cal.LLast+cal.LFirst));
             end
-            Screen('FillRect',window,o.gray1);
-            Screen('FillRect',window,o.gray,o.stimulusRect);
+            Screen('FillRect',o.window,o.gray1);
+            Screen('FillRect',o.window,o.gray,o.stimulusRect);
         else
-            Screen('FillRect',window);
+            Screen('FillRect',o.window);
             o.gray=0.5;
         end % if exist('cal','var')
-        Screen('Flip',window); % Load gamma table
-        if ~isfinite(window) || window == 0
+        Screen('Flip',o.window); % Load gamma table
+        if ~isfinite(o.window) || o.window == 0
             fprintf('error\n');
             error('Screen OpenWindow failed. Please try again.');
         end
         black=0; % CLUT color code for black.
         white=1; % CLUT color code for white.
-        Screen('FillRect',window,o.gray1);
-        Screen('FillRect',window,o.gray,o.stimulusRect);
-        Screen('Flip',window); % Screen is now all gray, at o.LBackground.
-        screenRect=Screen('Rect',window,1);
+        Screen('FillRect',o.window,o.gray1);
+        Screen('FillRect',o.window,o.gray,o.stimulusRect);
+        Screen('Flip',o.window); % Screen is now all gray, at o.LBackground.
+        screenRect=Screen('Rect',o.window,1);
         screenWidthPix=RectWidth(screenRect);
         o.pixPerCm=screenWidthPix/cal.screenWidthCm;
     else
         screenRect=[0 0 1280 800];
         screenWidthPix=RectWidth(screenRect);
         o.pixPerCm=screenWidthPix/33.1;
-    end % if ~isempty(window)
+    end % if ~isempty(o.window)
     degPerCm=57/o.viewingDistanceCm;
     o.pixPerDeg=o.pixPerCm/degPerCm;
     
     if false
         %% CONFIRM OLD ANSWERS IF STALE OR OBSERVER CHANGED
-        if ~isempty(window)
+        if ~isempty(o.window)
             if ~isempty(oOld) && (GetSecs-oOld.secs>10*60 || ~streq(oOld.observer,o.observer))
                 Screen('Preference','TextAntiAliasing',1);
-                % o.textSize=TextSizeToFit(window); % Nicer size, but text would
+                % o.textSize=TextSizeToFit(o.window); % Nicer size, but text would
                 % need wrapping.
-                Screen('TextSize',window,o.textSize);
-                Screen('TextFont',window,'Verdana');
-                Screen('FillRect',window,o.gray1);
+                Screen('TextSize',o.window,o.textSize);
+                Screen('TextFont',o.window,'Verdana');
+                Screen('FillRect',o.window,o.gray1);
                 string=sprintf('Confirm experimenter "%s" and observer "%s"?',o.experimenter,o.observer);
                 if o.useFilter
                     string=sprintf('%s With filter transmission %.3f?',string,o.filterTransmission);
                 end
                 string=sprintf('%s Right?\nHit RETURN to continue, or ESCAPE to quit.',string);
-                Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
-                DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
-                Screen('Flip',window); % Display request.
+                Screen('DrawText',o.window,' ',0,0,1,o.gray1,1); % Set background color.
+                DrawFormattedText(o.window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+                Screen('Flip',o.window); % Display request.
                 if o.speakInstructions
                     Speak(sprintf('Observer %s, right? If ok, hit RETURN to continue, otherwise hit ESCAPE to quit.',o.observer));
                 end
@@ -1683,6 +1686,7 @@ try
                     ShowCursor;
                     sca;
                     window=[];
+                    o.window=[];
                     return
                 end
             end
@@ -1694,18 +1698,18 @@ try
     if ~ismember(o.eyes,{'left','right','both'})
         error('o.eyes==''%s'' is not allowed. It must be ''left'',''right'', or ''both''.',o.eyes);
     end
-    if ~isempty(window)
+    if ~isempty(o.window)
         if ~isfield(oOld,'eyes') || GetSecs-oOld.secs>5*60 || ~streq(oOld.eyes,o.eyes)
-            Screen('TextSize',window,o.textSize);
-            Screen('TextFont',window,'Verdana');
-            Screen('FillRect',window,o.gray1);
+            Screen('TextSize',o.window,o.textSize);
+            Screen('TextFont',o.window,'Verdana');
+            Screen('FillRect',o.window,o.gray1);
             switch o.eyes
                 case 'both'
                     Screen('Preference','TextAntiAliasing',1);
                     string='Please use both eyes.\nHit RETURN to continue, or ESCAPE to quit.';
-                    Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
-                    DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
-                    Screen('Flip',window); % Display request.
+                    Screen('DrawText',o.window,' ',0,0,1,o.gray1,1); % Set background color.
+                    DrawFormattedText(o.window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+                    Screen('Flip',o.window); % Display request.
                     if o.speakInstructions
                         Speak('Please use both eyes. Hit RETURN to continue, or ESCAPE to quit.');
                     end
@@ -1721,14 +1725,15 @@ try
                         ShowCursor;
                         sca;
                         window=[];
+                        o.window=[];
                         return
                     end
                 case {'left','right'}
                     Screen('Preference','TextAntiAliasing',1);
                     string=sprintf('Please use just your %s eye. Cover your other eye.\nHit RETURN to continue, or ESCAPE to quit.',o.eyes);
-                    Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
-                    DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
-                    Screen('Flip',window); % Display request.
+                    Screen('DrawText',o.window,' ',0,0,1,o.gray1,1); % Set background color.
+                    DrawFormattedText(o.window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+                    Screen('Flip',o.window); % Display request.
                     if o.speakInstructions
                         string=sprintf('Please use just your %s eye. Cover your other eye. Hit RETURN to continue, or ESCAPE to quit.',o.eyes);
                         Speak(string);
@@ -1745,6 +1750,7 @@ try
                         ShowCursor;
                         sca;
                         window=[];
+                        o.window=[];
                         return
                     end
             end
@@ -1752,9 +1758,9 @@ try
             while streq(o.eyes,'one')
                 Screen('Preference','TextAntiAliasing',1);
                 string=[string 'Which eye will you use, left or right? Please type L or R:'];
-                Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
-                DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
-                Screen('Flip',window); % Display request.
+                Screen('DrawText',o.window,' ',0,0,1,o.gray1,1); % Set background color.
+                DrawFormattedText(o.window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+                Screen('Flip',o.window); % Display request.
                 if o.speakInstructions
                     Speak(string);
                 end
@@ -1770,6 +1776,7 @@ try
                     ShowCursor;
                     sca;
                     window=[];
+                    o.window=[];
                     return
                 end
                 response=upper(response);
@@ -1782,8 +1789,8 @@ try
                         string=sprintf('Illegal response ''%s''. ',response);
                 end
             end
-            Screen('FillRect',window,o.gray1);
-            Screen('Flip',window); % Blank to acknowledge response.
+            Screen('FillRect',o.window,o.gray1);
+            Screen('Flip',o.window); % Blank to acknowledge response.
         end
         switch o.eyes
             case 'both'
@@ -1829,23 +1836,25 @@ try
     o.nearPointXYDeg=o.eccentricityXYDeg; 
     
     fprintf('*Waiting for observer to set viewing distance.\n');
-    o=SetUpNearPoint(window,o);
+    o=SetUpNearPoint(o);
     if o.quitExperiment
         ListenChar;
         ShowCursor;
         sca;
         window=[];
+        o.window=[];
         return
     end
     
     fprintf('*Waiting for observer to set up fixation.\n');
-    o=SetUpFixation(window,o,ff);
+    o=SetUpFixation(o,ff);
     if o.quitExperiment
         ListenChar;
         ShowCursor;
         sca;
         window=[];
-        return
+        o.window=[];
+       return
     end
     
     gapPix=round(o.gapFraction4afc*o.targetHeightPix);
@@ -1856,8 +1865,8 @@ try
     o.targetWidthPix=o.targetCheckPix*round(o.targetWidthPix/o.targetCheckPix);
     
     MAX_FRAMES=100; % Better to limit than crash the GPU.
-    if ~isempty(window)
-        frameRate=1/Screen('GetFlipInterval',window);
+    if ~isempty(o.window)
+        frameRate=1/Screen('GetFlipInterval',o.window);
     else
         frameRate=60;
     end
@@ -1998,24 +2007,27 @@ try
         fix.targetHeightPix=o.targetHeightPix;
         [fixationLines,o.markTargetLocation]=ComputeFixationLines2(fix);
     end
-    if ~isempty(window) && ~isempty(fixationLines)
-        Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,black); % fixation
+    if ~isempty(o.window) && ~isempty(fixationLines)
+        Screen('DrawLines',o.window,fixationLines,fixationCrossWeightPix,black); % fixation
     end
     clear tSample
     
     % Compute noiseList
     switch o.noiseType % Fill noiseList with desired kind of noise.
         case 'gaussian'
-            o.noiseListBound=2;
+            o.noiseListMin=-2;
+            o.noiseListMax=2;
             temp=randn([1 20000]);
-            ok=temp.^2<o.noiseListBound^2;
+            ok=o.noiseListMin<=temp & temp<=o.noiseListMax;
             noiseList=temp(ok);
             clear temp;
         case 'uniform'
-            o.noiseListBound=1;
+            o.noiseListMin=-1;
+            o.noiseListMax=1;
             noiseList=-1:1/1024:1;
         case 'binary'
-            o.noiseListBound=1;
+            o.noiseListMin=-1;
+            o.noiseListMax=1;
             noiseList=[-1 1];
         otherwise
             error('Unknown noiseType "%s"',o.noiseType);
@@ -2043,7 +2055,14 @@ try
     end
     
     o.noiseListSd=std(noiseList);
-    a=0.9*o.noiseListSd/o.noiseListBound;
+    % This code assumes that max luminance is 2*LBackground, but that may
+    % not be true. I sometimes make LBackground nearly equal to LMax, to
+    % maximize brightness, and sometimes makes it 0.1*LMax to produce a dim
+    % display. Also it currently uses the upper bound o.noiseListMax,
+    % and ignores the lower bound o.noiseListMin. That's ok for now
+    % because the three allowed noise types, at the moment, have symmetric
+    % bounds.
+    a=0.9*o.noiseListSd/o.noiseListMax; % Max possible noiseSD, leaving a bit of range for signal.
     if o.noiseSD > a
         ffprintf(ff,'WARNING: Requested o.noiseSD %.2f too high. Reduced to %.2f\n',o.noiseSD,a);
         o.noiseSD=a;
@@ -2145,7 +2164,7 @@ try
         case {'identify' 'identifyAll' 'rate'}
             switch o.targetKind
                 case 'letter'
-                    if isempty(window)
+                    if isempty(o.window)
                         % Some window must already be open before we call
                         % OpenOffscreenWindow.
                         temporaryWindow=Screen('OpenWindow',0,1,[0 0 100 100]);
@@ -2228,7 +2247,7 @@ try
                         % something else, in any case not really fixable by us, although the "wait
                         % a bit and hope for the best" approach would the the most likely of all
                         % awful approaches to work around it. Maybe add a Screen('DrawingFinished',
-                        % window, [], 1); before the 'getimage' and/or before the random wait.
+                        % o.window, [], 1); before the 'getimage' and/or before the random wait.
                         %
                         % You could test a different machine, in case only one type of graphics
                         % card or vendor has the driver bug.
@@ -2260,7 +2279,7 @@ try
                     end
                     Screen('Close',scratchWindow);
                     scratchWindow=[];
-                    if isempty(window)
+                    if isempty(o.window)
                         Screen('Close',temporaryWindow);
                         temporaryWindow=[];
                     end
@@ -2285,11 +2304,11 @@ try
                 case 'image'
                     % Allow for color images.
                     % Scale to range -1 (black) to 1 (white).
-                    Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
+                    Screen('DrawText',o.window,' ',0,0,1,o.gray1,1); % Set background color.
                     string=sprintf('Reading images from disk ...');
-                    DrawFormattedText(window,string,...
+                    DrawFormattedText(o.window,string,...
                         o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
-                    Screen('Flip',window); % Display request.
+                    Screen('Flip',o.window); % Display request.
                     o.targetPix=round(o.targetHeightDeg/o.noiseCheckDeg);
                     o.targetFont=o.font;
                     o.showLineOfLetters=true;
@@ -2437,15 +2456,16 @@ try
     if ismember(o.observer,o.algorithmicObservers)
         Screen('CloseAll');
         window=[];
+        o.window=[];
         LMin=0;
         LMax=200;
         o.LBackground=100;
     end
     % We are now done with the signal font (e.g. Sloan or Bookman), since we've saved our signals as images.
-    if ~isempty(window)
-        Screen('TextFont',window,textFont);
-        Screen('TextSize',window,o.textSize);
-        Screen('TextStyle',window,textStyle);
+    if ~isempty(o.window)
+        Screen('TextFont',o.window,textFont);
+        Screen('TextSize',o.window,o.textSize);
+        Screen('TextStyle',o.window,textStyle);
         if ~o.useFractionOfScreen
             HideCursor;
         end
@@ -2649,7 +2669,7 @@ try
                     o.flankerContrast=-o.snapshotContrast;
                 end
         end
-        a=(1-LMin/o.LBackground)*o.noiseListSd/o.noiseListBound;
+        a=(1-LMin/o.LBackground)*o.noiseListSd/o.noiseListMax;
         if o.noiseSD > a
             ffprintf(ff,'WARNING: Reducing o.noiseSD of %s noise to %.2f to avoid overflow.\n',o.noiseType,a);
             o.noiseSD=a;
@@ -2662,7 +2682,7 @@ try
         %% RESTRICT tTest TO PHYSICALLY POSSIBLE RANGE
         switch o.targetModulates
             case 'noise'
-                a=(1-LMin/o.LBackground)/(o.noiseListBound*o.noiseSD/o.noiseListSd);
+                a=(1-LMin/o.LBackground)/(o.noiseListMax*o.noiseSD/o.noiseListSd);
                 if o.r > a
                     if ~isfield(o,'rWarningCount') || o.rWarningCount == 0
                         ffprintf(ff,'WARNING: Reducing o.r ratio of %s noises from %.2f to upper bound %.2f to stay within luminance range.\n',o.noiseType,o.r,a);
@@ -2674,7 +2694,7 @@ try
             case 'luminance'
                 % min negative contrast
                 a=(min(cal.old.L)-o.LBackground)/o.LBackground;
-                a=a+o.noiseListBound*o.noiseSD/o.noiseListSd;
+                a=a+o.noiseListMax*o.noiseSD/o.noiseListSd;
                 assert(a<0,'Need range for signal.');
                 if o.contrast < a
                     o.contrast=a;
@@ -2999,13 +3019,13 @@ try
         %% COMPUTE CLUT
         if ~ismember(o.observer,o.algorithmicObservers)
             if trial==1
-                % Clear screen before first trial. After the first trial,
-                % the screen is already ready for next trial.
-                Screen('FillRect',window,o.gray1);
-                Screen('FillRect',window,o.gray,o.stimulusRect);
+                % Clear screen only before first trial. After the first
+                % trial, the screen is already ready for next trial.
+                Screen('FillRect',o.window,o.gray1);
+                Screen('FillRect',o.window,o.gray,o.stimulusRect);
             end
             if ~isempty(fixationLines)
-                Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
+                Screen('DrawLines',o.window,fixationLines,fixationCrossWeightPix,0); % fixation
             end
             rect=[0 0 1 1]*2*o.annularNoiseBigRadiusDeg*o.pixPerDeg/o.noiseCheckPix;
             if o.newClutForEachImage % Usually enabled.
@@ -3019,8 +3039,8 @@ try
             end
             if o.measureContrast
                 % fprintf('o.gray*o.maxEntry %d gamma %.3f, o.gray1*o.maxEntry %d gamma %.3f\n',o.gray*o.maxEntry,cal.gamma(o.gray*o.maxEntry+1,2),o.gray1*o.maxEntry,cal.gamma(o.gray1*o.maxEntry+1,2));
-                Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
-                Screen('Flip',window,0,1);
+                Screen('LoadNormalizedGammaTable',o.window,cal.gamma,loadOnNextFlip);
+                Screen('Flip',o.window,0,1);
                 o=MeasureContrast(o,MFileLineNr);
             end
             if o.assessBitDepth
@@ -3028,10 +3048,10 @@ try
                 break;
             end
             if o.showCropMarks
-                TrimMarks(window,frameRect); % This should be moved down, to be drawn AFTER the noise.
+                TrimMarks(o.window,frameRect); % This should be moved down, to be drawn AFTER the noise.
             end
             if o.saveSnapshot && o.snapshotShowsFixationBefore && ~isempty(fixationLines)
-                Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
+                Screen('DrawLines',o.window,fixationLines,fixationCrossWeightPix,0); % fixation
             end
         end % if ~ismember(o.observer,o.algorithmicObservers)
         
@@ -3056,7 +3076,7 @@ try
                 c=(LL(2)-LL(1))/LL(1);
             end
             fprintf(', contrast %.4f\n',c);
-            movieTexture(iMovieFrame)=Screen('MakeTexture',window,img,0,0,1);
+            movieTexture(iMovieFrame)=Screen('MakeTexture',o.window,img,0,0,1);
             rect=Screen('Rect',movieTexture(iMovieFrame));
             img=Screen('GetImage',movieTexture(iMovieFrame),rect,'frontBuffer',1);
             index=unique(img(:));
@@ -3100,7 +3120,7 @@ try
                         rect=CenterRect(rect,[o.targetXYPix o.targetXYPix]);
                         rect=round(rect); % rect that will receive the stimulus (target and noises)
                         location(1).rect=rect;
-                        movieTexture(iMovieFrame)=Screen('MakeTexture',window,img,0,0,1); % SAVE MOVIE FRAME
+                        movieTexture(iMovieFrame)=Screen('MakeTexture',o.window,img,0,0,1); % SAVE MOVIE FRAME
                         srcRect=RectOfMatrix(img);
                         dstRect=rect;
                         offset=dstRect(1:2)-srcRect(1:2);
@@ -3116,13 +3136,13 @@ try
                         location(3).rect=AlignRect(rect,boundsRect,'left','bottom');
                         location(4).rect=AlignRect(rect,boundsRect,'right','bottom');
                         blankImage=o.gray*ones(RectHeight(boundsRect),RectWidth(boundsRect));
-                        movieTexture(iMovieFrame)=Screen('MakeTexture',window,blankImage,0,0,1);
+                        movieTexture(iMovieFrame)=Screen('MakeTexture',o.window,blankImage,0,0,1);
                         eraseRect=location(1).rect;
                         for i=1:locations
                             img=location(i).image;
                             img=IndexOfLuminance(cal,img*o.LBackground);
                             img=Expand(img,o.targetCheckPix);
-                            texture=Screen('MakeTexture',window,img/o.maxEntry,0,0,1);
+                            texture=Screen('MakeTexture',o.window,img/o.maxEntry,0,0,1);
                             rect=OffsetRect(location(i).rect,-boundsRect(1),-boundsRect(2));
                             Screen('DrawTexture',movieTexture(iMovieFrame),texture,RectOfMatrix(img),rect);
                             Screen('Close',texture);
@@ -3164,7 +3184,7 @@ try
                             location(4).labelRect=AlignRect(r,labelBounds,'right','bottom');
                             for i=1:locations
                                 [x, y]=RectCenter(location(i).labelRect);
-                                Screen('DrawText',window,sprintf('%d',i),x-o.textSize/2,y+0.4*o.textSize,black,o.gray1,1);
+                                Screen('DrawText',o.window,sprintf('%d',i),x-o.textSize/2,y+0.4*o.textSize,black,o.gray1,1);
                             end
                         end
                 end % switch o.task
@@ -3190,7 +3210,7 @@ try
             end
             fprintf(', contrast %.4f\n',c);
             % Compare hardware CLUT with identity.
-            gammaRead=Screen('ReadNormalizedGammaTable',window);
+            gammaRead=Screen('ReadNormalizedGammaTable',o.window);
             maxEntry=size(gammaRead,1)-1;
             gamma=repmat(((0:maxEntry)/maxEntry)',1,3);
             delta=gammaRead(:,2)-gamma(:,2);
@@ -3199,15 +3219,15 @@ try
         end
         
         %% PLAY MOVIE
-        if ~isempty(window)
-            Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
+        if ~isempty(o.window)
+            Screen('LoadNormalizedGammaTable',o.window,cal.gamma,loadOnNextFlip);
             if ~ismember(o.observer,o.algorithmicObservers)
                 Snd('Play',purr); % Pre-announce that image is up, awaiting response.
                 o.movieFrameFlipSec(1:o.movieFrames+1,trial)=nan;
                 for iMovieFrame=1:o.movieFrames
-                    Screen('DrawTexture',window,movieTexture(iMovieFrame),srcRect,dstRect);
+                    Screen('DrawTexture',o.window,movieTexture(iMovieFrame),srcRect,dstRect);
                     if o.fixationCrossDrawnOnStimulus && ~isempty(fixationLines)
-                        Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,black); % fixation
+                        Screen('DrawLines',o.window,fixationLines,fixationCrossWeightPix,black); % fixation
                     end
                     if o.showBlackAnnulus
                         radius=round(o.blackAnnulusSmallRadiusDeg*o.pixPerDeg);
@@ -3224,24 +3244,25 @@ try
                             color=IndexOfLuminance(cal,luminance);
                             o.blackAnnulusContrast=LuminanceOfIndex(cal,color)/o.LBackground-1;
                         end
-                        Screen('FrameRect',window,color,annulusRect,thickness);
+                        Screen('FrameRect',o.window,color,annulusRect,thickness);
                     end % if o.showBlackAnnulus
                     if o.saveStimulus && iMovieFrame == o.moviePreFrames+1
-                        o.savedStimulus=Screen('GetImage',window,o.stimulusRect,'drawBuffer');
+                        o.savedStimulus=Screen('GetImage',o.window,o.stimulusRect,'drawBuffer');
                         fprintf('o.savedStimulus at contrast %.3f, flankerContrast %.3f\n',o.contrast,o.flankerContrast);
-                        Screen('DrawText',window,sprintf('o.contrast %.3f, flankerContrast %.3f',o.contrast,o.flankerContrast),20,150);
+                        Screen('DrawText',o.window,sprintf('o.contrast %.3f, flankerContrast %.3f',o.contrast,o.flankerContrast),20,150);
                         o.newCal=cal;
                         if o.saveSnapshot
                             snapshotTexture=Screen('OpenOffscreenWindow',movieTexture(iMovieFrame));
                             Screen('CopyWindow',movieTexture(iMovieFrame),snapshotTexture);
                         end
                     end
-                    Screen('Flip',window,0,1); % Display movie frame. Don't clear back buffer.
+                    Screen('Flip',o.window,0,1); % Display movie frame. Don't clear back buffer.
                     o.movieFrameFlipSec(iMovieFrame,trial)=GetSecs;
                 end % for iMovieFrame=1:o.movieFrames
                 o.transcript.stimulusOnsetSec(trial)=o.movieFrameFlipSec(o.moviePreFrames+1,trial);
                 if o.saveSnapshot
-                    SaveSnapshot(o); % Closes window when done.
+                    o=SaveSnapshot(o); % Closes o.window when done.
+                    window=o.window;
                     return
                 end
                 if o.assessTargetLuminance
@@ -3249,7 +3270,7 @@ try
                     % from index to RGB. We use our calibration to estimate
                     % luminance from G.
                     rect=CenterRect(o.targetCheckPix*o.targetRectLocal,o.stimulusRect);
-                    o.actualStimulus=Screen('GetImage',window,rect,'frontBuffer',1);
+                    o.actualStimulus=Screen('GetImage',o.window,rect,'frontBuffer',1);
                     % Get the mode and mode of rest.
                     p=o.actualStimulus(:,:,2);
                     p=p(:);
@@ -3274,25 +3295,25 @@ try
                     %             o.actualStimulus(1:dy:end,1:dx:end,2)
                 end
                 if isfinite(o.targetDurationSec) % End the movie
-                    Screen('FillRect',window,o.gray,dstRect); % Erase only the movie, sparing the rest of the screen.
+                    Screen('FillRect',o.window,o.gray,dstRect); % Erase only the movie, sparing the rest of the screen.
                     if o.fixationCrossDrawnOnStimulus && ~isempty(fixationLines)
-                        Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,black); % fixation
+                        Screen('DrawLines',o.window,fixationLines,fixationCrossWeightPix,black); % fixation
                     end
                     if o.useDynamicNoiseMovie
-                        Screen('Flip',window,0,1); % Clear stimulus at next frame.
+                        Screen('Flip',o.window,0,1); % Clear stimulus at next frame.
                     else
                         % Clear stimulus at next frame after specified duration.
-                        Screen('Flip',window,o.movieFrameFlipSec(1,trial)+o.targetDurationSec-0.5/frameRate,1);
+                        Screen('Flip',o.window,o.movieFrameFlipSec(1,trial)+o.targetDurationSec-0.5/frameRate,1);
                     end
                     o.movieFrameFlipSec(iMovieFrame+1,trial)=GetSecs;
                     if ~o.fixationCrossBlankedNearTarget
                         WaitSecs(o.fixationCrossBlankedUntilSecAfterTarget);
                     end
                     if ~isempty(fixationLines)
-                        Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,black); % fixation
+                        Screen('DrawLines',o.window,fixationLines,fixationCrossWeightPix,black); % fixation
                     end
                     % After o.fixationCrossBlankedUntilSecAfterTarget, display new fixation.
-                    Screen('Flip',window,o.movieFrameFlipSec(iMovieFrame+1,trial)+0.3,1);
+                    Screen('Flip',o.window,o.movieFrameFlipSec(iMovieFrame+1,trial)+0.3,1);
                 end % if isfinite(o.targetDurationSec)
                 for iMovieFrame=1:o.movieFrames
                     Screen('Close',movieTexture(iMovieFrame));
@@ -3306,12 +3327,12 @@ try
                     o.contrast=saveContrast;
                 end
                 % Print instruction in upper left corner.
-                Screen('FillRect',window,o.gray1,topCaptionRect);
+                Screen('FillRect',o.window,o.gray1,topCaptionRect);
                 message=sprintf('Trial %d of %d. Block %d of %d.',trial,o.trialsPerBlock,o.blockNumber,o.blocksDesired);
                 if isfield(o,'experiment')
                     message=[message ' Experiment "' o.experiment '".'];
                 end
-                Screen('DrawText',window,message,o.textSize/2,o.textSize/2,black,o.gray1);
+                Screen('DrawText',o.window,message,o.textSize/2,o.textSize/2,black,o.gray1);
                 
                 % Print instructions in lower left corner.
                 factor=1;
@@ -3335,16 +3356,16 @@ try
                 textRect=AlignRect(textRect,bottomCaptionRect,'left','bottom');
                 textRect=OffsetRect(textRect,o.textSize/2,-o.textSize/2); % inset from screen edges
                 textRect=round(textRect);
-                bounds=Screen('TextBounds',window,message);
+                bounds=Screen('TextBounds',o.window,message);
                 ratio=RectWidth(bounds)/(0.93*RectWidth(screenRect));
-                Screen('TextSize',window,floor(o.textSize/max([ratio factor])));
-                Screen('FillRect',window,o.gray1,bottomCaptionRect);
-                Screen('DrawText',window,message,textRect(1),textRect(4),black,o.gray1,1);
-                Screen('TextSize',window,o.textSize);
+                Screen('TextSize',o.window,floor(o.textSize/max([ratio factor])));
+                Screen('FillRect',o.window,o.gray1,bottomCaptionRect);
+                Screen('DrawText',o.window,message,textRect(1),textRect(4),black,o.gray1,1);
+                Screen('TextSize',o.window,o.textSize);
             end
             
             %% DISPLAY RESPONSE ALTERNATIVES
-            if ~isempty(window)
+            if ~isempty(o.window)
                 switch o.task
                     case '4afc'
                         leftEdgeOfResponse=screenRect(3);
@@ -3438,7 +3459,7 @@ try
                                             o.responseScreenAbsoluteContrast);
                                         error('Ignoring o.responseScreenAbsoluteContrast (%.2f). Please use default [].',o.responseScreenAbsoluteContrast);
                                     end
-                                    texture=Screen('MakeTexture',window,~img*o.gray1,0,0,1); % Uses only two clut entries (0 1), nicely antialiased.
+                                    texture=Screen('MakeTexture',o.window,~img*o.gray1,0,0,1); % Uses only two clut entries (0 1), nicely antialiased.
                                 else
                                     if isempty(o.responseScreenAbsoluteContrast)
                                         c=(cal.LLast-o.LBackground)/o.LBackground; % Max possible contrast.
@@ -3446,7 +3467,7 @@ try
                                     else
                                         c=o.responseScreenAbsoluteContrast;
                                     end
-                                    texture=Screen('MakeTexture',window,(c*img+1)*o.gray,0,0,1);
+                                    texture=Screen('MakeTexture',o.window,(c*img+1)*o.gray,0,0,1);
                                 end
                             else
                                 if o.printImageStatistics
@@ -3483,18 +3504,18 @@ try
                                     fprintf('%d: "index         " im: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f\n',...
                                         MFileLineNr,size(im,1),size(im,2),size(im,3),mean(im(:)),std(im(:)),min(im(:)),max(im(:)));
                                 end
-                                texture=Screen('MakeTexture',window,im,0,0,1);
+                                texture=Screen('MakeTexture',o.window,im,0,0,1);
                             end
-                            Screen('DrawTexture',window,texture,RectOfMatrix(img),rect);
+                            Screen('DrawTexture',o.window,texture,RectOfMatrix(img),rect);
                             Screen('Close',texture);
                             if o.labelAlternatives
-                                Screen('TextSize',window,o.textSize);
+                                Screen('TextSize',o.window,o.textSize);
                                 if streq(o.targetKind,'gabor')
                                     textRect=AlignRect([0 0 o.textSize o.textSize],rect,'center','top');
                                 else
                                     textRect=AlignRect([0 0 o.textSize o.textSize],rect,'left','top');
                                 end
-                                Screen('DrawText',window,o.alphabet(i),textRect(1),textRect(4),black,o.gray1,1);
+                                Screen('DrawText',o.window,o.alphabet(i),textRect(1),textRect(4),black,o.gray1,1);
                             end
                             rect=OffsetRect(rect,step(1),step(2));
                         end % for i=1:o.alternatives
@@ -3505,15 +3526,15 @@ try
                         MFileLineNr,o.contrast,(cal.LLast-cal.LFirst)/(cal.LLast+cal.LFirst));
                 end
                 if o.assessGray
-                    pp=Screen('GetImage',window,[20 20 21 21]);
+                    pp=Screen('GetImage',o.window,[20 20 21 21]);
                     ffprintf(ff,'Line %d: Gray index is %d (%.1f cd/m^2). Corner is %d.\n',...
                         MFileLineNr,o.gray*o.maxEntry,LuminanceOfIndex(cal,o.gray*o.maxEntry),pp(1));
                 end
                 if trial == 1
                     WaitSecs(0.5); % First time is slow. Mario suggested a work around, explained at beginning of this file.
                 end
-                Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
-                Screen('Flip',window,0,1); % Display instructions.
+                Screen('LoadNormalizedGammaTable',o.window,cal.gamma,loadOnNextFlip);
+                Screen('Flip',o.window,0,1); % Display instructions.
             end
             
             %% COLLECT RESPONSE
@@ -3527,7 +3548,7 @@ try
                         if o.speakInstructions
                             Speak('Escape.');
                         end
-                       [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.textMarginPix);
+                       [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(o.window,o,o.textMarginPix);
                         trial=trial-1;
                     end
                     if o.quitExperiment
@@ -3563,7 +3584,7 @@ try
                     end
                     responseChar=GetKeypress(enableKeyCodes,o.deviceIndex);
                     if ismember(responseChar,[escapeChar,graveAccentChar])
-                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.textMarginPix);
+                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(o.window,o,o.textMarginPix);
                         trial=trial-1;
                     end
                     if o.quitExperiment
@@ -3598,21 +3619,21 @@ try
                     textRect=AlignRect(textRect,bottomCaptionRect,'left','bottom');
                     textRect=OffsetRect(textRect,o.textSize/2,-1.5*o.textSize); % Inset from screen edges
                     textRect=round(textRect);
-                    bounds=Screen('TextBounds',window,message);
+                    bounds=Screen('TextBounds',o.window,message);
                     ratio=RectWidth(bounds)/(0.93*RectWidth(bottomCaptionRect));
                     if ratio > 1
-                        Screen('TextSize',window,floor(o.textSize/ratio));
+                        Screen('TextSize',o.window,floor(o.textSize/ratio));
                     end
                     if all(o.alphabet==upper(o.alphabet))
-                        [responseString,terminatorChar]=GetEchoStringUppercase(window,message,textRect(1),textRect(4)-o.textSize,black,o.gray,1,o.deviceIndex);
+                        [responseString,terminatorChar]=GetEchoStringUppercase(o.window,message,textRect(1),textRect(4)-o.textSize,black,o.gray,1,o.deviceIndex);
                     else
-                        [responseString,terminatorChar]=GetEchoString(window,message,textRect(1),textRect(4)-o.textSize,black,o.gray,1,o.deviceIndex);
+                        [responseString,terminatorChar]=GetEchoString(o.window,message,textRect(1),textRect(4)-o.textSize,black,o.gray,1,o.deviceIndex);
                     end
                     o.transcript.responseTimeSec(trial)=GetSecs-o.transcript.stimulusOnsetSec(trial);
-                    %                Screen('FillRect',window,o.gray1,bottomCaptionRect);
-                    Screen('TextSize',window,o.textSize);
+                    %                Screen('FillRect',o.window,o.gray1,bottomCaptionRect);
+                    Screen('TextSize',o.window,o.textSize);
                     if ismember(terminatorChar,[escapeChar,graveAccentChar])
-                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.textMarginPix);
+                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(o.window,o,o.textMarginPix);
                         trial=trial-1;
                     end
                     if o.quitExperiment
@@ -3670,7 +3691,7 @@ try
                         escapeKeyCode graveAccentKeyCode],o.deviceIndex);
                     o.transcript.responseTimeSec(trial)=GetSecs-o.transcript.stimulusOnsetSec(trial);
                     if ismember(responseChar,[escapeChar,graveAccentChar])
-                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.textMarginPix);
+                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(o.window,o,o.textMarginPix);
                         trial=trial-1;
                     end
                     if o.quitExperiment
@@ -3719,7 +3740,7 @@ try
                 s=sprintf('Signal duration requested %.3f s, measured %.3f s, and likely %.3f s, an excess of %.0f frames.\n', ...
                     o.targetDurationSec,o.measuredTargetDurationSec(trial),o.likelyTargetDurationSec(trial), ...
                     (o.likelyTargetDurationSec(trial)-o.targetDurationSec)*frameRate);
-                if abs(o.measuredTargetDurationSec(trial)-o.targetDurationSec) > 0.010
+                if isfinite(o.targetDurationSec) && abs(o.measuredTargetDurationSec(trial)-o.targetDurationSec) > 0.010
                     ffprintf(ff,'WARNING: %s',s);
                 else
                     if o.printDurations
@@ -3998,24 +4019,25 @@ try
         end
     end
 %     RestoreCluts;
-    if Screen(window,'WindowKind') == 1
+    if Screen(o.window,'WindowKind') == 1
         % Tell observer what's happening.
-        Screen('LoadNormalizedGammaTable',window,cal.old.gamma,loadOnNextFlip);
-        Screen('FillRect',window);
-        Screen('DrawText',window,' ',0,0,1,1,1); % Set background color.
+        Screen('LoadNormalizedGammaTable',o.window,cal.old.gamma,loadOnNextFlip);
+        Screen('FillRect',o.window);
+        Screen('DrawText',o.window,' ',0,0,1,1,1); % Set background color.
         string=sprintf('Saving results to disk ...');
-        DrawFormattedText(window,string,...
+        DrawFormattedText(o.window,string,...
             o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
-        Screen('Flip',window); % Display message.
+        Screen('Flip',o.window); % Display message.
     end
     ListenChar(0); % flush
     ListenChar;
-    if ~isempty(window) && (o.quitExperiment || o.blockNumber >= o.blocksDesired)
+    if ~isempty(o.window) && (o.quitExperiment || o.blockNumber >= o.blocksDesired)
        sca; % Screen('CloseAll'); ShowCursor;
        if ismac
           AutoBrightness(cal.screen,1); % Restore autobrightness.
        end
        window=[];
+       o.window=[];
     end
     % This applescript "activate" command provokes a screen refresh (by
     % selecting MATLAB). My computers each have only one display, upon which
@@ -4034,7 +4056,7 @@ try
         % I disabled this in April 2018 because it takes 0.1 s.
         status=system('osascript -e ''tell application "MATLAB" to activate''');
     end
-    if ~isempty(window)
+    if ~isempty(o.window)
         Screen('Preference','VisualDebugLevel',oldVisualDebugLevel);
         Screen('Preference','SuppressAllWarnings',oldSupressAllWarnings);
     end
@@ -4056,7 +4078,7 @@ try
         if exist('jsonencode','builtin')
             json=jsonencode(o1);
         else
-            addpath(fullfile(fileparts(mfilename('fullpath')),'lib/jsonlab'));
+            addpath(fullfile(myPath,'lib/jsonlab'));
             json=savejson('',o1);
         end
         clear o1
@@ -4071,7 +4093,7 @@ try
         if exist('jsonencode','builtin')
             json=jsonencode(o.transcript);
         else
-            addpath(fullfile(fileparts(mfilename('fullpath')),'lib/jsonlab'));
+            addpath(fullfile(myPath,'lib/jsonlab'));
             json=savejson('',o.transcript);
         end
         fid=fopen(fullfile(o.dataFolder,[o.dataFilename '.transcript.json']),'w');
@@ -4092,6 +4114,7 @@ catch e
     ListenChar;
     sca; % screen close all
     window=[];
+    o.window=[];
     if exist('cal','var') && isfield(cal,'old') && isfield(cal.old,'gamma')
         Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
     end
@@ -4106,8 +4129,8 @@ catch e
 end
 end % function o=NoiseDiscrimination(o)
 %% FUNCTION SaveSnapshot
-function SaveSnapshot(o)
-global window fixationLines fixationCrossWeightPix labelBounds location screenRect ...
+function o=SaveSnapshot(o)
+global fixationLines fixationCrossWeightPix labelBounds location screenRect ...
     tTest idealT64 leftEdgeOfResponse cal ff whichSignal dataFid
 % Hasn't been tested since it became a subroutine. It may need more of its
 % variables to be declared "global". A more elegant solution, more
@@ -4117,7 +4140,7 @@ global window fixationLines fixationCrossWeightPix labelBounds location screenRe
 % modified here, it too may need to be returned as an output argument, or
 % made global.
 if o.snapshotShowsFixationAfter && ~isempty(fixationLines)
-    Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
+    Screen('DrawLines',o.window,fixationLines,fixationCrossWeightPix,0); % fixation
 end
 if o.cropSnapshot
     if o.showResponseNumbers
@@ -4134,7 +4157,7 @@ else
     cropRect=screenRect;
 end
 o.approxRequiredNumber=64/10^((tTest-idealT64)/0.55);
-rect=Screen('TextBounds',window,'approxRequiredNumber 0000');
+rect=Screen('TextBounds',o.window,'approxRequiredNumber 0000');
 r=screenRect;
 r(3)=leftEdgeOfResponse;
 r=InsetRect(r,o.textSize/2,o.textSize/2);
@@ -4155,28 +4178,28 @@ if streq(o.task,'4afc')
         end
         x(i).entropy=sum(-x(i).p.*log2(x(i).p));
     end
-    saveSize=Screen('TextSize',window,round(o.textSize*.4));
-    saveFont=Screen('TextFont',window,'Courier');
+    saveSize=Screen('TextSize',o.window,round(o.textSize*.4));
+    saveFont=Screen('TextFont',o.window,'Courier');
     for i=1:4
         s=[sprintf('L%d',i) sprintf(' %4.2f',x(i).L)];
-        Screen('DrawText',window,s,rect(1),rect(2)-360-(5-i)*30);
+        Screen('DrawText',o.window,s,rect(1),rect(2)-360-(5-i)*30);
     end
     for i=1:4
         s=[sprintf('p%d',i) sprintf(' %4.2f',x(i).p)];
-        Screen('DrawText',window,s,rect(1),rect(2)-240-(5-i)*30);
+        Screen('DrawText',o.window,s,rect(1),rect(2)-240-(5-i)*30);
     end
-    Screen('TextSize',window,round(o.textSize*.8));
-    Screen('DrawText',window,sprintf('Mean %4.2f %4.2f %4.2f %4.2f',x(:).mean),rect(1),rect(2)-240);
-    Screen('DrawText',window,sprintf('Sd   %4.2f %4.2f %4.2f %4.2f',x(:).sd),rect(1),rect(2)-210);
-    Screen('DrawText',window,sprintf('Max  %4.2f %4.2f %4.2f %4.2f',x(:).max),rect(1),rect(2)-180);
-    Screen('DrawText',window,sprintf('Min  %4.2f %4.2f %4.2f %4.2f',x(:).min),rect(1),rect(2)-150);
-    Screen('DrawText',window,sprintf('Bits %4.2f %4.2f %4.2f %4.2f',x(:).entropy),rect(1),rect(2)-120);
-    Screen('TextSize',window,saveSize);
-    Screen('TextFont',window,saveFont);
+    Screen('TextSize',o.window,round(o.textSize*.8));
+    Screen('DrawText',o.window,sprintf('Mean %4.2f %4.2f %4.2f %4.2f',x(:).mean),rect(1),rect(2)-240);
+    Screen('DrawText',o.window,sprintf('Sd   %4.2f %4.2f %4.2f %4.2f',x(:).sd),rect(1),rect(2)-210);
+    Screen('DrawText',o.window,sprintf('Max  %4.2f %4.2f %4.2f %4.2f',x(:).max),rect(1),rect(2)-180);
+    Screen('DrawText',o.window,sprintf('Min  %4.2f %4.2f %4.2f %4.2f',x(:).min),rect(1),rect(2)-150);
+    Screen('DrawText',o.window,sprintf('Bits %4.2f %4.2f %4.2f %4.2f',x(:).entropy),rect(1),rect(2)-120);
+    Screen('TextSize',o.window,saveSize);
+    Screen('TextFont',o.window,saveFont);
 end
 o.snapshotCaptionTextSize=ceil(o.snapshotCaptionTextSizeDeg*o.pixPerDeg);
-saveSize=Screen('TextSize',window,o.snapshotCaptionTextSize);
-saveFont=Screen('TextFont',window,'Courier');
+saveSize=Screen('TextSize',o.window,o.snapshotCaptionTextSize);
+saveFont=Screen('TextFont',o.window,'Courier');
 caption={''};
 switch o.targetModulates
     case 'luminance'
@@ -4205,15 +4228,15 @@ switch o.task
 end
 rect=OffsetRect(o.stimulusRect,-o.snapshotCaptionTextSize/2,0);
 for i=length(caption):- 1:1
-    r=Screen('TextBounds',window,caption{i});
+    r=Screen('TextBounds',o.window,caption{i});
     r=AlignRect(r,rect,RectRight,RectBottom);
-    Screen('DrawText',window,caption{i},r(1),r(2));
+    Screen('DrawText',o.window,caption{i},r(1),r(2));
     rect=OffsetRect(r,0,-o.snapshotCaptionTextSize);
 end
-Screen('TextSize',window,saveSize);
-Screen('TextFont',window,saveFont);
-Screen('Flip',window,0,1); % Save image for snapshot. Show target, instructions, and fixation.
-img=Screen('GetImage',window,cropRect);
+Screen('TextSize',o.window,saveSize);
+Screen('TextFont',o.window,saveFont);
+Screen('Flip',o.window,0,1); % Save image for snapshot. Show target, instructions, and fixation.
+img=Screen('GetImage',o.window,cropRect);
 %                         grayPixels=img==o.gray;
 %                         img(grayPixels)=128;
 freezing='';
@@ -4268,10 +4291,13 @@ dataFid=-1;
 ListenChar;
 ShowCursor;
 sca; % screen close all
-window=[];
+% window=[];
+o.window=[]; % NOTE: o is not returned by this function.
 AutoBrightness(cal.screen,1); % Restore autobrightness.
 return
 end % function SaveSnapshot
+
+
 %% FUNCTION assessBitDepth
 function assessBitDepth(o)
 % Display a linear luminance ramp. Alternate at 1 Hz, with something that
@@ -4295,38 +4321,38 @@ cal=LinearizeClut(cal);
 img=cal.nFirst:cal.nLast;
 n=floor(RectWidth(screenRect)/length(img));
 r=[0 0 n*length(img) RectHeight(screenRect)];
-Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
+Screen('LoadNormalizedGammaTable',o.window,cal.gamma,loadOnNextFlip);
 if o.assessLoadGamma
     ffprintf(ff,'Line %d: o.contrast %.3f, LoadNormalizedGammaTable 0.5*range/mean=%.3f\n', ...
         MFileLineNr,o.contrast,(cal.LLast-cal.LFirst)/(cal.LLast+cal.LFirst));
 end
-Screen('TextFont',window,'Verdana');
-Screen('TextSize',window,24);
+Screen('TextFont',o.window,'Verdana');
+Screen('TextSize',o.window,24);
 for bits=1:11
     % WARNING: Mario advises against using PutImage, which is retained in
     % Psychtoolbox solely for backward compatibility. As of May 31, 2017,
     % it's not compatible with high-res color, but that may be fixed in the
     % next release.
-    Screen('PutImage',window,img,r);
+    Screen('PutImage',o.window,img,r);
     msg=sprintf(' Now alternately clearing video DAC bit %d. Hit SPACE bar to continue. ',bits);
     newGamma=bitset(round(cal.gamma*(2^17-1)),17-bits,0)/(2^17-1);
-    Screen('DrawText',window,' o.assessBitDepth: Testing bits 1 to 11. ',100,100,0,1,1);
-    Screen('DrawText',window,msg,100,136,0,1,1);
-    Screen('Flip',window);
+    Screen('DrawText',o.window,' o.assessBitDepth: Testing bits 1 to 11. ',100,100,0,1,1);
+    Screen('DrawText',o.window,msg,100,136,0,1,1);
+    Screen('Flip',o.window);
     ListenChar(0); % Flush. May not be needed.
     ListenChar(2); % No echo. Needed.
     while CharAvail
         GetChar;
     end
     while ~CharAvail
-        Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
-        Screen('Flip',window);
+        Screen('LoadNormalizedGammaTable',o.window,cal.gamma,loadOnNextFlip);
+        Screen('Flip',o.window);
         WaitSecs(0.2);
-        Screen('LoadNormalizedGammaTable',window,newGamma,loadOnNextFlip);
-        Screen('Flip',window);
+        Screen('LoadNormalizedGammaTable',o.window,newGamma,loadOnNextFlip);
+        Screen('Flip',o.window);
         WaitSecs(0.2);
     end
-    Screen('LoadNormalizedGammaTable',window,cal.gamma,loadOnNextFlip);
+    Screen('LoadNormalizedGammaTable',o.window,cal.gamma,loadOnNextFlip);
     GetChar;
     ListenChar; % Back to normal. Needed.
 end
@@ -4336,13 +4362,13 @@ end
 end % function assessBitDepth
 %% FUNCTION MeasureContrast
 function oOut=MeasureContrast(o,line)
-global window cal ff trial
+global cal ff trial
 LBackground=(cal.LLast+cal.LFirst)/2;
 fprintf('%d: LFirst %.1f, LBackground %.1f, LLast %.1f cd/m^2\n',line,cal.LFirst,LBackground,cal.LLast);
 % Measure signal luminance L
 index=IndexOfLuminance(cal,(1+o.contrast)*LBackground);
-Screen('FillRect',window,index/o.maxEntry,o.stimulusRect);
-Screen('Flip',window,0,1);
+Screen('FillRect',o.window,index/o.maxEntry,o.stimulusRect);
+Screen('Flip',o.window,0,1);
 if o.usePhotometer
     L=GetLuminance;
 else
@@ -4350,8 +4376,8 @@ else
 end
 % Measure background luminance L0
 index0=IndexOfLuminance(cal,LBackground);
-Screen('FillRect',window,index0/o.maxEntry,o.stimulusRect);
-Screen('Flip',window,0,1);
+Screen('FillRect',o.window,index0/o.maxEntry,o.stimulusRect);
+Screen('Flip',o.window,0,1);
 if o.usePhotometer
     L0=GetLuminance;
 else
@@ -4423,11 +4449,11 @@ function AssessLinearity(o)
 % made global.fprintf('Assess linearity.\n');
 gratingL=o.LBackground*repmat([0.2 1.8],400,200); % 400x400 grating
 gratingImg=IndexOfLuminance(cal,gratingL);
-texture=Screen('MakeTexture',window,gratingImg/o.maxEntry,0,0,1);
+texture=Screen('MakeTexture',o.window,gratingImg/o.maxEntry,0,0,1);
 r=RectOfMatrix(gratingImg);
 r=CenterRect(r,o.stimulusRect);
-Screen('DrawTexture',window,texture,RectOfMatrix(gratingImg),r);
-peekImg=Screen('GetImage',window,r,'drawBuffer');
+Screen('DrawTexture',o.window,texture,RectOfMatrix(gratingImg),r);
+peekImg=Screen('GetImage',o.window,r,'drawBuffer');
 Screen('Close',texture);
 peekImg=peekImg(:,:,2);
 figure(1);
@@ -4440,6 +4466,7 @@ fprintf('grating written: %.1f %.1f\n',gratingImg(1,1:2));
 fprintf('grating read: %.1f %.1f\n',peekImg(1,1:2));
 fprintf('normalized luminance: %.1f %.1f\n',LuminanceOfIndex(cal,peekImg(1,1:2))/o.LBackground);
 end % function AssessLinearity(o)
+
 %% FUNCTION ModelObserver
 function response=ModelObserver(o,signal,location)
 global signalImageIndex signalMask  
@@ -4696,7 +4723,7 @@ xy=min(xy,rect(3:4));
 end
 
 %% SET UP NEAR POINT at correct slant and viewing distance.
-function o=SetUpNearPoint(window,o)
+function o=SetUpNearPoint(o)
 global ff
 black=0; % The CLUT color code for black.
 white=1; % The CLUT color code for white.
@@ -4741,26 +4768,26 @@ if ~IsXYInRect(o.nearPointXYPix,r)
         o.nearPointXYInUnitSquare,xy,o.targetHeightDeg,o.targetMargin);
     o.nearPointXYInUnitSquare=xy;
 end
-if isempty(window)
+if isempty(o.window)
     return
 end
 string=sprintf('Please adjust the viewing distance so the X is %.1f cm from the observer''s eye. ',...
     o.viewingDistanceCm);
 string=[string 'Tilt and swivel the display so the X is orthogonal to the observer''s line of sight. '...
     'Then hit RETURN to continue.\n'];
-Screen('TextSize',window,o.textSize);
-Screen('TextFont',window,'Verdana');
-Screen('FillRect',window,o.gray1);
-Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
-DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+Screen('TextSize',o.window,o.textSize);
+Screen('TextFont',o.window,'Verdana');
+Screen('FillRect',o.window,o.gray1);
+Screen('DrawText',o.window,' ',0,0,1,o.gray1,1); % Set background color.
+DrawFormattedText(o.window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
 x=o.nearPointXYPix(1);
 y=o.nearPointXYPix(2);
 a=0.05*RectHeight(o.stimulusRect);
-[~,~,lineWidthMinMaxPix(1),lineWidthMinMaxPix(2)]=Screen('DrawLines',window);
+[~,~,lineWidthMinMaxPix(1),lineWidthMinMaxPix(2)]=Screen('DrawLines',o.window);
 widthPix=max([min([a/20 lineWidthMinMaxPix(2)]) lineWidthMinMaxPix(1)]);
-Screen('DrawLine',window,black,x-a,y-a,x+a,y+a,widthPix);
-Screen('DrawLine',window,black,x+a,y-a,x-a,y+a,widthPix);
-Screen('Flip',window); % Display request.
+Screen('DrawLine',o.window,black,x-a,y-a,x+a,y+a,widthPix);
+Screen('DrawLine',o.window,black,x+a,y-a,x-a,y+a,widthPix);
+Screen('Flip',o.window); % Display request.
 if o.speakInstructions
     string=strrep(string,'.0','');
     string=strrep(string,'\n','');
@@ -4774,16 +4801,17 @@ if ismember(response,[escapeChar,graveAccentChar])
     o.quitBlock=true;
     o.quitExperiment=true;
     sca;
-    window=[];
+%     window=[]; % Uh oh! "window" is out of scope!
+    o.window=[]; % o is not returned.
     ListenChar;
     return
 end
-Screen('FillRect',window,o.gray1);
-Screen('Flip',window); % Blank, to acknowledge response.
+Screen('FillRect',o.window,o.gray1);
+Screen('Flip',o.window); % Blank, to acknowledge response.
 end
 
 %% SET UP FIXATION
-function o=SetUpFixation(window,o,ff)
+function o=SetUpFixation(o,ff)
 escapeChar=char(27);
 graveAccentChar='`';
 returnChar=char(13);
@@ -4794,11 +4822,11 @@ spaceKeyCode=KbName('space');
 returnKeyCode=KbName('return');
 o.fixationXYPix=round(XYPixOfXYDeg(o,[0 0]));
 
-if ~o.useFixation || isempty(window)
+if ~o.useFixation || isempty(o.window)
     o.fixationIsOffscreen=false;
 else
-    black=BlackIndex(window); % Retrieves the CLUT color code for black.
-    white=WhiteIndex(window); % Retrieves the CLUT color code for white.
+    black=BlackIndex(o.window); % Retrieves the CLUT color code for black.
+    white=WhiteIndex(o.window); % Retrieves the CLUT color code for white.
     if ~IsXYInRect(o.fixationXYPix,o.stimulusRect)
         o.fixationIsOffscreen=true;
         % o.fixationXYPix is in plane of display. Off-screen fixation is
@@ -4847,18 +4875,18 @@ else
             'pushing the target location (o.nearPointXYInUnitSquare [%.2f %.2f]) away from fixation, '...
             'or reducing o.viewingDistanceCm (%.1f cm), or reducing the target''s o.eccentricityXYDeg [%.1f %.1f]).'],...
             o.nearPointXYInUnitSquare,o.viewingDistanceCm,o.eccentricityXYDeg)];
-        Screen('TextSize',window,o.textSize);
-        Screen('TextFont',window,'Verdana');
-        Screen('FillRect',window,o.gray1);
-        Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
-        DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+        Screen('TextSize',o.window,o.textSize);
+        Screen('TextFont',o.window,'Verdana');
+        Screen('FillRect',o.window,o.gray1);
+        Screen('DrawText',o.window,' ',0,0,1,o.gray1,1); % Set background color.
+        DrawFormattedText(o.window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
         x=o.nearPointXYPix(1);
         y=o.nearPointXYPix(2);
         a=0.1*RectHeight(o.stimulusRect);
-        [~,~,lineWidthMinMaxPix(1),lineWidthMinMaxPix(2)]=Screen('DrawLines',window);
+        [~,~,lineWidthMinMaxPix(1),lineWidthMinMaxPix(2)]=Screen('DrawLines',o.window);
         widthPix=max([min([a/20 lineWidthMinMaxPix(2)]) lineWidthMinMaxPix(1)]);
-        Screen('DrawLine',window,black,x-a,y-a,x+a,y+a,widthPix);
-        Screen('DrawLine',window,black,x+a,y-a,x-a,y+a,widthPix);
+        Screen('DrawLine',o.window,black,x-a,y-a,x+a,y+a,widthPix);
+        Screen('DrawLine',o.window,black,x+a,y-a,x-a,y+a,widthPix);
         
         % Draw two green arrows to desired location of offscreen fixation mark.
         if o.fixationXYPix(2)>o.stimulusRect(4) || o.fixationXYPix(2)<o.stimulusRect(2) % Fixation below or above rect.
@@ -4871,24 +4899,24 @@ else
             baseXY=[x y]+s*delta;
             tipXY=o.fixationXYPix;
             [baseXY,tipXY]=ClipLineSegment2(baseXY,tipXY,o.stimulusRect);
-            Screen('DrawLine',window,[0 1 0],baseXY(1),baseXY(2),tipXY(1),tipXY(2),widthPix);
+            Screen('DrawLine',o.window,[0 1 0],baseXY(1),baseXY(2),tipXY(1),tipXY(2),widthPix);
             % arrow head
             xy=baseXY-tipXY;
             angle=atan2d(xy(2),xy(1));
             length=0.5*o.fixationCrossDeg*o.pixPerDeg;
             for rotation=[-30 30]
                 xy=tipXY+length*[cosd(angle+rotation) sind(angle+rotation)];
-                Screen('DrawLine',window,[0 1 0],xy(1),xy(2),tipXY(1),tipXY(2),widthPix);
+                Screen('DrawLine',o.window,[0 1 0],xy(1),xy(2),tipXY(1),tipXY(2),widthPix);
             end
         end
         
-        Screen('Flip',window); % Display question.
+        Screen('Flip',o.window); % Display question.
         if o.speakInstructions
             Speak(string);
         end
         answer=GetKeypress([returnKeyCode escapeKeyCode graveAccentKeyCode],o.deviceIndex);
-        Screen('FillRect',window,white);
-        Screen('Flip',window); % Blank, to acknowledge response.
+        Screen('FillRect',o.window,white);
+        Screen('Flip',o.window); % Blank, to acknowledge response.
         if ismember(answer,returnChar)
             o.fixationIsOffscreen=true;
             ffprintf(ff,'Offscreen fixation mark (%.1f,%.1f) cm from near point of display.\n',fixationOffsetXYCm);
@@ -4915,8 +4943,14 @@ function [cal,o]=ComputeClut(cal,o)
 % and on flanker. (We assume flanker does not overlap target.) If the noise
 % in fact does not superimpose target or flanker then this range may be
 % broader than strictly necessary.
-cal.LFirst=o.LBackground*(1-o.noiseListBound*o.r*o.noiseSD/o.noiseListSd);
-cal.LLast=o.LBackground*(1+o.noiseListBound*o.r*o.noiseSD/o.noiseListSd);
+% We know that:
+% o.noiseListMin<=0
+% o.noiseListMax>=0
+% o.r>=1
+% o.noiseSD>=0
+% o.noiseListSd>0;
+cal.LFirst=o.LBackground*(1+o.noiseListMin*o.r*o.noiseSD/o.noiseListSd);
+cal.LLast=o.LBackground*(1+o.noiseListMax*o.r*o.noiseSD/o.noiseListSd);
 if ~o.useFlankers
     o.flankerContrast=0;
 end
@@ -4931,14 +4965,14 @@ if streq(o.targetModulates,'luminance')
     end
 end
 if o.annularNoiseBigRadiusDeg > o.annularNoiseSmallRadiusDeg
-    cal.LFirst=min(cal.LFirst,o.LBackground*(1-o.noiseListBound*o.r*o.annularNoiseSD/o.noiseListSd));
-    cal.LLast=max(cal.LLast,o.LBackground*(1+o.noiseListBound*o.r*o.annularNoiseSD/o.noiseListSd));
+    cal.LFirst=min(cal.LFirst,o.LBackground*(1-o.noiseListMax*o.r*o.annularNoiseSD/o.noiseListSd));
+    cal.LLast=max(cal.LLast,o.LBackground*(1+o.noiseListMax*o.r*o.annularNoiseSD/o.noiseListSd));
 end
 if o.symmetricLuminanceRange
     % Use smallest range centered on o.LBackground that includes LFirst and
-    % LLast. Having a fixed index for "gray" (o.LBackground) assures us that
-    % the gray areas (most of the screen) won't change when the CLUT is
-    % updated.
+    % LLast. Having a fixed index for "gray" (o.LBackground) assures us
+    % that the gray areas (most of the screen) won't change when the CLUT
+    % is updated. I no longer think that's important.
     LRange=2*max(abs([cal.LLast-o.LBackground o.LBackground-cal.LFirst]));
     maxLRange=2*min(max(cal.old.L)-o.LBackground,o.LBackground-min(cal.old.L));
     LRange=min(LRange,maxLRange);
@@ -4954,7 +4988,7 @@ if o.saveSnapshot
     cal.nLast=o.maxEntry;
 end
 if false
-    % Compute clut for the specific noise.
+    % Compute CLUT for the specific noise.
     L=[];
     for i=1:length(location)
         L=[L location(i).image(:)*o.LBackground];
@@ -4962,7 +4996,8 @@ if false
     cal.LFirst=min(L);
     cal.LLast=max(L);
 else
-    % Compute clut for all possible noise.
+    % Compute clut for all possible instances of noise with the given
+    % noiseSD and noiseKind.
 end
 cal=LinearizeClut(cal);
 if o.symmetricLuminanceRange
@@ -4991,7 +5026,7 @@ end
 assert(isfinite(o.gray));
 end % function ComputeClut
 
-function [reply,o]=AskQuestion(window,o,text)
+function [reply,o]=AskQuestion(o,text)
 % Last argument is a struct with several fields: text.big, text.small,
 % text.fine, text.question, text.setTextSizeToMakeThisLineFit. We
 % optionally return "o" which is  possibly modified from the input o in
@@ -4999,38 +5034,38 @@ function [reply,o]=AskQuestion(window,o,text)
 % field text.setTextSizeToMakeThisLineFit then o.textSize is adjusted to
 % make the line fit horizontally within screenRect.
 global screenRect ff
-if isempty(window)
+if isempty(o.window)
     reply='';
     return
 end
 escapeChar=char(27);
 graveAccentChar='`';
 black=0;
-o.textSize=TextSizeToFit(window);
+o.textSize=TextSizeToFit(o.window);
 ListenChar(2); % no echo
-Screen('FillRect',window,o.gray1);
-Screen('TextSize',window,o.textSize);
-Screen('TextFont',window,o.textFont,0);
+Screen('FillRect',o.window,o.gray1);
+Screen('TextSize',o.window,o.textSize);
+Screen('TextFont',o.window,o.textFont,0);
 y=screenRect(4)/2-(1+2*length(text.big))*o.textSize;
 for i=1:length(text.big)
-    Screen('DrawText',window,text.big{i},o.textMarginPix,y,black,o.gray1);
+    Screen('DrawText',o.window,text.big{i},o.textMarginPix,y,black,o.gray1);
     y=y+2*o.textSize;
 end
 y=y-0.5*o.textSize;
-Screen('TextSize',window,round(0.6*o.textSize));
-Screen('DrawText',window,text.small,o.textMarginPix,y,black,o.gray1);
-Screen('TextSize',window,round(o.textSize*0.35));
-Screen('DrawText',window,text.fine,o.textMarginPix,screenRect(4)-0.5*o.textMarginPix,black,o.gray1,1);
-Screen('TextSize',window,o.textSize);
+Screen('TextSize',o.window,round(0.6*o.textSize));
+Screen('DrawText',o.window,text.small,o.textMarginPix,y,black,o.gray1);
+Screen('TextSize',o.window,round(o.textSize*0.35));
+Screen('DrawText',o.window,text.fine,o.textMarginPix,screenRect(4)-0.5*o.textMarginPix,black,o.gray1,1);
+Screen('TextSize',o.window,o.textSize);
 if IsWindows
     background=[];
 else
     background=o.gray1;
 end
 fprintf('%d: o.deviceIndex %.0f.\n',MFileLineNr,o.deviceIndex);
-[reply,terminatorChar]=GetEchoString(window,text.question,o.textMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
+[reply,terminatorChar]=GetEchoString(o.window,text.question,o.textMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
 if ismember(terminatorChar,[escapeChar graveAccentChar])
-    [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.textMarginPix);
+    [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(o.window,o,o.textMarginPix);
     if o.quitExperiment
         ffprintf(ff,'*** User typed ESCAPE twice. Experiment terminated.\n');
     elseif o.quitBlock
@@ -5039,27 +5074,27 @@ if ismember(terminatorChar,[escapeChar graveAccentChar])
         ffprintf(ff,'*** User typed ESCAPE, but chose to continue.\n');
     end
 end
-Screen('FillRect',window,o.gray1);
+Screen('FillRect',o.window,o.gray1);
 % Flip screen soon, to let observer know her answer was accepted.
 end % function AskQuestion
 
 function o=WaitUntilObserverIsReady(o,message)
-global window fixationLines fixationCrossWeightPix ff
+global fixationLines fixationCrossWeightPix ff
 escapeChar=char(27);
 graveAccentChar='`';
 escapeKeyCode=KbName('escape');
 graveAccentKeyCode=KbName('`~');
 spaceKeyCode=KbName('space');
-Screen('FillRect',window,o.gray1);
-Screen('FillRect',window,o.gray1,o.stimulusRect);
+Screen('FillRect',o.window,o.gray1);
+Screen('FillRect',o.window,o.gray1,o.stimulusRect);
 fprintf('o.gray1*o.maxEntry %.1f, o.gray*o.maxEntry %.1f, o.maxEntry %.0f\n',o.gray1*o.maxEntry,o.gray*o.maxEntry,o.maxEntry);
 if o.showCropMarks
-    TrimMarks(window,frameRect);
+    TrimMarks(o.window,frameRect);
 end
 if ~isempty(fixationLines)
-    Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
+    Screen('DrawLines',o.window,fixationLines,fixationCrossWeightPix,0); % fixation
 end
-Screen('Flip',window,0,1); % Show gray screen at o.LBackground with fixation and crop marks. Don't clear buffer.
+Screen('Flip',o.window,0,1); % Show gray screen at o.LBackground with fixation and crop marks. Don't clear buffer.
 readyString='';
 if o.markTargetLocation
     readyString=[readyString 'The X indicates target center. '];
@@ -5095,11 +5130,11 @@ if true % Create readyString.
     end
 end
 msg=[message readyString];
-Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
+Screen('DrawText',o.window,' ',0,0,1,o.gray1,1); % Set background color.
 black=0;
-Screen(window,'TextSize',o.textSize);
-DrawFormattedText(window,msg,0.5*o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
-Screen('Flip',window,0,1); % Proceeding to the trial.
+Screen(o.window,'TextSize',o.textSize);
+DrawFormattedText(o.window,msg,0.5*o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+Screen('Flip',o.window,0,1); % Proceeding to the trial.
 if o.speakInstructions
     if ismac
         msg=strrep(msg,'fix','fixh');
@@ -5116,7 +5151,7 @@ switch o.task
         % This keypress serves mainly to start the first trial, but we
         % offer to quit if the user hits ESCAPE.
         if ismember(responseChar,[escapeChar,graveAccentChar])
-            [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(window,o,o.textMarginPix);
+            [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(o.window,o,o.textMarginPix);
             if o.quitBlock
                 ffprintf(ff,'*** User typed ESCAPE. Quitting block.\n');
                 if o.speakInstructions
