@@ -70,28 +70,28 @@ o.thresholdParameter='contrast';
 o.trialsPerBlock=40;
 
 %% PUT THE EXPERIMENT'S CONDITIONS IN STRUCT oo
+o.targetHeightDeg=11;
+o.noiseCheckDeg=o.targetHeightDeg/20;
+o.noiseSD=0.2;
+o.targetDurationSec=inf;
+o.contrast=-1;
 oo={};
 if false
     o.conditionName='Noise letter';
     o.task='identify';
     o.targetModulates='noise';
     o.targetKind='letter';
-    o.targetHeightDeg=11;
-    o.noiseCheckDeg=o.targetHeightDeg/100;
-    o.noiseSD=0.2;
-    o.targetDurationSec=0.2;
-    o.contrast=-1;
     o.eccentricityXYDeg=[5.6 5.6];
     oo{end+1}=o;
     o.eccentricityXYDeg=[0 0];
 end
-if false
+if true
     o.conditionName='Luminance letter';
     o.task='identify';
     o.targetModulates='luminance';
     oo{end+1}=o;
 end
-if true
+if false
     o.conditionName='Entropy letter';
     o.task='identify';
     o.targetModulates='entropy';
