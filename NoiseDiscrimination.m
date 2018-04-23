@@ -2889,14 +2889,8 @@ try
                             location(1).image(annularNoiseMask)=1+(o.annularNoiseSD/o.noiseListSd)*noise(annularNoiseMask);
                             location(1).image=repmat(location(1).image,1,1,length(white)); % Support color.
                             location(1).image=location(1).image+o.contrast*signalImage; % Add signal to noise.
-                            if o.printImageStatistics
-                                img=signalImage;
-                                fprintf('%d: IMAGE STATS signalImage. signal(%d).image: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
-                                    MFileLineNr,i,size(img,1),size(img,2),size(img,3),mean(img(:)),std(img(:)),min(img(:)),max(img(:)),o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
-                                img=location(1).image;
-                                fprintf('%d: IMAGE STATS location(1).image. signal(%d).image: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
-                                    MFileLineNr,i,size(img,1),size(img,2),size(img,3),mean(img(:)),std(img(:)),min(img(:)),max(img(:)),o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
-                            end
+                            PrintImageStatistics(MFileLineNr,o,i,'signalImage',signalImage);
+                            PrintImageStatistics(MFileLineNr,o,i,'location(1).image',location(1).image)
                         case 'noise'
                             noise(signalMask)=o.r*noise(signalMask); % Signal modulates noise.
                             location(1).image=ones(o.canvasSize);
@@ -2909,10 +2903,7 @@ try
                             noise(~signalMask)=(0.5+floor(noise(~signalMask)*0.499999*o.backgroundEntropyLevels))/(0.5*o.backgroundEntropyLevels);
                             location(1).image=1+(o.noiseSD/o.noiseListSd)*noise;
                     end
-                    if o.printImageStatistics
-                        fprintf('%d: IMAGE STATS before flanker added. signal(%d).image: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
-                            MFileLineNr,i,size(img,1),size(img,2),size(img,3),mean(img(:)),std(img(:)),min(img(:)),max(img(:)),o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
-                    end
+                    PrintImageStatistics(MFileLineNr,o,i,'noise',noise);
                     
                     %% ADD FLANKERS, EACH A RANDOM LETTER LIKE THE TARGET
                     if o.useFlankers && streq(o.targetModulates,'luminance')
@@ -3016,7 +3007,7 @@ try
             fprintf('\n');
         end
         
-        %% COMPUTE CLUT
+      %% COMPUTE CLUT
         if ~ismember(o.observer,o.algorithmicObservers)
             if trial==1
                 % Clear screen only before first trial. After the first
@@ -3055,7 +3046,7 @@ try
             end
         end % if ~ismember(o.observer,o.algorithmicObservers)
         
-        %% MEASURE CONTRAST (TO CHECK THE PROGRAM)
+      %% MEASURE CONTRAST (TO CHECK THE PROGRAM)
         if o.measureContrast
             location=movieImage{1};
             fprintf('%d: luminance/o.LBackground',MFileLineNr);
@@ -3106,12 +3097,10 @@ try
                         % Convert to pixel values.
                         % PREPARE IMAGE DATA
                         img=location(1).image;
-                        if o.printImageStatistics
-                            fprintf('%d: IMAGE STATS before IndexOfLuminance. signal(%d).image: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
-                                MFileLineNr,i,size(img,1),size(img,2),size(img,3),mean(img(:)),std(img(:)),min(img(:)),max(img(:)),o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
-                        end
-%                         fprintf('%d: o.signalMin %.2f, o.signalMax %.2f\n',MFileLineNr,o.signalMin,o.signalMax);
+                        PrintImageStatistics(MFileLineNr,o,i,'before IndexOfLuminance',img);
                         img=IndexOfLuminance(cal,img*o.LBackground)/o.maxEntry;
+%                         im=LuminanceOfIndex(cal,img*o.maxEntry);
+%                         PrintImageStatistics(MFileLineNr,o,i,'LuminanceOfIndex(IndexOfLuminance)',im);
                         img=Expand(img,o.targetCheckPix);
                         if o.assessLinearity
                             AssessLinearity(o);
@@ -3256,7 +3245,7 @@ try
                             Screen('CopyWindow',movieTexture(iMovieFrame),snapshotTexture);
                         end
                     end
-                    Screen('Flip',o.window,0,1); % Display movie frame. Don't clear back buffer.
+                    Screen('Flip',o.window,0,1); % Display this frame of the movie. Don't clear back buffer.
                     o.movieFrameFlipSec(iMovieFrame,trial)=GetSecs;
                 end % for iMovieFrame=1:o.movieFrames
                 o.transcript.stimulusOnsetSec(trial)=o.movieFrameFlipSec(o.moviePreFrames+1,trial);
@@ -3277,7 +3266,7 @@ try
                     pp=mode(p);
                     pp(2)=mode(p(p~=pp));
                     pp=sort(pp);
-                    imageLuminance=interp1(cal.old.G,cal.old.L,pp,'pchip');
+                    LL=interp1(cal.old.G,cal.old.L,pp,'pchip');
                     ffprintf(ff,'%d: assessTargetLuminance: G',MFileLineNr);
                     ffprintf(ff,' %.4f',pp);
                     ffprintf(ff,', luminance');
@@ -3423,10 +3412,7 @@ try
                         end
                         for i=1:o.alternatives
                             img=signal(i).image;
-                            if o.printImageStatistics
-                                fprintf('%d: IMAGE STATS. signal(%d).image: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
-                                    MFileLineNr,i,size(img,1),size(img,2),size(img,3),mean(img(:)),std(img(:)),min(img(:)),max(img(:)),o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
-                            end
+%                             PrintImageStatistics(MFileLineNr,o,i,'before resize',img)
                             if useExpand
                                 img=Expand(signal(i).image,alphaCheckPix);
                             else
@@ -3443,10 +3429,7 @@ try
                                     % by the DrawTexture command below.
                                 end
                             end % if useExpand
-                            if o.printImageStatistics
-                                fprintf('%d: signal(%d) img: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
-                                    MFileLineNr,i,size(img,1),size(img,2),size(img,3),mean(img(:)),std(img(:)),min(img(:)),max(img(:)),o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
-                            end
+%                             PrintImageStatistics(MFileLineNr,o,i,'after resize',img)
                             if o.responseScreenAbsoluteContrast<0
                                 error('o.responseScreenAbsoluteContrast %.2f must be positive. Sign will track o.contrast.',o.responseScreenAbsoluteContrast);
                             end
@@ -3470,12 +3453,7 @@ try
                                     texture=Screen('MakeTexture',o.window,(c*img+1)*o.gray,0,0,1);
                                 end
                             else
-                                if o.printImageStatistics
-                                    fprintf('%d: o.signalMin %.2f, o.signalMax %.2f\n',...
-                                        MFileLineNr,o.signalMin,o.signalMax);
-                                    fprintf('%d: "signal(%d)" img: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f, LBackground %.0f, LFirst %.0f, LLast %.0f, nFirst %.0f, nLast %.0f\n',...
-                                        MFileLineNr,i,size(img,1),size(img,2),size(img,3),mean(img(:)),std(img(:)),min(img(:)),max(img(:)),o.LBackground,cal.LFirst,cal.LLast,cal.nFirst,cal.nLast);
-                                end
+                                PrintImageStatistics(MFileLineNr,o,i,'after MakeTexture',img)
                                 if isempty(o.responseScreenAbsoluteContrast)
                                     % Maximize absolute contrast.
                                     if o.thresholdPolarity>0
@@ -3533,7 +3511,13 @@ try
                 if trial == 1
                     WaitSecs(0.5); % First time is slow. Mario suggested a work around, explained at beginning of this file.
                 end
-                Screen('LoadNormalizedGammaTable',o.window,cal.gamma,loadOnNextFlip);
+                if isfinite(o.targetDurationSec)
+                    % If signal is over, then set CLUT to allow maximum
+                    % contrast of the response screen, using newly computed
+                    % cal.gamma. If signal is ongoing, then we leave the
+                    % CLUT as it is.
+                    Screen('LoadNormalizedGammaTable',o.window,cal.gamma,loadOnNextFlip);
+                end
                 Screen('Flip',o.window,0,1); % Display instructions.
             end
             
@@ -5159,5 +5143,18 @@ switch o.task
                 end
             end
         end
+end
+end % function WaitUntilObserverIsReady
+
+function PrintImageStatistics(line,o,i,msg,img)
+global cal
+if o.printImageStatistics
+    im=img(1:end,1);
+    fprintf(['%d: trials %d, signal %d, IMAGE STATS %s: size %dx%dx%d, mean %.2f, ' ...
+        'sd %.2f, min %.2f, max %.2f, LBackground %.0f, LFirst %.0f, LLast %.0f, '...
+        'o.contrast %.2f, o.noiseSD %.2f, o.signalMin %.2f, o.signalMax %.2f\n'],...
+        line,o.trials,i,msg,size(im,1),size(im,2),size(im,3),mean(im(:)),std(im(:)),...
+        min(im(:)),max(im(:)),o.LBackground,cal.LFirst,cal.LLast,...
+        o.contrast,o.noiseSD,o.signalMin,o.signalMax);
 end
 end
