@@ -21,6 +21,9 @@ addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % Folder in same dire
 cal=OurScreenCalibrations(0);
 o.localHostName=cal.localHostName;
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+% o.measureContrast=true;
+% o.printImageStatistics=true;
+% o.assessTargetLuminance=true;
 o.observer='ideal';
 o.observer='junk';
 o.experimenter='junk';
