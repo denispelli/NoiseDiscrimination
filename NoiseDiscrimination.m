@@ -3260,14 +3260,14 @@ try
                     % luminance from G.
                     rect=CenterRect(o.targetCheckPix*o.targetRectLocal,o.stimulusRect);
                     o.actualStimulus=Screen('GetImage',o.window,rect,'frontBuffer',1);
-                    % Get the mode and mode of rest.
+                    % Get first and second mode.
                     p=o.actualStimulus(:,:,2);
                     p=p(:);
                     pp=mode(p);
                     pp(2)=mode(p(p~=pp));
                     pp=sort(pp);
                     LL=interp1(cal.old.G,cal.old.L,pp,'pchip');
-                    ffprintf(ff,'%d: assessTargetLuminance: G',MFileLineNr);
+                    ffprintf(ff,'%d: assessTargetLuminance: two modal values: G',MFileLineNr);
                     ffprintf(ff,' %.4f',pp);
                     ffprintf(ff,', luminance');
                     ffprintf(ff,' %.1f',LL);
@@ -3276,7 +3276,7 @@ try
                     else
                         c=(LL(2)-LL(1))/LL(1);
                     end
-                    ffprintf(ff,', contrast %.4f\n',c);
+                    ffprintf(ff,' cd/m^2, contrast %.4f, o.contrast %.4f\n',c,o.contrast);
                     ffprintf(ff,'\n');
                     %             Print stimulus as table of numbers.
                     %             dx=round(size(o.actualStimulus,2)/10);
