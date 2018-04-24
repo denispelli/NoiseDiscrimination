@@ -14,20 +14,10 @@ if o.questPlusEnable && ~exist('qpInitialize','file')
 end
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % Folder in same directory as this M file.
 cal=OurScreenCalibrations(0);
-o.seed=[]; % Fresh.
-% o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
-if isempty(o.seed)
-    rng('shuffle'); % Use clock to seed the random number generator.
-    generator=rng;
-    o.seed=generator.Seed;
-else
-    rng(o.seed);
-end
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 % o.printImageStatistics=true;
 
 %% SPECIFY BASIC CONDITION
-o.ratingThreshold=4; % Our threshold for beauty.
 o.symmetricLuminanceRange=false; % Allow maximum brightness.
 o.desiredLuminanceFactor=1.8; % Maximize brightness.
 o.responseScreenAbsoluteContrast=0.9;
@@ -45,6 +35,7 @@ else
     o.convertSignalImageToGray=false;
     o.alphabetPlacement='right'; % 'top' or 'right';
 end
+o.ratingThreshold=4*ones(size(o.alphabet)); % Beauty threshold for each member of o.alphabet.
 o.targetMargin=0;
 viewingDistanceCm=40;
 o.contrast=1; % Select contrast polarity.
@@ -85,7 +76,7 @@ end
 
 %% SAVE CONDITIONS IN STRUCT oo
 oo={};
-for beautyTask=Shuffle(0:1)
+for beautyTask=1 %Shuffle(0:1)
     if beautyTask
         o.task='rate';
     else
@@ -110,9 +101,6 @@ for i=1:length(oo)
     tt(i,:)=t(1,vars);
 end
 disp(tt) % Print list of conditions.
-
-%% LOOK FOR PARTIAL RUNS OF THIS EXPERIMENT
-oo=OfferToResumeExperiment(oo);
 
 %% RUN THE CONDITIONS
 oo=RunExperiment(oo);
