@@ -79,7 +79,7 @@ o.noiseSD=0.2;
 o.targetDurationSec=inf;
 o.contrast=-1;
 oo={};
-if false
+if true
     o.conditionName='Noise letter';
     o.task='identify';
     o.targetModulates='noise';
@@ -94,8 +94,8 @@ if true
     o.targetModulates='luminance';
     oo{end+1}=o;
 end
-if false
-    o.conditionName='Entropy letter';
+if true
+    o.conditionName='Entropy letter 2';
     o.task='identify';
     o.targetModulates='entropy';
     o.backgroundEntropyLevels=2;
@@ -107,7 +107,20 @@ if false
     o.noiseSD=0.05;
     oo{end+1}=o;
 end
-if false
+if true
+    o.conditionName='Entropy letter 3';
+    o.task='identify';
+    o.targetModulates='entropy';
+    o.backgroundEntropyLevels=3;
+    o.targetHeightDeg=11;
+    o.noiseCheckDeg=o.targetHeightDeg/20;
+    o.targetDurationSec=inf;
+    o.noiseSD=0.2;
+    oo{end+1}=o;
+    o.noiseSD=0.05;
+    oo{end+1}=o;
+end
+if true
     o.conditionName='4afc noise';
     o.task='4afc';
     o.targetModulates='noise';
@@ -141,9 +154,6 @@ for oi=1:length(oo)
     end
     oo{oi}=o;
 end
-
-%% LOOK FOR PARTIAL RUNS OF THIS EXPERIMENT
-oo=OfferToResumeExperiment(oo);
 
 %% PRINT THE CONDITIONS (ONE PER ROW) AS TABLE TT
 % All these vars must be defined in every condition.
