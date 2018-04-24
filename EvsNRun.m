@@ -167,49 +167,48 @@ for i=1:length(oo)
     oo{i}.condition=i; % Number the conditions
 end
 
-%% PRINT THE CONDITIONS (ONE PER ROW) AS TABLE TT
+%% PRINT THE CONDITIONS (ONE PER ROW) AS TABLE TT.
 % All these vars must be defined in every condition.
 vars={'condition' 'experiment' 'conditionName' ...
     'useFilter' 'eccentricityXYDeg' ...
-    'targetDurationSec' 'targetCyclesPerDeg' ...
-    'targetHeightDeg' 'targetGaborCycles' 'noiseSD' 'noiseType'};
+    'targetDurationSec' 'targetHeightDeg' ...
+    'targetCyclesPerDeg' 'targetGaborCycles' ...
+    'noiseSD' 'noiseType'};
 tt=table;
-for i=14:length(oo)
+for i=1:length(oo)
     t=struct2table(oo{i},'AsArray',true);
     tt(i,:)=t(1,vars);
 end
 disp(tt) % Print list of conditions.
 
-%% RUN THE CONDITIONS
-if ~skipDataCollection
-    oo=RunExperiment(oo);
-end % if ~skipDataCollection
+%% RUN THE CONDITIONS.
+oo=RunExperiment(oo(12:end));
 
-%% PRINT SUMMARY OF RESULTS AS TABLE TT
+%% PRINT SUMMARY OF RESULTS AS TABLE TT.
 % Include whatever you're intersted in. We skip rows missing any value.
 vars={'condition' 'experiment' 'conditionName' ...
     'useFilter' 'luminanceAtEye' 'eccentricityXYDeg' ...
     'targetDurationSec' 'targetCyclesPerDeg' ...
     'targetHeightDeg' 'targetGaborCycles' ...
-    'noiseSD' 'N' 'noiseType' 'E' 'contrast'};
+    'noiseSD' 'N' 'noiseType' 'E' 'contrast' 'dataFilename' 'dataFolder'};
 tt=table;
 for i=1:length(oo)
     % Grab the variables we want into a one-row table.
     t=struct2table(oo{i},'AsArray',true);
-    % Skip incomplete rows.
+    % Skip empty rows.
     if ~all(ismember({'trials' 'contrast' 'transcript'},t.Properties.VariableNames)) || isempty(t.trials) || t.trials==0
         % Skip condition without data.
         continue
     end
-    % Warn, skip the condition, and report which fields were missing.
+    % Check that all vars are present. Skip any incomplete condition after
+    % warning which fields were missing.
     ok=ismember(vars,t.Properties.VariableNames);
     if ~all(ok)
         missing=join(vars(~ok),' ');
         warning('Skipping incomplete condition %d, because it lacks: %s',i,missing{1});
         continue
     end
-    % Add the complete row to our session table, with all conditions
-    % completed.
+    % Add the complete row to our table of completed conditions.
     tt(end+1,:)=t(1,vars);
 end
 disp(tt) % Print summary.
@@ -217,9 +216,9 @@ if isempty(tt)
     return
 end
 
-%% SAVE SUMMARY OF RESULTS
+%% SAVE SUMMARY OF RESULTS OF EXPERIMENT.
 o=oo{1};
 o.summaryFilename=[o.dataFilename '.summary'];
 writetable(tt,fullfile(o.dataFolder,[o.summaryFilename '.csv']));
 save(fullfile(o.dataFolder,[o.summaryFilename '.mat']),'tt','oo');
-fprintf('Summary saved in data folder as "%s" with extensions ".csv" and ".mat".\n',o.summaryFilename);
+fprintf('Experiment summary (with %d blocks) saved in data folder as "%s" with extensions ".csv" and ".mat".\n',length(oo),o.summaryFilename);
