@@ -2438,6 +2438,13 @@ try
     end
     o.centralNoiseEnvelopeE1DegDeg=sum(centralNoiseEnvelope(:).^2*o.noiseCheckPix/o.pixPerDeg^2);
     
+    if streq(o.task,'rate')
+        if length(o.ratingThreshold)~=length(o.alphabet)
+            error('Length of o.ratingThreshold is %d, but should equal length of o.alphabet ''%s'', which is %d.\n',...
+                length(o.ratingThreshold),o.alphabet,length(o.alphabet));
+        end
+    end
+    
     %% o.E1 is energy at unit contrast.
     power=1:length(signal);
     for i=1:length(signal)
@@ -4107,11 +4114,14 @@ catch e
         fclose(dataFid);
         dataFid=-1;
     end
+    % Sort field names.
     [~,neworder]=sort(lower(fieldnames(o)));
     o=orderfields(o,neworder);
+    
     rethrow(e);
 end
 end % function o=NoiseDiscrimination(o)
+
 %% FUNCTION SaveSnapshot
 function o=SaveSnapshot(o)
 global fixationLines fixationCrossWeightPix labelBounds location screenRect ...
@@ -4281,7 +4291,6 @@ AutoBrightness(cal.screen,1); % Restore autobrightness.
 return
 end % function SaveSnapshot
 
-
 %% FUNCTION assessBitDepth
 function assessBitDepth(o)
 % Display a linear luminance ramp. Alternate at 1 Hz, with something that
@@ -4344,6 +4353,7 @@ if o.speakInstructions
     Speak('Done');
 end
 end % function assessBitDepth
+
 %% FUNCTION MeasureContrast
 function oOut=MeasureContrast(o,line)
 global cal ff trial
@@ -4376,6 +4386,7 @@ o.nominalContrast(trial)=o.contrast;
 o.actualContrast(trial)=actualContrast;
 oOut=o;
 end % MeasureContrast
+
 %% FUNCTION AssessContrast
 function AssessContrast(o)
 % Estimate actual contrast on screen.
@@ -4422,6 +4433,7 @@ switch o.targetModulates
         end
 end
 end % function AssessContrast
+
 %% FUNCTION AssessLinearity
 function AssessLinearity(o)
 % Hasn't been tested since it became a subroutine. It may need more of its
@@ -4792,7 +4804,7 @@ if ismember(response,[escapeChar,graveAccentChar])
 end
 Screen('FillRect',o.window,o.gray1);
 Screen('Flip',o.window); % Blank, to acknowledge response.
-end
+end % function SetUpNearPoint
 
 %% SET UP FIXATION
 function o=SetUpFixation(o,ff)
@@ -4919,7 +4931,7 @@ if o.fixationCrossBlankedNearTarget
 else
     ffprintf(ff,'Fixation cross is blanked during and until %.2f s after target. No selective blanking near target. \n',o.fixationCrossBlankedUntilSecAfterTarget);
 end
-end
+end % function SetUpFixation
 
 
 function [cal,o]=ComputeClut(cal,o)
