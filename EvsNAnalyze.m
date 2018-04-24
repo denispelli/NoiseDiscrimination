@@ -1,67 +1,97 @@
 %% Analyze the data collected by EvsNRun.
-% It seems that NoiseDiscrimination only saves "o" and "cal" in MAT files,
-% but Veena's data have "oo". Is "oo" saved by EvsNRUN? Looking at EvsNRun,
+% It seems that NoiseDiscrimination only saves MAT files with "o" and "cal",
+% but Veena's data have "oo". Is "oo" saved by EvsNRun? Looking at EvsNRun,
 % I see it saves "oo" and "cal" in a *summary.MAT file, but Veena doesn't
 % seem to have such files.
 experiment='EvsN';
-if ~exist('skipDataCollection')
-   skipDataCollection=false;
-end
-if ~skipDataCollection
-   dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
-   cd(dataFolder);
-   matFiles=dir(fullfile(dataFolder,[experiment 'Run-NoiseDiscrimination*.mat']));
-   clear data;
-   for i = 1:length(matFiles)
-      % Extract the desired fields into "data", one row per threshold.
-      d = load(matFiles(i).name);
-%       data(i).LBackground=mean([d.cal.LFirst d.cal.LLast]); % Compute from cal in case it's not in o.
-      data(i).luminanceFactor=1; % default value
-      for field={'condition' 'experiment' 'dataFilename' 'experimenter' 'observer' 'trials' ...
+dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
+cd(dataFolder);
+matFiles=dir(fullfile(dataFolder,[experiment 'Run-NoiseDiscrimination*.mat']));
+% experiment={};
+oo={};
+for i=1:length(matFiles) % One threshold file per iteration.
+    % Extract the desired fields into "oo", one cell-row per threshold.
+    d=load(matFiles(i).name);
+    if ~isfield(d,'o')
+        % Skip summary files.
+        continue
+    end
+    o=d.o;
+    oo{end+1}={}; % New row for this threshold.
+    for field={'condition' 'conditionName' 'experiment' 'dataFilename' ...
+            'experimenter' 'observer' 'trials' ...
             'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' ...
             'targetHeightDeg' 'targetDurationSec' 'targetDurationSecMean'...
             'targetCheckDeg' 'fullResolutionTarget' ...
             'noiseType' 'noiseSD'  'noiseCheckDeg' ...
             'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
             'contrast' 'E' 'N' 'LBackground' 'conditionName'}
-         if isfield(d.o,field{:})
-            data(i).(field{:})=d.o.(field{:});
-         else
+        if isfield(o,field{:})
+            oo{end}.(field{:})=o.(field{:});
+        else
             if i==1
-               warning OFF BACKTRACE
-               warning('Missing data field: %s\n',field{:});
+                warning OFF BACKTRACE
+                warning('Missing o field: %s\n',field{:});
             end
-         end
-      end
-   end
-   if any([data(:).trials]<40)
-      s=sprintf('Threshold condition(trials):');
-      s=[s sprintf(' %d(%d),',data([data(:).trials]<40).condition,data([data(:).trials]<40).trials)];
-      warning('%d threshold(s) with fewer than 40 trials. %s',sum([data(:).trials]<40),s);
-   end
-   %    data = data([data(:).trials]>=40); % Discard thresholds with less than 40 trials.
-   % Sort by condition
-   [~,ii]=sort([data(:).condition]);
-   data=data(ii);
-   fprintf('Plotting %d thresholds.\n',length(data));
+        end
+    end
 end
-assert(~isempty(data))
+trials=[];
+for i=1:length(oo)
+    trials(i)=oo{i}.trials;
+end
+if any(trials<40)
+    s=sprintf('condition(trials):');
+    s=[s sprintf(' %d(%d),',oo{trials<40}.condition,oo{trials<40}.trials)];
+    warning('Discarding %d threshold(s) with fewer than 40 trials: %s',sum(trials<40),s);
+end
+oo = oo(trials>=40); % Discard thresholds with less than 40 trials.
+observers={};
+for i=1:length(oo)
+    observers{i}=oo{i}.observer;
+end
+uniqueObservers=unique(observers);
+fprintf('Plotting %d thresholds.\n',length(oo));
+ooo=oo;
+for observer=uniqueObservers
+    oo=ooo(ismember(observers,observer));
+    fprintf('Observer %s, %d thresholds.\n',observer{1},length(oo));
+end
+assert(~isempty(oo))
+% Sort by condition number.
+condition=[];
+for i=1:length(oo)
+    condition(i)=oo{i}.condition;
+end
+[~,ii]=sort(condition);
+oo=oo(ii);
 return
 %% Compute derived quantities
-for j=1:5:length(data)
-   for i=j:j+3
-      assert(data(j+4).N==0)
-      data(i).E0=data(j+4).E;
-      % (E-E0)/N
-      data(i).EE0N=(data(i).E-data(i).E0)/data(i).N;
-      % Neq=N E0/(E-E0)
-      data(i).Neq=data(i).N*data(i).E0/(data(i).E-data(i).E0);
-      data(i).targetCyclesPerDeg=data(i).targetGaborCycles/data(i).targetHeightDeg;
-   end
+for j=1:length(oo)
+    switch oo{j}.conditionName
+        case 'photon'
+            switch oo{j}.noiseType
+                case 'binary'
+                case 'gaussian'
+            end
+        case 'ganglion'
+        case 'cortical'
+    end
+end
+for condition={'photon' 'ganglion' 'cortical'}
+    which=oo.N==0
+        assert(oo{j+4}.N==0)
+        oo{i}.E0=oo{j+4}.E;
+        % (E-E0)/N
+        oo{i}.EE0N=(oo{i}.E-oo{i}.E0)/oo{i}.N;
+        % Neq=N E0/(E-E0)
+        oo{i}.Neq=oo{i}.N*oo{i}.E0/(oo{i}.E-oo{i}.E0);
+        oo{i}.targetCyclesPerDeg=oo{i}.targetGaborCycles/oo{i}.targetHeightDeg;
+    
 end
 
 %% Create CSV file
-t=struct2table(data);
+t=struct2table(oo);
 spreadsheet=fullfile(fileparts(mfilename('fullpath')),'data',[experiment '.csv']);
 writetable(t,spreadsheet);
 t
@@ -74,14 +104,14 @@ figure;
 set(gca,'FontSize',12);
 clear legendString
 for graph=1:2
-   ii=(graph-1)*5+(1:4);
-   i=ii(1);
-   loglog([data(ii).noiseCheckDeg],[data(ii).EE0N],'-x'); 
-   hold on;
-   legendString{graph}=sprintf('fullResolutionTarget %d',data(i).fullResolutionTarget);
-   if isfield(data(i),'conditionName') && ~isempty(data(i).conditionName)
-      legendString{graph}=[data(i).conditionName ': ' legendString{graph}];
-   end
+    ii=(graph-1)*5+(1:4);
+    i=ii(1);
+    loglog([oo{ii}.noiseCheckDeg],[oo{ii}.EE0N],'-x');
+    hold on;
+    legendString{graph}=sprintf('fullResolutionTarget %d',oo{i}.fullResolutionTarget);
+    if isfield(oo{i},'conditionName') && ~isempty(oo{i}.conditionName)
+        legendString{graph}=[oo{i}.conditionName ': ' legendString{graph}];
+    end
 end
 hold off
 legend(legendString);
@@ -92,11 +122,11 @@ ylabel('(E-E0)/N');
 axis([0.01 1 1 100]); % Limits of x and y.
 clear caption
 caption{1}=sprintf('experimenter %s, observer %s,', ...
-   data(1).experimenter,data(1).observer);
+    oo{1}.experimenter,oo{1}.observer);
 caption{2}=sprintf('targetKind %s, noiseType %s', ...
-   data(1).targetKind,data(1).noiseType);
-caption{3}=sprintf('eyes %s', data(1).eyes);
-caption{4}=sprintf('%.1f c/deg, cosine phase',data(1).targetCyclesPerDeg);
+    oo{1}.targetKind,oo{1}.noiseType);
+caption{3}=sprintf('eyes %s', oo{1}.eyes);
+caption{4}=sprintf('%.1f c/deg, cosine phase',oo{1}.targetCyclesPerDeg);
 annotation('textbox',[0.25 0.2 .1 .1],'String',caption,'FitBoxToText','on','LineStyle','none');
 
 % pbaspect([1 1 1]); % Make vertical and horizontal axes equal in length.
