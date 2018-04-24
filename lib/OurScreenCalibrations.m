@@ -76,8 +76,10 @@ cal.ScreenConfigureDisplayBrightnessWorks=true; % default value
 cal.brightnessSetting=1.00; % default value
 cal.brightnessRMSError=0; % default value
 
-[savedGamma,cal.dacBits]=Screen('ReadNormalizedGammaTable',cal.screen);
-cal.dacMax=(2^cal.dacBits)-1;
+% Mario says "dacBits" cannot be trusted. We should stop retrieving and
+% saveing it.
+% [savedGamma,cal.dacBits]=Screen('ReadNormalizedGammaTable',cal.screen);
+% cal.dacMax=(2^cal.dacBits)-1;
 
 if isempty(cal.macModelName)
    % MATLAB SWTICH fails when given an empty.
@@ -91,8 +93,8 @@ if ~isfield(cal,'datestr')
    cal.datestr='none';
    cal.notes='none';
    cal.calibratedBy='nobody';
-   cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
-   cal.dacMax=(2^cal.dacBits)-1;
+%    cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
+%    cal.dacMax=(2^cal.dacBits)-1;
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
    cal.old.L=[ 1.1 1.2 1.21 1.22 1.3 1.7 2.4 3.7 5.3 7.1 9.6 12.1 15.8 19.5 24.0 29.1 35.8 40.8 48.3 57.1 66.7 77.1 88.0 100.8 114.3 129.5 144.7 162.2 181.0 200.8 223.8 248.5 284.7]; % cd/m^2
 end
@@ -102,8 +104,8 @@ if streq(cal.macModelName,'MacBookPro9,2') && cal.screen==0 && streq(cal.machine
    cal.datestr='23-Mar-2015 19:01:17';
    cal.notes='Tiffany Martin living room lights on. computer screen almost at 90 degree angle sitting on couch';
    cal.calibratedBy='Tiffany Martin';
-   cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
-   cal.dacMax=(2^cal.dacBits)-1;
+%    cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
+%    cal.dacMax=(2^cal.dacBits)-1;
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
    cal.old.L=[ 1.3 1.2 1.3 1.5 2.2 3.3 5.5 8.1 12.3 15.9 18.9 24.4 28.5 33.9 41.5 45.9 51.0 59.7 67.6 78.7 86.4 96.3 107.3 116.7 129.8 139.2 151.3 160.5 173.9 185.7 199.5 210.2 225.6]; % cd/m^2
 end
@@ -113,8 +115,8 @@ if streq(cal.macModelName,'MacBookPro9,2') && cal.screen==0 && streq(cal.machine
    cal.datestr='03-Apr-2015 19:22:29';
    cal.notes='Tiffany Martin in Denis office, flux off';
    cal.calibratedBy='Tiffany Martin';
-   cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
-   cal.dacMax=(2^cal.dacBits)-1;
+%    cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
+%    cal.dacMax=(2^cal.dacBits)-1;
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
    cal.old.L=[ 1.2 1.3 1234.0 1.2 1.4 1.6 2.1 2.7 3.4 4.2 5.4 6.6 8.0 9.6 11.4 13.5 16.0 1.9 2.9 24.0 2.4 31.1 34.9 39.1 44.0 4.9 53.8 59.7 65.5 71.5 78.2 85.6 95.3]; % cd/m^2
 end
@@ -124,8 +126,8 @@ if streq(cal.macModelName,'MacBookPro9,2') && cal.screen==0 && streq(cal.machine
    cal.datestr='03-Apr-2015 19:42:49';
    cal.notes='Tiffany in Rm 279 flux off';
    cal.calibratedBy='Tiffany Martin';
-   cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
-   cal.dacMax=(2^cal.dacBits)-1;
+%    cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
+%    cal.dacMax=(2^cal.dacBits)-1;
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
    cal.old.L=[ 1.1 1.2 1.2 1.2 1.3 1.7 2.4 3.7 5.3 7.1 9.6 12.1 15.8 19.5 24.0 29.1 35.8 40.8 48.3 57.1 66.7 77.1 88.0 100.8 114.3 129.5 144.7 162.2 181.0 200.8 223.8 248.5 284.7]; % cd/m^2
 end
@@ -140,8 +142,8 @@ if streq(cal.macModelName,'iMac14,1') && cal.screen==0 && streq(cal.machineName,
    cal.datestr='11-May-2015 19:21:40';
    cal.notes='denis, in lab (Meyer Hall 406). room lights off. some afternoon daylight ( 7:21 pm may 11). "automatic brightness" disabled.';
    cal.calibratedBy='Denis Pelli';
-   cal.dacBits=10; % From ReadNormalizedGammaTable, verified with visual test.
-   cal.dacMax=(2^cal.dacBits)-1;
+%    cal.dacBits=10; % From ReadNormalizedGammaTable, verified with visual test.
+%    cal.dacMax=(2^cal.dacBits)-1;
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
    cal.old.L=[ 1.13 1.197 1.425 2.005 3.214 5.026 7.316 10.4 14.19 18.7 24.03 29.94 36.8 44.82 53.14 62.17 71.9 81.1 92.19 104.2 117.1 130.7 144.2 159.4 174 190.5 208.2 226.3 245.2 264.9 285.2 305.2 306.3]; % cd/m^2
 end
@@ -156,8 +158,8 @@ if streq(cal.macModelName,'MacBookAir6,2') && cal.screen==0 && streq(cal.machine
    cal.datestr='14-May-2015 15:52:44';
    cal.notes='denis in lab. Added gamma table Feb 22, 2017. Estimated G from gamma table.';
    cal.calibratedBy='Denis Pelli';
-   cal.dacBits=10; % From ReadNormalizedGammaTable.
-   cal.dacMax=(2^cal.dacBits)-1;
+%    cal.dacBits=10; % From ReadNormalizedGammaTable.
+%    cal.dacMax=(2^cal.dacBits)-1;
    cal.old.gammaIndexMax=1023;
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
    cal.old.L=[ 1.166 1.166 1.166 1.455 2.239 3.537 5.064 7.393 10.03 13.3 17.46 22.3 27.19 33.52 39.88 46.65 56.27 62.68 72.28 81.93 92.63 106.2 120.2 133.7 149.8 163.3 179.7 199.6 217.8 239.2 257.8 276.8 311]; % cd/m^2
@@ -431,8 +433,8 @@ if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && streq(cal.machin
    cal.datestr='27-May-2015 17:56:56';
    cal.notes='Calibration was done on 5/27/15 on Nick Blauch''s 13.3 in 2015 MBP in Pelli Lab';
    cal.calibratedBy='Nick Blauch';
-   cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
-   cal.dacMax=(2^cal.dacBits)-1;
+%    cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
+%    cal.dacMax=(2^cal.dacBits)-1;
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
    cal.old.L=[ 1.054 1.088 1.283 1.85 3.417 5.244 7.556 10.18 13.82 17.95 22.64 28.14 34.3 41.6 49.56 57.47 66.82 75.91 86.85 99 111.6 125.7 139.5 154.3 169.8 188.1 206 223.7 243.7 264.9 286.6 310.1 328.1]; % cd/m^2
 end
@@ -447,8 +449,8 @@ if streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==599
    cal.datestr='29-Jul-2015 09:23:36';
    cal.notes='Jacob Altholz, New iMac Callibration, Lights off, one shade closed';
    cal.calibratedBy='Lab';
-   cal.dacBits=12; % From ReadNormalizedGammaTable, unverified.
-   cal.dacMax=(2^cal.dacBits)-1;
+%    cal.dacBits=12; % From ReadNormalizedGammaTable, unverified.
+%    cal.dacMax=(2^cal.dacBits)-1;
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
    cal.old.L=[ 1.484 1.566 1.915 2.775 4.495 7.151 10.17 13.9 18.7 24.33 30.36 37.29 45.37 54.36 64.31 75.22 86.43 97.1 110.7 126.2 142.1 158.2 175 192.1 210.9 231.4 254.6 280.9 307 334.1 364.4 393.2 420.2]; % cd/m^2
 end
@@ -463,8 +465,8 @@ if streq(cal.macModelName,'MacBookAir4,2') && cal.screen==0 && streq(cal.machine
    cal.datestr='01-Jun-2015 16:59:38';
    cal.notes='Jacob Altholz 6/1/15';
    cal.calibratedBy='Jacob Altholz';
-   cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
-   cal.dacMax=(2^cal.dacBits)-1;
+%    cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
+%    cal.dacMax=(2^cal.dacBits)-1;
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
    cal.old.L=[ 0.787 0.97 1.115 1.469 2.162 3.278 4.727 6.758 9.371 12.52 15.78 20.35 25.18 30.33 36.81 43.8 51.34 59.55 70.46 80.43 91.12 102.4 116.9 130.9 144.7 162.1 178.3 197.6 216.4 235.3 258.9 282.6 324.5]; % cd/m^2
 end
@@ -479,8 +481,8 @@ if streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && cal.screenWidthM
    cal.datestr='30-Jul-2015 11:19:40';
    cal.notes=' Jacob Altholz, Michelle''s Desk in the office';
    cal.calibratedBy='Lab';
-   cal.dacBits=12; % From ReadNormalizedGammaTable, unverified.
-   cal.dacMax=(2^cal.dacBits)-1;
+%    cal.dacBits=12; % From ReadNormalizedGammaTable, unverified.
+%    cal.dacMax=(2^cal.dacBits)-1;
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
    cal.old.L=[ 1.071 1.14 1.472 2.504 3.761 6.023 8.715 11.57 15.2 19.59 24.7 30.54 37.1 44.48 52.54 61.46 70.72 80.14 91.5 103.8 117 130.8 145.3 159.7 175.6 193.3 211.6 231.7 252.8 274.9 298.5 320.9 348.9]; % cd/m^2
 end
@@ -495,8 +497,8 @@ if streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==602
    cal.datestr='28-Aug-2015 17:45:04';
    cal.notes='calibration done by Michelle Qiu at 5:45 PM on August 28, 2015';
    cal.calibratedBy='Lab';
-   cal.dacBits=12; % From ReadNormalizedGammaTable, unverified.
-   cal.dacMax=(2^cal.dacBits)-1;
+%    cal.dacBits=12; % From ReadNormalizedGammaTable, unverified.
+%    cal.dacMax=(2^cal.dacBits)-1;
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
    cal.old.L=[ 1.24 1.242 1.613 2.506 4.349 7.091 10.01 13.89 19.21 24.71 30.47 36.86 45.06 55.14 63.33 74.51 88.68 97.94 110.9 123.4 146.8 157.7 182.6 192.8 211.7 242.2 249.2 292 315.7 346.1 374.2 387.6 426.1]; % cd/m^2
 end
@@ -512,8 +514,8 @@ if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthM
    cal.datestr='22-Sep-2015 16:30';
    cal.notes='Shivam Verma 406 16:30 Env:50-70cd/m2 MBP13';
    cal.calibratedBy='Shivam Verma';
-   cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
-   cal.dacMax=(2^cal.dacBits)-1;
+%    cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
+%    cal.dacMax=(2^cal.dacBits)-1;
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
    cal.old.L=[ 1.1 1.2 1.21 1.22 1.3 1.7 2.4 3.7 5.3 7.1 9.6 12.1 15.8 19.5 24.0 29.1 35.8 40.8 48.3 57.1 66.7 77.1 88.0 100.8 114.3 129.5 144.7 162.2 181.0 200.8 223.8 248.5 284.7]; % cd/m^2
 end
@@ -529,8 +531,8 @@ if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthM
    cal.datestr='22-Sep-2015 16:17:17';
    cal.notes='Oana Meyer 406 16:15 Env:50-70cd/m2 MBP13';
    cal.calibratedBy='Oana Daniela Dumitru';
-   cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
-   cal.dacMax=(2^cal.dacBits)-1;
+%    cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
+%    cal.dacMax=(2^cal.dacBits)-1;
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
    cal.old.L=[ 1.3 1.449 1.584 2.362 3.446 5.096 7.153 9.688 12.77 16.54 20.8 25.77 25.75 37.64 41.51 51.28 59.53 67.29 76.88 87.17 98.6 110 122.4 134.7 147.8 163.9 178.7 195 211.9 230.5 248.8 266.4 283.3]; % cd/m^2
 end
@@ -546,8 +548,8 @@ if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthM
    cal.datestr='22-Sep-2015 16:30';
    cal.notes='Shivam Verma 406 16:30 Env:50-70cd/m2 MBP13';
    cal.calibratedBy='Shivam Verma';
-   cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
-   cal.dacMax=(2^cal.dacBits)-1;
+%    cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
+%    cal.dacMax=(2^cal.dacBits)-1;
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
    cal.old.L=[ 1.1 1.2 1.21 1.22 1.3 1.7 2.4 3.7 5.3 7.1 9.6 12.1 15.8 19.5 24.0 29.1 35.8 40.8 48.3 57.1 66.7 77.1 88.0 100.8 114.3 129.5 144.7 162.2 181.0 200.8 223.8 248.5 284.7]; % cd/m^2
 end
@@ -563,8 +565,8 @@ if IsOSX && streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.scr
    cal.datestr='26-Sep-2015 14:32:53';
    cal.notes='Xiuyun MBP new 13 14:31 Env: 28-47cd/m2 Meyer 406';
    cal.calibratedBy='Xiuyun Wu';
-   cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
-   cal.dacMax=(2^cal.dacBits)-1;
+%   cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
+%   cal.dacMax=(2^cal.dacBits)-1;
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
    cal.old.L=[ 1.154 1.225 1.507 2.279 3.414 5.276 7.461 10.18 13.47 17.46 22.01 27.3 33.04 40.03 46.85 54.35 63.1 71.46 81.58 92.77 104.7 117.2 130.1 142.9 157.2 173.9 190.5 208 226.4 247 265.9 285 308.2]; % cd/m^2
 end
@@ -580,8 +582,8 @@ if IsOSX && streq(cal.macModelName,'MacBookAir5,1') && cal.screen==0 && cal.scre
    cal.datestr='26-Sep-2015 15:07:15';
    cal.notes='Hormet MBA11'' Meyer 406 9/26 15:06 Env.:40-60cd/m2';
    cal.calibratedBy='Hormet Yiltiz';
-   cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
-   cal.dacMax=(2^cal.dacBits)-1;
+%   cal.dacBits=10; % From ReadNormalizedGammaTable, unverified.
+%   cal.dacMax=(2^cal.dacBits)-1;
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
    cal.old.L=[ 1.991 2.045 2.167 2.557 3.281 4.469 6.667 9.642 12.81 16.58 20.59 25.03 30.38 36.29 43.17 50.17 57.96 65.19 75.67 85.81 97.61 109.2 123.1 137.7 152.1 168.8 185.4 203.4 223.6 246.9 269.5 293.5 332.7]; % cd/m^2
 end
@@ -596,8 +598,8 @@ if IsWin && cal.screen==0 && cal.screenWidthMm==677 && cal.screenHeightMm==381
    cal.datestr='21-Sep-2015 18:03:19';
    cal.notes='Xiuyun Dell 15'' Win7 Meyer406 18:00 With Lights Env 25-35cd/m2';
    cal.calibratedBy='';
-   cal.dacBits=8; % From ReadNormalizedGammaTable, unverified.
-   cal.dacMax=(2^cal.dacBits)-1;
+%   cal.dacBits=8; % From ReadNormalizedGammaTable, unverified.
+%   cal.dacMax=(2^cal.dacBits)-1;
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
    cal.old.L=[ 3.718 3.729 3.892 4.15 5.052 6.079 7.317 8.909 11.08 13.8 17.46 21.6 26.55 32.12 38.17 44.51 52.07 58.17 66.44 74.86 85.2 94.96 106.8 119.4 132.9 148.7 165.8 181.9 201.5 221.1 241.6 265.1 287.2]; % cd/m^2
 end
@@ -612,9 +614,9 @@ if cal.screen==0 && strcmpi(cal.machineName, 'ThPad')
    cal.datestr='14-Jul-2015 20:23:19';
    cal.notes='Lab 1603 lab room total darkness; ThinkPad E50 LCD, HID: MONITOR\LEN40B0, Windows 8.1 64bit, MATLAB R2015a';
    cal.calibratedBy='';
-   cal.dacBits=8; % Assumed value.
+%   cal.dacBits=8; % Assumed value.
    %	cal.dacBits=8; % From ReadNormalizedGammaTable, unverified.
-   cal.dacMax=(2^cal.dacBits)-1;
+%   cal.dacMax=(2^cal.dacBits)-1;
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
    cal.old.L=[ 1.62 2.53 3.74 5.59 7.73 9.96 12.95 15.77 18.66 22.1 25.65 29.25 33.4 36.06 39.08 44.32 53.4 57.17 63.19 68.05 76.3 84.29 91.73 99.04 106.9 116.5 125.5 134.6 142.4 150.5 157.9 162.5 163.5]; % cd/m^2
 end
@@ -630,8 +632,8 @@ if IsOSX && streq(cal.macModelName,'MacBookPro11,3') && cal.screen==0 && cal.scr
    cal.datestr='15-Dec-2016 12:47:32';
    cal.notes='Hormet Yiltiz calibrated. Env background luminance: 3-6 cd/m2. Monitor mean lum: 53.06 cd/m2. Noon, with curtains on.';
    cal.calibratedBy='qcao';
-   cal.dacBits=12; % From ReadNormalizedGammaTable, unverified.
-   cal.dacMax=(2^cal.dacBits)-1;
+%   cal.dacBits=12; % From ReadNormalizedGammaTable, unverified.
+%   cal.dacMax=(2^cal.dacBits)-1;
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
    cal.old.L=[ 1.521 1.238 1.999 2.797 4.372 6.234 7.869 10.19 13.19 16.55 20.07 24.71 29.87 34.52 40.84 47.29 53.11 59.82 67.1 75.65 83.49 92.95 103.4 111.5 122 130.4 141.6 153.3 166.5 182.3 194.4 209.4 223]; % cd/m^2
 end
@@ -645,8 +647,8 @@ if IsLinux && cal.screen==0 && strcmpi(cal.machineName, 'ZBook') %cal.screenWidt
    cal.datestr='17-Dec-2016 17:43:53';
    cal.notes='HYiltiz calibrated HP ZBook 17 G2 Ubuntu 14.04 ATI Bonaire XT (Radeon R9 M280X) GPU, 60Hz, Meyer #956, Environment (background wall) luminance: 53.60 cd/m2. Calibrated with tripods. 64 levels.';
    cal.calibratedBy='';
-   cal.dacBits=8; % From ReadNormalizedGammaTable, unverified.
-   cal.dacMax=(2^cal.dacBits)-1;
+%   cal.dacBits=8; % From ReadNormalizedGammaTable, unverified.
+%   cal.dacMax=(2^cal.dacBits)-1;
    cal.old.n=[ 0 4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120 124 128 131 135 139 143 147 151 155 159 163 167 171 175 179 183 187 191 195 199 203 207 211 215 219 223 227 231 235 239 243 247 251 255];
    cal.old.L=[ 6.275 6.273 6.248 6.47 6.708 6.92 7.378 7.92 8.59 9.348 10.38 11.49 12.79 14.32 16.09 17.89 19.79 21.81 23.92 26.14 28.88 31.58 34.27 37.32 40.65 43.83 47.35 50.8 54.53 58.13 61.86 66.48 71.42 75.24 80.24 85.02 90.65 95.83 100.7 106 111.5 116.9 122.3 128.1 133.7 139.5 145.8 151.9 158.2 165 171.9 179.2 186.5 194.4 202.3 210.5 218.8 227.4 236 244.3 253 261.3 270.4 281.8 299.4]; % cd/m^2
 end
@@ -660,8 +662,8 @@ if IsLinux && cal.screen==1 && cal.screenWidthMm==361 && cal.screenHeightMm==203
    cal.datestr='20-Dec-2016 19:34:42';
    cal.notes='HYiltiz calibrated ThPad with Debian 8 testing, Linux 4.7.0-1, Octave 4.0.3, Psychtoolbox 3.0.13, Photometer params.: measuring mode (ABS.), RESP. (SLOW), CALIB. (PRESET), at Meyer 957 Workstation, Env luminance background 48.68-39.88cd/m2, viewing distance ~ 70 cm.';
    cal.calibratedBy='';
-   cal.dacBits=8; % From ReadNormalizedGammaTable, unverified.
-   cal.dacMax=(2^cal.dacBits)-1;
+%   cal.dacBits=8; % From ReadNormalizedGammaTable, unverified.
+%   cal.dacMax=(2^cal.dacBits)-1;
    cal.old.n=[ 0 4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120 124 128 131 135 139 143 147 151 155 159 163 167 171 175 179 183 187 191 195 199 203 207 211 215 219 223 227 231 235 239 243 247 251 255];
    cal.old.L=[ 3.623 3.675 3.683 3.688 3.71 3.783 3.903 4.07 4.288 4.555 4.868 5.228 5.645 6.09 6.605 7.158 7.773 8.44 9.165 9.935 10.77 11.63 12.56 13.5 14.54 15.58 16.72 17.85 19.06 20.38 21.73 23.16 24.65 25.93 27.79 29.7 31.74 33.9 36.14 38.54 41.07 43.73 46.49 49.38 52.44 55.69 59.09 62.74 66.48 70.92 75.71 80.69 85.77 91.18 96.43 101.8 107.3 113 118.9 125.1 131.9 139 145.4 150.5 151.1]; % cd/m^2
 end
@@ -676,8 +678,8 @@ if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWid
    cal.datestr='20-Feb-2017 18:55:21';
    cal.notes='iMac in lab, feb. 20, room lights on. at night. luminance of drop down screen 36.33 cd/m^2';
    cal.calibratedBy='Denis Pelli';
-   cal.dacBits=12; % From ReadNormalizedGammaTable, unverified.
-   cal.dacMax=(2^cal.dacBits)-1;
+%   cal.dacBits=12; % From ReadNormalizedGammaTable, unverified.
+%   cal.dacMax=(2^cal.dacBits)-1;
    cal.old.n=[ 0 128 256 384 512 640 768 896 1024 1152 1280 1408 1536 1664 1792 1920 2048 2175 2303 2431 2559 2687 2815 2943 3071 3199 3327 3455 3583 3711 3839 3967 4095];
    cal.old.L=[ 1.732 1.83 2.169 3.018 4.714 7.309 10.25 13.89 18.58 24.04 29.92 36.64 44.47 53.14 62.73 73.03 83.8 93.85 107 122.1 137.4 153.5 169.7 186.3 204.6 223.6 247 271.2 297.7 324.6 353.7 382 406.5]; % cd/m^2
 end
@@ -692,7 +694,7 @@ if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWid
    cal.datestr='21-Feb-2017 03:18:59';
    cal.notes='Denis room 406 at night, room lights on iMac Feb 21, 2017';
    cal.calibratedBy='Denis Pelli';
-   cal.dacBits=12; % From ReadNormalizedGammaTable, unverified.
+%   cal.dacBits=12; % From ReadNormalizedGammaTable, unverified.
    cal.old.gammaIndexMax=255;
    cal.old.G=[ 0 0.0313726 0.0627451 0.0941176 0.12549 0.156863 0.188235 0.219608 0.25098 0.282353 0.313726 0.345098 0.376471 0.407843 0.439216 0.470588 0.501961 0.529412 0.560784 0.592157 0.623529 0.654902 0.686275 0.717647 0.74902 0.780392 0.811765 0.843137 0.87451 0.905882 0.937255 0.968627 1];
    cal.old.L=[ 1.763 1.83 2.16 3.82 4.72 7.33 10.28 13.93 18.64 24.13 30 36.73 44.61 53.23 62.76 73.04 83.8 93.8 106.9 121.9 137.3 153.2 169.4 185.9 204.4 223.3 246.7 271 297.5 324.3 353.5 381.6 406.2]; % cd/m^2
@@ -709,7 +711,7 @@ if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWid
    cal.datestr='22-Feb-2017 11:13:36';
    cal.notes='Done by Ning, Feb.22.2017';
    cal.calibratedBy='Lab';
-   cal.dacBits=12; % From ReadNormalizedGammaTable.
+%   cal.dacBits=12; % From ReadNormalizedGammaTable.
    cal.old.gammaIndexMax=255;
    cal.old.gammaHistogramStd=0.0020;
    cal.old.G=[ 0 0.0313726 0.0627451 0.0941176 0.12549 0.156863 0.188235 0.219608 0.25098 0.282353 0.313726 0.345098 0.376471 0.407843 0.439216 0.470588 0.501961 0.529412 0.560784 0.592157 0.623529 0.654902 0.686275 0.717647 0.74902 0.780392 0.811765 0.843137 0.87451 0.905882 0.937255 0.968627 1];
@@ -792,7 +794,7 @@ if IsOSX && streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && cal.scr
    cal.datestr='24-Feb-2017 02:58:01';
    cal.notes='denis in room 406, room lights on, at night.';
    cal.calibratedBy='Denis Pelli';
-   cal.dacBits=12; % From ReadNormalizedGammaTable.
+%   cal.dacBits=12; % From ReadNormalizedGammaTable.
    cal.old.gammaIndexMax=1023;
    cal.old.gammaHistogramStd=0.0005;
    cal.old.G=[ 0 0.0312805 0.0625611 0.0938416 0.125122 0.156403 0.188661 0.219941 0.251222 0.282502 0.313783 0.345064 0.376344 0.407625 0.438905 0.470186 0.502444 0.529814 0.561095 0.592375 0.623656 0.654936 0.686217 0.717498 0.748778 0.780059 0.811339 0.843597 0.874878 0.906158 0.937439 0.968719 1];
@@ -1070,7 +1072,7 @@ if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWid
 	cal.notes='denis room 406 photometer 5 cm from screen, room lights on at night';
 	cal.calibratedBy='Lab';
 	cal.psychImagingOption='EnableNative11BitFramebuffer';
-	cal.dacBits=12; % From ReadNormalizedGammaTable.
+% 	cal.dacBits=12; % From ReadNormalizedGammaTable.
 	cal.old.gammaIndexMax=255;
 	cal.old.gammaHistogramStd=0.0020;
 	cal.old.G=[ 0 0.0156863 0.0313726 0.0470588 0.0627451 0.0784314 0.0941176 0.109804 0.12549 0.141176 0.156863 0.172549 0.188235 0.203922 0.219608 0.235294 0.25098 0.266667 0.282353 0.298039 0.313726 0.329412 0.345098 0.360784 0.376471 0.392157 0.407843 0.423529 0.439216 0.454902 0.470588 0.486275 0.501961 0.513726 0.529412 0.545098 0.560784 0.576471 0.592157 0.607843 0.623529 0.639216 0.654902 0.670588 0.686275 0.701961 0.717647 0.733333 0.74902 0.764706 0.780392 0.796078 0.811765 0.827451 0.843137 0.858824 0.87451 0.890196 0.905882 0.921569 0.937255 0.952941 0.968627 0.984314 1];
@@ -1148,7 +1150,7 @@ if IsOSX && streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && cal.scr
 	cal.psychImagingOption='EnableNative11BitFramebuffer';
 	cal.displayCoreId='AMD';
 	cal.bitsPerColorComponent=' ';
-	cal.dacBits=12; % From ReadNormalizedGammaTable.
+% 	cal.dacBits=12; % From ReadNormalizedGammaTable.
 	cal.old.gammaIndexMax=1023;
 	cal.old.gammaHistogramStd=0.0005;
 	cal.old.G=[ 0 0.0156403 0.0312805 0.0469208 0.0625611 0.0782014 0.0938416 0.109482 0.125122 0.140762 0.156403 0.173021 0.188661 0.204301 0.219941 0.235582 0.251222 0.266862 0.282502 0.298143 0.313783 0.329423 0.345064 0.360704 0.376344 0.391984 0.407625 0.423265 0.438905 0.454545 0.470186 0.485826 0.502444 0.514174 0.529814 0.545455 0.561095 0.576735 0.592375 0.608016 0.623656 0.639296 0.654936 0.670577 0.686217 0.701857 0.717498 0.733138 0.748778 0.764418 0.780059 0.795699 0.811339 0.826979 0.843597 0.859238 0.874878 0.890518 0.906158 0.921799 0.937439 0.953079 0.968719 0.98436 1];
@@ -1379,7 +1381,7 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 	cal.psychImagingOption='';
 	cal.displayCoreId='R600';
 	cal.bitsPerColorComponent='';
-	cal.dacBits=12; % From ReadNormalizedGammaTable.
+% 	cal.dacBits=12; % From ReadNormalizedGammaTable.
 	cal.old.gammaIndexMax=1023;
 	cal.old.gammaHistogramStd=0.0019;
 	cal.old.G=[ 0 0.0269407 0.0573613 0.0891485 0.121307 0.153533 0.186609 0.218501 0.250387 0.282461 0.314378 0.345613 0.376514 0.407458 0.438767 0.470244 0.502627 0.529855 0.560802 0.591933 0.623213 0.654586 0.686003 0.717436 0.748839 0.780135 0.811385 0.843582 0.874864 0.906283 0.93773 0.96904 1];
@@ -1610,7 +1612,7 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 	cal.psychImagingOption='EnableNative11BitFramebuffer';
 	cal.displayCoreId='R600';
 	cal.bitsPerColorComponent=' ';
-	cal.dacBits=12; % From ReadNormalizedGammaTable.
+% 	cal.dacBits=12; % From ReadNormalizedGammaTable.
 	cal.old.gammaIndexMax=1023;
 	cal.old.gammaHistogramStd=0.0019;
 	cal.old.G=[ 0 0.0126883 0.0269407 0.0418423 0.0573613 0.0731372 0.0891485 0.105225 0.121307 0.137413 0.153533 0.170573 0.186609 0.202584 0.218501 0.234444 0.250387 0.266394 0.282461 0.298511 0.314378 0.330049 0.345613 0.361086 0.376514 0.391941 0.407458 0.423067 0.438767 0.454498 0.470244 0.485963 0.502627 0.514338 0.529855 0.545299 0.560802 0.576353 0.591933 0.607558 0.623213 0.638885 0.654586 0.670287 0.686003 0.70172 0.717436 0.733152 0.748839 0.764495 0.780135 0.79576 0.811385 0.826995 0.843582 0.859222 0.874864 0.890565 0.906283 0.922013 0.93773 0.953415 0.96904 0.984573 1];
@@ -1841,7 +1843,7 @@ if IsOSX && streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && cal.scr
 	cal.psychImagingOption='EnableNative11BitFramebuffer';
 	cal.displayCoreId='AMD';
 	cal.bitsPerColorComponent=' ';
-	cal.dacBits=12; % From ReadNormalizedGammaTable.
+% 	cal.dacBits=12; % From ReadNormalizedGammaTable.
 	cal.old.gammaIndexMax=1023;
 	cal.old.gammaHistogramStd=0.0005;
 	cal.old.G=[ 0 0.0156403 0.0312805 0.0469208 0.0625611 0.0782014 0.0938416 0.109482 0.125122 0.140762 0.156403 0.173021 0.188661 0.204301 0.219941 0.235582 0.251222 0.266862 0.282502 0.298143 0.313783 0.329423 0.345064 0.360704 0.376344 0.391984 0.407625 0.423265 0.438905 0.454545 0.470186 0.485826 0.502444 0.514174 0.529814 0.545455 0.561095 0.576735 0.592375 0.608016 0.623656 0.639296 0.654936 0.670577 0.686217 0.701857 0.717498 0.733138 0.748778 0.764418 0.780059 0.795699 0.811339 0.826979 0.843597 0.859238 0.874878 0.890518 0.906158 0.921799 0.937439 0.953079 0.968719 0.98436 1];
@@ -2072,7 +2074,7 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 	cal.psychImagingOption='EnableNative11BitFramebuffer';
 	cal.displayCoreId='R600';
 	cal.bitsPerColorComponent=' ';
-	cal.dacBits=12; % From ReadNormalizedGammaTable.
+% 	cal.dacBits=12; % From ReadNormalizedGammaTable.
 	cal.old.gammaIndexMax=1023;
 	cal.old.gammaHistogramStd=0.0019;
 	cal.old.G=[ 0 0.0126883 0.0269407 0.0418423 0.0573613 0.0731372 0.0891485 0.105225 0.121307 0.137413 0.153533 0.170573 0.186609 0.202584 0.218501 0.234444 0.250387 0.266394 0.282461 0.298511 0.314378 0.330049 0.345613 0.361086 0.376514 0.391941 0.407458 0.423067 0.438767 0.454498 0.470244 0.485963 0.502627 0.514338 0.529855 0.545299 0.560802 0.576353 0.591933 0.607558 0.623213 0.638885 0.654586 0.670287 0.686003 0.70172 0.717436 0.733152 0.748839 0.764495 0.780135 0.79576 0.811385 0.826995 0.843582 0.859222 0.874864 0.890565 0.906283 0.922013 0.93773 0.953415 0.96904 0.984573 1];
@@ -2303,7 +2305,7 @@ if IsOSX && streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && cal.scr
 	cal.psychImagingOption='EnableNative11BitFramebuffer';
 	cal.displayCoreId='R600';
 	cal.bitsPerColorComponent=' ';
-	cal.dacBits=12; % From ReadNormalizedGammaTable.
+% 	cal.dacBits=12; % From ReadNormalizedGammaTable.
 	cal.old.gammaIndexMax=1023;
 	cal.old.gammaHistogramStd=0.0005;
 	cal.old.G=[ 0 0.0156403 0.0312805 0.0469208 0.0625611 0.0782014 0.0938416 0.109482 0.125122 0.140762 0.156403 0.173021 0.188661 0.204301 0.219941 0.235582 0.251222 0.266862 0.282502 0.298143 0.313783 0.329423 0.345064 0.360704 0.376344 0.391984 0.407625 0.423265 0.438905 0.454545 0.470186 0.485826 0.502444 0.514174 0.529814 0.545455 0.561095 0.576735 0.592375 0.608016 0.623656 0.639296 0.654936 0.670577 0.686217 0.701857 0.717498 0.733138 0.748778 0.764418 0.780059 0.795699 0.811339 0.826979 0.843597 0.859238 0.874878 0.890518 0.906158 0.921799 0.937439 0.953079 0.968719 0.98436 1];
@@ -2535,7 +2537,7 @@ if IsOSX && streq(cal.macModelName,'MacBookAir6,2') && cal.screen==0 && streq(ca
 % 	cal.psychImagingOption='EnableNative11BitFramebuffer';
 % 	cal.displayCoreId='R600';
 % 	cal.bitsPerColorComponent=' ';
-	cal.dacBits=12; % From ReadNormalizedGammaTable.
+% 	cal.dacBits=12; % From ReadNormalizedGammaTable.
 	cal.old.gammaIndexMax=1023;
 	cal.old.gammaHistogramStd=0.0005;
 	cal.old.G=[ 0 0.0156403 0.0312805 0.0469208 0.0625611 0.0782014 0.0938416 0.109482 0.125122 0.140762 0.156403 0.173021 0.188661 0.204301 0.219941 0.235582 0.251222 0.266862 0.282502 0.298143 0.313783 0.329423 0.345064 0.360704 0.376344 0.391984 0.407625 0.423265 0.438905 0.454545 0.470186 0.485826 0.502444 0.514174 0.529814 0.545455 0.561095 0.576735 0.592375 0.608016 0.623656 0.639296 0.654936 0.670577 0.686217 0.701857 0.717498 0.733138 0.748778 0.764418 0.780059 0.795699 0.811339 0.826979 0.843597 0.859238 0.874878 0.890518 0.906158 0.921799 0.937439 0.953079 0.968719 0.98436 1];
@@ -2766,7 +2768,7 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 	cal.psychImagingOption='EnableNative11BitFramebuffer';
 	cal.displayCoreId='R600';
 	cal.bitsPerColorComponent=' ';
-	cal.dacBits=12; % From ReadNormalizedGammaTable.
+% 	cal.dacBits=12; % From ReadNormalizedGammaTable.
 	cal.old.gammaIndexMax=1023;
 	cal.old.gammaHistogramStd=0.0005;
 	cal.old.G=[ 0 0.0156403 0.0312805 0.0469208 0.0625611 0.0782014 0.0938416 0.109482 0.125122 0.140762 0.156403 0.173021 0.188661 0.204301 0.219941 0.235582 0.251222 0.266862 0.282502 0.298143 0.313783 0.329423 0.345064 0.360704 0.376344 0.391984 0.407625 0.423265 0.438905 0.454545 0.470186 0.485826 0.502444 0.514174 0.529814 0.545455 0.561095 0.576735 0.592375 0.608016 0.623656 0.639296 0.654936 0.670577 0.686217 0.701857 0.717498 0.733138 0.748778 0.764418 0.780059 0.795699 0.811339 0.826979 0.843597 0.859238 0.874878 0.890518 0.906158 0.921799 0.937439 0.953079 0.968719 0.98436 1];
@@ -2997,7 +2999,7 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 	cal.psychImagingOption='EnableNative11BitFramebuffer';
 	cal.displayCoreId='R600';
 	cal.bitsPerColorComponent=' ';
-	cal.dacBits=12; % From ReadNormalizedGammaTable.
+% 	cal.dacBits=12; % From ReadNormalizedGammaTable.
 	cal.old.gammaIndexMax=1023;
 	cal.old.gammaHistogramStd=0.0005;
 	cal.old.G=[ 0 0.0156403 0.0312805 0.0469208 0.0625611 0.0782014 0.0938416 0.109482 0.125122 0.140762 0.156403 0.173021 0.188661 0.204301 0.219941 0.235582 0.251222 0.266862 0.282502 0.298143 0.313783 0.329423 0.345064 0.360704 0.376344 0.391984 0.407625 0.423265 0.438905 0.454545 0.470186 0.485826 0.502444 0.514174 0.529814 0.545455 0.561095 0.576735 0.592375 0.608016 0.623656 0.639296 0.654936 0.670577 0.686217 0.701857 0.717498 0.733138 0.748778 0.764418 0.780059 0.795699 0.811339 0.826979 0.843597 0.859238 0.874878 0.890518 0.906158 0.921799 0.937439 0.953079 0.968719 0.98436 1];
@@ -3228,7 +3230,7 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 	cal.psychImagingOption='';
 	cal.displayCoreId='';
 	cal.bitsPerColorComponent='';
-	cal.dacBits=12; % From ReadNormalizedGammaTable.
+% 	cal.dacBits=12; % From ReadNormalizedGammaTable.
 	cal.old.gammaIndexMax=1023;
 	cal.old.gammaHistogramStd=0.0005;
 	cal.old.G=[ 0 0.0156403 0.0312805 0.0469208 0.0625611 0.0782014 0.0938416 0.109482 0.125122 0.140762 0.156403 0.173021 0.188661 0.204301 0.219941 0.235582 0.251222 0.266862 0.282502 0.298143 0.313783 0.329423 0.345064 0.360704 0.376344 0.391984 0.407625 0.423265 0.438905 0.454545 0.470186 0.485826 0.502444 0.514174 0.529814 0.545455 0.561095 0.576735 0.592375 0.608016 0.623656 0.639296 0.654936 0.670577 0.686217 0.701857 0.717498 0.733138 0.748778 0.764418 0.780059 0.795699 0.811339 0.826979 0.843597 0.859238 0.874878 0.890518 0.906158 0.921799 0.937439 0.953079 0.968719 0.98436 1];
@@ -3459,7 +3461,7 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 	cal.psychImagingOption='EnableNative11BitFramebuffer';
 	cal.displayCoreId='R600';
 	cal.bitsPerColorComponent=' ';
-	cal.dacBits=12; % From ReadNormalizedGammaTable.
+% 	cal.dacBits=12; % From ReadNormalizedGammaTable.
 	cal.old.gammaIndexMax=1023;
 	cal.old.gammaHistogramStd=0.0005;
 	cal.old.G=[ 0 0.0156403 0.0312805 0.0469208 0.0625611 0.0782014 0.0938416 0.109482 0.125122 0.140762 0.156403 0.173021 0.188661 0.204301 0.219941 0.235582 0.251222 0.266862 0.282502 0.298143 0.313783 0.329423 0.345064 0.360704 0.376344 0.391984 0.407625 0.423265 0.438905 0.454545 0.470186 0.485826 0.502444 0.514174 0.529814 0.545455 0.561095 0.576735 0.592375 0.608016 0.623656 0.639296 0.654936 0.670577 0.686217 0.701857 0.717498 0.733138 0.748778 0.764418 0.780059 0.795699 0.811339 0.826979 0.843597 0.859238 0.874878 0.890518 0.906158 0.921799 0.937439 0.953079 0.968719 0.98436 1];
@@ -3690,7 +3692,7 @@ if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWid
 	cal.psychImagingOption='EnableNative11BitFramebuffer';
 	cal.displayCoreId='AMD';
 	cal.bitsPerColorComponent=' ';
-	cal.dacBits=12; % From ReadNormalizedGammaTable.
+% 	cal.dacBits=12; % From ReadNormalizedGammaTable.
 	cal.old.gammaIndexMax=255;
 	cal.old.gammaHistogramStd=0.0020;
 	cal.old.G=[ 0 0.0156863 0.0313726 0.0470588 0.0627451 0.0784314 0.0941176 0.109804 0.12549 0.141176 0.156863 0.172549 0.188235 0.203922 0.219608 0.235294 0.25098 0.266667 0.282353 0.298039 0.313726 0.329412 0.345098 0.360784 0.376471 0.392157 0.407843 0.423529 0.439216 0.454902 0.470588 0.486275 0.501961 0.513726 0.529412 0.545098 0.560784 0.576471 0.592157 0.607843 0.623529 0.639216 0.654902 0.670588 0.686275 0.701961 0.717647 0.733333 0.74902 0.764706 0.780392 0.796078 0.811765 0.827451 0.843137 0.858824 0.87451 0.890196 0.905882 0.921569 0.937255 0.952941 0.968627 0.984314 1];
@@ -3768,7 +3770,7 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 	cal.psychImagingOption='EnableNative11BitFramebuffer';
 	cal.displayCoreId='AMD';
 	cal.bitsPerColorComponent=' ';
-	cal.dacBits=12; % From ReadNormalizedGammaTable.
+% 	cal.dacBits=12; % From ReadNormalizedGammaTable.
 	cal.old.gammaIndexMax=1023;
 	cal.old.gammaHistogramStd=0.0005;
 	cal.old.G=[ 0 0.0156403 0.0312805 0.0469208 0.0625611 0.0782014 0.0938416 0.109482 0.125122 0.140762 0.156403 0.173021 0.188661 0.204301 0.219941 0.235582 0.251222 0.266862 0.282502 0.298143 0.313783 0.329423 0.345064 0.360704 0.376344 0.391984 0.407625 0.423265 0.438905 0.454545 0.470186 0.485826 0.502444 0.514174 0.529814 0.545455 0.561095 0.576735 0.592375 0.608016 0.623656 0.639296 0.654936 0.670577 0.686217 0.701857 0.717498 0.733138 0.748778 0.764418 0.780059 0.795699 0.811339 0.826979 0.843597 0.859238 0.874878 0.890518 0.906158 0.921799 0.937439 0.953079 0.968719 0.98436 1];
@@ -3999,7 +4001,7 @@ if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWid
 	cal.psychImagingOption='EnableNative11BitFramebuffer';
 	cal.displayCoreId='R600';
 	cal.bitsPerColorComponent=' ';
-	cal.dacBits=12; % From ReadNormalizedGammaTable.
+% 	cal.dacBits=12; % From ReadNormalizedGammaTable.
 	cal.old.gammaIndexMax=255;
 	cal.old.gammaHistogramStd=0.0020;
 	cal.old.G=[ 0 0.0156863 0.0313726 0.0470588 0.0627451 0.0784314 0.0941176 0.109804 0.12549 0.141176 0.156863 0.172549 0.188235 0.203922 0.219608 0.235294 0.25098 0.266667 0.282353 0.298039 0.313726 0.329412 0.345098 0.360784 0.376471 0.392157 0.407843 0.423529 0.439216 0.454902 0.470588 0.486275 0.501961 0.513726 0.529412 0.545098 0.560784 0.576471 0.592157 0.607843 0.623529 0.639216 0.654902 0.670588 0.686275 0.701961 0.717647 0.733333 0.74902 0.764706 0.780392 0.796078 0.811765 0.827451 0.843137 0.858824 0.87451 0.890196 0.905882 0.921569 0.937255 0.952941 0.968627 0.984314 1];
@@ -4077,7 +4079,7 @@ if IsOSX && streq(cal.macModelName,'MacBookPro13,2') && cal.screen==0 && cal.scr
 	cal.psychImagingOption='EnableNative11BitFramebuffer';
 	cal.displayCoreId='AMD';
 	cal.bitsPerColorComponent=' ';
-	cal.dacBits=12; % From ReadNormalizedGammaTable.
+% 	cal.dacBits=12; % From ReadNormalizedGammaTable.
 	cal.old.gammaIndexMax=1023;
 	cal.old.gammaHistogramStd=0.0005;
 	cal.old.G=[ 0 0.0156403 0.0312805 0.0469208 0.0625611 0.0782014 0.0938416 0.109482 0.125122 0.140762 0.156403 0.173021 0.188661 0.204301 0.219941 0.235582 0.251222 0.266862 0.282502 0.298143 0.313783 0.329423 0.345064 0.360704 0.376344 0.391984 0.407625 0.423265 0.438905 0.454545 0.470186 0.485826 0.502444 0.514174 0.529814 0.545455 0.561095 0.576735 0.592375 0.608016 0.623656 0.639296 0.654936 0.670577 0.686217 0.701857 0.717498 0.733138 0.748778 0.764418 0.780059 0.795699 0.811339 0.826979 0.843597 0.859238 0.874878 0.890518 0.906158 0.921799 0.937439 0.953079 0.968719 0.98436 1];
@@ -4309,7 +4311,7 @@ if IsOSX && streq(cal.macModelName,'MacBookPro13,2') && cal.screen==0 && cal.scr
 	cal.psychImagingOption='';
 	cal.displayCoreId='Intel';
 	cal.bitsPerColorComponent='';
-	cal.dacBits=10; % From ReadNormalizedGammaTable.
+% 	cal.dacBits=10; % From ReadNormalizedGammaTable.
 	cal.old.gammaIndexMax=1023;
 	cal.old.gammaHistogramStd=0.0005;
 	cal.old.G=[ 0 0.0156403 0.0312805 0.0469208 0.0625611 0.0782014 0.0938416 0.109482 0.125122 0.140762 0.156403 0.173021 0.188661 0.204301 0.219941 0.235582 0.251222 0.266862 0.282502 0.298143 0.313783 0.329423 0.345064 0.360704 0.376344 0.391984 0.407625 0.423265 0.438905 0.454545 0.470186 0.485826 0.502444 0.514174 0.529814 0.545455 0.561095 0.576735 0.592375 0.608016 0.623656 0.639296 0.654936 0.670577 0.686217 0.701857 0.717498 0.733138 0.748778 0.764418 0.780059 0.795699 0.811339 0.826979 0.843597 0.859238 0.874878 0.890518 0.906158 0.921799 0.937439 0.953079 0.968719 0.98436 1];
@@ -4540,7 +4542,7 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 	cal.psychImagingOption='EnableNative11BitFramebuffer';
 	cal.displayCoreId='R600';
 	cal.bitsPerColorComponent=' ';
-	cal.dacBits=12; % From ReadNormalizedGammaTable.
+% 	cal.dacBits=12; % From ReadNormalizedGammaTable.
 	cal.old.gammaIndexMax=1023;
 	cal.old.gammaHistogramStd=0.0005;
 	cal.old.G=[ 0 0.0156403 0.0312805 0.0469208 0.0625611 0.0782014 0.0938416 0.109482 0.125122 0.140762 0.156403 0.173021 0.188661 0.204301 0.219941 0.235582 0.251222 0.266862 0.282502 0.298143 0.313783 0.329423 0.345064 0.360704 0.376344 0.391984 0.407625 0.423265 0.438905 0.454545 0.470186 0.485826 0.502444 0.514174 0.529814 0.545455 0.561095 0.576735 0.592375 0.608016 0.623656 0.639296 0.654936 0.670577 0.686217 0.701857 0.717498 0.733138 0.748778 0.764418 0.780059 0.795699 0.811339 0.826979 0.843597 0.859238 0.874878 0.890518 0.906158 0.921799 0.937439 0.953079 0.968719 0.98436 1];
@@ -4771,7 +4773,7 @@ if IsOSX && streq(cal.macModelName,'MacBook10,1') && cal.screen==0 && cal.screen
 	cal.psychImagingOption='EnableNative11BitFramebuffer';
 	cal.displayCoreId='R600';
 	cal.bitsPerColorComponent=' ';
-	cal.dacBits=12; % From ReadNormalizedGammaTable.
+% 	cal.dacBits=12; % From ReadNormalizedGammaTable.
 	cal.old.gammaIndexMax=1023;
 	cal.old.gammaHistogramStd=0.0005;
 	cal.old.G=[ 0 0.0156403 0.0312805 0.0469208 0.0625611 0.0782014 0.0938416 0.109482 0.125122 0.140762 0.156403 0.173021 0.188661 0.204301 0.219941 0.235582 0.251222 0.266862 0.282502 0.298143 0.313783 0.329423 0.345064 0.360704 0.376344 0.391984 0.407625 0.423265 0.438905 0.454545 0.470186 0.485826 0.502444 0.514174 0.529814 0.545455 0.561095 0.576735 0.592375 0.608016 0.623656 0.639296 0.654936 0.670577 0.686217 0.701857 0.717498 0.733138 0.748778 0.764418 0.780059 0.795699 0.811339 0.826979 0.843597 0.859238 0.874878 0.890518 0.906158 0.921799 0.937439 0.953079 0.968719 0.98436 1];
