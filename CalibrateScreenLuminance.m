@@ -394,7 +394,9 @@ try
    end
    
    % Get the gamma table.
-   [cal.old.gamma,cal.dacBits]=Screen('ReadNormalizedGammaTable',cal.screen,cal.screenOutput);
+   % In April 2018 Mario Kleiner says that "dacBits" cannot be trusted and may be removed. So I stopped saving it.
+   %    [cal.old.gamma,cal.dacBits]=Screen('ReadNormalizedGammaTable',cal.screen,cal.screenOutput);
+   cal.old.gamma=Screen('ReadNormalizedGammaTable',cal.screen,cal.screenOutput);
    cal.old.gammaIndexMax=length(cal.old.gamma)-1; % Index into gamma table is 0..gammaIndexMax.
    
    % Make sure it's a good gamma table.
@@ -736,7 +738,7 @@ try
          fprintf(f,'\tcal.displayCoreId=''%s'';\n',cal.displayCoreId);
          fprintf(f,'\tcal.bitsPerColorComponent=''%s'';\n',cal.bitsPerColorComponent);
       end
-      fprintf(f,'\tcal.dacBits=%d; %% From ReadNormalizedGammaTable.\n',cal.dacBits);
+%       fprintf(f,'\tcal.dacBits=%d; %% From ReadNormalizedGammaTable.\n',cal.dacBits);
       fprintf(f,'\tcal.old.gammaIndexMax=%d;\n',cal.old.gammaIndexMax);
       fprintf(f,'\tcal.old.gammaHistogramStd=%.4f;\n',cal.old.gammaHistogramStd);
       fprintf(f,'\tcal.old.G=[');
