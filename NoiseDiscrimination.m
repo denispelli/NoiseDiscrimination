@@ -4522,6 +4522,20 @@ switch o.observer
                         end
                     case {'noise' 'entropy'}
                         % Calculate log likelihood of each possible letter.
+                        % Use the binary signal template (hypothesis) to
+                        % select "ink" pixels, and considers the rest
+                        % "paper" pixels. It knows the sd that ink and
+                        % paper are supposed to have.
+                        %
+                        % sdPaper and sdInk are scalars. im is 20x21
+                        % pixels, a letter displayed as an increment in
+                        % (gaussian) noise contrast. signalMask is 20x21
+                        % binary pixels, 1 means ink, 0 means paper. ink is
+                        % a vector, 238x1 for letter "S", the pixels in im
+                        % hypothesized to be ink. paper is a vector, 182x1
+                        % for letter "S", the pixels in im hypothesized to
+                        % be paper. likely is a vector, 1x9, with a value
+                        % for each possible letter.
                         sdPaper=o.noiseSD;
                         sdInk=o.r*o.noiseSD;
                         im=zeros(size(signal(1).image));
@@ -4530,8 +4544,8 @@ switch o.observer
                             signalMask=signal(i).image;
                             ink=im(signalMask)-1;
                             paper=im(~signalMask)-1;
-                            likely(i)=-length(ink)*log(sdInk*sqrt(2*pi))-sum(0.5*(ink/sdInk).^2);
-                            likely(i)=likely(i)-length(paper)*log(sdPaper*sqrt(2*pi))-sum(0.5*(paper/sdPaper).^2);
+                            likely(i)=-length(ink)*log(sdInk*sqrt(2*pi))-sum(0.5*(ink/sdInk).^2)...
+                                -length(paper)*log(sdPaper*sqrt(2*pi))-sum(0.5*(paper/sdPaper).^2);
                         end
                     otherwise
                         error('Illegal o.targetModulates "%s".',o.targetModulates);
