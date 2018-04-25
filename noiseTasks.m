@@ -25,7 +25,7 @@ o.localHostName=cal.localHostName;
 % o.printImageStatistics=true;
 % o.assessTargetLuminance=true;
 o.observer='ideal';
-o.observer='junk';
+% o.observer='junk';
 o.experimenter='junk';
 
 %% SPECIFY BASIC CONDITION
