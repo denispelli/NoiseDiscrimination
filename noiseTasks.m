@@ -12,7 +12,7 @@ if ~exist('struct2table','file')
 end
 if ~exist('qpInitialize','file')
     addpath('~/Dropbox/mQuestPlus');
-    addpath('~/DropboxmQuestPlus/questplus');
+    addpath('~/Dropbox/mQuestPlus/questplus');
 end
 if ~exist('qpInitialize','file')
     error('This script requires the QuestPlus package. Please get it from https://github.com/BrainardLab/mQUESTPlus.')
@@ -25,7 +25,7 @@ o.localHostName=cal.localHostName;
 % o.printImageStatistics=true;
 % o.assessTargetLuminance=true;
 o.observer='ideal';
-% o.observer='junk';
+o.observer='junk';
 o.experimenter='junk';
 
 %% SPECIFY BASIC CONDITION
@@ -104,7 +104,7 @@ if true
     o.targetDurationSec=inf;
     o.noiseSD=0.2;
     oo{end+1}=o;
-    o.noiseSD=0.05;
+%     o.noiseSD=0.05;
     oo{end+1}=o;
 end
 if true
@@ -117,7 +117,7 @@ if true
     o.targetDurationSec=inf;
     o.noiseSD=0.2;
     oo{end+1}=o;
-    o.noiseSD=0.05;
+%     o.noiseSD=0.05;
     oo{end+1}=o;
 end
 if true
