@@ -1,8 +1,10 @@
 %% Analyze the data collected by EvsNRun.
-% It seems that NoiseDiscrimination only saves MAT files with "o" and "cal",
-% but Veena's data have "oo". Is "oo" saved by EvsNRun? Looking at EvsNRun,
-% I see it saves "oo" and "cal" in a *summary.MAT file, but Veena doesn't
-% seem to have such files.
+% It seems that NoiseDiscrimination only saves MAT files with "o" and
+% "cal", but Veena's data have "oo". Is "oo" saved by EvsNRun? Looking at
+% EvsNRun, I see it saves "oo" and "cal" in a *summary.MAT file, but Veena
+% doesn't seem to have such files.
+myPath=fileparts(mfilename('fullpath')); % Takes 0.1 s.
+addpath(fullfile(myPath,'lib')); % Folder in same directory as this M file.
 experiment='EvsN';
 dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
 cd(dataFolder);
@@ -56,30 +58,49 @@ for observer=unique({oo.observer})
             which=isObserver & isConditionName & isNoiseType;
             if sum(which)>0
                 fprintf('%s-%s-%s: %d thresholds.\n',observer{1},conditionName{1},noiseType{1},sum(which));
-                subPlots=[1 length(unique({oo.conditionName}))];
-                [~,subPlotIndex]=ismember(conditionName,unique({oo.conditionName}));
-                Plot(oo(which),subPlots,subPlotIndex);
+                subplots=[1 length(unique({oo.conditionName}))];
+                [~,subplotIndex]=ismember(conditionName,unique({oo.conditionName}));
+                Plot(oo(which),subplots,subplotIndex);
             end
         end
     end
 end
 return
 
-function Plot(oo,subPlots,subPlotIndex)
-persistent previousObserver figureHandle
+function Plot(oo,subplots,subplotIndex)
+persistent previousObserver figureHandle overPlots figureTitle axisHandle
 if isempty(oo)
     return
 end
-fig = get(groot,'CurrentFigure');
+fontSize=12*0.6;
 if isempty(get(groot,'CurrentFigure')) || ~streq(oo(1).observer,previousObserver)
     previousObserver=oo(1).observer;
-%     hold off
-    figureHandle=figure;
-    figure('Name',oo(1).experiment,'NumberTitle','off');
+    rect=Screen('Rect',0);
+    figureTitle=[oo(1).experiment '-' oo(1).observer];
+    figureHandle=figure('Name',figureTitle,'NumberTitle','off','pos',[10 10 900 300]);
+    orient 'landscape'; % For printing.
+    overPlots=zeros(1,subplots(1)*subplots(2));
+    axisHandle=zeros(1,subplots(1)*subplots(2));
+    an=annotation('textbox',[0 0.9 1 .1],...
+        'String',figureTitle,...
+        'LineStyle','none','FontSize',fontSize*2,...
+        'HorizontalAlignment','center','VerticalAlignment','top');
+else
+    figure(figureHandle);
 end
-assert(subPlotIndex<=subPlots(1)*subPlots(2),'subPlotIndex too high.');
-subplot(subPlots(1),subPlots(2),subPlotIndex);
-% Sort by noise N.
+if axisHandle(subplotIndex)==0
+    % subplot(m,n,p) makes it easy to show several related graphs in one
+    % figure window. I suspect that calling subplot(m,n,p) for an existing
+    % axis object, erases it. So, when we first select that figure panel,
+    % we save a handle to it, which we later use to select the panel by
+    % calling subplot(handle), without calling subplot(m,n,p) again.
+    axisHandle(subplotIndex)=subplot(subplots(1),subplots(2),subplotIndex);
+else
+    hold(axisHandle(subplotIndex),'on');
+    subplot(axisHandle(subplotIndex));
+end
+
+% Sort by noise N. In case we connect the dots.
 [~,ii]=sort([oo.N]);
 oo=oo(ii);
 
@@ -94,49 +115,123 @@ for i=1:length(oo)
 end
 
 %% Create CSV file
+vars={'condition' 'experiment' 'conditionName' ...
+    'experimenter' 'observer' 'trials' 'contrast' 'E' 'N' ...
+    'targetKind' 'targetCyclesPerDeg'  'targetHeightDeg'  'targetDurationSec' ...
+    'noiseType' 'noiseSD'  'noiseCheckDeg' ...
+    'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
+    'LBackground'  'dataFilename'};
 t=struct2table(oo);
 spreadsheet=fullfile(fileparts(mfilename('fullpath')),'data',[oo(1).experiment '.csv']);
 % writetable(t,spreadsheet);
-t
+disp(t(:,vars));
 fprintf('All selected fields have been saved in spreadsheet: /data/%s.csv\n',oo(1).experiment);
 
-
 %% Plot
-set(gca,'FontSize',12);
-clear legendString
-loglog(N,E,'x');
+if Neq>=min(N) && Neq<2*max(N)
+    % Trust reasonable Neq. 
+    NLow=Neq/100;
+    NHigh=max([N Neq*10]);
+else
+    % Igore crazy Neq. 
+    NLow=min(N(N>0)); % Smallest nonzero noise.
+    NHigh=max(N);
+end
+overPlots(subplotIndex)=overPlots(subplotIndex)+1;
+switch overPlots(subplotIndex)
+    case 1
+        style1='xk';
+        style2='-k';
+        hold off;
+    case 2
+        style1='ok';
+        style2='--k';
+        hold on;
+    case 3
+        style1='+k';
+        style2=':k';
+        hold on;
+    otherwise
+        style1='^k';
+        style2='-.k';
+        hold on;
+end
+legendText=sprintf('%s %s',oo(1).conditionName,oo(1).noiseType);
+loglog(max(N,NLow),E,style1,'DisplayName',legendText);
 hold on;
-NFit=logspace(log10(Neq/4),log10(max(N)));
-EFit=(NFit+Neq)*E0/Neq;
-loglog(NFit,EFit,'-');
-legendString{subPlotIndex}=sprintf('%s %s',oo(1).conditionName,oo(1).noiseType);
-legend(legendString);
-legend('boxoff');
+ax=gca;
+NLine=logspace(log10(NLow),log10(NHigh));
+ELine=(NLine+Neq)*E0/Neq;
+loglog(NLine,ELine,style2,'DisplayName','Linear fit');
+set(gca,'FontSize',fontSize);
 title(oo(1).conditionName);
-xlabel('N (s deg^2)');
-ylabel('E (s deg^2)');
-% axis([0.01 1 1 100]); % Limits of x and y.
-clear caption
+xlabel('\it N \rm (s deg^2)','Interpreter','tex')
+ylabel('\it E \rm (s deg^2)','Interpreter','tex');
+lgd=legend('show');
+lgd.Location='northwest';
+lgd.FontSize=fontSize;
+legend('boxoff');
+caption={};
 caption{1}=sprintf('experimenter %s, observer %s,', ...
     oo(1).experimenter,oo(1).observer);
-caption{2}=sprintf('targetKind %s, noiseType %s', ...
-    oo(1).targetKind,oo(1).noiseType);
-caption{3}=sprintf('eyes %s', oo(1).eyes);
-caption{4}=sprintf('%.1f c/deg, cosine phase',oo(1).targetCyclesPerDeg);
-annotation('textbox',[0.25 0.2 .1 .1],'String',caption,'FitBoxToText','on','LineStyle','none');
+caption{2}=sprintf('%s, phase %.0f deg, noiseSD<=%.2f, noiseType %s', ...
+    oo(1).targetKind,oo(1).targetGaborPhaseDeg,max([oo.noiseSD]),oo(1).noiseType);
+caption{3}=sprintf('eyes %s, %.0f cd/m^2, ecc. [%.0f %.0f] deg, %.1f s, %.1f c/deg', ...
+    oo(1).eyes,oo(1).LBackground,oo(1).eccentricityXYDeg,...
+    oo(1).targetDurationSec,oo(1).targetCyclesPerDeg);
+text(0.02,.02,caption,'Units','normalized','FontSize',fontSize,'VerticalAlignment','bottom');
 
-% pbaspect([1 1 1]); % Make vertical and horizontal axes equal in length.
+% Set lower Y limit to E0/20. This leaves room for the "caption" text at
+% bottom of graph. If necessary, expand Y range to 3 log units.
+logUnits=3;
+ax=gca;
+yLimits=ax.YLim;
+yLimits(1)=E0/20;
+r=diff(log10(yLimits)); % Number of log units
+if logUnits>r
+   yLimits(2)=yLimits(2)*10^(logUnits-r);
+end
+ax.YLim=yLimits;
 
-% Scale so log units  have same length vertically and horizontally.
-xLimits = get(gca,'XLim');
-yLimits = get(gca,'YLim');
-yDecade = diff(yLimits)/diff(log10(yLimits));  %# Average y decade size
-xDecade = diff(xLimits)/diff(log10(xLimits));  %# Average x decade size
-set(gca,'XLim',xLimits,'YLim',yLimits,'DataAspectRatio',[1 yDecade/xDecade 1]);
-% hold off;
+ax=gca;
+if ax.XLim(1)<=0
+    warning('Lower X limit too low!! Setting it to NLow.')
+    xLim=ax.XLim
+    ax.XLim=[NLow xLim(2)];
+    oo(1).observer
+    oo(1).experiment
+    oo(1).conditionName
+    oo(1).noiseType
+    NLow
+    min(NLine)
+    E0
+    Neq
+end
+
+% Scale log unit to be 1.5 cm, vertically and horizontally.
+ax=gca;
+u=ax.Units;
+ax.Units='centimeters';
+drawnow; % Needed for valid Position reading.
+pos=ax.Position;
+ax.Position=[pos(1:2) 1.5*diff(log10(ax.XLim)) 1.5*diff(log10(ax.YLim))];
+ax.Units=u;
+
+% Add second x-axis for noise contrast noiseSD.
+% ax1=gca;
+% ax2=axes('Position',ax1.Position,...
+%     'XAxisLocation','top',...
+%     'YAxisLocation','right',...
+%     'Color','none',...
+%     'XColor','k','YColor','k');
+% ax2.XScale=ax1.XScale;
+% ax2.YScale=ax1.YScale;
+% ax2.XLim=sqrt(ax1.XLim)*oo(end).noiseSD/sqrt(oo(end).N);
+% ax2.YLim=ax1.YLim;
+% ax2.FontSize=ax1.FontSize;
 
 % Save plot to disk
-graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[oo(1).experiment '.eps']);
-% saveas(gcf,graphFile,'epsc')
+graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[figureTitle '.eps']);
+saveas(gcf,graphFile,'epsc')
 % print(gcf,graphFile,'-depsc'); % equivalent to saveas above
 end
