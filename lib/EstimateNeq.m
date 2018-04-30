@@ -6,8 +6,8 @@ function [E0,Neq]=EstimateNeq(E,N)
 % nonnegative values of E0 and Neq.
 % April, 2018. denis.pelli@nyu.edu
 assert(all(size(N)==size(E)),'E and N must have same size.');
-assert(all(N>=0),'N must be positive.');
-assert(all(E>=0),'E must be positive.');
+assert(all(N>=0),'N must not be negative.');
+assert(all(E>=0),'E must not be negative.');
 if size(E,2)>1
     E=E';
     N=N';
