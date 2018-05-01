@@ -82,10 +82,12 @@ for beautyTask=1 %Shuffle(0:1)
     else
         o.task='identify';
     end
-    for duration=Shuffle([0.2 1])
-        o.targetDurationSec=duration;
-        oo{end+1}=o;
-    end
+    o.targetDurationListSec=[0.2 2];
+    oo{end+1}=o;
+%     for duration=Shuffle([0.2 1])
+%         o.targetDurationSec=duration;
+%         oo{end+1}=o;
+%     end
 end
 for i=1:length(oo)
     oo{i}.condition=i; % Number the conditions
