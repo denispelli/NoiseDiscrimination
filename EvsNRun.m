@@ -34,15 +34,6 @@ if o.questPlusEnable && ~exist('qpInitialize','file')
 end
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % Folder in same directory as this M file.
 cal=OurScreenCalibrations(0);
-o.seed=[]; % Fresh.
-% o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
-if isempty(o.seed)
-    rng('shuffle'); % Use clock to seed the random number generator.
-    generator=rng;
-    o.seed=generator.Seed;
-else
-    rng(o.seed);
-end
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 % o.observer='ideal';
 % o.trialsPerBlock=100;
