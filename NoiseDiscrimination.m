@@ -2596,30 +2596,29 @@ try
     
     %% DO A BLOCK OF TRIALS.
     while trial<o.trialsPerBlock
-        if (trial==0 || o.skipTrial) && ~ismember(o.observer,o.algorithmicObservers)
-            % WAIT UNTIL OBSERVER IS READY
-            if o.skipTrial
-                trial=trial-1;
-                o.trialsSkipped=o.trialsSkipped+1;
-                o.skipTrial=false;
-            end
+        waitForObserver=(trial==0 || o.skipTrial) && ~ismember(o.observer,o.algorithmicObservers);
+        if o.skipTrial || o.ignoreTrial
+            % ignoreTrial is like skipTrial, without the wait. skipTrial is
+            % requested by the observer. ignoreTrial is requested by the
+            % software after a stimulus artifact (movie too long).
+            trial=trial-1;
+            o.trialsSkipped=o.trialsSkipped+1;
+            o.skipTrial=false;
+            o.ignoreTrial=false;
+        end
+        if waitForObserver
             o=WaitUntilObserverIsReady(o,waitMessage);
             waitMessage='Continuing. ';
             if o.quitBlock
                 break
             end
-            if o.skipTrial
-                continue
-            end
-        end % if (trial==0 || etc.
-        if o.ignoreTrial
-            % ignoreTrial is like skipTrial, without the wait.
-            trial=trial-1;
-            o.trialsSkipped=o.trialsSkipped+1;
-            o.ignoreTrial=false;
         end
         trial=trial+1;
         o.trials=trial;
+        assert(trial>0,'Error: trial<=0');
+        if o.skipTrial
+            continue
+        end
         [~,neworder]=sort(lower(fieldnames(o)));
         o=orderfields(o,neworder);
         
