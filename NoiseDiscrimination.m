@@ -705,6 +705,8 @@ o.dataFilename='';
 o.dataFolder='';
 o.textMarginPix=0;
 o.ratingThreshold=4*ones(1,10); % One value per element of o.alphabet.
+o.ignoreOverlyLongTrials=true;
+o.ignoreTrial=false;
 
 o.deviceIndex=-1; % -1 for all keyboards.
 o.deviceIndex=-3; % -3 for all keyboard/keypad devices.
@@ -2594,25 +2596,30 @@ try
     
     %% DO A BLOCK OF TRIALS.
     while trial<o.trialsPerBlock
-        trial=trial+1;
-        o.trials=trial;
-        if (trial==1 || o.skipTrial) && ~ismember(o.observer,o.algorithmicObservers)
+        if (trial==0 || o.skipTrial) && ~ismember(o.observer,o.algorithmicObservers)
             % WAIT UNTIL OBSERVER IS READY
             if o.skipTrial
+                trial=trial-1;
                 o.trialsSkipped=o.trialsSkipped+1;
                 o.skipTrial=false;
             end
             o=WaitUntilObserverIsReady(o,waitMessage);
             waitMessage='Continuing. ';
             if o.quitBlock
-                trial=trial-1;
                 break
             end
             if o.skipTrial
-                trial=trial-1;
                 continue
             end
+        end % if (trial==0 || etc.
+        if o.ignoreTrial
+            % ignoreTrial is like skipTrial, without the wait.
+            trial=trial-1;
+            o.trialsSkipped=o.trialsSkipped+1;
+            o.ignoreTrial=false;
         end
+        trial=trial+1;
+        o.trials=trial;
         [~,neworder]=sort(lower(fieldnames(o)));
         o=orderfields(o,neworder);
         
@@ -3709,7 +3716,7 @@ try
                         % matrix. So we replace the string by 0.
                         responseChar=0;
                     end
-                    [ok,response]=ismember(lower(responseChar),ratings);
+                    [~,response]=ismember(lower(responseChar),ratings);
                     response=response-1;
             end % switch o.task
             if ~o.quitBlock
@@ -3728,15 +3735,21 @@ try
                 o.measuredTargetDurationSec(trial)=o.movieFrameFlipSec(movieLastSignalFrame+1,trial)-...
                     o.movieFrameFlipSec(movieFirstSignalFrame,trial);
                 o.likelyTargetDurationSec(trial)=round(o.measuredTargetDurationSec(trial)*frameRate)/frameRate;
-                s=sprintf('Signal duration requested %.3f s, measured %.3f s, and likely %.3f s, an excess of %.0f frames.\n', ...
-                    o.targetDurationSec,o.measuredTargetDurationSec(trial),o.likelyTargetDurationSec(trial), ...
-                    (o.likelyTargetDurationSec(trial)-o.targetDurationSec)*frameRate);
-                if isfinite(o.targetDurationSec) && abs(o.measuredTargetDurationSec(trial)-o.targetDurationSec) > 0.010
-                    ffprintf(ff,'WARNING: %s',s);
+                % Somewhat arbitrarily, we allow stimuli up to 30% too long.
+                overlyLong=o.likelyTargetDurationSec(trial)>1.3*o.targetDurationSec;
+                if o.ignoreOverlyLongTrials && overlyLong
+                    s='Ignoring overly long trial. ';
+                    o.ignoreTrial=true;
                 else
-                    if o.printDurations
-                        ffprintf(ff,'%s',s);
-                    end
+                    s='';
+                end
+                s=sprintf('%sSignal duration requested %.3f s, measured %.3f s, and likely %.3f s, an excess of %.0f frames.\n', ...
+                    s,o.targetDurationSec,o.measuredTargetDurationSec(trial),o.likelyTargetDurationSec(trial), ...
+                    (o.likelyTargetDurationSec(trial)-o.targetDurationSec)*frameRate);
+                if overlyLong
+                    ffprintf(ff,'WARNING: %s',s);
+                elseif o.printDurations
+                    ffprintf(ff,'%s',s);
                 end
             end
         else
@@ -5097,7 +5110,7 @@ graveAccentKeyCode=KbName('`~');
 spaceKeyCode=KbName('space');
 Screen('FillRect',o.window,o.gray1);
 Screen('FillRect',o.window,o.gray1,o.stimulusRect);
-fprintf('o.gray1*o.maxEntry %.1f, o.gray*o.maxEntry %.1f, o.maxEntry %.0f\n',o.gray1*o.maxEntry,o.gray*o.maxEntry,o.maxEntry);
+% fprintf('o.gray1*o.maxEntry %.1f, o.gray*o.maxEntry %.1f, o.maxEntry %.0f\n',o.gray1*o.maxEntry,o.gray*o.maxEntry,o.maxEntry);
 if o.showCropMarks
     TrimMarks(o.window,frameRect);
 end
