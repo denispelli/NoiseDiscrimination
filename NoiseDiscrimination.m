@@ -545,6 +545,7 @@ o.blocksDesired=1; % How many blocks you to plan to run? Used solely for display
 o.experiment='';
 o.conditionName='';
 o.condition=1;
+o.conditions=1;
 o.speakInstructions=false;
 o.congratulateWhenDone=true; % true or false. Speak after final block (i.e. when o.blockNumber==o.blocksDesired). 
 o.quitBlock=false; % Returned value is true if the user aborts this block.
@@ -707,6 +708,8 @@ o.textMarginPix=0;
 o.ratingThreshold=4*ones(1,10); % One value per element of o.alphabet.
 o.ignoreOverlyLongTrials=true;
 o.ignoreTrial=false;
+o.targetDurationListSec=[];
+o.conditionList=1; % An array of integer condition numbers.
 
 o.deviceIndex=-1; % -1 for all keyboards.
 o.deviceIndex=-3; % -3 for all keyboard/keypad devices.
@@ -766,7 +769,7 @@ else
     % already defined in o. If the ignored field is a known output field,
     % then we ignore it silently. We warn of unknown fields because they
     % might be typos for input fields.
-    conditions=1;
+%     conditions=1;
     initializedFields=fieldnames(o);
     knownOutputFields={'labelAlternatives' 'beginningTime' ...
         'functionNames' 'cal' 'pixPerDeg' ...
@@ -796,11 +799,11 @@ else
         'instructionalMarginPix' 'quitRun' ... % obsolete, to be removed.
         'approxRequiredNumber' 'logApproxRequiredNumber'... % for the noise-discrimination project
         };
-    % Currently "conditions" is always 1, but in the future I'd like to
+    % In the future I'd like to
     % pass several conditions at once to be run randomly interleaved.
     % CriticalSpacing already supports this feature, and it works well.
     unknownFields={};
-    for condition=1:conditions
+    for condition=1 %:conditions
         oo(condition)=o;
         inputFields=fieldnames(oIn(condition));
         oo(condition).unknownFields={};
@@ -1874,11 +1877,7 @@ try
     end
     ffprintf(ff,'Frame rate %.1f Hz.\n',frameRate);
     o.targetDurationSec=max(1,round(o.targetDurationSec*frameRate))/frameRate;
-    if o.useDynamicNoiseMovie
-        o.checkSec=1/frameRate;
-    else
-        o.checkSec=o.targetDurationSec;
-    end
+    o.targetDurationListSec=max(1,round(o.targetDurationListSec*frameRate))/frameRate;
     if ~o.useDynamicNoiseMovie
         o.moviePreFrames=0;
         o.movieSignalFrames=1;
@@ -2137,9 +2136,12 @@ try
     o.NUnits='deg^2';
     temporal='Static';
     if o.useDynamicNoiseMovie
+        o.checkSec=1/frameRate;
         o.N=o.N*o.checkSec;
         o.NUnits='s deg^2';
         temporal='Dynamic';
+    else
+        o.checkSec=o.targetDurationSec;
     end
     ffprintf(ff,'%s noise power spectral density N %s log=%.2f\n', ...
         temporal,o.NUnits,log10(o.N));
@@ -2550,7 +2552,16 @@ try
             'psiParamsDomainList',{contrastDB, steepnesses, guessingRates, lapseRates},'qpPF',psychometricFunction);
         questPlusData=qpInitialize(questPlusData);
     end
-    
+
+    %% SETUP CONDITIONS
+    conditions=length(o.targetDurationListSec);
+    if conditions>1
+        o.conditionList=repmat(1:length(o.targetDurationListSec),1,o.trialsPerBlock);
+        o.conditionList=Shuffle(o.conditionList);
+    else
+        o.conditionList=1;
+    end
+
     %% GET READY TO DO A BLOCK
     o.data=[];
     if isfield(o,'transcript')
@@ -2576,14 +2587,19 @@ try
         % error) he gets it wrong only if he fails to guess it (prob. gamma)
         % and fails to detect it (prob. exp...).
         q=QuestCreate(tGuess,tGuessSd,o.pThreshold,o.steepness,0,0); % Prob of detecting flanker.
+        q.normalizePdf=true; % Prevent underflow of pdf.
         q.p2=o.lapse*o.guess+(1-o.lapse)*(1-(1-o.guess)*q.p2); % Prob of identifying target.
         q.s2=fliplr([1-q.p2;q.p2]);
         %    figure;
         %    plot(q.x2,q.p2);
     else
-        q=QuestCreate(tGuess,tGuessSd,o.pThreshold,o.steepness,o.lapse,o.guess);
+        clear qList
+        for condition=1:conditions
+            q=QuestCreate(tGuess,tGuessSd,o.pThreshold,o.steepness,o.lapse,o.guess);
+            q.normalizePdf=true; % Prevent underflow of pdf.
+            qList(condition)=q;
+        end
     end
-    q.normalizePdf=true; % Prevent underflow of pdf.
     wrongRight={'wrong', 'right'};
     timeZero=GetSecs;
     trialsRight=0;
@@ -2595,7 +2611,7 @@ try
     o.trials=trial;
     
     %% DO A BLOCK OF TRIALS.
-    while trial<o.trialsPerBlock
+    while trial<o.trialsPerBlock*length(conditions)
         waitForObserver=(trial==0 || o.skipTrial) && ~ismember(o.observer,o.algorithmicObservers);
         if o.skipTrial || o.ignoreTrial
             % ignoreTrial is like skipTrial, without the wait. skipTrial is
@@ -2605,6 +2621,7 @@ try
             o.trialsSkipped=o.trialsSkipped+1;
             o.skipTrial=false;
             o.ignoreTrial=false;
+            o.conditionList(trial+1:end)=Shuffle(conditionList(trial+1:end));
         end
         if waitForObserver
             o=WaitUntilObserverIsReady(o,waitMessage);
@@ -2621,6 +2638,13 @@ try
         end
         [~,neworder]=sort(lower(fieldnames(o)));
         o=orderfields(o,neworder);
+        
+        %% HANDLE MULTIPLE DURATIONS
+        if conditions>1
+            condition=o.conditionList(trial);
+            o.targetDurationSec=o.targetDurationListSec(condition);
+            q=qList(condition);
+        end
         
         %% SET TARGET LOG CONTRAST: tTest
         if o.questPlusEnable
@@ -3545,7 +3569,7 @@ try
                         if o.speakInstructions
                             Speak('Escape.');
                         end
-                       [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(o.window,o,o.textMarginPix);
+                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(o.window,o,o.textMarginPix);
                         trial=trial-1;
                     end
                     if o.quitExperiment
@@ -3807,10 +3831,12 @@ try
                 questPlusData=qpUpdate(questPlusData,stim,outcome);
             end
         end
+        qList(condition)=q;
         o.data(trial,1:1+length(isRight))=[tTest isRight];
         o.transcript.response{trial}=response;
         o.transcript.intensity(trial)=tTest;
         o.transcript.isRight{trial}=isRight;
+        o.transcript.condition(trial)=condition;
         if cal.ScreenConfigureDisplayBrightnessWorks && ~ismember(o.observer,o.algorithmicObservers)
             %          Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
             cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
@@ -3837,276 +3863,301 @@ try
         psych=[];
     end
     o.psych=psych;
-    o.questMean=QuestMean(q);
-    o.questSd=QuestSd(q);
-    t=QuestMean(q); % Used in printouts below.
-    sd=QuestSd(q); % Used in printouts below.
-    o.approxRequiredNumber=64/10^((o.questMean-idealT64)/0.55);
-    o.p=trialsRight/trial;
-    o.trials=trial;
-    rDeg=sqrt(sum(o.eccentricityXYDeg.^2));
-    switch o.thresholdParameter
-        case 'spacing'
-            ffprintf(ff,'%s: p %.0f%%, size %.2f deg, ecc. %.1f deg, critical spacing %.2f deg.\n',o.observer,100*o.p,targetSizeDeg,rDeg,10^o.questMean);
-        case 'size'
-            ffprintf(ff,'%s: p %.0f%%, ecc. %.1f deg, threshold size %.3f deg.\n',o.observer,100*o.p,rDeg,10^o.questMean);
-        case 'contrast'
-            o.contrast=o.thresholdPolarity*10^o.questMean;
-        case 'flankerContrast'
-            o.flankerContrast=o.thresholdPolarity*10^o.questMean;
-    end
-    o.EOverN=o.contrast^2*o.E1/o.N;
-    o.efficiency=o.idealEOverNThreshold/o.EOverN;
     
-    %% QUESTPlus: Estimate steepness and threshold contrast.
-    if o.questPlusEnable && isfield(questPlusData,'trialData')
-        psiParamsIndex=qpListMaxArg(questPlusData.posterior);
-        psiParamsBayesian=questPlusData.psiParamsDomain(psiParamsIndex,:);
-        if o.questPlusPrint
-            ffprintf(ff,'Quest: Max posterior est. of threshold: log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
-                o.questMean,o.steepness,o.guess,o.lapse);
-            %          ffprintf(ff,'QuestPlus: Max posterior estimate:      log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
-            %             psiParamsBayesian(1)/20,psiParamsBayesian(2),psiParamsBayesian(3),psiParamsBayesian(4));
-        end
-        psiParamsFit=qpFit(questPlusData.trialData,questPlusData.qpPF,psiParamsBayesian,questPlusData.nOutcomes,...,
-            'lowerBounds', [min(contrastDB) min(steepnesses) min(guessingRates) min(lapseRates)],...
-            'upperBounds',[max(contrastDB) max(steepnesses) max(guessingRates) max(lapseRates)]);
-        if o.questPlusPrint
-            ffprintf(ff,'QuestPlus: Max likelihood estimate:     log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
-                psiParamsFit(1)/20,psiParamsFit(2),psiParamsFit(3),psiParamsFit(4));
-        end
-        o.qpContrast=o.thresholdPolarity*10^(psiParamsFit(1)/20);	% threshold contrast
+    %% LOOP THROUGH ALL THE CONDITIONS
+    for condition=1:conditions
+        % Currently, conditions differ only in duration.
+        q=qList(condition);
+        o.targetDurationSec=o.targetDurationListSec(condition);
+        
+        o.questMean=QuestMean(q);
+        o.questSd=QuestSd(q);
+        t=QuestMean(q); % Used in printouts below.
+        sd=QuestSd(q); % Used in printouts below.
+        o.approxRequiredNumber=64/10^((o.questMean-idealT64)/0.55);
+        o.p=trialsRight/trial;
+        o.trials=trial;
+        rDeg=sqrt(sum(o.eccentricityXYDeg.^2));
         switch o.thresholdParameter
+            case 'spacing'
+                ffprintf(ff,'%s: p %.0f%%, size %.2f deg, ecc. %.1f deg, critical spacing %.2f deg.\n',o.observer,100*o.p,targetSizeDeg,rDeg,10^o.questMean);
+            case 'size'
+                ffprintf(ff,'%s: p %.0f%%, ecc. %.1f deg, threshold size %.3f deg.\n',o.observer,100*o.p,rDeg,10^o.questMean);
             case 'contrast'
-                o.contrast=o.qpContrast;
+                o.contrast=o.thresholdPolarity*10^o.questMean;
             case 'flankerContrast'
-                o.flankerContrast=o.qpContrast;
+                o.flankerContrast=o.thresholdPolarity*10^o.questMean;
         end
-        o.qpSteepness=psiParamsFit(2);          % steepness
-        o.qpGuessing=psiParamsFit(3);
-        o.qpLapse=psiParamsFit(4);
-        %% Plot trial data with maximum likelihood fit
-        if o.questPlusPlot
-            figure('Name',[o.experiment ':' o.conditionName],'NumberTitle','off');
-            title(o.conditionName,'FontSize',14);
-            hold on
-            stimCounts=qpCounts(qpData(questPlusData.trialData),questPlusData.nOutcomes);
-            stim=[stimCounts.stim];
-            stimFine=linspace(-40,0,100)';
-            plotProportionsFit=qpPFWeibull(stimFine,psiParamsFit);
-            for cc=1:length(stimCounts)
-                nTrials(cc)=sum(stimCounts(cc).outcomeCounts);
-                pCorrect(cc)=stimCounts(cc).outcomeCounts(2)/nTrials(cc);
+        o.EOverN=o.contrast^2*o.E1/o.N;
+        o.efficiency=o.idealEOverNThreshold/o.EOverN;
+        
+        %% QUESTPlus: Estimate steepness and threshold contrast.
+        if o.questPlusEnable && isfield(questPlusData,'trialData')
+            psiParamsIndex=qpListMaxArg(questPlusData.posterior);
+            psiParamsBayesian=questPlusData.psiParamsDomain(psiParamsIndex,:);
+            if o.questPlusPrint
+                ffprintf(ff,'Quest: Max posterior est. of threshold: log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
+                    o.questMean,o.steepness,o.guess,o.lapse);
+                %          ffprintf(ff,'QuestPlus: Max posterior estimate:      log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
+                %             psiParamsBayesian(1)/20,psiParamsBayesian(2),psiParamsBayesian(3),psiParamsBayesian(4));
             end
-            legendString=sprintf('%.2f %s',o.noiseSD,o.observer);
-            semilogx(10.^(stimFine/20),plotProportionsFit(:,2),'-','Color',[0 0 0],'LineWidth',3,'DisplayName',legendString);
-            scatter(10.^(stim/20),pCorrect,100,'o','MarkerEdgeColor',[0 0 0],'MarkerFaceColor',...
-                [0 0 0],'MarkerEdgeAlpha',.1,'MarkerFaceAlpha',.1,'DisplayName',legendString);
-            set(gca,'xscale','log');
-            set(gca,'XTickLabel',{'0.01' '0.1' '1'});
-            xlabel('Contrast');
-            ylabel('Proportion correct');
-            xlim([0.01 1]); ylim([0 1]);
-            set(gca,'FontSize',12);
-            o.targetCyclesPerDeg=o.targetGaborCycles/o.targetHeightDeg;
-            noteString{1}=sprintf('%s: %s %.1f c/deg, ecc %.0f deg, %.1f s\n%.0f cd/m^2, eyes %s, trials %d',...
-                o.conditionName,o.targetKind,o.targetCyclesPerDeg,o.eccentricityXYDeg(1),o.targetDurationSec,o.LBackground,o.eyes,o.trials);
-            noteString{2}=sprintf('%8s %7s %5s %9s %8s %5s','observer','noiseSD','log c','steepness','guessing','lapse');
-            noteString{end+1}=sprintf('%-8s %7.2f %5.2f %9.1f %8.2f %5.2f', ...
-                o.observer,o.noiseSD,log10(o.qpContrast),o.qpSteepness,o.qpGuessing,o.qpLapse);
-            text(0.4,0.4,'noiseSD observer');
-            legend('show','Location','southeast');
-            legend('boxoff');
-            annotation('textbox',[0.14 0.11 .5 .2],'String',noteString,...
-                'FitBoxToText','on','LineStyle','none',...
-                'FontName','Monospaced','FontSize',9);
-            drawnow;
-        end % if o.questPlusPlot
-    end % if o.questPlusEnable
-    
-    %% TIMING AND LUMINANCE
-    o.targetDurationSecMean=mean(o.likelyTargetDurationSec,'omitnan');
-    o.targetDurationSecSD=std(o.likelyTargetDurationSec,'omitnan');
-    if ~ismember(o.observer,o.algorithmicObservers)
-        ffprintf(ff,['Mean target duration %.3f',plusMinusChar,'%.3f s (sd over %d trials).\n'],o.targetDurationSecMean,o.targetDurationSecSD,length(o.likelyTargetDurationSec));
-    end
-    if o.useFilter
-        ffprintf(ff,'Background luminance %.1f cd/m^2, which filter reduces to %.2f cd/m^2.\n',o.LBackground,o.luminanceAtEye);
-    else
-        ffprintf(ff,'Background luminance %.1f cd/m^2.\n',o.LBackground);
-    end
-    
-    %% PRINT BOLD SUMMARY 
-    o.E=10^(2*o.questMean)*o.E1;
-    switch o.targetModulates
-        case 'luminance'
-            ffprintf(ff,['<strong>Block %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
-                'Threshold',plusMinusChar,'sd log contrast %.2f',plusMinusChar,'%.2f, contrast %.4f, log E/N %.2f, efficiency %.5f</strong>\n'],...
-                o.blockNumber,o.blocksDesired,trial,100*trialsRight/trial,(GetSecs-blockStartSecs)/trial,t,sd,o.thresholdPolarity*10^t,log10(o.EOverN),o.efficiency);
-        case {'noise' 'entropy'}
-            ffprintf(ff,['<strong>Block %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
-                'Threshold',plusMinusChar,'sd log(o.r-1) %.2f',plusMinusChar,'%.2f, approxRequiredNumber %.0f</strong>\n'],...
-                o.blockNumber,o.blocksDesired,trial,100*trialsRight/trial,(GetSecs-blockStartSecs)/trial,t,sd,o.approxRequiredNumber);
-    end
-    if abs(trialsRight/trial-o.pThreshold) > 0.1
-        ffprintf(ff,'WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.\n');
-    end
-    
-    %     t=mean(tSample);
-    %     tse=std(tSample)/sqrt(length(tSample));
-    %     switch o.targetModulates
-    %         case 'luminance',
-    %         ffprintf(ff,['SUMMARY: %s %d blocks mean',plusMinusChar,'se: log(contrast) %.2f',plusMinusChar,'%.2f, contrast %.3f\n'],...
-    %             o.observer,length(tSample),mean(tSample),tse,10^mean(tSample));
-    %         %         efficiency=(o.idealEOverNThreshold^2) / (10^(2*t));
-    %         %         ffprintf(ff,'Efficiency=%f\n', efficiency);
-    %         %o.EOverN=10^mean(2*tSample)*o.E1/o.N;
-    %         ffprintf(ff,['Threshold log E/N %.2f',plusMinusChar,'%.2f, E/N %.1f\n'],mean(log10(o.EOverN)),std(log10(o.EOverN))/sqrt(length(o.EOverN)),o.EOverN);
-    %         %o.efficiency=o.idealEOverNThreshold/o.EOverN;
-    %         ffprintf(ff,'User-provided ideal threshold E/N log E/N %.2f, E/N %.1f\n',log10(o.idealEOverNThreshold),o.idealEOverNThreshold);
-    %         ffprintf(ff,['Efficiency log %.2f',plusMinusChar,'%.2f, %.4f %%\n'],mean(log10(o.efficiency)),std(log10(o.efficiency))/sqrt(length(o.efficiency)),100*10^mean(log10(o.efficiency)));
-    %         corr=zeros(length(signal));
-    %         for i=1:length(signal)
-    %             for j=1:i
-    %                 cii=sum(signal(i).image(:).*signal(i).image(:));
-    %                 cjj=sum(signal(j).image(:).*signal(j).image(:));
-    %                 cij=sum(signal(i).image(:).*signal(j).image(:));
-    %                 corr(i,j)=cij/sqrt(cjj*cii);
-    %                 corr(j,i)=corr(i,j);
-    %             end
-    %         end
-    %         [iGrid,jGrid]=meshgrid(1:length(signal),1:length(signal));
-    %         offDiagonal=iGrid~=jGrid;
-    %         o.signalCorrelation=mean(corr(offDiagonal));
-    %         ffprintf(ff,'Average cross-correlation %.2f\n',o.signalCorrelation);
-    %         approximateIdealEOverN=(-1.189+4.757*log10(length(signal)))/(1-o.signalCorrelation);
-    %         %         err=0.0372;
-    %         %         minEst=(-1.189+4.757*log10(length(signal)-err))/(1-o.signalCorrelation);
-    %         %         maxEst=(-1.189+4.757*log10(length(signal)+err))/(1-o.signalCorrelation);
-    %         %         logErr=log10(max(maxEst/estimatedIdealEOverN,estimatedIdealEOverN/minEst));
-    %         ffprintf(ff,'Approximation, assuming pThreshold=0.64, predicts ideal threshold is about log E/N %.2f, E/N %.1f\n',log10(approximateIdealEOverN),approximateIdealEOverN);
-    %         ffprintf(ff,'The approximation is Eq. A.24 of Pelli et al. (2006) Vision Research 46:4646-4674.\n');
-    switch o.targetModulates
-        case 'noise'
-            t=o.questMean;
-            o.r=10^t+1;
-            o.approxRequiredNumber=64./10.^((t-idealT64)/0.55);
-            o.logApproxRequiredNumber=log10(o.approxRequiredNumber);
-            ffprintf(ff,'o.r %.3f, o.approxRequiredNumber %.0f\n',o.r,o.approxRequiredNumber);
-            %              logNse=std(logApproxRequiredNumber)/sqrt(length(tSample));
-            %              ffprintf(ff,['SUMMARY: %s %d blocks mean',plusMinusChar,'se: log(o.r-1) %.2f',plusMinusChar,'%.2f, log(approxRequiredNumber) %.2f',plusMinusChar,'%.2f\n'],...
-            % o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
-        case 'entropy'
-            t=o.questMean;
-            o.r=10^t+1;
-            signalEntropyLevels=o.r*o.backgroundEntropyLevels;
-            ffprintf(ff,'Entropy levels: o.r %.2f, background levels %d, signal levels %.1f\n',o.r,o.backgroundEntropyLevels,signalEntropyLevels);
-    end
-    switch o.targetModulates
-        case 'entropy'
-            if ~isempty(o.psych)
-                ffprintf(ff,'t\tr\tlevels\tbits\tright\ttrials\t%%\n');
-                o.psych.levels=o.psych.r*o.backgroundEntropyLevels;
-                for i=1:length(o.psych.t)
-                    ffprintf(ff,'%.2f\t%.2f\t%.0f\t%.1f\t%d\t%d\t%.0f\n',o.psych.t(i),o.psych.r(i),o.psych.levels(i),log2(o.psych.levels(i)),o.psych.right(i),o.psych.trials(i),100*o.psych.right(i)/o.psych.trials(i));
+            psiParamsFit=qpFit(questPlusData.trialData,questPlusData.qpPF,psiParamsBayesian,questPlusData.nOutcomes,...,
+                'lowerBounds', [min(contrastDB) min(steepnesses) min(guessingRates) min(lapseRates)],...
+                'upperBounds',[max(contrastDB) max(steepnesses) max(guessingRates) max(lapseRates)]);
+            if o.questPlusPrint
+                ffprintf(ff,'QuestPlus: Max likelihood estimate:     log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
+                    psiParamsFit(1)/20,psiParamsFit(2),psiParamsFit(3),psiParamsFit(4));
+            end
+            o.qpContrast=o.thresholdPolarity*10^(psiParamsFit(1)/20);	% threshold contrast
+            switch o.thresholdParameter
+                case 'contrast'
+                    o.contrast=o.qpContrast;
+                case 'flankerContrast'
+                    o.flankerContrast=o.qpContrast;
+            end
+            o.qpSteepness=psiParamsFit(2);          % steepness
+            o.qpGuessing=psiParamsFit(3);
+            o.qpLapse=psiParamsFit(4);
+            %% Plot trial data with maximum likelihood fit
+            if o.questPlusPlot
+                figure('Name',[o.experiment ':' o.conditionName],'NumberTitle','off');
+                title(o.conditionName,'FontSize',14);
+                hold on
+                stimCounts=qpCounts(qpData(questPlusData.trialData),questPlusData.nOutcomes);
+                stim=[stimCounts.stim];
+                stimFine=linspace(-40,0,100)';
+                plotProportionsFit=qpPFWeibull(stimFine,psiParamsFit);
+                for cc=1:length(stimCounts)
+                    nTrials(cc)=sum(stimCounts(cc).outcomeCounts);
+                    pCorrect(cc)=stimCounts(cc).outcomeCounts(2)/nTrials(cc);
+                end
+                legendString=sprintf('%.2f %s',o.noiseSD,o.observer);
+                semilogx(10.^(stimFine/20),plotProportionsFit(:,2),'-','Color',[0 0 0],'LineWidth',3,'DisplayName',legendString);
+                scatter(10.^(stim/20),pCorrect,100,'o','MarkerEdgeColor',[0 0 0],'MarkerFaceColor',...
+                    [0 0 0],'MarkerEdgeAlpha',.1,'MarkerFaceAlpha',.1,'DisplayName',legendString);
+                set(gca,'xscale','log');
+                set(gca,'XTickLabel',{'0.01' '0.1' '1'});
+                xlabel('Contrast');
+                ylabel('Proportion correct');
+                xlim([0.01 1]); ylim([0 1]);
+                set(gca,'FontSize',12);
+                o.targetCyclesPerDeg=o.targetGaborCycles/o.targetHeightDeg;
+                noteString{1}=sprintf('%s: %s %.1f c/deg, ecc %.0f deg, %.1f s\n%.0f cd/m^2, eyes %s, trials %d',...
+                    o.conditionName,o.targetKind,o.targetCyclesPerDeg,o.eccentricityXYDeg(1),o.targetDurationSec,o.LBackground,o.eyes,o.trials);
+                noteString{2}=sprintf('%8s %7s %5s %9s %8s %5s','observer','noiseSD','log c','steepness','guessing','lapse');
+                noteString{end+1}=sprintf('%-8s %7.2f %5.2f %9.1f %8.2f %5.2f', ...
+                    o.observer,o.noiseSD,log10(o.qpContrast),o.qpSteepness,o.qpGuessing,o.qpLapse);
+                text(0.4,0.4,'noiseSD observer');
+                legend('show','Location','southeast');
+                legend('boxoff');
+                annotation('textbox',[0.14 0.11 .5 .2],'String',noteString,...
+                    'FitBoxToText','on','LineStyle','none',...
+                    'FontName','Monospaced','FontSize',9);
+                drawnow;
+            end % if o.questPlusPlot
+        end % if o.questPlusEnable
+        
+        %% TIMING 
+        o.targetDurationSecMean=mean(o.likelyTargetDurationSec,'omitnan');
+        o.targetDurationSecSD=std(o.likelyTargetDurationSec,'omitnan');
+        if ~ismember(o.observer,o.algorithmicObservers)
+            msg=sprintf(['Mean target duration %.3f',plusMinusChar,'%.3f s (sd over %d trials).\n'],...
+                o.targetDurationSecMean,o.targetDurationSecSD,length(o.likelyTargetDurationSec));
+            if conditions>1
+                ffprintf(ff,'N.B. Averaged across %d durations. %s',conditions,msg);
+            else
+                ffprintf(ff,msg);
+            end
+        end
+        %% LUMINANCE
+        if o.useFilter
+            ffprintf(ff,'Background luminance %.1f cd/m^2, which filter reduces to %.2f cd/m^2.\n',o.LBackground,o.luminanceAtEye);
+        else
+            ffprintf(ff,'Background luminance %.1f cd/m^2.\n',o.LBackground);
+        end
+        
+        %% PRINT BOLD SUMMARY
+        o.E=10^(2*o.questMean)*o.E1;
+        index=o.transcript.condition==condition;
+        trials=sum(index); % Of this condition.
+        trialsRight=sum([o.transcript.isRight{index}]); % Of this condition.
+        switch o.targetModulates
+            case 'luminance'
+                ffprintf(ff,['<strong>Block %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
+                    'Threshold',plusMinusChar,'sd log contrast %.2f',plusMinusChar,'%.2f, contrast %.4f, log E/N %.2f, efficiency %.5f</strong>\n'],...
+                    o.blockNumber,o.blocksDesired,trials,100*trialsRight/trials,(GetSecs-blockStartSecs)/trial,t,sd,o.thresholdPolarity*10^t,log10(o.EOverN),o.efficiency);
+            case {'noise' 'entropy'}
+                ffprintf(ff,['<strong>Block %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
+                    'Threshold',plusMinusChar,'sd log(o.r-1) %.2f',plusMinusChar,'%.2f, approxRequiredNumber %.0f</strong>\n'],...
+                    o.blockNumber,o.blocksDesired,trials,100*trialsRight/trials,(GetSecs-blockStartSecs)/trial,t,sd,o.approxRequiredNumber);
+        end
+        if abs(trialsRight/trials-o.pThreshold) > 0.1
+            ffprintf(ff,'WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.\n');
+        end
+        
+        %     t=mean(tSample);
+        %     tse=std(tSample)/sqrt(length(tSample));
+        %     switch o.targetModulates
+        %         case 'luminance',
+        %         ffprintf(ff,['SUMMARY: %s %d blocks mean',plusMinusChar,'se: log(contrast) %.2f',plusMinusChar,'%.2f, contrast %.3f\n'],...
+        %             o.observer,length(tSample),mean(tSample),tse,10^mean(tSample));
+        %         %         efficiency=(o.idealEOverNThreshold^2) / (10^(2*t));
+        %         %         ffprintf(ff,'Efficiency=%f\n', efficiency);
+        %         %o.EOverN=10^mean(2*tSample)*o.E1/o.N;
+        %         ffprintf(ff,['Threshold log E/N %.2f',plusMinusChar,'%.2f, E/N %.1f\n'],mean(log10(o.EOverN)),std(log10(o.EOverN))/sqrt(length(o.EOverN)),o.EOverN);
+        %         %o.efficiency=o.idealEOverNThreshold/o.EOverN;
+        %         ffprintf(ff,'User-provided ideal threshold E/N log E/N %.2f, E/N %.1f\n',log10(o.idealEOverNThreshold),o.idealEOverNThreshold);
+        %         ffprintf(ff,['Efficiency log %.2f',plusMinusChar,'%.2f, %.4f %%\n'],mean(log10(o.efficiency)),std(log10(o.efficiency))/sqrt(length(o.efficiency)),100*10^mean(log10(o.efficiency)));
+        %         corr=zeros(length(signal));
+        %         for i=1:length(signal)
+        %             for j=1:i
+        %                 cii=sum(signal(i).image(:).*signal(i).image(:));
+        %                 cjj=sum(signal(j).image(:).*signal(j).image(:));
+        %                 cij=sum(signal(i).image(:).*signal(j).image(:));
+        %                 corr(i,j)=cij/sqrt(cjj*cii);
+        %                 corr(j,i)=corr(i,j);
+        %             end
+        %         end
+        %         [iGrid,jGrid]=meshgrid(1:length(signal),1:length(signal));
+        %         offDiagonal=iGrid~=jGrid;
+        %         o.signalCorrelation=mean(corr(offDiagonal));
+        %         ffprintf(ff,'Average cross-correlation %.2f\n',o.signalCorrelation);
+        %         approximateIdealEOverN=(-1.189+4.757*log10(length(signal)))/(1-o.signalCorrelation);
+        %         %         err=0.0372;
+        %         %         minEst=(-1.189+4.757*log10(length(signal)-err))/(1-o.signalCorrelation);
+        %         %         maxEst=(-1.189+4.757*log10(length(signal)+err))/(1-o.signalCorrelation);
+        %         %         logErr=log10(max(maxEst/estimatedIdealEOverN,estimatedIdealEOverN/minEst));
+        %         ffprintf(ff,'Approximation, assuming pThreshold=0.64, predicts ideal threshold is about log E/N %.2f, E/N %.1f\n',log10(approximateIdealEOverN),approximateIdealEOverN);
+        %         ffprintf(ff,'The approximation is Eq. A.24 of Pelli et al. (2006) Vision Research 46:4646-4674.\n');
+        switch o.targetModulates
+            case 'noise'
+                t=o.questMean;
+                o.r=10^t+1;
+                o.approxRequiredNumber=64./10.^((t-idealT64)/0.55);
+                o.logApproxRequiredNumber=log10(o.approxRequiredNumber);
+                ffprintf(ff,'o.r %.3f, o.approxRequiredNumber %.0f\n',o.r,o.approxRequiredNumber);
+                %              logNse=std(logApproxRequiredNumber)/sqrt(length(tSample));
+                %              ffprintf(ff,['SUMMARY: %s %d blocks mean',plusMinusChar,'se: log(o.r-1) %.2f',plusMinusChar,'%.2f, log(approxRequiredNumber) %.2f',plusMinusChar,'%.2f\n'],...
+                % o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
+            case 'entropy'
+                t=o.questMean;
+                o.r=10^t+1;
+                signalEntropyLevels=o.r*o.backgroundEntropyLevels;
+                ffprintf(ff,'Entropy levels: o.r %.2f, background levels %d, signal levels %.1f\n',o.r,o.backgroundEntropyLevels,signalEntropyLevels);
+        end
+        switch o.targetModulates
+            case 'entropy'
+                if ~isempty(o.psych)
+                    ffprintf(ff,'t\tr\tlevels\tbits\tright\ttrials\t%%\n');
+                    o.psych.levels=o.psych.r*o.backgroundEntropyLevels;
+                    for i=1:length(o.psych.t)
+                        ffprintf(ff,'%.2f\t%.2f\t%.0f\t%.1f\t%d\t%d\t%.0f\n',o.psych.t(i),o.psych.r(i),o.psych.levels(i),log2(o.psych.levels(i)),o.psych.right(i),o.psych.trials(i),100*o.psych.right(i)/o.psych.trials(i));
+                    end
+                end
+        end
+        
+        %% GOODBYE
+        if o.speakInstructions
+            if o.quitExperiment && ~ismember(o.observer,o.algorithmicObservers)
+                Speak('QUITTING now. Done.');
+            else
+                if ~o.quitBlock && o.blockNumber == o.blocksDesired && o.congratulateWhenDone && ~ismember(o.observer,o.algorithmicObservers)
+                    Speak('Congratulations. End of block.');
                 end
             end
-    end
-    if o.speakInstructions
-        if o.quitExperiment && ~ismember(o.observer,o.algorithmicObservers)
-            Speak('QUITTING now. Done.');
-        else
-            if ~o.quitBlock && o.blockNumber == o.blocksDesired && o.congratulateWhenDone && ~ismember(o.observer,o.algorithmicObservers)
-                Speak('Congratulations. End of block.');
+        end
+        % RestoreCluts;
+        if Screen(o.window,'WindowKind') == 1
+            % Tell observer what's happening.
+            Screen('LoadNormalizedGammaTable',o.window,cal.old.gamma,loadOnNextFlip);
+            Screen('FillRect',o.window);
+            Screen('DrawText',o.window,' ',0,0,1,1,1); % Set background color.
+            string=sprintf('Saving results to disk ...');
+            DrawFormattedText(o.window,string,...
+                o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+            Screen('Flip',o.window); % Display message.
+        end
+        ListenChar(0); % flush
+        ListenChar;
+        if ~isempty(o.window) && (o.quitExperiment || o.blockNumber >= o.blocksDesired)
+            sca; % Screen('CloseAll'); ShowCursor;
+            if ismac
+                AutoBrightness(cal.screen,1); % Restore autobrightness.
             end
+            window=[];
+            o.window=[];
         end
-    end
-%     RestoreCluts;
-    if Screen(o.window,'WindowKind') == 1
-        % Tell observer what's happening.
-        Screen('LoadNormalizedGammaTable',o.window,cal.old.gamma,loadOnNextFlip);
-        Screen('FillRect',o.window);
-        Screen('DrawText',o.window,' ',0,0,1,1,1); % Set background color.
-        string=sprintf('Saving results to disk ...');
-        DrawFormattedText(o.window,string,...
-            o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
-        Screen('Flip',o.window); % Display message.
-    end
-    ListenChar(0); % flush
-    ListenChar;
-    if ~isempty(o.window) && (o.quitExperiment || o.blockNumber >= o.blocksDesired)
-       sca; % Screen('CloseAll'); ShowCursor;
-       if ismac
-          AutoBrightness(cal.screen,1); % Restore autobrightness.
-       end
-       window=[];
-       o.window=[];
-    end
-    % This applescript "activate" command provokes a screen refresh (by
-    % selecting MATLAB). My computers each have only one display, upon which
-    % my MATLAB programs open a Psychtoolbox window. This applescript
-    % eliminates an annoyingly long pause at the end of my Psychtoolbox
-    % programs running under MATLAB 2014a, when returning to the MATLAB
-    % command window after twice opening and closing Screen windows. Without
-    % this command, when I return to MATLAB, the whole screen remains blank
-    % for a long time, maybe 30 s, or until I click something, so I can't
-    % tell that I'm back in MATLAB. This applescript command provokes a
-    % screen refresh, so the MATLAB editor appears immediately. Among
-    % several computers, the problem is always present in MATLAB 2014a and
-    % never in MATLAB 2015a. (All computers are running Mavericks.)
-    % denis.pelli@nyu.edu, June 18, 2015
-    if ismac && false 
-        % I disabled this in April 2018 because it takes 0.1 s.
-        status=system('osascript -e ''tell application "MATLAB" to activate''');
-    end
-    if ~isempty(o.window)
-        Screen('Preference','VisualDebugLevel',oldVisualDebugLevel);
-        Screen('Preference','SuppressAllWarnings',oldSupressAllWarnings);
-    end
+        % This applescript "activate" command provokes a screen refresh (by
+        % selecting MATLAB). My computers each have only one display, upon which
+        % my MATLAB programs open a Psychtoolbox window. This applescript
+        % eliminates an annoyingly long pause at the end of my Psychtoolbox
+        % programs running under MATLAB 2014a, when returning to the MATLAB
+        % command window after twice opening and closing Screen windows. Without
+        % this command, when I return to MATLAB, the whole screen remains blank
+        % for a long time, maybe 30 s, or until I click something, so I can't
+        % tell that I'm back in MATLAB. This applescript command provokes a
+        % screen refresh, so the MATLAB editor appears immediately. Among
+        % several computers, the problem is always present in MATLAB 2014a and
+        % never in MATLAB 2015a. (All computers are running Mavericks.)
+        % denis.pelli@nyu.edu, June 18, 2015
+        if ismac && false
+            % I disabled this in April 2018 because it takes 0.1 s.
+            status=system('osascript -e ''tell application "MATLAB" to activate''');
+        end
+        if ~isempty(o.window)
+            Screen('Preference','VisualDebugLevel',oldVisualDebugLevel);
+            Screen('Preference','SuppressAllWarnings',oldSupressAllWarnings);
+        end
+        o.signal=signal; % worth saving
+        %     o.q=q; % not worth saving
+        o.newCal=cal;
+        [~,neworder]=sort(lower(fieldnames(o)));
+        o=orderfields(o,neworder);
+        if conditions>1
+            filename=sprintf('%s-%d',o.dataFilename,condition);
+        else
+            filename=o.dataFilename;
+        end
+        save(fullfile(o.dataFolder,[filename '.mat']),'o','cal');
+        try % save to .json file
+            if streq(o.targetKind,'image')
+                % json encoding of 12 faces takes 60 s, which is unbearable.
+                % So we omit the signals from the json file.
+                o1=rmfield(o,'signal');
+            else
+                o1=o;
+            end
+            if exist('jsonencode','builtin')
+                json=jsonencode(o1);
+            else
+                addpath(fullfile(myPath,'lib/jsonlab'));
+                json=savejson('',o1);
+            end
+            clear o1
+            fid=fopen(fullfile(o.dataFolder,[filename '.json']),'w');
+            fprintf(fid,'%s',json);
+            fclose(fid);
+        catch e
+            warning('Failed to save .json file.');
+            warning(e.message);
+        end % save to .json file
+        try % save transcript to .json file
+            if exist('jsonencode','builtin')
+                json=jsonencode(o.transcript);
+            else
+                addpath(fullfile(myPath,'lib/jsonlab'));
+                json=savejson('',o.transcript);
+            end
+            fid=fopen(fullfile(o.dataFolder,[filename '.transcript.json']),'w');
+            fprintf(fid,'%s',json);
+            fclose(fid);
+        catch e
+            warning('Failed to save .transcript.json file.');
+            warning(e.message);
+        end % save transcript to .json file
+        fprintf('Results saved as %s with extensions .txt, .mat, and .json \nin the data folder: %s/\n',filename,o.dataFolder);
+    end % for condition
     fclose(dataFid); dataFid=-1;
-    o.signal=signal; % worth saving
-    %     o.q=q; % not worth saving
-    o.newCal=cal;
-    [~,neworder]=sort(lower(fieldnames(o)));
-    o=orderfields(o,neworder);
-    save(fullfile(o.dataFolder,[o.dataFilename '.mat']),'o','cal');
-    try % save to .json file
-        if streq(o.targetKind,'image')
-            % json encoding of 12 faces takes 60 s, which is unbearable.
-            % So we omit the signals from the json file.
-            o1=rmfield(o,'signal');
-        else
-            o1=o;
-        end
-        if exist('jsonencode','builtin')
-            json=jsonencode(o1);
-        else
-            addpath(fullfile(myPath,'lib/jsonlab'));
-            json=savejson('',o1);
-        end
-        clear o1
-        fid=fopen(fullfile(o.dataFolder,[o.dataFilename '.json']),'w');
-        fprintf(fid,'%s',json);
-        fclose(fid);
-    catch e
-        warning('Failed to save .json file.');
-        warning(e.message);
-    end % save to .json file
-    try % save transcript to .json file
-        if exist('jsonencode','builtin')
-            json=jsonencode(o.transcript);
-        else
-            addpath(fullfile(myPath,'lib/jsonlab'));
-            json=savejson('',o.transcript);
-        end
-        fid=fopen(fullfile(o.dataFolder,[o.dataFilename '.transcript.json']),'w');
-        fprintf(fid,'%s',json);
-        fclose(fid);
-    catch e
-        warning('Failed to save .transcript.json file.');
-        warning(e.message);
-    end % save transcript to .json file
-    fprintf('Results saved as %s with extensions .txt, .mat, and .json \nin the data folder: %s/\n',o.dataFilename,o.dataFolder);
     oOld.observer=o.observer;
     oOld.experimenter=o.experimenter;
     oOld.eyes=o.eyes;
