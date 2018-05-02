@@ -4,10 +4,10 @@
 
 %% GET READY
 clear o oo
-skipDataCollection=false; % Enable skipDataCollection to check plotting before we have data.
 o.questPlusEnable=false;
 if ~exist('rgb2lin','file')
-    error('This MATLAB %s is too old. We need MATLAB 2017b or better to use the function "rgb2lin".',version('-release'));
+    error('This MATLAB %s is too old. We need MATLAB 2017b or better to use the function "rgb2lin".',...
+        version('-release'));
 end
 if o.questPlusEnable && ~exist('qpInitialize','file')
     error('This script requires the QuestPlus package. Please get it from https://github.com/BrainardLab/mQUESTPlus.')
