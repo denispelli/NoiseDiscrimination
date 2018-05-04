@@ -90,10 +90,10 @@ else
 end
 if axisHandle(subplotIndex)==0
     % subplot(m,n,p) makes it easy to show several related graphs in one
-    % figure window. I suspect that calling subplot(m,n,p) for an existing
-    % axis object, erases it. So, when we first select that figure panel,
-    % we save a handle to it, which we later use to select the panel by
-    % calling subplot(handle), without calling subplot(m,n,p) again.
+    % figure window. Calling subplot(m,n,p) for an existing axis object
+    % seems erases it. So, when we first select that figure panel, we save
+    % a handle to it, which we later use to select the panel by calling
+    % subplot(handle), without calling subplot(m,n,p) again.
     axisHandle(subplotIndex)=subplot(subplots(1),subplots(2),subplotIndex);
 else
     hold(axisHandle(subplotIndex),'on');
@@ -174,10 +174,10 @@ legend('boxoff');
 caption={};
 caption{1}=sprintf('experimenter %s, observer %s,', ...
     oo(1).experimenter,oo(1).observer);
-caption{2}=sprintf('%s, phase %.0f deg, noiseSD<=%.2f, noiseType %s', ...
-    oo(1).targetKind,oo(1).targetGaborPhaseDeg,max([oo.noiseSD]),oo(1).noiseType);
-caption{3}=sprintf('eyes %s, %.0f cd/m^2, ecc. [%.0f %.0f] deg, %.1f s, %.1f c/deg', ...
-    oo(1).eyes,oo(1).LBackground,oo(1).eccentricityXYDeg,...
+caption{2}=sprintf('noiseSD<=%.2f, noiseCheckDeg %.3f, noiseType %s', ...
+    max([oo.noiseSD]),oo(1).noiseCheckDeg,oo(1).noiseType);
+caption{3}=sprintf('%s, eyes %s, %.0f cd/m^2, ecc. [%.0f %.0f] deg, %.1f s, %.1f c/deg', ...
+    oo(1).targetKind,oo(1).eyes,oo(1).LBackground,oo(1).eccentricityXYDeg,...
     oo(1).targetDurationSec,oo(1).targetCyclesPerDeg);
 text(0.02,.02,caption,'Units','normalized','FontSize',fontSize,'VerticalAlignment','bottom');
 
