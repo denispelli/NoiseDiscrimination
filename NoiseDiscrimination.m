@@ -3875,7 +3875,7 @@ try
     end
     o.psych=psych;
     
-    %% LOOP THROUGH ALL THE CONDITIONS
+    %% LOOP THROUGH ALL THE CONDITIONS, TO REPORT ONE THRESHOLD PER CONDITION.
     for condition=1:conditions
         % Currently, conditions differ only in duration.
         q=qList(condition);
@@ -3981,6 +3981,7 @@ try
                 ffprintf(ff,msg);
             end
         end
+        
         %% LUMINANCE
         if o.useFilter
             ffprintf(ff,'Background luminance %.1f cd/m^2, which filter reduces to %.2f cd/m^2.\n',o.LBackground,o.luminanceAtEye);
@@ -4006,41 +4007,26 @@ try
         if abs(trialsRight/trials-o.pThreshold) > 0.1
             ffprintf(ff,'WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.\n');
         end
-        
-        %     t=mean(tSample);
-        %     tse=std(tSample)/sqrt(length(tSample));
-        %     switch o.targetModulates
-        %         case 'luminance',
-        %         ffprintf(ff,['SUMMARY: %s %d blocks mean',plusMinusChar,'se: log(contrast) %.2f',plusMinusChar,'%.2f, contrast %.3f\n'],...
-        %             o.observer,length(tSample),mean(tSample),tse,10^mean(tSample));
-        %         %         efficiency=(o.idealEOverNThreshold^2) / (10^(2*t));
-        %         %         ffprintf(ff,'Efficiency=%f\n', efficiency);
-        %         %o.EOverN=10^mean(2*tSample)*o.E1/o.N;
-        %         ffprintf(ff,['Threshold log E/N %.2f',plusMinusChar,'%.2f, E/N %.1f\n'],mean(log10(o.EOverN)),std(log10(o.EOverN))/sqrt(length(o.EOverN)),o.EOverN);
-        %         %o.efficiency=o.idealEOverNThreshold/o.EOverN;
-        %         ffprintf(ff,'User-provided ideal threshold E/N log E/N %.2f, E/N %.1f\n',log10(o.idealEOverNThreshold),o.idealEOverNThreshold);
-        %         ffprintf(ff,['Efficiency log %.2f',plusMinusChar,'%.2f, %.4f %%\n'],mean(log10(o.efficiency)),std(log10(o.efficiency))/sqrt(length(o.efficiency)),100*10^mean(log10(o.efficiency)));
-        %         corr=zeros(length(signal));
-        %         for i=1:length(signal)
-        %             for j=1:i
-        %                 cii=sum(signal(i).image(:).*signal(i).image(:));
-        %                 cjj=sum(signal(j).image(:).*signal(j).image(:));
-        %                 cij=sum(signal(i).image(:).*signal(j).image(:));
-        %                 corr(i,j)=cij/sqrt(cjj*cii);
-        %                 corr(j,i)=corr(i,j);
-        %             end
-        %         end
-        %         [iGrid,jGrid]=meshgrid(1:length(signal),1:length(signal));
-        %         offDiagonal=iGrid~=jGrid;
-        %         o.signalCorrelation=mean(corr(offDiagonal));
-        %         ffprintf(ff,'Average cross-correlation %.2f\n',o.signalCorrelation);
-        %         approximateIdealEOverN=(-1.189+4.757*log10(length(signal)))/(1-o.signalCorrelation);
-        %         %         err=0.0372;
-        %         %         minEst=(-1.189+4.757*log10(length(signal)-err))/(1-o.signalCorrelation);
-        %         %         maxEst=(-1.189+4.757*log10(length(signal)+err))/(1-o.signalCorrelation);
-        %         %         logErr=log10(max(maxEst/estimatedIdealEOverN,estimatedIdealEOverN/minEst));
-        %         ffprintf(ff,'Approximation, assuming pThreshold=0.64, predicts ideal threshold is about log E/N %.2f, E/N %.1f\n',log10(approximateIdealEOverN),approximateIdealEOverN);
-        %         ffprintf(ff,'The approximation is Eq. A.24 of Pelli et al. (2006) Vision Research 46:4646-4674.\n');
+%         switch o.targetModulates
+%             case 'luminance',
+%                 corr=zeros(length(signal));
+%                 for i=1:length(signal)
+%                     for j=1:i
+%                         cii=sum(signal(i).image(:).*signal(i).image(:));
+%                         cjj=sum(signal(j).image(:).*signal(j).image(:));
+%                         cij=sum(signal(i).image(:).*signal(j).image(:));
+%                         corr(i,j)=cij/sqrt(cjj*cii);
+%                         corr(j,i)=corr(i,j);
+%                     end
+%                 end
+%                 [iGrid,jGrid]=meshgrid(1:length(signal),1:length(signal));
+%                 offDiagonal=iGrid~=jGrid;
+%                 o.signalCorrelation=mean(corr(offDiagonal));
+%                 ffprintf(ff,'Average cross-correlation %.2f\n',o.signalCorrelation);
+%                 approximateIdealEOverN=(-1.189+4.757*log10(length(signal)))/(1-o.signalCorrelation);
+%                 ffprintf(ff,'Approximation, assuming pThreshold=0.64, predicts ideal threshold is about log E/N %.2f, E/N %.1f\n',log10(approximateIdealEOverN),approximateIdealEOverN);
+%                 ffprintf(ff,'The approximation is Eq. A.24 of Pelli et al. (2006) Vision Research 46:4646-4674.\n');
+%         end
         switch o.targetModulates
             case 'noise'
                 t=o.questMean;
@@ -4056,9 +4042,6 @@ try
                 o.r=10^t+1;
                 signalEntropyLevels=o.r*o.backgroundEntropyLevels;
                 ffprintf(ff,'Entropy levels: o.r %.2f, background levels %d, signal levels %.1f\n',o.r,o.backgroundEntropyLevels,signalEntropyLevels);
-        end
-        switch o.targetModulates
-            case 'entropy'
                 if ~isempty(o.psych)
                     ffprintf(ff,'t\tr\tlevels\tbits\tright\ttrials\t%%\n');
                     o.psych.levels=o.psych.r*o.backgroundEntropyLevels;
@@ -4066,60 +4049,9 @@ try
                         ffprintf(ff,'%.2f\t%.2f\t%.0f\t%.1f\t%d\t%d\t%.0f\n',o.psych.t(i),o.psych.r(i),o.psych.levels(i),log2(o.psych.levels(i)),o.psych.right(i),o.psych.trials(i),100*o.psych.right(i)/o.psych.trials(i));
                     end
                 end
-        end
+        end % switch o.targetModulates
         
-        %% GOODBYE
-        if o.speakInstructions
-            if o.quitExperiment && ~ismember(o.observer,o.algorithmicObservers)
-                Speak('QUITTING now. Done.');
-            else
-                if ~o.quitBlock && o.blockNumber == o.blocksDesired && o.congratulateWhenDone && ~ismember(o.observer,o.algorithmicObservers)
-                    Speak('Congratulations. End of block.');
-                end
-            end
-        end
-        % RestoreCluts;
-        if Screen(o.window,'WindowKind') == 1
-            % Tell observer what's happening.
-            Screen('LoadNormalizedGammaTable',o.window,cal.old.gamma,loadOnNextFlip);
-            Screen('FillRect',o.window);
-            Screen('DrawText',o.window,' ',0,0,1,1,1); % Set background color.
-            string=sprintf('Saving results to disk ...');
-            DrawFormattedText(o.window,string,...
-                o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
-            Screen('Flip',o.window); % Display message.
-        end
-        ListenChar(0); % flush
-        ListenChar;
-        if ~isempty(o.window) && (o.quitExperiment || o.blockNumber >= o.blocksDesired)
-            sca; % Screen('CloseAll'); ShowCursor;
-            if ismac
-                AutoBrightness(cal.screen,1); % Restore autobrightness.
-            end
-            window=[];
-            o.window=[];
-        end
-        % This applescript "activate" command provokes a screen refresh (by
-        % selecting MATLAB). My computers each have only one display, upon which
-        % my MATLAB programs open a Psychtoolbox window. This applescript
-        % eliminates an annoyingly long pause at the end of my Psychtoolbox
-        % programs running under MATLAB 2014a, when returning to the MATLAB
-        % command window after twice opening and closing Screen windows. Without
-        % this command, when I return to MATLAB, the whole screen remains blank
-        % for a long time, maybe 30 s, or until I click something, so I can't
-        % tell that I'm back in MATLAB. This applescript command provokes a
-        % screen refresh, so the MATLAB editor appears immediately. Among
-        % several computers, the problem is always present in MATLAB 2014a and
-        % never in MATLAB 2015a. (All computers are running Mavericks.)
-        % denis.pelli@nyu.edu, June 18, 2015
-        if ismac && false
-            % I disabled this in April 2018 because it takes 0.1 s.
-            status=system('osascript -e ''tell application "MATLAB" to activate''');
-        end
-        if ~isempty(o.window)
-            Screen('Preference','VisualDebugLevel',oldVisualDebugLevel);
-            Screen('Preference','SuppressAllWarnings',oldSupressAllWarnings);
-        end
+        %% SAVE EACH THRESHOLD IN ITS OWN FILE, WITH A SUFFIX DESIGNATING THE CONDITION NUMBER.
         o.signal=signal; % worth saving
         %     o.q=q; % not worth saving
         o.newCal=cal;
@@ -4169,6 +4101,60 @@ try
         end % save transcript to .json file
         fprintf('Results saved as %s with extensions .txt, .mat, and .json \nin the data folder: %s/\n',filename,o.dataFolder);
     end % for condition
+
+    %% GOODBYE
+    if o.speakInstructions
+        if o.quitExperiment && ~ismember(o.observer,o.algorithmicObservers)
+            Speak('QUITTING now. Done.');
+        else
+            if ~o.quitBlock && o.blockNumber == o.blocksDesired && o.congratulateWhenDone && ~ismember(o.observer,o.algorithmicObservers)
+                Speak('Congratulations. End of block.');
+            end
+        end
+    end
+    % RestoreCluts;
+    if Screen(o.window,'WindowKind') == 1
+        % Tell observer what's happening.
+        Screen('LoadNormalizedGammaTable',o.window,cal.old.gamma,loadOnNextFlip);
+        Screen('FillRect',o.window);
+        Screen('DrawText',o.window,' ',0,0,1,1,1); % Set background color.
+        string=sprintf('Saving results to disk ...');
+        DrawFormattedText(o.window,string,...
+            o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+        Screen('Flip',o.window); % Display message.
+    end
+    ListenChar(0); % flush
+    ListenChar;
+    if ~isempty(o.window) && (o.quitExperiment || o.blockNumber >= o.blocksDesired)
+        sca; % Screen('CloseAll'); ShowCursor;
+        if ismac
+            AutoBrightness(cal.screen,1); % Restore autobrightness.
+        end
+        window=[];
+        o.window=[];
+    end
+    if ismac && false
+        % NOT IN USE: This applescript "activate" command provokes a screen
+        % refresh (by selecting MATLAB). My computers each have only one
+        % display, upon which my MATLAB programs open a Psychtoolbox
+        % window. This applescript eliminates an annoyingly long pause at
+        % the end of my Psychtoolbox programs running under MATLAB 2014a,
+        % when returning to the MATLAB command window after twice opening
+        % and closing Screen windows. Without this command, when I return
+        % to MATLAB, the whole screen remains blank for a long time, maybe
+        % 30 s, or until I click something, so I can't tell that I'm back
+        % in MATLAB. This applescript command provokes a screen refresh, so
+        % the MATLAB editor appears immediately. Among several computers,
+        % the problem is always present in MATLAB 2014a and never in MATLAB
+        % 2015a. (All computers are running Mavericks.)
+        % denis.pelli@nyu.edu, June 18, 2015
+        % I disabled this in April 2018 because it takes 0.1 s.
+        status=system('osascript -e ''tell application "MATLAB" to activate''');
+    end
+    if ~isempty(o.window)
+        Screen('Preference','VisualDebugLevel',oldVisualDebugLevel);
+        Screen('Preference','SuppressAllWarnings',oldSupressAllWarnings);
+    end
     fclose(dataFid); dataFid=-1;
     oOld.observer=o.observer;
     oOld.experimenter=o.experimenter;
