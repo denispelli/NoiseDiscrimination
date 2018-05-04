@@ -603,6 +603,8 @@ o.noiseSD=0.2; % Usually in the range 0 to 0.4. Typically 0.2.
 % o.noiseSD=0; % Usually in the range 0 to 0.4. Typically 0.2.
 o.annularNoiseSD=0; % Typically nan (i.e. use o.noiseSD) or 0.2.
 o.noiseCheckDeg=0.05; % Typically 0.05 or 0.2.
+o.noiseCheckFrames=1;
+o.noiseCheckSecs=[];
 o.noiseRadiusDeg=inf; % When o.task=4afc, the program will set o.noiseRadiusDeg=o.targetHeightDeg/2;
 o.noiseEnvelopeSpaceConstantDeg=inf;
 o.noiseRaisedCosineEdgeThicknessDeg=0; % midpoint of raised cosine is at noiseRadiusDeg.
@@ -661,7 +663,7 @@ o.alphabetPlacement='top'; % 'top' or 'right';
 o.replicatePelli2006=false;
 o.isWin=IsWin; % override this to simulate Windows on a Mac.
 o.movieFrameFlipSec=[]; % flip times (useful to calculate frame drops)
-o.useDynamicNoiseMovie=false; % 0 for static noise
+o.useDynamicNoiseMovie=false; % false for static noise
 o.moviePreSec=0;
 o.moviePostSec=0;
 o.likelyTargetDurationSec=[];
@@ -700,6 +702,7 @@ o.trialsSkipped=0;
 o.responseScreenAbsoluteContrast=0.99; % Set to [] to maximize possible contrast using CLUT for o.contrast.
 o.transcript.responseTimeSec=[]; % Time of response re o.transcript.stimulusOnsetSec, for each trial.
 o.transcript.stimulusOnsetSec=[]; % Value of GetSecs at stimulus onset, for each trial.
+o.transcript.condition=[];
 o.printImageStatistics=false;
 o.localHostName=''; % Copy this from cal.localHostName
 o.dataFilename='';
@@ -769,7 +772,6 @@ else
     % already defined in o. If the ignored field is a known output field,
     % then we ignore it silently. We warn of unknown fields because they
     % might be typos for input fields.
-%     conditions=1;
     initializedFields=fieldnames(o);
     knownOutputFields={'labelAlternatives' 'beginningTime' ...
         'functionNames' 'cal' 'pixPerDeg' ...
@@ -799,9 +801,9 @@ else
         'instructionalMarginPix' 'quitRun' ... % obsolete, to be removed.
         'approxRequiredNumber' 'logApproxRequiredNumber'... % for the noise-discrimination project
         };
-    % In the future I'd like to
-    % pass several conditions at once to be run randomly interleaved.
-    % CriticalSpacing already supports this feature, and it works well.
+    % In the future I'd like to pass several conditions at once to be run
+    % randomly interleaved. CriticalSpacing already supports this feature,
+    % and it works well.
     unknownFields={};
     for condition=1 %:conditions
         oo(condition)=o;
@@ -1184,7 +1186,7 @@ try
     LStandard=mean([min(cal.old.L) max(cal.old.L)]);
     if 1 ~= ~isempty(o.desiredRetinalIlluminanceTd)+~isempty(o.desiredLuminance)+~isempty(o.desiredLuminanceFactor)
         error(['You must specify one and only one of o.desiredLuminanceFactor, '...
-            'o.desiredLuminance, and o.desiredRetinalIlluminanceTd.'...
+            'o.desiredLuminance, and o.desiredRetinalIlluminanceTd. The rest should be empty []. '...
             'The default is o.desiredLuminanceFactor=1']);
     end
     if ~isempty(o.desiredLuminance)
@@ -1871,24 +1873,32 @@ try
     
     MAX_FRAMES=100; % Better to limit than crash the GPU.
     if ~isempty(o.window)
-        frameRate=1/Screen('GetFlipInterval',o.window);
+        displayFrameRate=1/Screen('GetFlipInterval',o.window);
     else
-        frameRate=60;
+        displayFrameRate=60;
     end
-    ffprintf(ff,'Frame rate %.1f Hz.\n',frameRate);
-    o.targetDurationSec=max(1,round(o.targetDurationSec*frameRate))/frameRate;
-    o.targetDurationListSec=max(1,round(o.targetDurationListSec*frameRate))/frameRate;
+    if isfinite(o.noiseCheckSecs)
+        % Rely on o.noiseCheckSecs if specified.
+        o.noiseCheckFrames=round(o.noiseCheckSecs*displayFrameRate);
+        % From here on, rely on o.noiseCheckFrames.
+    end
+    o.noiseCheckFrames=max(1,round(o.noiseCheckFrames));
+    o.noiseCheckSecs=o.noiseCheckFrames/displayFrameRate;
+    movieFrameRate=displayFrameRate/o.noiseCheckFrames;
+    ffprintf(ff,'Display frame rate %.1f Hz. Movie frame rate %.1f Hz.\n',displayFrameRate,movieFrameRate);
+    o.targetDurationSec=max(1,round(o.targetDurationSec*movieFrameRate))/movieFrameRate;
+    o.targetDurationListSec=max(1,round(o.targetDurationListSec*movieFrameRate))/movieFrameRate;
     if ~o.useDynamicNoiseMovie
         o.moviePreFrames=0;
         o.movieSignalFrames=1;
         o.moviePostFrames=0;
     else
-        o.moviePreFrames=round(o.moviePreSec*frameRate);
-        o.movieSignalFrames=round(o.targetDurationSec*frameRate);
+        o.moviePreFrames=round(o.moviePreSec*movieFrameRate);
+        o.movieSignalFrames=round(o.targetDurationSec*movieFrameRate);
         if o.movieSignalFrames < 1
             o.movieSignalFrames=1;
         end
-        o.moviePostFrames=round(o.moviePostSec*frameRate);
+        o.moviePostFrames=round(o.moviePostSec*movieFrameRate);
         if o.moviePreFrames+o.moviePostFrames>=MAX_FRAMES
             error('o.moviePreSec+o.moviePostSec=%.1f s too long for movie with MAX_FRAMES %d.\n',...
                 o.moviePreSec+o.moviePostSec,MAX_FRAMES);
@@ -1898,7 +1908,7 @@ try
     if o.movieFrames>MAX_FRAMES
         o.movieFrames=MAX_FRAMES;
         o.movieSignalFrames=o.movieFrames-o.moviePreFrames-o.moviePostFrames;
-        o.targetDurationSec=o.movieSignalFrames/frameRate;
+        o.targetDurationSec=o.movieSignalFrames/movieFrameRate;
         ffprintf(ff,'Constrained by MAX_FRAMES %d, reducing duration to %.3f s\n',MAX_FRAMES,o.targetDurationSec);
     end
     
@@ -2133,15 +2143,15 @@ try
     end
     ffprintf(ff,'%s\n',string);
     o.N=o.noiseCheckPix^2*o.pixPerDeg^-2*o.noiseSD^2;
-    o.NUnits='deg^2';
-    temporal='Static';
     if o.useDynamicNoiseMovie
-        o.checkSec=1/frameRate;
-        o.N=o.N*o.checkSec;
+        o.noiseCheckSecs=1/movieFrameRate;
+        o.N=o.N*o.noiseCheckSecs;
         o.NUnits='s deg^2';
         temporal='Dynamic';
     else
-        o.checkSec=o.targetDurationSec;
+        o.noiseCheckSecs=o.targetDurationSec;
+        o.NUnits='deg^2';
+        temporal='Static';
     end
     ffprintf(ff,'%s noise power spectral density N %s log=%.2f\n', ...
         temporal,o.NUnits,log10(o.N));
@@ -2554,7 +2564,7 @@ try
     end
 
     %% SETUP CONDITIONS
-    conditions=length(o.targetDurationListSec);
+    conditions=max(1,length(o.targetDurationListSec));
     if conditions>1
         o.conditionList=repmat(1:length(o.targetDurationListSec),1,o.trialsPerBlock);
         o.conditionList=Shuffle(o.conditionList);
@@ -2579,26 +2589,25 @@ try
         o.transcript.flankerResponse={};
         o.transcript.targetResponse={}; % Regardless of o.thresholdResponseTo.
     end
-    if streq(o.thresholdParameter,'flankerContrast') && streq(o.thresholdResponseTo,'target')
-        % Falling psychometric function for crowding of target as a function
-        % of flanker contrast. We assume that the observer makes a random
-        % finger error on fraction delta of the trials, and gets proportion
-        % gamma of those trials right. On the rest of the trials (no finger
-        % error) he gets it wrong only if he fails to guess it (prob. gamma)
-        % and fails to detect it (prob. exp...).
-        q=QuestCreate(tGuess,tGuessSd,o.pThreshold,o.steepness,0,0); % Prob of detecting flanker.
-        q.normalizePdf=true; % Prevent underflow of pdf.
-        q.p2=o.lapse*o.guess+(1-o.lapse)*(1-(1-o.guess)*q.p2); % Prob of identifying target.
-        q.s2=fliplr([1-q.p2;q.p2]);
-        %    figure;
-        %    plot(q.x2,q.p2);
-    else
-        clear qList
-        for condition=1:conditions
+    clear qList
+    assert(conditions>=1,'"conditions" must be integer >0.');
+    for condition=1:conditions
+        if streq(o.thresholdParameter,'flankerContrast') && streq(o.thresholdResponseTo,'target')
+            % Falling psychometric function for crowding of target as a function
+            % of flanker contrast. We assume that the observer makes a random
+            % finger error on fraction delta of the trials, and gets proportion
+            % gamma of those trials right. On the rest of the trials (no finger
+            % error) he gets it wrong only if he fails to guess it (prob. gamma)
+            % and fails to detect it (prob. exp...).
+            q=QuestCreate(tGuess,tGuessSd,o.pThreshold,o.steepness,0,0); % Prob of detecting flanker.
+            q.p2=o.lapse*o.guess+(1-o.lapse)*(1-(1-o.guess)*q.p2); % Prob of identifying target.
+            q.s2=fliplr([1-q.p2;q.p2]);
+            % figure; plot(q.x2,q.p2);
+        else
             q=QuestCreate(tGuess,tGuessSd,o.pThreshold,o.steepness,o.lapse,o.guess);
-            q.normalizePdf=true; % Prevent underflow of pdf.
-            qList(condition)=q;
         end
+        q.normalizePdf=true; % Prevent underflow of pdf.
+        qList(condition)=q;
     end
     wrongRight={'wrong', 'right'};
     timeZero=GetSecs;
@@ -2621,7 +2630,7 @@ try
             o.trialsSkipped=o.trialsSkipped+1;
             o.skipTrial=false;
             o.ignoreTrial=false;
-            o.conditionList(trial+1:end)=Shuffle(conditionList(trial+1:end));
+            o.conditionList(trial+1:end)=Shuffle(o.conditionList(trial+1:end));
         end
         if waitForObserver
             o=WaitUntilObserverIsReady(o,waitMessage);
@@ -3282,7 +3291,9 @@ try
                             Screen('CopyWindow',movieTexture(iMovieFrame),snapshotTexture);
                         end
                     end
-                    Screen('Flip',o.window,0,1); % Display this frame of the movie. Don't clear back buffer.
+                    for displayFrame=1:o.noiseCheckFrames
+                        Screen('Flip',o.window,0,1); % Display this frame of the movie. Don't clear back buffer.
+                    end
                     o.movieFrameFlipSec(iMovieFrame,trial)=GetSecs;
                 end % for iMovieFrame=1:o.movieFrames
                 o.transcript.stimulusOnsetSec(trial)=o.movieFrameFlipSec(o.moviePreFrames+1,trial);
@@ -3326,10 +3337,10 @@ try
                         Screen('DrawLines',o.window,fixationLines,fixationCrossWeightPix,black); % fixation
                     end
                     if o.useDynamicNoiseMovie
-                        Screen('Flip',o.window,0,1); % Clear stimulus at next frame.
+                        Screen('Flip',o.window,0,1); % Clear stimulus at next display frame.
                     else
-                        % Clear stimulus at next frame after specified duration.
-                        Screen('Flip',o.window,o.movieFrameFlipSec(1,trial)+o.targetDurationSec-0.5/frameRate,1);
+                        % Clear stimulus at next display frame after specified duration.
+                        Screen('Flip',o.window,o.movieFrameFlipSec(1,trial)+o.targetDurationSec-0.5/displayFrameRate,1);
                     end
                     o.movieFrameFlipSec(iMovieFrame+1,trial)=GetSecs;
                     if ~o.fixationCrossBlankedNearTarget
@@ -3757,7 +3768,7 @@ try
                 end
                 o.measuredTargetDurationSec(trial)=o.movieFrameFlipSec(movieLastSignalFrame+1,trial)-...
                     o.movieFrameFlipSec(movieFirstSignalFrame,trial);
-                o.likelyTargetDurationSec(trial)=round(o.measuredTargetDurationSec(trial)*frameRate)/frameRate;
+                o.likelyTargetDurationSec(trial)=round(o.measuredTargetDurationSec(trial)*movieFrameRate)/movieFrameRate;
                 % Somewhat arbitrarily, we allow stimuli up to 30% too long.
                 overlyLong=o.likelyTargetDurationSec(trial)>1.3*o.targetDurationSec;
                 if o.ignoreOverlyLongTrials && overlyLong
@@ -3766,9 +3777,9 @@ try
                 else
                     s='';
                 end
-                s=sprintf('%sSignal duration requested %.3f s, measured %.3f s, and likely %.3f s, an excess of %.0f frames.\n', ...
+                s=sprintf('%sSignal duration requested %.3f s, measured %.3f s, and likely %.3f s, an excess of %.0f display frames.\n', ...
                     s,o.targetDurationSec,o.measuredTargetDurationSec(trial),o.likelyTargetDurationSec(trial), ...
-                    (o.likelyTargetDurationSec(trial)-o.targetDurationSec)*frameRate);
+                    (o.likelyTargetDurationSec(trial)-o.targetDurationSec)*displayFrameRate);
                 if overlyLong
                     ffprintf(ff,'WARNING: %s',s);
                 elseif o.printDurations
@@ -3868,8 +3879,9 @@ try
     for condition=1:conditions
         % Currently, conditions differ only in duration.
         q=qList(condition);
-        o.targetDurationSec=o.targetDurationListSec(condition);
-        
+        if ~isempty(o.targetDurationListSec)
+            o.targetDurationSec=o.targetDurationListSec(condition);
+        end
         o.questMean=QuestMean(q);
         o.questSd=QuestSd(q);
         t=QuestMean(q); % Used in printouts below.
@@ -3978,7 +3990,7 @@ try
         
         %% PRINT BOLD SUMMARY
         o.E=10^(2*o.questMean)*o.E1;
-        index=o.transcript.condition==condition;
+        index=o.condition==condition;
         trials=sum(index); % Of this condition.
         trialsRight=sum([o.transcript.isRight{index}]); % Of this condition.
         switch o.targetModulates
@@ -5135,7 +5147,7 @@ if IsWindows
 else
     background=o.gray1;
 end
-fprintf('%d: o.deviceIndex %.0f.\n',MFileLineNr,o.deviceIndex);
+% fprintf('%d: o.deviceIndex %.0f.\n',MFileLineNr,o.deviceIndex);
 [reply,terminatorChar]=GetEchoString(o.window,text.question,o.textMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
 if ismember(terminatorChar,[escapeChar graveAccentChar])
     [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(o.window,o,o.textMarginPix);
