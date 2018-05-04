@@ -21,6 +21,8 @@ function [ha, pos] = tight_subplot(Nh, Nw, gap, marg_h, marg_w)
 %  Example: ha = tight_subplot(3,2,[.01 .03],[.1 .01],[.01 .01])
 %           for ii = 1:6; axes(ha(ii)); plot(randn(10,ii)); end
 %           set(ha(1:4),'XTickLabel',''); set(ha,'YTickLabel','')
+%
+% https://www.mathworks.com/matlabcentral/fileexchange/27991-tight-subplot-nh--nw--gap--marg-h--marg-w-
 
 % Pekka Kumpulainen 21.5.2012   @tut.fi
 % Tampere University of Technology / Automation Science and Engineering
