@@ -62,7 +62,7 @@ function newCal=LinearizeClut(cal)
 checkLuminance=0; % optional diagnostic print out
 checkLinearization=0; % optional diagnostic print out
 if isfield(cal,'gamma')
-   assert(size(cal.gamma,1)==cal.clutMapLength)
+   assert(size(cal.gamma,1)==cal.clutMapLength,'Length of gamma table (%d) inconsistent with clutMapLength (%d).',size(cal.gamma,1),cal.clutMapLength)
 end
 % If not strictly monotonic.
 if ~all(diff(cal.old.L)>0)
