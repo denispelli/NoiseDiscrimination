@@ -805,6 +805,7 @@ else
         'showLineOfLetters' 'signalMax' 'signalMin' ...
         'targetFont' 'targetPix' 'useSpeech'...
         'approxRequiredNumber' 'logApproxRequiredNumber'... % for the noise-discrimination project
+        'idealT64' 'q' 'rWarningCount' 'trialsRight' 'window'...
         };
     unknownFields={};
     for oi=1:conditions
@@ -2650,7 +2651,7 @@ try
             oo(oi).transcript=[];
         end
         oo(oi).transcript.intensity=[];
-        oo(oi).transcript.isRight=[];
+        oo(oi).transcript.isRight={}; % A cell because isRight may have length 1, 2, or 3.
         oo(oi).transcript.rawResponseString={};
         oo(oi).transcript.response={};
         oo(oi).transcript.target=[];
@@ -2682,12 +2683,13 @@ try
     wrongRight={'wrong', 'right'};
     timeZero=GetSecs;
     trialsRight=0;
+    [oo.trialsRight]=deal(0);
     [oo.rWarningCount]=deal(0);
     [oo.skipTrial]=deal(false);
     [oo.trialsSkipped]=deal(0);
     [oo.trials]=deal(0);
     waitMessage='Starting new block. ';
-    blockStartSec=GetSecs;
+    blockStartSecs=GetSecs;
     trial=0;
     o=oo(1);
     oi=oo(1).conditionList(1);
@@ -2739,7 +2741,7 @@ try
                     repmat(oo(oi).constantStimuli,1,ceil(oo(oi).trialsPerBlock/length(oo(oi).constantStimuli)));
                 oo(oi).thresholdParameterValueList=Shuffle(oo(oi).thresholdParameterValueList);
             end
-            c=oo(oi).thresholdParameterValueList(trial);
+            c=oo(oi).thresholdParameterValueList(trial); % I think this should be oo(oi).trials instead of trial.
             oo(oi).thresholdPolarity=sign(c);
             tTest=log10(abs(c));
         end
@@ -2847,7 +2849,7 @@ try
         end % switch oo(oi).targetModulates
         
         if oo(oi).noiseFrozenInBlock
-            if trial == 1
+            if oo(oi).trials == 1
                 if oo(oi).noiseFrozenInBlockSeed
                     assert(oo(oi).noiseFrozenInBlockSeed > 0 && isinteger(oo(oi).noiseFrozenInBlockSeed))
                     oo(oi).noiseListSeed=oo(oi).noiseFrozenInBlockSeed;
@@ -3105,9 +3107,9 @@ try
                             end
                             location(1).image=location(1).image+c*flankerImage; % Add flanker.
                         end % for j=1:length(angle)
-                        oo(oi).transcript.flankers{trial}=oo(oi).whichFlanker; % The several flanker signal indices.
-                        oo(oi).transcript.flankerXYDeg{trial}=oo(oi).flankerXYDeg; % The several flanker eccentricities.
-                        oo(oi).transcript.eccentricityXYDeg{trial}=oo(oi).eccentricityXYDeg; % Target eccentricity.
+                        oo(oi).transcript.flankers{oo(oi).trials}=oo(oi).whichFlanker; % The several flanker signal indices.
+                        oo(oi).transcript.flankerXYDeg{oo(oi).trials}=oo(oi).flankerXYDeg; % The several flanker eccentricities.
+                        oo(oi).transcript.eccentricityXYDeg{oo(oi).trials}=oo(oi).eccentricityXYDeg; % Target eccentricity.
                     end % if oo(oi).useFlankers
                 otherwise
                     error('Unknown o.task "%s"',oo(oi).task);
@@ -3326,7 +3328,7 @@ try
             Screen('LoadNormalizedGammaTable',oo(oi).window,cal.gamma,loadOnNextFlip);
             if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
                 Snd('Play',purr); % Pre-announce that image is up, awaiting response.
-                oo(oi).movieFrameFlipSecs(1:oo(oi).movieFrames+1,trial)=nan;
+                oo(oi).movieFrameFlipSecs(1:oo(oi).movieFrames+1,oo(oi).trials)=nan;
                 for iMovieFrame=1:oo(oi).movieFrames
                     Screen('DrawTexture',oo(oi).window,movieTexture(iMovieFrame),srcRect,dstRect);
                     if oo(oi).fixationCrossDrawnOnStimulus && ~isempty(fixationLines)
@@ -3362,9 +3364,9 @@ try
                     for displayFrame=1:oo(oi).noiseCheckFrames
                         Screen('Flip',oo(oi).window,0,1); % Display this frame of the movie. Don't clear back buffer.
                     end
-                    oo(oi).movieFrameFlipSecs(iMovieFrame,trial)=GetSecs;
+                    oo(oi).movieFrameFlipSecs(iMovieFrame,oo(oi).trials)=GetSecs;
                 end % for iMovieFrame=1:oo(oi).movieFrames
-                oo(oi).transcript.stimulusOnsetSecs(trial)=oo(oi).movieFrameFlipSecs(oo(oi).moviePreFrames+1,trial);
+                oo(oi).transcript.stimulusOnsetSecs(oo(oi).trials)=oo(oi).movieFrameFlipSecs(oo(oi).moviePreFrames+1,oo(oi).trials);
                 if oo(oi).saveSnapshot
                     oo(oi)=SaveSnapshot(oo(oi)); % Closes oo(oi).window when done.
                     window=oo(oi).window;
@@ -3408,9 +3410,9 @@ try
                         Screen('Flip',oo(oi).window,0,1); % Clear stimulus at next display frame.
                     else
                         % Clear stimulus at next display frame after specified duration.
-                        Screen('Flip',oo(oi).window,oo(oi).movieFrameFlipSecs(1,trial)+oo(oi).targetDurationSecs-0.5/displayFrameRate,1);
+                        Screen('Flip',oo(oi).window,oo(oi).movieFrameFlipSecs(1,oo(oi).trials)+oo(oi).targetDurationSecs-0.5/displayFrameRate,1);
                     end
-                    oo(oi).movieFrameFlipSecs(iMovieFrame+1,trial)=GetSecs;
+                    oo(oi).movieFrameFlipSecs(iMovieFrame+1,oo(oi).trials)=GetSecs;
                     if ~oo(oi).fixationCrossBlankedNearTarget
                         WaitSecs(oo(oi).fixationCrossBlankedUntilSecsAfterTarget);
                     end
@@ -3418,7 +3420,7 @@ try
                         Screen('DrawLines',oo(oi).window,fixationLines,fixationCrossWeightPix,black); % fixation
                     end
                     % After o.fixationCrossBlankedUntilSecsAfterTarget, display new fixation.
-                    Screen('Flip',oo(oi).window,oo(oi).movieFrameFlipSecs(iMovieFrame+1,trial)+0.3,1);
+                    Screen('Flip',oo(oi).window,oo(oi).movieFrameFlipSecs(iMovieFrame+1,oo(oi).trials)+0.3,1);
                 end % if isfinite(oo(oi).targetDurationSecs)
                 for iMovieFrame=1:oo(oi).movieFrames
                     Screen('Close',movieTexture(iMovieFrame));
@@ -3433,7 +3435,7 @@ try
                 end
                 % Print instruction in upper left corner.
                 Screen('FillRect',oo(oi).window,oo(oi).gray1,topCaptionRect);
-                message=sprintf('Trial %d of %d. Block %d of %d.',trial,oo(oi).trialsPerBlock,oo(oi).blockNumber,oo(oi).blocksDesired);
+                message=sprintf('Trial %d of %d. Block %d of %d.',trial,oo(oi).trialsPerBlock*conditions,oo(oi).blockNumber,oo(oi).blocksDesired);
                 if isfield(oo(oi),'experiment')
                     message=[message ' Experiment "' oo(oi).experiment '".'];
                 end
@@ -3670,7 +3672,7 @@ try
                         ffprintf(ff,'*** ESCAPE SPACE. Proceeding to next trial.\n');
                         continue
                     end
-                    oo(oi).transcript.responseTimeSecs(trial)=GetSecs-oo(oi).transcript.stimulusOnsetSecs(trial);
+                    oo(oi).transcript.responseTimeSecs(oo(oi).trials)=GetSecs-oo(oi).transcript.stimulusOnsetSecs(oo(oi).trials);
                     response=clicks;
                 case 'identify'
                     o.quitBlock=false;
@@ -3687,6 +3689,7 @@ try
                     if ismember(responseChar,[escapeChar,graveAccentChar])
                         [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(oo(oi).window,o,oo(oi).textMarginPix);
                         trial=trial-1;
+                        oo(oi).trials=oo(oi).trials-1; % Make sure we don't duplicate this minus 1 at the top of the loop.
                     end
                     if o.quitExperiment
                         ffprintf(ff,'*** User typed ESCAPE twice. Quitting experiment.\n');
@@ -3706,7 +3709,7 @@ try
                         ffprintf(ff,'*** User typed ESCAPE. Proceeding to next trial.\n');
                         continue
                     end
-                    oo(oi).transcript.responseTimeSecs(trial)=GetSecs-oo(oi).transcript.stimulusOnsetSecs(trial);
+                    oo(oi).transcript.responseTimeSecs(oo(oi).trials)=GetSecs-oo(oi).transcript.stimulusOnsetSecs(oo(oi).trials);
                     if length(responseChar) > 1
                         % GetKeypress might return a multi-character string,
                         % but our code assumes the response is a scalar, not a
@@ -3730,13 +3733,14 @@ try
                     else
                         [responseString,terminatorChar]=GetEchoString(oo(oi).window,message,textRect(1),textRect(4)-oo(oi).textSize,black,oo(oi).gray,1,oo(oi).deviceIndex);
                     end
-                    oo(oi).transcript.responseTimeSecs(trial)=GetSecs-oo(oi).transcript.stimulusOnsetSecs(trial);
+                    oo(oi).transcript.responseTimeSecs(oo(oi).trials)=GetSecs-oo(oi).transcript.stimulusOnsetSecs(oo(oi).trials);
                     %                Screen('FillRect',oo(oi).window,oo(oi).gray1,bottomCaptionRect);
                     Screen('TextSize',oo(oi).window,oo(oi).textSize);
                     if ismember(terminatorChar,[escapeChar,graveAccentChar])
                         [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(oo(oi).window,o,oo(oi).textMarginPix);
                         trial=trial-1;
-                    end
+                        oo(oi).trials=oo(oi).trials-1;
+                   end
                     if o.quitExperiment
                         ffprintf(ff,'*** User typed ESCAPE twice. Quitting experiment.\n');
                         if oo(oi).speakInstructions
@@ -3764,6 +3768,7 @@ try
                         waitMessage=sprintf('Sorry. You must type 3 letters, but you typed %d: "%s". Trial ignored. Continuing.\n',length(responses),responseString);
                         o.skipTrial=true;
                         trial=trial-1;
+                        oo(oi).trials=oo(oi).trials-1;
                         continue
                     end
                     switch oo(oi).thresholdResponseTo
@@ -3772,28 +3777,29 @@ try
                         case 'flankers'
                             response=responses([1 3]);
                     end
-                    oo(oi).transcript.rawResponseString{trial}=responseString;
-                    oo(oi).transcript.flankerResponse{trial}=responses([1 3]);
-                    [~,oo(oi).transcript.targetResponse{trial}]=ismember(oo(oi).transcript.rawResponseString{trial}(2),oo(oi).alphabet);
-                    if length(oo(oi).transcript.flankerXYDeg{trial})>1 && oo(oi).transcript.flankerXYDeg{trial}{1}(1)>oo(oi).transcript.flankerXYDeg{trial}{2}(1)
+                    oo(oi).transcript.rawResponseString{oo(oi).trials}=responseString;
+                    oo(oi).transcript.flankerResponse{oo(oi).trials}=responses([1 3]);
+                    [~,oo(oi).transcript.targetResponse{oo(oi).trials}]=ismember(oo(oi).transcript.rawResponseString{oo(oi).trials}(2),oo(oi).alphabet);
+                    if length(oo(oi).transcript.flankerXYDeg{oo(oi).trials})>1 && oo(oi).transcript.flankerXYDeg{oo(oi).trials}{1}(1)>oo(oi).transcript.flankerXYDeg{oo(oi).trials}{2}(1)
                         % The flankers are created in order of increasing
                         % radial eccentricity. However, the observer
                         % responds in order of increasing X eccentricity,
                         % so here, if necessary, we flip the order of the
                         % flanker stimulus reports to match that of the
                         % observer's response.
-                        oo(oi).transcript.flankers{trial}=fliplr(oo(oi).transcript.flankers{trial});
-                        oo(oi).transcript.flankerXYDeg{trial}=fliplr(oo(oi).transcript.flankerXYDeg{trial});
+                        oo(oi).transcript.flankers{oo(oi).trials}=fliplr(oo(oi).transcript.flankers{oo(oi).trials});
+                        oo(oi).transcript.flankerXYDeg{oo(oi).trials}=fliplr(oo(oi).transcript.flankerXYDeg{oo(oi).trials});
                     end
                 case 'rate'
                     ratings='0123456789';
                     o.quitBlock=false;
                     responseChar=GetKeypress([numberKeyCodes ...
                         escapeKeyCode graveAccentKeyCode],oo(oi).deviceIndex);
-                    oo(oi).transcript.responseTimeSecs(trial)=GetSecs-oo(oi).transcript.stimulusOnsetSecs(trial);
+                    oo(oi).transcript.responseTimeSecs(oo(oi).trials)=GetSecs-oo(oi).transcript.stimulusOnsetSecs(oo(oi).trials);
                     if ismember(responseChar,[escapeChar,graveAccentChar])
                         [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(oo(oi).window,o,oo(oi).textMarginPix);
                         trial=trial-1;
+                        oo(oi).trials=oo(oi).trials-1;
                     end
                     if o.quitExperiment
                         ffprintf(ff,'*** User typed ESCAPE twice. Quitting experiment.\n');
@@ -3825,7 +3831,7 @@ try
             if ~o.quitBlock
                 if ~isfinite(oo(oi).targetDurationSecs)
                     % Signal persists until response, so we measure response time.
-                    oo(oi).movieFrameFlipSecs(iMovieFrame+1,trial)=GetSecs;
+                    oo(oi).movieFrameFlipSecs(iMovieFrame+1,oo(oi).trials)=GetSecs;
                 end
                 % CHECK DURATION
                 if oo(oi).useDynamicNoiseMovie
@@ -3835,11 +3841,11 @@ try
                     movieFirstSignalFrame=1;
                     movieLastSignalFrame=1;
                 end
-                oo(oi).measuredTargetDurationSecs(trial)=oo(oi).movieFrameFlipSecs(movieLastSignalFrame+1,trial)-...
-                    oo(oi).movieFrameFlipSecs(movieFirstSignalFrame,trial);
-                oo(oi).likelyTargetDurationSecs(trial)=round(oo(oi).measuredTargetDurationSecs(trial)*movieFrameRate)/movieFrameRate;
+                oo(oi).measuredTargetDurationSecs(oo(oi).trials)=oo(oi).movieFrameFlipSecs(movieLastSignalFrame+1,oo(oi).trials)-...
+                    oo(oi).movieFrameFlipSecs(movieFirstSignalFrame,oo(oi).trials);
+                oo(oi).likelyTargetDurationSecs(oo(oi).trials)=round(oo(oi).measuredTargetDurationSecs(oo(oi).trials)*movieFrameRate)/movieFrameRate;
                 % Somewhat arbitrarily, we allow stimuli up to 30% too long.
-                overlyLong=oo(oi).likelyTargetDurationSecs(trial)>1.3*oo(oi).targetDurationSecs;
+                overlyLong=oo(oi).likelyTargetDurationSecs(oo(oi).trials)>1.3*oo(oi).targetDurationSecs;
                 if oo(oi).ignoreOverlyLongTrials && overlyLong
                     s='Ignoring overly long trial. ';
                     oo(oi).ignoreTrial=true;
@@ -3847,8 +3853,8 @@ try
                     s='';
                 end
                 s=sprintf('%sSignal duration requested %.3f s, measured %.3f s, and likely %.3f s, an excess of %.0f display frames.\n', ...
-                    s,oo(oi).targetDurationSecs,oo(oi).measuredTargetDurationSecs(trial),oo(oi).likelyTargetDurationSecs(trial), ...
-                    (oo(oi).likelyTargetDurationSecs(trial)-oo(oi).targetDurationSecs)*displayFrameRate);
+                    s,oo(oi).targetDurationSecs,oo(oi).measuredTargetDurationSecs(oo(oi).trials),oo(oi).likelyTargetDurationSecs(oo(oi).trials), ...
+                    (oo(oi).likelyTargetDurationSecs(oo(oi).trials)-oo(oi).targetDurationSecs)*displayFrameRate);
                 if overlyLong
                     ffprintf(ff,'WARNING: %s',s);
                 elseif oo(oi).printDurations
@@ -3864,9 +3870,9 @@ try
         switch oo(oi).task % score as right or wrong
             case '4afc'
                 isRight=response == signalLocation;
-                oo(oi).transcript.target(trial)=signalLocation;
+                oo(oi).transcript.target(oo(oi).trials)=signalLocation;
             case {'identify' 'identifyAll'}
-                oo(oi).transcript.target(trial)=whichSignal;
+                oo(oi).transcript.target(oo(oi).trials)=whichSignal;
                 switch oo(oi).thresholdResponseTo
                     case 'target'
                         isRight=response == whichSignal;
@@ -3874,11 +3880,11 @@ try
                         % There are two flankers, so, in this case,
                         % isRight, response, and flankers are all 1x2
                         % arrays.
-                        isRight=response == oo(oi).transcript.flankers{trial};
+                        isRight=response == oo(oi).transcript.flankers{oo(oi).trials};
                 end
             case 'rate'
                 isRight=response>=oo(oi).ratingThreshold(whichSignal);
-                oo(oi).transcript.target(trial)=whichSignal;
+                oo(oi).transcript.target(oo(oi).trials)=whichSignal;
         end
         if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
             switch oo(oi).task
@@ -3903,6 +3909,7 @@ try
             case 'flankerContrast'
         end
         trialsRight=trialsRight+sum(isRight);
+        oo(oi).trialsRight=oo(oi).trialsRight+sum(isRight);
         for i=1:size(isRight)
             oo(oi).q=QuestUpdate(oo(oi).q,tTest,isRight(i)); % Add the new datum (actual test intensity and observer isRight) to the database.
             if oo(oi).questPlusEnable
@@ -3911,11 +3918,11 @@ try
                 oo(oi).questPlusData=qpUpdate(oo(oi).questPlusData,stim,outcome);
             end
         end
-        oo(oi).data(trial,1:1+length(isRight))=[tTest isRight];
-        oo(oi).transcript.response{trial}=response;
-        oo(oi).transcript.intensity(trial)=tTest;
-        oo(oi).transcript.isRight(trial)=isRight;
-        oo(oi).transcript.condition(trial)=oi;
+        oo(oi).data(oo(oi).trials,1:1+length(isRight))=[tTest isRight];
+        oo(oi).transcript.response{oo(oi).trials}=response;
+        oo(oi).transcript.intensity(oo(oi).trials)=tTest;
+        oo(oi).transcript.isRight{oo(oi).trials}=isRight;
+        oo(oi).transcript.condition(oo(oi).trials)=oi;
         if cal.ScreenConfigureDisplayBrightnessWorks && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
             %          Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
             cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
@@ -3930,6 +3937,7 @@ try
     end % while trial<oo(oi).trialsPerBlock
     
     %% DONE. REPORT THRESHOLD FOR THIS BLOCK.
+    % This loop should be enhanced to separate the data for each conditions.
     if ~isempty(oo(oi).data)
         psych.t=unique(oo(oi).data(:,1));
         psych.r=1+10.^psych.t;
@@ -3950,8 +3958,7 @@ try
         t=QuestMean(oo(oi).q); % Used in printouts below.
         sd=QuestSd(oo(oi).q); % Used in printouts below.
         oo(oi).approxRequiredNumber=64/10^((oo(oi).questMean-oo(oi).idealT64)/0.55);
-        oo(oi).p=trialsRight/trial;
-        oo(oi).trials=trial;
+        oo(oi).p=oo(oi).trialsRight/oo(oi).trials;
         rDeg=sqrt(sum(oo(oi).eccentricityXYDeg.^2));
         switch oo(oi).thresholdParameter
             case 'spacing'
@@ -4056,7 +4063,12 @@ try
         oo(oi).E=10^(2*oo(oi).questMean)*oo(oi).E1;
         index=oo(oi).condition==oi;
         trials=sum(index); % Of this condition.
-        trialsRight=sum([oo(oi).transcript.isRight(index)]); % Of this condition.
+        if isempty(oo(oi).transcript.intensity)
+            warning('oo(%d).transcript.intensity is empty.',oi);
+            trialsRight=0;
+        else
+            trialsRight=sum([oo(oi).transcript.isRight{index}]); % Of this condition.
+        end
         switch oo(oi).targetModulates
             case 'luminance'
                 ffprintf(ff,['<strong>Block %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
@@ -4147,15 +4159,19 @@ try
             warning(e.message);
         end % save to .json file
         try % save transcript to .json file
-            if exist('jsonencode','builtin')
-                json=jsonencode(oo(oi).transcript);
+            if isempty(oo(oi).transcript.intensity)
+                warning('(oo(%d).transcript is empty.',oi);
             else
-                addpath(fullfile(myPath,'lib/jsonlab'));
-                json=savejson('',oo(oi).transcript);
+                if exist('jsonencode','builtin')
+                    json=jsonencode(oo(oi).transcript);
+                else
+                    addpath(fullfile(myPath,'lib/jsonlab'));
+                    json=savejson('',oo(oi).transcript);
+                end
+                fid=fopen(fullfile(oo(oi).dataFolder,[filename '.transcript.json']),'w');
+                fprintf(fid,'%s',json);
+                fclose(fid);
             end
-            fid=fopen(fullfile(oo(oi).dataFolder,[filename '.transcript.json']),'w');
-            fprintf(fid,'%s',json);
-            fclose(fid);
         catch e
             warning('Failed to save .transcript.json file.');
             warning(e.message);
