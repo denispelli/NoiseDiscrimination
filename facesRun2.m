@@ -1,5 +1,5 @@
-% facesRun.m
-% April 11, 2018
+% facesRun2.m
+% May 6, 2018
 % Denis Pelli
 
 %% GET READY
@@ -33,6 +33,7 @@ else
     o.signalImagesAreGammaCorrected=true;
     o.targetKind='image';
     o.alphabet='abcdef';
+    o.signalImagesCacheCode=1234; % Speed up image loading.
     o.convertSignalImageToGray=false;
     o.alphabetPlacement='right'; % 'top' or 'right';
 end
@@ -89,8 +90,16 @@ o.fixationCrossDrawnOnStimulus=true;
 ooo={};
 for task={'rate' 'identify'}
     o.task=task{1};
+    switch o.task
+        case 'rate'
+            o.guess=0.05;
+            o.lapse=0.05;
+        case 'identify'
+            o.guess=nan;
+            o.lapse=nan;
+    end
     duration=[0.017 0.05 0.15 0.5 1.5];
-    duration=[0.017 1.5];
+%     duration=[0.017 1.5];
     oo=repmat(o,size(duration));
     for i=1:length(oo)
         oo(i).targetDurationSecs=duration(i);
@@ -109,22 +118,19 @@ end
 disp(tt) % Print list of conditions.
 
 %% RUN THE CONDITIONS
-for i=1:length(ooo)
-    ooo{i}=NoiseDiscrimination2(ooo{i});
-end
-% oo=RunExperiment(oo);
+ooo=RunExperiment2(ooo);
 
 %% PRINT SUMMARY OF RESULTS AS TABLE TT
 % Include whatever you're intersted in. We skip rows missing any value.
 vars={'conditionName' 'observer' 'trials'  'task' 'targetDurationSecs' 'targetHeightDeg' 'contrast' 'guess' 'lapse' 'steepness'};
-tt=Experiment2Table(ooo,vars);
+tt=Experiment2Table2(ooo,vars);
 disp(tt) % Print summary.
 if isempty(tt)
     return
 end
 
 %% SAVE SUMMARY OF RESULTS
-o=oo{1};
+o=ooo{1}(1);
 o.summaryFilename=[o.dataFilename '.summary' ];
 writetable(tt,fullfile(o.dataFolder,[o.summaryFilename '.csv']));
 save(fullfile(o.dataFolder,[o.summaryFilename '.mat']),'tt','oo');
