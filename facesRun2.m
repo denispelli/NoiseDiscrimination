@@ -74,21 +74,33 @@ if false
     o.questPlusPlot=true;
 end
 
+%% FIXATION
+% Draw fixation lines that are fixed on the display (and stimulus) but
+% blanked over the stimulus so that they extend left, right, up, and down,
+% beyond the stimulus. This give a guide to fixation, with minimum
+% distraction, since, over time, the only thing that changes is the
+% successive appear of one stimulus after another.
+o.blankingRadiusReTargetHeight= 0.48;
+o.fixationCrossDeg=inf; 
+% o.fixationCrossBlankedUntilSecsAfterTarget=0.6; % Pause after stimulus before display of fixation. Skipped when fixationCrossBlankedNearTarget. Not needed when eccentricity is bigger than the target.
+o.fixationCrossDrawnOnStimulus=true;
+
 %% SAVE INTERLEAVED CONDITIONS IN STRUCT oo
 ooo={};
 for task={'rate' 'identify'}
     o.task=task{1};
-%     durations=Shuffle([0.017 0.05 0.15 0.5 1.5]);
-    durations=Shuffle([0.017  1.5]);
-    oo=repmat(o,size(durations));
-    for i=1:length(durations)
-        oo(i).targetDurationSecs=durations(i);
+    duration=[0.017 0.05 0.15 0.5 1.5];
+    duration=[0.017 1.5];
+    oo=repmat(o,size(duration));
+    for i=1:length(oo)
+        oo(i).targetDurationSecs=duration(i);
+        oo(i).conditionName=sprintf('%s %.0f ms',o.task,1000*duration(i));
     end
     ooo{end+1}=oo;
 end
 
 %% PRINT THE CONDITIONS (ONE PER ROW) AS TABLE TT
-vars={'task' 'targetDurationSecs' 'targetHeightDeg' 'noiseSD'};
+vars={'conditionName' 'task' 'targetDurationSecs' 'targetHeightDeg' 'noiseSD'};
 tt=table;
 for i=1:length(ooo)
     t=struct2table(ooo{i},'AsArray',true);
@@ -98,15 +110,14 @@ disp(tt) % Print list of conditions.
 
 %% RUN THE CONDITIONS
 for i=1:length(ooo)
-    ooo{1}=NoiseDiscrimination2(ooo{1});
+    ooo{i}=NoiseDiscrimination2(ooo{i});
 end
 % oo=RunExperiment(oo);
-return
 
 %% PRINT SUMMARY OF RESULTS AS TABLE TT
 % Include whatever you're intersted in. We skip rows missing any value.
-vars={'condition' 'observer' 'trials'  'task' 'targetDurationSecs' 'targetHeightDeg' 'contrast' 'guess' 'lapse' 'steepness'};
-tt=Experiment2Table(oo,vars);
+vars={'conditionName' 'observer' 'trials'  'task' 'targetDurationSecs' 'targetHeightDeg' 'contrast' 'guess' 'lapse' 'steepness'};
+tt=Experiment2Table(ooo,vars);
 disp(tt) % Print summary.
 if isempty(tt)
     return
