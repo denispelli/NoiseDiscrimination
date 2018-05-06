@@ -26,22 +26,24 @@ function oo=NoiseDiscrimination(ooIn)
 % without ESCAPE keys, NoiseDiscrimination accepts the GRAVE ACCENT key as
 % equivalent to the ESCAPE key.
 %
-% RESUME a partially completed experiment. there's a new feature to allow
-% resuming a partially completed experiment. it has not been thoroughly
-% tested. This only arises if an observer has previously used ESCAPE ESCAPE
-% to get out of an experiment before completion. The saved summary file has
-% "-partial" in the file name. If you run the same experiment on the same
-% computer, the program will notice the old file and offer to resume it,
-% instead of starting a new one. [IMPORTANT: This question is presented in
-% the MATLAB command window, not a Psychtoolbox window.] You are allowed to
-% say, "yes", to resume the old experiment. Or hit DELETE to delete the old
-% partial experiment. Or hit RETURN to ignore the file and proceed with
-% your new experiment. If you resume the old experiment it eventually
-% produces a new experiment file. I haven't yet added code to delete the
-% obsolete partial file. This new feature will not appear if your observers
-% always finish their experiments.It's a convenience for the experimenter
-% because it allows you to design long experiments, with many blocks, that
-% the observer can complete over multiple sessions.
+% RESUME. There's a new feature to allow resuming a partially completed
+% experiment. It has not been thoroughly tested. This only arises if an
+% observer has previously used ESCAPE ESCAPE to get out of an experiment
+% before completion. The saved MAT file has "-partial" in the file name. If
+% you run the same experiment on the same computer, the program will notice
+% the old file (based solely on o.experiment and computer name) and offer
+% to resume it, instead of starting a new experiment. [IMPORTANT: This
+% question is presented in the MATLAB command window, not a Psychtoolbox
+% window.] The software doesn't yet know the observer's name, so it will
+% offer files by any observer. You can say "yes", to resume the old
+% experiment. Or hit DELETE to delete the old partial experiment. Or hit
+% RETURN to ignore the file and proceed with your new experiment. If you
+% resume the old experiment it eventually produces a new experiment file. I
+% haven't yet added code to automatically delete the obsolete partial file.
+% This new feature will not appear if your observers always finish their
+% experiments. It's a convenience for the experimenter because it allows
+% you to design long experiments, with many blocks, that the observer can
+% complete over multiple sessions.
 %
 % SNAPSHOT. It is useful to take snapshots of the stimulus produced by
 % NoiseDiscrimination. Such snapshots can be used in papers and talks to
