@@ -17,8 +17,16 @@ Screen('FillRect',window,backgroundColor);
 Screen('TextFont',window,o.textFont,0);
 black=0;
 Screen('Preference','TextAntiAliasing',0);
-if isfield(o,'trials')&&isfield(o,'trialsPerBlock')&&isfield(o,'blockNumber')&&isfield(o,'blocksDesired')&&isfield(o,'textSize')
-   message=sprintf('Trial %d of %d. Block %d of %d.',o.trials,o.trialsPerBlock,o.blockNumber,o.blocksDesired);
+trials=0;
+trialsDesired=0;
+if isfield(o,'trials')&&isfield(o,'trialsPerBlock')
+    for oi=1:length(oo)
+        trials=trials+oo(oi).trials;
+        trialsDesired=trialsDesired+oo(oi).trialsPerBlock;
+    end
+end
+if isfield(o,'blockNumber')&&isfield(o,'blocksDesired')&&isfield(o,'textSize')
+   message=sprintf('Trial %d of %d. Block %d of %d.',trials,trialsDesired,o.blockNumber,o.blocksDesired);
    if isfield(o,'experiment')
       message=[message ' Experiment "' o.experiment '".'];
    end
@@ -30,11 +38,11 @@ end
 Screen('TextSize',window,o.textSize);
 % Set background color for DrawFormattedText.
 Screen('DrawText',window,' ',0,0,black,backgroundColor,1);
-lastRun=isfield(o,'blockNumber') && isfield(o,'blocksDesired') && o.blockNumber>=o.blocksDesired;
-if lastRun
-    nextRunMsg='';
+lastBlock=isfield(o,'blockNumber') && isfield(o,'blocksDesired') && o.blockNumber>=o.blocksDesired;
+if lastBlock
+    nextBlockMsg='';
 else
-    nextRunMsg='Or hit RETURN to proceed to the next block. ';
+    nextBlockMsg='Or hit RETURN to proceed to the next block. ';
 end
 if nargout==3
    nextTrialMsg='Or hit SPACE to proceed to the next trial.';
@@ -42,7 +50,7 @@ else
    nextTrialMsg='';
 end
 string=['You escaped. Any incomplete trial was canceled. Hit ESCAPE again to quit the whole experiment. '...
-    nextRunMsg nextTrialMsg];
+    nextBlockMsg nextTrialMsg];
 DrawFormattedText(window,string,textMarginPix,textMarginPix+0.5*o.textSize+y,black,60,[],[],1.1);
 Screen('Flip',window);
 answer=GetKeypress([spaceKeyCode returnKeyCode escapeKeyCode graveAccentKeyCode],o.deviceIndex);
