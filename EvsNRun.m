@@ -20,11 +20,10 @@ sdOverBound.uniform=0.58;
 sdOverBound.binary=1.41;
 maxBound=0.37; % Rule of thumb based on experience with gaussian.
 maxSd=struct('gaussian',maxBound*sdOverBound.gaussian,'uniform',maxBound*sdOverBound.uniform,'binary',maxBound*sdOverBound.binary);
-maxSd
+% maxSd
 
 %% GET READY
 clear o oo
-skipDataCollection=false; % Enable skipDataCollection to check plotting before we have data.
 o.questPlusEnable=false;
 if ~exist('struct2table','file')
     error('This MATLAB %s is too old. We need MATLAB 2013b or better to use the function "struct2table".',version('-release'));
@@ -89,7 +88,7 @@ for domain=0:3
             o.targetCyclesPerDeg=4;
             o.targetDurationSec=0.1;
             o.desiredLuminance=2.5; % cd/m^2
-            o.desiredLuminanceFactor=[];
+%             o.noiseCheckFrames=10;
             o.useFilter=true;
             o.fixationCrossWeightDeg=0.05; % Typically 0.03. Use 0.05 for scotopic testing.
             o.blankingRadiusReTargetHeight=3;
@@ -164,7 +163,7 @@ vars={'condition' 'experiment' 'conditionName' ...
     'useFilter' 'eccentricityXYDeg' ...
     'targetDurationSec' 'targetHeightDeg' ...
     'targetCyclesPerDeg' 'targetGaborCycles' ...
-    'noiseSD' 'noiseType'};
+    'noiseSD' 'noiseType' 'noiseCheckFrames'};
 tt=table;
 for i=1:length(oo)
     t=struct2table(oo{i},'AsArray',true);
@@ -173,14 +172,14 @@ end
 disp(tt) % Print list of conditions.
 
 %% RUN THE CONDITIONS.
-oo=RunExperiment(oo(12:end));
+oo=RunExperiment(oo);
 
 %% PRINT SUMMARY OF RESULTS AS TABLE TT.
 % Include whatever you're intersted in. We skip rows missing any value.
 vars={'condition' 'experiment' 'conditionName' ...
     'useFilter' 'luminanceAtEye' 'eccentricityXYDeg' ...
     'targetDurationSec' 'targetCyclesPerDeg' ...
-    'targetHeightDeg' 'targetGaborCycles' ...
+    'targetHeightDeg' 'targetGaborCycles'  'noiseCheckFrames'...
     'noiseSD' 'N' 'noiseType' 'E' 'contrast' 'dataFilename' 'dataFolder'};
 tt=table;
 for i=1:length(oo)
