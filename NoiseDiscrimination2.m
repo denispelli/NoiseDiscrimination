@@ -713,6 +713,7 @@ o.ignoreOverlyLongTrials=true;
 o.ignoreTrial=false;
 o.targetDurationListSecs=[];
 o.conditionList=1; % An array of integer condition numbers.
+o.signalImagesCacheCode=[];
 
 o.deviceIndex=-1; % -1 for all keyboards.
 o.deviceIndex=-3; % -3 for all keyboard/keypad devices.
@@ -1088,7 +1089,7 @@ try
         text.question='Experimenter name:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
         fprintf('*Waiting for experimenter name.\n');
-        [reply,o]=AskQuestion(oo(1),text);
+        [reply,o]=AskQuestion(oo,text);
         if o.quitBlock
             ListenChar;
             ShowCursor;
@@ -1109,7 +1110,7 @@ try
         text.question='Observer name:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
         fprintf('*Waiting for observer name.\n');
-        [reply,o]=AskQuestion(oo(1),text);
+        [reply,o]=AskQuestion(oo,text);
         if o.quitBlock
             ListenChar;
             ShowCursor;
@@ -1138,7 +1139,7 @@ try
             text.question='';
             text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
             fprintf('*Waiting for observer to remove sunglasses.\n');
-            [~,o]=AskQuestion(oo(1),text);
+            [~,o]=AskQuestion(oo,text);
         end
     else % if ~o.useFilter
         text.big={'Please use a filter or sunglasses to reduce the luminance.' '(Our lab sunglasses transmit 0.115)' 'Please slowly type its transmission (between 0.000 and 1.000)' 'followed by RETURN.'};
@@ -1151,7 +1152,7 @@ try
         text.fine='';
         text.question='Filter transmission:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
-        [reply,o]=AskQuestion(oo(1),text);
+        [reply,o]=AskQuestion(oo,text);
         if ~o.quitBlock
             if ~isempty(reply)
                 o.filterTransmission=str2num(reply);
@@ -1748,6 +1749,7 @@ try
                     end
                     o.quitBlock=true;
                     o.quitExperiment=true;
+                    oo(1).quitExperiment=true;
                     ListenChar;
                     ShowCursor;
                     sca;
@@ -1791,6 +1793,7 @@ try
                         end
                         o.quitBlock=true;
                         o.quitExperiment=true;
+                        oo(1).quitExperiment=true;
                         ListenChar;
                         ShowCursor;
                         sca;
@@ -1816,6 +1819,7 @@ try
                         end
                         o.quitBlock=true;
                         o.quitExperiment=true;
+                        oo(1).quitExperiment=true;
                         ListenChar;
                         ShowCursor;
                         sca;
@@ -1842,6 +1846,7 @@ try
                     end
                     o.quitBlock=true;
                     o.quitExperiment=true;
+                    oo(1).quitExperiment=true;
                     ListenChar;
                     ShowCursor;
                     sca;
@@ -1910,6 +1915,7 @@ try
     [oo.nearPointXYPix]=deal(o.nearPointXYPix);
     [oo.nearPointXYInUnitSquare]=deal(o.nearPointXYInUnitSquare);
     if o.quitExperiment
+        oo(1).quitExperiment=true;
         ListenChar;
         ShowCursor;
         sca;
@@ -2400,24 +2406,38 @@ try
                         oo(oi).targetPix=round(oo(oi).targetHeightDeg/oo(oi).noiseCheckDeg);
                         oo(oi).targetFont=oo(oi).font;
                         oo(oi).showLineOfLetters=true;
-                        [signalStruct,bounds]=LoadSignalImages(oo(oi));
-                        oo(oi).targetRectLocal=bounds;
-                        sz=size(signalStruct(1).image);
-                        white=signalStruct(1).image(1,1,:);
-                        if oo(oi).convertSignalImageToGray
-                            white=0.2989*white(1)+0.5870*white(2)+0.1140*white(3);
-                        end
-                        whiteImage=repmat(double(white),sz(1),sz(2));
-                        for i=1:length(signalStruct)
-                            if ~oo(oi).convertSignalImageToGray
-                                m=signalStruct(i).image;
-                            else
-                                m=0.2989*signalStruct(i).image(:,:,1)+0.5870*signalStruct(i).image(:,:,2)+0.1140*signalStruct(i).image(:,:,3);
+                        oo(oi).useCache=false;
+                        if oi>1 && isfield(oo(oi),'signalImagesCacheCode') && ~isempty(oo(oi).signalImagesCacheCode)
+                            for oiCache=1:oi-1
+                                if oo(oiCache).signalImagesCacheCode==oo(oi).signalImagesCacheCode
+                                    oo(oi).useCache=true;
+                                    break;
+                                end
                             end
-                            %                         imshow(uint8(m));
-                            oo(oi).signal(i).image=double(m)./whiteImage-1;
-                            %                         imshow((oo(oi).signal(i).image+1));
                         end
+                        if oo(oi).useCache
+                            oo(oi).targetRectLocal=oo(oiCache).targetRectLocal;
+                            oo(oi).signal=oo(oiCache).signal;
+                        else
+                            [signalStruct,bounds]=LoadSignalImages(oo(oi));
+                            oo(oi).targetRectLocal=bounds;
+                            sz=size(signalStruct(1).image);
+                            white=signalStruct(1).image(1,1,:);
+                            if oo(oi).convertSignalImageToGray
+                                white=0.2989*white(1)+0.5870*white(2)+0.1140*white(3);
+                            end
+                            whiteImage=repmat(double(white),sz(1),sz(2));
+                            for i=1:length(signalStruct)
+                                if ~oo(oi).convertSignalImageToGray
+                                    m=signalStruct(i).image;
+                                else
+                                    m=0.2989*signalStruct(i).image(:,:,1)+0.5870*signalStruct(i).image(:,:,2)+0.1140*signalStruct(i).image(:,:,3);
+                                end
+                                %                         imshow(uint8(m));
+                                oo(oi).signal(i).image=double(m)./whiteImage-1;
+                                %                         imshow((oo(oi).signal(i).image+1));
+                            end
+                        end % if oo(oi).useCache
                     otherwise
                         error('Unknown o.targetKind "%s".',oo(oi).targetKind);
                 end % switch oo(oi).targetKind
@@ -3651,11 +3671,12 @@ try
                         if oo(oi).speakInstructions
                             Speak('Escape.');
                         end
-                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(oo(oi).window,o,oo(oi).textMarginPix);
+                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(oo(oi).window,oo,oo(oi).textMarginPix);
                         trial=trial-1;
                     end
                     if o.quitExperiment
-                        ffprintf(ff,'*** ESCAPE ESCAPE. Quitting experiment.\n');
+                        oo(1).quitExperiment=true;
+                       ffprintf(ff,'*** ESCAPE ESCAPE. Quitting experiment.\n');
                         if oo(oi).speakInstructions
                             Speak('Done.');
                         end
@@ -3687,12 +3708,13 @@ try
                     end
                     responseChar=GetKeypress(enableKeyCodes,oo(oi).deviceIndex);
                     if ismember(responseChar,[escapeChar,graveAccentChar])
-                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(oo(oi).window,o,oo(oi).textMarginPix);
+                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(oo(oi).window,oo,oo(oi).textMarginPix);
                         trial=trial-1;
                         oo(oi).trials=oo(oi).trials-1; % Make sure we don't duplicate this minus 1 at the top of the loop.
                     end
                     if o.quitExperiment
-                        ffprintf(ff,'*** User typed ESCAPE twice. Quitting experiment.\n');
+                        oo(1).quitExperiment=true;
+                       ffprintf(ff,'*** User typed ESCAPE twice. Quitting experiment.\n');
                         if oo(oi).speakInstructions
                             Speak('Done.');
                         end
@@ -3737,11 +3759,12 @@ try
                     %                Screen('FillRect',oo(oi).window,oo(oi).gray1,bottomCaptionRect);
                     Screen('TextSize',oo(oi).window,oo(oi).textSize);
                     if ismember(terminatorChar,[escapeChar,graveAccentChar])
-                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(oo(oi).window,o,oo(oi).textMarginPix);
+                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(oo(oi).window,oo,oo(oi).textMarginPix);
                         trial=trial-1;
                         oo(oi).trials=oo(oi).trials-1;
                    end
                     if o.quitExperiment
+                        oo(1).quitExperiment=true;
                         ffprintf(ff,'*** User typed ESCAPE twice. Quitting experiment.\n');
                         if oo(oi).speakInstructions
                             Speak('Done.');
@@ -3797,11 +3820,12 @@ try
                         escapeKeyCode graveAccentKeyCode],oo(oi).deviceIndex);
                     oo(oi).transcript.responseTimeSecs(oo(oi).trials)=GetSecs-oo(oi).transcript.stimulusOnsetSecs(oo(oi).trials);
                     if ismember(responseChar,[escapeChar,graveAccentChar])
-                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(oo(oi).window,o,oo(oi).textMarginPix);
+                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(oo(oi).window,oo,oo(oi).textMarginPix);
                         trial=trial-1;
                         oo(oi).trials=oo(oi).trials-1;
                     end
                     if o.quitExperiment
+                        oo(1).quitExperiment=true;
                         ffprintf(ff,'*** User typed ESCAPE twice. Quitting experiment.\n');
                         if oo(oi).speakInstructions
                             Speak('Done.');
@@ -4957,10 +4981,6 @@ if ismember(response,[escapeChar,graveAccentChar])
     end
     o.quitBlock=true;
     o.quitExperiment=true;
-    sca;
-%     window=[]; % Uh oh! "window" is out of scope!
-    [oo.window]=deal([]); % o is not returned.
-    ListenChar;
     return
 end
 Screen('FillRect',o.window,o.gray1);
@@ -5184,14 +5204,15 @@ end
 assert(isfinite(o.gray));
 end % function ComputeClut
 
-function [reply,o]=AskQuestion(o,text)
-% Last argument is a struct with several fields: text.big, text.small,
+function [reply,o]=AskQuestion(oo,text)
+% "text" argument is a struct with several fields: text.big, text.small,
 % text.fine, text.question, text.setTextSizeToMakeThisLineFit. We
 % optionally return "o" which is  possibly modified from the input o in
 % o.textSize o.quitExperiment o.quitBlock and o.skipTrial. If "text" has the
 % field text.setTextSizeToMakeThisLineFit then o.textSize is adjusted to
 % make the line fit horizontally within screenRect.
 global screenRect ff
+o=oo(1);
 if isempty(o.window)
     reply='';
     return
@@ -5223,7 +5244,7 @@ end
 % fprintf('%d: o.deviceIndex %.0f.\n',MFileLineNr,o.deviceIndex);
 [reply,terminatorChar]=GetEchoString(o.window,text.question,o.textMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
 if ismember(terminatorChar,[escapeChar graveAccentChar])
-    [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(o.window,o,o.textMarginPix);
+    [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(o.window,oo,o.textMarginPix);
     if o.quitExperiment
         ffprintf(ff,'*** User typed ESCAPE twice. Experiment terminated.\n');
     elseif o.quitBlock
@@ -5309,7 +5330,7 @@ switch o.task
         % This keypress serves mainly to start the first trial, but we
         % offer to quit if the user hits ESCAPE.
         if ismember(responseChar,[escapeChar,graveAccentChar])
-            [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(o.window,o,o.textMarginPix);
+            [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(o.window,oo,o.textMarginPix);
             if o.quitBlock
                 ffprintf(ff,'*** User typed ESCAPE. Quitting block.\n');
                 if o.speakInstructions
