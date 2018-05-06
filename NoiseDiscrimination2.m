@@ -4038,49 +4038,47 @@ try
                 drawnow;
             end % if oo(oi).questPlusPlot
         end % if oo(oi).questPlusEnable
-        
-        %% TIMING 
-        oo(oi).targetDurationSecsMean=mean(oo(oi).likelyTargetDurationSecs,'omitnan');
-        oo(oi).targetDurationSecsSD=std(oo(oi).likelyTargetDurationSecs,'omitnan');
-        if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
-            msg=sprintf(['Mean target duration %.3f',plusMinusChar,'%.3f s (sd over %d trials).\n'],...
-                oo(oi).targetDurationSecsMean,oo(oi).targetDurationSecsSD,length(oo(oi).likelyTargetDurationSecs));
-            if conditions>1
-                ffprintf(ff,'N.B. Averaged across %d durations. %s',conditions,msg);
+              
+        %% LUMINANCE
+        if oi==1
+            if oo(oi).useFilter
+                ffprintf(ff,'Background luminance %.1f cd/m^2, which filter reduced to %.2f cd/m^2. ',oo(oi).LBackground,oo(oi).luminanceAtEye);
             else
-                ffprintf(ff,msg);
+                ffprintf(ff,'Background luminance %.1f cd/m^2. ',oo(oi).LBackground);
+            end
+            % No new line, so next item continues on same line.
+        end
+        
+        %% WORK FLOW TIMING
+        if oi==1
+            secs=(GetSecs-blockStartSecs)/trial;
+            if secs>1
+                ffprintf(ff,'%.0f s/trial, across all conditions.\n',secs);
+            else
+                ffprintf(ff,'%.0f ms/trial, across all conditions.\n',secs*1000);
             end
         end
         
-        %% LUMINANCE
-        if oo(oi).useFilter
-            ffprintf(ff,'Background luminance %.1f cd/m^2, which filter reduces to %.2f cd/m^2.\n',oo(oi).LBackground,oo(oi).luminanceAtEye);
-        else
-            ffprintf(ff,'Background luminance %.1f cd/m^2.\n',oo(oi).LBackground);
-        end
-        
-        %% PRINT BOLD SUMMARY
+       
+        %% PRINT BOLD SUMMARY OF CONDITION oi
         oo(oi).E=10^(2*oo(oi).questMean)*oo(oi).E1;
-        index=oo(oi).condition==oi;
-        trials=sum(index); % Of this condition.
-        if isempty(oo(oi).transcript.intensity)
-            warning('oo(%d).transcript.intensity is empty.',oi);
-            trialsRight=0;
-        else
-            trialsRight=sum([oo(oi).transcript.isRight{index}]); % Of this condition.
+        if oi==1
+            ffprintf(ff,'/n');
         end
+        msg=sprintf(['%d of %d. "%s". %d trials. %.0f%% right. '...
+                    'Threshold log contrast %.2f',plusMinusChar,'%.2f (m',plusMinusChar,'sd),'],...
+                    oi,length(oo),oo(oi).conditionName,oo(oi).trials,100*oo(oi).trialsRight/oo(oi).trials,t,sd);
         switch oo(oi).targetModulates
             case 'luminance'
-                ffprintf(ff,['<strong>Block %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
-                    'Threshold',plusMinusChar,'sd log contrast %.2f',plusMinusChar,'%.2f, contrast %.4f, log E/N %.2f, efficiency %.5f</strong>\n'],...
-                    oo(oi).blockNumber,oo(oi).blocksDesired,trials,100*trialsRight/trials,(GetSecs-blockStartSecs)/trial,t,sd,oo(oi).thresholdPolarity*10^t,log10(oo(oi).EOverN),oo(oi).efficiency);
+                ffprintf(ff,'<strong>%s contrast %.4f, log E/N %.2f, efficiency %.5f</strong>\n',...
+                    msg,oo(oi).thresholdPolarity*10^t,log10(oo(oi).EOverN),oo(oi).efficiency);
             case {'noise' 'entropy'}
-                ffprintf(ff,['<strong>Block %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
-                    'Threshold',plusMinusChar,'sd log(o.r-1) %.2f',plusMinusChar,'%.2f, approxRequiredNumber %.0f</strong>\n'],...
-                    oo(oi).blockNumber,oo(oi).blocksDesired,trials,100*trialsRight/trials,(GetSecs-blockStartSecs)/trial,t,sd,oo(oi).approxRequiredNumber);
+                ffprintf(ff,'<strong>%s log(o.r-1) %.2f',plusMinusChar,'%.2f, approxRequiredNumber %.0f</strong>\n',...
+                    msg,oo(oi).approxRequiredNumber);
         end
-        if abs(trialsRight/trials-oo(oi).pThreshold) > 0.1
-            ffprintf(ff,'WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.\n');
+        if abs(oo(oi).trialsRight/oo(oi).trials-oo(oi).pThreshold) > 0.1
+            ffprintf(ff,'WARNING: Proportion correct %.0f%% is far from threshold criterion %.0f%%, so don''t trust the estimated threshold.\n',...
+                100*oo(oi).trialsRight/oo(oi).trials,100*oo(oi).pThreshold);
         end
 %         switch oo(oi).targetModulates
 %             case 'luminance',
@@ -4125,7 +4123,16 @@ try
                     end
                 end
         end % switch oo(oi).targetModulates
-        
+
+        %% STIMULUS TIMING
+        oo(oi).targetDurationSecsMean=mean(oo(oi).likelyTargetDurationSecs,'omitnan');
+        oo(oi).targetDurationSecsSD=std(oo(oi).likelyTargetDurationSecs,'omitnan');
+        if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
+            ffprintf(ff,['"%s" Across %d trials, target duration %.3f',plusMinusChar,'%.3f s (m',plusMinusChar,'sd).\n'],...
+                oo(oi).conditionName,length(oo(oi).likelyTargetDurationSecs),...
+                oo(oi).targetDurationSecsMean,oo(oi).targetDurationSecsSD);
+        end
+  
         %% SAVE EACH THRESHOLD IN ITS OWN FILE, WITH A SUFFIX DESIGNATING THE CONDITION NUMBER.
         oo(oi).newCal=cal;
         [~,neworder]=sort(lower(fieldnames(oo(oi))));
@@ -4138,8 +4145,8 @@ try
         save(fullfile(oo(oi).dataFolder,[filename '.mat']),'o','cal');
         try % save to .json file
             if streq(oo(oi).targetKind,'image')
-                % json encoding of 12 faces takes 60 s, which is unbearable.
-                % So we omit the signals from the json file.
+                % json encoding of 12 faces takes 60 s, which is
+                % unbearable, so we omit the signals from the json file.
                 o1=rmfield(o,'signal');
             else
                 o1=o;
@@ -4160,7 +4167,9 @@ try
         end % save to .json file
         try % save transcript to .json file
             if isempty(oo(oi).transcript.intensity)
-                warning('(oo(%d).transcript is empty.',oi);
+                if oo(oi).trials>1
+                    warning('oo(%d).transcript.intensity is empty.',oi);
+                end
             else
                 if exist('jsonencode','builtin')
                     json=jsonencode(oo(oi).transcript);
@@ -4176,7 +4185,7 @@ try
             warning('Failed to save .transcript.json file.');
             warning(e.message);
         end % save transcript to .json file
-        fprintf('Results saved as %s with extensions .txt, .mat, and .json \nin the data folder: %s/\n',filename,oo(oi).dataFolder);
+        fprintf('Results saved as %s with extensions .txt, .mat, and .json \nin the data folder: %s/\n\n',filename,oo(oi).dataFolder);
     end % for oi=1:conditions
 
     %% GOODBYE
