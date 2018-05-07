@@ -1384,7 +1384,9 @@ try
     ffprintf(ff,'observer %s, task %s, alternatives %d,  steepness %.1f,\n',o.observer,o.task,o.alternatives,o.steepness);
     ffprintf(ff,'Experiment: %s. ',o.experiment);
     ffprintf(ff,'%d conditions: ',conditions);
-    ffprintf(ff,'%s, ',{oo.conditionName});
+    for oi=1:conditions
+        ffprintf(ff,'%s, ',oo(oi).conditionName);
+    end
     ffprintf(ff,'\n');
     
     %% STIMULUS PARAMETERS
