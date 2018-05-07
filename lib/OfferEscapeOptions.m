@@ -1,5 +1,5 @@
 function [quitExperiment,quitBlock,skipTrial]=OfferEscapeOptions(window,oo,textMarginPix)
-% [quitExperiment,quitBlock,skipTrial]=OfferEscapeOptions(window,o,textMarginPix);
+% [quitExperiment,quitBlock,skipTrial]=OfferEscapeOptions(window,oo,textMarginPix);
 o=oo(1);
 if o.speakEachLetter && o.useSpeech
    Speak('Escape');
