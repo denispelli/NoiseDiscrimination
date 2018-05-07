@@ -538,6 +538,26 @@ if nargin < 1 || ~exist('oIn','var')
     oIn.noInputArgument=true;
 end
 o=[];
+% I added these here May 6, 2018,  to guarantee that they'll be defined
+% when I pull them into a table in EvsNRun2.m
+o.condition=[];
+o.experiment=[];
+o.conditionName=[];
+o.useFilter=false;
+o.luminanceAtEye=[];
+o.eccentricityXYDeg=[];
+o.targetDurationSecs=[];
+o.targetCyclesPerDeg=[];
+o.targetHeightDeg=[];
+o.targetGaborCycles=[];
+o.noiseCheckFrames=1;
+o.noiseSD=[];
+o.N=[];
+o.E=[];
+o.dataFilename='';
+o.dataFolder='';
+% End of recent addition.
+
 o.questPlusEnable=false;
 o.questPlusSteepnesses=1:0.1:5;
 o.questPlusGuessingRates=nan; % 1/alternatives
@@ -744,26 +764,6 @@ o.targetDurationListSecs=[];
 o.conditionList=1; % An array of integer condition numbers.
 o.signalImagesCacheCode=[];
 o.age=20;
-
-% I added these here to guarantee they'll be defined when I pull them into
-% a table in EvsNRun2.m
-o.condition=[];
-o.experiment=[];
-o.conditionName=[];
-o.useFilter=false;
-o.luminanceAtEye=[];
-o.eccentricityXYDeg=[];
-o.targetDurationSecs=[];
-o.targetCyclesPerDeg=[];
-o.targetHeightDeg=[];
-o.targetGaborCycles=[];
-o.noiseCheckFrames=1;
-o.noiseSD=[];
-o.N=[];
-o.noiseType=[];
-o.E=[];
-o.dataFilename='';
-o.dataFolder='';
 
 o.deviceIndex=-1; % -1 for all keyboards.
 o.deviceIndex=-3; % -3 for all keyboard/keypad devices.
@@ -2771,21 +2771,21 @@ try
     [oo.skipTrial]=deal(false);
     [oo.trialsSkipped]=deal(0);
     [oo.trials]=deal(0);
+    trial=0;
     waitMessage='Starting new block. ';
     blockStartSecs=GetSecs;
-    trial=0;
     o=oo(1);
     oi=oo(1).conditionList(1);
     
     %% DO A BLOCK OF TRIALS.
     while trial<length(oo(1).conditionList)
-        waitForObserver=trial==0 || o.skipTrial;
+        waitForObserver=(trial==0 || o.skipTrial);
         if o.skipTrial || o.ignoreTrial
             % ignoreTrial is like skipTrial, without the wait. skipTrial is
             % requested by the observer. ignoreTrial is requested by the
             % software after a stimulus artifact (movie too long).
-            trial=trial-1;
-            oo(oi).trials=oo(oi).trials-1;
+            assert(trial>=0,'Error: trial<0');
+            assert(oo(oi).trials>=0,'Error: oo(oi).trials<0');
             oo(oi).trialsSkipped=oo(oi).trialsSkipped+1;
             o.skipTrial=false;
             o.ignoreTrial=false;
@@ -2793,16 +2793,19 @@ try
         end
         trial=trial+1;
         oi=oo(1).conditionList(trial);
+        oo(oi).trials=oo(oi).trials+1;
+        assert(trial>0,'Error: trial<=0');
+        assert(oo(oi).trials>0,'Error oo(oi).trials<=0');
         if waitForObserver && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers) 
-            o=WaitUntilObserverIsReady(o,waitMessage);
+            o=WaitUntilObserverIsReady(o,oo,waitMessage);
             waitMessage='Continuing. ';
             if o.quitBlock
                 break
             end
         end
-        oo(oi).trials=oo(oi).trials+1;
-        assert(trial>0,'Error: trial<=0');
         if o.skipTrial
+            trial=trial-1;
+            oo(oi).trials=oo(oi).trials-1;
             continue
         end
         [~,neworder]=sort(lower(fieldnames(oo(oi))));
@@ -2824,7 +2827,7 @@ try
                     repmat(oo(oi).constantStimuli,1,ceil(oo(oi).trialsPerBlock/length(oo(oi).constantStimuli)));
                 oo(oi).thresholdParameterValueList=Shuffle(oo(oi).thresholdParameterValueList);
             end
-            c=oo(oi).thresholdParameterValueList(trial); % I think this should be oo(oi).trials instead of trial.
+            c=oo(oi).thresholdParameterValueList(oo(oi).trials); 
             oo(oi).thresholdPolarity=sign(c);
             tTest=log10(abs(c));
         end
@@ -3411,6 +3414,7 @@ try
             Screen('LoadNormalizedGammaTable',oo(oi).window,cal.gamma,loadOnNextFlip);
             if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
                 Snd('Play',purr); % Pre-announce that image is up, awaiting response.
+                assert(oo(oi).trials>0,'oo(oi).trials must be >0');
                 oo(oi).movieFrameFlipSecs(1:oo(oi).movieFrames+1,oo(oi).trials)=nan;
                 for iMovieFrame=1:oo(oi).movieFrames
                     Screen('DrawTexture',oo(oi).window,movieTexture(iMovieFrame),srcRect,dstRect);
@@ -3736,6 +3740,7 @@ try
                         end
                         [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(oo(oi).window,oo,oo(oi).textMarginPix);
                         trial=trial-1;
+                        oo(oi).trials=oo(oi).trials-1;
                     end
                     if o.quitExperiment
                         oo(1).quitExperiment=true;
@@ -3773,7 +3778,7 @@ try
                     if ismember(responseChar,[escapeChar,graveAccentChar])
                         [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(oo(oi).window,oo,oo(oi).textMarginPix);
                         trial=trial-1;
-                        oo(oi).trials=oo(oi).trials-1; % Make sure we don't duplicate this minus 1 at the top of the loop.
+                        oo(oi).trials=oo(oi).trials-1;
                     end
                     if o.quitExperiment
                         oo(1).quitExperiment=true;
@@ -5319,7 +5324,7 @@ Screen('FillRect',o.window,o.gray1);
 Screen('Flip',o.window); % Flip screen, to let observer know her answer was accepted.
 end % function AskQuestion
 
-function o=WaitUntilObserverIsReady(o,message)
+function o=WaitUntilObserverIsReady(o,oo,message)
 global fixationLines fixationCrossWeightPix ff
 escapeChar=char(27);
 graveAccentChar='`';
