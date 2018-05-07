@@ -1,4 +1,4 @@
-function oo=NoiseDiscrimination(ooIn)
+function oo=NoiseDiscrimination2(ooIn)
 % oo=NoiseDiscrimination(oo);
 %
 % You can now pass an array of stucts, one struct per condition, and it
@@ -45,6 +45,14 @@ function oo=NoiseDiscrimination(ooIn)
 % you to design long experiments, with many blocks, that the observer can
 % complete over multiple sessions.
 %
+% Ragahavan & Pelli: Photon noise is NPhoton = phi^-1 q^-1 L^-1, where phi
+% is the transduction efficiency of (fraction of light required to account
+% for) the photon noise, qL  is luminance expressed as a quantal flux of
+% 555-nm photon deg-2 s-1, q = 1.26e6 deg^-2 s^-1 td^-1 is the conversion
+% factor, and L is retinal illuminance in td.
+% q=1.26e6;
+% NPhoton=1/(phi*q*td);
+
 % SNAPSHOT. It is useful to take snapshots of the stimulus produced by
 % NoiseDiscrimination. Such snapshots can be used in papers and talks to
 % show our stimuli. If you request a snapshot then NoiseDiscrimination
@@ -53,10 +61,11 @@ function oo=NoiseDiscrimination(ooIn)
 % some information about the condition is contained in the file name and in
 % a caption on the figure. The caption may not be included if you enable
 % cropping. Here are the parameters that you can control:
-% o.saveSnapshot=true; % If true, take snapshot for public presentation.
+%
+% o.saveSnapshot=true;    % If true, take snapshot for public presentation. 
 % o.snapshotContrast=0.2; % nan to request program default.
-% o.cropSnapshot=false; % If true, crop to include only target and noise,
-%                   % plus response numbers, if displayed.
+% o.cropSnapshot=false;   % If true, crop to include only target and noise,
+%                         % plus response numbers, if displayed.
 % o.snapshotCaptionTextSizeDeg=0.5;
 %
 % Standard condition for counting V1 neurons: o.noiseCheckPix=13;
@@ -476,7 +485,7 @@ persistent oOld % Saved from previous block to skip prompts that were already an
 
 %% GLOBALS, FILES
 global fixationLines fixationCrossWeightPix labelBounds ...
-    screenRect tTest leftEdgeOfResponse cal ...
+     tTest leftEdgeOfResponse cal ...
     ff whichSignal dataFid ...
      signalImageIndex signalMask % for function ModelObserver
 % This list of global variables is shared only with the several subroutines
@@ -698,11 +707,12 @@ o.desiredRetinalIlluminanceTd=[];
 o.desiredLuminance=[];
 o.desiredLuminanceFactor=1;
 o.luminanceFactor=1; % For max brightness, set this to to 2, and o.symmetricLuminanceRange=false;
-% o.LBackground = o.luminanceFactor*mean([cal.LMin cal.LMax]);
+o.LBackground = []; % Usually =o.luminanceFactor*mean([cal.LMin cal.LMax]);
 o.symmetricLuminanceRange=true; % For max brightness set this false and o.LuminanceFactor=2.
 o.luminanceAtEye=[];
 o.retinalIlluminanceTd=[];
 o.pupilDiameterMm=[];
+o.pupilKnown=false;
 o.annularNoiseEnvelopeRadiusDeg=0;
 o.labelAlternatives=[];
 o.trialsPerBlock=40;
@@ -733,6 +743,27 @@ o.ignoreTrial=false;
 o.targetDurationListSecs=[];
 o.conditionList=1; % An array of integer condition numbers.
 o.signalImagesCacheCode=[];
+o.age=20;
+
+% I added these here to guarantee they'll be defined when I pull them into
+% a table in EvsNRun2.m
+o.condition=[];
+o.experiment=[];
+o.conditionName=[];
+o.useFilter=false;
+o.luminanceAtEye=[];
+o.eccentricityXYDeg=[];
+o.targetDurationSecs=[];
+o.targetCyclesPerDeg=[];
+o.targetHeightDeg=[];
+o.targetGaborCycles=[];
+o.noiseCheckFrames=1;
+o.noiseSD=[];
+o.N=[];
+o.noiseType=[];
+o.E=[];
+o.dataFilename='';
+o.dataFolder='';
 
 o.deviceIndex=-1; % -1 for all keyboards.
 o.deviceIndex=-3; % -3 for all keyboard/keypad devices.
@@ -855,11 +886,12 @@ end
 o=oo(1);
 [screenWidthMm,screenHeightMm]=Screen('DisplaySize',o.screen);
 screenBufferRect=Screen('Rect',o.screen);
-screenRect=Screen('Rect',o.screen,1);
+o.screenrect=Screen('Rect',o.screen,1);
 resolution=Screen('Resolution',o.screen);
 if o.useFractionOfScreen
-    screenRect=round(o.useFractionOfScreen*screenRect);
+    o.screenrect=round(o.useFractionOfScreen*o.screenrect);
 end
+[oo.screenrect]=deal(o.screenrect);
 
 %% OLD FEATURE: REPLICATE PELLI 2006
 % 3/23/17 moved this block of code to after reading o parameters. Untested in new location.
@@ -884,7 +916,7 @@ end
 %     o.noiseSD=0.25;
 %     o.noiseCheckDeg=0.063;
 %     o.targetHeightDeg=29*o.noiseCheckDeg;
-%     o.pixPerCm=RectWidth(screenRect)/(0.1*screenWidthMm);
+%     o.pixPerCm=RectWidth(o.screenrect)/(0.1*screenWidthMm);
 %     o.pixPerDeg=2/0.0633; % As in Pelli et al. (2006).
 %     degPerCm=o.pixPerCm/o.pixPerDeg;
 %     o.viewingDistanceCm=57/degPerCm;
@@ -1046,13 +1078,14 @@ try
             warning('You need EnableClutMapping to control contrast.');
         end
         if ~o.useFractionOfScreen
-            [window,screenRect]=PsychImaging('OpenWindow',cal.screen,1.0);
+            [window,o.screenrect]=PsychImaging('OpenWindow',cal.screen,1.0);
         else
             r=round(o.useFractionOfScreen*screenBufferRect);
             r=AlignRect(r,screenBufferRect,'right','bottom');
-            [window,screenRect]=PsychImaging('OpenWindow',cal.screen,1.0,r);
+            [window,o.screenrect]=PsychImaging('OpenWindow',cal.screen,1.0,r);
         end
         [oo.window]=deal(window);
+        [oo.screenrect]=deal(o.screenrect);
         % if cal.hiDPIMultiple~=1
         %     ffprintf(ff,'HiDPI: It doesn''t matter, but you might be curious to know.\n');
         %     if ismac
@@ -1062,7 +1095,7 @@ try
         %     end
         %     ffprintf(ff,'%s is in dual-resolution HiDPI mode. Display resolution is %.2fx buffer resolution.\n',str,cal.hiDPIMultiple);
         %     ffprintf(ff,'Draw buffer is %d x %d. ',screenBufferRect(3:4));
-        %     ffprintf(ff,'Display is %d x %d.\n',screenRect(3:4));
+        %     ffprintf(ff,'Display is %d x %d.\n',o.screenrect(3:4));
         %     ffprintf(ff,'We are using it in its native %d x %d resolution.\n',resolution.width,resolution.height);
         %     ffprintf(ff,'You can use Switch Res X (http://www.madrau.com/) to select a pure resolution, not HiDPI.\n');
         % end
@@ -1087,13 +1120,14 @@ try
             loadOnNextFlip=true; % Load hardware CLUT: 0. now; 1. on flip.
         end
     end
-    screenRect=Screen('Rect',cal.screen,1); % screen rect in UseRetinaResolution mode
+    o.screenrect=Screen('Rect',cal.screen,1); % screen rect in UseRetinaResolution mode
     if o.useFractionOfScreen
-        screenRect=round(o.useFractionOfScreen*screenRect);
+        o.screenrect=round(o.useFractionOfScreen*o.screenrect);
     end
+    [oo.screenrect]=deal(o.screenrect);
 
     %% ASK EXPERIMENTER NAME
-    [oo.textMarginPix]=deal(round(0.08*min(RectWidth(screenRect),RectHeight(screenRect))));
+    [oo.textMarginPix]=deal(round(0.08*min(RectWidth(o.screenrect),RectHeight(o.screenrect))));
     [oo.textSize]=deal(39);
     [oo.textFont]=deal('Verdana');
     black=0; % The CLUT color code for black.
@@ -1222,7 +1256,8 @@ try
     % LStandard is the highest o.LBackground luminance at which we can
     % display a sinusoid at maximum contrast (nearly 1). I have done most
     % of my experiments at that luminance. 
-    % THIS CODE ASSUMES THAT ALL CONDITIONS HAVE THE SAME:
+    % THIS CODE ASSUMES THAT ALL INTERLEAVED CONDITIONS HAVE THE SAME 
+    % LUMINANCE AND:
     % o.desiredLuminanceFactor, o.desiredLuminance, and
     % o.desiredRetinalIlluminanceTd.
     if ~all([oo.desiredLuminanceFactor]) && any([oo.desiredLuminanceFactor])...
@@ -1231,7 +1266,14 @@ try
         error('All conditions must have the same luminance settings.');
     end
     o=oo(1);
-    LStandard=mean([min(cal.old.L) max(cal.old.L)]);
+    if exist('cal','var')
+        LMin=min(cal.old.L);
+        LMax=max(cal.old.L);
+    else
+        LMin=0;
+        LMax=200;
+    end
+    LStandard=mean([LMin LMax]);
     if 1 ~= ~isempty(o.desiredRetinalIlluminanceTd)+~isempty(o.desiredLuminance)+~isempty(o.desiredLuminanceFactor)
         error(['You must specify one and only one of o.desiredLuminanceFactor, '...
             'o.desiredLuminance, and o.desiredRetinalIlluminanceTd. The rest should be empty []. '...
@@ -1250,18 +1292,17 @@ try
         end
         % o.filterTransmission refers to optical neutral density filters or
         % sunglasses.
-        % o.luminanceFactor refers to software attenuation of luminance from
-        % the standard middle of attainable range.
+        % o.luminanceFactor refers to software attenuation of luminance
+        % from the standard middle of attainable range.
         td=o.filterTransmission*LStandard*pi*o.pupilDiameterMm^2/4;
         o.luminanceFactor=o.desiredRetinalIlluminanceTd/td;
     end
-    o.luminanceFactor=min([max(cal.old.L)/LStandard o.luminanceFactor]); % upper bound
-    o.luminanceAtEye=o.luminanceFactor*o.filterTransmission*LStandard;
-    o.retinalIlluminanceTd=o.luminanceAtEye*pi*o.pupilDiameterMm^2/4;
+    o.luminanceFactor=min([LMax/LStandard o.luminanceFactor]); % upper bound
     [oo.luminanceFactor]=deal(o.luminanceFactor);
-    [oo.luminanceAtEye]=deal(o.luminanceAtEye);
-    [oo.retinalIlluminanceTd]=deal(o.retinalIlluminanceTd);
-
+    o.LBackground=o.luminanceFactor*mean([LMin LMax]); 
+    [oo.LBackground]=deal(o.LBackground);
+    % Need screen geometry to compute screen area in deg^2, so we
+    % call ComputeNPhoton after we set the near point.
     % Need to update all reports of luminance to include effect of filter.
     
     %% OPEN OUTPUT FILES
@@ -1273,7 +1314,7 @@ try
         case 2
         o.functionNames=[stack(2).name '-' stack(1).name];
         case 3
-            if streq(stack(2).name,'RunExperiment')
+            if ismember(stack(2).name,{'RunExperiment' 'RunExperiment2'})
                 o.functionNames=[stack(3).name '-' stack(1).name]; % Omit 'RunExperiment'
             else
                 o.functionNames=[stack(3).name '-' stack(2).name '-' stack(1).name];
@@ -1335,14 +1376,14 @@ try
     
     %% STIMULUS PARAMETERS
     for oi=1:conditions
-        oo(oi).pixPerCm=RectWidth(screenRect)/(0.1*screenWidthMm);
+        oo(oi).pixPerCm=RectWidth(o.screenrect)/(0.1*screenWidthMm);
         degPerCm=57/oo(oi).viewingDistanceCm;
         oo(oi).pixPerDeg=oo(oi).pixPerCm/degPerCm;
         oo(oi).textSize=round(oo(oi).textSizeDeg*oo(oi).pixPerDeg);
         oo(oi).textSizeDeg=oo(oi).textSize/oo(oi).pixPerDeg;
-        oo(oi).textLineLength=floor(1.9*RectWidth(screenRect)/oo(oi).textSize);
+        oo(oi).textLineLength=floor(1.9*RectWidth(o.screenrect)/oo(oi).textSize);
         oo(oi).lineSpacing=1.5;
-        oo(oi).stimulusRect=InsetRect(screenRect,0,oo(oi).lineSpacing*1.2*oo(oi).textSize); % Allow room for captions at top and bottom of screen.
+        oo(oi).stimulusRect=InsetRect(o.screenrect,0,oo(oi).lineSpacing*1.2*oo(oi).textSize); % Allow room for captions at top and bottom of screen.
         if streq(oo(oi).task,'identifyAll')
             oo(oi).stimulusRect(4)=oo(oi).stimulusRect(4)-oo(oi).lineSpacing*0.8*oo(oi).textSize; % Allow extra room for this 2-line bottom caption.
         end
@@ -1362,7 +1403,6 @@ try
             oo(oi).targetCheckPix=oo(oi).noiseCheckPix;
         end
         oo(oi).targetCheckDeg=oo(oi).targetCheckPix/oo(oi).pixPerDeg;
-        oo(oi).LBackground=oo(oi).luminanceFactor*(max(cal.old.L)+min(cal.old.L))/2;
         % We use nearly the whole clut (entries 2 to 254) for stimulus generation.
         % We reserve first and last (0 and o.maxEntry), for black and white.
         oo(oi).firstGrayClutEntry=2;
@@ -1381,9 +1421,9 @@ try
             oo(oi).showResponseNumbers=false; % Inappropriate so suppress.
             switch oo(oi).alphabetPlacement
                 case 'right'
-                    oo(oi).stimulusRect(3)=oo(oi).stimulusRect(3)-RectHeight(screenRect)/max(6,oo(oi).alternatives);
+                    oo(oi).stimulusRect(3)=oo(oi).stimulusRect(3)-RectHeight(o.screenrect)/max(6,oo(oi).alternatives);
                 case 'top'
-                    oo(oi).stimulusRect(2)=max(oo(oi).stimulusRect(2),screenRect(2)+0.5*RectWidth(screenRect)/max(6,oo(oi).alternatives));
+                    oo(oi).stimulusRect(2)=max(oo(oi).stimulusRect(2),o.screenrect(2)+0.5*RectWidth(o.screenrect)/max(6,oo(oi).alternatives));
                 otherwise
                     error('Unknown alphabetPlacement "%d".\n',oo(oi).alphabetPlacement);
             end
@@ -1425,12 +1465,12 @@ try
         % excessive texture size) by not computing pixels that won't be seen.
         % The actual clipping is done using o.stimulusRect.
         oo(oi).noiseRadiusDeg=max(oo(oi).noiseRadiusDeg,0);
-        oo(oi).noiseRadiusDeg=min(oo(oi).noiseRadiusDeg,RectWidth(screenRect)/oo(oi).pixPerDeg);
+        oo(oi).noiseRadiusDeg=min(oo(oi).noiseRadiusDeg,RectWidth(o.screenrect)/oo(oi).pixPerDeg);
         oo(oi).noiseRaisedCosineEdgeThicknessDeg=max(0,oo(oi).noiseRaisedCosineEdgeThicknessDeg);
         oo(oi).noiseRaisedCosineEdgeThicknessDeg=min(oo(oi).noiseRaisedCosineEdgeThicknessDeg,2*oo(oi).noiseRadiusDeg);
         oo(oi).annularNoiseSmallRadiusDeg=max(oo(oi).noiseRadiusDeg,oo(oi).annularNoiseSmallRadiusDeg); % "noise" and annularNoise cannot overlap.
         oo(oi).annularNoiseBigRadiusDeg=max(oo(oi).annularNoiseBigRadiusDeg,oo(oi).annularNoiseSmallRadiusDeg); % Big radius is at least as big as small radius.
-        oo(oi).annularNoiseBigRadiusDeg=min(oo(oi).annularNoiseBigRadiusDeg,RectWidth(screenRect)/oo(oi).pixPerDeg);
+        oo(oi).annularNoiseBigRadiusDeg=min(oo(oi).annularNoiseBigRadiusDeg,RectWidth(o.screenrect)/oo(oi).pixPerDeg);
         oo(oi).annularNoiseSmallRadiusDeg=min(oo(oi).annularNoiseBigRadiusDeg,oo(oi).annularNoiseSmallRadiusDeg); % Big radius is at least as big as small radius.
         if isnan(oo(oi).blankingRadiusReTargetHeight)
             switch oo(oi).targetKind
@@ -1464,18 +1504,18 @@ try
         end
         % BEWARE: The caption rects may differ between conditions and ought
         % to be stored in the condition, e.g. oo.topCaptionRect. The entire
-        % screen is in screenRect. The stimulus is in stimulusRect, which
-        % is within screenRect. Every pixel not in stimulusRect is in one
+        % screen is in o.screenrect. The stimulus is in stimulusRect, which
+        % is within o.screenrect. Every pixel not in stimulusRect is in one
         % or more of the caption rects, which form a border on three sides
         % of the screen. The caption rects overlap at the corners of the
         % screen.
-        topCaptionRect=screenRect;
+        topCaptionRect=o.screenrect;
         topCaptionRect(4)=oo(oi).stimulusRect(2); % top caption (trial number)
-        bottomCaptionRect=screenRect;
+        bottomCaptionRect=o.screenrect;
         bottomCaptionRect(2)=oo(oi).stimulusRect(4); % bottom caption (instructions)
-        rightCaptionRect=screenRect;
+        rightCaptionRect=o.screenrect;
         rightCaptionRect(1)=oo(oi).stimulusRect(3); % right caption
-        leftCaptionRect=screenRect;
+        leftCaptionRect=o.screenrect;
         leftCaptionRect(3)=oo(oi).stimulusRect(1); % left caption
         % The caption rects are hardly used. It turns out that I typically
         % do a FillRect of screenRect with the caption background (1), and
@@ -1534,7 +1574,7 @@ try
     %% REPORT CONFIGURATION
     [screenWidthMm, screenHeightMm]=Screen('DisplaySize',cal.screen);
     cal.screenWidthCm=screenWidthMm/10;
-    ffprintf(ff,'Computer %s, %s, screen %d, %dx%d, %.1fx%.1f cm\n',cal.localHostName,cal.macModelName,cal.screen,RectWidth(screenRect),RectHeight(screenRect),screenWidthMm/10,screenHeightMm/10);
+    ffprintf(ff,'Computer %s, %s, screen %d, %dx%d, %.1fx%.1f cm\n',cal.localHostName,cal.macModelName,cal.screen,RectWidth(o.screenrect),RectHeight(o.screenrect),screenWidthMm/10,screenHeightMm/10);
     assert(cal.screenWidthCm == screenWidthMm/10);
     ffprintf(ff,'Computer account %s.\n',cal.processUserLongName);
     ffprintf(ff,'%s %s calibrated by %s on %s.\n',cal.localHostName,cal.macModelName,cal.calibratedBy,cal.datestr);
@@ -1728,14 +1768,15 @@ try
         Screen('FillRect',o.window,o.gray1);
         Screen('FillRect',o.window,o.gray,o.stimulusRect);
         Screen('Flip',o.window); % Screen is now all gray, at o.LBackground.
-        screenRect=Screen('Rect',o.window,1);
-        screenWidthPix=RectWidth(screenRect);
+        o.screenrect=Screen('Rect',o.window,1);
+        screenWidthPix=RectWidth(o.screenrect);
         o.pixPerCm=screenWidthPix/cal.screenWidthCm;
     else
-        screenRect=[0 0 1280 800];
-        screenWidthPix=RectWidth(screenRect);
+        o.screenrect=[0 0 1280 800];
+        screenWidthPix=RectWidth(o.screenrect);
         o.pixPerCm=screenWidthPix/33.1;
     end % if ~isempty(o.window)
+    [oo.screenrect]=deal(o.screenrect);
     degPerCm=57/o.viewingDistanceCm;
     o.pixPerDeg=o.pixPerCm/degPerCm;
     
@@ -1962,6 +2003,9 @@ try
     [oo.nearPointXYDeg]=deal(o.nearPointXYDeg);
     gapPix=round(o.gapFraction4afc*o.targetHeightPix);
     
+    %% Compute NPhoton
+    oo=ComputeNPhoton(oo);
+  
     %% SET NOISE PARAMETERS
     for oi=1:conditions
         oo(oi).targetWidthPix=oo(oi).targetHeightPix;
@@ -2642,7 +2686,7 @@ try
                 tGuess=log10(2*nominalAcuityDeg);
             case 'contrast'
                 oo(oi).thresholdPolarity=sign(oo(oi).contrast);
-                if ~isfinite(oo(oi).thresholdPolarity)
+                if isempty(oo(oi).thresholdPolarity) || ~isfinite(oo(oi).thresholdPolarity)
                     error('You must specify o.contrast to indicate + or - desired sign of contrast.');
                 end
             case 'flankerContrast'
@@ -3503,7 +3547,7 @@ try
                 textRect=OffsetRect(textRect,oo(oi).textSize/2,-oo(oi).textSize/2); % inset from screen edges
                 textRect=round(textRect);
                 bounds=Screen('TextBounds',oo(oi).window,message);
-                ratio=RectWidth(bounds)/(0.93*RectWidth(screenRect));
+                ratio=RectWidth(bounds)/(0.93*RectWidth(o.screenrect));
                 Screen('TextSize',oo(oi).window,floor(oo(oi).textSize/max([ratio factor])));
                 Screen('FillRect',oo(oi).window,oo(oi).gray1,bottomCaptionRect);
                 Screen('DrawText',oo(oi).window,message,textRect(1),textRect(4),black,oo(oi).gray1,1);
@@ -3514,7 +3558,7 @@ try
             if ~isempty(oo(oi).window)
                 switch oo(oi).task
                     case '4afc'
-                        leftEdgeOfResponse=screenRect(3);
+                        leftEdgeOfResponse=o.screenrect(3);
                     case {'identify' 'identifyAll'}
                         % Draw the response alternatives.
                         sz=size(oo(oi).signal(1).image);
@@ -3522,10 +3566,10 @@ try
                         rect=[0 0 oo(oi).targetWidthPix oo(oi).targetHeightPix]/oo(oi).targetCheckPix; % size of oo(oi).signal(1).image
                         switch oo(oi).alphabetPlacement
                             case 'right'
-                                desiredLengthPix=RectHeight(screenRect);
+                                desiredLengthPix=RectHeight(o.screenrect);
                                 targetChecks=RectHeight(rect);
                             case 'top'
-                                desiredLengthPix=0.5*RectWidth(screenRect);
+                                desiredLengthPix=0.5*RectWidth(o.screenrect);
                                 targetChecks=RectWidth(rect);
                         end
                         switch oo(oi).targetKind
@@ -3557,7 +3601,7 @@ try
                         useExpand=alphaCheckPix == round(alphaCheckPix);
                         rect=[0 0 oo(oi).targetWidthPix oo(oi).targetHeightPix]/oo(oi).targetCheckPix; % size of oo(oi).signal(1).image
                         rect=round(rect*alphaCheckPix);
-                        rect=AlignRect(rect,screenRect,RectRight,RectTop);
+                        rect=AlignRect(rect,o.screenrect,RectRight,RectTop);
                         rect=OffsetRect(rect,-alphaGapPix,alphaGapPix); % spacing
                         rect=round(rect);
                         switch oo(oi).alphabetPlacement
@@ -4106,7 +4150,7 @@ try
         %% PRINT BOLD SUMMARY OF CONDITION oi
         oo(oi).E=10^(2*oo(oi).questMean)*oo(oi).E1;
         if oi==1
-            ffprintf(ff,'/n');
+            ffprintf(ff,'\n');
         end
         msg=sprintf(['%d of %d. "%s". %d trials. %.0f%% right. '...
                     'Threshold log contrast %.2f',plusMinusChar,'%.2f (m',plusMinusChar,'sd),'],...
@@ -4314,7 +4358,7 @@ end % function o=NoiseDiscrimination(o)
 
 %% FUNCTION SaveSnapshot
 function o=SaveSnapshot(o)
-global fixationLines fixationCrossWeightPix labelBounds location screenRect ...
+global fixationLines fixationCrossWeightPix labelBounds location  ...
     tTest leftEdgeOfResponse cal ff whichSignal dataFid
 % Hasn't been tested since it became a subroutine. It may need more of its
 % variables to be declared "global". A more elegant solution, more
@@ -4338,11 +4382,11 @@ if o.cropSnapshot
         end
     end
 else
-    cropRect=screenRect;
+    cropRect=o.screenrect;
 end
 o.approxRequiredNumber=64/10^((tTest-o.idealT64)/0.55);
 rect=Screen('TextBounds',o.window,'approxRequiredNumber 0000');
-r=screenRect;
+r=o.screenrect;
 r(3)=leftEdgeOfResponse;
 r=InsetRect(r,o.textSize/2,o.textSize/2);
 rect=AlignRect(rect,r,RectRight,RectBottom);
@@ -4502,8 +4546,8 @@ cal.nFirst=o.firstGrayClutEntry;
 cal.nLast=o.lastGrayClutEntry;
 cal=LinearizeClut(cal);
 img=cal.nFirst:cal.nLast;
-n=floor(RectWidth(screenRect)/length(img));
-r=[0 0 n*length(img) RectHeight(screenRect)];
+n=floor(RectWidth(o.screenrect)/length(img));
+r=[0 0 n*length(img) RectHeight(o.screenrect)];
 Screen('LoadNormalizedGammaTable',o.window,cal.gamma,loadOnNextFlip);
 if o.assessLoadGamma
     ffprintf(ff,'Line %d: o.contrast %.3f, LoadNormalizedGammaTable 0.5*range/mean=%.3f\n', ...
@@ -4885,7 +4929,6 @@ end
 xyPix=xyPix+o.nearPointXYPix;
 end
 
-% THIS FUNCTION WORKS, BUT IS CURRENTLY UNUSED.
 function xyDeg=XYDegOfXYPix(o,xyPix)
 % Convert position from (x,y) coordinate in o.stimulusRect to deg (relative
 % to fixation). Deg increase right and up. Pix are in Apple screen
@@ -5229,8 +5272,8 @@ function [reply,o]=AskQuestion(oo,text)
 % optionally return "o" which is  possibly modified from the input o in
 % o.textSize o.quitExperiment o.quitBlock and o.skipTrial. If "text" has the
 % field text.setTextSizeToMakeThisLineFit then o.textSize is adjusted to
-% make the line fit horizontally within screenRect.
-global screenRect ff
+% make the line fit horizontally within o.screenrect.
+global  ff
 o=oo(1);
 if isempty(o.window)
     reply='';
@@ -5244,7 +5287,7 @@ ListenChar(2); % no echo
 Screen('FillRect',o.window,o.gray1);
 Screen('TextSize',o.window,o.textSize);
 Screen('TextFont',o.window,o.textFont,0);
-y=screenRect(4)/2-(1+2*length(text.big))*o.textSize;
+y=o.screenrect(4)/2-(1+2*length(text.big))*o.textSize;
 for i=1:length(text.big)
     Screen('DrawText',o.window,text.big{i},o.textMarginPix,y,black,o.gray1);
     y=y+2*o.textSize;
@@ -5253,7 +5296,7 @@ y=y-0.5*o.textSize;
 Screen('TextSize',o.window,round(0.6*o.textSize));
 Screen('DrawText',o.window,text.small,o.textMarginPix,y,black,o.gray1);
 Screen('TextSize',o.window,round(o.textSize*0.35));
-Screen('DrawText',o.window,text.fine,o.textMarginPix,screenRect(4)-0.5*o.textMarginPix,black,o.gray1,1);
+Screen('DrawText',o.window,text.fine,o.textMarginPix,o.screenrect(4)-0.5*o.textMarginPix,black,o.gray1,1);
 Screen('TextSize',o.window,o.textSize);
 if IsWindows
     background=[];
@@ -5261,7 +5304,7 @@ else
     background=o.gray1;
 end
 % fprintf('%d: o.deviceIndex %.0f.\n',MFileLineNr,o.deviceIndex);
-[reply,terminatorChar]=GetEchoString(o.window,text.question,o.textMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
+[reply,terminatorChar]=GetEchoString(o.window,text.question,o.textMarginPix,0.82*o.screenrect(4),black,background,1,o.deviceIndex);
 if ismember(terminatorChar,[escapeChar graveAccentChar])
     [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(o.window,oo,o.textMarginPix);
     if o.quitExperiment
@@ -5273,7 +5316,7 @@ if ismember(terminatorChar,[escapeChar graveAccentChar])
     end
 end
 Screen('FillRect',o.window,o.gray1);
-% Flip screen soon, to let observer know her answer was accepted.
+Screen('Flip',o.window); % Flip screen, to let observer know her answer was accepted.
 end % function AskQuestion
 
 function o=WaitUntilObserverIsReady(o,message)
