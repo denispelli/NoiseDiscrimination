@@ -1,5 +1,5 @@
 function oo=NoiseDiscrimination2(ooIn)
-% oo=NoiseDiscrimination(oo);
+% oo=NoiseDiscrimination2(oo);
 %
 % You can now pass an array of stucts, one struct per condition, and it
 % will run them all interleaved.
