@@ -1,4 +1,4 @@
-% EvsNRun.m
+% EvsNRun2.m
 % Measure E vs N for each of 3 conditions, with and
 % without noise. We expect linearity always.
 % April 5, 2018
@@ -13,14 +13,14 @@
 %% MAX SD OF EACH NOISE TYPE
 % With the same bound on range, we can reach 3.3 times higher noiseSd using
 % binary instead of gaussian noise. In the code below, we use steps of
-% 2^0.5=1.4, so i increase noiseSd by a factor of 2^1.5=2.8 when using
+% 2^0.5=1.4, so i increase max noiseSd by a factor of 2^1.5=2.8 when using
 % binary noise.
 sdOverBound.gaussian=0.43;
 sdOverBound.uniform=0.58;
 sdOverBound.binary=1.41;
 maxBound=0.37; % Rule of thumb based on experience with gaussian.
 maxSd=struct('gaussian',maxBound*sdOverBound.gaussian,'uniform',maxBound*sdOverBound.uniform,'binary',maxBound*sdOverBound.binary);
-% maxSd
+% % maxSd
 
 %% GET READY
 clear o oo
@@ -44,14 +44,14 @@ o.viewingDistanceCm=40;
 o.targetGaborCycles=3;
 o.pThreshold=0.75;
 o.useDynamicNoiseMovie=true;
-o.moviePreSec=0.2;
-o.moviePostSec=0.2;
+o.moviePreSecs=0.2;
+o.moviePostSecs=0.2;
 o.fixationCrossDeg=3;
 o.blankingRadiusReEccentricity=0;
 o.blankingRadiusReTargetHeight=0;
 o.targetMarkDeg=1;
 o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
-if 0
+if 1
     % Target letter
     o.targetKind='letter';
     o.font='Sloan';
@@ -62,6 +62,9 @@ else
     o.targetGaborOrientationsDeg=[0 45 90 135];
     o.targetGaborNames='1234';
     o.alphabet=o.targetGaborNames;
+o.targetGaborSpaceConstantCycles=inf; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
+% o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
+% o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
 end
 o.alternatives=length(o.alphabet);
 if false
@@ -76,33 +79,30 @@ if false
 end
 
 %% SPECIFY CONDITIONS IN oo STRUCT
-oo={};
+ooo={};
 % THREE DOMAINS: photon, cortical, ganglion
 for domain=0:3
     o.blankingRadiusReTargetHeight=nan;
     switch domain
         case 0
-            % photon, binary noise
+            % photon, gaussian noise
             o.conditionName='photon';
             o.eccentricityXYDeg=[0 0];
             o.targetCyclesPerDeg=4;
-            o.targetDurationSec=0.1;
+            o.targetDurationSecs=0.1;
             o.desiredLuminance=2.5; % cd/m^2
-            if 1
-                o.desiredLuminance=[];
-                %             o.desiredLuminanceFactor=[];
-                o.noiseCheckFrames=10;
-            end
+            o.desiredLuminanceFactor=[];
+            o.noiseCheckFrames=3;
             o.useFilter=true;
             o.fixationCrossWeightDeg=0.05; % Typically 0.03. Use 0.05 for scotopic testing.
             o.blankingRadiusReTargetHeight=3;
             o.noiseType='gaussian';
         case 1
-            % photon, gaussian noise
+            % photon, binary noise
             o.conditionName='photon';
             o.eccentricityXYDeg=[0 0];
             o.targetCyclesPerDeg=4;
-            o.targetDurationSec=0.1;
+            o.targetDurationSecs=0.1;
             o.desiredLuminance=2.5; % cd/m^2
             o.desiredLuminanceFactor=[];
             o.useFilter=true;
@@ -114,7 +114,7 @@ for domain=0:3
             o.conditionName='cortical';
             o.eccentricityXYDeg=[0 0];
             o.targetCyclesPerDeg=0.5;
-            o.targetDurationSec=0.4;
+            o.targetDurationSecs=0.4;
             o.desiredLuminance=[];
             o.desiredLuminanceFactor=1;
             o.useFilter=false;
@@ -126,7 +126,7 @@ for domain=0:3
             o.eccentricityXYDeg=[30 0];
             o.nearPointXYInUnitSquare=[0.80 0.5];
             o.targetCyclesPerDeg=0.5;
-            o.targetDurationSec=0.2;
+            o.targetDurationSecs=0.2;
             o.desiredLuminance=[];
             o.desiredLuminanceFactor=1;
             o.useFilter=false;
@@ -147,7 +147,7 @@ for domain=0:3
             maxNoiseSD=0.16*2^0.5;
             p2=0.5;
         case 'binary'
-            maxNoiseSD=0.16*2^2;
+            maxNoiseSD=0.16*2^2; % higher by 2^1.5
             p2=2;
     end
 %     for noiseSD=Shuffle([0 2.^(-4:1.5:p2)*0.16])
@@ -155,69 +155,73 @@ for domain=0:3
         o.noiseSD=noiseSD;
         o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
         o.noiseCheckDeg=o.targetHeightDeg/20;
-        oo{end+1}=o;
+        ooo{end+1}=o;
     end
 end
-for i=1:length(oo)
-    oo{i}.condition=i; % Number the conditions
+for i=1:length(ooo)
+    ooo{i}.condition=i; % Number the conditions
 end
 
 %% PRINT THE CONDITIONS (ONE PER ROW) AS TABLE TT.
 % All these vars must be defined in every condition.
 vars={'condition' 'experiment' 'conditionName' ...
     'useFilter' 'eccentricityXYDeg' ...
-    'targetDurationSec' 'targetHeightDeg' ...
+    'targetDurationSecs' 'targetHeightDeg' ...
     'targetCyclesPerDeg' 'targetGaborCycles' ...
     'noiseSD' 'noiseType' 'noiseCheckFrames'};
 tt=table;
-for i=1:length(oo)
-    t=struct2table(oo{i},'AsArray',true);
+for i=1:length(ooo)
+    t=struct2table(ooo{i},'AsArray',true);
     tt(i,:)=t(1,vars);
 end
 disp(tt) % Print list of conditions.
 
 %% RUN THE CONDITIONS.
-% oo=RunExperiment(oo);
-oo=[o o];
-oo(1).noiseSD=0.5;
-oo(1).noiseSD=0;
-oo=NoiseDiscrimination2(oo);
+ooo=RunExperiment2(ooo);
+% oo=[o o];
+% oo(1).noiseSD=0.5;
+% oo(1).noiseSD=0;
+% oo=NoiseDiscrimination2(oo);
 
 %% PRINT SUMMARY OF RESULTS AS TABLE TT.
 % Include whatever you're intersted in. We skip rows missing any value.
 vars={'condition' 'experiment' 'conditionName' ...
     'useFilter' 'luminanceAtEye' 'eccentricityXYDeg' ...
-    'targetDurationSec' 'targetCyclesPerDeg' ...
+    'targetDurationSecs' 'targetCyclesPerDeg' ...
     'targetHeightDeg' 'targetGaborCycles'  'noiseCheckFrames'...
     'noiseSD' 'N' 'noiseType' 'E' 'contrast' 'dataFilename' 'dataFolder'};
 tt=table;
-for i=1:length(oo)
-    % Grab the variables we want into a one-row table.
-    t=struct2table(oo{i},'AsArray',true);
+for i=1:length(ooo)
+    t=struct2table(ooo{i},'AsArray',true);
     % Skip empty rows.
     if ~all(ismember({'trials' 'contrast' 'transcript'},t.Properties.VariableNames)) || isempty(t.trials) || t.trials==0
         % Skip condition without data.
         continue
     end
-    % Check that all vars are present. Skip any incomplete condition after
-    % warning which fields were missing.
-    ok=ismember(vars,t.Properties.VariableNames);
-    if ~all(ok)
-        missing=join(vars(~ok),' ');
-        warning('Skipping incomplete condition %d, because it lacks: %s',i,missing{1});
-        continue
-    end
-    % Add the complete row to our table of completed conditions.
-    tt(end+1,:)=t(1,vars);
+    tt(end+1:end+height(t),:)=t(:,vars);
 end
+% for i=1:length(oo)
+%     % Grab the variables we want into a one-row table.
+%     t=struct2table(oo{i},'AsArray',true);
+%     % Check that all vars are present. Skip any incomplete condition after
+%     % warning which fields were missing.
+%     ok=ismember(vars,t.Properties.VariableNames);
+%     if ~all(ok)
+%         missing=join(vars(~ok),' ');
+%         warning('Skipping incomplete condition %d, because it lacks: %s',i,missing{1});
+%         continue
+%     end
+%     % Add the complete row to our table of completed conditions.
+%     tt(end+1,:)=t(1,vars);
+% end
 disp(tt) % Print summary.
 if isempty(tt)
     return
 end
 
 %% SAVE SUMMARY OF RESULTS OF EXPERIMENT.
-o=oo{1};
+o=ooo{1}(1);
 o.summaryFilename=[o.dataFilename '.summary'];
 writetable(tt,fullfile(o.dataFolder,[o.summaryFilename '.csv']));
-save(fullfile(o.dataFolder,[o.summaryFilename '.mat']),'tt','oo');
-fprintf('Experiment summary (with %d blocks) saved in data folder as "%s" with extensions ".csv" and ".mat".\n',length(oo),o.summaryFilename);
+save(fullfile(o.dataFolder,[o.summaryFilename '.mat']),'tt','ooo');
+fprintf('Experiment summary (with %d blocks) saved in data folder as "%s" with extensions ".csv" and ".mat".\n',length(ooo),o.summaryFilename);
