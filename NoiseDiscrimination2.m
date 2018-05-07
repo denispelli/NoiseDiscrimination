@@ -486,7 +486,7 @@ persistent oOld % Saved from previous block to skip prompts that were already an
 %% GLOBALS, FILES
 global fixationLines fixationCrossWeightPix labelBounds ...
      tTest leftEdgeOfResponse cal ...
-    ff whichSignal dataFid ...
+    ff whichSignal logFid ...
      signalImageIndex signalMask % for function ModelObserver
 % This list of global variables is shared only with the several subroutines
 % at the end of this file. The list may be incomplete as the new routines
@@ -1331,25 +1331,35 @@ try
     [oo.dataFolder]=deal(o.dataFolder);
     o.beginningTime=now;
     while 1
-        % If necessary, increment by 1 sec to find an unused file name, as
-        % many times as required.
+        % Find a unique time code, not already in use. Computers run trials
+        % quickly, and can generate a threshold in less than a second.
+        % Starting from the present time, keep incrementing by 1 sec until
+        % we find an unused file name.
         t=datevec(o.beginningTime);
-        o.dataFilename=sprintf('%s-%s.%d.%d.%d.%d.%d.%d',o.functionNames,o.observer,round(t));
-        dataFid=fopen(fullfile(o.dataFolder,[o.dataFilename '.txt']),'rt');
-        if dataFid==-1
-            break
+        oldFiles=dir(fullfile(o.dataFolder,sprintf('*NoiseDiscrimination*.%d.%d.%d.%d.%d.%d*',round(t))));
+        if isempty(oldFiles)
+            break;
         end
-        fclose(dataFid);
         o.beginningTime=o.beginningTime+1/24/60/60;
     end
     [oo.beginningTime]=deal(o.beginningTime);
-    [oo.dataFilename]=deal(o.dataFilename); % Later i'll add an index indicating which condition.
+    if conditions>1
+        for oi=1:conditions
+            oo(oi).dataFilename=sprintf('%s-%s-%s.%d.%d.%d.%d.%d.%d-%d',o.functionNames,o.observer,oo(oi).conditionName,round(t),oi);
+            % We have one common log for all the conditions.
+            oo(oi).logFilename=sprintf('%s-%s.%d.%d.%d.%d.%d.%d-%d',o.functionNames,o.observer,round(t),oi);
+        end
+    else
+        oo(1).dataFilename=sprintf('%s-%s-%s.%d.%d.%d.%d.%d.%d',o.functionNames,o.observer,oo(oi).conditionName,round(t));
+        oo(1).logFilename=oo(1).dataFilename;
+    end
+    o=oo(1);
     st=dbstack('-completenames',1);
     if ~isempty(st)
        for i=1:2
           o.scriptName=st(i).name; % Save name of calling script.
           o.script=fileread(st(i).file); % Save a copy of the calling script.
-          if ~streq(o.scriptName,'RunExperiment.m')
+          if ~ismember(o.scriptName,{'RunExperiment.m' 'RunExperiment2.m'})
              break
           end
        end
@@ -1359,20 +1369,23 @@ try
     end
     [oo.scriptName]=deal(o.scriptName);
     [oo.script]=deal(o.script);
-    dataFid=fopen(fullfile(o.dataFolder,[o.dataFilename '.txt']),'rt');
-    if dataFid ~= -1
-        error('Oops. There''s already a file called "%s.txt". Please tell Denis.',o.dataFilename);
+    logFid=fopen(fullfile(o.dataFolder,[o.logFilename '.txt']),'rt');
+    if logFid ~= -1
+        error('Oops. There''s already a file called "%s.txt". Please tell Denis.',o.logFilename);
     end
-    [dataFid,msg]=fopen(fullfile(o.dataFolder,[o.dataFilename '.txt']),'wt');
-    if dataFid == -1
-        error('%s. Could not create data file: %s',msg,[o.dataFilename '.txt']);
+    [logFid,msg]=fopen(fullfile(o.dataFolder,[o.logFilename '.txt']),'wt');
+    if logFid == -1
+        error('%s. Could not create log file: %s',msg,[o.logFilename '.txt']);
     end
-    assert(dataFid > -1);
-    ff=[1 dataFid];
-    fprintf('\nSaving results in two data files:\n');
+    assert(logFid > -1);
+    ff=[1 logFid];
+    fprintf('\nSaving results in log and data files:\n');
     ffprintf(ff,'%s\n',o.dataFilename);
-    ffprintf(ff,'%s %s\n',o.functionNames,datestr(now));
     ffprintf(ff,'observer %s, task %s, alternatives %d,  steepness %.1f,\n',o.observer,o.task,o.alternatives,o.steepness);
+    ffprintf(ff,'Experiment: %s. ',o.experiment);
+    ffprintf(ff,'%d conditions: ',conditions);
+    ffprintf(ff,'%s, ',{oo.conditionName});
+    ffprintf(ff,'\n');
     
     %% STIMULUS PARAMETERS
     for oi=1:conditions
@@ -4229,12 +4242,7 @@ try
         oo(oi).newCal=cal;
         [~,neworder]=sort(lower(fieldnames(oo(oi))));
         oo(oi)=orderfields(oo(oi),neworder);
-        if oi>1
-            filename=sprintf('%s-%d',oo(oi).dataFilename,oi);
-        else
-            filename=oo(oi).dataFilename;
-        end
-        save(fullfile(oo(oi).dataFolder,[filename '.mat']),'o','cal');
+        save(fullfile(oo(oi).dataFolder,[oo(oi).dataFilename '.mat']),'o','cal');
         try % save to .json file
             if streq(oo(oi).targetKind,'image')
                 % json encoding of 12 faces takes 60 s, which is
@@ -4250,7 +4258,7 @@ try
                 json=savejson('',o1);
             end
             clear o1
-            fid=fopen(fullfile(oo(oi).dataFolder,[filename '.json']),'w');
+            fid=fopen(fullfile(oo(oi).dataFolder,[oo(oi).dataFilename '.json']),'w');
             fprintf(fid,'%s',json);
             fclose(fid);
         catch e
@@ -4269,7 +4277,7 @@ try
                     addpath(fullfile(myPath,'lib/jsonlab'));
                     json=savejson('',oo(oi).transcript);
                 end
-                fid=fopen(fullfile(oo(oi).dataFolder,[filename '.transcript.json']),'w');
+                fid=fopen(fullfile(oo(oi).dataFolder,[oo(oi).dataFilename '.transcript.json']),'w');
                 fprintf(fid,'%s',json);
                 fclose(fid);
             end
@@ -4277,7 +4285,7 @@ try
             warning('Failed to save .transcript.json file.');
             warning(e.message);
         end % save transcript to .json file
-        fprintf('Results saved as %s with extensions .txt, .mat, and .json \nin the data folder: %s/\n\n',filename,oo(oi).dataFolder);
+        fprintf('Results saved as %s with extensions .txt, .mat, and .json \nin the data folder: %s/\n\n',oo(oi).dataFilename,oo(oi).dataFolder);
     end % for oi=1:conditions
 
     %% GOODBYE
@@ -4333,7 +4341,7 @@ try
         Screen('Preference','VisualDebugLevel',oldVisualDebugLevel);
         Screen('Preference','SuppressAllWarnings',oldSupressAllWarnings);
     end
-    fclose(dataFid); dataFid=-1;
+    fclose(logFid); logFid=-1;
     oOld.observer=oo(oi).observer;
     oOld.experimenter=oo(oi).experimenter;
     oOld.eyes=oo(oi).eyes;
@@ -4349,9 +4357,9 @@ catch e
         Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
     end
     AutoBrightness(cal.screen,1); % Restore autobrightness.
-    if dataFid>-1
-        fclose(dataFid);
-        dataFid=-1;
+    if logFid>-1
+        fclose(logFid);
+        logFid=-1;
     end
     % Sort field names.
     [~,neworder]=sort(lower(fieldnames(o)));
@@ -4364,7 +4372,7 @@ end % function o=NoiseDiscrimination(o)
 %% FUNCTION SaveSnapshot
 function o=SaveSnapshot(o)
 global fixationLines fixationCrossWeightPix labelBounds location  ...
-    tTest leftEdgeOfResponse cal ff whichSignal dataFid
+    tTest leftEdgeOfResponse cal ff whichSignal logFid
 % Hasn't been tested since it became a subroutine. It may need more of its
 % variables to be declared "global". A more elegant solution, more
 % transparent that "global" would be to put all the currently global
@@ -4519,8 +4527,8 @@ end
 o.trialsPerBlock=1;
 o.blocksDesired=1;
 ffprintf(ff,'SUCCESS: o.saveSnapshot is done. Image saved, now returning.\n');
-fclose(dataFid);
-dataFid=-1;
+fclose(logFid);
+logFid=-1;
 ListenChar;
 ShowCursor;
 sca; % screen close all
