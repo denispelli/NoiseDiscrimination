@@ -47,7 +47,7 @@ function oo=NoiseDiscrimination2(ooIn)
 %
 % Ragahavan & Pelli: Photon noise is NPhoton = phi^-1 q^-1 L^-1, where phi
 % is the transduction efficiency of (fraction of light required to account
-% for) the photon noise, qL  is luminance expressed as a quantal flux of
+% for) the photon noise, qL is luminance expressed as a quantal flux of
 % 555-nm photon deg-2 s-1, q = 1.26e6 deg^-2 s^-1 td^-1 is the conversion
 % factor, and L is retinal illuminance in td.
 % q=1.26e6;
@@ -724,11 +724,11 @@ o.maxViewingDistanceCm=nan;
 o.useFilter=false;
 o.filterTransmission=0.115; % our dark glasses.
 o.desiredRetinalIlluminanceTd=[];
-o.desiredLuminance=[];
-o.desiredLuminanceFactor=1;
-o.luminanceFactor=1; % For max brightness, set this to to 2, and o.symmetricLuminanceRange=false;
-o.LBackground = []; % Usually =o.luminanceFactor*mean([cal.LMin cal.LMax]);
-o.symmetricLuminanceRange=true; % For max brightness set this false and o.LuminanceFactor=2.
+o.desiredLuminanceAtEye=[];
+o.desiredLuminanceFactor=1; % Ratio of screen luminance LBackground to LStandard, middle of physically possible range.
+o.luminanceFactor=1; % For max brightness, set this to 1.9, and o.symmetricLuminanceRange=false;
+o.LBackground = []; % Equals o.luminanceFactor*mean([LMin LMax]);
+o.symmetricLuminanceRange=true; % For max brightness set this false and o.LuminanceFactor=1.9.
 o.luminanceAtEye=[];
 o.retinalIlluminanceTd=[];
 o.pupilDiameterMm=[];
@@ -1255,43 +1255,50 @@ try
     %% LUMINANCE
     % LStandard is the highest o.LBackground luminance at which we can
     % display a sinusoid at maximum contrast (nearly 1). I have done most
-    % of my experiments at that luminance. 
-    % THIS CODE ASSUMES THAT ALL INTERLEAVED CONDITIONS HAVE THE SAME 
-    % LUMINANCE AND:
-    % o.desiredLuminanceFactor, o.desiredLuminance, and
-    % o.desiredRetinalIlluminanceTd.
+    % of my experiments at that luminance. NoiseDiscrimination2 FORCES ALL
+    % INTERLEAVED CONDITIONS TO HAVE THE SAME LUMINANCE AND ASSUMES THEY
+    % HAVE SAME LUMINANCE SETTINGS, e.g. o.desiredLuminanceFactor,
+    % o.desiredLuminanceAtEye, and o.desiredRetinalIlluminanceTd.
     if ~all([oo.desiredLuminanceFactor]) && any([oo.desiredLuminanceFactor])...
-       || ~all([oo.desiredLuminance]) && any([oo.desiredLuminance])...
+       || ~all([oo.desiredLuminanceAtEye]) && any([oo.desiredLuminanceAtEye])...
        || ~all([oo.desiredRetinalIlluminanceTd]) && any([oo.desiredRetinalIlluminanceTd])
         error('All conditions must have the same luminance settings.');
     end
     o=oo(1);
     if exist('cal','var')
+        % The physical limits of the calibrated display.
         LMin=min(cal.old.L);
         LMax=max(cal.old.L);
     else
+        % This is arbitrary, for computational observers. We don't display
+        % this.
         LMin=0;
         LMax=200;
     end
     LStandard=mean([LMin LMax]);
-    if 1 ~= ~isempty(o.desiredRetinalIlluminanceTd)+~isempty(o.desiredLuminance)+~isempty(o.desiredLuminanceFactor)
+    if 1 ~= ~isempty(o.desiredRetinalIlluminanceTd)+~isempty(o.desiredLuminanceAtEye)+~isempty(o.desiredLuminanceFactor)
         error(['You must specify one and only one of o.desiredLuminanceFactor, '...
-            'o.desiredLuminance, and o.desiredRetinalIlluminanceTd. The rest should be empty []. '...
+            'o.desiredLuminanceAtEye, and o.desiredRetinalIlluminanceTd. The rest should be empty []. '...
             'The default is o.desiredLuminanceFactor=1']);
     end
-    if ~isempty(o.desiredLuminance)
-        o.luminanceFactor=o.desiredLuminance/(LStandard*o.filterTransmission);
+    if ~isempty(o.desiredLuminanceAtEye)
+        o.luminanceFactor=o.desiredLuminanceAtEye/(LStandard*o.filterTransmission);
     end
     if ~isempty(o.desiredLuminanceFactor)
         o.luminanceFactor=o.desiredLuminanceFactor;
     end
     if ~isempty(o.desiredRetinalIlluminanceTd)
         if isempty(o.pupilDiameterMm)
+            % Actually, I could compute an inverse to PupilDiameter(L), to
+            % solve for what luminance is required to attain the desired
+            % retinal illuminance. The caveat is that the formula is merely
+            % a population average, and individual observers may deviate
+            % from it.
             error(['When you request o.desiredRetinalIlluminanceTd, ' ...
                 'you must also specify o.pupilDiameterMm or an observer with known pupil size.']);
         end
-        % o.filterTransmission refers to optical neutral density filters or
-        % sunglasses.
+        % o.filterTransmission refers to an optical neutral density filter
+        % or sunglasses.
         % o.luminanceFactor refers to software attenuation of luminance
         % from the standard middle of attainable range.
         td=o.filterTransmission*LStandard*pi*o.pupilDiameterMm^2/4;
@@ -1299,7 +1306,7 @@ try
     end
     o.luminanceFactor=min([LMax/LStandard o.luminanceFactor]); % upper bound
     [oo.luminanceFactor]=deal(o.luminanceFactor);
-    o.LBackground=o.luminanceFactor*mean([LMin LMax]); 
+    o.LBackground=o.luminanceFactor*LStandard; 
     [oo.LBackground]=deal(o.LBackground);
     % Need screen geometry to compute screen area in deg^2, so we
     % call ComputeNPhoton after we set the near point.
@@ -1334,7 +1341,7 @@ try
         % Find a unique time code, not already in use. Computers run trials
         % quickly, and can generate a threshold in less than a second.
         % Starting from the present time, keep incrementing by 1 sec until
-        % we find an unused file name.
+        % we find an unused time code.
         t=datevec(o.beginningTime);
         oldFiles=dir(fullfile(o.dataFolder,sprintf('*NoiseDiscrimination*.%d.%d.%d.%d.%d.%d*',round(t))));
         if isempty(oldFiles)
@@ -1697,8 +1704,8 @@ try
         if exist('cal','var')
             LMin=min(cal.old.L);
             LMax=max(cal.old.L);
-            o.LBackground=o.luminanceFactor*mean([LMin LMax]); % Desired background luminance.
-            %          o.LBackground=o.LBackground*(1+(rand-0.5)/32); % Tiny jitter, ±1.5%
+            % o.LBackground=o.luminanceFactor*mean([LMin LMax]); % Already set above.
+            % o.LBackground=o.LBackground*(1+(rand-0.5)/32); % Tiny jitter, ±1.5%
             % First entry is black.
             cal.gamma(1,1:3)=0; % Black.
             % Second entry (CLUT entry 1) is o.gray1. We have two clut
@@ -1722,10 +1729,17 @@ try
             fprintf('o.gray1*o.maxEntry %.1f yields %.1f cd/m^2 vs. LBackground %.1f cd/m^2.\n',...
                 o.gray1*o.maxEntry,o.LBackground,L1);
             if false
-                % o.noiseListMin not yet defined.
+                % Can't use ComputeClut yet, because o.noiseListMin is not
+                % yet defined.
                 [cal,o]=ComputeClut(cal,o);
             else
-                % CLUT entries for stimulus.
+                % Devote most of the CLUT entries to the stimulus. This is
+                % a crummy CLUT for temporary use, before testing. It's
+                % linear, but it spans the display's entire range instead
+                % of optimizing resolution by spanning of the luminance
+                % range we need. We use it merely to show the right gray
+                % level as we ask the observer questions. This allows some
+                % light adaptation before the testing begins.
                 cal.LFirst=LMin;
                 if o.symmetricLuminanceRange
                     cal.LLast=o.LBackground+(o.LBackground-LMin); % Symmetric about o.LBackground.
@@ -1748,10 +1762,12 @@ try
                 end
                 oo(1).gray=IndexOfLuminance(cal,o.LBackground)/o.maxEntry;
                 if o.printGrayLuminance
-                    fprintf('%d: o.gray old vs new %.2f %.2f\n',MFileLineNr,oldGray,o.gray);
-                    fprintf('o.contrast %.2f, o.LBackground %.0f cd/m^2, cal.old.L(end) %.0f cd/m^2\n',o.contrast,o.LBackground,cal.old.L(end));
-                    fprintf('o.LBackground %.0f cd/m^2, cal.old.L(end) %.0f cd/m^2\n',o.LBackground,cal.old.L(end));
-                    fprintf('%d: o.maxEntry*[o.gray1 o.gray]=[%.1f %.1f]\n',...
+                    ffprintf(ff,'%d: o.gray old vs new %.2f %.2f\n',MFileLineNr,oldGray,o.gray);
+                    ffprintf(ff,'o.contrast %.2f, o.LBackground %.0f cd/m^2, cal.old.L(end) %.0f cd/m^2\n',o.contrast,o.LBackground,cal.old.L(end));
+                    ffprintf(ff,'o.LBackground %.0f cd/m^2, cal.old.L(end) %.0f cd/m^2\n',o.LBackground,cal.old.L(end));
+                    ffprintf(ff,'o.luminanceAtEye %.2f cd/m^2, o.filterTransmission %.3f, o.luminanceFactor %.2f\n',...
+                        o.luminanceAtEye,o.filterTransmission,o.luminanceFactor);
+                    ffprintf(ff,'%d: o.maxEntry*[o.gray1 o.gray]=[%.1f %.1f]\n',...
                         MFileLineNr,o.maxEntry*[o.gray1 o.gray]);
                     disp('cal.gamma(1+[o.gray1 o.gray]*o.maxEntry,:)');
                     disp(cal.gamma(1+[o.gray1 o.gray]*o.maxEntry,:));
@@ -1764,7 +1780,7 @@ try
             o=oo(1);
             Screen('LoadNormalizedGammaTable',o.window,cal.gamma,loadOnNextFlip);
             if o.assessLoadGamma
-                ffprintf(ff,'Line %d: o.contrast %.3f, LoadNormalizedGammaTable 0.5*range/mean=%.3f\n', ...
+                fffprintf(ff,ff,'Line %d: o.contrast %.3f, LoadNormalizedGammaTable 0.5*range/mean=%.3f\n', ...
                     MFileLineNr,o.contrast,(cal.LLast-cal.LFirst)/(cal.LLast+cal.LFirst));
             end
             Screen('FillRect',o.window,o.gray1);
@@ -1775,7 +1791,7 @@ try
         end % if exist('cal','var')
         Screen('Flip',o.window); % Load gamma table
         if ~isfinite(o.window) || o.window == 0
-            fprintf('error\n');
+            ffprintf(ff,'error\n');
             error('Screen OpenWindow failed. Please try again.');
         end
         black=0; % CLUT color code for black.
@@ -2222,13 +2238,18 @@ try
         end
         
         oo(oi).noiseListSd=std(noiseList);
-        % This code assumes that max luminance is 2*LBackground, but that may
-        % not be true. I sometimes make LBackground nearly equal to LMax, to
-        % maximize brightness, and sometimes makes it 0.1*LMax to produce a dim
-        % display. Also it currently uses the upper bound o.noiseListMax,
-        % and ignores the lower bound o.noiseListMin. That's ok for now
-        % because the three allowed noise types, at the moment, have symmetric
-        % bounds.
+        % This bit of code, preparing the noise list, assumes that the
+        % background is half the max possible luminance,
+        % LBackground=0.5*LMax, but that is not always true. E.g. when
+        % testing faces we make LBackground nearly equal to LMax, to
+        % maximize brightness, and to test low luminances we sometimes set
+        % LBackground=0.1*LMax to produce a dim display. Also this code
+        % currently uses the upper bound o.noiseListMax, and ignores the
+        % lower bound o.noiseListMin. That's ok for now because the three
+        % allowed noise types, at the moment, have symmetric bounds. I
+        % think, but haven't double-checked, that ComputeClut is more
+        % rigorous, and merely assumes that the background does not exceed
+        % the max possible, LBackground<=LMax.
         a=0.9*oo(oi).noiseListSd/oo(oi).noiseListMax; % Max possible noiseSD, leaving a bit of range for signal.
         if oo(oi).noiseSD > a
             ffprintf(ff,'WARNING: Requested o.noiseSD %.2f too high. Reduced to %.2f\n',oo(oi).noiseSD,a);
@@ -2552,8 +2573,6 @@ try
         
         % Compute o.signalIsBinary, o.signalMin, o.signalMax.
         % Image will be (o.contrast*o.signal+1)*o.LBackground.
-        fprintf('%d: Compute o.signalMin etc. ',MFileLineNr);
-        tic;
         v=[];
         for i=1:oo(oi).alternatives
             img=oo(oi).signal(i).image;
@@ -2562,8 +2581,6 @@ try
         oo(oi).signalIsBinary=all(ismember(v,[0 1]));
         oo(oi).signalMin=min(v);
         oo(oi).signalMax=max(v);
-        toc
-        fprintf('%d: o.signalMin %.2f, o.signalMax %.2f\n',MFileLineNr,oo(oi).signalMin,oo(oi).signalMax);
         
         Screen('Preference','TextAntiAliasing',1);
         
@@ -3571,7 +3588,7 @@ try
                 Screen('FillRect',oo(oi).window,oo(oi).gray1,bottomCaptionRect);
                 Screen('DrawText',oo(oi).window,message,textRect(1),textRect(4),black,oo(oi).gray1,1);
                 Screen('TextSize',oo(oi).window,oo(oi).textSize);
-            end
+            end % if ~ismember(observer,algorithmicObservers);
             
             %% DISPLAY RESPONSE ALTERNATIVES
             if ~isempty(oo(oi).window)
@@ -5191,19 +5208,24 @@ else
 end
 end % function SetUpFixation
 
-
+%% COMPUTE CLUT
 function [cal,o]=ComputeClut(cal,o)
-% Set up luminance range that allows for superposition of noise on target
-% and on flanker. (We assume flanker does not overlap target.) If the noise
-% in fact does not superimpose target or flanker then this range may be
-% broader than strictly necessary.
-% We know that:
+% Set up luminance range that maximizes CLUT resolution over the range we
+% need, allowing for superposition of noise on target and on flanker. (We
+% assume flanker does not overlap target.) If the noise in fact does not
+% superimpose target or flanker then this range may be broader than
+% strictly necessary.
+% We assume that:
 % o.noiseListMin<=0
 % o.noiseListMax>=0
 % o.r>=1
 % o.noiseSD>=0
 % o.noiseListSd>0;
 % o.LBackground>0;
+% LFirst and LLast are the min and max of the luminance range that the CLUT
+% will support. We make this range just big enough to include all the
+% luminances our signal in noise may need, using the known min and max of
+% the signal and noise.
 cal.LFirst=o.LBackground*(1+o.noiseListMin*o.r*o.noiseSD/o.noiseListSd);
 cal.LLast=o.LBackground*(1+o.noiseListMax*o.r*o.noiseSD/o.noiseListSd);
 if ~o.useFlankers
