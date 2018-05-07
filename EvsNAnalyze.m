@@ -173,21 +173,21 @@ lgd.FontSize=fontSize;
 legend('boxoff');
 oo=ComputeNPhoton(oo);
 caption={};
-caption{1}=sprintf('experimenter %s, observer %s, log NPhoton %.1f', ...
-    oo(1).experimenter,oo(1).observer,log10(oo(1).NPhoton));
+caption{1}=sprintf('experimenter %s, observer %s', ...
+    oo(1).experimenter,oo(1).observer);
 caption{2}=sprintf('noiseSD<=%.2f, noiseCheckDeg %.3f, noiseType %s', ...
     max([oo.noiseSD]),oo(1).noiseCheckDeg,oo(1).noiseType);
-caption{3}=sprintf('%s, eyes %s, %.0f cd/m^2, ecc. [%.0f %.0f] deg, %.1f s, %.1f c/deg', ...
-    oo(1).targetKind,oo(1).eyes,oo(1).LBackground,oo(1).eccentricityXYDeg,...
-    oo(1).targetDurationSec,oo(1).targetCyclesPerDeg);
+caption{3}=sprintf('eyes %s, %.1f cd/m^2, %.0f td, log NPhoton %.1f', ...
+    oo(1).eyes,oo(1).luminanceAtEye,oo(1).retinalIlluminanceTd,log10(oo(1).NPhoton));
+caption{4}=sprintf('ecc. [%.0f %.0f] deg, %.1f s, %s, %.1f c/deg',...
+    oo(1).eccentricityXYDeg,oo(1).targetDurationSec,oo(1).targetKind,oo(1).targetCyclesPerDeg);
 text(0.02,.02,caption,'Units','normalized','FontSize',fontSize,'VerticalAlignment','bottom');
-
-% Set lower Y limit to E0/20. This leaves room for the "caption" text at
+% Set lower Y limit to E0/40. This leaves room for the "caption" text at
 % bottom of graph. If necessary, expand Y range to 3 log units.
 logUnits=3;
 ax=gca;
 yLimits=ax.YLim;
-yLimits(1)=E0/20;
+yLimits(1)=E0/40;
 r=diff(log10(yLimits)); % Number of log units
 if logUnits>r
    yLimits(2)=yLimits(2)*10^(logUnits-r);
