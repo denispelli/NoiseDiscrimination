@@ -20,7 +20,7 @@
 % params.ecc=logspace(-2,2);
 % params.component='photon'; NeqPhoton=equivalentNoise(params);
 
-function Neq=equivalentNoise(s)
+function Neq=EquivalentNoiseModel(s)
     % Constants from Watson, 2014 
     ak = [0.9851 0.9935 0.9729 0.996];
     r2k = [1.058 1.035 1.084 0.9932];
