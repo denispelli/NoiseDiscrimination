@@ -8,10 +8,11 @@ addpath(fullfile(myPath,'lib')); % Folder in same directory as this M file.
 experiment='EvsN';
 dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
 cd(dataFolder);
-matFiles=dir(fullfile(dataFolder,[experiment 'Run-NoiseDiscrimination*.mat']));
+matFiles=dir(fullfile(dataFolder,[experiment '*-NoiseDiscrimination*.mat']));
 close all
 % experiment={};
 oo=[];
+clear Plot % To clear the persistent variables in the subroutine below.
 for i=1:length(matFiles) % One threshold file per iteration.
     % Extract the desired fields into "oo", one cell-row per threshold.
     d=load(matFiles(i).name);
@@ -19,6 +20,7 @@ for i=1:length(matFiles) % One threshold file per iteration.
         % Skip summary files.
         continue
     end
+    o=struct;
     for field={'condition' 'conditionName' 'experiment' 'dataFilename' ...
             'experimenter' 'observer' 'trials' ...
             'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' ...
@@ -26,7 +28,7 @@ for i=1:length(matFiles) % One threshold file per iteration.
             'targetCheckDeg' 'fullResolutionTarget' ...
             'noiseType' 'noiseSD'  'noiseCheckDeg' ...
             'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
-            'contrast' 'E' 'N' 'LBackground' 'retinalIlluminanceTd' 'pupilDiameterMm' 'NPhoton'}
+            'contrast' 'E' 'N' 'LBackground' 'luminanceAtEye' 'luminanceFactor' 'filterTransmission' 'useFilter' 'retinalIlluminanceTd' 'pupilDiameterMm' 'NPhoton' 'pixPerCm' 'screenRect' 'nearPointXYPix'}
         if isfield(d.o,field{:})
             o.(field{:})=d.o.(field{:});
         else
@@ -47,7 +49,10 @@ if any([oo.trials]<40)
     s=[s sprintf(' %d(%d),',oo([oo.trials]<40).condition,oo([oo.trials]<40).trials)];
     warning('Discarding %d threshold(s) with fewer than 40 trials: %s',sum([oo.trials]<40),s);
 end
-oo = oo([oo.trials]>=40); % Discard thresholds with less than 40 trials.
+oo = oo([oo.trials]>=40); % Discard thresholds with fewer than 40 trials.
+t=struct2table(oo);
+t(:,{'dataFilename','conditionName','observer','luminanceAtEye' 'LBackground','filterTransmission','useFilter','luminanceFactor'})
+return
 fprintf('Plotting %d thresholds.\n',length(oo));
 for observer=unique({oo.observer})
     isObserver=ismember({oo.observer},observer);
@@ -65,7 +70,6 @@ for observer=unique({oo.observer})
         end
     end
 end
-return
 
 function Plot(oo,subplots,subplotIndex)
 persistent previousObserver figureHandle overPlots figureTitle axisHandle
