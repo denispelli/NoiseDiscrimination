@@ -133,7 +133,7 @@ if o.plotSteepness
    xlim([0.01 1]); ylim([0 1]);
    set(gca,'FontSize',12);
    noteString{1}=sprintf('%s: %s %.1f c/deg, ecc %.0f deg, %.1f s\n%.0f cd/m^2, eyes %s',...
-      o.conditionName,o.targetKind,o.targetCyclesPerDeg,o.eccentricityXYDeg(1),o.targetDurationSec,o.LBackground,o.eyes);
+      o.conditionName,o.targetKind,o.targetCyclesPerDeg,o.eccentricityXYDeg(1),o.targetDurationSecs,o.LBackground,o.eyes);
    noteString{2}=sprintf('%8s %7s %5s %9s %6s %5s %6s','observer','noiseSD','log c','steepness','guessing','lapse','trials');
    noteString{end+1}=sprintf('%-8s %7.2f %5.2f %9.1f %8.2f %5.2f %6d', ...
       o.observer,o.noiseSD,log10(o.contrast),o.steepness,o.guessing,o.lapse,o.trials);
