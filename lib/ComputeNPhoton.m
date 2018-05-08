@@ -1,13 +1,10 @@
 function oo=ComputeNPhoton(oo)
 o=oo(1);
-if ~isfield(o,'luminanceFactor')
-    [oo.luminanceFactor]=deal(1);
-end
 if ~isfield(o,'filterTransmission')
     [oo.filterTransmission]=deal(1);
 end
 o=oo(1);
-o.luminanceAtEye=o.luminanceFactor*o.filterTransmission*o.LBackground;
+o.luminanceAtEye=o.filterTransmission*o.LBackground;
 switch o.eyes
     case {'left' 'right'}
         e=1;
