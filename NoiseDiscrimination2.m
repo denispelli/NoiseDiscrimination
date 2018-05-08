@@ -586,7 +586,6 @@ o.observer=''; % Name of person or algorithm.
 o.algorithmicObservers={'ideal', 'brightnessSeeker', 'blackshot', 'maximum'};
 o.experimenter='';
 o.eyes='both'; % 'left', 'right', 'both', or 'one', which asks user to specify at runtime.
-o.luminanceTransmission=1; % Less than one for dark glasses or neutral density filter.
 o.trialsPerBlock=40; % Typically 40.
 o.trials=0; % Initialize trial counter so it's defined even if user quits early.
 o.blockNumber=1; % For display only, indicate the block number. When o.blockNumber==blocksDesired this program says "Congratulations" before returning.
@@ -722,12 +721,12 @@ o.newClutForEachImage=true;
 o.minScreenWidthDeg=nan;
 o.maxViewingDistanceCm=nan;
 o.useFilter=false;
-o.filterTransmission=0.115; % our dark glasses.
+o.filterTransmission=0.115; % Less than one for dark glasses or neutral density filter. 0.115 for our dark glasses.
 o.desiredRetinalIlluminanceTd=[];
 o.desiredLuminanceAtEye=[];
 o.desiredLuminanceFactor=1; % Ratio of screen luminance LBackground to LStandard, middle of physically possible range.
 o.luminanceFactor=1; % For max brightness, set this to 1.9, and o.symmetricLuminanceRange=false;
-o.LBackground = []; % Equals o.luminanceFactor*mean([LMin LMax]);
+o.LBackground = []; % Will be set to o.luminanceFactor*mean([LMin LMax]);
 o.symmetricLuminanceRange=true; % For max brightness set this false and o.LuminanceFactor=1.9.
 o.luminanceAtEye=[];
 o.retinalIlluminanceTd=[];
@@ -1254,7 +1253,7 @@ try
     
     %% LUMINANCE
     % LStandard is the highest o.LBackground luminance at which we can
-    % display a sinusoid at maximum contrast (nearly 1). I have done most
+    % display a sinusoid at a contrast of nearly 100%. I have done most
     % of my experiments at that luminance. NoiseDiscrimination2 FORCES ALL
     % INTERLEAVED CONDITIONS TO HAVE THE SAME LUMINANCE AND ASSUMES THEY
     % HAVE SAME LUMINANCE SETTINGS, e.g. o.desiredLuminanceFactor,
@@ -2238,18 +2237,20 @@ try
         end
         
         oo(oi).noiseListSd=std(noiseList);
-        % This bit of code, preparing the noise list, assumes that the
-        % background is half the max possible luminance,
-        % LBackground=0.5*LMax, but that is not always true. E.g. when
-        % testing faces we make LBackground nearly equal to LMax, to
-        % maximize brightness, and to test low luminances we sometimes set
-        % LBackground=0.1*LMax to produce a dim display. Also this code
-        % currently uses the upper bound o.noiseListMax, and ignores the
-        % lower bound o.noiseListMin. That's ok for now because the three
-        % allowed noise types, at the moment, have symmetric bounds. I
-        % think, but haven't double-checked, that ComputeClut is more
-        % rigorous, and merely assumes that the background does not exceed
-        % the max possible, LBackground<=LMax.
+        % This safety check should be updated to check more rigorously. As
+        % set above, o.LBackground=o.luminanceFactor*mean([LMin LMax]).
+        % This (old) bit of code, which is just a safety check of the noise
+        % list, assumes that the luminanceFactor=1, but that is not always
+        % true. E.g. when testing faces we use a luminanceFactor=2 to make
+        % LBackground nearly equal to LMax, to maximize brightness, and to
+        % test low luminances we sometimes set luminanceFactor=0.1 to
+        % produce a dim display. Also this code currently uses the upper
+        % bound o.noiseListMax, and ignores the lower bound o.noiseListMin.
+        % That's ok for now because the three allowed noise types, at the
+        % moment, have symmetric bounds. I think, but haven't
+        % double-checked, that ComputeClut is more rigorous, and merely
+        % assumes that the background does not exceed the max possible,
+        % LBackground<=LMax.
         a=0.9*oo(oi).noiseListSd/oo(oi).noiseListMax; % Max possible noiseSD, leaving a bit of range for signal.
         if oo(oi).noiseSD > a
             ffprintf(ff,'WARNING: Requested o.noiseSD %.2f too high. Reduced to %.2f\n',oo(oi).noiseSD,a);
