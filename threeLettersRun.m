@@ -44,7 +44,7 @@ o.eccentricityXYDeg=[0,15];
 o.flankerSpacingDeg=3;
 o.targetHeightDeg=2;
 o.noiseCheckDeg=o.targetHeightDeg/20;
-o.targetDurationSec=0.2;
+o.targetDurationSecs=0.2;
 o.eyes='both';
 o.contrast=-0.16;
 o.flankerContrast=-1; % Negative for dark letters.
@@ -64,8 +64,8 @@ end
 o.fixationCrossWeightDeg=0.09;
 o.blankingRadiusReEccentricity=0; % No blanking.
 o.blankingRadiusReTargetHeight=0;
-o.moviePreSec=0.2;
-o.moviePostSec=0.2;
+o.moviePreSecs=0.2;
+o.moviePostSecs=0.2;
 o.targetMarkDeg=2;
 o.fixationCrossDeg=3;
 if true
@@ -158,7 +158,7 @@ disp(tt) % Print the oo list of conditions.
 
 %% RUN THE CONDITIONS
 if ~skipDataCollection
-    oo=RunExperiment(oo);
+    oo=RunExperiment2(oo);
 end % if ~skipDataCollection
 
 %% PRINT SUMMARY OF RESULTS AS TABLE TT
