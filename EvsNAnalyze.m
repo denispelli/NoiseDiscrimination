@@ -50,9 +50,15 @@ if any([oo.trials]<40)
     warning('Discarding %d threshold(s) with fewer than 40 trials: %s',sum([oo.trials]<40),s);
 end
 oo = oo([oo.trials]>=40); % Discard thresholds with fewer than 40 trials.
+
+% Report the luminance fields of each file.
 t=struct2table(oo);
 t(:,{'dataFilename','conditionName','observer','luminanceAtEye' 'LBackground','filterTransmission','useFilter','luminanceFactor'})
-return
+fprintf('Unique o.luminanceAtEye: ');
+u=unique(t.luminanceAtEye);
+fprintf('%.0f, ',u);
+fprintf('\n');
+
 fprintf('Plotting %d thresholds.\n',length(oo));
 for observer=unique({oo.observer})
     isObserver=ismember({oo.observer},observer);
@@ -70,6 +76,7 @@ for observer=unique({oo.observer})
         end
     end
 end
+return
 
 function Plot(oo,subplots,subplotIndex)
 persistent previousObserver figureHandle overPlots figureTitle axisHandle
@@ -95,16 +102,16 @@ end
 if axisHandle(subplotIndex)==0
     % subplot(m,n,p) makes it easy to show several related graphs in one
     % figure window. Calling subplot(m,n,p) for an existing axis object
-    % seems erases it. So, when we first select that figure panel, we save
-    % a handle to it, which we later use to select the panel by calling
-    % subplot(handle), without calling subplot(m,n,p) again.
+    % seems to erase it. So, when we first select that figure panel, we
+    % save a handle to it, which we later reuse to select the panel by
+    % calling subplot(handle), without calling subplot(m,n,p) again.
     axisHandle(subplotIndex)=subplot(subplots(1),subplots(2),subplotIndex);
 else
     hold(axisHandle(subplotIndex),'on');
     subplot(axisHandle(subplotIndex));
 end
 
-% Sort by noise N. In case we connect the dots.
+% Sort by noise N. So it'll look pretty if we later connect the dots.
 [~,ii]=sort([oo.N]);
 oo=oo(ii);
 
@@ -120,7 +127,7 @@ end
 
 %% Create CSV file
 vars={'condition' 'experiment' 'conditionName' ...
-    'experimenter' 'observer' 'trials' 'contrast' 'E' 'N' ...
+    'experimenter' 'observer' 'trials' 'contrast' 'luminanceAtEye' 'E' 'N' ...
     'targetKind' 'targetCyclesPerDeg'  'targetHeightDeg'  'targetDurationSec' ...
     'noiseType' 'noiseSD'  'noiseCheckDeg' ...
     'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
