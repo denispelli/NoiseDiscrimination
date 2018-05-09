@@ -143,6 +143,7 @@ if blocksDone>0
     fprintf('Saved the experiment (%d of %d blocks done) in %s in data folder.\n',...
         blocksDone,length(ooo),experimentFilename);
 end
+sca; % Restore cursor.
 end % function
 
 %% CLEANUP WHEN RunExperiment TERMINATES.
