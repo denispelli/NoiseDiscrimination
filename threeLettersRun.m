@@ -97,6 +97,7 @@ o.thresholdParameter='contrast';
 
 %% PUT THE EXPERIMENT'S CONDITIONS IN STRUCT oo
 oo={};
+
 if true
     o.contrast=-0.15;
     o.trialsPerBlock=300;
