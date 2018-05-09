@@ -97,15 +97,19 @@ o.thresholdParameter='contrast';
 
 %% PUT THE EXPERIMENT'S CONDITIONS IN STRUCT oo
 oo={};
-if false
-    o.conditionName='Target letter, fixed contrast';
-    o.trialsPerBlock=50;
-    o.constantStimuli=[-0.30];
+if true
+    o.contrast=-0.15;
+    o.trialsPerBlock=300;
+    o.constantStimuli=-10 .^ (-1.1:0.05:-0.6);
     o.useMethodOfConstantStimuli=true;
+    o.conditionName='various flanker contrasts';
+    o.useFlankers=true;
+    o.thresholdParameter='flankerContrast';
+    o.task='identifyAll';
     oo{end+1}=o;
 end
 o.useMethodOfConstantStimuli=false;
-if true
+if false
     o.conditionName='Threshold contrast';
     o.trialsPerBlock=40;
     o.useFlankers=false;
@@ -114,7 +118,7 @@ if true
     o.noiseSD=0;
     oo{end+1}=o;
 end
-if true
+if false
     o.conditionName='Threshold contrast of crowding';
     o.trialsPerBlock=300;
     o.useFlankers=true;
