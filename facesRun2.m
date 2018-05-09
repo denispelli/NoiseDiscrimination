@@ -1,5 +1,5 @@
 % facesRun2.m
-% May 6, 2018
+% May 9, 2018
 % Denis Pelli
 
 %% GET READY
@@ -14,7 +14,7 @@ if o.questPlusEnable && ~exist('qpInitialize','file')
 end
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % Folder in same directory as this M file.
 cal=OurScreenCalibrations(0);
-o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 % o.printImageStatistics=true;
 
 %% SPECIFY BASIC CONDITION
