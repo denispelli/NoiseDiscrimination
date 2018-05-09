@@ -3,6 +3,10 @@
 % "cal", but Veena's data have "oo". Is "oo" saved by EvsNRun? Looking at
 % EvsNRun, I see it saves "oo" and "cal" in a *summary.MAT file, but Veena
 % doesn't seem to have such files.
+global printConditions
+printConditions=false;
+printFilenames=true;
+plotGraphs=true;
 myPath=fileparts(mfilename('fullpath')); % Takes 0.1 s.
 addpath(fullfile(myPath,'lib')); % Folder in same directory as this M file.
 experiment='EvsN';
@@ -20,17 +24,39 @@ for i=1:length(matFiles) % One threshold file per iteration.
         % Skip summary files.
         continue
     end
-    o=struct;
-    for field={'condition' 'conditionName' 'experiment' 'dataFilename' ...
+    usesSecsPlural=contains(matFiles(i).name,'NoiseDiscrimination2');
+    if usesSecsPlural
+        vars={'condition' 'conditionName' 'experiment' 'dataFilename' ...
             'experimenter' 'observer' 'trials' ...
             'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' ...
-            'targetHeightDeg' 'targetDurationSec' 'targetDurationSecMean'...
+            'targetHeightDeg' 'targetDurationSecs' 'targetDurationSecsMean' 'targetDurationSecsSD'...
             'targetCheckDeg' 'fullResolutionTarget' ...
             'noiseType' 'noiseSD'  'noiseCheckDeg' ...
             'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
-            'contrast' 'E' 'N' 'LBackground' 'luminanceAtEye' 'luminanceFactor' 'filterTransmission' 'useFilter' 'retinalIlluminanceTd' 'pupilDiameterMm' 'NPhoton' 'pixPerCm' 'screenRect' 'nearPointXYPix'}
-        if isfield(d.o,field{:})
-            o.(field{:})=d.o.(field{:});
+            'contrast' 'E' 'N' 'LBackground' 'luminanceAtEye' 'luminanceFactor'...
+            'filterTransmission' 'useFilter' 'retinalIlluminanceTd' 'pupilDiameterMm'...
+            'pixPerCm' 'screenRect' 'nearPointXYPix'};
+    else
+        vars={'condition' 'conditionName' 'experiment' 'dataFilename' ...
+            'experimenter' 'observer' 'trials' ...
+            'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' ...
+            'targetHeightDeg' 'targetDurationSec' 'targetDurationSecMean' 'targetDurationSecSD'...
+            'targetCheckDeg' 'fullResolutionTarget' ...
+            'noiseType' 'noiseSD'  'noiseCheckDeg' ...
+            'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
+            'contrast' 'E' 'N' 'LBackground' 'luminanceAtEye' 'luminanceFactor'...
+            'filterTransmission' 'useFilter' 'retinalIlluminanceTd' 'pupilDiameterMm'...
+            'pixPerCm' 'nearPointXYPix'};
+    end
+    o=struct;
+    for field=vars
+        if isfield(d.o,field{1})
+            if usesSecsPlural
+                newField=field{1};
+            else
+                newField=strrep(field{1},'Sec','Secs');
+            end
+            o.(newField)=d.o.(field{1});
         else
             if i==1
                 warning OFF BACKTRACE
@@ -51,27 +77,33 @@ if any([oo.trials]<40)
 end
 oo = oo([oo.trials]>=40); % Discard thresholds with fewer than 40 trials.
 
+oo=ComputeNPhoton(oo);
+
 % Report the luminance fields of each file.
 t=struct2table(oo);
-t(:,{'dataFilename','conditionName','observer','luminanceAtEye' 'LBackground','filterTransmission','useFilter','luminanceFactor'})
+if printFilenames
+    t(:,{'dataFilename','conditionName','observer','LBackground','filterTransmission','useFilter' 'luminanceFactor' 'luminanceAtEye' 'A' 'targetDurationSecs' 'LAT'})
+end
 fprintf('Unique o.luminanceAtEye: ');
 u=unique(t.luminanceAtEye);
 fprintf('%.0f, ',u);
 fprintf('\n');
 
-fprintf('Plotting %d thresholds.\n',length(oo));
-for observer=unique({oo.observer})
-    isObserver=ismember({oo.observer},observer);
-    for conditionName=unique({oo.conditionName})
-        isConditionName=ismember({oo.conditionName},conditionName);
-        for noiseType=unique({oo.noiseType})
-            isNoiseType=ismember({oo.noiseType},noiseType);
-            which=isObserver & isConditionName & isNoiseType;
-            if sum(which)>0
-                fprintf('%s-%s-%s: %d thresholds.\n',observer{1},conditionName{1},noiseType{1},sum(which));
-                subplots=[1 length(unique({oo.conditionName}))];
-                [~,subplotIndex]=ismember(conditionName,unique({oo.conditionName}));
-                Plot(oo(which),subplots,subplotIndex);
+if plotGraphs
+    fprintf('Plotting %d thresholds.\n',length(oo));
+    for observer=unique({oo.observer})
+        isObserver=ismember({oo.observer},observer);
+        for conditionName=unique({oo.conditionName})
+            isConditionName=ismember({oo.conditionName},conditionName);
+            for noiseType=unique({oo.noiseType})
+                isNoiseType=ismember({oo.noiseType},noiseType);
+                which=isObserver & isConditionName & isNoiseType;
+                if sum(which)>0
+                    fprintf('%s-%s-%s: %d thresholds.\n',observer{1},conditionName{1},noiseType{1},sum(which));
+                    subplots=[1 length(unique({oo.conditionName}))];
+                    [~,subplotIndex]=ismember(conditionName,unique({oo.conditionName}));
+                    Plot(oo(which),subplots,subplotIndex);
+                end
             end
         end
     end
@@ -79,6 +111,7 @@ end
 return
 
 function Plot(oo,subplots,subplotIndex)
+global printConditions
 persistent previousObserver figureHandle overPlots figureTitle axisHandle
 if isempty(oo)
     return
@@ -128,14 +161,16 @@ end
 %% Create CSV file
 vars={'condition' 'experiment' 'conditionName' ...
     'experimenter' 'observer' 'trials' 'contrast' 'luminanceAtEye' 'E' 'N' ...
-    'targetKind' 'targetCyclesPerDeg'  'targetHeightDeg'  'targetDurationSec' ...
+    'targetKind' 'targetCyclesPerDeg'  'targetHeightDeg'  'targetDurationSecs' ...
     'noiseType' 'noiseSD'  'noiseCheckDeg' ...
     'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
     'LBackground'  'dataFilename'};
 t=struct2table(oo);
 spreadsheet=fullfile(fileparts(mfilename('fullpath')),'data',[oo(1).experiment '.csv']);
 % writetable(t,spreadsheet);
-disp(t(:,vars));
+if printConditions
+    disp(t(:,vars));
+end
 fprintf('All selected fields have been saved in spreadsheet: /data/%s.csv\n',oo(1).experiment);
 
 %% Plot
@@ -184,14 +219,14 @@ lgd.FontSize=fontSize;
 legend('boxoff');
 oo=ComputeNPhoton(oo);
 caption={};
-caption{1}=sprintf('experimenter %s, observer %s', ...
-    oo(1).experimenter,oo(1).observer);
+caption{1}=sprintf('experimenter %s, observer %s, eyes %s', ...
+    oo(1).experimenter,oo(1).observer,oo(1).eyes);
 caption{2}=sprintf('noiseSD<=%.2f, noiseCheckDeg %.3f, noiseType %s', ...
     max([oo.noiseSD]),oo(1).noiseCheckDeg,oo(1).noiseType);
-caption{3}=sprintf('eyes %s, %.1f cd/m^2, %.0f td, log NPhoton %.1f', ...
-    oo(1).eyes,oo(1).luminanceAtEye,oo(1).retinalIlluminanceTd,log10(oo(1).NPhoton));
-caption{4}=sprintf('ecc. [%.0f %.0f] deg, %.1f s, %s, %.1f c/deg',...
-    oo(1).eccentricityXYDeg,oo(1).targetDurationSec,oo(1).targetKind,oo(1).targetCyclesPerDeg);
+caption{3}=sprintf('%.1f cd/m^2, %.0f td, LAT %.2f, log NPhoton %.1f', ...
+    oo(1).luminanceAtEye,oo(1).retinalIlluminanceTd,oo(1).LAT,log10(oo(1).NPhoton));
+caption{4}=sprintf('ecc. [%.0f %.0f] deg, %.1f s, %s %.1f c/deg, log Neq %.2f',...
+    oo(1).eccentricityXYDeg,oo(1).targetDurationSecs,oo(1).targetKind,oo(1).targetCyclesPerDeg,log10(oo(1).Neq));
 text(0.02,.02,caption,'Units','normalized','FontSize',fontSize,'VerticalAlignment','bottom');
 % Set lower Y limit to E0/40. This leaves room for the "caption" text at
 % bottom of graph. If necessary, expand Y range to 3 log units.
