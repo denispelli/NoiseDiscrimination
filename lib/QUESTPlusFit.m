@@ -14,6 +14,9 @@ function oOut=QUESTPlusFit(o)
 printParameters=0; % For debugging.
 
 %% QUESTPlus initialization
+if ~isfield(o,'psych')
+    error('The o argument must have a "psych" field.');
+end
 steepnesses=1:0.5:5;
 if isfield(o,'questPlusSteepnesses')
    steepnesses=o.questPlusSteepnesses;
