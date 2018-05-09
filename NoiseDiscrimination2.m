@@ -1045,6 +1045,7 @@ if isempty(o.window) && ~ismember(o.observer,o.algorithmicObservers)
       ffprintf(ff,'Turning autobrightness off. Setting "brightness" to %.2f, on a scale of 0.0 to 1.0;\n',cal.brightnessSetting);
    end
 end % if isempty(o.window)
+oo=SortFields(oo);
 
 %% TRY-CATCH BLOCK CONTAINS ALL CODE IN WHICH THE WINDOW IS OPEN
 try
@@ -1204,6 +1205,7 @@ try
         text.fine='';
         text.question='Filter transmission:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
+        fprintf('*Waiting for observer to put on sunglasses.\n');
         [reply,o]=AskQuestion(oo,text);
         if ~o.quitBlock
             if ~isempty(reply)
@@ -2841,8 +2843,7 @@ try
             oo(oi).trials=oo(oi).trials-1;
             continue
         end
-        [~,neworder]=sort(lower(fieldnames(oo(oi))));
-        oo(oi)=orderfields(oo(oi),neworder);
+        oo=SortFields(oo);
                 
         %% SET TARGET LOG CONTRAST: tTest
         if oo(oi).questPlusEnable
@@ -4062,19 +4063,20 @@ try
     end % while trial<oo(oi).trialsPerBlock
     
     %% DONE. REPORT THRESHOLD FOR THIS BLOCK.
-    % This loop should be enhanced to separate the data for each conditions.
-    if ~isempty(oo(oi).data)
-        psych.t=unique(oo(oi).data(:,1));
-        psych.r=1+10.^psych.t;
-        for i=1:length(psych.t)
-            dataAtT=oo(oi).data(:,1) == psych.t(i);
-            psych.trials(i)=sum(dataAtT);
-            psych.right(i)=sum(oo(oi).data(dataAtT,2));
+    for oi=1:conditions
+        if ~isempty(oo(oi).data)
+            psych.t=unique(oo(oi).data(:,1));
+            psych.r=1+10.^psych.t;
+            for i=1:length(psych.t)
+                dataAtT=oo(oi).data(:,1) == psych.t(i);
+                psych.trials(i)=sum(dataAtT);
+                psych.right(i)=sum(oo(oi).data(dataAtT,2));
+            end
+        else
+            psych=[];
         end
-    else
-        psych=[];
-    end
-    oo(oi).psych=psych;
+        oo(oi).psych=psych;
+    end % for oi=1:conditions
     
     %% LOOP THROUGH ALL THE CONDITIONS, TO REPORT ONE THRESHOLD PER CONDITION.
     for oi=1:conditions
@@ -4259,9 +4261,8 @@ try
         end
   
         %% SAVE EACH THRESHOLD IN ITS OWN FILE, WITH A SUFFIX DESIGNATING THE CONDITION NUMBER.
+        oo=SortFields(oo);
         oo(oi).newCal=cal;
-        [~,neworder]=sort(lower(fieldnames(oo(oi))));
-        oo(oi)=orderfields(oo(oi),neworder);
         save(fullfile(oo(oi).dataFolder,[oo(oi).dataFilename '.mat']),'o','cal');
         try % save to .json file
             if streq(oo(oi).targetKind,'image')
@@ -4381,13 +4382,17 @@ catch e
         fclose(logFid);
         logFid=-1;
     end
-    % Sort field names.
-    [~,neworder]=sort(lower(fieldnames(o)));
-    o=orderfields(o,neworder);
-    
     rethrow(e);
 end % try
 end % function o=NoiseDiscrimination(o)
+
+function oo=SortFields(oo)
+[~,newOrder]=sort(lower(fieldnames(oo(1))));
+for oi=1:length(oo)
+    o=orderfields(oo(oi),newOrder);
+    oo(oi)=o; % Work around MATLAB bug.
+end
+end
 
 %% FUNCTION SaveSnapshot
 function o=SaveSnapshot(o)
