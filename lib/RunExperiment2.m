@@ -112,8 +112,8 @@ for block=1:length(ooo)
         % Test each condition in a block.
         if isfield(oo(oi),'trials') && oo(oi).trials>=oo(oi).trialsPerBlock
             % Gather components of filename.
-            o.experiment=ooo{1}(1).experiment;
-            o.observer=ooo{1}(1).observer;
+            experiment=ooo{1}(oi).experiment;
+            observer=ooo{1}(oi).observer;
             continue
         end
         thisBlockDone=false;
@@ -137,7 +137,7 @@ else
 end
 if blocksDone>0
     experimentFilename=sprintf('%s-%s-%s%s.%d.%d.%d.%d.%d.%d.mat',...
-        o.experiment,o.observer,o.localHostName,partialString,round(datevec(now)));
+        experiment,observer,localHostName,partialString,round(datevec(now)));
     dataFolder=fullfile(fileparts(fileparts(mfilename('fullpath'))),'data');
     save(fullfile(dataFolder,experimentFilename),'ooo');
     fprintf('Saved the experiment (%d of %d blocks done) in %s in data folder.\n',...
