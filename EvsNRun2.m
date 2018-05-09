@@ -17,10 +17,14 @@
 % binary noise.
 sdOverBound.gaussian=0.43;
 sdOverBound.uniform=0.58;
-sdOverBound.binary=1.41;
+sdOverBound.binary=std([-1 1]);
+sdOverBound.ternary=std(-1:1);
 maxBound=0.37; % Rule of thumb based on experience with gaussian.
-maxSd=struct('gaussian',maxBound*sdOverBound.gaussian,'uniform',maxBound*sdOverBound.uniform,'binary',maxBound*sdOverBound.binary);
-% % maxSd
+maxSd=struct('gaussian',maxBound*sdOverBound.gaussian,...
+    'uniform',maxBound*sdOverBound.uniform,...
+    'binary',maxBound*sdOverBound.binary,...
+    'ternary',maxBound*sdOverBound.ternary);
+% maxSd
 
 %% GET READY
 clear o oo
@@ -33,7 +37,7 @@ if o.questPlusEnable && ~exist('qpInitialize','file')
 end
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % Folder in same directory as this M file.
 cal=OurScreenCalibrations(0);
-o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 % o.observer='ideal';
 % o.trialsPerBlock=100;
 
@@ -50,8 +54,8 @@ o.fixationCrossDeg=3;
 o.blankingRadiusReEccentricity=0;
 o.blankingRadiusReTargetHeight=0;
 o.targetMarkDeg=1;
-o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
-if 1
+o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary' or 'ternary'
+if 0
     % Target letter
     o.targetKind='letter';
     o.font='Sloan';
@@ -62,9 +66,8 @@ else
     o.targetGaborOrientationsDeg=[0 45 90 135];
     o.targetGaborNames='1234';
     o.alphabet=o.targetGaborNames;
-o.targetGaborSpaceConstantCycles=inf; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
-% o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
-% o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
+    % o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
+    % o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
 end
 o.alternatives=length(o.alphabet);
 if false
@@ -81,34 +84,23 @@ end
 %% SPECIFY CONDITIONS IN oo STRUCT
 ooo={};
 % THREE DOMAINS: photon, cortical, ganglion
-for domain=0:3
+for domain=1
     o.blankingRadiusReTargetHeight=nan;
     switch domain
-        case 0
-            % photon, gaussian noise
-            o.conditionName='photon';
-            o.eccentricityXYDeg=[0 0];
-            o.targetCyclesPerDeg=4;
-            o.targetDurationSecs=0.1;
-            o.desiredLuminanceAtEye=2.5; % cd/m^2
-            o.desiredLuminanceFactor=[];
-            o.noiseCheckFrames=3;
-            o.useFilter=true;
-            o.fixationCrossWeightDeg=0.05; % Typically 0.03. Use 0.05 for scotopic testing.
-            o.blankingRadiusReTargetHeight=3;
-            o.noiseType='gaussian';
         case 1
-            % photon, binary noise
-            o.conditionName='photon';
+            % photon
+            o.conditionName='photon 3 frame';
             o.eccentricityXYDeg=[0 0];
             o.targetCyclesPerDeg=4;
             o.targetDurationSecs=0.1;
-            o.desiredLuminanceAtEye=2.5; % cd/m^2
+            o.desiredLuminanceAtEye=10; % cd/m^2
             o.desiredLuminanceFactor=[];
             o.useFilter=true;
             o.fixationCrossWeightDeg=0.05; % Typically 0.03. Use 0.05 for scotopic testing.
             o.blankingRadiusReTargetHeight=3;
-            o.noiseType='binary';
+            o.noiseCheckFrames=3;
+            o.noiseType='ternary';
+            o.contrast=1; 
         case 2
             % cortical
             o.conditionName='cortical';
@@ -119,7 +111,7 @@ for domain=0:3
             o.desiredLuminanceFactor=1;
             o.useFilter=false;
             o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it thicker for scotopic testing.
-            o.noiseType='binary';
+            o.noiseType='ternary';
         case 3
             % ganglion
             o.conditionName='ganglion';
@@ -131,7 +123,7 @@ for domain=0:3
             o.desiredLuminanceFactor=1;
             o.useFilter=false;
             o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it thicker for scotopic testing.
-            o.noiseType='binary';
+            o.noiseType='ternary';
     end
     o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
     if all(o.eccentricityXYDeg==0)
@@ -142,29 +134,27 @@ for domain=0:3
         o.blankingRadiusReTargetHeight=0;
         o.fixationCrossDeg=3;
     end
-    switch o.noiseType
-        case 'gaussian'
-            maxNoiseSD=0.16*2^0.5;
-            p2=0.5;
-        case 'binary'
-            maxNoiseSD=0.16*2^2; % higher by 2^1.5
-            p2=2;
-    end
-%     for noiseSD=Shuffle([0 2.^(-4:1.5:p2)*0.16])
-    for noiseSD=4*2^p2*0.16
+    oo=[];
+    for noiseSD=[0 2.^(-6:1.5:0)]*maxSd.(o.noiseType)
+%     for noiseSD=maxSd.(o.noiseType)
         o.noiseSD=noiseSD;
         o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
         o.noiseCheckDeg=o.targetHeightDeg/20;
-        ooo{end+1}=o;
+        if isempty(oo)
+            oo=o;
+        else
+            oo(end+1)=o;
+        end
     end
+    ooo{end+1}=oo;
 end
-for i=1:length(ooo)
-    ooo{i}.condition=i; % Number the conditions
-end
+% for i=1:length(ooo)
+%     [ooo{i}.block]=deal(i); % Number the blocks
+% end
 
 %% PRINT THE CONDITIONS (ONE PER ROW) AS TABLE TT.
 % All these vars must be defined in every condition.
-vars={'condition' 'experiment' 'conditionName' ...
+vars={'experiment' 'conditionName' ...
     'useFilter' 'eccentricityXYDeg' ...
     'targetDurationSecs' 'targetHeightDeg' ...
     'targetCyclesPerDeg' 'targetGaborCycles' ...
@@ -185,7 +175,7 @@ ooo=RunExperiment2(ooo);
 
 %% PRINT SUMMARY OF RESULTS AS TABLE TT.
 % Include whatever you're intersted in. We skip rows missing any value.
-vars={'condition' 'experiment' 'conditionName' ...
+vars={ 'experiment' 'conditionName' ...
     'useFilter' 'luminanceAtEye' 'eccentricityXYDeg' ...
     'targetDurationSecs' 'targetCyclesPerDeg' ...
     'targetHeightDeg' 'targetGaborCycles'  'noiseCheckFrames'...
@@ -194,7 +184,7 @@ tt=table;
 for i=1:length(ooo)
     t=struct2table(ooo{i},'AsArray',true);
     % Skip empty rows.
-    if ~all(ismember({'trials' 'contrast' 'transcript'},t.Properties.VariableNames)) || isempty(t.trials) || t.trials==0
+    if ~all(ismember({'trials' 'contrast' 'transcript'},t.Properties.VariableNames)) || isempty(t.trials) || all(t.trials==0)
         % Skip condition without data.
         continue
     end
