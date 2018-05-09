@@ -540,7 +540,6 @@ end
 o=[];
 % I added these here May 6, 2018,  to guarantee that they'll be defined
 % when I pull them into a table in EvsNRun2.m
-o.condition=[];
 o.experiment=[];
 o.conditionName=[];
 o.useFilter=false;
@@ -592,7 +591,6 @@ o.blockNumber=1; % For display only, indicate the block number. When o.blockNumb
 o.blocksDesired=1; % How many blocks you to plan to run? Used solely for display and congratulations and keeping o.window open until last block.
 o.experiment='';
 o.conditionName='';
-o.condition=1;
 o.speakInstructions=false;
 o.congratulateWhenDone=true; % true or false. Speak after final block (i.e. when o.blockNumber==o.blocksDesired). 
 o.quitBlock=false; % Returned value is true if the user aborts this block.
@@ -763,6 +761,8 @@ o.targetDurationListSecs=[];
 o.conditionList=1; % An array of integer condition numbers.
 o.signalImagesCacheCode=[];
 o.age=20;
+o.approxRequiredNumber=[];
+o.snapshotCaptionTextSize=[];
 
 o.deviceIndex=-1; % -1 for all keyboards.
 o.deviceIndex=-3; % -3 for all keyboard/keypad devices.
@@ -2213,6 +2213,10 @@ try
                 oo(oi).noiseListMin=-1;
                 oo(oi).noiseListMax=1;
                 noiseList=[-1 1];
+            case 'ternary'
+                oo(oi).noiseListMin=-1;
+                oo(oi).noiseListMax=1;
+                noiseList=[-1 0 1];
             otherwise
                 error('Unknown noiseType "%s"',oo(oi).noiseType);
         end
@@ -3489,8 +3493,10 @@ try
                 end % for iMovieFrame=1:oo(oi).movieFrames
                 oo(oi).transcript.stimulusOnsetSecs(oo(oi).trials)=oo(oi).movieFrameFlipSecs(oo(oi).moviePreFrames+1,oo(oi).trials);
                 if oo(oi).saveSnapshot
-                    oo(oi)=SaveSnapshot(oo(oi)); % Closes oo(oi).window when done.
-                    window=oo(oi).window;
+                    o=SaveSnapshot(oo(oi),snapshotTexture); % Closes oo(oi).window when done.
+                    oo(oi)=o;
+                    window=o.window;
+                    oo(1).quitExperiment=true;
                     return
                 end
                 if oo(oi).assessTargetLuminance
@@ -4395,7 +4401,10 @@ end
 end
 
 %% FUNCTION SaveSnapshot
-function o=SaveSnapshot(o)
+% NOT TESTED. IF o.saveStimulus==true THEN MY MOVIE CODE ABOVE SAVES A
+% snapshotTexture, WHICH I MODIFIED THIS CODE TO USE. BUT I HAVEN'T TESTED
+% IT. FOR NOW, USE o.saveStimulus, WHICH WORKS WELL.
+function o=SaveSnapshot(o,snapshotTexture)
 global fixationLines fixationCrossWeightPix labelBounds location  ...
     tTest leftEdgeOfResponse cal ff whichSignal logFid
 % Hasn't been tested since it became a subroutine. It may need more of its
@@ -4406,7 +4415,7 @@ global fixationLines fixationCrossWeightPix labelBounds location  ...
 % modified here, it too may need to be returned as an output argument, or
 % made global.
 if o.snapshotShowsFixationAfter && ~isempty(fixationLines)
-    Screen('DrawLines',o.window,fixationLines,fixationCrossWeightPix,0); % fixation
+    Screen('DrawLines',snapshotTexture,fixationLines,fixationCrossWeightPix,0); % fixation
 end
 if o.cropSnapshot
     if o.showResponseNumbers
@@ -4423,7 +4432,7 @@ else
     cropRect=o.screenrect;
 end
 o.approxRequiredNumber=64/10^((tTest-o.idealT64)/0.55);
-rect=Screen('TextBounds',o.window,'approxRequiredNumber 0000');
+rect=Screen('TextBounds',snapshotTexture,'approxRequiredNumber 0000');
 r=o.screenrect;
 r(3)=leftEdgeOfResponse;
 r=InsetRect(r,o.textSize/2,o.textSize/2);
@@ -4444,28 +4453,28 @@ if streq(o.task,'4afc')
         end
         x(i).entropy=sum(-x(i).p.*log2(x(i).p));
     end
-    saveSize=Screen('TextSize',o.window,round(o.textSize*.4));
-    saveFont=Screen('TextFont',o.window,'Courier');
+    saveSize=Screen('TextSize',snapshotTexture,round(o.textSize*.4));
+    saveFont=Screen('TextFont',snapshotTexture,'Courier');
     for i=1:4
         s=[sprintf('L%d',i) sprintf(' %4.2f',x(i).L)];
-        Screen('DrawText',o.window,s,rect(1),rect(2)-360-(5-i)*30);
+        Screen('DrawText',snapshotTexture,s,rect(1),rect(2)-360-(5-i)*30);
     end
     for i=1:4
         s=[sprintf('p%d',i) sprintf(' %4.2f',x(i).p)];
-        Screen('DrawText',o.window,s,rect(1),rect(2)-240-(5-i)*30);
+        Screen('DrawText',snapshotTexture,s,rect(1),rect(2)-240-(5-i)*30);
     end
-    Screen('TextSize',o.window,round(o.textSize*.8));
-    Screen('DrawText',o.window,sprintf('Mean %4.2f %4.2f %4.2f %4.2f',x(:).mean),rect(1),rect(2)-240);
-    Screen('DrawText',o.window,sprintf('Sd   %4.2f %4.2f %4.2f %4.2f',x(:).sd),rect(1),rect(2)-210);
-    Screen('DrawText',o.window,sprintf('Max  %4.2f %4.2f %4.2f %4.2f',x(:).max),rect(1),rect(2)-180);
-    Screen('DrawText',o.window,sprintf('Min  %4.2f %4.2f %4.2f %4.2f',x(:).min),rect(1),rect(2)-150);
-    Screen('DrawText',o.window,sprintf('Bits %4.2f %4.2f %4.2f %4.2f',x(:).entropy),rect(1),rect(2)-120);
-    Screen('TextSize',o.window,saveSize);
-    Screen('TextFont',o.window,saveFont);
+    Screen('TextSize',snapshotTexture,round(o.textSize*.8));
+    Screen('DrawText',snapshotTexture,sprintf('Mean %4.2f %4.2f %4.2f %4.2f',x(:).mean),rect(1),rect(2)-240);
+    Screen('DrawText',snapshotTexture,sprintf('Sd   %4.2f %4.2f %4.2f %4.2f',x(:).sd),rect(1),rect(2)-210);
+    Screen('DrawText',snapshotTexture,sprintf('Max  %4.2f %4.2f %4.2f %4.2f',x(:).max),rect(1),rect(2)-180);
+    Screen('DrawText',snapshotTexture,sprintf('Min  %4.2f %4.2f %4.2f %4.2f',x(:).min),rect(1),rect(2)-150);
+    Screen('DrawText',snapshotTexture,sprintf('Bits %4.2f %4.2f %4.2f %4.2f',x(:).entropy),rect(1),rect(2)-120);
+    Screen('TextSize',snapshotTexture,saveSize);
+    Screen('TextFont',snapshotTexture,saveFont);
 end
 o.snapshotCaptionTextSize=ceil(o.snapshotCaptionTextSizeDeg*o.pixPerDeg);
-saveSize=Screen('TextSize',o.window,o.snapshotCaptionTextSize);
-saveFont=Screen('TextFont',o.window,'Courier');
+saveSize=Screen('TextSize',snapshotTexture,o.snapshotCaptionTextSize);
+saveFont=Screen('TextFont',snapshotTexture,'Courier');
 caption={''};
 switch o.targetModulates
     case 'luminance'
@@ -4486,23 +4495,26 @@ switch o.task
     case '4afc'
         answer=signalLocation;
         answerString=sprintf('%d',answer);
-        caption{end+1}=sprintf('xyz%s',lower(answerString));
     case {'identify' 'rate'}
         answer=whichSignal;
         answerString=o.alphabet(answer);
-        caption{end+1}=sprintf('xyz%s',lower(answerString));
+    case 'identifyAll'
+        whichFlankers=o.transcript.flankers{o.trials};
+        answer=[whichFlankers(1) whichSignal whichFlankers(2)] ;
+        answerString=o.alphabet(answer);
 end
+caption{end+1}=sprintf('xyz%s',lower(answerString));
 rect=OffsetRect(o.stimulusRect,-o.snapshotCaptionTextSize/2,0);
 for i=length(caption):- 1:1
-    r=Screen('TextBounds',o.window,caption{i});
+    r=Screen('TextBounds',snapshotTexture,caption{i});
     r=AlignRect(r,rect,RectRight,RectBottom);
-    Screen('DrawText',o.window,caption{i},r(1),r(2));
+    Screen('DrawText',snapshotTexture,caption{i},r(1),r(2));
     rect=OffsetRect(r,0,-o.snapshotCaptionTextSize);
 end
-Screen('TextSize',o.window,saveSize);
-Screen('TextFont',o.window,saveFont);
-Screen('Flip',o.window,0,1); % Save image for snapshot. Show target, instructions, and fixation.
-img=Screen('GetImage',o.window,cropRect);
+Screen('TextSize',snapshotTexture,saveSize);
+Screen('TextFont',snapshotTexture,saveFont);
+% Screen('Flip',o.window,0,1); % Save image for snapshot. Show target, instructions, and fixation.
+img=Screen('GetImage',snapshotTexture,cropRect);
 %                         grayPixels=img==o.gray;
 %                         img(grayPixels)=128;
 freezing='';
@@ -4520,9 +4532,15 @@ switch o.targetModulates
 end
 switch o.targetModulates
     case 'luminance'
-        filename=sprintf('%s_%s_%s%s_%.3fc_%.0fpix_%s',signalDescription,o.task,o.noiseType,freezing,o.thresholdPolarity*10^tTest,o.targetHeightPix/o.noiseCheckPix,answerString);
+        filename=sprintf('%s_%s_%s%s_%.3fc_%.0fpix_%s',...
+            signalDescription,o.task,o.noiseType,freezing,...
+            o.thresholdPolarity*10^tTest,o.targetHeightPix/o.noiseCheckPix,...
+            answerString);
     case {'noise', 'entropy'}
-        filename=sprintf('%s_%s_%s%s_%.3fr_%.0fpix_%.0freq_%s',signalDescription,o.task,o.noiseType,freezing,1+10^tTest,o.targetHeightPix/o.noiseCheckPix,o.approxRequiredNumber,answerString);
+        filename=sprintf('%s_%s_%s%s_%.3fr_%.0fpix_%.0freq_%s',...
+            signalDescription,o.task,o.noiseType,freezing,...
+            1+10^tTest,o.targetHeightPix/o.noiseCheckPix,o.approxRequiredNumber,...
+            answerString);
 end
 mypath=fileparts(mfilename('fullpath'));
 saveSnapshotFid=fopen(fullfile(mypath,[filename '.png']),'rt');
