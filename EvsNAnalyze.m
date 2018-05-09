@@ -17,16 +17,16 @@ close all
 % experiment={};
 oo=[];
 clear Plot % To clear the persistent variables in the subroutine below.
-for i=1:length(matFiles) % One threshold file per iteration.
+for oi=1:length(matFiles) % One threshold file per iteration.
     % Extract the desired fields into "oo", one cell-row per threshold.
-    d=load(matFiles(i).name);
+    d=load(matFiles(oi).name);
     if ~isfield(d,'o')
         % Skip summary files.
         continue
     end
-    usesSecsPlural=contains(matFiles(i).name,'NoiseDiscrimination2');
+    usesSecsPlural=contains(matFiles(oi).name,'NoiseDiscrimination2');
     if usesSecsPlural
-        vars={'condition' 'conditionName' 'experiment' 'dataFilename' ...
+        vars={'conditionName' 'experiment' 'dataFilename' ...
             'experimenter' 'observer' 'trials' ...
             'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' ...
             'targetHeightDeg' 'targetDurationSecs' 'targetDurationSecsMean' 'targetDurationSecsSD'...
@@ -37,7 +37,7 @@ for i=1:length(matFiles) % One threshold file per iteration.
             'filterTransmission' 'useFilter' 'retinalIlluminanceTd' 'pupilDiameterMm'...
             'pixPerCm' 'screenRect' 'nearPointXYPix'};
     else
-        vars={'condition' 'conditionName' 'experiment' 'dataFilename' ...
+        vars={'conditionName' 'experiment' 'dataFilename' ...
             'experimenter' 'observer' 'trials' ...
             'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' ...
             'targetHeightDeg' 'targetDurationSec' 'targetDurationSecMean' 'targetDurationSecSD'...
@@ -48,7 +48,6 @@ for i=1:length(matFiles) % One threshold file per iteration.
             'filterTransmission' 'useFilter' 'retinalIlluminanceTd' 'pupilDiameterMm'...
             'pixPerCm' 'nearPointXYPix'};
     end
-    o=struct;
     for field=vars
         if isfield(d.o,field{1})
             if usesSecsPlural
@@ -56,23 +55,19 @@ for i=1:length(matFiles) % One threshold file per iteration.
             else
                 newField=strrep(field{1},'Sec','Secs');
             end
-            o.(newField)=d.o.(field{1});
+            oo(oi).(newField)=d.o.(field{1});
         else
-            if i==1
+            if oi==1
                 warning OFF BACKTRACE
                 warning('Missing o field: %s\n',field{:});
             end
         end
     end
-    if isempty(oo)
-        oo=o;
-    else
-        oo(end+1)=o; % Add row for this threshold.
-    end
 end
-if any([oo.trials]<40)
+short=[oo.trials]<40;
+if any(short)
     s=sprintf('condition(trials):');
-    s=[s sprintf(' %d(%d),',oo([oo.trials]<40).condition,oo([oo.trials]<40).trials)];
+    s=[s sprintf(' %d(%d),',[find(short) oo(short).trials]')];
     warning('Discarding %d threshold(s) with fewer than 40 trials: %s',sum([oo.trials]<40),s);
 end
 oo = oo([oo.trials]>=40); % Discard thresholds with fewer than 40 trials.
@@ -159,7 +154,7 @@ for i=1:length(oo)
 end
 
 %% Create CSV file
-vars={'condition' 'experiment' 'conditionName' ...
+vars={'experiment' 'conditionName' ...
     'experimenter' 'observer' 'trials' 'contrast' 'luminanceAtEye' 'E' 'N' ...
     'targetKind' 'targetCyclesPerDeg'  'targetHeightDeg'  'targetDurationSecs' ...
     'noiseType' 'noiseSD'  'noiseCheckDeg' ...
