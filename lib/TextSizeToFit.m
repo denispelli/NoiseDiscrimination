@@ -1,9 +1,11 @@
 function textSize=TextSizeToFit(window,lineOfText,o)
-% Set textSize so our lineOfText just fits on screen.
-global screenRect % Might be reduced to produce a small display for debugging.
+% textSize=TextSizeToFit(window,lineOfText,o);
+% Set textSize so our lineOfText just fits in window.
 if nargin<1
     error('You must provide "window" when calling textSize=TextSizeToFit(window,lineOfText,o).');
 end
+% Note that the window's screenRect might be small for debugging.
+screenRect=Screen('Rect',window);
 if nargin<2
     lineOfText='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
 end
