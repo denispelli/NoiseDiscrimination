@@ -4406,6 +4406,7 @@ end % try
 end % function o=NoiseDiscrimination(o)
 
 function oo=SortFields(oo)
+return % Temporary, until I figure out why this routine works for my MATLAB R2017b, but not Shenghao's MATLAB 2015b.
 [~,newOrder]=sort(lower(fieldnames(oo(1))));
 for oi=1:length(oo)
     o=orderfields(oo(oi),newOrder);
