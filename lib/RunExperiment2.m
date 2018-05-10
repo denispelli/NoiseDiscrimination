@@ -81,7 +81,7 @@ for block=1:length(ooo)
     end
     % Prepare this block.
     for oi=1:length(oo)
-        oo(oi).blockNumber=block;
+        oo(oi).block=block;
         oo(oi).blocksDesired=length(ooo);
         oo(oi).localHostName=localHostName;
         if ~isempty(ooPrior)
