@@ -103,10 +103,10 @@ o.observer='junk'; % Name of person or existing algorithm.
 % o.observer='maximum'; % Existing algorithm instead of person.
 % o.observer='ideal'; % Existing algorithm instead of person.
 o.trialsPerBlock=40; % Typically 40.
-o.blockNumber=1; % For display only, indicate the run number. When o.blockNumber==blocksDesired this program says "Congratulations" before returning.
+o.block=1; % For display only, indicate the run number. When o.block==blocksDesired this program says "Congratulations" before returning.
 o.blocksDesired=1; % How many runs you to plan to do, used solely for display (and congratulations).
 o.speakInstructions=1;
-o.congratulateWhenDone=1; % 0 or 1. Spoken after last run (i.e. when o.blockNumber==0.blocksDesired). You can turn this off.
+o.congratulateWhenDone=1; % 0 or 1. Spoken after last run (i.e. when o.block==0.blocksDesired). You can turn this off.
 o.runAborted=0; % 0 or 1. Returned value is 1 if the user aborts this run (i.e. threshold).
 o.quitNow=0; % 0 or 1. Returned value is 1 if the observer wants to quit now; no more runs.
 % o.signalKind='noise';  % Display a noise increment.
@@ -963,7 +963,7 @@ try
         end
     end
     frameRect=InsetRect(boundsRect,-1,-1);
-    % for o.blockNumber=1:o.blocksDesired
+    % for o.block=1:o.blocksDesired
     if ~ismember(o.observer,{'ideal','brightnessSeeker','maximum'}) %&& ~o.saveSnapshot;
         Screen('FillRect',window,gray1);
         Screen('FillRect',window,gray,o.stimulusRect);
@@ -1575,7 +1575,7 @@ try
                 end
                 eraseRect=ClipRect(eraseRect,o.stimulusRect);
                 Screen('FillRect',window,gray1,topCaptionRect);
-                message=sprintf('Trial %d of %d. Run %d of %d.',trial,o.trialsPerBlock,o.blockNumber,o.blocksDesired);
+                message=sprintf('Trial %d of %d. Run %d of %d.',trial,o.trialsPerBlock,o.block,o.blocksDesired);
                 Screen('DrawText',window,message,textSize/2,textSize/2,black);
                 
                 % Print instructions in lower left corner.
@@ -1944,9 +1944,9 @@ try
     o.EOverN=10^(2*o.questMean)*E1/N;
     o.efficiency = o.idealEOverNThreshold/o.EOverN;
     if streq(o.signalKind,'luminance')
-        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold±sd log(contrast) %.2f±%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.blockNumber,o.blocksDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
+        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold±sd log(contrast) %.2f±%.2f, contrast %.5f, log E/N %.2f, efficiency %.5f\n',o.block,o.blocksDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,10^t,log10(o.EOverN),o.efficiency);
     else
-        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold±sd log(sigma-1) %.2f±%.2f, approx required n %.0f\n',o.blockNumber,o.blocksDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
+        ffprintf(ff,'Run %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. Threshold±sd log(sigma-1) %.2f±%.2f, approx required n %.0f\n',o.block,o.blocksDesired,trial,100*trialsRight/trial,(GetSecs-runStart)/trial,t,sd,approxRequiredN);
     end
     if abs(trialsRight/trial-o.pThreshold)>0.1
         ffprintf(ff,'WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.\n');
@@ -2010,7 +2010,7 @@ try
             %              logNse=std(logApproxRequiredNumber)/sqrt(length(tSample));
             %              ffprintf(ff,'SUMMARY: %s %d runs mean±se: log(sigma-1) %.2f±%.2f, log(approx required n) %.2f±%.2f\n',o.observer,length(tSample),mean(tSample),tse,logApproxRequiredNumber,logNse);
     end
-    if o.runAborted && o.blockNumber<o.blocksDesired
+    if o.runAborted && o.block<o.blocksDesired
         Speak('Please type period to skip the rest and quit now, or space to continue with next run.');
         FlushEvents('keyDown');
         response=0;
@@ -2035,7 +2035,7 @@ try
             end
         end
     end
-    if o.blockNumber==o.blocksDesired && o.congratulateWhenDone && ~ismember(o.observer,{'ideal','brightnessSeeker','maximum'})
+    if o.block==o.blocksDesired && o.congratulateWhenDone && ~ismember(o.observer,{'ideal','brightnessSeeker','maximum'})
         Speak('Congratulations. You are done.');
     end
     if Screen(window,'WindowKind')==1;

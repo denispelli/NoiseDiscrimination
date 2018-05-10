@@ -5,10 +5,10 @@
 % to run it before each human session.
 clear all
 eccentricities=[0 4 8 16 32];
-o.blockNumber=0;
+o.block=0;
 o.blocksDesired=length(eccentricities);
 for eccentricity=Shuffle(eccentricities)
-    o.blockNumber=o.blockNumber+1;
+    o.block=o.block+1;
     o.eccentricityDeg=eccentricity;
     o.distanceCm=50; % viewing distance
     o.signalKind='luminance'; % display a luminance decrement instead of a noise increment.

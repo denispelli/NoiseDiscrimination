@@ -25,8 +25,8 @@ if isfield(o,'trials')&&isfield(o,'trialsPerBlock')
         trialsDesired=trialsDesired+oo(oi).trialsPerBlock;
     end
 end
-if isfield(o,'blockNumber')&&isfield(o,'blocksDesired')&&isfield(o,'textSize')
-   message=sprintf('Trial %d of %d. Block %d of %d.',trials,trialsDesired,o.blockNumber,o.blocksDesired);
+if isfield(o,'block')&&isfield(o,'blocksDesired')&&isfield(o,'textSize')
+   message=sprintf('Trial %d of %d. Block %d of %d.',trials,trialsDesired,o.block,o.blocksDesired);
    if isfield(o,'experiment')
       message=[message ' Experiment "' o.experiment '".'];
    end
@@ -38,7 +38,7 @@ end
 Screen('TextSize',window,o.textSize);
 % Set background color for DrawFormattedText.
 Screen('DrawText',window,' ',0,0,black,backgroundColor,1);
-lastBlock=isfield(o,'blockNumber') && isfield(o,'blocksDesired') && o.blockNumber>=o.blocksDesired;
+lastBlock=isfield(o,'block') && isfield(o,'blocksDesired') && o.block>=o.blocksDesired;
 if lastBlock
     nextBlockMsg='';
 else

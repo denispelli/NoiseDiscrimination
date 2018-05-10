@@ -540,14 +540,14 @@ o.eyes='both'; % 'left', 'right', 'both', or 'one', which asks user to specify a
 o.luminanceTransmission=1; % Less than one for dark glasses or neutral density filter.
 o.trialsPerBlock=40; % Typically 40.
 o.trials=0; % Initialize trial counter so it's defined even if user quits early.
-o.blockNumber=1; % For display only, indicate the block number. When o.blockNumber==blocksDesired this program says "Congratulations" before returning.
+o.block=1; % For display only, indicate the block number. When o.block==blocksDesired this program says "Congratulations" before returning.
 o.blocksDesired=1; % How many blocks you to plan to run? Used solely for display and congratulations and keeping o.window open until last block.
 o.experiment='';
 o.conditionName='';
 o.condition=1;
 o.conditions=1;
 o.speakInstructions=false;
-o.congratulateWhenDone=true; % true or false. Speak after final block (i.e. when o.blockNumber==o.blocksDesired). 
+o.congratulateWhenDone=true; % true or false. Speak after final block (i.e. when o.block==o.blocksDesired). 
 o.quitBlock=false; % Returned value is true if the user aborts this block.
 o.quitExperiment=false; % Returned value is true if the observer wants to quit whole experiment now; no more blocks.
 o.targetKind='letter';
@@ -3365,7 +3365,7 @@ try
                 end
                 % Print instruction in upper left corner.
                 Screen('FillRect',o.window,o.gray1,topCaptionRect);
-                message=sprintf('Trial %d of %d. Block %d of %d.',trial,o.trialsPerBlock,o.blockNumber,o.blocksDesired);
+                message=sprintf('Trial %d of %d. Block %d of %d.',trial,o.trialsPerBlock,o.block,o.blocksDesired);
                 if isfield(o,'experiment')
                     message=[message ' Experiment "' o.experiment '".'];
                 end
@@ -3998,11 +3998,11 @@ try
             case 'luminance'
                 ffprintf(ff,['<strong>Block %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
                     'Threshold',plusMinusChar,'sd log contrast %.2f',plusMinusChar,'%.2f, contrast %.4f, log E/N %.2f, efficiency %.5f</strong>\n'],...
-                    o.blockNumber,o.blocksDesired,trials,100*trialsRight/trials,(GetSecs-blockStartSecs)/trial,t,sd,o.thresholdPolarity*10^t,log10(o.EOverN),o.efficiency);
+                    o.block,o.blocksDesired,trials,100*trialsRight/trials,(GetSecs-blockStartSecs)/trial,t,sd,o.thresholdPolarity*10^t,log10(o.EOverN),o.efficiency);
             case {'noise' 'entropy'}
                 ffprintf(ff,['<strong>Block %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
                     'Threshold',plusMinusChar,'sd log(o.r-1) %.2f',plusMinusChar,'%.2f, approxRequiredNumber %.0f</strong>\n'],...
-                    o.blockNumber,o.blocksDesired,trials,100*trialsRight/trials,(GetSecs-blockStartSecs)/trial,t,sd,o.approxRequiredNumber);
+                    o.block,o.blocksDesired,trials,100*trialsRight/trials,(GetSecs-blockStartSecs)/trial,t,sd,o.approxRequiredNumber);
         end
         if abs(trialsRight/trials-o.pThreshold) > 0.1
             ffprintf(ff,'WARNING: Proportion correct is far from threshold criterion. Threshold estimate unreliable.\n');
@@ -4107,7 +4107,7 @@ try
         if o.quitExperiment && ~ismember(o.observer,o.algorithmicObservers)
             Speak('QUITTING now. Done.');
         else
-            if ~o.quitBlock && o.blockNumber == o.blocksDesired && o.congratulateWhenDone && ~ismember(o.observer,o.algorithmicObservers)
+            if ~o.quitBlock && o.block == o.blocksDesired && o.congratulateWhenDone && ~ismember(o.observer,o.algorithmicObservers)
                 Speak('Congratulations. End of block.');
             end
         end
@@ -4125,7 +4125,7 @@ try
     end
     ListenChar(0); % flush
     ListenChar;
-    if ~isempty(o.window) && (o.quitExperiment || o.blockNumber >= o.blocksDesired)
+    if ~isempty(o.window) && (o.quitExperiment || o.block >= o.blocksDesired)
         sca; % Screen('CloseAll'); ShowCursor;
         if ismac
             AutoBrightness(cal.screen,1); % Restore autobrightness.

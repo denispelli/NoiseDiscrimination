@@ -26,6 +26,6 @@ o.fixationCrossWeightDeg=0.05; % Typically 0.05. This should be much thicker for
 o.fixationCrossBlankedNearTarget=0; % 0 or 1.
 o.speakInstructions=0;
 o.blocksDesired=1;
-o.blockNumber=1;
+o.block=1;
 o.signalKind='entropy';
 o=NoiseDiscrimination(o);

@@ -169,7 +169,7 @@ if ~skipDataCollection
     clear oOut
     for oi=1:length(oo) % Edit this line to select which conditions to run now.
         o=oo{oi};
-        o.blockNumber=oi;
+        o.block=oi;
         o.blocksDesired=length(oo);
         o.alternatives=length(o.alphabet);
         if exist('oOut','var')

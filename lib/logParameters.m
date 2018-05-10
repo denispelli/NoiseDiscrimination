@@ -2,7 +2,7 @@ clear all
 %% Last Google Doc page 1:1, MAX:1
 
 %Script to test effects of outside noise vs. inside noise. 
-o.blockNumber=0;
+o.block=0;
 % o.blocksDesired = 14;
 o.blocksDesired = 1;
 saveData = 1;
@@ -18,7 +18,7 @@ for run=1:o.blocksDesired
         acuityDeg = .029*(o.eccentricityDeg + 2.72);
         criticalSpacingDeg = .3*(o.eccentricityDeg + .45);
 
-        o.blockNumber= o.blockNumber + 1;
+        o.block= o.block + 1;
         o.useTinyWindow = 0;
         o.measureBeta = 0;
         o.beta = 1.7;

@@ -2,10 +2,10 @@
 % Written by Denis Pelli June 24, 205 to confirm that IdealP is working
 % properly. Looks fine.
 clear all
-o.blockNumber=0;
+o.block=0;
 o.blocksDesired=1;
 for height=2
-    o.blockNumber=o.blockNumber+1;
+    o.block=o.block+1;
     o.signalKind='luminance'; % display a luminance decrement instead of a noise increment.
     o.noiseSD=.2;
     o.noiseType='gaussian';

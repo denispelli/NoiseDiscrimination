@@ -78,7 +78,7 @@ oo{end+1}=o;
 
 for oi=1:length(oo)
     o=oo{oi};
-    o.blockNumber=oi;
+    o.block=oi;
     o.blocksDesired=length(oo);
     o.condition=oi;
     oo{oi}=o;

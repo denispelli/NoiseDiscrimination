@@ -72,7 +72,7 @@ for oi=1:length(oo)
         % Skip any condition that already has the desired trials.
         continue
     end
-    o.blockNumber=oi;
+    o.block=oi;
     o.blocksDesired=length(oo);
     o.localHostName=localHostName;
     if ~isempty(oPrior)
