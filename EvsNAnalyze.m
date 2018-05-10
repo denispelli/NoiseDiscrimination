@@ -64,13 +64,14 @@ for oi=1:length(matFiles) % One threshold file per iteration.
         end
     end
 end
-short=[oo.trials]<40;
-if any(short)
-    s=sprintf('condition(trials):');
-    s=[s sprintf(' %d(%d),',[find(short) oo(short).trials]')];
-    warning('Discarding %d threshold(s) with fewer than 40 trials: %s',sum([oo.trials]<40),s);
+s=sprintf('condition(trials):');
+for oi=length(oo):-1:1
+    if isempty(oo(oi).trials) || oo(oi).trials<40
+        s=[s sprintf(' %d(%d),',oi,oo(oi).trials)];
+        oo(oi)=[];
+    end
 end
-oo = oo([oo.trials]>=40); % Discard thresholds with fewer than 40 trials.
+warning('Discarding %d threshold(s) with fewer than 40 trials: %s',sum([oo.trials]<40),s);
 
 oo=ComputeNPhoton(oo);
 
