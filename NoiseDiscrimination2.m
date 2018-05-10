@@ -588,12 +588,12 @@ o.experimenter='';
 o.eyes='both'; % 'left', 'right', 'both', or 'one', which asks user to specify at runtime.
 o.trialsPerBlock=40; % Typically 40.
 o.trials=0; % Initialize trial counter so it's defined even if user quits early.
-o.blockNumber=1; % For display only, indicate the block number. When o.blockNumber==blocksDesired this program says "Congratulations" before returning.
+o.block=1; % For display only, indicate the block number. When o.block==blocksDesired this program says "Congratulations" before returning.
 o.blocksDesired=1; % How many blocks you to plan to run? Used solely for display and congratulations and keeping o.window open until last block.
 o.experiment='';
 o.conditionName='';
 o.speakInstructions=false;
-o.congratulateWhenDone=true; % true or false. Speak after final block (i.e. when o.blockNumber==o.blocksDesired). 
+o.congratulateWhenDone=true; % true or false. Speak after final block (i.e. when o.block==o.blocksDesired). 
 o.quitBlock=false; % Returned value is true if the user aborts this block.
 o.quitExperiment=false; % Returned value is true if the observer wants to quit whole experiment now; no more blocks.
 o.targetKind='letter';
@@ -3568,7 +3568,7 @@ try
                 end
                 % Print instruction in upper left corner.
                 Screen('FillRect',oo(oi).window,oo(oi).gray1,topCaptionRect);
-                message=sprintf('Trial %d of %d. Block %d of %d.',trial,oo(oi).trialsPerBlock*conditions,oo(oi).blockNumber,oo(oi).blocksDesired);
+                message=sprintf('Trial %d of %d. Block %d of %d.',trial,oo(oi).trialsPerBlock*conditions,oo(oi).block,oo(oi).blocksDesired);
                 if isfield(oo(oi),'experiment')
                     message=[message ' Experiment "' oo(oi).experiment '".'];
                 end
@@ -4333,7 +4333,7 @@ try
         if o.quitExperiment && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
             Speak('QUITTING now. Done.');
         else
-            if ~o.quitBlock && oo(oi).blockNumber == oo(oi).blocksDesired && oo(oi).congratulateWhenDone && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
+            if ~o.quitBlock && oo(oi).block == oo(oi).blocksDesired && oo(oi).congratulateWhenDone && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
                 Speak('Congratulations. End of block.');
             end
         end
@@ -4351,7 +4351,7 @@ try
     end
     ListenChar(0); % flush
     ListenChar;
-    if ~isempty(oo(oi).window) && (o.quitExperiment || oo(oi).blockNumber >= oo(oi).blocksDesired)
+    if ~isempty(oo(oi).window) && (o.quitExperiment || oo(oi).block >= oo(oi).blocksDesired)
         sca; % Screen('CloseAll'); ShowCursor;
         if ismac
             AutoBrightness(cal.screen,1); % Restore autobrightness.
