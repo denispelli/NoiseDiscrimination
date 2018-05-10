@@ -41,7 +41,7 @@ function out=RunExperiment2(ooo)
 % reason, whether by reaching the end, the posting of an error here or in
 % any function called from here, or the user hitting control-C.
 
-cleanup=onCleanup(@() MyCleanupFunction);
+cleanup=onCleanup(@() CloseWindowAndCleanup);
 
 if isempty(ooo)
     error('ooo was empty. You didn''t specify any conditions.');
@@ -146,14 +146,15 @@ end
 sca; % Restore cursor.
 end % function
 
-%% CLEANUP WHEN RunExperiment TERMINATES.
-function MyCleanupFunction()
+%% Clean up when RunExperiment terminates, even by control-C.
+function CloseWindowAndCleanup()
 % Close any window opened by the Psychtoolbox Screen command, and re-enable keyboard.
 global window
 sca;
 window=[];
-ListenChar;
+ListenChar; % May already be done by sca.
+ShowCursor; % May already be done by sca.
 if ismac
     AutoBrightness(0,1);
 end
-end % function
+end % function CloseWindowAndCleanup()
