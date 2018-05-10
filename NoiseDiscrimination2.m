@@ -4407,11 +4407,8 @@ end % function o=NoiseDiscrimination(o)
 
 function oo=SortFields(oo)
 return % Temporary, until I figure out why this routine works for my MATLAB R2017b, but not Shenghao's MATLAB 2015b.
-[~,newOrder]=sort(lower(fieldnames(oo(1))));
-for oi=1:length(oo)
-    o=orderfields(oo(oi),newOrder);
-    oo(oi)=o; % Work around MATLAB bug.
-end
+[~,newOrder]=sort(lower(fieldnames(oo)));
+    oo=orderfields(oo,newOrder);
 end
 
 %% FUNCTION SaveSnapshot
@@ -4419,7 +4416,7 @@ end
 % snapshotTexture, WHICH I MODIFIED THIS SUBROUTINE TO USE, BUT I HAVEN'T
 % TESTED IT YET. FOR NOW, USE o.saveStimulus, WHICH WORKS WELL.
 % The difference is that SaveStimulus merely saves a screeshot in
-% o.savedStimulus, whereas SaveSnapshot adds lot's of text info, and saves
+% o.savedStimulus, whereas SaveSnapshot adds lot's of text, and saves
 % it as a file to disk.
 function o=SaveSnapshot(o,snapshotTexture)
 global fixationLines fixationCrossWeightPix labelBounds location  ...
