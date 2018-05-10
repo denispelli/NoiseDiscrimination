@@ -153,4 +153,7 @@ global window
 sca;
 window=[];
 ListenChar;
+if ismac
+    AutoBrightness(0,1);
+end
 end % function
