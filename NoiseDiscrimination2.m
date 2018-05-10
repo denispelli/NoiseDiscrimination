@@ -1042,7 +1042,7 @@ if isempty(o.window) && ~ismember(o.observer,o.algorithmicObservers)
          cal.brightnessReading=NaN;
       end
    end
-   if cal.ScreenConfigureDisplayBrightnessWorks
+   if ismac
       AutoBrightness(cal.screen,0);
       ffprintf(ff,'Turning autobrightness off. Setting "brightness" to %.2f, on a scale of 0.0 to 1.0;\n',cal.brightnessSetting);
    end
@@ -1152,6 +1152,9 @@ try
             window=[];
             oo(1).quitExperiment=o.quitExperiment;
             [oo.window]=deal([]);
+            if ismac
+                AutoBrightness(0,1);
+            end
             return
         end
         [oo.experimenter]=deal(reply);
@@ -1174,6 +1177,9 @@ try
             window=[];
             [oo.window]=deal([]);
             oo(1).quitExperiment=o.quitExperiment;
+            if ismac
+                AutoBrightness(0,1);
+            end
             return
         end
         [oo.observer]=deal(reply);
@@ -1228,6 +1234,9 @@ try
         window=[];
         [oo.window]=deal([]);
         oo(1).quitExperiment=o.quitExperiment;
+        if ismac
+            AutoBrightness(0,1);
+        end
         return
     end
     if ~isempty(o.window)
@@ -1852,6 +1861,9 @@ try
                     sca;
                     window=[];
                     [oo.window]=deal([]);
+                    if ismac
+                        AutoBrightness(0,1);
+                    end
                     return
                 end
             end
@@ -1896,6 +1908,9 @@ try
                         sca;
                         window=[];
                         [oo.window]=deal([]);
+                        if ismac
+                            AutoBrightness(0,1);
+                        end
                         return
                     end
                 case {'left','right'}
@@ -1922,6 +1937,9 @@ try
                         sca;
                         window=[];
                         [oo.window]=deal([]);
+                        if ismac
+                            AutoBrightness(0,1);
+                        end
                         return
                     end
             end
@@ -1949,6 +1967,9 @@ try
                     sca;
                     window=[];
                     [oo.window]=deal([]);
+                    if ismac
+                        AutoBrightness(0,1);
+                    end
                     return
                 end
                 response=upper(response);
@@ -2018,6 +2039,9 @@ try
         sca;
         window=[];
         [oo.window]=deal([]);
+        if ismac
+            AutoBrightness(0,1);
+        end
         return
     end
     
@@ -2034,7 +2058,10 @@ try
         sca;
         window=[];
         [oo.window]=deal([]);
-       return
+        if ismac
+            AutoBrightness(0,1);
+        end
+        return
     end
     
     [oo.nearPointXYDeg]=deal(o.nearPointXYDeg);
@@ -4396,7 +4423,9 @@ catch e
     if exist('cal','var') && isfield(cal,'old') && isfield(cal.old,'gamma')
         Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
     end
-    AutoBrightness(cal.screen,1); % Restore autobrightness.
+    if ismac
+        AutoBrightness(cal.screen,1); % Restore autobrightness.
+    end
     if logFid>-1
         fclose(logFid);
         logFid=-1;
@@ -4590,7 +4619,9 @@ ShowCursor;
 sca; % screen close all
 % window=[];
 [oo.window]=deal([]); % NOTE: o is not returned by this function.
-AutoBrightness(cal.screen,1); % Restore autobrightness.
+if ismac
+    AutoBrightness(cal.screen,1); % Restore autobrightness.
+end
 return
 end % function SaveSnapshot
 
