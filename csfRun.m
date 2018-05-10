@@ -79,7 +79,7 @@ if false
     o.questPlusPlot=true;
 end
 
-%% SPECIFY CONDITIONS IN oo STRUCT
+%% SPECIFY CONDITIONS IN ooo STRUCT
 ooo={};
 o.blankingRadiusReTargetHeight=nan;
 o.targetDurationSecs=0.2;
