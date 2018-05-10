@@ -439,9 +439,9 @@ function oo=NoiseDiscrimination2(ooIn)
 % -mario
 
 %% INPUT ARGUMENT
-if exist('oIn','var') && isfield(oIn,'quitExperiment') && oIn.quitExperiment
+if exist('ooIn','var') && isfield(ooIn,'quitExperiment') && ooIn(1).quitExperiment
     % If the user wants to quit the experiment, then return immediately.
-    o=oIn;
+    oo=ooIn;
     return
 end
 
@@ -534,8 +534,9 @@ ff=1; % Once we open a data file, ff will print to both screen and data file.
 
 %% DEFAULT VALUE FOR EVERY "o" PARAMETER
 % They are overridden by what you provide in each argument struct ooIn(i).
-if nargin < 1 || ~exist('oIn','var')
-    oIn.noInputArgument=true;
+if nargin < 1 || ~exist('ooIn','var')
+    ooIn=struct;
+    ooIn.noInputArgument=true;
 end
 o=[];
 % I added these here May 6, 2018,  to guarantee that they'll be defined
@@ -813,7 +814,7 @@ for oi=1:conditions
 end
 if false
     % ACCEPT ALL o FIELDS.
-    % All fields in the user-supplied "oIn" overwrite corresponding fields in "o".
+    % All fields in the user-supplied "ooIn" overwrite corresponding fields in "o".
     for oi=1:conditions
         fields=fieldnames(ooIn(oi));
         for i=1:length(fields)
@@ -823,8 +824,8 @@ if false
     end
 else
     % ACCEPT ONLY KNOWN o FIELDS.
-    % For each condition, all fields in the user-supplied "oIn" overwrite
-    % corresponding fields in "o". We ignore any field in oIn that is not
+    % For each condition, all fields in the user-supplied "ooIn" overwrite
+    % corresponding fields in "o". We ignore any field in ooIn that is not
     % already defined in o. If the ignored field is a known output field,
     % then we ignore it silently. We warn of unknown fields because they
     % might be typos for input fields.
@@ -856,6 +857,7 @@ else
         'targetFont' 'targetPix' 'useSpeech'...
         'approxRequiredNumber' 'logApproxRequiredNumber'... % for the noise-discrimination project
         'idealT64' 'q' 'rWarningCount' 'trialsRight' 'window'...
+        'block'...
         };
     unknownFields={};
     for oi=1:conditions
@@ -894,7 +896,7 @@ end
 
 %% OLD FEATURE: REPLICATE PELLI 2006
 % 3/23/17 moved this block of code to after reading o parameters. Untested in new location.
-% if o.replicatePelli2006 || isfield(oIn,'replicatePelli2006') && oIn.replicatePelli2006
+% if o.replicatePelli2006 || isfield(ooIn,'replicatePelli2006') && ooIn(oi).replicatePelli2006
 %     % Set parameter defaults to match conditions of Pelli et al. (2006). Their
 %     % Table A (p. 4668) reports that ideal log E is -2.59 for Sloan, and
 %     % that log N is -3.60. Thus they reported ideal log E/N 1.01. This
@@ -1148,6 +1150,7 @@ try
             ShowCursor;
             sca;
             window=[];
+            oo(1).quitExperiment=o.quitExperiment;
             [oo.window]=deal([]);
             return
         end
@@ -1170,6 +1173,7 @@ try
             sca;
             window=[];
             [oo.window]=deal([]);
+            oo(1).quitExperiment=o.quitExperiment;
             return
         end
         [oo.observer]=deal(reply);
@@ -1223,6 +1227,7 @@ try
         sca;
         window=[];
         [oo.window]=deal([]);
+        oo(1).quitExperiment=o.quitExperiment;
         return
     end
     if ~isempty(o.window)
@@ -2839,6 +2844,7 @@ try
             o=WaitUntilObserverIsReady(o,oo,waitMessage);
             waitMessage='Continuing. ';
             if o.quitBlock
+                oo(1).quitExperiment=o.quitExperiment;
                 break
             end
         end
@@ -3478,13 +3484,13 @@ try
                     end % if oo(oi).showBlackAnnulus
                     if oo(oi).saveStimulus && iMovieFrame == oo(oi).moviePreFrames+1
                         oo(oi).savedStimulus=Screen('GetImage',oo(oi).window,oo(oi).stimulusRect,'drawBuffer');
-                        fprintf('oo(oi).savedStimulus at contrast %.3f, flankerContrast %.3f\n',oo(oi).contrast,oo(oi).flankerContrast);
-                        Screen('DrawText',oo(oi).window,sprintf('o.contrast %.3f, flankerContrast %.3f',oo(oi).contrast,oo(oi).flankerContrast),20,150);
-                        oo(oi).newCal=cal;
-                        if oo(oi).saveSnapshot
-                            snapshotTexture=Screen('OpenOffscreenWindow',movieTexture(iMovieFrame));
-                            Screen('CopyWindow',movieTexture(iMovieFrame),snapshotTexture);
-                        end
+                        ffprintf(ff,'oo(oi).savedStimulus at contrast %.3f, flankerContrast %.3f\n',oo(oi).contrast,oo(oi).flankerContrast);
+                        figure
+                        imshow(oo(oi).savedStimulus);
+                    end
+                    if oo(oi).saveSnapshot && iMovieFrame==oo(oi).moviePreFrames+1
+                        snapshotTexture=Screen('OpenOffscreenWindow',movieTexture(iMovieFrame));
+                        Screen('CopyWindow',movieTexture(iMovieFrame),snapshotTexture);
                     end
                     for displayFrame=1:oo(oi).noiseCheckFrames
                         Screen('Flip',oo(oi).window,0,1); % Display this frame of the movie. Don't clear back buffer.
@@ -3765,7 +3771,14 @@ try
                     Screen('LoadNormalizedGammaTable',oo(oi).window,cal.gamma,loadOnNextFlip);
                 end
                 Screen('Flip',oo(oi).window,0,1); % Display instructions.
+            end % if ~isempty(o.window)
+            if oo(oi).saveStimulus 
+                oo(oi).savedResponseScreen=Screen('GetImage',oo(oi).window,oo(oi).stimulusRect,'frontBuffer');
+                ffprintf(ff,'oo(oi).savedResponseScreen\n');
+                figure;
+                imshow(oo(oi).savedResponseScreen);
             end
+
             
             %% COLLECT RESPONSE
             switch oo(oi).task
@@ -3784,7 +3797,7 @@ try
                     end
                     if o.quitExperiment
                         oo(1).quitExperiment=true;
-                       ffprintf(ff,'*** ESCAPE ESCAPE. Quitting experiment.\n');
+                        ffprintf(ff,'*** ESCAPE ESCAPE. Quitting experiment.\n');
                         if oo(oi).speakInstructions
                             Speak('Done.');
                         end
@@ -3822,7 +3835,7 @@ try
                     end
                     if o.quitExperiment
                         oo(1).quitExperiment=true;
-                       ffprintf(ff,'*** User typed ESCAPE twice. Quitting experiment.\n');
+                        ffprintf(ff,'*** User typed ESCAPE twice. Quitting experiment.\n');
                         if oo(oi).speakInstructions
                             Speak('Done.');
                         end
@@ -4401,9 +4414,12 @@ end
 end
 
 %% FUNCTION SaveSnapshot
-% NOT TESTED. IF o.saveStimulus==true THEN MY MOVIE CODE ABOVE SAVES A
-% snapshotTexture, WHICH I MODIFIED THIS CODE TO USE. BUT I HAVEN'T TESTED
-% IT. FOR NOW, USE o.saveStimulus, WHICH WORKS WELL.
+% NOT TESTED. IF o.saveSnapshot==true THEN MY MOVIE CODE ABOVE SAVES A
+% snapshotTexture, WHICH I MODIFIED THIS SUBROUTINE TO USE, BUT I HAVEN'T
+% TESTED IT YET. FOR NOW, USE o.saveStimulus, WHICH WORKS WELL.
+% The difference is that SaveStimulus merely saves a screeshot in
+% o.savedStimulus, whereas SaveSnapshot adds lot's of text info, and saves
+% it as a file to disk.
 function o=SaveSnapshot(o,snapshotTexture)
 global fixationLines fixationCrossWeightPix labelBounds location  ...
     tTest leftEdgeOfResponse cal ff whichSignal logFid
@@ -5097,8 +5113,7 @@ if ismember(response,[escapeChar,graveAccentChar])
     if o.speakInstructions
         Speak('Quitting.');
     end
-    o.quitBlock=true;
-    o.quitExperiment=true;
+    oo(1).quitExperiment=true;
     return
 end
 Screen('FillRect',o.window,o.gray1);
