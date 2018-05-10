@@ -924,7 +924,6 @@ end
 % end
 
 %% SET UP MISCELLANEOUS
-%onCleanupInstance=onCleanup(@()ListenChar;sca;window=[];[oo.window]=deal([]);); % clears screen and restores keyboard when function terminated.
 for oi=1:conditions
     o=oo(oi);
     if ~ismember(o.observer,o.algorithmicObservers) && ismac && ~ScriptingOkShowPermission
@@ -1146,15 +1145,8 @@ try
         fprintf('*Waiting for experimenter name.\n');
         [reply,o]=AskQuestion(oo,text);
         if o.quitBlock
-            ListenChar;
-            ShowCursor;
-            sca;
-            window=[];
+            CloseWindowAndCleanup(oo);
             oo(1).quitExperiment=o.quitExperiment;
-            [oo.window]=deal([]);
-            if ismac
-                AutoBrightness(0,1);
-            end
             return
         end
         [oo.experimenter]=deal(reply);
@@ -1171,15 +1163,8 @@ try
         fprintf('*Waiting for observer name.\n');
         [reply,o]=AskQuestion(oo,text);
         if o.quitBlock
-            ListenChar;
-            ShowCursor;
-            sca;
-            window=[];
-            [oo.window]=deal([]);
+            CloseWindowAndCleanup(oo);
             oo(1).quitExperiment=o.quitExperiment;
-            if ismac
-                AutoBrightness(0,1);
-            end
             return
         end
         [oo.observer]=deal(reply);
@@ -1228,15 +1213,8 @@ try
     end % if ~o.useFilter
     [oo.filterTransmission]=deal(o.filterTransmission);
     if o.quitBlock
-        ListenChar;
-        ShowCursor;
-        sca;
-        window=[];
-        [oo.window]=deal([]);
+        CloseWindowAndCleanup(oo)
         oo(1).quitExperiment=o.quitExperiment;
-        if ismac
-            AutoBrightness(0,1);
-        end
         return
     end
     if ~isempty(o.window)
@@ -1853,17 +1831,8 @@ try
                     if o.speakInstructions
                         Speak('Quitting.');
                     end
-                    o.quitBlock=true;
-                    o.quitExperiment=true;
                     oo(1).quitExperiment=true;
-                    ListenChar;
-                    ShowCursor;
-                    sca;
-                    window=[];
-                    [oo.window]=deal([]);
-                    if ismac
-                        AutoBrightness(0,1);
-                    end
+                    CloseWindowAndCleanup(oo)
                     return
                 end
             end
@@ -1900,17 +1869,8 @@ try
                         if o.speakInstructions
                             Speak('Quitting.');
                         end
-                        o.quitBlock=true;
-                        o.quitExperiment=true;
                         oo(1).quitExperiment=true;
-                        ListenChar;
-                        ShowCursor;
-                        sca;
-                        window=[];
-                        [oo.window]=deal([]);
-                        if ismac
-                            AutoBrightness(0,1);
-                        end
+                        CloseWindowAndCleanup(oo)
                         return
                     end
                 case {'left','right'}
@@ -1929,17 +1889,8 @@ try
                         if o.speakInstructions
                             Speak('Quitting.');
                         end
-                        o.quitBlock=true;
-                        o.quitExperiment=true;
                         oo(1).quitExperiment=true;
-                        ListenChar;
-                        ShowCursor;
-                        sca;
-                        window=[];
-                        [oo.window]=deal([]);
-                        if ismac
-                            AutoBrightness(0,1);
-                        end
+                        CloseWindowAndCleanup(oo)
                         return
                     end
             end
@@ -1959,17 +1910,8 @@ try
                     if o.speakInstructions
                         Speak('Quitting.');
                     end
-                    o.quitBlock=true;
-                    o.quitExperiment=true;
                     oo(1).quitExperiment=true;
-                    ListenChar;
-                    ShowCursor;
-                    sca;
-                    window=[];
-                    [oo.window]=deal([]);
-                    if ismac
-                        AutoBrightness(0,1);
-                    end
+                    CloseWindowAndCleanup(oo)
                     return
                 end
                 response=upper(response);
@@ -2034,14 +1976,7 @@ try
     [oo.nearPointXYInUnitSquare]=deal(o.nearPointXYInUnitSquare);
     if o.quitExperiment
         oo(1).quitExperiment=true;
-        ListenChar;
-        ShowCursor;
-        sca;
-        window=[];
-        [oo.window]=deal([]);
-        if ismac
-            AutoBrightness(0,1);
-        end
+        CloseWindowAndCleanup(oo)
         return
     end
     
@@ -2051,16 +1986,8 @@ try
     [oo.targetXYPix]=deal(o.targetXYPix);
     [oo.fixationXYPix]=deal(o.fixationXYPix);
     [oo.fixationIsOffscreen]=deal(oo.fixationIsOffscreen);
-
     if oo(1).quitExperiment
-        ListenChar;
-        ShowCursor;
-        sca;
-        window=[];
-        [oo.window]=deal([]);
-        if ismac
-            AutoBrightness(0,1);
-        end
+        CloseWindowAndCleanup(oo)
         return
     end
     
@@ -4379,12 +4306,7 @@ try
     ListenChar(0); % flush
     ListenChar;
     if ~isempty(oo(oi).window) && (o.quitExperiment || oo(oi).block >= oo(oi).blocksDesired)
-        sca; % Screen('CloseAll'); ShowCursor;
-        if ismac
-            AutoBrightness(cal.screen,1); % Restore autobrightness.
-        end
-        window=[];
-        [oo.window]=deal([]);
+        CloseWindowAndCleanup(oo);
     end
     if ismac && false
         % NOT IN USE: This applescript "activate" command provokes a screen
@@ -4416,15 +4338,9 @@ try
     oOld.secs=GetSecs; % Date for staleness.
 catch e
     %% MATLAB catch
-    ListenChar;
-    sca; % screen close all
-    window=[];
-    [oo.window]=deal([]);
+    CloseWindowAndCleanup(oo)
     if exist('cal','var') && isfield(cal,'old') && isfield(cal.old,'gamma')
         Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
-    end
-    if ismac
-        AutoBrightness(cal.screen,1); % Restore autobrightness.
     end
     if logFid>-1
         fclose(logFid);
@@ -4614,14 +4530,7 @@ o.blocksDesired=1;
 ffprintf(ff,'SUCCESS: o.saveSnapshot is done. Image saved, now returning.\n');
 fclose(logFid);
 logFid=-1;
-ListenChar;
-ShowCursor;
-sca; % screen close all
-% window=[];
-[oo.window]=deal([]); % NOTE: o is not returned by this function.
-if ismac
-    AutoBrightness(cal.screen,1); % Restore autobrightness.
-end
+CloseWindowAndCleanup(oo)
 return
 end % function SaveSnapshot
 
@@ -5519,3 +5428,19 @@ if o.printImageStatistics
         o.contrast,o.noiseSD,o.signalMin,o.signalMax);
 end
 end
+
+function CloseWindowAndCleanup(oo)
+% Close any window opened by the Psychtoolbox Screen command, re-enable
+% keyboard, show cursor, and restore AutoBrightness.
+global window
+if nargin>0
+    [oo.window]=deal([]);
+end
+sca;
+window=[];
+ListenChar; % May already be done by sca.
+ShowCursor; % May already be done by sca.
+if ismac
+    AutoBrightness(0,1);
+end
+end % function CloseWindowAndCleanup()
