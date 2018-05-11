@@ -1969,6 +1969,10 @@ try
     % believe none of this program assumes any particular relation between
     % the two, other that the statement immediately below that locates the
     % target at the near point.
+    
+    if length(o.eccentricityXYDeg)~=2
+        error('o.eccentricityXYDeg must be an array of two numbers.');
+    end
     oo(1).nearPointXYDeg=o.eccentricityXYDeg; 
     
     fprintf('*Waiting for observer to set viewing distance.\n');
@@ -5469,7 +5473,9 @@ global window
 if nargin>0
     [oo.window]=deal([]);
 end
+fprintf('Closing the window takes 30 s. ... ');
 sca;
+fprintf('Done.\n');
 window=[];
 ListenChar; % May already be done by sca.
 ShowCursor; % May already be done by sca.
