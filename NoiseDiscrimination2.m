@@ -1093,6 +1093,10 @@ try
         fprintf('Done.\n');
         [oo.window]=deal(window);
         [oo.screenrect]=deal(o.screenrect);
+        if ~o.useFractionOfScreen
+            HideCursor;
+        end
+
         % if cal.hiDPIMultiple~=1
         %     ffprintf(ff,'HiDPI: It doesn''t matter, but you might be curious to know.\n');
         %     if ismac
@@ -2659,9 +2663,6 @@ try
             Screen('TextFont',oo(1).window,textFont);
             Screen('TextSize',oo(1).window,oo(oi).textSize);
             Screen('TextStyle',oo(1).window,textStyle);
-            if ~oo(oi).useFractionOfScreen
-                HideCursor;
-            end
         end
         frameRect=InsetRect(boundsRect,-1,-1);
         if oo(oi).saveSnapshot
@@ -5480,11 +5481,11 @@ global window
 fprintf('Closing the window takes 30 s. ... ');
 % sca;
 Screen('Close',window);
+fprintf('Done.\n');
 window=[];
 if nargin>0
     [oo.window]=deal([]);
 end
-fprintf('Done.\n');
 ListenChar; % May already be done by sca.
 ShowCursor; % May already be done by sca.
 if ismac
