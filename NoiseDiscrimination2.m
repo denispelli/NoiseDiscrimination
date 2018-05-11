@@ -764,6 +764,7 @@ o.signalImagesCacheCode=[];
 o.age=20;
 o.approxRequiredNumber=[];
 o.snapshotCaptionTextSize=[];
+o.printLogOfIdeal=false;
 
 o.deviceIndex=-1; % -1 for all keyboards.
 o.deviceIndex=-3; % -3 for all keyboard/keypad devices.
@@ -2054,6 +2055,7 @@ try
             case {'letter' 'image'}
                 ffprintf(ff,'o.font %s\n',oo(oi).font);
             case 'gabor'
+                ffprintf(ff,'o.targetCyclesPerDeg %.1f\n',oo(oi).targetCyclesPerDeg);
                 ffprintf(ff,'o.targetGaborSpaceConstantCycles %.1f\n',oo(oi).targetGaborSpaceConstantCycles);
                 ffprintf(ff,'o.targetGaborCycles %.1f\n',oo(oi).targetGaborCycles);
                 ffprintf(ff,'o.targetGaborOrientationsDeg [');
@@ -3740,7 +3742,10 @@ try
                 oo(oi).savedResponseScreen=Screen('GetImage',oo(oi).window,oo(oi).stimulusRect,'frontBuffer');
                 ffprintf(ff,'oo(oi).savedResponseScreen\n');
                 figure;
+                w=warning('off');
                 imshow(oo(oi).savedResponseScreen);
+                % It would be nice to save these to disk.
+                warning(w);
             end
 
             
@@ -4044,7 +4049,7 @@ try
                 error(string);
             end
         end
-        if trial/10==round(trial/10) && ismember(oo(oi).observer,oo(oi).algorithmicObservers)
+        if oo(oi).printLogOfIdeal && trial/10==round(trial/10) && ismember(oo(oi).observer,oo(oi).algorithmicObservers)
             fprintf('trial %d, block %d, condition %d, t %.2f, isRight %d, %dx%d, %.0f s, %.2f Mpix/s.\n',...
                 trial,oo(oi).block,oi,tTest,isRight,oo(oi).canvasSize,GetSecs-blockStartSecs,1e-6*prod(oo(oi).canvasSize)*trial/(GetSecs-blockStartSecs));
         end
@@ -4180,9 +4185,9 @@ try
         if oi==1
             ffprintf(ff,'\n');
         end
-        msg=sprintf(['%d of %d. "%s". %d trials. %.0f%% right. '...
-                    'Threshold log contrast %.2f',plusMinusChar,'%.2f (m',plusMinusChar,'sd),'],...
-                    oi,length(oo),oo(oi).conditionName,oo(oi).trials,100*oo(oi).trialsRight/oo(oi).trials,t,sd);
+        msg=sprintf(['%d of %d "%s" %d trials, %.0f%% right, noiseSD %.2f, '...
+                    'Threshold log c %.2f',plusMinusChar,'%.2f,'],...
+                    oi,length(oo),oo(oi).conditionName,oo(oi).trials,100*oo(oi).trialsRight/oo(oi).trials,oo(oi).noiseSD,t,sd);
         switch oo(oi).targetModulates
             case 'luminance'
                 ffprintf(ff,'<strong>%s contrast %.4f, log E/N %.2f, efficiency %.5f</strong>\n',...
