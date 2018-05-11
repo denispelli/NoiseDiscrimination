@@ -42,7 +42,7 @@ cal=OurScreenCalibrations(0);
 %% SPECIFY BASIC CONDITION
 o.experiment='EvsN';
 o.eyes='both'; % 'left', 'right', 'both'.
-o.viewingDistanceCm=40;
+o.viewingDistanceCm=80;
 o.targetGaborCycles=3;
 o.pThreshold=0.75;
 o.useDynamicNoiseMovie=true;
@@ -103,11 +103,13 @@ for ecc=[0 1 4 16 32]
         if isfield(o,'observer') && streq(o.observer,'ideal')
             % Don't waste time generating noise far from the signal.
             o.noiseRadiusDeg=o.targetHeightDeg/2;
+        else
+            o.noiseRadiusDeg=4*o.targetHeightDeg;
         end
         o.noiseCheckDeg=o.targetHeightDeg/20;
         if all(o.eccentricityXYDeg==0)
             o.markTargetLocation=false;
-            o.blankingRadiusReTargetHeight=1;
+            o.blankingRadiusReTargetHeight=0.6;
             o.fixationCrossDeg=inf;
         else
             o.markTargetLocation=true;
