@@ -143,14 +143,15 @@ if blocksDone>0
     fprintf('Saved the experiment (%d of %d blocks done) in %s in data folder.\n',...
         blocksDone,length(ooo),experimentFilename);
 end
-sca; % Restore cursor.
 end % function
 
 %% Clean up when RunExperiment terminates, even by control-C.
 function CloseWindowAndCleanup()
 % Close any window opened by the Psychtoolbox Screen command, and re-enable keyboard.
 global window
-sca;
+if ~isempty(window)
+    sca;
+end
 window=[];
 ListenChar; % May already be done by sca.
 ShowCursor; % May already be done by sca.
