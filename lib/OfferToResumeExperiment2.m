@@ -13,13 +13,8 @@ returnChar=char(13);
 spaceChar=' ';
 escapeKeyCode=KbName('escape');
 graveAccentKeyCode=KbName('`~');
-spaceKeyCode=KbName('space');
 returnKeyCode=KbName('return');
-escapeKeyCode=KbName('escape');
-graveAccentKeyCode=KbName('`~');
 spaceKeyCode=KbName('space');
-returnKeyCode=KbName('return');
-returnChar=13;
 cal=OurScreenCalibrations(0);
 o=ooo{1}(1);
 if ~isfield(o,'experiment') || isempty(o.experiment)
@@ -33,7 +28,7 @@ if ~isempty(matFiles)
     n=[];
     for i = 1:length(matFiles)
         % Load each experiment into one cell of expt.
-        expt{i}=load(matFiles(i).name,'oo');
+        expt{i}=load(matFiles(i).name,'ooo');
         n(i)=matFiles(i).datenum;
     end
     [~,index]=sort(n,'descend');
@@ -45,21 +40,23 @@ if ~isempty(matFiles)
         ListenChar(2); % no echo
         resumeExperiment=false;
         for i=1:length(expt)
-            o=expt{i}.oo{1};
+            o=expt{i}.ooo{1};
 %             if isempty(o.observer) || o.trials<o.trialsPerBlock
 %                 % This partial experiment has no data. Skip it.
 %                 continue
 %             end
-            fprintf('<strong>%s, %s, Observer: %s</strong>\n',matFiles(i).name,matFiles(i).date,o.observer);
-            fprintf('Type Y for yes use it. Hit RETURN to ignore it, or DELETE to delete it:\n');
+            s=sprintf('<strong>%s, %s, Observer: %s</strong>\n',matFiles(i).name,matFiles(i).date,[o.observer ' ']);
+            fprintf('%s',s);
+            fprintf('Type Y for: Yes, use it. Hit RETURN to ignore it, or DELETE to delete it: ');
             responseChar=GetKeypress([KbName('y') KbName('delete') returnKeyCode escapeKeyCode graveAccentKeyCode]);
+            fprintf('\n');
             switch responseChar
                 case 'y'
-                    oo=expt{i}.oo;
-                    for j=1:length(oo)
+                    ooo=expt{i}.ooo;
+                    for j=1:length(ooo)
                         % In each block, reset the quit flags.
-                        oo{j}.quitRun=false;
-                        oo{j}.quitExperiment=false;
+                        [ooo{j}.quitBlock]=deal(false);
+                        [ooo{j}.quitExperiment]=deal(false);
                     end
                     fprintf('Ok. Resuming partial old experiment.\n');
                     resumeExperiment=true;
