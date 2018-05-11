@@ -588,7 +588,7 @@ o.experimenter='';
 o.eyes='both'; % 'left', 'right', 'both', or 'one', which asks user to specify at runtime.
 o.trialsPerBlock=40; % Typically 40.
 o.trials=0; % Initialize trial counter so it's defined even if user quits early.
-o.block=1; % For display only, indicate the block number. When o.block==blocksDesired this program says "Congratulations" before returning.
+o.block=1; % We display the the block number. When o.block==blocksDesired this program says "Congratulations" before returning.
 o.blocksDesired=1; % How many blocks you to plan to run? Used solely for display and congratulations and keeping o.window open until last block.
 o.experiment='';
 o.conditionName='';
@@ -1986,9 +1986,10 @@ try
     [oo.targetXYPix]=deal(o.targetXYPix);
     [oo.fixationXYPix]=deal(o.fixationXYPix);
     [oo.fixationIsOffscreen]=deal(oo.fixationIsOffscreen);
+
     if oo(1).quitExperiment
         CloseWindowAndCleanup(oo)
-        return
+       return
     end
     
     [oo.nearPointXYDeg]=deal(o.nearPointXYDeg);
@@ -2568,11 +2569,11 @@ try
         r=round(r);
         centralNoiseMask=FillRectInMatrix(1,r,centralNoiseMask); % fill radius with 1
         centralNoiseMask=logical(centralNoiseMask);
+        oo(oi).useCentralNoiseMask=~all(centralNoiseMask);
         
         if isfinite(oo(oi).noiseEnvelopeSpaceConstantDeg) && oo(oi).noiseRaisedCosineEdgeThicknessDeg > 0
             error('Sorry. Please set o.noiseEnvelopeSpaceConstantDeg=inf or set o.noiseRaisedCosineEdgeThicknessDeg=0.');
         end
-        
         if isfinite(oo(oi).noiseEnvelopeSpaceConstantDeg)
             % Compute Gaussian noise envelope, which will be central or annular,
             % depending on whether o.annularNoiseEnvelopeRadiusDeg is zero or
@@ -2591,6 +2592,7 @@ try
                 distance=radius;
             end
             centralNoiseEnvelope=exp(-(distance.^2)/sigma^2);
+            oo(oi).useCentralNoiseEnvelope=true;
         elseif oo(oi).noiseRaisedCosineEdgeThicknessDeg > 0
             % Compute central noise envelope with raised-cosine border.
             [x, y]=meshgrid(1:oo(oi).canvasSize(1),1:oo(oi).canvasSize(2));
@@ -2602,8 +2604,10 @@ try
             a=min(180,a);
             a=max(0,a);
             centralNoiseEnvelope=0.5+0.5*cosd(a);
+            oo(oi).useCentralNoiseEnvelope=true;
         else
             centralNoiseEnvelope=ones(oo(oi).canvasSize);
+            oo(oi).useCentralNoiseEnvelope=false;
         end
         oo(oi).centralNoiseEnvelopeE1DegDeg=sum(centralNoiseEnvelope(:).^2*oo(oi).noiseCheckPix/oo(oi).pixPerDeg^2);
         
@@ -2966,7 +2970,7 @@ try
                     assert(IsRectInRect(sRect,canvasRect),'There isn''t enough room for four targets. Reduce o.targetHeightDeg or o.viewingDistanceCm.');
                     signalImageIndex=logical(FillRectInMatrix(true,sRect,zeros(oo(oi).canvasSize)));
                     locations=4;
-                    location=struct('image',{[] [] [] []});
+                    location=struct('image',{[] [] [] []}); % Four-element struct array.
 %                     rng('shuffle'); TAKES 0.01 s.
                     if iMovieFrame == 1
                         signalLocation=randi(locations);
@@ -3042,7 +3046,9 @@ try
                     noise=Expand(noise,oo(oi).noiseCheckPix/oo(oi).targetCheckPix); % One number per targetCheck.
                     % Each pixel in "noise" now represents a targetCheck.
                     noise(~centralNoiseMask & ~annularNoiseMask)=0;
-                    noise(centralNoiseMask)=centralNoiseEnvelope(centralNoiseMask).*noise(centralNoiseMask); % TAKES 2 ms.
+                    if oo(oi).useCentralNoiseEnvelope
+                        noise(centralNoiseMask)=centralNoiseEnvelope(centralNoiseMask).*noise(centralNoiseMask); % TAKES 2 ms.
+                    end
                     canvasRect=RectOfMatrix(noise); % units of targetChecks
                     assert(all(canvasRect==[0 0 oo(oi).canvasSize(2) oo(oi).canvasSize(1)]));
                     sRect=RectOfMatrix(oo(oi).signal(1).image); % units of targetChecks
@@ -3085,7 +3091,11 @@ try
                             % pixel represents one targetCheck. Target is
                             % centered in that image.
                             location(1).image=ones(size(signalImage(:,:,1))); % TAKES 0.3 ms.
-                            location(1).image(centralNoiseMask)=1+(oo(oi).noiseSD/oo(oi).noiseListSd)*noise(centralNoiseMask); % TAKES 1 ms.
+                            if oo(oi).useCentralNoiseMask
+                                location(1).image(centralNoiseMask)=1+(oo(oi).noiseSD/oo(oi).noiseListSd)*noise(centralNoiseMask); % TAKES 1 ms.
+                            else
+                                location(1).image=1+(oo(oi).noiseSD/oo(oi).noiseListSd)*noise; % TAKES ? ms.
+                            end
                             location(1).image(annularNoiseMask)=1+(oo(oi).annularNoiseSD/oo(oi).noiseListSd)*noise(annularNoiseMask);
                             location(1).image=repmat(location(1).image,1,1,length(white)); % Support color.
                             location(1).image=location(1).image+oo(oi).contrast*signalImage; % Add signal to noise.
@@ -3919,9 +3929,10 @@ try
                         continue
                     end
                     if length(responseChar) > 1
-                        % GetKeypress might return a multi-character string,
-                        % but our code assumes the response is a scalar, not a
-                        % matrix. So we replace the string by 0.
+                        % GetKeypress might return a multi-character
+                        % string, but our code assumes the response is a
+                        % scalar, not a matrix. So we replace the string by
+                        % 0.
                         responseChar=0;
                     end
                     [~,response]=ismember(lower(responseChar),ratings);
@@ -3961,7 +3972,7 @@ try
                 end
             end
         else
-            response=ModelObserver(o,oo(oi).signal,movieImage{oo(oi).moviePreFrames+1});
+            response=ModelObserver(o,oo(oi).signal,movieImage(oo(oi).moviePreFrames+1:end-oo(oi).moviePostFrames));
         end % if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
         if o.quitBlock
             break;
@@ -4032,6 +4043,10 @@ try
                 ffprintf(ff,string);
                 error(string);
             end
+        end
+        if trial/10==round(trial/10) && ismember(oo(oi).observer,oo(oi).algorithmicObservers)
+            fprintf('trial %d, block %d, condition %d, t %.2f, isRight %d, %dx%d, %.0f s, %.2f Mpix/s.\n',...
+                trial,oo(oi).block,oi,tTest,isRight,oo(oi).canvasSize,GetSecs-blockStartSecs,1e-6*prod(oo(oi).canvasSize)*trial/(GetSecs-blockStartSecs));
         end
     end % while trial<oo(oi).trialsPerBlock
     
@@ -4707,13 +4722,15 @@ fprintf('normalized luminance: %.1f %.1f\n',LuminanceOfIndex(cal,peekImg(1,1:2))
 end % function AssessLinearity(o)
 
 %% FUNCTION ModelObserver
-function response=ModelObserver(o,signal,location)
+function response=ModelObserver(o,signal,movieImage)
 global signalImageIndex signalMask  
 % ModelObserver now works for identifying a luminance/noise/entropy letter
 % in noise. Hasn't yet been critically tested to see if its performance
 % matches theoretical benchmarks. But the thresholds seem reasonable, and
 % quest succesfully homes in on 75%. Instead of globals, we could put 
 % the currently global variables into a new struct called "model".
+% NOTE: the movie's pre and post frames have already been removed.
+location=movieImage{1};
 switch o.observer
     case 'ideal'
         switch o.task
@@ -4756,12 +4773,24 @@ switch o.observer
                     case 'luminance'
                         % THIS WORKS.
                         im=zeros(size(signal(1).image));
-                        % signalImageIndex selects the pixels in the
-                        % signal rect.
-                        im(:)=location(1).image(signalImageIndex); % the signal
+                        imSum=im;
+                        % The signal is always static. The noise may be
+                        % static or dynamic. Averaging over time is optimal
+                        % becasue the signal is static.
+                        for iMovieFrame=1:length(movieImage)
+                            location=movieImage{iMovieFrame};
+                            % signalImageIndex selects the pixels in the
+                            % signal rect.
+                            im(:)=location(1).image(signalImageIndex); % the signal
+                            imSum=imSum+im;
+                        end
+                        im=imSum/length(movieImage);
                         for i=1:o.alternatives
                             d=im-(1+o.contrast*signal(i).image);
-                            likely(i)=-mean(d(:).^2);
+                            % We compute rms difference between each 
+                            % possible signal and the average stimulus
+                            % frame (over the signal part of the movie).
+                            likely(i)=-sqrt(mean(d(:).^2));
                         end
                     case {'noise' 'entropy'}
                         % Calculate log likelihood of each possible letter.
@@ -5428,7 +5457,6 @@ if o.printImageStatistics
         o.contrast,o.noiseSD,o.signalMin,o.signalMax);
 end
 end
-
 function CloseWindowAndCleanup(oo)
 % Close any window opened by the Psychtoolbox Screen command, re-enable
 % keyboard, show cursor, and restore AutoBrightness.
