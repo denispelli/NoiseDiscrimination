@@ -100,6 +100,10 @@ for ecc=[0 1 4 16 32]
         o.targetCyclesPerDeg=sf;
         o.nearPointXYInUnitSquare=[0.80 0.5];
         o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
+        if isfield(o,'observer') && streq(o.observer,'ideal')
+            % Don't waste time generating noise far from the signal.
+            o.noiseRadiusDeg=o.targetHeightDeg/2;
+        end
         o.noiseCheckDeg=o.targetHeightDeg/20;
         if all(o.eccentricityXYDeg==0)
             o.markTargetLocation=false;
