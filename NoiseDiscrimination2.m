@@ -4269,24 +4269,24 @@ try
   
         %% SAVE EACH THRESHOLD IN ITS OWN FILE, WITH A SUFFIX DESIGNATING THE CONDITION NUMBER.
         oo=SortFields(oo);
-        oo(oi).newCal=cal;
-        save(fullfile(oo(oi).dataFolder,[oo(oi).dataFilename '.mat']),'o','cal');
+        oo(1).newCal=cal;
+        save(fullfile(oo(1).dataFolder,[oo(1).dataFilename '.mat']),'oo','cal');
         try % save to .json file
             if streq(oo(oi).targetKind,'image')
                 % json encoding of 12 faces takes 60 s, which is
                 % unbearable, so we omit the signals from the json file.
-                o1=rmfield(o,'signal');
+                oo1=rmfield(oo,'signal');
             else
-                o1=o;
+                oo1=oo;
             end
             if exist('jsonencode','builtin')
-                json=jsonencode(o1);
+                json=jsonencode(oo1);
             else
                 addpath(fullfile(myPath,'lib/jsonlab'));
-                json=savejson('',o1);
+                json=savejson('',oo1);
             end
-            clear o1
-            fid=fopen(fullfile(oo(oi).dataFolder,[oo(oi).dataFilename '.json']),'w');
+            clear oo1
+            fid=fopen(fullfile(oo(1).dataFolder,[oo(1).dataFilename '.json']),'w');
             fprintf(fid,'%s',json);
             fclose(fid);
         catch e
@@ -5480,17 +5480,19 @@ function CloseWindowAndCleanup(oo)
 % Close any window opened by the Psychtoolbox Screen command, re-enable
 % keyboard, show cursor, and restore AutoBrightness.
 global window
-fprintf('Closing the window takes 30 s. ... ');
-% sca;
-Screen('Close',window);
-fprintf('Done.\n');
-window=[];
+if ~isempty(window)
+    fprintf('Closing the window takes 30 s. ... ');
+    % sca;
+    Screen('Close',window);
+    fprintf('Done.\n');
+    window=[];
+    if ismac
+        AutoBrightness(0,1);
+    end
+end
 if nargin>0
     [oo.window]=deal([]);
 end
 ListenChar; % May already be done by sca.
 ShowCursor; % May already be done by sca.
-if ismac
-    AutoBrightness(0,1);
-end
 end % function CloseWindowAndCleanup()
