@@ -150,7 +150,8 @@ function CloseWindowAndCleanup()
 % Close any window opened by the Psychtoolbox Screen command, and re-enable keyboard.
 global window
 if ~isempty(window)
-    sca;
+    Screen('Close',window);
+%     sca;
 end
 window=[];
 ListenChar; % May already be done by sca.
