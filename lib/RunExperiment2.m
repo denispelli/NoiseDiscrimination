@@ -151,12 +151,12 @@ function CloseWindowAndCleanup()
 global window
 if ~isempty(window)
     Screen('Close',window);
-%     sca;
+    %     sca;
+    if ismac
+        AutoBrightness(0,1);
+    end
 end
 window=[];
 ListenChar; % May already be done by sca.
 ShowCursor; % May already be done by sca.
-if ismac
-    AutoBrightness(0,1);
-end
 end % function CloseWindowAndCleanup()
