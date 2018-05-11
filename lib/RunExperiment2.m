@@ -109,7 +109,7 @@ for block=1:length(ooo)
     thisBlockDone=true; % Initial value.
     oo=ooo{block}; % Get a block.
     for oi=1:length(oo)
-        % Test each condition in a block.
+        % Check each condition in a block.
         if isfield(oo(oi),'trials') && oo(oi).trials>=oo(oi).trialsPerBlock
             % Gather components of filename.
             experiment=ooo{1}(oi).experiment;
