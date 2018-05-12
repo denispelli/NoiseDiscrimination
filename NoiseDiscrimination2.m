@@ -1,19 +1,22 @@
 function oo=NoiseDiscrimination2(ooIn)
 % oo=NoiseDiscrimination2(oo);
 %
-% You can now pass an array of stucts, one struct per condition, and it
+% You can now pass a struct array, one element per condition, and it
 % will run them all interleaved.
 %
-% Pass all your parameters in the "o" struct, which will be returned with
+% Pass all your parameters in the "oo" struct, which will be returned with
 % all the results as additional fields. NoiseDiscrimination may adjust some
 % of your parameters to satisfy physical constraints. Constraints include
 % the screen size, resolution, and maximum possible contrast.
 %
 % You should write a short script that loads all your parameters into an
-% "o" struct and calls o=NoiseDiscrimination(o). Within your script it's
-% fine to keep reusing o, with little or no change. However, at the
-% beginning of your script, I recommend calling "clear o" to make sure that
-% you don't carry over any values from a prior experiment.
+% "oo" struct array and calls oo=NoiseDiscrimination(oo). Within your
+% script, it may be convenient to load up a temporary struct "o" with a
+% single condition, and later assign it to an element of the array struct,
+% e.g. oo(oi)=o; it's fine to keep reusing o and oo. However, at the
+% beginning of your script, I recommend calling "clear o oo" to make sure
+% that you don't carry over any values from a prior iteration or
+% experiment.
 %
 % OFF THE NYU CAMPUS: If you have an NYU netid and you're using the NYU
 % MATLAB license server then you can work from off campus if you install
@@ -21,46 +24,48 @@ function oo=NoiseDiscrimination2(ooIn)
 % http://www.nyu.edu/its/nyunet/offcampus/vpn/#services
 %
 % ALTERNATE FOR ESCAPE KEY: The 2017 MacBook Pro with the task bar has no
-% built-in ESCAPE key. (The task bar sometimes simulates ESCAPE key, but I
-% don't know if we can count on it being there.) To support computers
-% without ESCAPE keys, NoiseDiscrimination accepts the GRAVE ACCENT key as
-% equivalent to the ESCAPE key.
+% built-in ESCAPE key. (The task bar simulates the ESCAPE key, but the
+% PsychToolbox software can't read it.) To support computers without ESCAPE
+% keys, NoiseDiscrimination always accepts the GRAVE ACCENT key
+% (immediately below ESCAPE) as equivalent to the ESCAPE key.
 %
-% RESUME. There's a new feature to allow resuming a partially completed
-% experiment. It has not been thoroughly tested. This only arises if an
-% observer has previously used ESCAPE ESCAPE to get out of an experiment
-% before completion. The saved MAT file has "-partial" in the file name. If
-% you run the same experiment on the same computer, the program will notice
-% the old file (based solely on o.experiment and computer name) and offer
-% to resume it, instead of starting a new experiment. [IMPORTANT: This
-% question is presented in the MATLAB command window, not a Psychtoolbox
-% window.] The software doesn't yet know the observer's name, so it will
-% offer files by any observer. You can say "yes", to resume the old
-% experiment. Or hit DELETE to delete the old partial experiment. Or hit
-% RETURN to ignore the file and proceed with your new experiment. If you
-% resume the old experiment it eventually produces a new experiment file. I
-% haven't yet added code to automatically delete the obsolete partial file.
-% This new feature will not appear if your observers always finish their
-% experiments. It's a convenience for the experimenter because it allows
-% you to design long experiments, with many blocks, that the observer can
-% complete over multiple sessions.
+% QUIT AND RESUME. There's a new feature to allow resuming a partially
+% completed experiment. It has not been thoroughly tested. This only arises
+% if an observer has previously used ESCAPE ESCAPE to get out of an
+% experiment before completion. The saved MAT file has "-partial" in the
+% file name. If you run the same experiment on the same computer, the
+% program will notice the old file (based solely on o.experiment and
+% computer name) and offer to resume it, instead of starting a new
+% experiment. [IMPORTANT: This question is presented in the MATLAB command
+% window, not a Psychtoolbox window.] The software doesn't yet know the
+% observer's name, so it will offer files by any observer. You can say
+% "yes", to resume the old experiment. Or hit DELETE to delete the old
+% partial experiment. Or hit RETURN to ignore the file and proceed with
+% your new experiment. If you resume the old experiment it eventually
+% produces a new experiment file. I haven't yet added code to automatically
+% delete the obsolete partial file. This new feature will not appear if
+% your observers always finish their experiments. It's a convenience for
+% the experimenter because it allows you to design long experiments, with
+% many blocks, that the observer can complete over multiple sessions.
 %
-% Ragahavan & Pelli: Photon noise is NPhoton = phi^-1 q^-1 L^-1, where phi
-% is the transduction efficiency of (fraction of light required to account
-% for) the photon noise, qL is luminance expressed as a quantal flux of
-% 555-nm photon deg-2 s-1, q = 1.26e6 deg^-2 s^-1 td^-1 is the conversion
-% factor, and L is retinal illuminance in td.
+% ComputeNPhoton computes NPhoton. Ragahavan & Pelli: Photon noise is
+% NPhoton = phi^-1 q^-1 L^-1, where phi is the transduction efficiency of
+% (fraction of light required to account for) the photon noise, qL is
+% luminance expressed as a quantal flux of 555-nm photon deg-2 s-1,
+% q = 1.26e6 deg^-2 s^-1 td^-1 is the conversion factor, and L is retinal
+% illuminance in td.
 % q=1.26e6;
 % NPhoton=1/(phi*q*td);
 
-% SNAPSHOT. It is useful to take snapshots of the stimulus produced by
-% NoiseDiscrimination. Such snapshots can be used in papers and talks to
-% show our stimuli. If you request a snapshot then NoiseDiscrimination
-% saves the first stimulus to a PNG image file and then quits with a fake
-% error. To help you keep track of how you made each stimulus image file,
-% some information about the condition is contained in the file name and in
-% a caption on the figure. The caption may not be included if you enable
-% cropping. Here are the parameters that you can control:
+% SNAPSHOT && SAVESTIMULUS. It is useful to take snapshots of the stimulus
+% produced by NoiseDiscrimination. Such snapshots can be used in papers and
+% talks to show our stimuli. If you request a snapshot then
+% NoiseDiscrimination saves the first stimulus to a PNG image file and then
+% quits with a fake error. To help you keep track of how you made each
+% stimulus image file, some information about the condition is contained in
+% the file name and in a caption on the figure. The caption may not be
+% included if you enable cropping. Here are the parameters that you can
+% control:
 %
 % o.saveSnapshot=true;    % If true, take snapshot for public presentation. 
 % o.snapshotContrast=0.2; % nan to request program default.
@@ -102,9 +107,9 @@ function oo=NoiseDiscrimination2(ooIn)
 % Pasting a grayscale image (128) on a background set to 1 resulted in
 % intermediate pixel values which were all darker than the background gray.
 % I fixed this by making the background be 128. Thus the background is
-% always gray o.LBackground, but it's produced by a color index of 128 inside
-% stimulusRect, and a color index of 1 outside it. This is drawn by calling
-% FillRect with 1 for the whole screen, and again with 128 for the
+% always gray o.LBackground, but it's produced by a color index of 128
+% inside stimulusRect, and a color index of 1 outside it. This is drawn by
+% calling FillRect with 1 for the whole screen, and again with 128 for the
 % stimulusRect.
 %
 % FIXATION CROSS. The fixation cross is quite flexible. You specify its
@@ -113,7 +118,16 @@ function oo=NoiseDiscrimination2(ooIn)
 % no fixation line) around the target that is at least a target width (to
 % avoid overlap masking) and at least half the eccentricity (to avoid
 % crowding). Otherwise the fixation cross is blanked during target
-% presentation and until o.fixationCrossBlankedUntilSecsAfterTarget.
+% presentation and until o.fixationCrossBlankedUntilSecsAfterTarget. There
+% are many options:
+% o.useFixation=true;
+% o.fixationCrossDeg=3; % Typically 3 or inf. Make this at least 4 deg for scotopic testing, since the fovea is blind scotopically.
+% o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
+% o.fixationCrossBlankedNearTarget=true;
+% o.fixationCrossBlankedUntilSecsAfterTarget=0.6; % Pause after stimulus before display of fixation. Skipped when fixationCrossBlankedNearTarget. Not needed when eccentricity is bigger than the target.
+% o.fixationCrossDrawnOnStimulus=false;
+% o.blankingRadiusReTargetHeight= nan;
+% o.blankingRadiusReEccentricity= 0.5;
 %
 % ANNULAR GAUSSIAN NOISE ENVELOPE. Use these three parameters to specify an
 % annular gaussian envelope. The amplitude is a Gaussian of R-Ra where R is
@@ -135,8 +149,10 @@ function oo=NoiseDiscrimination2(ooIn)
 % o.nearPointXYDeg % eccentricity of near point re fixation. Right & up are +.
 % 1. Set displayNearPointXYDeg to eccentricityXYDeg, roughly.
 % 2. Set displayNearPointXYPix according to o.nearPointXYInUnitSquare.
-% 3. Ask viewer to adjust display so desired near point is at desired viewing distance and orthogonal to line of sight from eye.
-% 4. If using off-screen fixation, put it at same distance from eye, and compute its position relative to near point.
+% 3. Ask viewer to adjust display so desired near point is at desired
+% viewing distance and orthogonal to line of sight from eye.
+% 4. If using off-screen fixation, put it at same distance from eye, and
+% compute its position relative to near point.
 
 %% CURRENT ISSUES/BUGS
 % 1. Would like to add illustrations to the question screens, so you can
@@ -150,7 +166,6 @@ function oo=NoiseDiscrimination2(ooIn)
 % when I access it in a subrouting, it's empty or undefined (i don't
 % remember), even though it's declared as global in both. Several other
 % variables are also declared global and work as expected.
-% 5. ModelObserver works fine for luminance and noise. 
 
 
 %% EXTRA DOCUMENTATION
@@ -1368,13 +1383,14 @@ try
     o=oo(1);
     st=dbstack('-completenames',1);
     if ~isempty(st)
-       for i=1:2
+       for i=1:length(st)
           o.scriptName=st(i).name; % Save name of calling script.
-          o.script=fileread(st(i).file); % Save a copy of the calling script.
-          if ~ismember(o.scriptName,{'RunExperiment.m' 'RunExperiment2.m'})
-             break
+          if contains(o.scriptName,'RunExperiment')
+             continue
           end
-       end
+          o.script=fileread(st(i).file); % Save a copy of the calling script.
+          break
+        end
     else
         o.scriptName='';
         o.script='';
@@ -5071,8 +5087,8 @@ end
 if isempty(o.window)
     return
 end
-string=sprintf('Please adjust the viewing distance so the X is %.1f cm from the observer''s eye. ',...
-    o.viewingDistanceCm);
+string=sprintf('Please adjust the viewing distance so the X is %.1f cm (%.1f inches) from the observer''s eye. ',...
+    o.viewingDistanceCm,o.viewingDistanceCm/2.54);
 string=[string 'Tilt and swivel the display so the X is orthogonal to the observer''s line of sight. '...
     'Then hit RETURN to continue.\n'];
 Screen('TextSize',o.window,o.textSize);
@@ -5145,9 +5161,9 @@ else
         string='OFF-SCREEN FIXATION. As indicated by the green arrows, please set up a fixation mark';
         if fixationOffsetXYCm(1)~=0
             if fixationOffsetXYCm(1) < 0
-                string=sprintf('%s %.1f cm to the left of',string,-fixationOffsetXYCm(1));
+                string=sprintf('%s %.1f cm (%.1f inches) to the left of',string,-fixationOffsetXYCm(1),-fixationOffsetXYCm(1)/2.54);
             else
-                string=sprintf('%s %.1f cm to the right of',string,fixationOffsetXYCm(1));
+                string=sprintf('%s %.1f cm (%.1f inches) to the right of',string,fixationOffsetXYCm(1),fixationOffsetXYCm(1)/2.54);
             end
         end
         if fixationOffsetXYCm(1)~=0 && fixationOffsetXYCm(2)~=0
@@ -5155,14 +5171,14 @@ else
         end
         if fixationOffsetXYCm(2)~=0
             if fixationOffsetXYCm(2) < 0
-                string=sprintf('%s %.1f cm higher than',string,-fixationOffsetXYCm(2));
+                string=sprintf('%s %.1f cm (%.1f inches) higher than',string,-fixationOffsetXYCm(2),-fixationOffsetXYCm(2)/2.54);
             else
-                string=sprintf('%s %.1f cm lower than',string,fixationOffsetXYCm(2));
+                string=sprintf('%s %.1f cm (%.1f inches) lower than',string,fixationOffsetXYCm(2),fixationOffsetXYCm(2)/2.54);
             end
         end
         string=[string ' the X.'];
-        string=sprintf('%s Adjust the viewing distances so both your fixation mark and the X below are %.1f cm from the observer''s eye.',...
-            string,o.viewingDistanceCm);
+        string=sprintf('%s Adjust the viewing distances so both your fixation mark and the X below are %.1f cm (%.1f inches) from the observer''s eye.',...
+            string,o.viewingDistanceCm,o.viewingDistanceCm/2.54);
         string=[string ' Tilt and swivel the display so that the X is orthogonal to the observer''s line of sight. '...
             'Then hit RETURN to proceed, or ESCAPE to quit. '];
         string=[string sprintf(['\n\nEXPERT NOTE: You might be able to bring fixation back on-screen '...
