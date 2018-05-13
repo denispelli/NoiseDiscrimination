@@ -5021,7 +5021,7 @@ xy=max(xy,rect(1:2));
 xy=min(xy,rect(3:4));
 end
 
-%% SET UP NEAR POINT at correct slant and viewing distance.
+%% SetUpNearPoint at correct slant and viewing distance.
 function o=SetUpNearPoint(o)
 global ff
 black=0; % The CLUT color code for black.
@@ -5104,7 +5104,7 @@ Screen('FillRect',o.window,o.gray1);
 Screen('Flip',o.window); % Blank, to acknowledge response.
 end % function SetUpNearPoint
 
-%% SET UP FIXATION
+%% SetUpFixation
 function o=SetUpFixation(o,ff)
 escapeChar=char(27);
 graveAccentChar='`';
@@ -5326,6 +5326,7 @@ end
 assert(isfinite(o.gray));
 end % function ComputeClut
 
+%% AskQuestion
 function [reply,o]=AskQuestion(oo,text)
 % "text" argument is a struct with several fields: text.big, text.small,
 % text.fine, text.question, text.setTextSizeToMakeThisLineFit. We
@@ -5379,6 +5380,7 @@ Screen('FillRect',o.window,o.gray1);
 Screen('Flip',o.window); % Flip screen, to let observer know her answer was accepted.
 end % function AskQuestion
 
+%% WaitUntilObserverIsReady
 function o=WaitUntilObserverIsReady(o,oo,message)
 global fixationLines fixationCrossWeightPix ff
 escapeChar=char(27);
@@ -5463,6 +5465,7 @@ switch o.task
 end
 end % function WaitUntilObserverIsReady
 
+%% PrintImageStatistics
 function PrintImageStatistics(line,o,i,msg,img)
 global cal
 if o.printImageStatistics
@@ -5475,13 +5478,14 @@ if o.printImageStatistics
         o.contrast,o.noiseSD,o.signalMin,o.signalMax);
 end
 end
+
+%% CloseWindowsAndCleanup
 function CloseWindowsAndCleanup(oo)
 % Close any window opened by the Psychtoolbox Screen command, re-enable
 % keyboard, show cursor, and restore AutoBrightness.
 global window
 if ~isempty(Screen('Windows'))
     fprintf('Closing the window takes 30 s. ... ');
-    % sca;
     Screen('CloseAll');
     fprintf('Done.\n');
     if ismac
