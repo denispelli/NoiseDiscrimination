@@ -1,4 +1,4 @@
-function out=RunExperiment2(ooo)
+function oooOut=RunExperiment2(ooo)
 % ooo=RunExperiment2(ooo);
 %
 % ooo is a cell array representing an experiment. Each cell represents one
@@ -41,7 +41,7 @@ function out=RunExperiment2(ooo)
 % reason, whether by reaching the end, the posting of an error here or in
 % any function called from here, or the user hitting control-C.
 
-cleanup=onCleanup(@() CloseWindowAndCleanup);
+cleanup=onCleanup(@() CloseWindowsAndCleanup);
 
 if isempty(ooo)
     error('ooo was empty. You didn''t specify any conditions.');
@@ -65,8 +65,8 @@ ooo=OfferToResumeExperiment2(ooo);
 % refer to by o=oo(oi). If the experiment is already partially completed,
 % we run every block that has any conditions with fewer than the desired
 % number of trials. When we run a block, we discard any old trials.
+ooPrior=[];
 for block=1:length(ooo)
-    ooPrior=[];
     % Skip any block in which all conditions are already done.
     oo=ooo{block}; % Get a block.
     thisBlockDone=true;
@@ -80,17 +80,15 @@ for block=1:length(ooo)
         continue
     end
     % Prepare this block.
-    for oi=1:length(oo)
-        oo(oi).block=block;
-        oo(oi).blocksDesired=length(ooo);
-        oo(oi).localHostName=localHostName;
-        if ~isempty(ooPrior)
-            % Reuse answers from immediately preceding block.
-            oo(oi).experimenter=ooPrior(1).experimenter;
-            oo(oi).observer=ooPrior(1).observer;
-            oo(oi).filterTransmission=ooPrior(1).filterTransmission;
-            % Setting o.useFilter to false forces o.filterTransmission=1.
-        end
+    [oo.block]=deal(block);
+    [oo.blocksDesired]=deal(length(ooo)); % Displayed on screen.
+    [oo.localHostName]=deal(localHostName);
+    if ~isempty(ooPrior)
+        % Reuse answers from immediately preceding block.
+        [oo.experimenter]=deal(ooPrior(1).experimenter);
+        [oo.observer]=deal(ooPrior(1).observer);
+        [oo.filterTransmission]=deal(ooPrior(1).filterTransmission);
+        % Setting o.useFilter to false forces o.filterTransmission=1.
     end
     % Run this block.
     ooPrior=NoiseDiscrimination2(oo); % Run a block.
@@ -99,7 +97,7 @@ for block=1:length(ooo)
         break
     end
 end % for block=1:length(ooo)
-out=ooo;
+oooOut=ooo;
 
 %% HOW MANY BLOCKS ARE DONE?
 % The criterion for "done" should be a reasonable number of trials,
@@ -110,7 +108,7 @@ for block=1:length(ooo)
     oo=ooo{block}; % Get a block.
     for oi=1:length(oo)
         % Check each condition in a block.
-        if isfield(oo(oi),'trials') && oo(oi).trials>=oo(oi).trialsPerBlock
+        if isfield(oo(oi),'trials') && isfield(oo(oi),'trialsPerBlock') && oo(oi).trials>=oo(oi).trialsPerBlock
             % Gather components of filename.
             experiment=ooo{1}(oi).experiment;
             observer=ooo{1}(oi).observer;
@@ -123,17 +121,15 @@ for block=1:length(ooo)
     end
 end
     
-%% SAVE ALL THE RESULTS IN AN EXPERIMENT MAT FILE LABELED "partial"
-%% THAT SUPPORTS LATER RESUMING A PARTIALLY DONE EXPERIMENT.
+%% SAVE THE EXPERIMENT
 % If no block has been completed, then save nothing. If we have at least
-% one block done, then save the whole experiment. If some, but not all, the
-% blocks have been done, then the saved file's name includes the word
-% "-partial", indicating that the observer can later resume and finish the
-% experiment. 
+% one block done, then save the whole experiment in a MAT file. If
+% complete, it is labeled "-done". Otherwise it is labelled "-partial",
+% indicating that the observer can later resume and finish the experiment.
 if blocksDone<length(ooo)
     partialString='-partial';
 else
-    partialString='-';
+    partialString='-done';
 end
 if blocksDone>0
     experimentFilename=sprintf('%s-%s-%s%s.%d.%d.%d.%d.%d.%d.mat',...
@@ -145,11 +141,12 @@ if blocksDone>0
 end
 end % function
 
-%% Clean up when RunExperiment terminates, even by control-C.
-function CloseWindowAndCleanup()
+%% Clean up whenever RunExperiment terminates, even by control-C.
+function CloseWindowsAndCleanup()
 % Close any window opened by the Psychtoolbox Screen command, and re-enable keyboard.
 global window
 if ~isempty(Screen('Windows'))
+    % Screen CloseAll is very slow, so call it only if we need to.
     Screen('CloseAll');
     %     sca;
     if ismac
@@ -159,4 +156,4 @@ end
 window=[];
 ListenChar; % May already be done by sca.
 ShowCursor; % May already be done by sca.
-end % function CloseWindowAndCleanup()
+end % function CloseWindowsAndCleanup()
