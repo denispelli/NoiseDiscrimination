@@ -133,7 +133,7 @@ end
 if blocksDone<length(ooo)
     partialString='-partial';
 else
-    partialString='';
+    partialString='-';
 end
 if blocksDone>0
     experimentFilename=sprintf('%s-%s-%s%s.%d.%d.%d.%d.%d.%d.mat',...
@@ -149,8 +149,8 @@ end % function
 function CloseWindowAndCleanup()
 % Close any window opened by the Psychtoolbox Screen command, and re-enable keyboard.
 global window
-if ~isempty(window)
-    Screen('Close',window);
+if ~isempty(Screen('Windows'))
+    Screen('CloseAll');
     %     sca;
     if ismac
         AutoBrightness(0,1);
