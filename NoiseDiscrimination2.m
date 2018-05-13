@@ -551,31 +551,19 @@ end
 ff=1; % Once we open a data file, ff will print to both screen and data file.
 
 %% DEFAULT VALUE FOR EVERY "o" PARAMETER
-% They are overridden by what you provide in each argument struct ooIn(i).
+% These default values are overridden by what you explicitly provide in
+% the argument array struct ooIn. Any empty [] fields in ooIn will be ignored
+% and will not override the default. This is necessary because when you
+% create ooIn, which is an array of conditions to be interleaved, whenever
+% you assign a new field for one condition, MATLAB will create that field
+% for all conditions, initalized with []. When interleaving different
+% conditions, they will often be explicit about different fields. So we do
+% not take [] as an explicit intention by the user.
 if nargin < 1 || ~exist('ooIn','var')
     ooIn=struct;
     ooIn.noInputArgument=true;
 end
 o=[];
-% I added these here May 6, 2018,  to guarantee that they'll be defined
-% when I pull them into a table in EvsNRun2.m
-o.experiment=[];
-o.conditionName=[];
-o.useFilter=false;
-o.luminanceAtEye=[];
-o.eccentricityXYDeg=[];
-o.targetDurationSecs=[];
-o.targetCyclesPerDeg=[];
-o.targetHeightDeg=[];
-o.targetGaborCycles=[];
-o.noiseCheckFrames=1;
-o.noiseSD=[];
-o.N=[];
-o.E=[];
-o.dataFilename='';
-o.dataFolder='';
-% End of recent addition.
-
 o.questPlusEnable=false;
 o.questPlusSteepnesses=1:0.1:5;
 o.questPlusGuessingRates=nan; % 1/alternatives
@@ -604,6 +592,7 @@ o.observer=''; % Name of person or algorithm.
 o.algorithmicObservers={'ideal', 'brightnessSeeker', 'blackshot', 'maximum'};
 o.experimenter='';
 o.eyes='both'; % 'left', 'right', 'both', or 'one', which asks user to specify at runtime.
+o.blocksDesired=1;
 o.trialsPerBlock=40; % Typically 40.
 o.trials=0; % Initialize trial counter so it's defined even if user quits early.
 o.block=1; % We display the the block number. When o.block==blocksDesired this program says "Congratulations" before returning.
@@ -751,8 +740,6 @@ o.pupilDiameterMm=[];
 o.pupilKnown=false;
 o.annularNoiseEnvelopeRadiusDeg=0;
 o.labelAlternatives=[];
-o.trialsPerBlock=40;
-o.blocksDesired=1;
 o.eyes='both';
 o.readAlphabetFromDisk=false;
 o.borderLetter=[];
@@ -783,6 +770,11 @@ o.age=20;
 o.approxRequiredNumber=[];
 o.snapshotCaptionTextSize=[];
 o.printLogOfIdeal=false;
+o.N=[]; 
+o.E=[];
+o.Neq=[];
+o.E0=[];
+o.NPhoton=[];
 
 o.deviceIndex=-1; % -1 for all keyboards.
 o.deviceIndex=-3; % -3 for all keyboard/keypad devices.
@@ -831,77 +823,68 @@ conditions=length(ooIn);
 for oi=1:conditions
     oo(oi)=o;
 end
-if false
-    % ACCEPT ALL o FIELDS.
-    % All fields in the user-supplied "ooIn" overwrite corresponding fields in "o".
-    for oi=1:conditions
-        fields=fieldnames(ooIn(oi));
-        for i=1:length(fields)
-            field=fields{i};
-            oo(oi).(field)=ooIn(oi).(field);
-        end
-    end
-else
-    % ACCEPT ONLY KNOWN o FIELDS.
-    % For each condition, all fields in the user-supplied "ooIn" overwrite
-    % corresponding fields in "o". We ignore any field in ooIn that is not
-    % already defined in o. If the ignored field is a known output field,
-    % then we ignore it silently. We warn of unknown fields because they
-    % might be typos for input fields.
-    initializedFields=fieldnames(o);
-    knownOutputFields={'labelAlternatives' 'beginningTime' ...
-        'functionNames' 'cal' 'pixPerDeg' ...
-        'lineSpacing' 'stimulusRect' 'noiseCheckPix' ...
-        'minLRange' 'targetHeightPix' ...
-        'contrast' 'targetWidthPix' 'checkSecs' 'moviePreFrames'...
-        'movieSignalFrames' 'moviePostFrames' 'movieFrames' 'noiseSize'...
-        'annularNoiseSmallSize' 'annularNoiseBigSize' 'canvasSize'...
-        'noiseListMin' 'noiseListMax' 'noiseIsFiltered' 'noiseListSd' 'N' 'NUnits' ...
-        'targetRectLocal' 'xHeightPix' 'xHeightDeg' 'HHeightPix' ...
-        'HHeightDeg' 'alphabetHeightDeg' 'annularNoiseEnvelopeRadiusDeg' ...
-        'centralNoiseEnvelopeE1DegDeg' 'E1' 'data' 'psych' 'questMean'...
-        'questSd' 'p' 'trials' 'EOverN' 'efficiency' 'targetDurationSecsMean'...
-        'targetDurationSecsSD' 'E' 'signal' 'newCal'...
-        'beamPositionQueriesAvailable' ...
-        'drawTextPlugin' 'fixationXYPix' 'maxEntry' 'nearPointXYDeg'...
-        'nearPointXYPix' 'pixPerCm' 'psychtoolboxKernelDriverLoaded'...
-        'targetXYPix' 'textLineLength' 'textSize' 'unknownFields'...
-        'speakEachLetter' 'targetCheckDeg' 'targetCheckPix'...
-        'textFont'  'LBackground' 'targetCyclesPerDeg' 'contrast' ...
-        'thresholdParameterValueList' 'noInputArgument' ...
-        'firstGrayClutEntry' 'lastGrayClutEntry' 'gray' 'r' 'transcript'...
-        'signalIsBinary' 'targetXYInUnitSquare'...
-        'gray1' 'resumeExperiment' 'script' 'scriptName' ...
-        'showLineOfLetters' 'signalMax' 'signalMin' ...
-        'targetFont' 'targetPix' 'useSpeech'...
-        'approxRequiredNumber' 'logApproxRequiredNumber'... % for the noise-discrimination project
-        'idealT64' 'q' 'rWarningCount' 'trialsRight' 'window'...
-        'block'...
-        'A' 'LAT' 'NPhoton' 'logFilename' 'screenrect' 'screenRect'...
-        'useCentralNoiseEnvelope' 'useCentralNoiseMask'...
-        };
-    unknownFields={};
-    for oi=1:conditions
-        inputFields=fieldnames(ooIn(oi));
-        oo(oi).unknownFields={};
-        for i=1:length(inputFields)
-            if ismember(inputFields{i},initializedFields)
-                % We accept only the parameters that we initialized above.
-                % Overwrite initial value.
+% ACCEPT ONLY KNOWN o FIELDS.
+% For each condition, all nonempty fields in the user-supplied "ooIn"
+% overwrite corresponding fields in "o". We ignore any field in ooIn that
+% is not already defined in o. If the ignored field is a known output
+% field, then we ignore it silently. We warn of unknown fields because they
+% might be typos for input fields.
+initializedFields=fieldnames(o);
+knownOutputFields={'labelAlternatives' 'beginningTime' ...
+    'functionNames' 'cal' 'pixPerDeg' ...
+    'lineSpacing' 'stimulusRect' 'noiseCheckPix' ...
+    'minLRange' 'targetHeightPix' ...
+    'contrast' 'targetWidthPix' 'checkSecs' 'moviePreFrames'...
+    'movieSignalFrames' 'moviePostFrames' 'movieFrames' 'noiseSize'...
+    'annularNoiseSmallSize' 'annularNoiseBigSize' 'canvasSize'...
+    'noiseListMin' 'noiseListMax' 'noiseIsFiltered' 'noiseListSd' 'N' 'NUnits' ...
+    'targetRectLocal' 'xHeightPix' 'xHeightDeg' 'HHeightPix' ...
+    'HHeightDeg' 'alphabetHeightDeg' 'annularNoiseEnvelopeRadiusDeg' ...
+    'centralNoiseEnvelopeE1DegDeg' 'E1' 'data' 'psych' 'questMean'...
+    'questSd' 'p' 'trials' 'EOverN' 'efficiency' 'targetDurationSecsMean'...
+    'targetDurationSecsSD' 'E' 'signal' 'newCal'...
+    'beamPositionQueriesAvailable' ...
+    'drawTextPlugin' 'fixationXYPix' 'maxEntry' 'nearPointXYDeg'...
+    'nearPointXYPix' 'pixPerCm' 'psychtoolboxKernelDriverLoaded'...
+    'targetXYPix' 'textLineLength' 'textSize' 'unknownFields'...
+    'speakEachLetter' 'targetCheckDeg' 'targetCheckPix'...
+    'textFont'  'LBackground' 'targetCyclesPerDeg' 'contrast' ...
+    'thresholdParameterValueList' 'noInputArgument' ...
+    'firstGrayClutEntry' 'lastGrayClutEntry' 'gray' 'r' 'transcript'...
+    'signalIsBinary' 'targetXYInUnitSquare'...
+    'gray1' 'resumeExperiment' 'script' 'scriptName' ...
+    'showLineOfLetters' 'signalMax' 'signalMin' ...
+    'targetFont' 'targetPix' 'useSpeech'...
+    'approxRequiredNumber' 'logApproxRequiredNumber'... % for the noise-discrimination project
+    'idealT64' 'q' 'rWarningCount' 'trialsRight' 'window'...
+    'block'...
+    'A' 'LAT' 'NPhoton' 'logFilename' 'screenrect' 'screenRect'...
+    'useCentralNoiseEnvelope' 'useCentralNoiseMask'...
+    };
+unknownFields={};
+for oi=1:conditions
+    inputFields=fieldnames(ooIn(oi));
+    oo(oi).unknownFields={};
+    for i=1:length(inputFields)
+        if ismember(inputFields{i},initializedFields)
+            % We accept only the fields that we initialized above.
+            % Overwrite initial value only if the input field is not empty.
+            if ~isempty(ooIn(oi).(inputFields{i}))
                 oo(oi).(inputFields{i})=ooIn(oi).(inputFields{i});
-            elseif ~ismember(inputFields{i},knownOutputFields)
-                % Record unknown field, and issue error below, with a
-                % complete list of unknown fields in the input struct.
-                oo(oi).unknownFields{end+1}=inputFields{i};
             end
+        elseif ~ismember(inputFields{i},knownOutputFields)
+            % Record unknown field, and issue error below, with a
+            % complete list of unknown fields in the input struct.
+            oo(oi).unknownFields{end+1}=inputFields{i};
         end
-        oo(oi).unknownFields=unique(oo(oi).unknownFields);
-        unknownFields=unique([unknownFields oo(oi).unknownFields]);
-    end % for oi=1:conditions
-    if ~isempty(unknownFields)
-        error(['Unknown field(s) in input struct:' sprintf(' o.%s',unknownFields{:}) '.']);
     end
+    oo(oi).unknownFields=unique(oo(oi).unknownFields);
+    unknownFields=unique([unknownFields oo(oi).unknownFields]);
+end % for oi=1:conditions
+if ~isempty(unknownFields)
+    error(['Unknown field(s) in input struct:' sprintf(' o.%s',unknownFields{:}) '.']);
 end
+
 
 
 %% SCREEN PARAMETERS
@@ -5496,16 +5479,16 @@ function CloseWindowAndCleanup(oo)
 % Close any window opened by the Psychtoolbox Screen command, re-enable
 % keyboard, show cursor, and restore AutoBrightness.
 global window
-if ~isempty(window)
+if ~isempty(Screen('Windows'))
     fprintf('Closing the window takes 30 s. ... ');
     % sca;
-    Screen('Close',window);
+    Screen('CloseAll');
     fprintf('Done.\n');
-    window=[];
     if ismac
         AutoBrightness(0,1);
     end
 end
+window=[];
 if nargin>0
     [oo.window]=deal([]);
 end
