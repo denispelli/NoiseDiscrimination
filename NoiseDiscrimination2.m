@@ -1155,7 +1155,7 @@ try
         fprintf('*Waiting for experimenter name.\n');
         [reply,o]=AskQuestion(oo,text);
         if o.quitBlock
-            CloseWindowAndCleanup(oo);
+            CloseWindowsAndCleanup(oo);
             oo(1).quitExperiment=o.quitExperiment;
             return
         end
@@ -1173,7 +1173,7 @@ try
         fprintf('*Waiting for observer name.\n');
         [reply,o]=AskQuestion(oo,text);
         if o.quitBlock
-            CloseWindowAndCleanup(oo);
+            CloseWindowsAndCleanup(oo);
             oo(1).quitExperiment=o.quitExperiment;
             return
         end
@@ -1223,7 +1223,7 @@ try
     end % if ~o.useFilter
     [oo.filterTransmission]=deal(o.filterTransmission);
     if o.quitBlock
-        CloseWindowAndCleanup(oo)
+        CloseWindowsAndCleanup(oo)
         oo(1).quitExperiment=o.quitExperiment;
         return
     end
@@ -1843,7 +1843,7 @@ try
                         Speak('Quitting.');
                     end
                     oo(1).quitExperiment=true;
-                    CloseWindowAndCleanup(oo)
+                    CloseWindowsAndCleanup(oo)
                     return
                 end
             end
@@ -1881,7 +1881,7 @@ try
                             Speak('Quitting.');
                         end
                         oo(1).quitExperiment=true;
-                        CloseWindowAndCleanup(oo)
+                        CloseWindowsAndCleanup(oo)
                         return
                     end
                 case {'left','right'}
@@ -1901,7 +1901,7 @@ try
                             Speak('Quitting.');
                         end
                         oo(1).quitExperiment=true;
-                        CloseWindowAndCleanup(oo)
+                        CloseWindowsAndCleanup(oo)
                         return
                     end
             end
@@ -1922,7 +1922,7 @@ try
                         Speak('Quitting.');
                     end
                     oo(1).quitExperiment=true;
-                    CloseWindowAndCleanup(oo)
+                    CloseWindowsAndCleanup(oo)
                     return
                 end
                 response=upper(response);
@@ -1991,7 +1991,7 @@ try
     [oo.nearPointXYInUnitSquare]=deal(o.nearPointXYInUnitSquare);
     if o.quitExperiment
         oo(1).quitExperiment=true;
-        CloseWindowAndCleanup(oo)
+        CloseWindowsAndCleanup(oo)
         return
     end
     
@@ -2003,7 +2003,7 @@ try
     [oo.fixationIsOffscreen]=deal(oo.fixationIsOffscreen);
 
     if oo(1).quitExperiment
-        CloseWindowAndCleanup(oo)
+        CloseWindowsAndCleanup(oo)
        return
     end
     
@@ -4339,7 +4339,7 @@ try
     ListenChar(0); % flush
     ListenChar;
     if ~isempty(oo(1).window) && (o.quitExperiment || oo(oi).block >= oo(oi).blocksDesired)
-        CloseWindowAndCleanup(oo);
+        CloseWindowsAndCleanup(oo);
     end
     if ismac && false
         % NOT IN USE: This applescript "activate" command provokes a screen
@@ -4371,7 +4371,7 @@ try
     oOld.secs=GetSecs; % Date for staleness.
 catch e
     %% MATLAB catch
-    CloseWindowAndCleanup(oo)
+    CloseWindowsAndCleanup(oo)
     if exist('cal','var') && isfield(cal,'old') && isfield(cal.old,'gamma')
         Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
     end
@@ -4563,7 +4563,7 @@ o.blocksDesired=1;
 ffprintf(ff,'SUCCESS: o.saveSnapshot is done. Image saved, now returning.\n');
 fclose(logFid);
 logFid=-1;
-CloseWindowAndCleanup(oo)
+CloseWindowsAndCleanup(oo)
 return
 end % function SaveSnapshot
 
@@ -5475,7 +5475,7 @@ if o.printImageStatistics
         o.contrast,o.noiseSD,o.signalMin,o.signalMax);
 end
 end
-function CloseWindowAndCleanup(oo)
+function CloseWindowsAndCleanup(oo)
 % Close any window opened by the Psychtoolbox Screen command, re-enable
 % keyboard, show cursor, and restore AutoBrightness.
 global window
@@ -5494,4 +5494,4 @@ if nargin>0
 end
 ListenChar; % May already be done by sca.
 ShowCursor; % May already be done by sca.
-end % function CloseWindowAndCleanup()
+end % function CloseWindowsAndCleanup()
