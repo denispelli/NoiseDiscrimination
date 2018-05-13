@@ -1,4 +1,4 @@
-% csfRun.m
+% csfLettersRun.m
 % Measure threshold for 4 spatial frequencies at four eccentricities, with and
 % without noise. 
 % May 9, 2018
@@ -40,7 +40,7 @@ cal=OurScreenCalibrations(0);
 % o.trialsPerBlock=100;
 
 %% SPECIFY BASIC CONDITION
-o.experiment='EvsN';
+o.experiment='csfLetters'; % Mistakenly set to EvsN. Oops!!
 o.eyes='both'; % 'left', 'right', 'both'.
 o.viewingDistanceCm=80;
 o.targetGaborCycles=3;
