@@ -133,10 +133,10 @@ end % for ecc
 for i=1:length(ooo)
     [ooo{i}.block]=deal(i); % Number the blocks
 end
-ooo{1}(1).trialsPerBlock=1;
-ooo{2}(1).trialsPerBlock=1;
-ooo=ooo(1:2);
-o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+% ooo{1}(1).trialsPerBlock=1;
+% ooo{2}(1).trialsPerBlock=1;
+% ooo=ooo(1:2);
+% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 
 %% PRINT THE CONDITIONS (ONE PER ROW) AS TABLE TT.
 % All these vars must be defined in every condition.
