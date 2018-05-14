@@ -1448,6 +1448,8 @@ try
             switch oo(oi).alphabetPlacement
                 case 'right'
                     oo(oi).stimulusRect(3)=oo(oi).stimulusRect(3)-RectHeight(o.screenRect)/max(6,oo(oi).alternatives);
+                case 'left'
+                    oo(oi).stimulusRect(1)=oo(oi).stimulusRect(1)+RectHeight(o.screenRect)/max(6,oo(oi).alternatives);
                 case 'top'
                     oo(oi).stimulusRect(2)=max(oo(oi).stimulusRect(2),o.screenRect(2)+0.5*RectWidth(o.screenRect)/max(6,oo(oi).alternatives));
                 otherwise
@@ -3551,8 +3553,13 @@ try
                 if isfield(oo(oi),'experiment')
                     message=[message ' Experiment "' oo(oi).experiment '".'];
                 end
-                Screen('DrawText',oo(1).window,message,oo(oi).textSize/2,oo(oi).textSize/2,black,oo(oi).gray1);
-                
+                x=oo(oi).textSize/2;
+                switch oo(oi).alphabetPlacement
+                    case {'top' 'right'}
+                    case 'left'
+                        x=x+RectHeight(o.screenRect)/max(6,oo(oi).alternatives);
+                end
+                Screen('DrawText',oo(1).window,message,x,oo(oi).textSize/2,black,oo(oi).gray1);
                 % Print instructions in lower left corner.
                 factor=1;
                 switch oo(oi).task
@@ -3573,7 +3580,7 @@ try
                 end
                 textRect=[0 0 oo(oi).textSize 1.2*oo(oi).textSize];
                 textRect=AlignRect(textRect,bottomCaptionRect,'left','bottom');
-                textRect=OffsetRect(textRect,oo(oi).textSize/2,-oo(oi).textSize/2); % inset from screen edges
+                textRect=OffsetRect(textRect,x,-oo(oi).textSize/2); % inset from screen edges
                 textRect=round(textRect);
                 bounds=Screen('TextBounds',oo(1).window,message);
                 ratio=RectWidth(bounds)/(0.93*RectWidth(o.screenRect));
@@ -3594,7 +3601,7 @@ try
                         oo(oi).targetWidthPix=round(oo(oi).targetHeightPix*sz(2)/sz(1));
                         rect=[0 0 oo(oi).targetWidthPix oo(oi).targetHeightPix]/oo(oi).targetCheckPix; % size of oo(oi).signal(1).image
                         switch oo(oi).alphabetPlacement
-                            case 'right'
+                            case {'left' 'right'}
                                 desiredLengthPix=RectHeight(o.screenRect);
                                 targetChecks=RectHeight(rect);
                             case 'top'
@@ -3630,11 +3637,17 @@ try
                         useExpand=alphaCheckPix == round(alphaCheckPix);
                         rect=[0 0 oo(oi).targetWidthPix oo(oi).targetHeightPix]/oo(oi).targetCheckPix; % size of oo(oi).signal(1).image
                         rect=round(rect*alphaCheckPix);
-                        rect=AlignRect(rect,o.screenRect,RectRight,RectTop);
-                        rect=OffsetRect(rect,-alphaGapPix,alphaGapPix); % spacing
+                        switch oo(oi).alphabetPlacement
+                            case {'left'}
+                                rect=AlignRect(rect,o.screenRect,RectLeft,RectTop);
+                                rect=OffsetRect(rect,alphaGapPix,alphaGapPix); % spacing
+                            case {'right' 'top'}
+                                rect=AlignRect(rect,o.screenRect,RectRight,RectTop);
+                                rect=OffsetRect(rect,-alphaGapPix,alphaGapPix); % spacing
+                        end
                         rect=round(rect);
                         switch oo(oi).alphabetPlacement
-                            case 'right'
+                            case {'left' 'right'}
                                 step=[0 RectHeight(rect)+alphaGapPix];
                             case 'top'
                                 step=[RectWidth(rect)+alphaGapPix 0];
