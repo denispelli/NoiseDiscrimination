@@ -38,11 +38,13 @@ cal=OurScreenCalibrations(0);
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 % o.observer='ideal';
 % o.trialsPerBlock=100;
+% o.printLogOfIdeal=true;
+% Screen('Preference', 'Verbosity',0);
 
 %% SPECIFY BASIC CONDITION
 o.experiment='csfLettersStatic'; % Mistakenly set to EvsN. Oops!!
 o.eyes='both'; % 'left', 'right', 'both'.
-o.viewingDistanceCm=80;
+o.viewingDistanceCm=50;
 o.targetGaborCycles=3;
 o.pThreshold=0.75;
 o.useDynamicNoiseMovie=false;
@@ -94,11 +96,12 @@ o.saveStimulus=false;
 o.noiseCheckFrames=2;
 for ecc=[0 1 4 16 32]
     o.eccentricityXYDeg=[ecc 0];
-    for sf=[0.5 2 8 32]
-        if ecc>=16 && sf>8
+    for sf=[0.5 2 8 16]
+        if NominalAcuityDeg(ecc)>o.targetGaborCycles/sf
             continue
         end
         o.targetCyclesPerDeg=sf;
+        o.alphabetPlacement='left';
         o.nearPointXYInUnitSquare=[0.80 0.5];
         o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
         if isfield(o,'observer') && streq(o.observer,'ideal')
