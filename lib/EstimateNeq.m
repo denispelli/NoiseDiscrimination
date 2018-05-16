@@ -24,7 +24,9 @@ Neq=max(Neq,0); % Impose positivity on the guess, so mincon won't fail.
 fun=@(b) Cost(E,N,b(1),b(2));
 % b=fminsearch(fun,[E0 Neq]); % Unconstrained fit.
 opts=optimoptions('fmincon','Display','off','MaxIterations',1000);
+w=warning('OFF','MATLAB:singularMatrix');
 b=fmincon(fun,[E0 Neq],[],[],[],[],[0 0],[inf inf],[],opts); % Search constrains E0 and Neq to not be negative.
+warning(w);
 E0=b(1);
 Neq=b(2);
 end
