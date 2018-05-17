@@ -47,6 +47,9 @@ if nargin>0
 else
    cal.screen=0;
 end
+if ~ismember(cal.screen,Screen('Screens'))
+    error('You referred to non-existent screen %d.',cal.screen);
+end
 screenBufferRect=Screen('Rect',cal.screen);
 screenRect=Screen('Rect',cal.screen,1);
 % Detect HiDPI mode, e.g. on a Retina display.
@@ -4995,6 +4998,7 @@ if streq(cal.datestr,'none')
     t=struct2table(cal,'AsArray',true);
     t.OSName=OSName;
     disp(t(:,{'OSName' 'macModelName' 'screen' 'screenWidthMm' 'screenHeightMm' 'localHostName'}));
+    warning('Failed to find a calibration for your screen. Did you change the computer name?');
     warning('Your screen is uncalibrated. Use CalibrateScreenLuminance to calibrate it.');
 end
 
