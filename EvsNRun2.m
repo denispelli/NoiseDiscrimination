@@ -10,22 +10,6 @@
 % P=0.75, assuming 4 alternatives
 % monocular, temporal field, right eye
 
-%% MAX SD OF EACH NOISE TYPE
-% With the same bound on range, we can reach 3.3 times higher noiseSd using
-% binary instead of gaussian noise. In the code below, we use steps of
-% 2^0.5=1.4, so i increase max noiseSd by a factor of 2^1.5=2.8 when using
-% binary noise.
-sdOverBound.gaussian=0.43;
-sdOverBound.uniform=0.58;
-sdOverBound.binary=std([-1 1]);
-sdOverBound.ternary=std(-1:1);
-maxBound=0.37; % Rule of thumb based on experience with gaussian.
-maxSd=struct('gaussian',maxBound*sdOverBound.gaussian,...
-    'uniform',maxBound*sdOverBound.uniform,...
-    'binary',maxBound*sdOverBound.binary,...
-    'ternary',maxBound*sdOverBound.ternary);
-% maxSd
-
 %% GET READY
 clear o oo
 o.questPlusEnable=false;
@@ -135,8 +119,8 @@ for domain=1
         o.fixationCrossDeg=3;
     end
     oo=[];
-    for noiseSD=[0 2.^(-6:1.5:0)]*maxSd.(o.noiseType)
-%     for noiseSD=maxSd.(o.noiseType)
+    for noiseSD=[0 2.^(-6:1.5:0)]*MaxNoiseSD(o.noiseType)
+%     for noiseSD=MaxNoiseSD(o.noiseType)
         o.noiseSD=noiseSD;
         o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
         o.noiseCheckDeg=o.targetHeightDeg/20;
