@@ -8,6 +8,8 @@
 % P=0.75, assuming 4 alternatives
 % binocular, right field?
 
+error('fix fixation for 1 deg ecc.');
+
 %% GET READY
 clear o oo
 o.questPlusEnable=false;
