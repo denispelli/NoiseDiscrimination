@@ -1088,7 +1088,7 @@ try
         else
             warning('You need EnableClutMapping to control contrast.');
         end
-        fprintf('Opening the window takes 30 s. ... ');
+        fprintf('Opening the window ... ');
         s=GetSecs;
         if ~o.useFractionOfScreen
             [window,o.screenRect]=PsychImaging('OpenWindow',cal.screen,1.0);
@@ -1373,7 +1373,15 @@ try
     st=dbstack('-completenames',1);
     for i=1:length(st)
         oo(1).scriptName=st(i).name; % Save name of calling script.
-        if contains(oo(1).scriptName,'RunExperiment')
+        try
+%             hide=contains(oo(1).scriptName,'RunExperiment');
+            hide=ismember(oo(1).scriptName,{'RunExperiment' 'RunExperiment2'});
+        catch e
+            fprintf('Error in ismember(''%s'',{''RunExperiment2''})\n',oo(1).scriptName);
+            oo(1).scriptName
+            rethrow(e)
+        end
+        if hide
             continue
         end
         oo(1).script=fileread(st(i).file); % Save a copy of the calling script.
@@ -5538,7 +5546,7 @@ function CloseWindowsAndCleanup(oo)
 % keyboard, show cursor, and restore AutoBrightness.
 global window
 if ~isempty(Screen('Windows'))
-    fprintf('Closing the window takes 30 s. ... ');
+    fprintf('Closing the window ... ');
     s=GetSecs;
     Screen('CloseAll');
     fprintf('Done (%.1f s).\n',GetSecs-s);
