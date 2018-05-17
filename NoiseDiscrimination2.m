@@ -1088,7 +1088,7 @@ try
         else
             warning('You need EnableClutMapping to control contrast.');
         end
-        fprintf('Opening the window takes 30 s. ...');
+        fprintf('Opening the window takes 30 s. ... ');
         s=GetSecs;
         if ~o.useFractionOfScreen
             [window,o.screenRect]=PsychImaging('OpenWindow',cal.screen,1.0);
@@ -1368,19 +1368,16 @@ try
         oo(1).dataFilename=sprintf('%s-%s-%s.%d.%d.%d.%d.%d.%d',oo(1).functionNames,oo(1).observer,oo(oi).conditionName,round(t));
         oo(1).logFilename=oo(1).dataFilename;
     end
+    oo(1).scriptName='';
+    oo(1).script='';
     st=dbstack('-completenames',1);
-    if ~isempty(st)
-       for i=1:length(st)
-          oo(1).scriptName=st(i).name; % Save name of calling script.
-          if contains(oo(1).scriptName,'RunExperiment')
-             continue
-          end
-          oo(1).script=fileread(st(i).file); % Save a copy of the calling script.
-          break
+    for i=1:length(st)
+        oo(1).scriptName=st(i).name; % Save name of calling script.
+        if contains(oo(1).scriptName,'RunExperiment')
+            continue
         end
-    else
-        oo(1).scriptName='';
-        oo(1).script='';
+        oo(1).script=fileread(st(i).file); % Save a copy of the calling script.
+        break
     end
     [oo.scriptName]=deal(oo(1).scriptName);
     [oo.script]=deal(oo(1).script);
@@ -1396,7 +1393,7 @@ try
     ff=[1 logFid];
     fprintf('\nSaving results in log and data files:\n');
     ffprintf(ff,'%s\n',oo(1).dataFilename);
-    ffprintf(ff,'observer %s, task %s, alternatives %d,  steepness %.1f,\n',oo(1).observer,oo(1).task,oo(1).alternatives,oo(1).steepness);
+    ffprintf(ff,'observer %s, task %s, alternatives %d,  steepness %.1f\n',oo(1).observer,oo(1).task,oo(1).alternatives,oo(1).steepness);
     ffprintf(ff,'Experiment: %s. ',oo(1).experiment);
     ffprintf(ff,'%d conditions: ',conditions);
     for oi=1:conditions
@@ -1484,6 +1481,12 @@ try
                 error('Unknown o.task "%s".',oo(oi).task);
         end
         oo(oi).targetHeightDeg=oo(oi).targetHeightPix/oo(oi).pixPerDeg;
+        if oo(oi).targetHeightDeg > maxStimulusHeight/oo(oi).pixPerDeg
+            error(['Sorry. o.targetHeightDeg (%.1f deg) is too big to fit on %.1f deg x %.1f deg display.\n' ...
+                'Reduce viewing distance (%.1f cm) or target size.\n'],...
+                oo(oi).targetHeightDeg,maxStimulusWidth/oo(oi).pixPerDeg,...
+                maxStimulusHeight/oo(oi).pixPerDeg,oo(oi).viewingDistanceCm);
+        end
         if oo(oi).noiseRadiusDeg > maxStimulusHeight/oo(oi).pixPerDeg
             ffprintf(ff,'Reducing requested o.noiseRadiusDeg (%.1f deg) to %.1f deg, the max possible.\n',...
                 oo(oi).noiseRadiusDeg,maxStimulusHeight/oo(oi).pixPerDeg);
@@ -1614,7 +1617,7 @@ try
     ffprintf(ff,'cal.ScreenConfigureDisplayBrightnessWorks=%.0f;\n',cal.ScreenConfigureDisplayBrightnessWorks);
     if ~all(ismember([oo.observer],oo(oi).algorithmicObservers)) && ismac && isfield(cal,'profile')
         ffprintf(ff,'cal.profile=''%s'';\n',cal.profile);
-        fprintf('Setting screen profile ...');
+        fprintf('Setting screen profile ... ');
         s=GetSecs;
         oldProfile=ScreenProfile(cal.screen);
         if streq(oldProfile,cal.profile)
@@ -2127,12 +2130,12 @@ try
         oo(oi).annularNoiseBigSize=2*round(oo(oi).annularNoiseBigSize/2); % An even number, so we can center it on center of letter.
         oo(oi).annularNoiseBigRadiusDeg=0.5*oo(oi).annularNoiseBigSize(1)/(oo(oi).pixPerDeg/oo(oi).noiseCheckPix);
         
-        % Make o.canvasSize just big enough to hold everything we're showing,
-        % including signal, flankers, and noise. o.canvasSize is in units of
-        % targetChecks. We limit o.canvasSize to fit in o.stimulusRect (after
-        % converting targetChecks to pixels). Note that o.canvasSize is [height
-        % width], a MATLAB convention, whereas canvasRect is [0 0 width
-        % height], an Apple convention.
+        % Make o.canvasSize just big enough to hold everything we're
+        % showing, including signal, flankers, and noise. o.canvasSize is
+        % in units of targetChecks. We limit o.canvasSize to fit in
+        % o.stimulusRect (after converting targetChecks to pixels). Note
+        % that o.canvasSize is [height width], a MATLAB convention, whereas
+        % canvasRect is [0 0 width height], an Apple convention.
         oo(oi).canvasSize=[oo(oi).targetHeightPix oo(oi).targetWidthPix]/oo(oi).targetCheckPix;
         oo(oi).canvasSize=2*oo(oi).canvasSize; % Denis. For extended noise background.
         if oo(oi).useFlankers
@@ -2279,7 +2282,7 @@ try
             otherwise
                 error('%d: Unknown task %d',oi,oo(oi).task);
         end
-        ffprintf(ff,'%d: Target height %.1f deg is %.1 targetChecks or %.1f noiseChecks.\n',...
+        ffprintf(ff,'%d: Target height %.1f deg is %.1f targetChecks or %.1f noiseChecks.\n',...
             oi,oo(oi).targetHeightDeg,oo(oi).targetHeightPix/oo(oi).targetCheckPix,oo(oi).targetHeightPix/oo(oi).noiseCheckPix);
         ffprintf(ff,'%d: %s size %.1f deg, targetCheck %.3f deg, noiseCheck %.3f deg.\n',...
             oi,object,oo(oi).targetHeightDeg,oo(oi).targetCheckDeg,oo(oi).noiseCheckDeg);
@@ -2500,7 +2503,7 @@ try
                         % Allow for color images.
                         % Scale to range -1 (black) to 1 (white).
                         Screen('DrawText',oo(1).window,' ',0,0,1,oo(oi).gray1,1); % Set background color.
-                        string=sprintf('Reading images from disk ...');
+                        string=sprintf('Reading images from disk ... ');
                         DrawFormattedText(oo(1).window,string,...
                             oo(oi).textSize,1.5*oo(oi).textSize,black,oo(oi).textLineLength,[],[],1.3);
                         Screen('Flip',oo(1).window); % Display request.
@@ -2570,8 +2573,8 @@ try
                 boundsRect=CenterRect(targetRect,[oo(oi).targetXYPix oo(oi).targetXYPix]);
                 % targetRect not used. boundsRect used solely for the snapshot.
         end % switch oo(oi).task
-        fprintf('%d: Prepare the %d signals, each %dx%d. ',oi,oo(oi).alternatives,size(oo(oi).signal(1).image,1),size(oo(oi).signal(1).image,2));
-        toc
+        fprintf('%d: Prepare the %d signals, each %dx%d. ... Done (%.1f).\n',...
+            oi,oo(oi).alternatives,size(oo(oi).signal(1).image,1),size(oo(oi).signal(1).image,2),toc);
         
         % Compute o.signalIsBinary, o.signalMin, o.signalMax.
         % Image will be (o.contrast*o.signal+1)*o.LBackground.
@@ -4368,7 +4371,7 @@ try
         Screen('LoadNormalizedGammaTable',oo(1).window,cal.old.gamma,loadOnNextFlip);
         Screen('FillRect',oo(1).window);
         Screen('DrawText',oo(1).window,' ',0,0,1,1,1); % Set background color.
-        string=sprintf('Saving results to disk ...');
+        string=sprintf('Saving results to disk ... ');
         DrawFormattedText(oo(1).window,string,...
             oo(oi).textSize,1.5*oo(oi).textSize,black,oo(oi).textLineLength,[],[],1.3);
         Screen('Flip',oo(1).window); % Display message.
@@ -5036,6 +5039,12 @@ function xyDeg=XYDegOfXYPix(o,xyPix)
 % is relative to location of near point, which is orthogonal to line of
 % sight. We typically put the target at the near point, but that is not
 % assumed in this routine.
+if isempty(o.nearPointXYPix)
+    error('You must set o.nearPointXYPix before calling XYDegOfXYPix.');
+end
+if isempty(o.pixPerCm) || isempty(o.viewingDistanceCm)
+    error('You must set o.pixPerCm and o.viewingDistanceCm before calling XYDegOfXYPix.');
+end
 xyPix=xyPix-o.nearPointXYPix;
 rPix=sqrt(sum(xyPix.^2));
 rDeg=atan2d(rPix/o.pixPerCm,o.viewingDistanceCm);
