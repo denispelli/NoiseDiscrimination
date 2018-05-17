@@ -1,6 +1,6 @@
 %% Analyze the data collected by csfRun.
 global printConditions figureHandle
-for expt={'csf' 'csfLetters' 'csfLettersStatic'}
+for expt={'csf' 'csfLetters' 'csfLettersStatic' 'csfGaborsStatic'}
     experiment=expt{1};
     idealEOverN=8.5;
     readExperiment=true;
