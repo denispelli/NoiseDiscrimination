@@ -4993,15 +4993,6 @@ if IsOSX && streq(cal.macModelName,'MacBook10,1') && cal.screen==0 && cal.screen
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
 
-if streq(cal.datestr,'none')
-    % Identify this computer.
-    t=struct2table(cal,'AsArray',true);
-    t.OSName=OSName;
-    disp(t(:,{'OSName' 'macModelName' 'screen' 'screenWidthMm' 'screenHeightMm' 'localHostName'}));
-    warning('Failed to find a calibration for your screen. Did you change the computer name?');
-    warning('Your screen is uncalibrated. Use CalibrateScreenLuminance to calibrate it.');
-end
-
 if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-MacBook-Pro-Erin')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
@@ -5232,3 +5223,13 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 0.9922 0.9922 0.9922;0.9932 0.9932 0.9932;0.9941 0.9941 0.9941;0.9951 0.9951 0.9951;0.9961 0.9961 0.9961;...
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
+
+if streq(cal.datestr,'none')
+    % Identify this computer.
+    t=struct2table(cal,'AsArray',true);
+    t.OSName=OSName;
+    disp(t(:,{'OSName' 'macModelName' 'screen' 'screenWidthMm' 'screenHeightMm' 'localHostName'}));
+    warning('Failed to find a calibration for your screen. Did you change the computer name?');
+    warning('Your screen is uncalibrated. Use CalibrateScreenLuminance to calibrate it.');
+end
+
