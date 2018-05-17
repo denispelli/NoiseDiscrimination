@@ -984,6 +984,9 @@ end
 if cal.screen > 0
     fprintf('Using external monitor.\n');
 end
+if streq(cal.datestr,'none')
+    error('Your screen is uncalibrated. Use CalibrateScreenLuminance to calibrate it.');
+end
 cal.clutMapLength=o.clutMapLength;
 for oi=1:conditions
     oo(oi).maxEntry=oo(oi).clutMapLength-1; % copied here on April. 8, 2018
@@ -1006,7 +1009,7 @@ o=oo(1);
 if isempty(o.window) && ~ismember(o.observer,o.algorithmicObservers)
    useBrightnessFunction=true;
    if useBrightnessFunction
-       fprintf('Calling Brightness two or three times ... ');
+       fprintf('Calling Brightness several times. ... ');
        s=GetSecs;
        Brightness(cal.screen,cal.brightnessSetting); % Set brightness.
        cal.brightnessReading=Brightness(cal.screen); % Read brightness.
@@ -1015,7 +1018,7 @@ if isempty(o.window) && ~ismember(o.observer,o.algorithmicObservers)
            % Not sure why. Maybe it times out.
            cal.brightnessReading=Brightness(cal.screen); % Read brightness.
        end
-       fprintf('Done (%.3f s).\n',GetSecs-s);
+       fprintf('Done (%.1f s).\n',GetSecs-s);
       if isfinite(cal.brightnessReading) && abs(cal.brightnessSetting-cal.brightnessReading)>0.01
          error('Set brightness to %.2f, but read back %.2f',cal.brightnessSetting,cal.brightnessReading);
       end
@@ -1051,8 +1054,10 @@ if isempty(o.window) && ~ismember(o.observer,o.algorithmicObservers)
       end
    end
    if ismac
+      ffprintf(ff,'Brightness set to %.2f. Turning AutoBrightness off. ... ',cal.brightnessSetting);
+      s=GetSecs;
       AutoBrightness(cal.screen,0);
-      ffprintf(ff,'Turning autobrightness off. Setting "brightness" to %.2f, on a scale of 0.0 to 1.0;\n',cal.brightnessSetting);
+      ffprintf(ff,'Done (%.1f s)\n',GetSecs)-s;
    end
 end % if isempty(o.window)
 clear o
@@ -1088,7 +1093,7 @@ try
         else
             warning('You need EnableClutMapping to control contrast.');
         end
-        fprintf('Opening the window ... ');
+        fprintf('Opening the window. ... ');
         s=GetSecs;
         if ~o.useFractionOfScreen
             [window,o.screenRect]=PsychImaging('OpenWindow',cal.screen,1.0);
@@ -1625,7 +1630,7 @@ try
     ffprintf(ff,'cal.ScreenConfigureDisplayBrightnessWorks=%.0f;\n',cal.ScreenConfigureDisplayBrightnessWorks);
     if ~all(ismember([oo.observer],oo(oi).algorithmicObservers)) && ismac && isfield(cal,'profile')
         ffprintf(ff,'cal.profile=''%s'';\n',cal.profile);
-        fprintf('Setting screen profile ... ');
+        fprintf('Setting screen profile. ... ');
         s=GetSecs;
         oldProfile=ScreenProfile(cal.screen);
         if streq(oldProfile,cal.profile)
@@ -2366,7 +2371,7 @@ try
                         if isempty(oo(1).window)
                             % Some window must already be open before we call
                             % OpenOffscreenWindow.
-                            fprintf('Opening temporaryWindow ... ');
+                            fprintf('Opening temporaryWindow. ... ');
                             s=GetSecs;
                             temporaryWindow=Screen('OpenWindow',0,1,[0 0 100 100]);
                             fprintf('Done (%.1f s).\n',GetSecs-s);
@@ -2511,7 +2516,7 @@ try
                         % Allow for color images.
                         % Scale to range -1 (black) to 1 (white).
                         Screen('DrawText',oo(1).window,' ',0,0,1,oo(oi).gray1,1); % Set background color.
-                        string=sprintf('Reading images from disk ... ');
+                        string=sprintf('Reading images from disk. ... ');
                         DrawFormattedText(oo(1).window,string,...
                             oo(oi).textSize,1.5*oo(oi).textSize,black,oo(oi).textLineLength,[],[],1.3);
                         Screen('Flip',oo(1).window); % Display request.
@@ -4379,7 +4384,7 @@ try
         Screen('LoadNormalizedGammaTable',oo(1).window,cal.old.gamma,loadOnNextFlip);
         Screen('FillRect',oo(1).window);
         Screen('DrawText',oo(1).window,' ',0,0,1,1,1); % Set background color.
-        string=sprintf('Saving results to disk ... ');
+        string=sprintf('Saving results to disk. ... ');
         DrawFormattedText(oo(1).window,string,...
             oo(oi).textSize,1.5*oo(oi).textSize,black,oo(oi).textLineLength,[],[],1.3);
         Screen('Flip',oo(1).window); % Display message.
@@ -5546,7 +5551,7 @@ function CloseWindowsAndCleanup(oo)
 % keyboard, show cursor, and restore AutoBrightness.
 global window
 if ~isempty(Screen('Windows'))
-    fprintf('Closing the window ... ');
+    fprintf('Closing the window. ... ');
     s=GetSecs;
     Screen('CloseAll');
     fprintf('Done (%.1f s).\n',GetSecs-s);
