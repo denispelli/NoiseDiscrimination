@@ -1,8 +1,11 @@
 %% Analyze the data collected by csfRun.
 global printConditions figureHandle
-for expt={'csf' 'csfLetters' 'csfLettersStatic' 'csfGaborsStatic'}
+for expt={'csfLettersStatic' 'csfGaborsStatic'}
+% for expt={'csf' 'csfLetters' 'csfLettersStatic' 'csfGaborsStatic'}
     experiment=expt{1};
-    idealEOverN=8.5;
+    idealEOverN=struct;
+    idealEOverN.letter=1.27; % Ran ideal, average of 30 1000-trial thresholds. sd=0.17
+    idealEOverN.gabor=1.49; % Ran ideal, average of 30 1000-trial thresholds. sd=0.10
     readExperiment=true;
     printConditions=false;
     printFilenames=true;
@@ -16,10 +19,14 @@ for expt={'csf' 'csfLetters' 'csfLettersStatic' 'csfGaborsStatic'}
         % block. Each cell contains a struct array, with an element per
         % condition and its threshold.
         matFiles=dir(fullfile(dataFolder,'EvsN-*.mat'));
-        matFiles=[matFiles;dir(fullfile(dataFolder,[experiment '-*.mat']))];
+        m=dir(fullfile(dataFolder,[experiment 'Run*.summary.mat']));
+        matFiles=[matFiles;m];
+        m=dir(fullfile(dataFolder,[experiment '*-done.*.mat']));
+        matFiles=[matFiles;m];
     else
         % Each file contains one condition and its threshold.
-        matFiles=dir(fullfile(dataFolder,[experiment '*-NoiseDiscrimination*.mat']));
+        s=[experiment '*-NoiseDiscrimination*.mat'];
+        matFiles=dir(fullfile(dataFolder,s));
     end
     close all
     % We will ignore the blocking and read every condition into one huge struct
@@ -42,7 +49,7 @@ for expt={'csf' 'csfLetters' 'csfLettersStatic' 'csfGaborsStatic'}
         d=load(matFiles(iFile).name);
         if readExperiment
             if contains(matFiles(iFile).name,'NoiseDiscrimination') || ~isfield(d,'ooo')
-                continue
+%                 continue
             end
             if isempty(d.ooo{1}(1).observer)
                 continue
@@ -107,7 +114,7 @@ for expt={'csf' 'csfLetters' 'csfLettersStatic' 'csfGaborsStatic'}
                 E=[oo(ii).E];
                 N=[oo(ii).N];
                 [E0,Neq]=EstimateNeq(E,N);
-                efficiency=idealEOverN/(E0/Neq);
+                efficiency=idealEOverN.(oo(1).targetKind)/(E0/Neq);
             else
                 E0=[];
                 Neq=[];
@@ -142,9 +149,9 @@ for expt={'csf' 'csfLetters' 'csfLettersStatic' 'csfGaborsStatic'}
                     for row=1:2
                         subplotIndex=sub2ind(fliplr(subplots),col,row);
                         switch row
-                            case 1
-                                which=iiObserver & [oo.noiseSD]==0;
                             case 2
+                                which=iiObserver & [oo.noiseSD]==0;
+                            case 1
                                 which=iiObserver & [oo.noiseSD]>0;
                         end
                         Plot(field,oo(which),subplots,subplotIndex,style);
@@ -268,7 +275,13 @@ for iStyle=1:length(sfList)
     y=abs([oo(ii).(field)]);
     y(y>10^3*min(y))=nan;
     yAll=[yAll y];
-    loglog([oo(ii).eccentricityXDeg]+0.15,y,style{iStyle},'DisplayName',legendText);
+    try
+    loglog([oo(ii).eccentricityXDeg]+0.15,y,style{min(iStyle,length(style))},'DisplayName',legendText);
+    catch e
+        fprintf('observer %s, condition %s, legend %s\n',oo(1).observer,oo(1).conditionName,legendText);
+        fprintf('size x %d %d, size y %d %d\n',size([oo(ii).eccentricityXDeg]),size(y));
+        rethrow(e);
+    end
     hold on;
 end
 % NLine=logspace(log10(NLow),log10(NHigh));
