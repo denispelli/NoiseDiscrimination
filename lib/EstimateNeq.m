@@ -16,7 +16,9 @@ if size(E,2)~=1
     error('E and N should be vectors, yet have size %dx%d.',size(E));
 end
 % E=b(1)+b(2)*N; % Regression equation.
+w=warning('OFF','MATLAB:singularMatrix');
 b=[ones(size(N)) N]\E; % Regress.
+warning(w);
 E0=b(1); % Guess E0
 Neq=E0/b(2); % Guess Neq
 E0=max(E0,eps); % Impose positivity on the guess, so mincon won't fail.
