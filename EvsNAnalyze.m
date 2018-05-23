@@ -3,10 +3,11 @@
 % "cal", but Veena's data have "oo". Is "oo" saved by EvsNRun? Looking at
 % EvsNRun, I see it saves "oo" and "cal" in a *summary.MAT file, but Veena
 % doesn't seem to have such files.
-global printConditions
+global printConditions makePlotLinear
 printConditions=false;
 printFilenames=true;
 plotGraphs=true;
+makePlotLinear=true;
 myPath=fileparts(mfilename('fullpath')); % Takes 0.1 s.
 addpath(fullfile(myPath,'lib')); % Folder in same directory as this M file.
 experiment='EvsN';
@@ -24,42 +25,29 @@ for oi=1:length(matFiles) % One threshold file per iteration.
         % Skip summary files.
         continue
     end
+    vars={'conditionName' 'experiment' 'dataFilename' ...
+        'experimenter' 'observer' 'trials' ...
+        'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' ...
+        'targetHeightDeg' 'targetDurationSecs' 'targetDurationSecsMean' 'targetDurationSecsSD'...
+        'targetCheckDeg' 'fullResolutionTarget' ...
+        'noiseType' 'noiseSD'  'noiseCheckDeg' ...
+        'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
+        'contrast' 'E' 'N' 'LBackground' 'luminanceAtEye' 'luminanceFactor'...
+        'filterTransmission' 'useFilter' 'retinalIlluminanceTd' 'pupilDiameterMm'...
+        'pixPerCm' 'screenRect' 'nearPointXYPix' 'NUnits'};
     usesSecsPlural=contains(matFiles(oi).name,'NoiseDiscrimination2');
-    if usesSecsPlural
-        vars={'conditionName' 'experiment' 'dataFilename' ...
-            'experimenter' 'observer' 'trials' ...
-            'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' ...
-            'targetHeightDeg' 'targetDurationSecs' 'targetDurationSecsMean' 'targetDurationSecsSD'...
-            'targetCheckDeg' 'fullResolutionTarget' ...
-            'noiseType' 'noiseSD'  'noiseCheckDeg' ...
-            'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
-            'contrast' 'E' 'N' 'LBackground' 'luminanceAtEye' 'luminanceFactor'...
-            'filterTransmission' 'useFilter' 'retinalIlluminanceTd' 'pupilDiameterMm'...
-            'pixPerCm' 'screenRect' 'nearPointXYPix'};
-    else
-        vars={'conditionName' 'experiment' 'dataFilename' ...
-            'experimenter' 'observer' 'trials' ...
-            'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' ...
-            'targetHeightDeg' 'targetDurationSec' 'targetDurationSecMean' 'targetDurationSecSD'...
-            'targetCheckDeg' 'fullResolutionTarget' ...
-            'noiseType' 'noiseSD'  'noiseCheckDeg' ...
-            'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
-            'contrast' 'E' 'N' 'LBackground' 'luminanceAtEye' 'luminanceFactor'...
-            'filterTransmission' 'useFilter' 'retinalIlluminanceTd' 'pupilDiameterMm'...
-            'pixPerCm' 'nearPointXYPix'};
-    end
     for field=vars
-        if isfield(d.o,field{1})
-            if usesSecsPlural
-                newField=field{1};
-            else
-                newField=strrep(field{1},'Sec','Secs');
-            end
-            oo(oi).(newField)=d.o.(field{1});
+        if usesSecsPlural
+            oldField=field{1};
+        else
+            oldField=strrep(field{1},'Secs','Sec');
+        end
+        if isfield(d.o,oldField)
+            oo(oi).(field{1})=d.o.(oldField);
         else
             if oi==1
                 warning OFF BACKTRACE
-                warning('Missing o field: %s\n',field{:});
+                warning('Missing o field: %s\n',oldField);
             end
         end
     end
@@ -107,7 +95,7 @@ end
 return
 
 function Plot(oo,subplots,subplotIndex)
-global printConditions
+global printConditions makePlotLinear
 persistent previousObserver figureHandle overPlots figureTitle axisHandle
 if isempty(oo)
     return
@@ -117,6 +105,9 @@ if isempty(get(groot,'CurrentFigure')) || ~streq(oo(1).observer,previousObserver
     previousObserver=oo(1).observer;
     rect=Screen('Rect',0);
     figureTitle=[oo(1).experiment '-' oo(1).observer];
+    if makePlotLinear
+        figureTitle=[figureTitle '-linear'];
+    end
     figureHandle=figure('Name',figureTitle,'NumberTitle','off','pos',[10 10 900 300]);
     orient 'landscape'; % For printing.
     overPlots=zeros(1,subplots(1)*subplots(2));
@@ -171,11 +162,11 @@ fprintf('All selected fields have been saved in spreadsheet: /data/%s.csv\n',oo(
 
 %% Plot
 if Neq>=min(N) && Neq<2*max(N)
-    % Trust reasonable Neq. 
+    % Trust reasonable Neq.
     NLow=Neq/100;
     NHigh=max([N Neq*10]);
 else
-    % Igore crazy Neq. 
+    % Igore crazy Neq.
     NLow=min(N(N>0)); % Smallest nonzero noise.
     NHigh=max(N);
 end
@@ -207,8 +198,8 @@ ELine=(NLine+Neq)*E0/Neq;
 loglog(NLine,ELine,style2,'DisplayName','Linear fit');
 set(gca,'FontSize',fontSize);
 title(oo(1).conditionName);
-xlabel('\it N \rm (s deg^2)','Interpreter','tex')
-ylabel('\it E \rm (s deg^2)','Interpreter','tex');
+xlabel(['\it N \rm (' oo(1).NUnits ')'],'Interpreter','tex')
+ylabel(['\it E \rm (' oo(1).NUnits ')'],'Interpreter','tex');
 lgd=legend('show');
 lgd.Location='northwest';
 lgd.FontSize=fontSize;
@@ -223,7 +214,9 @@ caption{3}=sprintf('%.1f cd/m^2, %.0f td, LAT %.2f, log NPhoton %.1f', ...
     oo(1).luminanceAtEye,oo(1).retinalIlluminanceTd,oo(1).LAT,log10(oo(1).NPhoton));
 caption{4}=sprintf('ecc. [%.0f %.0f] deg, %.1f s, %s %.1f c/deg, log Neq %.2f',...
     oo(1).eccentricityXYDeg,oo(1).targetDurationSecs,oo(1).targetKind,oo(1).targetCyclesPerDeg,log10(oo(1).Neq));
-text(0.02,.02,caption,'Units','normalized','FontSize',fontSize,'VerticalAlignment','bottom');
+if ~makePlotLinear
+    text(0.02,.02,caption,'Units','normalized','FontSize',fontSize,'VerticalAlignment','bottom');
+end
 % Set lower Y limit to E0/40. This leaves room for the "caption" text at
 % bottom of graph. If necessary, expand Y range to 3 log units.
 logUnits=3;
@@ -232,7 +225,7 @@ yLimits=ax.YLim;
 yLimits(1)=E0/40;
 r=diff(log10(yLimits)); % Number of log units
 if logUnits>r
-   yLimits(2)=yLimits(2)*10^(logUnits-r);
+    yLimits(2)=yLimits(2)*10^(logUnits-r);
 end
 ax.YLim=yLimits;
 
@@ -272,9 +265,25 @@ ax.Units=u;
 % ax2.XLim=sqrt(ax1.XLim)*oo(end).noiseSD/sqrt(oo(end).N);
 % ax2.YLim=ax1.YLim;
 % ax2.FontSize=ax1.FontSize;
-
+if makePlotLinear
+    set(gca,'XScale','linear','YScale','linear');
+    ax=gca;
+    xLim=ax.XLim;
+    yLim=ax.YLim;
+    xLim(1)=-2*Neq;
+    yLim(1)=0;
+    xLim(2)=10*oo(1).Neq;
+    yLim(2)=E0+(E0/Neq)*xLim(2);
+    ax.XLim=xLim;
+    ax.YLim=yLim;
+    legend('hide');
+    NLine=[-Neq xLim(2)];
+    ELine=[0 yLim(2)];
+    loglog(NLine,ELine,style2);
+end
 % Save plot to disk
 graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[figureTitle '.eps']);
 saveas(gcf,graphFile,'epsc')
+
 % print(gcf,graphFile,'-depsc'); % equivalent to saveas above
 end
