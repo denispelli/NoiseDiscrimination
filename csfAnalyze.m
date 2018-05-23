@@ -1,13 +1,15 @@
 %% Analyze the data collected by csfRun.
-global printConditions figureHandle
+global printConditions figureHandle averageAcrossObservers displayCaption
 for expt={'csfLettersStatic' 'csfGaborsStatic'}
-% for expt={'csf' 'csfLetters' 'csfLettersStatic' 'csfGaborsStatic'}
+    % for expt={'csf' 'csfLetters' 'csfLettersStatic' 'csfGaborsStatic'}
     experiment=expt{1};
     idealEOverN=struct;
     idealEOverN.letter=1.27; % Ran ideal, average of 30 1000-trial thresholds. sd=0.17
     idealEOverN.gabor=1.49; % Ran ideal, average of 30 1000-trial thresholds. sd=0.10
+    averageAcrossObservers=true;
     readExperiment=true;
     printConditions=false;
+    displayCaption=false;
     printFilenames=true;
     plotGraphs=true;
     myPath=fileparts(mfilename('fullpath')); % Takes 0.1 s.
@@ -49,7 +51,7 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
         d=load(matFiles(iFile).name);
         if readExperiment
             if contains(matFiles(iFile).name,'NoiseDiscrimination') || ~isfield(d,'ooo')
-%                 continue
+                %                 continue
             end
             if isempty(d.ooo{1}(1).observer)
                 continue
@@ -93,19 +95,26 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
         return
     end
     
-    %% DISCARD THRESHOLDS WITH INSUFFICIENT TRIALS
+    % DISCARD THRESHOLDS WITH INSUFFICIENT TRIALS
     s=sprintf('condition(trials):');
     for oi=length(oo):-1:1
         if isempty(oo(oi).trials) || oo(oi).trials<oo(oi).trialsPerBlock
             s=[s sprintf(' %d(%d),',oi,oo(oi).trials)];
             oo(oi)=[];
+            continue
         end
+        % Delete thresholds that seem impossibly low.
+        %         if oo(oi).contrast<0.01
+        %             oo(oi)=[];
+        %             continue
+        %         end
     end
     if sum([oo.trials]<oo(1).trialsPerBlock)>0
         warning('Discarding %d threshold(s) with fewer than %d trials: %s',sum([oo.trials]<oo(1).trialsPerBlock),oo(oi).trialsPerBlock,s);
     end
     
-    %% COMPUTE DERIVED QUANTITIES
+    
+    % COMPUTE DERIVED QUANTITIES
     oo=ComputeNPhoton(oo);
     for observer=unique({oo.observer})
         for conditionName=unique({oo.conditionName})
@@ -126,11 +135,73 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
         end
     end
     
-    % PRINT
-    t=struct2table(oo);
-    if printFilenames
-        t(:,{'dataFilename','experiment','conditionName','observer','targetCyclesPerDeg','eccentricityXYDeg','contrast','noiseSD' 'Neq' 'E0'})
+    % COMPUTE AVERAGE "a"
+    if averageAcrossObservers
+        numberOfobservers=length(unique({oo.observer}));
+        aa=[];
+        ai=0;
+        % We average all the data for all conditions sharing the same
+        % condition name. Currently we treat two runs by one observer in
+        % the same way as runs by different observers. In principle one
+        % might want to average each observer's data before averaging
+        % across observers.
+        for conditionName=unique({oo.conditionName})
+            ii=ismember({oo.conditionName},conditionName);
+            if isempty(ii)
+                continue
+            end
+            ai=ai+1;
+            aa(ai).contrast=mean([oo(ii).contrast]);
+            aa(ai).contrastSD=std([oo(ii).contrast]);
+            aa(ai).contrastSE=std([oo(ii).contrast])/sqrt(length(ii));
+            aa(ai).E=mean([oo(ii).E]);
+            aa(ai).ESD=std([oo(ii).E]);
+            aa(ai).ESE=std([oo(ii).E])/sqrt(length(ii));
+            aa(ai).Neq=mean([oo(ii).Neq]);
+            aa(ai).NeqSD=std([oo(ii).Neq]);
+            aa(ai).NeqSE=std([oo(ii).Neq])/sqrt(length(ii));
+            aa(ai).efficiency=mean([oo(ii).efficiency]);
+            aa(ai).efficiencySD=std([oo(ii).efficiency]);
+            aa(ai).efficiencySE=std([oo(ii).efficiency])/sqrt(length(ii));
+            aa(ai).ii=ii;
+            aa(ai).conditionName=conditionName{1};
+            aa(ai).eccentricityXYDeg=oo(find(ii,1)).eccentricityXYDeg;
+            aa(ai).targetHeightDeg=oo(find(ii,1)).targetHeightDeg;
+            aa(ai).targetCyclesPerDeg=oo(find(ii,1)).targetCyclesPerDeg;
+            aa(ai).targetKind=oo(find(ii,1)).targetKind;
+            aa(ai).experiment=oo(find(ii,1)).experiment;
+            aa(ai).experimenter=oo(find(ii,1)).experimenter;
+            aa(ai).observer=num2str(numberOfobservers);
+            aa(ai).Neq=oo(find(ii,1)).Neq;
+            aa(ai).E0=oo(find(ii,1)).E0;
+            aa(ai).N=oo(find(ii,1)).N;
+            aa(ai).experimenter=oo(find(ii,1)).experimenter;
+            aa(ai).experimenter=oo(find(ii,1)).experimenter;
+            aa(ai).dataFilename=oo(find(ii,1)).dataFilename;
+            aa(ai).observer=oo(find(ii,1)).observer;
+            aa(ai).noiseSD=oo(find(ii,1)).noiseSD;
+            aa(ai).targetGaborCycles=oo(find(ii,1)).targetGaborCycles;
+            aa(ai).LBackground=oo(find(ii,1)).LBackground;
+            aa(ai).filterTransmission=oo(find(ii,1)).filterTransmission;
+            aa(ai).pupilDiameterMm=oo(find(ii,1)).pupilDiameterMm;
+            aa(ai).eyes=oo(find(ii,1)).eyes;
+            aa(ai).targetDurationSecs=oo(find(ii,1)).targetDurationSecs;
+            aa(ai).retinalIlluminanceTd=oo(find(ii,1)).retinalIlluminanceTd;
+            aa(ai).noiseCheckDeg=oo(find(ii,1)).noiseCheckDeg;
+            aa(ai).noiseType=oo(find(ii,1)).noiseType;
+            aa(ai).luminanceAtEye=oo(find(ii,1)).luminanceAtEye;
+            aa(ai).noiseCheckFrames=oo(find(ii,1)).noiseCheckFrames;
+            aa(ai).useDynamicNoiseMovie=oo(find(ii,1)).useDynamicNoiseMovie;
+            fprintf('%s,%s,%s\n',aa(ai).experiment,aa(ai).conditionName,aa(ai).observer);
+        end
+        ooOld=oo;
+        oo=aa;
     end
+   t=struct2table(oo);
+   for exp=unique(t.experiment)
+       for cond=(t.conditionName)
+           for obs=(t.observer)
+               sample=t(
     
     if plotGraphs
         fprintf('Plotting %d thresholds.\n',length(oo));
@@ -139,22 +210,42 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
         if 1
             field='contrast';
             figureHandle=[];
-            subplots=[2 length(observers)];
-            style={'-xk' '--xk' '-.xk' ':xk'};
-            for col=1:length(observers)
-                observer=observers{col};
-                iiObserver=ismember({oo.observer},observer);
-                if sum(iiObserver)>0
-                    fprintf('%s %s %s: %d thresholds.\n',experiment,observer,field,sum(iiObserver));
-                    for row=1:2
-                        subplotIndex=sub2ind(fliplr(subplots),col,row);
-                        switch row
-                            case 2
-                                which=iiObserver & [oo.noiseSD]==0;
-                            case 1
-                                which=iiObserver & [oo.noiseSD]>0;
+            if averageAcrossObservers
+                style={'-k' '--k' '-.k' ':k'};
+            else
+                style={'-xk' '--xk' '-.xk' ':xk'};
+            end
+            if averageAcrossObservers
+                subplots=[2 1];
+                fprintf('%s %s %s: %d thresholds.\n',experiment,'avearge',field);
+                col=1;
+                for row=1:2
+                    subplotIndex=sub2ind(fliplr(subplots),col,row);
+                    switch row
+                        case 1
+                            which= [oo.noiseSD]>0;
+                        case 2
+                            which= [oo.noiseSD]==0;
+                    end
+                    Plot(field,oo(which),subplots,subplotIndex,style);
+                end
+            else
+                subplots=[2 length(observers)];
+                for col=1:length(observers)
+                    observer=observers{col};
+                    iiObserver=ismember({oo.observer},observer);
+                    if sum(iiObserver)>0
+                        fprintf('%s %s %s: %d thresholds.\n',experiment,observer,field,sum(iiObserver));
+                        for row=1:2
+                            subplotIndex=sub2ind(fliplr(subplots),col,row);
+                            switch row
+                                case 1
+                                    which=iiObserver & [oo.noiseSD]>0;
+                                case 2
+                                    which=iiObserver & [oo.noiseSD]==0;
+                            end
+                            Plot(field,oo(which),subplots,subplotIndex,style);
                         end
-                        Plot(field,oo(which),subplots,subplotIndex,style);
                     end
                 end
             end
@@ -164,24 +255,44 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
             field='efficiency';
             figureHandle=[];
             subplots=[2 length(observers)];
-            style={'-xk' '--xk' '-.xk' ':xk'};
-            for col=1:length(observers)
-                observer=observers{col};
-                iiObserver=ismember({oo.observer},observer);
-                if sum(iiObserver)>0
-                    fprintf('%s %s %s: %d thresholds.\n',experiment,observer,field,sum(iiObserver));
-                    which=iiObserver & [oo.noiseSD]==0;
-                    for row=1:2
-                        subplotIndex=sub2ind(fliplr(subplots),col,row);
-                        switch row
-                            case 1
-                                Plot('efficiency',oo(which),subplots,subplotIndex,style);
-                            case 2
-                                Plot('Neq',oo(which),subplots,subplotIndex,style);
+            if averageAcrossObservers
+                style={'-k' '--k' '-.k' ':k'};
+            else
+                style={'-xk' '--xk' '-.xk' ':xk'};
+            end
+            if averageAcrossObservers
+                subplots=[2 1];
+                fprintf('%s %s %s: %d thresholds.\n',experiment,'average',field,length(oo));
+                col=1;
+                for row=1:2
+                    subplotIndex=sub2ind(fliplr(subplots),col,row);
+                    which=[oo.noiseSD]==0;
+                    switch row
+                        case 1
+                            Plot('efficiency',oo(which),subplots,subplotIndex,style);
+                        case 2
+                            Plot('Neq',oo(which),subplots,subplotIndex,style);
+                    end
+                end
+            else
+                for col=1:length(observers)
+                    observer=observers{col};
+                    iiObserver=ismember({oo.observer},observer);
+                    if sum(iiObserver)>0
+                        fprintf('%s %s %s: %d thresholds.\n',experiment,observer,field,sum(iiObserver));
+                        which=iiObserver & [oo.noiseSD]==0;
+                        for row=1:2
+                            subplotIndex=sub2ind(fliplr(subplots),col,row);
+                            switch row
+                                case 1
+                                    Plot('efficiency',oo(which),subplots,subplotIndex,style);
+                                case 2
+                                    Plot('Neq',oo(which),subplots,subplotIndex,style);
+                            end
                         end
                     end
                 end
-            end
+             end
         end
     end % if plotGraphs
 end % for expt={}
@@ -189,7 +300,7 @@ return
 
 %% PLOT
 function Plot(field,oo,subplots,subplotIndex,style)
-global printConditions figureHandle
+global printConditions figureHandle averageAcrossObservers displayCaption
 persistent figureTitle axisHandle
 if isempty(oo)
     return
@@ -222,10 +333,11 @@ else
 end
 
 % Sort by eccentricity.
-for oi=1:length(oo)
-    oo(oi).eccentricityXDeg=oo(oi).eccentricityXYDeg(1);
+x=[];
+for i=1:length(oo)
+    x(i)=oo(i).eccentricityXYDeg(1);
 end
-[~,ii]=sort([oo.eccentricityXDeg]);
+[~,ii]=sort(x);
 oo=oo(ii);
 % Sort by sf.
 [~,ii]=sort([oo.targetCyclesPerDeg]);
@@ -276,11 +388,32 @@ for iStyle=1:length(sfList)
     y(y>10^3*min(y))=nan;
     yAll=[yAll y];
     try
-    loglog([oo(ii).eccentricityXDeg]+0.15,y,style{min(iStyle,length(style))},'DisplayName',legendText);
+        x=[];
+        for i=find(ii)
+            x(end+1)=oo(i).eccentricityXYDeg(1)+0.15;
+        end
+        loglog(x,y,style{min(iStyle,length(style))},...
+            'DisplayName',legendText,'LineWidth',1);
+        hold on
     catch e
         fprintf('observer %s, condition %s, legend %s\n',oo(1).observer,oo(1).conditionName,legendText);
-        fprintf('size x %d %d, size y %d %d\n',size([oo(ii).eccentricityXDeg]),size(y));
+        fprintf('size x %d %d, size y %d %d\n',length([oo(ii)]),length(y));
         rethrow(e);
+    end
+    if averageAcrossObservers
+        ySE=[oo(ii).([field 'SE'])];
+        x=[];
+        for i=find(ii)
+            x(end+1)=oo(i).eccentricityXYDeg(1)+0.15;
+        end
+        x=Expand(x,1,2);
+        yBar=zeros(2,length(ySE));
+        yBar(1,:)=y-ySE;
+        yBar(2,:)=y+ySE;
+        loglog(x,yBar,'-k','LineWidth',1);
+        msg=sprintf('n = %d',length(unique([oo(ii).observer])));
+        text(0.05,0.05,msg,'Units','normalized','Interpreter','tex'); 
+        hold on
     end
     hold on;
 end
@@ -288,7 +421,9 @@ end
 % ELine=(NLine+Neq)*E0/Neq;
 % loglog(NLine,ELine,style2,'DisplayName','Linear fit');
 set(gca,'FontSize',fontSize);
-title([oo(1).observer]);
+if ~averageAcrossObservers
+    title([oo(1).observer]);
+end
 xlabel('Eccentricity+0.15 (deg)','Interpreter','tex');
 switch field
     case 'Neq'
@@ -300,10 +435,12 @@ switch field
     otherwise
         ylabel(field,'Interpreter','tex');
 end
-lgd=legend('show');
-lgd.Location='southwest';
-lgd.FontSize=fontSize;
-legend('boxoff');
+if ~averageAcrossObservers
+    lgd=legend('show');
+    lgd.Location='southwest';
+    lgd.FontSize=fontSize;
+    legend('boxoff');
+end
 oo=ComputeNPhoton(oo);
 caption={};
 caption{1}=sprintf('observer %s, eyes %s', ...
@@ -358,11 +495,13 @@ ax.Units=u;
 
 xLim=ax.XLim;
 yLim=ax.YLim;
+if ~averageAcrossObservers && displayCaption
 switch field
     case 'contrast'
         text(xLim(1),yLim(1)*20^0.5,caption,'FontSize',fontSize,'VerticalAlignment','bottom');
     otherwise
         text(xLim(1),yLim(1)*20,caption,'FontSize',fontSize,'VerticalAlignment','bottom');
+end
 end
 
 % Add second x-axis for noise contrast noiseSD.
