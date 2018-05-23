@@ -101,7 +101,12 @@ for ecc=[0 1 4 16 32]
             o.blankingRadiusReTargetHeight=0;
             o.fixationCrossDeg=3;
         end
-        o.conditionName=sprintf('%.0f-deg-%.1f-cpd',o.eccentricityXYDeg(1),o.targetCyclesPerDeg);
+            switch o.targetKind
+                case 'gabor'
+                    o.conditionName=sprintf('ec-%.0f-deg-%.1f-cpd',o.eccentricityXYDeg(1),o.targetCyclesPerDeg);
+                case 'letter'
+                    o.conditionName=sprintf('ec-%.0f-deg-sz-%.1f-deg',o.eccentricityXYDeg(1),o.targetHeightDeg);
+            end
         oo=[]; % Interleave these conditions.
         for sd=[0 MaxNoiseSD(o.noiseType)]
             o.noiseSD=sd;
