@@ -36,7 +36,7 @@ o.noiseSD=0; % max is 0.16 for gaussian, 0.5 for binary.
 
 % o.noiseCheckDeg=0.09*8;
 % o.noiseSD=0; % noise contrast [0 0.16]
-o.eccentricityDeg=0; % eccentricity [0 8 16 32]
+o.eccentricityXYDeg=[0 0]; % eccentricity [0 8 16 32]
 
 o.noiseEnvelopeSpaceConstantDeg=128; % always Inf for hard edge top-hat noise
 o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
@@ -50,7 +50,7 @@ o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
 
 % LETTER
 % o.targetHeightDeg=7.64; % Target size, range 0 to inf.
-% o.eccentricityDeg=0; % eccentricity [0 8 16 32]
+% o.eccentricityXYDeg=[0 0]; % eccentricity [0 8 16 32]
 % o.targetKind='letter';
 % o.font='Sloan';
 % o.alphabet='DHKNORSVZ';

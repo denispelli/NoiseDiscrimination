@@ -13,7 +13,7 @@ o.task='identify';
 o.durationSec=0.2;
 o.beta=1.8;
 o.thresholdParameter='contrast'; % Use Quest to measure threshold 'contrast'
-o.eccentricityDeg=0;
+o.eccentricityXYDeg=[0 0];
 o.noiseCheckDeg=0.37; % gives noiseCheckPix==13 on MacBook Air
 o.targetHeightDeg=30*o.noiseCheckDeg;
 o.noiseRadiusDeg=o.targetHeightDeg/2;

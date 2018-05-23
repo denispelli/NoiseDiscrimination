@@ -13,10 +13,10 @@ for run=1:o.blocksDesired
 
         o.noiseSD=noiseContrast;
         o.targetHeightDeg=2;
-%         o.eccentricityDeg=8;
-        o.eccentricityDeg=20;
-        acuityDeg = .029*(o.eccentricityDeg + 2.72);
-        criticalSpacingDeg = .3*(o.eccentricityDeg + .45);
+%         o.eccentricityXYDeg=[8 0];
+        o.eccentricityXYDeg=[20 0];
+        acuityDeg = .029*(o.eccentricityXYDeg(1) + 2.72);
+        criticalSpacingDeg = .3*(o.eccentricityXYDeg(1) + .15);
 
         o.block= o.block + 1;
         o.useTinyWindow = 0;
@@ -73,7 +73,7 @@ for run=1:o.blocksDesired
             movefile(strcat(o.datafilename,'.txt'),'E1ContrastResponse/runs');
             movefile(strcat(o.datafilename,'.mat'),'E1ContrastResponse/runs');
             %%%change fileName below to your needs. 
-            fileName = strcat('E1ContrastResponse/',o.observer,'-size',num2str(o.targetHeightDeg),'deg-ECC',num2str(o.eccentricityDeg),'deg-',maskType);
+            fileName = strcat('E1ContrastResponse/',o.observer,'-size',num2str(o.targetHeightDeg),'deg-ECC',num2str(o.eccentricityXYDeg(1)),'deg-',maskType);
             myFid=fopen(fileName,'a');
             fprintf(myFid,'%f\t%f\n',o.noiseSD,abs(o.contrast));
             fclose(myFid);

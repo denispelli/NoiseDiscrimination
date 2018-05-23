@@ -19,7 +19,7 @@ o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
 
 % LETTER
 o.targetHeightDeg=8; % Target size, range 0 to inf.
-eccentricityDeg=0; % eccentricity [0 8 16 32]
+o.eccentricityXYDeg=[0 0]; % eccentricity [0 8 16 32]
 o.targetKind='letter';
 o.font='Sloan';
 o.alphabet='DHKNORSVZ';

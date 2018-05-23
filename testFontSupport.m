@@ -15,7 +15,7 @@ o.dynamicSignalPoolSize = 100; % or 1 for static noise
 %o.thresholdParameter='spacing';
 
 o.targetHeightDeg=7.37; % letter/gabor size [2 4 8].
-o.eccentricityDeg=16; % eccentricity [0 16 32]
+o.eccentricityXYDeg=[16 0]; % eccentricity [0 16 32]
 o.noiseSD=0.1; % noise contrast [0 0.16]
 o.noiseCheckDeg=o.targetHeightDeg/20;
 %o.noiseCheckDeg=o.targetHeightDeg/40;

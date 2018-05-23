@@ -7,7 +7,7 @@ o.signalKind='noise';  % Display a noise increment.
 % o.task='4afc';
 o.beta=1.8;
 o.task='identify';
-o.eccentricityDeg=0;
+o.eccentricityXYDeg=[0 0];
 o.noiseCheckDeg=0.2*1.6; % adjust to achieve noiseCheckPix==13 on MacBook Air
 % o.noiseCheckPix=13;
 o.noiseToTargetRatio=1;

@@ -1,4 +1,4 @@
-function o = funcNoiseParam(letterSizeDeg,noiseContrast,noiseDecayRadius,eccentricityDeg,varargin)
+function o = funcNoiseParam(letterSizeDeg,noiseContrast,noiseDecayRadius,eccentricityXYDeg,varargin)
 %function o = funcNoiseDiscrimination(a,b,varargin)
 % Wrapper function for studying effects of noise (Pelli Lab experiment).
 % Requires 3 inputs (letter size, noise contrast, noise decay radius, eccentricity).
@@ -21,7 +21,7 @@ optargs(1:numvarargs) = varargin;
 % or ...
 % [optargs{1:numvarargs}] = varargin{:};
 o.targetHeightDeg=letterSizeDeg;
-o.eccentricityDeg=eccentricityDeg; % 0, 2, 8, 32
+o.eccentricityXYDeg=eccentricityXYDeg; % 0, 2, 8, 32
 o.noiseEnvelopeSpaceConstantDeg=noiseDecayRadius; % 0.5, 2, 8, inf
 o.noiseRadiusDeg=noiseContrast;
 [o.observer,o.noiseType,o.distanceCm,o.durationSec] = optargs{:};
@@ -36,7 +36,7 @@ o.noiseRadiusDeg=noiseContrast;
 %o.targetHeightDeg=2;
 %o.durationSec=0.2;
 %o.noiseRadiusDeg=inf;
-%o.eccentricityDeg=32; % 0, 2, 8, 32
+%o.eccentricityXYDeg=[32 0]; % 0, 2, 8, 32
 %o.noiseEnvelopeSpaceConstantDeg=2; % 0.5, 2, 8, inf
 %##################################################################
 

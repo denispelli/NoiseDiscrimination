@@ -277,7 +277,7 @@ o.trialsPerBlock=1e4;
 
 % ############# we test target size x ecc w/o noise #######
 o.targetHeightDeg=8; % letter/gabor size [2 4 8].
-o.eccentricityDeg=0; % eccentricity [0 16 32]
+o.eccentricityXYDeg=[0 0]; %  [0 16 32]
 o.noiseSD=0.16; % noise contrast [0 0.16]
 % We want to compare these:
 o.noiseCheckDeg=o.targetHeightDeg/20;
@@ -306,7 +306,7 @@ for i = 1:size(missingT,1)
   o.noiseSD = missingT.noiseContrast(i);
   o.noiseEnvelopeSpaceConstantDeg=missingT.noiseDecayRadius(i);
   o.noiseRadiusDeg=missingT.noiseRadiusDeg(i);
-  o.eccentricityDeg=missingT.eccentricity(i);
+  o.eccentricityXYDeg(1)=missingT.eccentricity(i);
   %   o.targetKind = 'letter'
   o.noiseCheckDeg=o.targetHeightDeg/20;
 

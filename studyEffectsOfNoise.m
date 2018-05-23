@@ -22,7 +22,7 @@ o.trialsPerBlock=80;
 % ############# we test target size x ecc w/o noise #######
 % o.targetHeightDeg=6; % OLD: letter or gabor size [2 3.5 6];
 o.targetHeightDeg=16; % letter/gabor size [2 4 8].
-o.eccentricityDeg=8; % eccentricity [0 8 16 32]
+o.eccentricityXYDeg=[8 0]; % [0 8 16 32]
 o.noiseSD=0.16; % noise contrast [0 0.16]
 % We want to compare these:
 o.noiseCheckDeg=o.targetHeightDeg/20;
@@ -124,7 +124,7 @@ if useBackupSessions % auto-generate full sequence of experiments for "Winter" d
         for iTargetSize=1:numel(tableCell{iEcc,2})
             for iRatio=0:numel(NoiseDecayRaiusOverLetterRadius)
                 oo(iCounter) = o;
-                oo(iCounter).eccentricityDeg = tableCell{iEcc,1};
+                oo(iCounter).eccentricityXYDeg=[tableCell{iEcc,1} 0];
                 oo(iCounter).targetHeightDeg = tableCell{iEcc,2}(iTargetSize);
                 
                 if iRatio==0

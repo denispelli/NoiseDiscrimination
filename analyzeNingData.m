@@ -3,7 +3,7 @@ data=[];
 for ii = 1:length(MATs)
     d = load(MATs(ii).name);
     
-     data = [data; d.o.noiseSD d.o.xHeightDeg d.o.eccentricityDeg d.o.contrast];
+     data = [data; d.o.noiseSD d.o.xHeightDeg d.o.eccentricityXYDeg d.o.contrast];
 % data = [data; d.o];        
 % Chen_March10{ii} = d.o;
     
@@ -42,7 +42,7 @@ data=[];
 for ii = 1:length(MATs)
     d = load(MATs(ii).name);
     if d.o.trials >= 40 && strcmp(d.o.noiseType,'gaussian') && d.o.targetHeightDeg <3
-        data = [data; d.o.noiseSD d.o.eccentricityDeg d.o.contrast];
+        data = [data; d.o.noiseSD d.o.eccentricityXYDeg d.o.contrast];
         Ning_March3rd_dark{ii}=d.o;
 %         Ning_March3rd_dark{ii}.observer
     end
