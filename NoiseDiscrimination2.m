@@ -4115,7 +4115,7 @@ try
             end
         end
         if oo(oi).printLogOfIdeal && trial/10==round(trial/10) && ismember(oo(oi).observer,oo(oi).algorithmicObservers)
-            fprintf('%d: trial %d, block %d of %d, t %.2f, isRight %d, %dx%d, %.0f s, %.1f kpix/s.\n',...
+            fprintf('%d: trial %3d, block %2d of %2d, t %.2f, isRight %d, %dx%d, %2.0f s, %.1f kpix/s.\n',...
                 oi,trial,oo(oi).block,oo(oi).blocksDesired,tTest,isRight,oo(oi).canvasSize,GetSecs-blockStartSecs,...
                 1e-3*oo(oi).alternatives*prod(oo(oi).canvasSize)*trial/(GetSecs-blockStartSecs));
         end
@@ -4865,9 +4865,9 @@ switch o.observer
                             % We compute rms difference between each 
                             % possible signal and the average stimulus
                             % frame (over the signal part of the movie).
-                            imshow(im);
-                            imshow((1+o.contrast*signal(i).image));
-                            imshow(d+1);
+%                             imshow(im);
+%                             imshow((1+o.contrast*signal(i).image));
+%                             imshow(d+1);
                             likely(i)=-sqrt(mean(d(:).^2));
                         end
                     case {'noise' 'entropy'}
