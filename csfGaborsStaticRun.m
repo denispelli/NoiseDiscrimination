@@ -20,10 +20,10 @@ end
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % Folder in same directory as this M file.
 cal=OurScreenCalibrations(0);
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
-% o.observer='ideal';
-% o.trialsPerBlock=100;
-% o.printLogOfIdeal=true;
-% Screen('Preference', 'Verbosity',0);
+o.observer='ideal';
+o.trialsPerBlock=1000;
+o.printLogOfIdeal=true;
+Screen('Preference', 'Verbosity',0);
 
 %% SPECIFY BASIC CONDITION
 o.experiment='csfGaborsStatic'; 
@@ -104,10 +104,18 @@ for ecc=[0 1 4 16 32]
             o.blankingRadiusReTargetHeight=0;
             o.fixationCrossDeg=3;
         end
-        o.conditionName=sprintf('%.0f-deg-%.1f-cpd',o.eccentricityXYDeg(1),o.targetCyclesPerDeg);
+            switch o.targetKind
+                case 'gabor'
+                    o.conditionName=sprintf('%.0f-deg-%.1f-cpd',o.eccentricityXYDeg(1),o.targetCyclesPerDeg);
+                case 'letter'
+                    o.conditionName=sprintf('ec-%.0f-deg-%.1f-deg',o.eccentricityXYDeg(1),o.targetHeightDeg);
+            end
         oo=[]; % Interleave these conditions.
         for sd=[0 MaxNoiseSD(o.noiseType)]
             o.noiseSD=sd;
+            if o.noiseSD==0 && streq(o.observer,'ideal')
+%                 continue
+            end
             if isempty(oo)
                 oo=o;
             else
