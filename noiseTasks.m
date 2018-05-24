@@ -74,9 +74,13 @@ o.trialsPerBlock=40;
 
 %% PUT THE EXPERIMENT'S CONDITIONS IN STRUCT oo
 o.targetHeightDeg=11;
+o.noiseRadiusDeg=o.targetHeightDeg/2;
 o.noiseCheckDeg=o.targetHeightDeg/20;
 o.noiseSD=0.2;
-o.targetDurationSec=inf;
+o.targetDurationSec=0.2;
+o.fixationCrossDrawnOnStimulus=true;
+o.markTargetLocation=true; % Is there a mark designating target position?
+o.targetMarkDeg=0.1;
 o.contrast=-1;
 oo={};
 if true
