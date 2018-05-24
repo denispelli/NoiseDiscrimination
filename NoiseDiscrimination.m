@@ -3992,8 +3992,13 @@ try
         %% PRINT BOLD SUMMARY
         o.E=10^(2*o.questMean)*o.E1;
         index=o.condition==condition;
-        trials=sum(index); % Of this condition.
-        trialsRight=sum([o.transcript.isRight{index}]); % Of this condition.
+        if ~isempty(o.transcript.isRight)
+            trials=length([o.transcript.isRight{index}]); % Of this condition.
+            trialsRight=sum([o.transcript.isRight{index}]); % Of this condition.
+        else
+            trials=0;
+            trialsRight=0;
+        end
         switch o.targetModulates
             case 'luminance'
                 ffprintf(ff,['<strong>Block %4d of %d.  %d trials. %.0f%% right. %.3f s/trial. '...
