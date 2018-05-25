@@ -197,11 +197,11 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
         ooOld=oo;
         oo=aa;
     end
-   t=struct2table(oo);
-   for exp=unique(t.experiment)
-       for cond=(t.conditionName)
-           for obs=(t.observer)
-               sample=t(
+%    t=struct2table(oo);
+%    for exp=unique(t.experiment)
+%        for cond=(t.conditionName)
+%            for obs=(t.observer)
+%                sample=t(
     
     if plotGraphs
         fprintf('Plotting %d thresholds.\n',length(oo));
@@ -465,6 +465,12 @@ switch field
         yLim(1)=min(yAll,[],'omitnan')/225^0.5;
     otherwise
         yLim(1)=min(yAll,[],'omitnan')/225;
+end
+switch field
+    case 'efficiency'
+        yLim=[3e-4 1];
+    case 'Neq'
+        yLim=[5e-9 3e-4];
 end
 ax.YLim=yLim;
 r=diff(log10(yLim)); % Number of log units
