@@ -629,7 +629,11 @@ try
                            Speak('Escape');
                         end
                      end
-                     error('User hit Control-C, Escape, or GraveAccent.');
+                     sca;
+                     ShowCursor;
+                     ListenChar;
+                     fprintf('\nQUITTING: User hit Control-C, Escape, or GraveAccent.\n');
+                     return
                   end
                   if ~isfloat(n) || length(n)~=1
                      Speak('Invalid. Try again.');
@@ -670,14 +674,13 @@ try
    catch
       Screen('CloseAll');
       ShowCursor;
-      sca;
       ListenChar;
       psychrethrow(psychlasterror);
       return
    end
    Screen('CloseAll');
    ShowCursor;
-   sca;
+   ListenChar; % restore
    if cal.ScreenConfigureDisplayBrightnessWorks
       cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
       fprintf('Brightness still set to %.0f%%, now reads as %.0f%%.\n',100*cal.brightnessSetting,100*cal.brightnessReading);

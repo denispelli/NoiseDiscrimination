@@ -22,7 +22,7 @@ cal=OurScreenCalibrations(0);
 o.localHostName=cal.localHostName;
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 o.observer='ideal';
-% o.observer='junk';
+o.observer='junk';
 o.experimenter='junk';
 
 %% SPECIFY BASIC CONDITION
@@ -131,6 +131,8 @@ if false
     o.backgroundEntropyLevels=3;
     oo{end+1}=o;
 end
+    o.noiseRadiusDeg=o.targetHeightDeg/2;
+
 
 %% POLISH THE LIST OF CONDITIONS
 for oi=1:length(oo)
