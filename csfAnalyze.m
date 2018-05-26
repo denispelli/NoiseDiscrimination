@@ -151,6 +151,7 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
                 continue
             end
             ai=ai+1;
+            aa(ai).n=sum(ii(:));
             aa(ai).contrast=mean([oo(ii).contrast]);
             aa(ai).contrastSD=std([oo(ii).contrast]);
             aa(ai).contrastSE=std([oo(ii).contrast])/sqrt(length(ii));
@@ -192,7 +193,8 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
             aa(ai).luminanceAtEye=oo(find(ii,1)).luminanceAtEye;
             aa(ai).noiseCheckFrames=oo(find(ii,1)).noiseCheckFrames;
             aa(ai).useDynamicNoiseMovie=oo(find(ii,1)).useDynamicNoiseMovie;
-            fprintf('%s,%s,%s\n',aa(ai).experiment,aa(ai).conditionName,aa(ai).observer);
+            fprintf('%s,%s,%s: %d thresholds, %d observers\n',...
+                aa(ai).experiment,aa(ai).conditionName,aa(ai).observer,n,numberOfobservers);
         end
         ooOld=oo;
         oo=aa;
@@ -401,6 +403,7 @@ for iStyle=1:length(sfList)
         rethrow(e);
     end
     if averageAcrossObservers
+        % Error bars
         ySE=[oo(ii).([field 'SE'])];
         x=[];
         for i=find(ii)
@@ -410,7 +413,7 @@ for iStyle=1:length(sfList)
         yBar=zeros(2,length(ySE));
         yBar(1,:)=y-ySE;
         yBar(2,:)=y+ySE;
-        loglog(x,yBar,'-k','LineWidth',1);
+        loglog(x,yBar,'-k','LineWidth',1,'HandleVisibility','off');
         msg=sprintf('n = %d',length(unique([oo(ii).observer])));
         text(0.05,0.05,msg,'Units','normalized','Interpreter','tex'); 
         hold on
@@ -435,7 +438,7 @@ switch field
     otherwise
         ylabel(field,'Interpreter','tex');
 end
-if ~averageAcrossObservers
+if 1 || ~averageAcrossObservers
     lgd=legend('show');
     lgd.Location='southwest';
     lgd.FontSize=fontSize;
