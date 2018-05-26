@@ -113,7 +113,6 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
         warning('Discarding %d threshold(s) with fewer than %d trials: %s',sum([oo.trials]<oo(1).trialsPerBlock),oo(oi).trialsPerBlock,s);
     end
     
-    
     % COMPUTE DERIVED QUANTITIES
     oo=ComputeNPhoton(oo);
     for observer=unique({oo.observer})
@@ -122,7 +121,8 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
             if sum(ii(:))>1
                 E=[oo(ii).E];
                 N=[oo(ii).N];
-                [E0,Neq]=EstimateNeq(E,N);
+                ok=abs([oo(ii).contrast])<1.1;
+                [E0,Neq]=EstimateNeq(E,N,ok);
                 efficiency=idealEOverN.(oo(1).targetKind)/(E0/Neq);
             else
                 E0=[];
@@ -135,75 +135,77 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
         end
     end
     
-    % COMPUTE AVERAGE "a"
+    % FOR EACH conditionName AND noiseSD, COMPUTE AVERAGE "a" ACROSS
+    % OBSERVERS
     if averageAcrossObservers
         numberOfobservers=length(unique({oo.observer}));
         aa=[];
         ai=0;
         % We average all the data for all conditions sharing the same
-        % condition name. Currently we treat two runs by one observer in
-        % the same way as runs by different observers. In principle one
-        % might want to average each observer's data before averaging
-        % across observers.
+        % condition name and noiseSD. Currently we treat two runs by one
+        % observer in the same way as runs by different observers. In
+        % principle one might want to average each observer's data before
+        % averaging across observers.
         for conditionName=unique({oo.conditionName})
-            ii=ismember({oo.conditionName},conditionName);
-            if isempty(ii)
-                continue
+            for noiseSD=unique([oo.noiseSD])
+                ii=ismember({oo.conditionName},conditionName) & ismember([oo.noiseSD],noiseSD);
+                if isempty(ii)
+                    continue
+                end
+                ai=ai+1;
+                aa(ai).n=sum(ii(:));
+                aa(ai).ii=ii;
+                aa(ai).experiment=oo(find(ii,1)).experiment;
+                aa(ai).experimenter=oo(find(ii,1)).experimenter;
+                aa(ai).observer=num2str(numberOfobservers);
+                aa(ai).conditionName=conditionName{1};
+                aa(ai).contrast=mean([oo(ii).contrast]);
+                aa(ai).contrastSD=std([oo(ii).contrast]);
+                aa(ai).contrastSE=std([oo(ii).contrast])/sqrt(sum(ii(:)));
+                aa(ai).E=mean([oo(ii).E],'omitnan');
+                aa(ai).ESD=std([oo(ii).E],'omitnan');
+                aa(ai).ESE=std([oo(ii).E],'omitnan')/sqrt(sum(ii(:)));
+                aa(ai).Neq=mean([oo(ii).Neq],'omitnan');
+                aa(ai).NeqSD=std([oo(ii).Neq],'omitnan');
+                aa(ai).NeqSE=std([oo(ii).Neq],'omitnan')/sqrt(sum(ii(:)));
+                iiOk=ii & isfinite([oo.efficiency]) & [oo.efficiency]<1;
+                aa(ai).efficiency=mean([oo(iiOk).efficiency],'omitnan');
+                aa(ai).efficiencySD=std([oo(iiOk).efficiency],'omitnan');
+                aa(ai).efficiencySE=std([oo(iiOk).efficiency],'omitnan')/sqrt(sum(iiOk(:)));
+                aa(ai).eccentricityXYDeg=oo(find(ii,1)).eccentricityXYDeg;
+                aa(ai).targetHeightDeg=oo(find(ii,1)).targetHeightDeg;
+                aa(ai).targetCyclesPerDeg=oo(find(ii,1)).targetCyclesPerDeg;
+                aa(ai).targetKind=oo(find(ii,1)).targetKind;
+                aa(ai).E0=oo(find(ii,1)).E0;
+                aa(ai).N=oo(find(ii,1)).N;
+                aa(ai).dataFilename=oo(find(ii,1)).dataFilename;
+                aa(ai).noiseSD=oo(find(ii,1)).noiseSD;
+                aa(ai).targetGaborCycles=oo(find(ii,1)).targetGaborCycles;
+                aa(ai).LBackground=oo(find(ii,1)).LBackground;
+                aa(ai).filterTransmission=oo(find(ii,1)).filterTransmission;
+                aa(ai).pupilDiameterMm=oo(find(ii,1)).pupilDiameterMm;
+                aa(ai).eyes=oo(find(ii,1)).eyes;
+                aa(ai).targetDurationSecs=oo(find(ii,1)).targetDurationSecs;
+                aa(ai).retinalIlluminanceTd=oo(find(ii,1)).retinalIlluminanceTd;
+                aa(ai).noiseCheckDeg=oo(find(ii,1)).noiseCheckDeg;
+                aa(ai).noiseType=oo(find(ii,1)).noiseType;
+                aa(ai).luminanceAtEye=oo(find(ii,1)).luminanceAtEye;
+                aa(ai).noiseCheckFrames=oo(find(ii,1)).noiseCheckFrames;
+                aa(ai).useDynamicNoiseMovie=oo(find(ii,1)).useDynamicNoiseMovie;
+                fprintf('%d:%s,%s,%s: %d thresholds, %d observers\n',...
+                    ai,aa(ai).experiment,aa(ai).conditionName,aa(ai).observer,aa(ai).n,numberOfobservers);
             end
-            ai=ai+1;
-            aa(ai).n=sum(ii(:));
-            aa(ai).contrast=mean([oo(ii).contrast]);
-            aa(ai).contrastSD=std([oo(ii).contrast]);
-            aa(ai).contrastSE=std([oo(ii).contrast])/sqrt(length(ii));
-            aa(ai).E=mean([oo(ii).E]);
-            aa(ai).ESD=std([oo(ii).E]);
-            aa(ai).ESE=std([oo(ii).E])/sqrt(length(ii));
-            aa(ai).Neq=mean([oo(ii).Neq]);
-            aa(ai).NeqSD=std([oo(ii).Neq]);
-            aa(ai).NeqSE=std([oo(ii).Neq])/sqrt(length(ii));
-            aa(ai).efficiency=mean([oo(ii).efficiency]);
-            aa(ai).efficiencySD=std([oo(ii).efficiency]);
-            aa(ai).efficiencySE=std([oo(ii).efficiency])/sqrt(length(ii));
-            aa(ai).ii=ii;
-            aa(ai).conditionName=conditionName{1};
-            aa(ai).eccentricityXYDeg=oo(find(ii,1)).eccentricityXYDeg;
-            aa(ai).targetHeightDeg=oo(find(ii,1)).targetHeightDeg;
-            aa(ai).targetCyclesPerDeg=oo(find(ii,1)).targetCyclesPerDeg;
-            aa(ai).targetKind=oo(find(ii,1)).targetKind;
-            aa(ai).experiment=oo(find(ii,1)).experiment;
-            aa(ai).experimenter=oo(find(ii,1)).experimenter;
-            aa(ai).observer=num2str(numberOfobservers);
-            aa(ai).Neq=oo(find(ii,1)).Neq;
-            aa(ai).E0=oo(find(ii,1)).E0;
-            aa(ai).N=oo(find(ii,1)).N;
-            aa(ai).experimenter=oo(find(ii,1)).experimenter;
-            aa(ai).experimenter=oo(find(ii,1)).experimenter;
-            aa(ai).dataFilename=oo(find(ii,1)).dataFilename;
-            aa(ai).observer=oo(find(ii,1)).observer;
-            aa(ai).noiseSD=oo(find(ii,1)).noiseSD;
-            aa(ai).targetGaborCycles=oo(find(ii,1)).targetGaborCycles;
-            aa(ai).LBackground=oo(find(ii,1)).LBackground;
-            aa(ai).filterTransmission=oo(find(ii,1)).filterTransmission;
-            aa(ai).pupilDiameterMm=oo(find(ii,1)).pupilDiameterMm;
-            aa(ai).eyes=oo(find(ii,1)).eyes;
-            aa(ai).targetDurationSecs=oo(find(ii,1)).targetDurationSecs;
-            aa(ai).retinalIlluminanceTd=oo(find(ii,1)).retinalIlluminanceTd;
-            aa(ai).noiseCheckDeg=oo(find(ii,1)).noiseCheckDeg;
-            aa(ai).noiseType=oo(find(ii,1)).noiseType;
-            aa(ai).luminanceAtEye=oo(find(ii,1)).luminanceAtEye;
-            aa(ai).noiseCheckFrames=oo(find(ii,1)).noiseCheckFrames;
-            aa(ai).useDynamicNoiseMovie=oo(find(ii,1)).useDynamicNoiseMovie;
-            fprintf('%s,%s,%s: %d thresholds, %d observers\n',...
-                aa(ai).experiment,aa(ai).conditionName,aa(ai).observer,n,numberOfobservers);
         end
         ooOld=oo;
         oo=aa;
     end
-%    t=struct2table(oo);
-%    for exp=unique(t.experiment)
-%        for cond=(t.conditionName)
-%            for obs=(t.observer)
-%                sample=t(
+    t=struct2table(oo);
+    for exp=unique(t.experiment)
+        for cond=(t.conditionName)
+            rows=ismember(t.experiment,exp) & ismember(t.conditionName,cond) & t.noiseSD>0;
+            disp(t(rows,{'experiment' 'conditionName' 'efficiency' 'contrast'}));
+        end
+    end
     
     if plotGraphs
         fprintf('Plotting %d thresholds.\n',length(oo));
@@ -213,7 +215,8 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
             field='contrast';
             figureHandle=[];
             if averageAcrossObservers
-                style={'-k' '--k' '-.k' ':k'};
+%                 style={'-k' '--k' '-.k' ':k'};
+                style={'-' '-' '-' '-'};
             else
                 style={'-xk' '--xk' '-.xk' ':xk'};
             end
@@ -259,6 +262,7 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
             subplots=[2 length(observers)];
             if averageAcrossObservers
                 style={'-k' '--k' '-.k' ':k'};
+                style={'-' '-' '-' '-'};
             else
                 style={'-xk' '--xk' '-.xk' ':xk'};
             end
@@ -268,7 +272,7 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
                 col=1;
                 for row=1:2
                     subplotIndex=sub2ind(fliplr(subplots),col,row);
-                    which=[oo.noiseSD]==0;
+                    which=[oo.noiseSD]==0 & [oo.targetHeightDeg]>0.15;
                     switch row
                         case 1
                             Plot('efficiency',oo(which),subplots,subplotIndex,style);
@@ -301,11 +305,17 @@ end % for expt={}
 return
 
 %% PLOT
-function Plot(field,oo,subplots,subplotIndex,style)
+function Plot(field,oo,subplots,subplotIndex,style,color)
 global printConditions figureHandle averageAcrossObservers displayCaption
 persistent figureTitle axisHandle
 if isempty(oo)
     return
+end
+if nargin<5
+    style={'-' '-' '-' '-'};
+end
+if nargin<6
+    color=[0 0 0;.5 .5 .5;.7 .7 .7;.8 .8 .8;.9 .9 .9];
 end
 fontSize=12*0.6;
 if isempty(figureHandle)
@@ -344,7 +354,6 @@ oo=oo(ii);
 % Sort by sf.
 [~,ii]=sort([oo.targetCyclesPerDeg]);
 oo=oo(ii);
-
 
 % Create CSV file
 vars={'experiment' 'conditionName' ...
@@ -394,8 +403,10 @@ for iStyle=1:length(sfList)
         for i=find(ii)
             x(end+1)=oo(i).eccentricityXYDeg(1)+0.15;
         end
-        loglog(x,y,style{min(iStyle,length(style))},...
-            'DisplayName',legendText,'LineWidth',1);
+        h=loglog(x,y,style{min(iStyle,length(style))});
+        h.Color=color(min(iStyle,size(color,1)),1:3);
+        h.LineWidth=2;
+        h.DisplayName=legendText;
         hold on
     catch e
         fprintf('observer %s, condition %s, legend %s\n',oo(1).observer,oo(1).conditionName,legendText);
@@ -414,12 +425,14 @@ for iStyle=1:length(sfList)
         yBar(1,:)=y-ySE;
         yBar(2,:)=y+ySE;
         loglog(x,yBar,'-k','LineWidth',1,'HandleVisibility','off');
-        msg=sprintf('n = %d',length(unique([oo(ii).observer])));
-        text(0.05,0.05,msg,'Units','normalized','Interpreter','tex'); 
+        msg=sprintf('n = %d',oo(find(ii,1)).n);
+        if iStyle==1
+            text(0.05,0.05,msg,'Units','normalized');
+        end
         hold on
     end
     hold on;
-end
+end % for iStyle=1:length(sfList)
 % NLine=logspace(log10(NLow),log10(NHigh));
 % ELine=(NLine+Neq)*E0/Neq;
 % loglog(NLine,ELine,style2,'DisplayName','Linear fit');
@@ -430,7 +443,7 @@ end
 xlabel('Eccentricity+0.15 (deg)','Interpreter','tex');
 switch field
     case 'Neq'
-        ylabel('Neq (s deg^2)','Interpreter','tex');
+        ylabel('{\itN}eq (s deg^2)','Interpreter','tex');
     case 'contrast'
         ylabel('Contrast','Interpreter','tex');
     case 'efficiency'
@@ -461,44 +474,32 @@ switch field
 end
 ax=gca;
 yLim=ax.YLim;
-assert(all(isreal(yLim))&&all(yLim>0),sprintf('Complex or not positive: %f%+fi %f%+fi  %f%+fi %f%+fi\n',...
+assert(all(isreal(yLim)) && all(yLim>0),...
+    sprintf('Complex or not positive: %f%+fi %f%+fi  %f%+fi %f%+fi\n',...
     real(yLim(1)),imag(yLim(1)),real(yLim(2)),imag(yLim(2))));
 switch field
     case 'contrast'
-        yLim(1)=min(yAll,[],'omitnan')/225^0.5;
-    otherwise
-        yLim(1)=min(yAll,[],'omitnan')/225;
-end
-switch field
+        yLim=[3e-3 1];
     case 'efficiency'
-        yLim=[3e-4 1];
+        yLim=[1e-3 1];
     case 'Neq'
-        yLim=[5e-9 3e-4];
+        yLim=[1e-7 3e-4];
 end
 ax.YLim=yLim;
-r=diff(log10(yLim)); % Number of log units
-try
-    if logUnits>r
-        yLim(2)=yLim(2)*10^(logUnits-r);
-    end
-    ax.YLim=yLim;
-catch e
-    r=r;
-    throw(e)
-end
 
-% Scale log unit to be 1.5 cm, vertically and horizontally for all
-% variables, except 3 cm per log unit of contrast.
+% Scale log unit to be logUnitCm, vertically and horizontally for all
+% variables, except 2*logUnitCm per log unit of contrast.
 ax=gca;
 u=ax.Units;
 ax.Units='centimeters';
 drawnow; % Needed for valid Position reading.
 pos=ax.Position;
+logUnitCm=2;
 switch field
     case 'contrast'
-        ax.Position=[pos(1:2) 1.5*diff(log10(ax.XLim)) 3*diff(log10(ax.YLim))];
+        ax.Position=[pos(1:2) logUnitCm*diff(log10(ax.XLim)) 2*logUnitCm*diff(log10(ax.YLim))];
     otherwise
-        ax.Position=[pos(1:2) 1.5*diff(log10(ax.XLim)) 1.5*diff(log10(ax.YLim))];
+        ax.Position=[pos(1:2) logUnitCm*diff(log10(ax.XLim)) logUnitCm*diff(log10(ax.YLim))];
 end
 ax.Units=u;
 
