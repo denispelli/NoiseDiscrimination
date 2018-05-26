@@ -5,30 +5,31 @@ function oooOut=RunExperiment2(ooo)
 % block of the experiment, and contains an array struct oo, with one "o"
 % struct per condition. All the conditions in the array are randomly
 % interleaved during testing. It is common to have just one condition. Each
-% o struct has many fields, including o.trials.
+% "o" struct has many fields, including o.trials.
 %
 % KEEP WINDOW OPEN THROUGHOUT EXPERIMENT: The psychtoolbox Screen command
-% takes maybe 30 s to open a window and a similar time to close it. It's
-% unpleasant for observers to wait through those delays more than once. To
-% eliminate needless waiting, the first time we call NoiseDiscrimination to
-% run a block of trials, it opens a window. That window typically fills the
-% whole screen, unless you've set o.useFractionOfScreen less than 1 (to
-% facilitate debugging). That window stays open when NoiseDiscrimination
-% returns, so it's ready for the next block, and so on, until we reach the
-% end of the experiment (end of the "oo" cell array), or the user hits
-% ESCAPE and chooses to o.quitExperiment.
+% takes tens of seconds to open a window and a similar time to close it.
+% It's unpleasant for observers to wait through those delays more than
+% once. To eliminate needless waiting, the first time we call
+% NoiseDiscrimination to run a block of trials, it opens a window. That
+% window fills the whole screen, unless you've set o.useFractionOfScreen
+% less than 1 (to facilitate debugging). That window stays open when
+% NoiseDiscrimination returns, so it's ready for the next block, and so on,
+% until we reach the end of the experiment (end of the "ooo" cell array),
+% or the user hits ESCAPE and chooses to o.quitExperiment.
 %
-% RESUME: Optionally resume a partially-completed experiment. When you call
-% RunExperiment, we first look in the data folder for a partially-done
-% experiment with the same o.experiment name, done on this computer. (Alas,
-% we don't yet know the observer's name, so we can't search for it.) If we
-% find one or more matching partial experiment file we ask, for each, if
-% you want to finish it (or delete it or skip it). If you say YES then we
-% ignore the oo argument that you passed (and the rest of the matching
-% partial-experiment files), and instead load up oo from the disk file. One
-% by one we run the conditions that still don't have enough trials, until
-% the observer quits or we reach the end of the experiment. Then we save
-% the completed experiment to disk, without "partial" in the filename.
+% RESUME INCOMPLETE EXPERIMENT: Optionally resume a partially-completed
+% experiment. When you call RunExperiment, we first look in the data folder
+% for a partially-done experiment with the same o.experiment name, done on
+% this computer. (Alas, we don't yet know the observer's name, so we can't
+% search for it.) If we find one or more matching partial experiment file
+% we ask, for each, if you want to finish it (or delete it or skip it). If
+% you say YES then we ignore the oo argument that you passed (and the rest
+% of the matching partial-experiment files), and instead load up oo from
+% the disk file. One by one we run the conditions that still don't have
+% enough trials, until the observer quits or we reach the end of the
+% experiment. Then we save the completed experiment to disk, without
+% "partial" in the filename.
 %
 % denis.pelli@nyu.edu, May 4, 2018
 
@@ -36,8 +37,8 @@ function oooOut=RunExperiment2(ooo)
 % ought to delete the old partial, since its data are now obsolete,
 % duplicated in the new complete experiment file.
 
-% Once we call onCleanup, until RunExperiment ends, MyCleanupFunction will
-% run (closing any open windows) when this function terminates for any
+% Once we call onCleanup, until RunExperiment ends, CloseWindowsAndCleanup
+% will run (closing any open windows) when this function terminates for any
 % reason, whether by reaching the end, the posting of an error here or in
 % any function called from here, or the user hitting control-C.
 
@@ -62,7 +63,7 @@ end
 ooo=OfferToResumeExperiment2(ooo);
 
 %% RUN THE CONDITIONS IN EXPERIMENT ooo, WHETHER OLD OR NEW.
-% You pass a cell array ooo the represents the whole experiment. Each cell
+% You pass a cell array ooo that represents the whole experiment. Each cell
 % ooo{block} represents one block. The cell contains an array struct oo.
 % Each struct oo(oi) is a condition, which we typically (but not here)
 % refer to by o=oo(oi). If the experiment is already partially completed,
