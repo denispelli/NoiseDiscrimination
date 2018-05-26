@@ -46,6 +46,9 @@ cleanup=onCleanup(@() CloseWindowsAndCleanup);
 if isempty(ooo)
     error('ooo was empty. You didn''t specify any conditions.');
 end
+if ~exist('Screen','file')
+    error('We need the Psychtoolbox. Please add it to the MATLAB path. Available from http://psychtoolbox.org');
+end
 computer=Screen('Computer');
 if computer.windows
     localHostName=getenv('USERDOMAIN');

@@ -459,6 +459,9 @@ if exist('ooIn','var') && isfield(ooIn,'quitExperiment') && ooIn(1).quitExperime
     oo=ooIn;
     return
 end
+if ~exist('Screen','file')
+    error('We need the Psychtoolbox. Please add it to the MATLAB path. Available from http://psychtoolbox.org');
+end
 
 %% SUGGESTED VALUES FOR ANNULUS
 if false

@@ -47,6 +47,9 @@ if nargin>0
 else
    cal.screen=0;
 end
+if ~exist('Screen','file')
+    error('We need the Psychtoolbox. Please add it to the MATLAB path. Available from http://psychtoolbox.org');
+end
 if ~ismember(cal.screen,Screen('Screens'))
     error('You referred to non-existent screen %d.',cal.screen);
 end
