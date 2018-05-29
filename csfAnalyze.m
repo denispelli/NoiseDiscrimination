@@ -1,11 +1,16 @@
 %% Analyze the data collected by csfRun.
-global printConditions figureHandle averageAcrossObservers displayCaption
-for expt={'csfLettersStatic' 'csfGaborsStatic'}
+% Why did I have to adjust the ideal thresholds? What changed?
+% Does new letter efficiency match old graph?
+% It seems misleading to count repeats of same observer when reporting n.
+global printConditions figureHandle averageAcrossObservers displayCaption observerList
+global printObserverNames
+for expt={'csfLettersStatic'}% 'csfGaborsStatic'}
     % for expt={'csf' 'csfLetters' 'csfLettersStatic' 'csfGaborsStatic'}
+    printObserverNames=false;
     experiment=expt{1};
     idealEOverN=struct;
-    idealEOverN.letter=1.27; % Ran ideal, average of 30 1000-trial thresholds. sd=0.17
-    idealEOverN.gabor=1.49; % Ran ideal, average of 30 1000-trial thresholds. sd=0.10
+    idealEOverN.letter=1.27/0.15; % Ran ideal, average of 30 1000-trial thresholds. sd=0.17
+    idealEOverN.gabor=1.49/.8; % Ran ideal, average of 30 1000-trial thresholds. sd=0.10
     averageAcrossObservers=true;
     readExperiment=true;
     printConditions=false;
@@ -136,9 +141,12 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
     end
     
     % FOR EACH conditionName AND noiseSD, COMPUTE AVERAGE "a" ACROSS
-    % OBSERVERS
+    % ALL OBSERVERS, EXCEPT IDEAL. WE DON'T YET EXCLUDE DUPLICATES.
     if averageAcrossObservers
-        numberOfobservers=length(unique({oo.observer}));
+        observerList=unique({oo.observer});
+        ok=~ismember(observerList,'ideal');
+        observerList=observerList(ok); % Exclude 'ideal'.
+        numberOfObservers=length(observerList);
         aa=[];
         ai=0;
         % We average all the data for all conditions sharing the same
@@ -148,30 +156,33 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
         % averaging across observers.
         for conditionName=unique({oo.conditionName})
             for noiseSD=unique([oo.noiseSD])
-                ii=ismember({oo.conditionName},conditionName) & ismember([oo.noiseSD],noiseSD);
+                ii=ismember({oo.conditionName},conditionName) & ismember([oo.noiseSD],noiseSD)...
+                    & ismember({oo.observer},observerList);
                 if isempty(ii)
                     continue
                 end
                 ai=ai+1;
                 aa(ai).n=sum(ii(:));
+                aa(ai).observerList={oo(ii).observer};
                 aa(ai).ii=ii;
                 aa(ai).experiment=oo(find(ii,1)).experiment;
                 aa(ai).experimenter=oo(find(ii,1)).experimenter;
-                aa(ai).observer=num2str(numberOfobservers);
+                aa(ai).observer=num2str(numberOfObservers);
                 aa(ai).conditionName=conditionName{1};
-                aa(ai).contrast=mean([oo(ii).contrast]);
-                aa(ai).contrastSD=std([oo(ii).contrast]);
-                aa(ai).contrastSE=std([oo(ii).contrast])/sqrt(sum(ii(:)));
+                ok=ii & isfinite([oo.contrast]) & abs([oo.contrast])<1 & abs([oo.contrast])>0.002;
+                aa(ai).contrast=mean([oo(ok).contrast],'omitnan');
+                aa(ai).contrastSD=std([oo(ok).contrast],'omitnan');
+                aa(ai).contrastSE=std([oo(ok).contrast],'omitnan')/sqrt(sum(ok(:)));
                 aa(ai).E=mean([oo(ii).E],'omitnan');
                 aa(ai).ESD=std([oo(ii).E],'omitnan');
                 aa(ai).ESE=std([oo(ii).E],'omitnan')/sqrt(sum(ii(:)));
                 aa(ai).Neq=mean([oo(ii).Neq],'omitnan');
                 aa(ai).NeqSD=std([oo(ii).Neq],'omitnan');
                 aa(ai).NeqSE=std([oo(ii).Neq],'omitnan')/sqrt(sum(ii(:)));
-                iiOk=ii & isfinite([oo.efficiency]) & [oo.efficiency]<1;
-                aa(ai).efficiency=mean([oo(iiOk).efficiency],'omitnan');
-                aa(ai).efficiencySD=std([oo(iiOk).efficiency],'omitnan');
-                aa(ai).efficiencySE=std([oo(iiOk).efficiency],'omitnan')/sqrt(sum(iiOk(:)));
+                ok=ii & isfinite([oo.efficiency]) & [oo.efficiency]<1;
+                aa(ai).efficiency=mean([oo(ok).efficiency],'omitnan');
+                aa(ai).efficiencySD=std([oo(ok).efficiency],'omitnan');
+                aa(ai).efficiencySE=std([oo(ok).efficiency],'omitnan')/sqrt(sum(ok(:)));
                 aa(ai).eccentricityXYDeg=oo(find(ii,1)).eccentricityXYDeg;
                 aa(ai).targetHeightDeg=oo(find(ii,1)).targetHeightDeg;
                 aa(ai).targetCyclesPerDeg=oo(find(ii,1)).targetCyclesPerDeg;
@@ -193,12 +204,13 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
                 aa(ai).noiseCheckFrames=oo(find(ii,1)).noiseCheckFrames;
                 aa(ai).useDynamicNoiseMovie=oo(find(ii,1)).useDynamicNoiseMovie;
                 fprintf('%d:%s,%s,%s: %d thresholds, %d observers\n',...
-                    ai,aa(ai).experiment,aa(ai).conditionName,aa(ai).observer,aa(ai).n,numberOfobservers);
+                    ai,aa(ai).experiment,aa(ai).conditionName,aa(ai).observer,aa(ai).n,numberOfObservers);
             end
         end
         ooOld=oo;
         oo=aa;
     end
+    % Display table of thresholds.
     t=struct2table(oo);
     for exp=unique(t.experiment)
         for cond=(t.conditionName)
@@ -222,7 +234,7 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
             end
             if averageAcrossObservers
                 subplots=[2 1];
-                fprintf('%s %s %s: %d thresholds.\n',experiment,'avearge',field);
+                fprintf('%s %s %s: %d thresholds.\n',experiment,'average',field);
                 col=1;
                 for row=1:2
                     subplotIndex=sub2ind(fliplr(subplots),col,row);
@@ -306,7 +318,8 @@ return
 
 %% PLOT
 function Plot(field,oo,subplots,subplotIndex,style,color)
-global printConditions figureHandle averageAcrossObservers displayCaption
+global printConditions figureHandle averageAcrossObservers displayCaption 
+global printObserverNames
 persistent figureTitle axisHandle
 if isempty(oo)
     return
@@ -321,7 +334,14 @@ fontSize=12*0.6;
 if isempty(figureHandle)
     rect=Screen('Rect',0);
     figureTitle=[oo(1).experiment '-' field];
-    figureHandle=figure('Name',figureTitle,'NumberTitle','off','pos',[10 10 900 700]);
+    if averageAcrossObservers
+        figureTitle=[figureTitle '-average'];
+    end
+    if averageAcrossObservers
+        figureHandle=figure('Name',figureTitle,'NumberTitle','off','pos',[10 10 900 700]);
+    else
+        figureHandle=figure('Name',figureTitle,'NumberTitle','off','pos',[10 10 1280 700]);
+    end
     orient 'landscape'; % For printing.
     overPlots=zeros(1,subplots(1)*subplots(2));
     axisHandle=zeros(1,subplots(1)*subplots(2));
@@ -425,9 +445,16 @@ for iStyle=1:length(sfList)
         yBar(1,:)=y-ySE;
         yBar(2,:)=y+ySE;
         loglog(x,yBar,'-k','LineWidth',1,'HandleVisibility','off');
-        msg=sprintf('n = %d',oo(find(ii,1)).n);
+        j=find(ii,1);
+        msg=sprintf('n = %d',oo(j).n);
+        if printObserverNames
+            msg=[msg '.'];
+            for i=1:length(oo(j).observerList)
+                msg=[msg sprintf(' %s',oo(j).observerList{i})];
+            end
+        end
         if iStyle==1
-            text(0.05,0.05,msg,'Units','normalized');
+            text(4,8,msg,'Units','points');
         end
         hold on
     end
@@ -481,7 +508,7 @@ switch field
     case 'contrast'
         yLim=[3e-3 1];
     case 'efficiency'
-        yLim=[1e-3 1];
+        yLim=[3e-3 3];
     case 'Neq'
         yLim=[1e-7 3e-4];
 end
