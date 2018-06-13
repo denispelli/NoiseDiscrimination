@@ -3508,7 +3508,10 @@ try
                         ffprintf(ff,'oo(oi).savedStimulus at contrast %.3f, flankerContrast %.3f\n',oo(oi).contrast,oo(oi).flankerContrast);
                         figure
                         imshow(oo(oi).savedStimulus);
-                    end
+                        filename=sprintf('%s-%d.png',oo(oi).conditionName,trial);
+                        imwrite(img,fullfile(oo(1).dataFolder,filename),'png');
+                        ffprintf(ff,'Saved image to file "%s" ',filename);
+                   end
                     if oo(oi).saveSnapshot && iMovieFrame==oo(oi).moviePreFrames+1
                         snapshotTexture=Screen('OpenOffscreenWindow',movieTexture(iMovieFrame));
                         Screen('CopyWindow',movieTexture(iMovieFrame),snapshotTexture);
@@ -4476,11 +4479,13 @@ if o.cropSnapshot
         end
     end
 else
-    cropRect=o.screenRect;
+%     cropRect=o.screenRect;
+    cropRect=Screen('Rect',snapshotTexture);
 end
 o.approxRequiredNumber=64/10^((tTest-o.idealT64)/0.55);
 rect=Screen('TextBounds',snapshotTexture,'approxRequiredNumber 0000');
-r=o.screenRect;
+% r=o.screenRect;
+r=Screen('Rect',snapshotTexture);
 r(3)=leftEdgeOfResponse;
 r=InsetRect(r,o.textSize/2,o.textSize/2);
 rect=AlignRect(rect,r,RectRight,RectBottom);
@@ -4619,7 +4624,7 @@ o.blocksDesired=1;
 ffprintf(ff,'SUCCESS: o.saveSnapshot is done. Image saved, now returning.\n');
 fclose(logFid);
 logFid=-1;
-CloseWindowsAndCleanup(oo)
+CloseWindowsAndCleanup;
 return
 end % function SaveSnapshot
 
