@@ -4,7 +4,7 @@
 % It seems misleading to count repeats of same observer when reporting n.
 global printConditions figureHandle averageAcrossObservers displayCaption observerList
 global printObserverNames
-for expt={'csfLettersStatic'}% 'csfGaborsStatic'}
+for expt={'csfLettersStatic' 'csfGaborsStatic'}
     % for expt={'csf' 'csfLetters' 'csfLettersStatic' 'csfGaborsStatic'}
     printObserverNames=false;
     experiment=expt{1};
@@ -330,7 +330,7 @@ end
 if nargin<6
     color=[0 0 0;.5 .5 .5;.7 .7 .7;.8 .8 .8;.9 .9 .9];
 end
-fontSize=12*0.6;
+fontSize=10;
 if isempty(figureHandle)
     rect=Screen('Rect',0);
     figureTitle=[oo(1).experiment '-' field];
@@ -454,7 +454,7 @@ for iStyle=1:length(sfList)
             end
         end
         if iStyle==1
-            text(4,8,msg,'Units','points');
+            text(4,8,msg,'Units','points','FontSize',fontSize);
         end
         hold on
     end
@@ -467,16 +467,17 @@ set(gca,'FontSize',fontSize);
 if ~averageAcrossObservers
     title([oo(1).observer]);
 end
-xlabel('Eccentricity+0.15 (deg)','Interpreter','tex');
+xlabel('Eccentricity+0.15 (deg)','Interpreter','tex','FontSize',fontSize);
+xtickformat('%.1f');
 switch field
     case 'Neq'
-        ylabel('{\itN}eq (s deg^2)','Interpreter','tex');
+        ylabel('{\itN}eq (s deg^2)','Interpreter','tex','FontSize',fontSize);
     case 'contrast'
-        ylabel('Contrast','Interpreter','tex');
+        ylabel('Contrast','Interpreter','tex','FontSize',fontSize);
     case 'efficiency'
-        ylabel('Efficiency','Interpreter','tex');
+        ylabel('Efficiency','Interpreter','tex','FontSize',fontSize);
     otherwise
-        ylabel(field,'Interpreter','tex');
+        ylabel(field,'Interpreter','tex','FontSize',fontSize);
 end
 if 1 || ~averageAcrossObservers
     lgd=legend('show');
@@ -508,11 +509,18 @@ switch field
     case 'contrast'
         yLim=[3e-3 1];
     case 'efficiency'
-        yLim=[3e-3 3];
+        yLim=[3e-3 1];
     case 'Neq'
         yLim=[1e-7 3e-4];
 end
 ax.YLim=yLim;
+switch field
+    case 'contrast'
+        yticklabels({'0.01' '0.1' '1'});
+    case 'efficiency'
+        yticklabels({'0.01' '0.1' '1'});
+    case 'Neq'
+end
 
 % Scale log unit to be logUnitCm, vertically and horizontally for all
 % variables, except 2*logUnitCm per log unit of contrast.
@@ -540,6 +548,9 @@ switch field
         text(xLim(1),yLim(1)*20,caption,'FontSize',fontSize,'VerticalAlignment','bottom');
 end
 end
+%         xtickformat('%.1f');
+% xticklabels('manual');
+xticklabels({'0.1','1','10','100'});
 
 % Add second x-axis for noise contrast noiseSD.
 % ax1=gca;
