@@ -1,3 +1,5 @@
+function SizeOfFields(o)
+% Print size (in bytes) of each field in the argument struct "o".
 for f=fieldnames(o)'
     x=o.(f{1});
     w=whos('x');
