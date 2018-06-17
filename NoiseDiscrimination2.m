@@ -1631,7 +1631,7 @@ try
     ffprintf(ff,'%s %s calibrated by %s on %s.\n',cal.localHostName,cal.macModelName,cal.calibratedBy,cal.datestr);
     ffprintf(ff,'%s\n',cal.notes);
     ffprintf(ff,'cal.ScreenConfigureDisplayBrightnessWorks=%.0f;\n',cal.ScreenConfigureDisplayBrightnessWorks);
-    if ~all(ismember([oo.observer],oo(oi).algorithmicObservers)) && ismac && isfield(cal,'profile')
+    if ~all(ismember({oo.observer},oo(oi).algorithmicObservers)) && ismac && isfield(cal,'profile')
         ffprintf(ff,'cal.profile=''%s'';\n',cal.profile);
         fprintf('Setting screen profile. ... ');
         s=GetSecs;
@@ -2292,6 +2292,7 @@ try
     Snd('Open');
     
     %% PREPARE TARGET IMAGE (I.E. SIGNAL)
+    temporaryWindow=[]; % Perhaps we should keep the temporary window open across blocks.
     for oi=1:conditions
         switch oo(oi).task
             case '4afc'
@@ -2374,7 +2375,7 @@ try
             case {'identify' 'identifyAll' 'rate'}
                 switch oo(oi).targetKind
                     case 'letter'
-                        if isempty(oo(1).window)
+                        if isempty(oo(1).window) && isempty(temporaryWindow)
                             % Some window must already be open before we call
                             % OpenOffscreenWindow.
                             fprintf('Opening temporaryWindow. ... ');
@@ -2493,14 +2494,7 @@ try
                         end
                         Screen('Close',scratchWindow);
                         scratchWindow=[];
-                        if isempty(oo(1).window)
-                            fprintf('Closing temporaryWindow. ... ');
-                            s=GetSecs;
-                            Screen('Close',temporaryWindow);
-                            temporaryWindow=[];
-                            fprintf('Done (%.1f s).\n',GetSecs-s);
-                        end
-                    case 'gabor'
+                      case 'gabor'
                         % o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
                         % o.targetGaborSpaceConstantCycles=1.5; % The 1/e space constant of the gaussian envelope in periods of the sinewave.
                         % o.targetGaborCycles=3; % cycles of the sinewave.
@@ -2691,9 +2685,8 @@ try
         oo(oi).E1=mean(power)*(oo(oi).targetCheckPix/oo(oi).pixPerDeg)^2;
         ffprintf(ff,'%d: log E1/deg^2 %.2f, where E1 is energy at unit contrast.\n',oi,log10(oo(oi).E1));
         if ismember(oo(oi).observer,oo(oi).algorithmicObservers)
-            Screen('CloseAll');
             window=[];
-            [oo(oi).window]=deal([]);
+            oo(oi).window=[];
             LMin=0;
             LMax=200;
             oo(oi).LBackground=100;
@@ -2710,6 +2703,15 @@ try
         end
     end % for oi=1:conditions
     
+    if ~isempty(temporaryWindow)
+        % Perhaps we should keep the temporary window open across blocks.
+        fprintf('Closing temporaryWindow. ... ');
+        s=GetSecs;
+        Screen('Close',temporaryWindow);
+        temporaryWindow=[];
+        fprintf('Done (%.1f s).\n',GetSecs-s);
+    end
+  
     %% SET PARAMETERS FOR QUEST
     for oi=1:conditions
         if isempty(oo(oi).lapse) || isnan(oo(oi).lapse)
@@ -4123,7 +4125,7 @@ try
                 error(string);
             end
         end
-        if oo(oi).printLogOfIdeal && trial/10==round(trial/10) && ismember(oo(oi).observer,oo(oi).algorithmicObservers)
+        if oo(oi).printLogOfIdeal && trial/100==round(trial/100) && ismember(oo(oi).observer,oo(oi).algorithmicObservers)
             fprintf('%d: trial %3d, block %2d of %2d, t %.2f, isRight %d, %dx%d, %2.0f s, %.1f kpix/s.\n',...
                 oi,trial,oo(oi).block,oo(oi).blocksDesired,tTest,isRight,oo(oi).canvasSize,GetSecs-blockStartSecs,...
                 1e-3*oo(oi).alternatives*prod(oo(oi).canvasSize)*trial/(GetSecs-blockStartSecs));
