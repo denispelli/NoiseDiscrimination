@@ -1,14 +1,14 @@
 function o=MeasureLuminancePrecision(o)
 % o=MeasureLuminancePrecision(o);
 % Measure (and graph) the luminance at each of a requested number of
-% floating-point luminance values over a (small) range to reveal how many
-% bits of precision your display achieves. The optional input argument "o"
-% is a struct with many fields, as explained below in INPUT ARGUMENT.
+% floating-point luminance values spanning a (small) range to reveal how
+% many bits of precision your display achieves. The optional input argument
+% "o" is a struct with many fields, as explained below in INPUT ARGUMENT.
 % Calling it with no argument will return a struct o with all the default
 % values, which you can modify to use as an argument when you call it
 % again.
 %
-% Denis Pelli, May 7, 2017
+% Denis Pelli, June 17, 2018
 %
 %% REQUIRED:
 % 1. MATLAB http://mathworks.com
@@ -29,7 +29,7 @@ function o=MeasureLuminancePrecision(o)
 % DenissMacBookPro5K-Dithering61696-o.useNative10Bit-LoadIdentityCLUT-Luminances8.fig
 %
 %% EXPLANATION:
-% Using Psychtoolbox SCREEN imaging, measures how precisely we can control
+% Using Psychtoolbox Screen imaging, measures how precisely we can control
 % display luminance. Loads identity into the Color Lookup Table (CLUT) and
 % measures the luminance produced by each value loaded into a large
 % uniform patch of image pixels. (This program varies only the luminance,
@@ -73,23 +73,27 @@ function o=MeasureLuminancePrecision(o)
 % See INPUT ARGUMENT below.
 %
 %% A FEW COMPUTERS THAT SUPPORT MORE-THAN-8-BIT PRECISION
-% As of April 2017, Apple documents (below) indicate that two currently
-% available macOS computers attain 10-bit precision from pixel to display
-% (in each of the three RGB channels): the Mac Pro and the iMac 27" retina
-% desktop. From my testing, I add the Apple's high-end MacBook Pro laptop
-% (Retina, 15-inch, Mid 2015). I tested my MacBook Pro (Retina, 15-inch,
-% Mid 2015) and iMac (Retina 5K, 27-inch, Late 2014). Both use AMD drivers.
-% Using MeasureLuminancePrecision, I have documented 11-bit luminance
-% precision on both of these displays, provided you enable o.useNative11Bit.
+% MacOS: As of April 2017, Apple documents (below) indicate that two
+% currently available macOS computers attain 10-bit precision from pixel to
+% display (in each of the three RGB channels): the Mac Pro and the iMac 27"
+% retina desktop. From my testing, I add the MacBook (Retina, 12-inch,
+% 2017) and the high-end MacBook Pro laptop (Retina, 15-inch, Mid 2015). I
+% tested my MacBook (Retina, 12-inch, 2017), high-end MacBook Pro (Retina,
+% 15-inch, Mid 2015) and high-end iMac (Retina 5K, 27-inch, Late 2014). The
+% video drivers are Intel in the MacBook, and AMD (Radeon) in the high-end
+% MacBook Pro and iMac. Using MeasureLuminancePrecision (with
+% o.useNative11Bit), I have documented 10-bit luminance precision in the
+% MacBook, and 11-bit luminance precision in the MacBook Pro and iMac.
 % https://www.macrumors.com/2015/10/30/4k-5k-imacs-10-bit-color-depth-osx-el-capitan/
 % https://developer.apple.com/library/content/releasenotes/MacOSX/WhatsNewInOSX/Articles/MacOSX10_11_2.html#//apple_ref/doc/uid/TP40016630-SW1
 % https://developer.apple.com/library/content/samplecode/DeepImageDisplayWithOpenGL/Introduction/Intro.html#//apple_ref/doc/uid/TP40016622
 % https://macperformanceguide.com/blog/2016/20161127_1422-Apple2016MacBookPro-10-bit-color.html
 %
-% My Hewlett-Packard Z Book laptop running Linux attains 10-bit luminance
-% precision. I have not yet succeeded in getting dither to work on the Z
-% Book. I thank  my former student, Hörmet Yiltiz, for setting up the Z
-% Book and getting 10-bit imaging to work, with help from Mario Kleiner.
+% Linux: My Hewlett-Packard Z Book laptop running Linux attains 10-bit
+% luminance precision. I have not yet succeeded in getting dither to work
+% on the Z Book. I thank  my former student, Hörmet Yiltiz, for setting up
+% the Z Book and getting 10-bit imaging to work, with help from Mario
+% Kleiner.
 %
 % MacBook Pro driving NEC PA244UHD 4K display
 % https://macperformanceguide.com/blog/2016/20161127_1422-Apple2016MacBookPro-10-bit-color.html
@@ -279,9 +283,13 @@ function o=MeasureLuminancePrecision(o)
 % MATLAB figure. Each graph will use the specified number of luminances.
 %
 % o.patchWidthPixels = display a pixel in a dark square to defeat dithering.
+%
 % o.wigglePixelNotCLUT = whether to vary the value of the pixel or CLUT.
+%
 % o.loadIdentityCLUT = whether to load identity into the CLUT.
+%
 % o.enableCLUTMapping = whether to use software table lookup. See below.
+%
 % o.CLUTMapSize = 2^n for n-bit precision. Make it big to conserve resolution.
 
 sca
@@ -302,7 +310,7 @@ if nargin<1
    o.removeDaylight=false; % Use this if your room has slowly changing daylight.
    o.wigglePixelNotCLUT=true; % true is fine. The software CLUT is not important.
    o.loadIdentityCLUT=true; % true is fine. This nullifies the CLUT.
-   o.enableCLUTMapping=false; % true use software CLUT; false don't. false is fine.
+   o.enableCLUTMapping=false; % true means use software CLUT; false means don't. false is fine.
    o.CLUTMapSize=4096; % Size of software CLUT. Limits resolution to log2(o.CLUTMapSize) bits.
    o.useFractionOfScreen=false; % For debugging, reduce our window to expose Command Window.
    o.callScreenNullForMario=false; % Used with custom version of SCREEN that reports GPU registers.
@@ -311,7 +319,7 @@ end
 
 %% BEGIN
 if 1
-   % Quick test, February 2018
+   % Quick test, June 2018
    o.luminances=4;
    o.luminanceFactor=.9;
    o.reciprocalOfFraction=[1 128]; % List one or more, e.g. 1, 128, 256.
@@ -363,24 +371,28 @@ try
    if ~o.useFractionOfScreen
       window = PsychImaging('OpenWindow',screen,[1 1 1]);
    else
-      window = PsychImaging('OpenWindow',screen,[1 1 1],round(o.useFractionOfScreen*screenBufferRect));
+      window = PsychImaging('OpenWindow',screen,[1 1 1],...
+          round(o.useFractionOfScreen*screenBufferRect));
    end
    screenRect=Screen('Rect',window);
    windowInfo=Screen('GetWindowInfo',window);
    switch(windowInfo.DisplayCoreId)
       % Choose the right magic dither code for the video driver. Currently
-      % this works only for AMD drivers on  Apple's iMac and MacBook Pro,
-      % and HP's Z Book. See Dithering Notes above.
-      case 'AMD',
+      % this is written for the AMD drivers on Apple's iMac and MacBook
+      % Pro, and HP's Z Book. See Dithering Notes above. However, I've
+      % never detected any effect of trying to change the code or turn
+      % dithering on or off. Each computer seems to have dithering
+      % permanently on or permanently off.
+      case 'AMD'
          displayEngineVersion=windowInfo.GPUMinorType/10;
          switch(round(displayEngineVersion))
-            case 6,
+            case 6
                displayGPUFamily='Southern Islands';
                % Examples:
                % AMD Radeon R9 M290X used in MacBook Pro (Retina, 15-inch, Mid 2015)
                % AMD Radeon R9 M370X used in iMac (Retina 5K, 27-inch, Late 2014)
                o.ditheringCode=61696;
-            case 8,
+            case 8
                displayGPUFamily='Sea Islands';
                % Used in HP Z Book laptop.
                % o.ditheringCode= 61696;
@@ -389,7 +401,7 @@ try
                % enable dithering for a native 8-bit panel, which is the
                % wrong thing to do for the laptop's 10-bit panel, assuming
                % the driver docs are correct. But then, who knows?
-            otherwise,
+             otherwise
                displayGPUFamily='unknown';
          end
          fprintf('Display driver: %s version %.1f, "%s"\n',...
@@ -754,9 +766,12 @@ XYZ = CORRMAT(4:6,:) * [s.x s.y s.z]';
 L=XYZ(2);
 end
 
-%% CLEANUP WHEN MeasureLuminancePrecision TERMINATES.
+%% CLEANUP when MeasureLuminancePrecision terminates (return, error, or ^c).
 function MyCleanupFunction()
 % Close any window opened by the Psychtoolbox Screen command, and re-enable keyboard.
-sca;
+if ~isempty(Screen('Windows'))
+    sca;
+end
+ShowCursor;
 ListenChar;
-end % function
+end
