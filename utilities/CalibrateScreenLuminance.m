@@ -141,7 +141,7 @@ makeItQuick=false; % true for debugging
 Screen('Preference', 'SkipSyncTests', 1);
 try
    commandwindow; % Bring focus to command window, if not already there.
-   addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
+   addpath(fullfile(fileparts(fileparts(mfilename('fullpath'))),'lib')); % folder is in directory, two up from this M file
    fprintf('\nWelcome to Calibrate Screen Luminance.\n');
    while true
       reply=input('Do you want me to use computer speech to guide you (y or n)?:','s');
@@ -282,7 +282,7 @@ try
       end
    end
    if IsOSX %|| IsLinux
-      addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder in same directory as this M file
+      addpath(fullfile(fileparts(fileparts(mfilename('fullpath'))),'AutoBrightness')); % folder in same directory as this M file
       if ~ScriptingOkShowPermission
          error(['Please give MATLAB permission to control the computer. ' ...
             'You''ll need admin privileges to do this.']);
@@ -694,7 +694,7 @@ try
    cal.notes=input('Please type one line about conditions of this calibration, \nincluding your name, the room, and the room illumination.\nYour notes:','s');
    filename='OurScreenCalibrations.m';
    fprintf('Appending this calibration data to %s.\n',filename);
-   mypath=fileparts(mfilename('fullpath'));
+   mypath=fileparts(fileparts(mfilename('fullpath')));
    fullfilename=fullfile(mypath,'lib',filename);
    fid=fopen(fullfilename,'a+');
    for f=[1,fid]

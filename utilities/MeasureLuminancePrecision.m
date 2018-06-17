@@ -5,7 +5,8 @@ function o=MeasureLuminancePrecision(o)
 % bits of precision your display achieves. The optional input argument "o"
 % is a struct with many fields, as explained below in INPUT ARGUMENT.
 % Calling it with no argument will return a struct o with all the default
-% values, which you can modify to use as an argument when you call it again.
+% values, which you can modify to use as an argument when you call it
+% again.
 %
 % Denis Pelli, May 7, 2017
 %
@@ -62,8 +63,9 @@ function o=MeasureLuminancePrecision(o)
 %
 %% INPUT ARGUMENT:
 % You must define all the necessary fields in the "o" struct. You may wish
-% to initially call o=MeasureLuminancePrecision without an argument to get
-% all the needs fields initialized with default values.
+% to initially call o=MeasureLuminancePrecision without an argument to
+% initialize all the fields with default values, and then override
+% particular fields, as you wish.
 % o.luminances = number of luminances to measure, 5 s each.
 % o.reciprocalOfFraction = list desired values, e.g. 1, 64, 128, 256.
 % o.useNative11Bit = whether to enable the driver's 11-bit mode. Recommended.
@@ -283,6 +285,8 @@ function o=MeasureLuminancePrecision(o)
 % o.CLUTMapSize = 2^n for n-bit precision. Make it big to conserve resolution.
 
 sca
+cleanup=onCleanup(@() MyCleanupFunction);
+
 if nargin<1
    % If you omit the input argument "o", we set up a default here.
    % If you provide "o" it must define all these fields.
@@ -308,9 +312,9 @@ end
 %% BEGIN
 if 1
    % Quick test, February 2018
-   o.luminances=4096;
+   o.luminances=4;
    o.luminanceFactor=.9;
-   o.reciprocalOfFraction=[1024]; % List one or more, e.g. 1, 128, 256.
+   o.reciprocalOfFraction=[1 128]; % List one or more, e.g. 1, 128, 256.
    cal=OurScreenCalibrations(0);
    LMin=min(cal.old.L);
    LMax=max(cal.old.L);
@@ -567,6 +571,8 @@ clear sd
 for iData=1:length(data)
    d=data(iData);
    nMin=log2(1/d.fraction);
+   nMin=round(nMin);
+   nMin=max(1,nMin);
    vShift=-1:0.01:1;
    sd=ones(16,length(vShift))*nan;
    for bits=nMin:16
@@ -583,7 +589,7 @@ for iData=1:length(data)
       end
    end
    minsd=min(min(sd));
-   [bits jShift]=find(sd==minsd,1);
+   [bits, jShift]=find(sd==minsd,1);
    j=round((length(vShift)+1)/2);
    fprintf('min sd %.2f at %d bits %.4f shift; sd %.2f at 11 bits %.4f shift\n',...
       minsd,bits,vShift(jShift),sd(11,j),vShift(j));
@@ -747,3 +753,10 @@ s = ColorCal2('MeasureXYZ');
 XYZ = CORRMAT(4:6,:) * [s.x s.y s.z]';
 L=XYZ(2);
 end
+
+%% CLEANUP WHEN MeasureLuminancePrecision TERMINATES.
+function MyCleanupFunction()
+% Close any window opened by the Psychtoolbox Screen command, and re-enable keyboard.
+sca;
+ListenChar;
+end % function
