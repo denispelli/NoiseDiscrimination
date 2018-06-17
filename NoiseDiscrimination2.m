@@ -1703,11 +1703,11 @@ try
         % The first 'DrawText' call triggers loading of the plugin, but may fail.
         Screen('DrawText',oo(1).window,' ',0,0,0,1,1);
         oo(1).drawTextPlugin=Screen('Preference','TextRenderer')>0;
-        if ~oo(1).drawTextPlugin
-            warning('The DrawText plugin failed to load. See warning above.');
-        end
         ffprintf(ff,'o.drawTextPlugin %s %% Need true for accurate text rendering.\n',mat2str(oo(1).drawTextPlugin));
         [oo.drawTextPlugin]=deal(oo(1).drawTextPlugin);
+        if ~oo(1).drawTextPlugin
+            error('The DrawText plugin failed to load. See warning above. Read "Install NoiseDiscrimination.docx" B.7 to learn how to install it.');
+        end
 
         % Recommended by Mario Kleiner, July 2017.
         winfo=Screen('GetWindowInfo',oo(1).window);
@@ -1722,6 +1722,9 @@ try
             oo(1).psychtoolboxKernelDriverLoaded=false;
         end
         [oo.psychtoolboxKernelDriverLoaded]=deal(oo(1).psychtoolboxKernelDriverLoaded);
+        if ~oo(1).psychtoolboxKernelDriverLoaded
+            error('Please load the Psychtoolbox Kernel Driver, as explained by "help PsychtoolboxKernelDriver".');
+        end
         
         % Compare hardware CLUT with identity.
         gammaRead=Screen('ReadNormalizedGammaTable',oo(1).window);
