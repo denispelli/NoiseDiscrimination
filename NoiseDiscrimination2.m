@@ -2618,9 +2618,9 @@ try
         rect=RectOfMatrix(centralNoiseMask);
         r=CenterRect([0 0 oo(oi).noiseSize]*oo(oi).noiseCheckPix/oo(oi).targetCheckPix,rect);
         r=round(r);
-        centralNoiseMask=FillRectInMatrix(1,r,centralNoiseMask); % fill radius with 1
+        centralNoiseMask=FillRectInMatrix(1,r,centralNoiseMask); % Fill disk of given radius with 1.
         centralNoiseMask=logical(centralNoiseMask);
-        oo(oi).useCentralNoiseMask=~all(centralNoiseMask);
+        oo(oi).useCentralNoiseMask=~all(centralNoiseMask(:));
         
         if isfinite(oo(oi).noiseEnvelopeSpaceConstantDeg) && oo(oi).noiseRaisedCosineEdgeThicknessDeg > 0
             error('Sorry. Please set o.noiseEnvelopeSpaceConstantDeg=inf or set o.noiseRaisedCosineEdgeThicknessDeg=0.');
@@ -2628,8 +2628,9 @@ try
         if isfinite(oo(oi).noiseEnvelopeSpaceConstantDeg)
             % Compute Gaussian noise envelope, which will be central or annular,
             % depending on whether o.annularNoiseEnvelopeRadiusDeg is zero or
-            % greater than zero.
-            [x,y]=meshgrid(1:oo(oi).canvasSize(1),1:oo(oi).canvasSize(2));
+            % greater than zero. Regardless, it has a space constant given
+            % by o.noiseEnvelopeSpaceConstantDeg.
+            [x,y]=meshgrid(1:oo(oi).canvasSize(2),1:oo(oi).canvasSize(1));
             x=x-mean(x(:));
             y=y-mean(y(:));
             radius=sqrt(x.^2+y.^2);
@@ -2705,6 +2706,7 @@ try
     
     if ~isempty(temporaryWindow)
         % Perhaps we should keep the temporary window open across blocks.
+        % This might speed up the opening of our main window by 2.5 s.
         fprintf('Closing temporaryWindow. ... ');
         s=GetSecs;
         Screen('Close',temporaryWindow);
