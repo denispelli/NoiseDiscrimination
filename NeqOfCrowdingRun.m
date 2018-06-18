@@ -29,7 +29,7 @@ end
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % Folder in same directory as this M file.
 cal=OurScreenCalibrations(0);
 o.localHostName=cal.localHostName;
-o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 
 %% SPECIFY BASIC CONDITION
 o.experiment='NeqOfCrowding';
@@ -111,13 +111,21 @@ if true
     o.useFlankers=false;
     o.thresholdParameter='contrast';
     o.task='identify';
+    o.noiseRadiusDeg=inf;
+    o.noiseRaisedCosineEdgeThicknessDeg=0;
+    o.complementNoiseEnvelope=false;
     o.noiseSD=0;
-    %     oo{end+1}=o;
     oOne=o;
     o.noiseSD=MaxNoiseSD(o.noiseType);
-    oo{end+1}=[oOne o];
+    oTwo=o;
+    o.noiseRadiusDeg=o.flankerSpacingDeg/2;
+    o.noiseRaisedCosineEdgeThicknessDeg=o.flankerSpacingDeg/2;
+    o.complementNoiseEnvelope=true;
+    oo{end+1}=[oOne oTwo o];
 end
 if true
+%     o.useDynamicNoiseMovie=false;
+%     o.targetDurationSecs=inf;
     o.conditionName='Threshold flanker contrast for crowding';
     o.trialsPerBlock=40;
     o.useFlankers=true;
@@ -126,16 +134,29 @@ if true
     o.thresholdResponseTo='target';
     o.task='identify';
     o.noiseCheckDeg=o.targetHeightDeg/20;
-    o.annularNoiseEnvelopeRadiusDeg=o.flankerSpacingDeg;
-    o.noiseEnvelopeSpaceConstantDeg=o.flankerSpacingDeg/2;
-    o.noiseRadiusDeg=inf;
-    o.annularNoiseSD=0;
-    o.noiseSD=0;
-    %     oo{end+1}=o;
+    if false
+        % Creates a ring of noise.
+        o.annularNoiseSD=0;
+        o.noiseEnvelopeSpaceConstantDeg=o.flankerSpacingDeg/2;
+        o.noiseRadiusDeg=inf;
+        o.annularNoiseEnvelopeRadiusDeg=o.flankerSpacingDeg;
+    elseif false
+        % Creates full-field noise with a hard-edged hole sparing the target.
+        o.noiseSD=0;
+        o.noiseRadiusDeg=0;
+        o.annularNoiseBigRadiusDeg=inf;
+        o.annularNoiseSmallRadiusDeg=o.flankerSpacingDeg/2;
+        o.noiseRaisedCosineEdgeThicknessDeg=o.flankerSpacingDeg/2;
+    else
+        % Creates full-field noise with a soft-edged hole sparing the target.
+        o.annularNoiseSD=0;
+        o.noiseRadiusDeg=o.flankerSpacingDeg/2;
+        o.noiseRaisedCosineEdgeThicknessDeg=o.flankerSpacingDeg/2;
+        o.complementNoiseEnvelope=true;
+    end
     oOne=o;
     o.noiseSD=MaxNoiseSD(o.noiseType)/2;
     oTwo=o;
-    %     oo{end+1}=o;
     o.noiseSD=MaxNoiseSD(o.noiseType);
     oo{end+1}=[oOne oTwo o];
 end
