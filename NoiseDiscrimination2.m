@@ -664,6 +664,7 @@ o.noiseCheckSecs=[];
 o.noiseRadiusDeg=inf; % When o.task=4afc, the program will set o.noiseRadiusDeg=o.targetHeightDeg/2;
 o.noiseEnvelopeSpaceConstantDeg=inf;
 o.noiseRaisedCosineEdgeThicknessDeg=0; % midpoint of raised cosine is at noiseRadiusDeg.
+o.complementNoiseEnvelope=false; % Set envelope=1-envelope.
 o.noiseSpectrum='white'; % 'pink' or 'white'
 o.showBlackAnnulus=false;
 o.blackAnnulusContrast=-1; % (LBlack-o.LBackground)/o.LBackground. -1 for black line. >-1 for gray line.
@@ -1557,9 +1558,9 @@ try
         % to be stored in the condition, e.g. oo.topCaptionRect. The entire
         % screen is in o.screenRect. The stimulus is in stimulusRect, which
         % is within o.screenRect. Every pixel not in stimulusRect is in one
-        % or more of the caption rects, which form a border on three sides
-        % of the screen. The caption rects overlap at the corners of the
-        % screen.
+        % or more of the caption rects, which form a border on all four
+        % sides of the screen. The caption rects overlap at the corners of
+        % the screen.
         topCaptionRect=oo(1).screenRect;
         topCaptionRect(4)=oo(oi).stimulusRect(2); % top caption (trial number)
         bottomCaptionRect=oo(1).screenRect;
@@ -1846,7 +1847,7 @@ try
     oo(1).pixPerDeg=oo(1).pixPerCm/degPerCm;
     
     if false
-        %% CONFIRM OLD ANSWERS IF STALE OR OBSERVER CHANGED
+        %% CONFIRM OLD ANSWERS IF THEY ARE STALE OR WE HAVE A NEW OBSERVER.
         if ~isempty(oo(1).window)
             if ~isempty(oOld) && (GetSecs-oOld.secs>10*60 || ~streq(oOld.observer,oo(1).observer))
                 Screen('Preference','TextAntiAliasing',1);
@@ -2164,6 +2165,9 @@ try
         if oo(oi).annularNoiseBigRadiusDeg > oo(oi).annularNoiseSmallRadiusDeg
             % April 2018, Denis changed denominator to targetCheckPix.
             oo(oi).canvasSize=max(oo(oi).canvasSize,2*oo(oi).annularNoiseBigRadiusDeg*[1 1]*oo(oi).pixPerDeg/oo(oi).targetCheckPix);
+        end
+        if oo(oi).complementNoiseEnvelope
+            oo(oi).canvasSize=[inf inf];
         end
         switch oo(oi).task
             case {'identify' 'identifyAll' 'rate'}
@@ -2603,23 +2607,26 @@ try
         Screen('Preference','TextAntiAliasing',1);
         
         % Compute hard-edged annular noise mask
-        annularNoiseMask=zeros(oo(oi).canvasSize); % initialize with 0
+        annularNoiseMask=zeros(oo(oi).canvasSize); % Initialize with 0.
         rect=RectOfMatrix(annularNoiseMask);
         r=[0 0 oo(oi).annularNoiseBigSize(1) oo(oi).annularNoiseBigSize(2)];
         r=round(CenterRect(r,rect));
-        annularNoiseMask=FillRectInMatrix(1,r,annularNoiseMask); % fill big radius with 1
+        annularNoiseMask=FillRectInMatrix(1,r,annularNoiseMask); % Fill big radius with 1.
         r=[0 0 oo(oi).annularNoiseSmallSize(1) oo(oi).annularNoiseSmallSize(2)];
         r=round(CenterRect(r,rect));
-        annularNoiseMask=FillRectInMatrix(0,r,annularNoiseMask); % fill small radius with 0
+        annularNoiseMask=FillRectInMatrix(0,r,annularNoiseMask); % Fill small radius with 0.
         annularNoiseMask=logical(annularNoiseMask);
         
         % Compute hard-edged central noise mask
-        centralNoiseMask=zeros(oo(oi).canvasSize); % initialize with 0
+        centralNoiseMask=zeros(oo(oi).canvasSize); % Initialize with 0.
         rect=RectOfMatrix(centralNoiseMask);
         r=CenterRect([0 0 oo(oi).noiseSize]*oo(oi).noiseCheckPix/oo(oi).targetCheckPix,rect);
         r=round(r);
         centralNoiseMask=FillRectInMatrix(1,r,centralNoiseMask); % Fill disk of given radius with 1.
         centralNoiseMask=logical(centralNoiseMask);
+        if oo(oi).complementNoiseEnvelope
+            centralNoiseMask=true(size(centralNoiseMask));
+        end
         oo(oi).useCentralNoiseMask=~all(centralNoiseMask(:));
         
         if isfinite(oo(oi).noiseEnvelopeSpaceConstantDeg) && oo(oi).noiseRaisedCosineEdgeThicknessDeg > 0
@@ -2647,7 +2654,7 @@ try
             oo(oi).useCentralNoiseEnvelope=true;
         elseif oo(oi).noiseRaisedCosineEdgeThicknessDeg > 0
             % Compute central noise envelope with raised-cosine border.
-            [x, y]=meshgrid(1:oo(oi).canvasSize(1),1:oo(oi).canvasSize(2));
+            [x,y]=meshgrid(1:oo(oi).canvasSize(2),1:oo(oi).canvasSize(1));
             x=x-mean(x(:));
             y=y-mean(y(:));
             thickness=oo(oi).noiseRaisedCosineEdgeThicknessDeg*oo(oi).pixPerDeg/oo(oi).targetCheckPix;
@@ -2660,6 +2667,9 @@ try
         else
             centralNoiseEnvelope=ones(oo(oi).canvasSize);
             oo(oi).useCentralNoiseEnvelope=false;
+        end
+        if oo(oi).complementNoiseEnvelope
+            centralNoiseEnvelope=1-centralNoiseEnvelope;
         end
         oo(oi).centralNoiseEnvelopeE1DegDeg=sum(centralNoiseEnvelope(:).^2*oo(oi).noiseCheckPix/oo(oi).pixPerDeg^2);
         
