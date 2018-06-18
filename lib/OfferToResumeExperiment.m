@@ -22,11 +22,13 @@ returnKeyCode=KbName('return');
 returnChar=13;
 cal=OurScreenCalibrations(0);
 o=oo{1};
-if ~isfield(o,'experiment') || isempty(o.experiment)
-    error('The field o.experiment must be a nonempty string.');
+for ii=1:length(o)
+    if ~isfield(o,'experiment') || isempty(o(ii).experiment)
+        error('The field o.experiment must be a nonempty string.');
+    end
 end
 dataFolder=fullfile(fileparts(fileparts(mfilename('fullpath'))),'data');
-matFiles=dir(fullfile(dataFolder,[o.experiment '-*-' cal.localHostName '-partial*.mat']));
+matFiles=dir(fullfile(dataFolder,[o(1).experiment '-*-' cal.localHostName '-partial*.mat']));
 if ~isempty(matFiles)
     cd(dataFolder);
     expt={};
@@ -46,12 +48,12 @@ if ~isempty(matFiles)
         resumeExperiment=false;
         for i=1:length(expt)
             o=expt{i}.oo{1};
-%             if isempty(o.observer) || o.trials<o.trialsPerBlock
-%                 % This partial experiment has no data. Skip it.
+%             if isempty(o(1).observer) || o(1).trials<o(1).trialsPerBlock
+%                 % This partial experiment is incomplete. Skip it.
 %                 continue
 %             end
-            fprintf('<strong>%s, %s, Observer: %s</strong>\n',matFiles(i).name,matFiles(i).date,o.observer);
-            fprintf('Type Y for yes use it. Hit RETURN to ignore it, or DELETE to delete it:\n');
+            fprintf('<strong>%s, %s, Observer: %s</strong>\n',matFiles(i).name,matFiles(i).date,o(1).observer);
+            fprintf('To use it, type Y for yes. Hit RETURN to ignore it, or DELETE to delete it:\n');
             responseChar=GetKeypress([KbName('y') KbName('delete') returnKeyCode escapeKeyCode graveAccentKeyCode]);
             switch responseChar
                 case 'y'
