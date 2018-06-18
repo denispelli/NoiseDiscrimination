@@ -4409,7 +4409,7 @@ try
         Screen('DrawText',oo(1).window,' ',0,0,1,1,1); % Set background color.
         string=sprintf('Saving results to disk. ... ');
         DrawFormattedText(oo(1).window,string,...
-            oo(oi).textSize,1.5*oo(oi).textSize,black,oo(oi).textLineLength,[],[],1.3);
+            oo(oi).textSize,2*oo(oi).textSize,black,oo(oi).textLineLength,[],[],1.3);
         Screen('Flip',oo(1).window); % Display message.
     end
     ListenChar(0); % flush
