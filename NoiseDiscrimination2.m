@@ -5519,15 +5519,19 @@ if true % Create readyString.
             if IsOSX && ismember(MacModelName,{'MacBook10,1' 'MacBookAir6,2' 'MacBookPro11,5' ... % Mine, without touch bar, just to test this code.
                     'MacBookPro13,2' 'MacBookPro13,3' ... % 2016 with touch bar.
                     'MacBookPro14,1' 'MacBookPro14,2' 'MacBookPro14,3'}) % 2017 with touch bar.
-                readyString=['[For your convenience, hitting the accent grave tilde key "`~" is equivalent to hitting the ESCAPE key immediately above it.]\n' readyString];
+                footnote='For your convenience, hitting the accent grave tilde key `~ is equivalent to hitting the ESCAPE key immediately above it.\n';
+            else
+                footnote='';
             end
     end
 end
-msg=[message readyString];
+msg=[message readyString '\n'];
 Screen('DrawText',o.window,' ',0,0,1,o.gray1,1); % Set background color.
 black=0;
 Screen(o.window,'TextSize',o.textSize);
-DrawFormattedText(o.window,msg,0.5*o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+[x,y]=DrawFormattedText(o.window,msg,0.5*o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+Screen(o.window,'TextSize',round(0.8*o.textSize));
+DrawFormattedText(o.window,footnote,x,y,black,o.textLineLength/0.8,[],[],1.3);
 Screen('Flip',o.window,0,1); % Proceeding to the trial.
 if o.speakInstructions
     if ismac
