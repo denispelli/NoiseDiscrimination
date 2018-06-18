@@ -84,10 +84,19 @@ function o=MeasureLuminancePrecision(o)
 % MacBook Pro and iMac. Using MeasureLuminancePrecision (with
 % o.useNative11Bit), I have documented 10-bit luminance precision in the
 % MacBook, and 11-bit luminance precision in the MacBook Pro and iMac.
+% Regarding the MacBook, Mario says: This is just 10 bpc simulated via some
+% Apple proprietary dithering method. The current Macbook specs say that
+% that machine and its internal flat panel can only do 8 bpc, and all our
+% results on other machines last year showed the 10 bpc were just emulated.
+% ... For grayscale stimuli you might be able to get better 10.8 bpc
+% precision via the bitstealing method using:
+% PsychImaging('AddTask','General','EnablePseudoGrayOutput'); 
+%
 % https://www.macrumors.com/2015/10/30/4k-5k-imacs-10-bit-color-depth-osx-el-capitan/
 % https://developer.apple.com/library/content/releasenotes/MacOSX/WhatsNewInOSX/Articles/MacOSX10_11_2.html#//apple_ref/doc/uid/TP40016630-SW1
 % https://developer.apple.com/library/content/samplecode/DeepImageDisplayWithOpenGL/Introduction/Intro.html#//apple_ref/doc/uid/TP40016622
 % https://macperformanceguide.com/blog/2016/20161127_1422-Apple2016MacBookPro-10-bit-color.html
+% https://buyersguide.macrumors.com/#Mac
 %
 % Linux: My Hewlett-Packard Z Book laptop running Linux attains 10-bit
 % luminance precision. I have not yet succeeded in getting dither to work
@@ -109,14 +118,14 @@ function o=MeasureLuminancePrecision(o)
 % imagine that there may yet be a way to enable dithering on the HP Z Book,
 % and I hope someone will discover the trick.
 %
-% o.ditheringCode = 61696; Required for dither on my iMac and MacBook Pro.'
-% For dither, the magic number 61696 is appropriate for the graphics chips
-% belonging to the AMD Radeon "Southern Islands" gpu family. Such chips are
-% used in the MacBook Pro (Retina, 15-inch, Mid 2015) (AMD Radeon R9 M290X)
-% and the iMac (Retina 5K, 27-inch, Late 2014) (AMD Radeon R9 M370X). As
-% far as I know, in April 2017, those are the only Apple Macs with AMD
-% drivers, and may be the only Macs that support more-than-8-bit luminance
-% precision.
+% o.ditheringCode = 61696; Supposedly required for dither on my iMac and
+% MacBook Pro.' For dither, the magic number 61696 is appropriate for the
+% graphics chips belonging to the AMD Radeon "Southern Islands" gpu family.
+% Such chips are used in the MacBook Pro (Retina, 15-inch, Mid 2015) (AMD
+% Radeon R9 M290X) and the iMac (Retina 5K, 27-inch, Late 2014) (AMD Radeon
+% R9 M370X). As far as I know, in April 2017, those are the only Apple Macs
+% with AMD drivers, and may be the only Macs that support more-than-8-bit
+% luminance precision.
 %
 % MARIO: FOR HP Z Book "Sea Islands" GPU:
 % 10 bpc panel dither setup code for the zBooks "Sea Islands" (CIK) gpu:
@@ -151,16 +160,6 @@ function o=MeasureLuminancePrecision(o)
 % macOS, and see if Linux in EnableNative16BitFramebuffer mode can
 % squeeze out more than 11 bpc.
 %
-% MARIO: Btw., so far i still didn't manage to replicate your 11 bpc with
-% dithering finding on any AMD hardware + 8 bit display here, even with
-% more modern AMD graphics cards, so i'm still puzzled by that result. I'll
-% probably add some debug code to the next PTB beta for you to run on
-% macOS, to dump some hardware settings, maybe that'd give some clues about
-% how that 11 bpc instead of expected max 10 bpc happens.
-%
-% MARIO: Thanks for all the measurement Denis. The new script is pretty
-% cool, with the automatic model fit and all. Also works on Octave.
-
 % MARIO: I now tested a 8 year old MacPro with a Radeon HD-5700 from
 % 2009'ish under OSX 10.11 in 'Native10BitFramebuffer' mode with my
 % ColorCal-II, and interestingly it also measures 8 bpc in standard mode,
@@ -176,26 +175,19 @@ function o=MeasureLuminancePrecision(o)
 % MARIO: So what Apple apparently does on those machines which are not 10
 % bit supported is it implements an 11 bpc capable spatial dithering
 % algorithm in software (probably running as a shader on the gpu to speed
-% it up a bi! t), not using the display hardwares capabilities at all. This
+% it up a bit), not using the display hardwares capabilities at all. This
 % would also explain the sync failures at least i get when running in "10
 % bit" mode, and the PTB warnings about pageflipping not being used.
 % Exactly what one would expect if a desktop compositor is running and does
-% some post-processing (= software dithering) pass on each image. This also
-% explains why the dither settings have no effect in any way -- or at best
-% would make the results worse rather than better if anything.
+% some post-processing (i.e. software dithering) pass on each image. This
+% also explains why the dither settings have no effect in any way -- or at
+% best would make the results worse rather than better if anything.
 %
 % MARIO: I bet the same thing happens on your MacBookPro - they are just
 % faking it, although good enough to convince the photometer.
 %
 % MARIO: The interesting question will be what they do on your iMac Retina
 % 5k for which they do advertise 10 bit support.
-%
-% MARIO: Attached is a Screen mex file for Matlab on OSX with the debug
-% code. What i'd need is you to add a Screen('Null') command in your
-% script, after the Screen('Flip') that shows the test stim, before the
-% photometer measurement code, and then run that. It will print out
-% register dumps after each Flip. Interesting is a comparison of the values
-% between 8 bit mode and 10 bit mode.
 %
 %% NOTES ON OTHER ISSUES
 %
@@ -292,8 +284,8 @@ function o=MeasureLuminancePrecision(o)
 %
 % o.CLUTMapSize = 2^n for n-bit precision. Make it big to conserve resolution.
 
-sca
-cleanup=onCleanup(@() MyCleanupFunction);
+MyCleanupFunction; % Close any open windows.
+cleanup=onCleanup(@() MyCleanupFunction); % Close window on error or ctl-c.
 
 if nargin<1
    % If you omit the input argument "o", we set up a default here.
@@ -305,6 +297,7 @@ if nargin<1
    o.useDithering=[]; % true enable. [] default. false disable.
    o.useNative10Bit=false;  % Enable this to get 10-bit (and better with dithering) performance.
    o.useNative11Bit=true;  % Enable this to get 11-bit (and better with dithering) performance.
+   o.enablePseudoGrayOutput=false; % Enable to use RGB to improve luminance resolution of gray image.
    o.usePhotometer=true; % true: use ColorCAL II XYZ; 0 simulate 8-bit rendering.
    o.useShuffle=false; % Randomize order of luminances to prevent systematic effect of changing background.
    o.removeDaylight=false; % Use this if your room has slowly changing daylight.
@@ -318,9 +311,11 @@ if nargin<1
 end
 
 %% BEGIN
-if 1
+if true % Set this false outside of Denis Pelli's lab.
    % Quick test, June 2018
-   o.luminances=4;
+   % OurScreenCalibrations.m contains calibrations of all of Denis Pelli's
+   % computers.
+   o.luminances=16;
    o.luminanceFactor=.9;
    o.reciprocalOfFraction=[1 128]; % List one or more, e.g. 1, 128, 256.
    cal=OurScreenCalibrations(0);
@@ -328,10 +323,12 @@ if 1
    LMax=max(cal.old.L);
    L=o.luminanceFactor*0.5*cal.old.L(end);
    o.vBase=interp1(cal.old.L,cal.old.G,L);
+   o.useNative11Bit=false; 
+   o.enablePseudoGrayOutput=true;
 end
 BackupCluts;
 Screen('Preference','SkipSyncTests',2);
-if 0
+if false
    % Print full report for Mario
    Screen('Preference','SkipSyncTests',1);
    Screen('Preference','Verbosity',10);
@@ -342,10 +339,10 @@ try
    screenBufferRect = Screen('Rect',screen);
    PsychImaging('PrepareConfiguration');
    PsychImaging('AddTask','General','UseRetinaResolution');
-   if 0
+   if false
       % CODE FROM MARIO FOR LINUX HP Z BOOK
       switch nBits
-         case 8; % do nothing
+         case 8 % do nothing
          case 10; PsychImaging('AddTask','General','EnableNative10BitFramebuffer');
          case 11; PsychImaging('AddTask','General','EnableNative11BitFramebuffer');
          case 12; PsychImaging('AddTask','General','EnableNative16BitFramebuffer',[],16);
@@ -367,6 +364,11 @@ try
       % This works with any clutSize on MacBook Pro and iMac. On HP zBook
       % it uselessly works only at clutSize=256.
       PsychImaging('AddTask','AllViews','EnableCLUTMapping',o.CLUTMapSize,1); % clutSize,high res
+   end
+   if o.enablePseudoGrayOutput
+       % Chris Tyler's bit-stealing method, using RGB to improve
+       % luminance resolution.
+       PsychImaging('AddTask','General','EnablePseudoGrayOutput');
    end
    if ~o.useFractionOfScreen
       window = PsychImaging('OpenWindow',screen,[1 1 1]);
@@ -502,7 +504,7 @@ try
             Screen('LoadNormalizedGammaTable',window,gamma,loadOnNextFlip);
             Screen('FillRect',window,iPixel/(o.CLUTMapSize-1));
          end
-         msg='MeasureLuminancePrecision by Denis Pelli, 2017\n';
+         msg='MeasureLuminancePrecision by Denis Pelli, 2017,2018\n';
          if nData>1
             msg=sprintf('%sSeries %d of %d.\n',msg,iData,nData);
          end
@@ -551,7 +553,7 @@ try
             gamma=repmat(((0:size(gammaRead,1)-1)/(size(gammaRead,1)-1))',1,3);
             delta=gammaRead(:,2)-gamma(:,2);
             % fprintf('Difference in read-back of identity CLUT: mean %.9f, sd %.9f\n',mean(delta),std(delta));
-            if 0
+            if false
                % Report all errors in identity CLUT.
                list=gamma(:,2)~=gammaRead(:,2);
                fprintf('%d differences between gamma table loaded vs. read. Checking only green channel.\n',sum(list));
@@ -566,15 +568,12 @@ try
       data(iData)=d;
    end
    t=(GetSecs-t)/length(data)/o.luminances;
-catch
-   sca
-   RestoreCluts
-   psychrethrow(psychlasterror);
+catch err
+   MyCleanupFunction;
+   rethrow(err);
 end
-Screen('Close',window);
-close all
-RestoreCluts
-sca
+close all % Close any open figures.
+MyCleanupFunction; % Close window.
 
 %% ANALYZE RESULTS
 % We compare our data with the prediction for n-bit precision, and choose
@@ -678,6 +677,9 @@ for iData=1:length(data)
    if o.useNative11Bit
       name=sprintf('%suseNative11Bit, ',name);
    end
+   if o.enablePseudoGrayOutput
+      name=sprintf('%spseudoGray, ',name);
+   end
    y=y+dy;
    text(x,y,name);
    name='';
@@ -712,7 +714,6 @@ for iData=1:length(data)
    name=sprintf('Display range %.1f, %.0f cd/m^2.',LMin,LMax);
    y=y+dy;
    text(x,y,name);
-   name='';
 end
 folder=fileparts(mfilename('fullpath'));
 cd(folder);
@@ -774,4 +775,5 @@ if ~isempty(Screen('Windows'))
 end
 ShowCursor;
 ListenChar;
+RestoreCluts;
 end
