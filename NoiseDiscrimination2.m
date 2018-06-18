@@ -1636,6 +1636,16 @@ try
         ffprintf(ff,'cal.profile=''%s'';\n',cal.profile);
         fprintf('Setting screen profile. ... ');
         s=GetSecs;
+        if Screen(oo(1).window,'WindowKind') == 1
+            % Tell observer what's happening.
+            Screen('LoadNormalizedGammaTable',oo(1).window,cal.old.gamma,loadOnNextFlip);
+            Screen('FillRect',oo(1).window);
+            Screen('DrawText',oo(1).window,' ',0,0,1,1,1); % Set background color.
+            string=sprintf('Setting screen color profile. ... ');
+            DrawFormattedText(oo(1).window,string,...
+                oo(oi).textSize,2*oo(oi).textSize,black,oo(oi).textLineLength,[],[],1.3);
+            Screen('Flip',oo(1).window); % Display message.
+        end
         oldProfile=ScreenProfile(cal.screen);
         if streq(oldProfile,cal.profile)
             if streq(cal.profile,'ColorMatch RGB')
