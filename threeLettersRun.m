@@ -15,7 +15,7 @@ if ~exist('struct2table','file')
 end
 if ~exist('qpInitialize','file')
     addpath('~/Dropbox/mQuestPlus');
-    addpath('~/DropboxmQuestPlus/questplus');
+    addpath('~/Dropbox/mQuestPlus/questplus');
 end
 if ~exist('qpInitialize','file')
     error('This script requires the QuestPlus package. Please get it from https://github.com/BrainardLab/mQUESTPlus.')
@@ -85,8 +85,9 @@ o.thresholdParameter='contrast';
 
 %% PUT THE EXPERIMENT'S CONDITIONS IN STRUCT oo
 oo={};
+o.noiseType='ternary';
 
-if true
+if false
     o.contrast=-0.15;
     o.trialsPerBlock=300;
     o.constantStimuli=-10 .^ (-1.1:0.05:-0.6);
@@ -98,7 +99,7 @@ if true
     oo{end+1}=o;
 end
 o.useMethodOfConstantStimuli=false;
-if false
+if true
     o.conditionName='Threshold contrast';
     o.trialsPerBlock=40;
     o.useFlankers=false;
@@ -106,21 +107,22 @@ if false
     o.task='identify';
     o.noiseSD=0;
     oo{end+1}=o;
+    o.noiseSD=MaxNoiseSD(o.noiseType);
+    oo{end+1}=o;
 end
-if false
-    o.conditionName='Threshold contrast of crowding';
-    o.trialsPerBlock=300;
+if true
+    o.conditionName='Threshold flanker contrast for crowding';
+    o.trialsPerBlock=40;
     o.useFlankers=true;
     o.contrast=-0.2;
     o.thresholdParameter='flankerContrast';
     o.thresholdResponseTo='flankers';
     o.task='identifyAll';
-    % for noiseSD=Shuffle([0 0.16])
-    for noiseSD=[0]
-        o.noiseCheckDeg=o.targetHeightDeg/20;
-        o.noiseSD=noiseSD;
-        oo{end+1}=o;
-    end
+    o.noiseCheckDeg=o.targetHeightDeg/20;
+    o.noiseSD=0;
+    oo{end+1}=o;
+    o.noiseSD=MaxNoiseSD(o.noiseType);
+    oo{end+1}=o;
 end
 
 %% POLISH THE LIST OF CONDITIONS
