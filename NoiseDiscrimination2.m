@@ -676,7 +676,7 @@ o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
 o.noiseFrozenInTrial=false; % 0 or 1.  If true (1), use same noise at all locations
 o.noiseFrozenInBlock=false; % 0 or 1.  If true (1), use same noise on every trial
 o.noiseFrozenInBlockSeed=0; % 0 or positive integer. If o.noiseFrozenInBlock, then any nonzero positive integer will be used as the seed for the block.
-o.markTargetLocation=false; % Is there a mark designating target position?
+o.markTargetLocation=false; % Display a mark designating target position?
 o.targetMarkDeg=1;
 o.useFixation=true;
 o.fixationIsOffscreen=false;
@@ -1641,6 +1641,7 @@ try
             Screen('LoadNormalizedGammaTable',oo(1).window,cal.old.gamma,loadOnNextFlip);
             Screen('FillRect',oo(1).window);
             Screen('DrawText',oo(1).window,' ',0,0,1,1,1); % Set background color.
+            Screen('TextSize',oo(1).window,oo(oi).textSize);
             string=sprintf('Setting screen color profile. ... ');
             DrawFormattedText(oo(1).window,string,...
                 oo(oi).textSize,2*oo(oi).textSize,black,oo(oi).textLineLength,[],[],1.3);
@@ -5503,37 +5504,35 @@ readyString='';
 if o.markTargetLocation
     readyString=[readyString 'The X indicates target center. '];
 end
-if true % Create readyString.
-    if streq(o.eyes,'both')
-        eyeOrEyes='eyes';
+if streq(o.eyes,'both')
+    eyeOrEyes='eyes';
+else
+    eyeOrEyes='eye';
+end
+if o.useFixation
+    if o.fixationIsOffscreen
+        readyString=sprintf('%sPlease fix your %s on your offscreen fixation mark, ',readyString,eyeOrEyes);
     else
-        eyeOrEyes='eye';
+        readyString=sprintf('%sPlease fix your %s on the center of the fixation cross +, ',readyString,eyeOrEyes);
     end
-    if o.useFixation
-        if o.fixationIsOffscreen
-            readyString=sprintf('%sPlease fix your %s on your offscreen fixation mark, ',readyString,eyeOrEyes);
+    word='and';
+else
+    word='Please';
+end
+switch o.task
+    case '4afc'
+        readyString=[readyString word ' CLICK when ready to proceed.'];
+        fprintf('Please CLICK when ready to proceed.\n');
+    case {'identify' 'identifyAll' 'rate'}
+        readyString=[readyString word ' press the SPACE bar when ready to proceed.'];
+        fprintf('Please press the SPACE bar when ready to proceed.\n');
+        if IsOSX && ismember(MacModelName,{'MacBook10,1' 'MacBookAir6,2' 'MacBookPro11,5' ... % Mine, without touch bar, just to test this code.
+                'MacBookPro13,2' 'MacBookPro13,3' ... % 2016 with touch bar.
+                'MacBookPro14,1' 'MacBookPro14,2' 'MacBookPro14,3'}) % 2017 with touch bar.
+            footnote='For your convenience, hitting the accent grave tilde key `~ is equivalent to hitting the ESCAPE key immediately above it.\n';
         else
-            readyString=sprintf('%sPlease fix your %s on the center of the fixation cross +, ',readyString,eyeOrEyes);
+            footnote='';
         end
-        word='and';
-    else
-        word='Please';
-    end
-    switch o.task
-        case '4afc'
-            readyString=[readyString word ' CLICK when ready to proceed.'];
-            fprintf('Please CLICK when ready to proceed.\n');
-        case {'identify' 'identifyAll' 'rate'}
-            readyString=[readyString word ' press the SPACE bar when ready to proceed.'];
-            fprintf('Please press the SPACE bar when ready to proceed.\n');
-            if IsOSX && ismember(MacModelName,{'MacBook10,1' 'MacBookAir6,2' 'MacBookPro11,5' ... % Mine, without touch bar, just to test this code.
-                    'MacBookPro13,2' 'MacBookPro13,3' ... % 2016 with touch bar.
-                    'MacBookPro14,1' 'MacBookPro14,2' 'MacBookPro14,3'}) % 2017 with touch bar.
-                footnote='For your convenience, hitting the accent grave tilde key `~ is equivalent to hitting the ESCAPE key immediately above it.\n';
-            else
-                footnote='';
-            end
-    end
 end
 msg=[message readyString '\n'];
 Screen('DrawText',o.window,' ',0,0,1,o.gray1,1); % Set background color.
