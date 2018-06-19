@@ -800,6 +800,7 @@ else
         'targetFont' 'targetPix' 'useSpeech'...
         'instructionalMarginPix' 'quitRun' ... % obsolete, to be removed.
         'approxRequiredNumber' 'logApproxRequiredNumber'... % for the noise-discrimination project
+        'rWarningCount' 'window' ...
         };
     % In the future I'd like to pass several conditions at once to be run
     % randomly interleaved. CriticalSpacing already supports this feature,
