@@ -39,6 +39,8 @@ o.flankerSpacingDeg=3;
 o.targetHeightDeg=2;
 o.noiseCheckDeg=o.targetHeightDeg/20;
 o.targetDurationSecs=0.2;
+o.moviePreSecs=0.2;
+o.moviePostSecs=0.2;
 o.eyes='both';
 o.contrast=-0.16;
 o.flankerContrast=-1; % Negative for dark letters.
@@ -49,19 +51,12 @@ o.useDynamicNoiseMovie=true;
 o.alphabetPlacement='right'; % 'top' or 'right';
 o.annularNoiseSD=0;
 o.noiseRadiusDeg=inf;
-if false
-    o.annularNoiseBigRadiusDeg=inf;
-    o.annularNoiseSmallRadiusDeg=0;
-    o.annularNoiseEnvelopeRadiusDeg=o.flankerSpacingDeg;
-    o.noiseEnvelopeSpaceConstantDeg=o.flankerSpacingDeg/2;
-end
+o.markTargetLocation=true;
 o.fixationCrossWeightDeg=0.09;
-o.blankingRadiusReEccentricity=0; % No blanking.
-o.blankingRadiusReTargetHeight=0;
-o.moviePreSecs=0.2;
-o.moviePostSecs=0.2;
-o.targetMarkDeg=2;
 o.fixationCrossDeg=3;
+o.blankingRadiusReEccentricity=0; % No blanking.
+o.blankingRadiusReTargetHeight=2;
+o.targetMarkDeg=15;
 if true
     % Target letter
     o.targetKind='letter';
@@ -156,11 +151,11 @@ for oi=1:length(oo)
     for ii=1:length(o)
         o(ii).alternatives=length(o(ii).alphabet);
     end
-    if all(o(1).eccentricityXYDeg==0)
-        o(1).markTargetLocation=false;
-    else
-        o(1).markTargetLocation=true;
-    end
+%     if all(o(1).eccentricityXYDeg==0)
+%         o(1).markTargetLocation=false;
+%     else
+%         o(1).markTargetLocation=true;
+%     end
     oo{oi}=o;
 end
 
