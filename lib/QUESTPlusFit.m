@@ -2,8 +2,8 @@ function oOut=QUESTPlusFit(o)
 % oOut=QUESTPlusFit(o);
 % Input:         o:      struct of human test data.
 % Output:        oOut:   o with added fields: contrast,steepness,guessing,lapse
-% Maximum likelihood estimate of parameters of psychometric function.
-% The code here computes both maximum posterior and maximum likelihood
+% Maximum likelihood estimate of parameters of psychometric function. The
+% code here computes both maximum posterior and maximum likelihood
 % estimates, but we return only the maximum likelihood estimate.
 %
 % Written by Shenghao Lin, January 2018. Polished by denis.pelli@nyu.edu.
@@ -128,16 +128,17 @@ if o.plotSteepness
    end
    semilogx(10.^(stimFine/20),plotProportionsFit(:,2),lineStyle,'Color',color,'LineWidth',3,'DisplayName',s); 
    scatter(10.^(stim/20),pCorrect,100,'o','MarkerEdgeColor',color,'MarkerFaceColor',...
-      color,'MarkerEdgeAlpha',.1,'MarkerFaceAlpha',.1,'DisplayName',s);
-   set(gca,'xscale','log');
-   set(gca,'XTickLabel',{'0.01' '0.1' '1'});
+       color,'MarkerEdgeAlpha',0.1,'MarkerFaceAlpha',0.1,'DisplayName',s);
+   ax=gca;
+   ax.XScale='log';
+   ax.XTickLabel={'0.01' '0.1' '1'};
    xlabel('Contrast');
    ylabel('Proportion correct');
    xlim([0.01 1]); ylim([0 1]);
-   set(gca,'FontSize',12);
-   noteString{1}=sprintf('%s: %s %.1f c/deg, ecc %.0f deg, %.1f s\n%.0f cd/m^2, eyes %s',...
-      o.conditionName,o.targetKind,o.targetCyclesPerDeg,o.eccentricityXYDeg(1),o.targetDurationSecs,o.LBackground,o.eyes);
-   noteString{2}=sprintf('%8s %7s %5s %9s %6s %5s %6s','observer','noiseSD','log c','steepness','guessing','lapse','trials');
+   ax.FontSize=12;
+   noteString{1}=sprintf('%s: %s %.1f deg, %.1f c/deg, ecc (%.0f %.0f) deg, %.1f s\n%.0f cd/m^2, eyes %s',...
+      o.conditionName,o.targetKind,o.targetHeightDeg,o.targetCyclesPerDeg,o.eccentricityXYDeg,o.targetDurationSecs,o.LBackground,o.eyes);
+   noteString{end+1}=sprintf('%8s %7s %5s %9s %6s %5s %6s','observer','noiseSD','log c','steepness','guessing','lapse','trials');
    noteString{end+1}=sprintf('%-8s %7.2f %5.2f %9.1f %8.2f %5.2f %6d', ...
       o.observer,o.noiseSD,log10(o.contrast),o.steepness,o.guessing,o.lapse,o.trials);
    if newFigure
