@@ -19,13 +19,13 @@ black=0;
 Screen('Preference','TextAntiAliasing',0);
 trials=0;
 trialsDesired=0;
-if isfield(o,'trials')&&isfield(o,'trialsPerBlock')
+if isfield(o,'trials') && isfield(o,'trialsPerBlock')
     for oi=1:length(oo)
         trials=trials+oo(oi).trials;
         trialsDesired=trialsDesired+oo(oi).trialsPerBlock;
     end
 end
-if isfield(o,'block')&&isfield(o,'blocksDesired')&&isfield(o,'textSize')
+if isfield(o,'block') && isfield(o,'blocksDesired') && isfield(o,'textSize')
    message=sprintf('Trial %d of %d. Block %d of %d.',trials,trialsDesired,o.block,o.blocksDesired);
    if isfield(o,'experiment')
       message=[message ' Experiment "' o.experiment '".'];
