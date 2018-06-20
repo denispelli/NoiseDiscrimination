@@ -1718,7 +1718,7 @@ try
         ffprintf(ff,'o.drawTextPlugin %s %% Need true for accurate text rendering.\n',mat2str(oo(1).drawTextPlugin));
         [oo.drawTextPlugin]=deal(oo(1).drawTextPlugin);
         if ~oo(1).drawTextPlugin
-            error('The DrawText plugin failed to load. See warning above. Read "Install NoiseDiscrimination.docx" B.7 to learn how to install it.');
+            error('The DrawText plugin failed to load. We need it. See warning above. Read "Install NoiseDiscrimination.docx" B.7 to learn how to install it.');
         end
 
         % Recommended by Mario Kleiner, July 2017.
@@ -1735,7 +1735,7 @@ try
         end
         [oo.psychtoolboxKernelDriverLoaded]=deal(oo(1).psychtoolboxKernelDriverLoaded);
         if ~oo(1).psychtoolboxKernelDriverLoaded
-            error('Please load the Psychtoolbox Kernel Driver, as explained by "help PsychtoolboxKernelDriver".');
+            error('IMPORTANT: You must install the Psychtoolbox Kernel Driver, as explained by "*Install NoiseDiscrimination.docx" step B.13.');
         end
         
         % Compare hardware CLUT with identity.
