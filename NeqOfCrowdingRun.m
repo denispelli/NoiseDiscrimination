@@ -14,17 +14,21 @@ if ~exist('struct2table','file')
     error('This MATLAB %s is too old. We need MATLAB 2013b or better to use the function "struct2table".',version('-release'));
 end
 if ~exist('qpInitialize','file')
-    addpath('~/Dropbox/mQuestPlus');
-    addpath('~/Dropbox/mQuestPlus/questplus');
-    addpath('~/Dropbox/mQuestPlus/psifunctions');
-    addpath('~/Dropbox/mQuestPlus/utilities');
-    addpath('~/Dropbox/mQuestPlus/printplot');
-    addpath('~/Dropbox/mQuestPlus/dataproc');
-    addpath('~/Dropbox/mQuestPlus/mathworkscentral/allcomb');
-    addpath('~/Dropbox/mQuestPlus/mathworkscentral/von_mises_cdf');
+    addpath('/Applications/mQuestPlus');
+    addpath('/Applications/mQuestPlus/questplus');
+    addpath('/Applications/mQuestPlus/psifunctions');
+    addpath('/Applications/mQuestPlus/utilities');
+    addpath('/Applications/mQuestPlus/printplot');
+    addpath('/Applications/mQuestPlus/dataproc');
+    addpath('/Applications/mQuestPlus/mathworkscentral/allcomb');
+    addpath('/Applications/mQuestPlus/mathworkscentral/von_mises_cdf');
 end
 if ~exist('qpInitialize','file')
-    error('This script requires the QuestPlus package. Please get it from https://github.com/BrainardLab/mQUESTPlus.')
+    error(['This script requires the QuestPlus package. ' ...
+        'Please get it from https://github.com/BrainardLab/mQUESTPlus and ' ...
+        'put it in your Applications folder. ' ...
+        'Make sure the folder name is precisely "mQuestPlus". '...
+        'You might need to remove a trailing "-master".']);
 end
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % Folder in same directory as this M file.
 cal=OurScreenCalibrations(0);
