@@ -779,6 +779,8 @@ o.E=[];
 o.Neq=[];
 o.E0=[];
 o.NPhoton=[];
+o.screenVerbosity=0; % 0 for no messages, 1 for critical, 2 for warnings, 3 default
+% See https://github.com/Psychtoolbox-3/Psychtoolbox-3/wiki/FAQ:-Control-Verbosity-and-Debugging
 
 o.deviceIndex=-1; % -1 for all keyboards.
 o.deviceIndex=-3; % -3 for all keyboard/keypad devices.
@@ -893,6 +895,7 @@ end
 
 %% SCREEN PARAMETERS
 o=oo(1);
+Screen('Preference','Verbosity',o.screenVerbosity);
 [screenWidthMm,screenHeightMm]=Screen('DisplaySize',o.screen);
 screenBufferRect=Screen('Rect',o.screen);
 o.screenRect=Screen('Rect',o.screen,1);
@@ -1011,58 +1014,62 @@ clear o
 %% Only call Brightness while no window is open.
 o=oo(1);
 if isempty(o.window) && ~ismember(o.observer,o.algorithmicObservers)
-   useBrightnessFunction=true;
-   if useBrightnessFunction
-       fprintf('Calling Brightness several times. ... ');
-       s=GetSecs;
-       Brightness(cal.screen,cal.brightnessSetting); % Set brightness.
-       cal.brightnessReading=Brightness(cal.screen); % Read brightness.
-       if cal.brightnessReading==-1
-           % If it failed, try again. The first attempt sometimes fails.
-           % Not sure why. Maybe it times out.
-           cal.brightnessReading=Brightness(cal.screen); % Read brightness.
-       end
-       fprintf('Done (%.1f s).\n',GetSecs-s);
-      if isfinite(cal.brightnessReading) && abs(cal.brightnessSetting-cal.brightnessReading)>0.01
-         error('Set brightness to %.2f, but read back %.2f',cal.brightnessSetting,cal.brightnessReading);
-      end
-   end
-   if ~useBrightnessFunction
-      try
-         % Caution: Screen ConfigureDisplay Brightness gives a fatal error
-         % if not supported, and is unsupported on many devices, including
-         % a video projector under macOS. We use try-catch to recover.
-         % NOTE: It was my impression in summer 2017 that the Brightness
-         % function (which uses AppleScript to control the System
-         % Preferences Display panel) is currently more reliable than the
-         % Screen ConfigureDisplay Brightness feature (which uses a macOS
-         % call). The Screen call adjusts the brightness, but not the
-         % slider in the Preferences Display panel, and macOS later
-         % unpredictably resets the brightness to the level of the slider,
-         % not what we asked for. This is a macOS bug in the Apple call
-         % used by Screen.
-         for i=1:3
-            Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
-            cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
-            %          Brightness(cal.screen,cal.brightnessSetting);
-            %          cal.brightnessReading=Brightness(cal.screen);
-            if abs(cal.brightnessSetting-cal.brightnessReading)<0.01
-               break;
-            elseif i==3
-               error('Tried three times to set brightness to %.2f, but read back %.2f',...
-                  cal.brightnessSetting,cal.brightnessReading);
+    useBrightnessFunction=true;
+    try
+        fprintf('Setting Brightness. ... ');
+        s=GetSecs;
+        for i=1:3
+            if useBrightnessFunction
+                % Currently Brightness.m insists that no window be open.
+                % I'm considering removing that restriction. We need to
+                % avoid the situation of issuing an error while the Command
+                % window is obscured by the Psychtoolbox window. The better
+                % solution is to use a try-catch block to catch the error
+                % and issue sca to close the window before rethrowing the
+                % error.
+                Brightness(cal.screen,cal.brightnessSetting); % Set brightness.
+                cal.brightnessReading=Brightness(cal.screen); % Read brightness.
+            else
+                Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
+                cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
             end
-         end
-      catch
-         cal.brightnessReading=NaN;
-      end
-   end
-   if ismac
-      ffprintf(ff,'Brightness set to %.2f. Turning AutoBrightness off. ... ',cal.brightnessSetting);
-      s=GetSecs;
-      AutoBrightness(cal.screen,0);
-      ffprintf(ff,'Done (%.1f s)\n',GetSecs)-s;
-   end
+            if abs(cal.brightnessSetting-cal.brightnessReading)<0.01
+                break;
+            elseif i==3
+                error('Tried three times to set brightness to %.2f, but read back %.2f',...
+                    cal.brightnessSetting,cal.brightnessReading);
+            end
+            % If it failed, try again two more times. The first call to
+            % Brightness sometimes fails. Not sure why. Maybe it times out.
+        end
+        fprintf('Done (%.1f s).\n',GetSecs-s);
+    catch e
+        % Caution: Screen ConfigureDisplay Brightness gives a fatal error
+        % if not supported, and is unsupported on many devices, including a
+        % video projector under macOS. We use try-catch to recover. NOTE:
+        % It is my impression since summer 2017 that the Brightness
+        % function (which uses AppleScript to control the System
+        % Preferences Display panel) is currently more reliable than the
+        % Screen ConfigureDisplay Brightness feature (which uses a macOS
+        % call). The Screen call adjusts the brightness, but not the slider
+        % in the Preferences Display panel, and macOS later unpredictably
+        % resets the brightness to the level of the slider, not what we
+        % asked for. This is a macOS bug in the Apple call used by Screen.
+        ffprintf(ff,'WARNING: This computer does not support control of brightness of this screen.');
+        msg=getReport(e);
+        ffprintf(ff,msg);
+        cal.brightnessReading=NaN;
+    end % try
+    if abs(cal.brightnessSetting-cal.brightnessReading)>0.01
+        error('Set brightness to %.2f, but read back %.2f',cal.brightnessSetting,cal.brightnessReading);
+    end
+    ffprintf(ff,'Brightness set to %.2f.\n',cal.brightnessSetting);
+    if ismac
+        ffprintf(ff,'Turning AutoBrightness off. ... ');
+        s=GetSecs;
+        AutoBrightness(cal.screen,0);
+        ffprintf(ff,'Done (%.1f s)\n',GetSecs-s);
+    end
 end % if isempty(o.window)
 clear o
 oo=SortFields(oo);
@@ -1097,7 +1104,7 @@ try
         else
             warning('You need EnableClutMapping to control contrast.');
         end
-        fprintf('Opening the window. ... ');
+        fprintf('Opening the window. ...\n'); % New line for Screen warnings.
         s=GetSecs;
         if ~o.useFractionOfScreen
             [window,o.screenRect]=PsychImaging('OpenWindow',cal.screen,1.0);
@@ -1106,7 +1113,7 @@ try
             r=AlignRect(r,screenBufferRect,'right','bottom');
             [window,o.screenRect]=PsychImaging('OpenWindow',cal.screen,1.0,r);
         end
-        fprintf('Done (%.1f s).\n',GetSecs-s);
+        fprintf('Done opening window (%.1f s).\n',GetSecs-s);
         [oo.window]=deal(window);
         [oo.screenRect]=deal(o.screenRect);
         if ~o.useFractionOfScreen
@@ -1408,8 +1415,8 @@ try
     end
     assert(logFid > -1);
     ff=[1 logFid];
-    fprintf('\nSaving results in log and data files:\n');
-    ffprintf(ff,'%s\n',oo(1).dataFilename);
+    fprintf('Saving results in log and data files:\n');
+    ffprintf(ff,'<strong>%s</strong>\n',oo(1).dataFilename);
     ffprintf(ff,'observer %s, task %s, alternatives %d,  steepness %.1f\n',oo(1).observer,oo(1).task,oo(1).alternatives,oo(1).steepness);
     ffprintf(ff,'Experiment: %s. ',oo(1).experiment);
     ffprintf(ff,'%d conditions: ',conditions);
@@ -1656,7 +1663,7 @@ try
             end
         end
         ScreenProfile(cal.screen,cal.profile);
-        fprintf('Done (%.1f s).\n',GetSecs-s);
+        fprintf('Done setting screen profile (%.1f s).\n',GetSecs-s);
     end
     Screen('Preference','SkipSyncTests',1);
     oldVisualDebugLevel=Screen('Preference','VisualDebugLevel',0);
@@ -4262,9 +4269,9 @@ try
         %% LUMINANCE
         if oi==1
             if oo(oi).useFilter
-                ffprintf(ff,'Background luminance %.1f cd/m^2, which filter reduced to %.2f cd/m^2. ',oo(oi).LBackground,oo(oi).luminanceAtEye);
+                ffprintf(ff,'Background luminance %.1f cd/m^2, which filter reduced to %.2f cd/m^2.\n',oo(oi).LBackground,oo(oi).luminanceAtEye);
             else
-                ffprintf(ff,'Background luminance %.1f cd/m^2. ',oo(oi).LBackground);
+                ffprintf(ff,'Background luminance %.1f cd/m^2.\n',oo(oi).LBackground);
             end
             % No new line, so next item continues on same line.
         end
@@ -5522,10 +5529,8 @@ end
 switch o.task
     case '4afc'
         readyString=[readyString word ' CLICK when ready to proceed.'];
-        fprintf('Please CLICK when ready to proceed.\n');
     case {'identify' 'identifyAll' 'rate'}
         readyString=[readyString word ' press the SPACE bar when ready to proceed.'];
-        fprintf('Please press the SPACE bar when ready to proceed.\n');
         if IsOSX && ismember(MacModelName,{'MacBook10,1' 'MacBookAir6,2' 'MacBookPro11,5' ... % Mine, without touch bar, just to test this code.
                 'MacBookPro13,2' 'MacBookPro13,3' ... % 2016 with touch bar.
                 'MacBookPro14,1' 'MacBookPro14,2' 'MacBookPro14,3'}) % 2017 with touch bar.
@@ -5592,15 +5597,19 @@ if ~isempty(Screen('Windows'))
     fprintf('Closing the window. ... ');
     s=GetSecs;
     Screen('CloseAll');
-    fprintf('Done (%.1f s).\n',GetSecs-s);
+    fprintf('Done closing the window (%.1f s).\n',GetSecs-s);
     if ismac
+        fprintf('Restoring AutoBrightness. ... ');
+        s=GetSecs;
         AutoBrightness(0,1);
+        fprintf('Done (%.1f s).\n',GetSecs-s);
     end
 end
 window=[];
 if nargin>0
     [oo.window]=deal([]);
 end
-ListenChar; % May already be done by sca.
-ShowCursor; % May already be done by sca.
+Screen('Preference','Verbosity',2); % Restore default level.
+ListenChar; % May already be done by Screen('CloseAll').
+ShowCursor; % May already be done by Screen('CloseAll').
 end % function CloseWindowsAndCleanup()
