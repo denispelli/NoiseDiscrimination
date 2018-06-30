@@ -1172,7 +1172,9 @@ try
     [oo.useSpeech]=deal(false);
     if isempty(oo(1).experimenter)
         text.big={'Hello,' 'Please slowly type the experimenter''s name followed by RETURN.'};
-        text.small='I''ll remember your answers, and skip these questions on the next block.';
+        text.small={'I''ll remember your answers, and skip these questions on the next block.' ...
+            'If the keyboard seems dead, please hit Control-C twice to quit, ' ...
+            'then quit and restart MATLAB, and run your MATLAB script again.'};
         text.fine='NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.';
         text.question='Experimenter name:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
@@ -1189,7 +1191,9 @@ try
     %% ASK OBSERVER NAME
     if isempty(oo(1).observer)
         text.big={'Hello Observer,' 'Please slowly type your name followed by RETURN.'};
-        text.small='I''ll remember your answers, and skip these questions on the next block.';
+        text.small={'I''ll remember your answers, and skip these questions on the next block.' ...
+            'If the keyboard seems dead, please hit Control-C twice to quit, ' ...
+            'then quit and restart MATLAB, and run your MATLAB script again.'};
         text.fine='NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.';
         text.question='Observer name:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
@@ -1214,7 +1218,7 @@ try
             % If the preceding block had a filter, and this block does not, we ask
             % the observer to remove the filter or sunglasses.
             text.big={'Please remove any filter or sunglasses. Hit RETURN to continue.'};
-            text.small='';
+            text.small={};
             text.fine='';
             text.question='';
             text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
@@ -1228,7 +1232,7 @@ try
         else
             text.big{end}=sprintf('followed by RETURN. Or just hit RETURN to say: %.3f',o.filterTransmission);
         end
-        text.small='';
+        text.small={};
         text.fine='';
         text.question='Filter transmission:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
@@ -5439,10 +5443,12 @@ end % function ComputeClut
 function [reply,o]=AskQuestion(oo,text)
 % "text" argument is a struct with several fields: text.big, text.small,
 % text.fine, text.question, text.setTextSizeToMakeThisLineFit. We
-% optionally return "o" which is  possibly modified from the input o in
-% o.textSize o.quitExperiment o.quitBlock and o.skipTrial. If "text" has the
-% field text.setTextSizeToMakeThisLineFit then o.textSize is adjusted to
-% make the line fit horizontally within o.screenRect.
+% optionally return "o" which the input o, but some fields may be modified:
+% o.textSize o.quitExperiment o.quitBlock and o.skipTrial. If "text" has
+% the field text.setTextSizeToMakeThisLineFit then o.textSize is adjusted
+% to make the line just fit horizontally within o.screenRect. text.big and
+% text.small are cell lists of strings. Each string is printed on its own
+% line. text.fine and text.question are strings.
 global ff
 o=oo(1);
 if isempty(o.window)
@@ -5464,7 +5470,10 @@ for i=1:length(text.big)
 end
 y=y-0.5*o.textSize;
 Screen('TextSize',o.window,round(0.6*o.textSize));
-Screen('DrawText',o.window,text.small,o.textMarginPix,y,black,o.gray1);
+for i=1:length(text.small)
+    Screen('DrawText',o.window,text.small{i},o.textMarginPix,y,black,o.gray1);
+    y=y+2*0.6*o.textSize;
+end
 Screen('TextSize',o.window,round(o.textSize*0.35));
 Screen('DrawText',o.window,text.fine,o.textMarginPix,o.screenRect(4)-0.5*o.textMarginPix,black,o.gray1,1);
 Screen('TextSize',o.window,o.textSize);
