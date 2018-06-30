@@ -1516,8 +1516,8 @@ try
                 maxStimulusHeight/oo(oi).pixPerDeg,oo(oi).viewingDistanceCm);
         end
         if oo(oi).noiseRadiusDeg > maxStimulusHeight/oo(oi).pixPerDeg
-            ffprintf(ff,'Reducing requested o.noiseRadiusDeg (%.1f deg) to %.1f deg, the max possible.\n',...
-                oo(oi).noiseRadiusDeg,maxStimulusHeight/oo(oi).pixPerDeg);
+            ffprintf(ff,'%d: Reducing requested o.noiseRadiusDeg (%.1f deg) to %.1f deg, the max possible.\n',...
+                oi,oo(oi).noiseRadiusDeg,maxStimulusHeight/oo(oi).pixPerDeg);
             oo(oi).noiseRadiusDeg=maxStimulusHeight/oo(oi).pixPerDeg;
         end
         if oo(oi).useFlankers
