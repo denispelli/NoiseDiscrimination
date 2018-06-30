@@ -1635,6 +1635,10 @@ try
     end % for oi=1:conditions
     
     %% REPORT CONFIGURATION
+    c=Screen('Computer'); % Get name and version of OS.
+    s=strrep(c.system,'Mac OS','macOS'); % Modernize the spelling.
+    [~,v]=PsychtoolboxVersion;
+    ffprintf(ff,'%s, MATLAB %s, Psychtoolbox %d.%d.%d\n',s,version('-release'),v.major,v.minor,v.point);
     [screenWidthMm, screenHeightMm]=Screen('DisplaySize',cal.screen);
     cal.screenWidthCm=screenWidthMm/10;
     ffprintf(ff,'Computer %s, %s, screen %d, %dx%d, %.1fx%.1f cm\n',cal.localHostName,cal.macModelName,cal.screen,RectWidth(oo(oi).screenRect),RectHeight(oo(oi).screenRect),screenWidthMm/10,screenHeightMm/10);
