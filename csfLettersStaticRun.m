@@ -21,6 +21,7 @@ addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % Folder in same dire
 cal=OurScreenCalibrations(0);
 % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
 o.observer='ideal';
+% o.observer='junk';
 o.trialsPerBlock=1000;
 o.printLogOfIdeal=true;
 Screen('Preference', 'Verbosity',0);
@@ -76,6 +77,7 @@ o.desiredLuminanceFactor=1;
 o.useFilter=false;
 o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it thicker for scotopic testing.
 o.noiseType='ternary';
+o.noiseType='gaussian';
 o.saveStimulus=false;
 o.noiseCheckFrames=2;
 for ecc=[0 1 4 16 32]
