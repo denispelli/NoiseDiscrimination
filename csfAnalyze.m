@@ -3,7 +3,7 @@
 % Does new letter efficiency match old graph?
 % It seems misleading to count repeats of same observer when reporting n.
 global printConditions figureHandle averageAcrossObservers displayCaption observerList
-global printObserverNames
+global printObserverNames showIdeal
 for expt={'csfLettersStatic' 'csfGaborsStatic'}
     % for expt={'csf' 'csfLetters' 'csfLettersStatic' 'csfGaborsStatic'}
     printObserverNames=false;
@@ -12,6 +12,7 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
     idealEOverN.letter=1.27/0.15; % Ran ideal, average of 30 1000-trial thresholds. sd=0.17
     idealEOverN.gabor=1.49/.8; % Ran ideal, average of 30 1000-trial thresholds. sd=0.10
     averageAcrossObservers=true;
+    showIdeal=true;
     readExperiment=true;
     printConditions=false;
     displayCaption=false;
@@ -167,7 +168,7 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
                 aa(ai).ii=ii;
                 aa(ai).experiment=oo(find(ii,1)).experiment;
                 aa(ai).experimenter=oo(find(ii,1)).experimenter;
-                aa(ai).observer=num2str(numberOfObservers);
+                aa(ai).observer=sprintf('n=%d',numberOfObservers);
                 aa(ai).conditionName=conditionName{1};
                 ok=ii & isfinite([oo.contrast]) & abs([oo.contrast])<1 & abs([oo.contrast])>0.002;
                 aa(ai).contrast=mean([oo(ok).contrast],'omitnan');
@@ -227,33 +228,47 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
             field='contrast';
             figureHandle=[];
             if averageAcrossObservers
-%                 style={'-k' '--k' '-.k' ':k'};
                 style={'-' '-' '-' '-'};
             else
                 style={'-xk' '--xk' '-.xk' ':xk'};
             end
             if averageAcrossObservers
-                subplots=[2 1];
+                if showIdeal
+                    subplots=[2 2];
+                else
+                    subplots=[2 1];
+                end
                 fprintf('%s %s %s: %d thresholds.\n',experiment,'average',field);
-                col=1;
-                for row=1:2
-                    subplotIndex=sub2ind(fliplr(subplots),col,row);
-                    switch row
+                for col=1:subplots(2)
+                    switch col
                         case 1
-                            which= [oo.noiseSD]>0;
+                            iiObserver=true(size(observer));
                         case 2
-                            which= [oo.noiseSD]==0;
+                            averageAcrossObservers=false;
+                            oo=ooOld;
+                            iiObserver=ismember('ideal',{oo.observer});
                     end
-                    Plot(field,oo(which),subplots,subplotIndex,style);
+                    for row=1:subplots(1)
+                        subplotIndex=sub2ind(fliplr(subplots),col,row);
+                        switch row
+                            case 1
+                                which= iiObserver & [oo.noiseSD]>0;
+                            case 2
+                                which= iiObserver & [oo.noiseSD]==0;
+                        end
+                        Plot(field,oo(which),subplots,subplotIndex,style);
+                    end
+                    averageAcrossObservers=true;
+                    oo=aa;
                 end
             else
                 subplots=[2 length(observers)];
-                for col=1:length(observers)
+                for col=1:subplots(2)
                     observer=observers{col};
                     iiObserver=ismember({oo.observer},observer);
                     if sum(iiObserver)>0
                         fprintf('%s %s %s: %d thresholds.\n',experiment,observer,field,sum(iiObserver));
-                        for row=1:2
+                        for row=1:subplots(1)
                             subplotIndex=sub2ind(fliplr(subplots),col,row);
                             switch row
                                 case 1
@@ -279,18 +294,31 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
                 style={'-xk' '--xk' '-.xk' ':xk'};
             end
             if averageAcrossObservers
-                subplots=[2 1];
+                if showIdeal
+                    subplots=[2 2];
+                else
+                    subplots=[2 1];
+                end
                 fprintf('%s %s %s: %d thresholds.\n',experiment,'average',field,length(oo));
-                col=1;
-                for row=1:2
-                    subplotIndex=sub2ind(fliplr(subplots),col,row);
-                    which=[oo.noiseSD]==0 & [oo.targetHeightDeg]>0.15;
-                    switch row
+                for col=1:subplots(2)
+                    switch col
                         case 1
-                            Plot('efficiency',oo(which),subplots,subplotIndex,style);
+                            iiObserver=0;
                         case 2
-                            Plot('Neq',oo(which),subplots,subplotIndex,style);
+                            averageAcrossObservers=false;
+                            iiObserver=ismember('ideal',observer);
                     end
+                    for row=1:subplots(1)
+                        subplotIndex=sub2ind(fliplr(subplots),col,row);
+                        which=[oo.noiseSD]==iiObserver & [oo.targetHeightDeg]>0.15;
+                        switch row
+                            case 1
+                                Plot('efficiency',oo(which),subplots,subplotIndex,style);
+                            case 2
+                                Plot('Neq',oo(which),subplots,subplotIndex,style);
+                        end
+                    end
+                    averageAcrossObservers=true;
                 end
             else
                 for col=1:length(observers)
@@ -299,7 +327,7 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
                     if sum(iiObserver)>0
                         fprintf('%s %s %s: %d thresholds.\n',experiment,observer,field,sum(iiObserver));
                         which=iiObserver & [oo.noiseSD]==0;
-                        for row=1:2
+                        for row=1:subplots(1)
                             subplotIndex=sub2ind(fliplr(subplots),col,row);
                             switch row
                                 case 1
@@ -310,15 +338,75 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
                         end
                     end
                 end
-             end
+            end % if averageAcrossObservers
         end
+        
+        if 1
+            field='EOverN';
+            figureHandle=[];
+            subplots=[1 length(observers)];
+            if averageAcrossObservers
+                style={'-k' '--k' '-.k' ':k'};
+                style={'-' '-' '-' '-'};
+            else
+                style={'-xk' '--xk' '-.xk' ':xk'};
+            end
+            if averageAcrossObservers
+                if showIdeal
+                    subplots=[2 2];
+                else
+                    subplots=[2 1];
+                end
+                fprintf('%s %s %s: %d thresholds.\n',experiment,'average',field);
+                for col=1:subplots(2)
+                    switch col
+                        case 1
+                            iiObserver=true(size(observer));
+                        case 2
+                            averageAcrossObservers=false;
+                            oo=ooOld;
+                            iiObserver=ismember({oo.observer},'ideal');
+                    end
+                    for row=1:subplots(1)
+                        subplotIndex=sub2ind(fliplr(subplots),col,row);
+                        switch row
+                            case 1
+                                Plot('EOverN',oo(which),subplots,subplotIndex,style);
+                            case 2
+                                Plot('efficiency',oo(which),subplots,subplotIndex,style);
+                        end
+                    end
+                    averageAcrossObservers=true;
+                    oo=aa;
+                end
+            else
+                for col=1:subplots(2)
+                    observer=observers{col};
+                    iiObserver=ismember({oo.observer},observer);
+                    if sum(iiObserver)>0
+                        fprintf('%s %s %s: %d thresholds.\n',experiment,observer,field,sum(iiObserver));
+                        which=iiObserver & [oo.noiseSD]>0;
+                        for row=1:subplots(1)
+                            subplotIndex=sub2ind(fliplr(subplots),col,row);
+                            switch row
+                                case 1
+                                    Plot('EOverN',oo(which),subplots,subplotIndex,style);
+                                case 2
+                                    Plot('Neq',oo(which),subplots,subplotIndex,style);
+                            end
+                        end
+                    end % if sum
+                end % for col
+            end % if averageAcrossObservers
+        end
+        
     end % if plotGraphs
 end % for expt={}
 return
 
 %% PLOT
 function Plot(field,oo,subplots,subplotIndex,style,color)
-global printConditions figureHandle averageAcrossObservers displayCaption 
+global printConditions figureHandle averageAcrossObservers displayCaption
 global printObserverNames
 persistent figureTitle axisHandle
 if isempty(oo)
@@ -415,7 +503,12 @@ for iStyle=1:length(sfList)
         case 'letter'
             legendText=sprintf('%.1f deg',oo(1).targetGaborCycles/sf);
     end
-    y=abs([oo(ii).(field)]);
+    switch field
+        case 'EOverN'
+            y=abs([oo(ii).E]-[oo(ii).E0])./[oo(ii).N];
+        otherwise
+            y=abs([oo(ii).(field)]);
+    end
     y(y>10^3*min(y))=nan;
     yAll=[yAll y];
     try
@@ -435,7 +528,12 @@ for iStyle=1:length(sfList)
     end
     if averageAcrossObservers
         % Error bars
-        ySE=[oo(ii).([field 'SE'])];
+        switch field
+            case 'EOverN'
+                ySE=[oo(ii).ESE]./[oo(ii).N];
+            otherwise
+                ySE=[oo(ii).([field 'SE'])];
+        end
         x=[];
         for i=find(ii)
             x(end+1)=oo(i).eccentricityXYDeg(1)+0.15;
@@ -476,6 +574,8 @@ switch field
         ylabel('Contrast','Interpreter','tex','FontSize',fontSize);
     case 'efficiency'
         ylabel('Efficiency','Interpreter','tex','FontSize',fontSize);
+    case 'EOverN'
+        ylabel('(E-E0)/N','Interpreter','tex','FontSize',fontSize);
     otherwise
         ylabel(field,'Interpreter','tex','FontSize',fontSize);
 end
@@ -510,7 +610,9 @@ switch field
         yLim=[3e-3 1];
     case 'efficiency'
         yLim=[3e-3 1];
-    case 'Neq'
+     case 'EOverN'
+        yLim=[.1 100];
+   case 'Neq'
         yLim=[1e-7 3e-4];
 end
 ax.YLim=yLim;
@@ -519,6 +621,8 @@ switch field
         yticklabels({'0.01' '0.1' '1'});
     case 'efficiency'
         yticklabels({'0.01' '0.1' '1'});
+    case 'EOverN'
+        yticklabels({'0.1' '1' '10' '100'});
     case 'Neq'
 end
 
@@ -541,12 +645,12 @@ ax.Units=u;
 xLim=ax.XLim;
 yLim=ax.YLim;
 if ~averageAcrossObservers && displayCaption
-switch field
-    case 'contrast'
-        text(xLim(1),yLim(1)*20^0.5,caption,'FontSize',fontSize,'VerticalAlignment','bottom');
-    otherwise
-        text(xLim(1),yLim(1)*20,caption,'FontSize',fontSize,'VerticalAlignment','bottom');
-end
+    switch field
+        case 'contrast'
+            text(xLim(1),yLim(1)*20^0.5,caption,'FontSize',fontSize,'VerticalAlignment','bottom');
+        otherwise
+            text(xLim(1),yLim(1)*20,caption,'FontSize',fontSize,'VerticalAlignment','bottom');
+    end
 end
 %         xtickformat('%.1f');
 % xticklabels('manual');
