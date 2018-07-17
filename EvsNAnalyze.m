@@ -1,8 +1,6 @@
 %% Analyze the data collected by EvsNRun.
-% It seems that NoiseDiscrimination only saves MAT files with "o" and
-% "cal", but Veena's data have "oo". Is "oo" saved by EvsNRun? Looking at
-% EvsNRun, I see it saves "oo" and "cal" in a *summary.MAT file, but Veena
-% doesn't seem to have such files.
+experiment='EvsN';
+experiment='NeqOfCrowding';
 global printConditions makePlotLinear
 printConditions=false;
 printFilenames=true;
@@ -10,67 +8,58 @@ plotGraphs=true;
 makePlotLinear=true;
 myPath=fileparts(mfilename('fullpath')); % Takes 0.1 s.
 addpath(fullfile(myPath,'lib')); % Folder in same directory as this M file.
-experiment='EvsN';
 dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
 cd(dataFolder);
-matFiles=dir(fullfile(dataFolder,[experiment '*-NoiseDiscrimination*.mat']));
 close all
-% experiment={};
-oo=[];
-clear Plot % To clear the persistent variables in the subroutine below.
-for oi=1:length(matFiles) % One threshold file per iteration.
-    % Extract the desired fields into "oo", one cell-row per threshold.
-    d=load(matFiles(oi).name);
-    if ~isfield(d,'o')
-        % Skip summary files.
-        continue
-    end
-    vars={'conditionName' 'experiment' 'dataFilename' ...
-        'experimenter' 'observer' 'trials' ...
-        'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' ...
-        'targetHeightDeg' 'targetDurationSecs' 'targetDurationSecsMean' 'targetDurationSecsSD'...
-        'targetCheckDeg' 'fullResolutionTarget' ...
-        'noiseType' 'noiseSD'  'noiseCheckDeg' ...
-        'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
-        'contrast' 'E' 'N' 'LBackground' 'luminanceAtEye' 'luminanceFactor'...
-        'filterTransmission' 'useFilter' 'retinalIlluminanceTd' 'pupilDiameterMm'...
-        'pixPerCm' 'screenRect' 'nearPointXYPix' 'NUnits'};
-    usesSecsPlural=contains(matFiles(oi).name,'NoiseDiscrimination2');
-    for field=vars
-        if usesSecsPlural
-            oldField=field{1};
-        else
-            oldField=strrep(field{1},'Secs','Sec');
-        end
-        if isfield(d.o,oldField)
-            oo(oi).(field{1})=d.o.(oldField);
-        else
-            if oi==1
-                warning OFF BACKTRACE
-                warning('Missing o field: %s\n',oldField);
-            end
-        end
-    end
-end
-s=sprintf('condition(trials):');
+clear Plot % Clear the persistent variables in the subroutine below.
+
+%% READ ALL DATA OF experiment FILES INTO A LIST OF THRESHOLDS "oo".
+vars={'condition' 'conditionName' 'experiment' 'dataFilename' ...
+    'experimenter' 'observer' 'trials' ...
+    'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' ...
+    'targetHeightDeg' 'targetDurationSecs' 'targetDurationSecsMean' 'targetDurationSecsSD'...
+    'targetCheckDeg' 'fullResolutionTarget' ...
+    'noiseType' 'noiseSD'  'noiseCheckDeg' ...
+    'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
+    'contrast' 'E' 'N' 'LBackground' 'luminanceAtEye' 'luminanceFactor'...
+    'filterTransmission' 'useFilter' 'retinalIlluminanceTd' 'pupilDiameterMm'...
+    'pixPerCm'  'nearPointXYPix' 'NUnits' 'beginningTime'};
+oo=ReadExperimentData(experiment,vars); % Adds date and missingFields.
+
+%% SELECT CONDITION(S)
 for oi=length(oo):-1:1
-    if isempty(oo(oi).trials) || oo(oi).trials<40
-        s=[s sprintf(' %d(%d),',oi,oo(oi).trials)];
-        oo(oi)=[];
+    switch experiment
+        case 'EvsN'
+            if ~ismember(oo(oi).conditionName,{'photon 3 frame'})
+                oo(oi)=[];
+            end
+        case 'NeqOfCrowding'
+            if ~ismember(oo(oi).experiment,{experiment})
+                oo(oi)=[];
+            end
     end
 end
-warning('Discarding %d threshold(s) with fewer than 40 trials: %s',sum([oo.trials]<40),s);
+
+if isempty(oo)
+    error('No conditions selected.');
+end
 
 oo=ComputeNPhoton(oo);
 
 % Report the luminance fields of each file.
 t=struct2table(oo);
 if printFilenames
-    t(:,{'dataFilename','conditionName','observer','LBackground','filterTransmission','useFilter' 'luminanceFactor' 'luminanceAtEye' 'A' 'targetDurationSecs' 'LAT'})
+    fprintf('Ready to analyze %d thresholds:\n',length(oo));
+    switch experiment
+        case 'EvsN'
+            disp(t(:,{'dataFilename','conditionName','observer','LBackground','filterTransmission','useFilter'
+                'luminanceFactor' 'luminanceAtEye' 'A' 'targetDurationSecs' 'LAT'}));
+        case 'NeqOfCrowding'
+            disp(t(:,{'observer','conditionName','N','E'}));
+    end
 end
 fprintf('Unique o.luminanceAtEye: ');
-u=unique(t.luminanceAtEye);
-fprintf('%.0f, ',u);
+fprintf('%.0f, ',unique(t.luminanceAtEye));
 fprintf('\n');
 
 if plotGraphs
@@ -274,8 +263,12 @@ if makePlotLinear
     yLim(1)=0;
     xLim(2)=10*oo(1).Neq;
     yLim(2)=E0+(E0/Neq)*xLim(2);
-    ax.XLim=xLim;
-    ax.YLim=yLim;
+    if all(isfinite(xLim))
+        ax.XLim=xLim;
+    end
+    if all(isfinite(yLim))
+        ax.YLim=yLim;
+    end
     legend('hide');
     NLine=[-Neq xLim(2)];
     ELine=[0 yLim(2)];
