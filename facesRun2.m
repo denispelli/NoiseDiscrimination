@@ -1,6 +1,8 @@
 % facesRun2.m
 % May 9, 2018
 % Denis Pelli
+%% MODIFIED TO USE SLOAN AS FACES. DOESN'T YET COPE WITH BINARY IMAGES.
+useSloan=false;
 
 %% GET READY
 clear o oo
@@ -29,10 +31,18 @@ if false
     o.alphabet='DHKNORSVZ';
 else
     % Target face
-    o.signalImagesFolder='faces';
+    if ~useSloan
+        o.signalImagesFolder='faces';
+    else
+        o.signalImagesFolder='Sloan';
+    end
     o.signalImagesAreGammaCorrected=true;
     o.targetKind='image';
-    o.alphabet='abcdef';
+    if ~useSloan
+        o.alphabet='abcdef';
+    else
+        o.alphabet='DHNORSZ';
+    end
     o.signalImagesCacheCode=1234; % Speed up image loading.
     o.convertSignalImageToGray=false;
     o.alphabetPlacement='right'; % 'top' or 'right';
@@ -88,7 +98,12 @@ o.fixationCrossDrawnOnStimulus=true;
 
 %% SAVE INTERLEAVED CONDITIONS IN STRUCT oo
 ooo={};
-for task={'rate' 'identify'}
+if ~useSloan
+    tasks={'rate' 'identify'};
+else
+    tasks={'identify'};
+end
+for task=tasks
     o.task=task{1};
     switch o.task
         case 'rate'
@@ -99,7 +114,11 @@ for task={'rate' 'identify'}
             o.lapse=nan;
     end
     duration=[0.017 0.05 0.15 0.5 1.5];
-%     duration=[0.017 1.5];
+    if ~useSloan
+        duration=[0.017 1.5];
+    else
+        duration=inf;
+    end
     oo=repmat(o,size(duration));
     for i=1:length(oo)
         oo(i).targetDurationSecs=duration(i);
