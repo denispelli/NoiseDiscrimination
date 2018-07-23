@@ -4764,6 +4764,7 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 0.9922 0.9922 0.9922;0.9932 0.9932 0.9932;0.9941 0.9941 0.9941;0.9951 0.9951 0.9951;0.9961 0.9961 0.9961;...
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
+%
 if IsOSX && streq(cal.macModelName,'MacBook10,1') && cal.screen==0 && cal.screenWidthMm==259 && cal.screenHeightMm==161 && streq(cal.localHostName,'Denis-MacBook')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
