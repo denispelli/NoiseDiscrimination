@@ -5,7 +5,7 @@ for oi=1:length(oo)
     end
     oo(oi).luminanceAtEye=oo(oi).filterTransmission*oo(oi).LBackground;
     switch oo(oi).eyes
-        case {'left' 'right'}
+        case {'left' 'right' 'one'}
             e=1;
         case 'both'
             e=2;
@@ -18,12 +18,12 @@ for oi=1:length(oo)
             xyDeg=XYDegOfXYPix(oo(oi),[0 0])-XYDegOfXYPix(oo(oi),oo(oi).stimulusRect(3:4));
             a=abs(xyDeg(1)*xyDeg(2)); % Screen area in deg^2.
         catch
-            % This is accurate if the observer is fixating the center of the
-            % display. Even if the observer is looking elsewhere, this is
-            % probably accurate enough for this rough use, especially since we
-            % are giving the area of a luminous field that is assumed to be
-            % centered on fixation. Estimation of pupil diameter without
-            % looking at the pupil is always rough.
+            % This is accurate if the observer is fixating the center of
+            % the display. Even if the observer is looking elsewhere, this
+            % is probably accurate enough for this rough use, especially
+            % since we are giving the area of a luminous field that is
+            % assumed to be centered on fixation. Estimation of pupil
+            % diameter without looking at the pupil is always rough.
             if ~isfield(oo(oi),'screenRect') || isempty(oo(oi).screenRect)
                 % Began saving this May 6, 2018.
                 oo(oi).screenRect=[0 0 1680 1050]; % MacBook Pro.
