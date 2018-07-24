@@ -68,7 +68,13 @@ for iFile=1:length(matFiles) % One file per iteration.
         continue % Skip unknown file type.
     end
     for k=1:length(ooo) % Iterate through blocks.
+        if ~isfield(ooo{k},'dataFilename')
+            continue
+        end
         for j=1:length(ooo{k}) % Iterate through conditions within a block.
+            if isempty(ooo{k}(j).dataFilename)
+                continue
+            end
             o=ooo{k}(j); % "o" is a threshold struct.
             oo(end+1).missingFields={}; % Create new element.
             usesSecsPlural=isfield(o,'targetDurationSecs');
@@ -125,7 +131,7 @@ end
 for oi=length(oo):-1:1
     if oo(oi).trials<40
         oo(oi)=[];
-        tt(oi)=[];
+        tt(oi,:)=[];
     end
 end
 
