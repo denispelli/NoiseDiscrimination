@@ -2,16 +2,23 @@ function [E0,Neq]=EstimateNeq(E,N,ok)
 % We estimate the best linear fit of E vs N, taking into account the
 % conservation of sd of log E. The minimization begins with a quick guess
 % that is a linear regression that doesn't take that into account (i.e.
-% assuming conservation of sd of E, not log E). We constrain the solution
-% to nonnegative values of E0 and Neq. We use the optional logical array
-% "ok", to ignore bad thresholds.
+% assuming conservation of sd of E, not log E). We use the regression
+% result as a starting point for the minimization. We constrain the
+% solution to nonnegative values of E0 and Neq. We use the optional logical
+% array "ok", to ignore bad thresholds.
+%
+% It was making terrible fits. mincon with the default algorithm often gave
+% wrong answers. Using the option to select the ?sqp? algorithm helped a
+% lot. We now try an unconstrained fit first, which is more reliable, and
+% only if the answer is out of bounds do we try the constrained fit.
 %
 % When the data are nearly flat, the best fit requires a large Neq. If the
 % slope is negative then the best fitting Neq is negative. In that
-% situation the best legal fit is a large Neq, but the minimizing fits
-% don't find the large Neq solution if you seed it with small Neq. That's
-% why we take the absolute value of Neq in choosing a seed for the next
-% fit.
+% situation the best legal fit (positive Neq) is a large Neq, but the
+% minimizing fits don't find the large Neq solution if you seed it with
+% small Neq. That's why we take the absolute value of Neq in choosing a
+% seed for the next fit.
+%
 % May 2018. denis.pelli@nyu.edu
 printFit=true;
 if nargin<3
@@ -80,10 +87,10 @@ if E0<0 || Neq<0
     if printFit
         fprintf('mincon fit, Neq %.2g, E0 %.2g, rms error of log E %.2g\n',Neq,E0,Cost(E,N,E0,Neq));
     end
-    cost=Cost(E,N,E0,Neq);
-    if cost>unconstrainedCost+0.01
-        warning('The rms error in fitting log E is %.2f constrained vs. %.2f unconstrained.\n',cost,unconstrainedCost);
-    end
+end
+cost=Cost(E,N,E0,Neq);
+if cost>0.5
+    warning('The rms error in fitting log E is %.2f, which is terribly large. E0 %.2g, Neq %.2g',cost,E0,Neq);
 end
 end
 
