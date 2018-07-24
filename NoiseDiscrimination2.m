@@ -738,7 +738,7 @@ o.desiredLuminanceFactor=1; % Ratio of screen luminance LBackground to LStandard
 o.luminanceFactor=1; % For max brightness, set this to 1.9, and o.symmetricLuminanceRange=false;
 o.LBackground = []; % Will be set to o.luminanceFactor*mean([LMin LMax]);
 o.symmetricLuminanceRange=true; % For max brightness set this false and o.LuminanceFactor=1.9.
-o.luminanceAtEye=[];
+o.luminanceAtEye=[]; % Set by ComputeNPhoton(), line 2073.
 o.retinalIlluminanceTd=[];
 o.pupilDiameterMm=[];
 o.pupilKnown=false;
@@ -770,7 +770,7 @@ o.ignoreTrial=false;
 o.targetDurationListSecs=[];
 o.conditionList=1; % An array of integer condition numbers.
 o.signalImagesCacheCode=[];
-o.age=20;
+o.age=20; % Assume age 20, unless later specified.
 o.approxRequiredNumber=[];
 o.snapshotCaptionTextSize=[];
 o.printLogOfIdeal=false;
@@ -1259,28 +1259,7 @@ try
     end
     previousBlockUsedFilter=oo(1).useFilter;
     clear o
-    
-    %% PUPIL SIZE
-    % Measured December 2017 by Darshan.
-    % Monocular right eye viewing of 250 cd/m^2 screen.
-    if isempty(oo(1).pupilDiameterMm)
-        switch lower(oo(1).observer)
-            case 'hortense'
-                mm=3.3;
-            case 'katerina'
-                mm=5.0;
-            case 'shenghao'
-                mm=5.3;
-            case 'yichen'
-                mm=4.4;
-            case 'darshan'
-                mm=4.9;
-            otherwise
-                mm=[];
-        end
-        [oo.pupilDiameterMm]=deal(mm);
-    end
-    
+      
     %% LUMINANCE
     % LStandard is the highest o.LBackground luminance at which we can
     % display a sinusoid at a contrast of nearly 100%. I have done most
@@ -2069,8 +2048,38 @@ try
     [oo.nearPointXYDeg]=deal(oo(1).nearPointXYDeg);
     gapPix=round(oo(1).gapFraction4afc*oo(1).targetHeightPix);
     
+    %% PUPIL SIZE
+    % Measured December 2017 by Darshan.
+    % Monocular right eye viewing of 250 cd/m^2 screen.
+    if isempty(oo(1).pupilDiameterMm) ...
+            && ismember(oo(1).eyes,{'one' 'left' 'right'}) ...
+            && abs(log10(oo(1).LBackground/250))<0.2 ...
+            && ~oo(1).useFilter
+        oo(1).pupilKnown=true;
+        switch lower(oo(1).observer)
+            case 'hortense'
+                mm=3.3;
+            case 'katerina'
+                mm=5.0;
+            case 'shenghao'
+                mm=5.3;
+            case 'yichen'
+                mm=4.4;
+            case 'darshan'
+                mm=4.9;
+            otherwise
+                mm=[];
+                oo(1).pupilKnown=false;
+        end
+        [oo.pupilDiameterMm]=deal(mm);
+        [oo.pupilKnown]=deal(oo(1).pupilKnown);
+    end
+    
     %% Compute NPhoton
     oo=ComputeNPhoton(oo);
+    % If pupilDiameterMm is not specified, then ComputeNPhoton gets an
+    % estimate from PupilDiameter(), based on luminance, field area, age,
+    % and number of eyes.
   
     %% SET NOISE PARAMETERS
     for oi=1:conditions
