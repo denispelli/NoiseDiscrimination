@@ -1,11 +1,14 @@
 %% Analyze the data collected by EvsNRun.
+% Why is Neq crazy big for Darshan, despite reasonable data?
+
 experiment='EvsN';
 experiment='NeqOfCrowding';
-global printConditions makePlotLinear
+global printConditions makePlotLinear showLegendBox
+showLegendBox=true;
 printConditions=false;
 printFilenames=true;
 plotGraphs=true;
-makePlotLinear=true;
+makePlotLinear=false;
 myPath=fileparts(mfilename('fullpath')); % Takes 0.1 s.
 addpath(fullfile(myPath,'lib')); % Folder in same directory as this M file.
 dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
@@ -21,7 +24,7 @@ vars={'condition' 'conditionName' 'experiment' 'dataFilename' ...
     'targetCheckDeg' 'fullResolutionTarget' ...
     'noiseType' 'noiseSD'  'noiseCheckDeg' ...
     'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
-    'contrast' 'E' 'N' 'LBackground' 'luminanceAtEye' 'luminanceFactor'...
+    'contrast' 'E' 'E1' 'N' 'LBackground' 'luminanceAtEye' 'luminanceFactor'...
     'filterTransmission' 'useFilter' 'retinalIlluminanceTd' 'pupilDiameterMm'...
     'pixPerCm'  'nearPointXYPix' 'NUnits' 'beginningTime'};
 oo=ReadExperimentData(experiment,vars); % Adds date and missingFields.
@@ -62,6 +65,7 @@ fprintf('Unique o.luminanceAtEye: ');
 fprintf('%.0f, ',unique(t.luminanceAtEye));
 fprintf('\n');
 
+list=struct([]);
 if plotGraphs
     fprintf('Plotting %d thresholds.\n',length(oo));
     for observer=unique({oo.observer})
@@ -72,7 +76,19 @@ if plotGraphs
                 isNoiseType=ismember({oo.noiseType},noiseType);
                 which=isObserver & isConditionName & isNoiseType;
                 if sum(which)>0
-                    fprintf('%s-%s-%s: %d thresholds.\n',observer{1},conditionName{1},noiseType{1},sum(which));
+%                     fprintf('%s-%s-%s: %d thresholds. ',observer{1},conditionName{1},noiseType{1},sum(which));
+                    list(end+1).observer=observer{1};
+                    list(end).conditionName=conditionName{1};
+                    list(end).noiseType=noiseType{1};
+                    list(end).thresholds=sum(which);
+                    E=[oo(which).E];
+                    N=[oo(which).N];
+                    [E0,Neq]=EstimateNeq(E,N);
+                    E1=oo(which).E1;
+                    E1=mean(E1);
+                    list(end).logC0=0.5*log10(E0/E1);
+                    list(end).logNeq=log10(Neq);
+                    list(end).logE0OverNeq=log10(E0/Neq);
                     subplots=[1 length(unique({oo.conditionName}))];
                     [~,subplotIndex]=ismember(conditionName,unique({oo.conditionName}));
                     Plot(oo(which),subplots,subplotIndex);
@@ -81,10 +97,12 @@ if plotGraphs
         end
     end
 end
+t=struct2table(list);
+disp(t);
 return
 
 function Plot(oo,subplots,subplotIndex)
-global printConditions makePlotLinear
+global printConditions makePlotLinear showLegendBox
 persistent previousObserver figureHandle overPlots figureTitle axisHandle
 if isempty(oo)
     return
@@ -142,12 +160,15 @@ vars={'experiment' 'conditionName' ...
     'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
     'LBackground'  'dataFilename'};
 t=struct2table(oo);
-spreadsheet=fullfile(fileparts(mfilename('fullpath')),'data',[oo(1).experiment '.csv']);
-% writetable(t,spreadsheet);
+dataFilename=[oo(1).experiment '-' oo(1).conditionName '.csv'];
 if printConditions
     disp(t(:,vars));
 end
-fprintf('All selected fields have been saved in spreadsheet: /data/%s.csv\n',oo(1).experiment);
+if false
+    spreadsheet=fullfile(fileparts(mfilename('fullpath')),'data',dataFilename);
+    writetable(t,spreadsheet);
+    fprintf('All selected fields have been saved in spreadsheet: /data/%s\n',dataFilename);
+end
 
 %% Plot
 if Neq>=min(N) && Neq<2*max(N)
@@ -192,7 +213,9 @@ ylabel(['\it E \rm (' oo(1).NUnits ')'],'Interpreter','tex');
 lgd=legend('show');
 lgd.Location='northwest';
 lgd.FontSize=fontSize;
-legend('boxoff');
+if ~showLegendBox
+    legend('boxoff');
+end
 oo=ComputeNPhoton(oo);
 caption={};
 caption{1}=sprintf('experimenter %s, observer %s, eyes %s', ...
