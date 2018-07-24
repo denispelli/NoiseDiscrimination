@@ -5,7 +5,15 @@ function [E0,Neq]=EstimateNeq(E,N,ok)
 % assuming conservation of sd of E, not log E). We constrain the solution
 % to nonnegative values of E0 and Neq. We use the optional logical array
 % "ok", to ignore bad thresholds.
+%
+% When the data are nearly flat, the best fit requires a large Neq. If the
+% slope is negative then the best fitting Neq is negative. In that
+% situation the best legal fit is a large Neq, but the minimizing fits
+% don't find the large Neq solution if you seed it with small Neq. That's
+% why we take the absolute value of Neq in choosing a seed for the next
+% fit.
 % May 2018. denis.pelli@nyu.edu
+printFit=true;
 if nargin<3
     ok=true(size(E));
 end
@@ -42,16 +50,41 @@ b=[ones(size(N)) N]\E; % Regress.
 warning(w);
 E0=b(1); % Guess E0
 Neq=E0/b(2); % Guess Neq
+if printFit
+    fprintf('Initial regression, Neq %.2g, E0 %.2g, rms error of log E %.2g\n',Neq,E0,Cost(E,N,E0,Neq));
+end
 E0=max(E0,eps); % Impose positivity on the guess, so mincon won't fail.
-Neq=max(Neq,eps); % Impose positivity on the guess, so mincon won't fail.
+Neq=abs(Neq); % Impose positivity on the guess, so mincon won't fail.
 fun=@(b) Cost(E,N,b(1),b(2));
-% b=fminsearch(fun,[E0 Neq]); % Unconstrained fit.
-opts=optimoptions('fmincon','Display','off','MaxIterations',1000);
-w=warning('OFF','MATLAB:singularMatrix');
-b=fmincon(fun,[E0 Neq],[],[],[],[],[0 0],[inf inf],[],opts); % Search constrains E0 and Neq to not be negative.
-warning(w);
+opts=optimset('TypicalX',[0.1 1e-6],'MaxFunEvals',1e6);
+b=fminsearch(fun,[E0 Neq],opts); % Unconstrained fit.
 E0=b(1);
 Neq=b(2);
+if printFit
+    fprintf('fminsearch fit, Neq %.2g, E0 %.2g, rms error of log E %.2g\n',Neq,E0,Cost(E,N,E0,Neq));
+end
+% The unconstrained fit is more reliable, so we use its answer when it's in
+% bounds. If it's out of bounds, then we run a constrained fit.
+if E0<0 || Neq<0
+    unconstrainedCost=Cost(E,N,E0,Neq);
+    E0=max(eps,E0);
+    Neq=abs(Neq); 
+    % The choice of algorithm is key. With the default algorithm I was
+    % getting terrible fits. 'sqp' works well.
+    opts=optimoptions('fmincon','Display','off','Algorithm','sqp','TypicalX',[0.1 1e-6]);
+    w=warning('OFF','MATLAB:singularMatrix');
+    b=fmincon(fun,[E0 Neq],[],[],[],[],[eps eps],[inf inf],[],opts); % Search constrains E0 and Neq to not be negative.
+    warning(w);
+    E0=b(1);
+    Neq=b(2);
+    if printFit
+        fprintf('mincon fit, Neq %.2g, E0 %.2g, rms error of log E %.2g\n',Neq,E0,Cost(E,N,E0,Neq));
+    end
+    cost=Cost(E,N,E0,Neq);
+    if cost>unconstrainedCost+0.01
+        warning('The rms error in fitting log E is %.2f constrained vs. %.2f unconstrained.\n',cost,unconstrainedCost);
+    end
+end
 end
 
 function cost=Cost(E,N,E0,Neq)
