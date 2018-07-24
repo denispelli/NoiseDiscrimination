@@ -1,5 +1,4 @@
 %% Analyze the data collected by EvsNRun.
-% Why is Neq crazy big for Darshan, despite reasonable data?
 
 experiment='EvsN';
 % experiment='NeqOfCrowding';
@@ -33,13 +32,10 @@ oo=ReadExperimentData(experiment,vars); % Adds date and missingFields.
 for oi=length(oo):-1:1
     switch experiment
         case 'EvsN'
-            if ~ismember(oo(oi).conditionName,{'photon 3 frame'})
-                oo(oi)=[];
-            end
+%             if ~ismember(oo(oi).conditionName,{'photon 3 frame'})
+%                 oo(oi)=[];
+%             end
         case 'NeqOfCrowding'
-            if ~ismember(oo(oi).experiment,{experiment})
-                oo(oi)=[];
-            end
     end
 end
 
