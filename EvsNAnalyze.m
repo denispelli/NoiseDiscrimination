@@ -83,6 +83,7 @@ if plotGraphs
                     list(end).thresholds=sum(which);
                     E=[oo(which).E];
                     N=[oo(which).N];
+%                     fprintf('%s %s\n',observer{1},conditionName{1});
                     [E0,Neq]=EstimateNeq(E,N);
                     E1=oo(which).E1;
                     E1=mean(E1);
@@ -213,6 +214,7 @@ ylabel(['\it E \rm (' oo(1).NUnits ')'],'Interpreter','tex');
 lgd=legend('show');
 lgd.Location='northwest';
 lgd.FontSize=fontSize;
+lgd.Color='none';
 if ~showLegendBox
     legend('boxoff');
 end
@@ -240,6 +242,19 @@ if logUnits>r
     yLimits(2)=yLimits(2)*10^(logUnits-r);
 end
 ax.YLim=yLimits;
+
+% Make sure graph is at least 2 log units wide.
+% Widen graph left and right to nearest even log unit.
+xLimits=ax.XLim;
+xLimits(1)=10^floor(log10(xLimits(1)));
+xLimits(2)=10^ceil(log10(xLimits(2)));
+minLogUnits=2;
+neededLogUnits=minLogUnits-log10(xLimits(2)/xLimits(1));
+if xLimits(2)/xLimits(1)<=10
+    xLimits(1)=xLimits(1)/10^(neededLogUnits/2);
+    xLimits(2)=xLimits(2)*10^(neededLogUnits/2);
+end
+ax.XLim=xLimits;
 
 ax=gca;
 if ax.XLim(1)<=0
