@@ -2,7 +2,7 @@
 % Why is Neq crazy big for Darshan, despite reasonable data?
 
 experiment='EvsN';
-experiment='NeqOfCrowding';
+% experiment='NeqOfCrowding';
 global printConditions makePlotLinear showLegendBox
 showLegendBox=true;
 printConditions=false;
@@ -55,7 +55,7 @@ if printFilenames
     fprintf('Ready to analyze %d thresholds:\n',length(oo));
     switch experiment
         case 'EvsN'
-            disp(t(:,{'dataFilename','conditionName','observer','LBackground','filterTransmission','useFilter'
+            disp(t(:,{'dataFilename','conditionName','observer','LBackground','filterTransmission','useFilter' ...
                 'luminanceFactor' 'luminanceAtEye' 'A' 'targetDurationSecs' 'LAT'}));
         case 'NeqOfCrowding'
             disp(t(:,{'observer','conditionName','N','E'}));
