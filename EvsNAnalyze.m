@@ -32,9 +32,9 @@ oo=ReadExperimentData(experiment,vars); % Adds date and missingFields.
 for oi=length(oo):-1:1
     switch experiment
         case 'EvsN'
-%             if ~ismember(oo(oi).conditionName,{'photon 3 frame'})
-%                 oo(oi)=[];
-%             end
+            if ~ismember(oo(oi).conditionName,{'photon 3 frame'})
+                oo(oi)=[];
+            end
         case 'NeqOfCrowding'
     end
 end
@@ -139,7 +139,7 @@ end
 [~,ii]=sort([oo.N]);
 oo=oo(ii);
 
-%% Compute derived quantities
+%% Compute derived quantities: Neq, E0, and c/deg
 E=[oo.E];
 N=[oo.N];
 [E0,Neq]=EstimateNeq(E,N);
@@ -239,14 +239,14 @@ if logUnits>r
 end
 ax.YLim=yLimits;
 
-% Make sure graph is at least 2 log units wide.
 % Widen graph left and right to nearest even log unit.
+% Make sure graph is at least 2 log units wide.
 xLimits=ax.XLim;
 xLimits(1)=10^floor(log10(xLimits(1)));
 xLimits(2)=10^ceil(log10(xLimits(2)));
 minLogUnits=2;
 neededLogUnits=minLogUnits-log10(xLimits(2)/xLimits(1));
-if xLimits(2)/xLimits(1)<=10
+if neededLogUnits>0
     xLimits(1)=xLimits(1)/10^(neededLogUnits/2);
     xLimits(2)=xLimits(2)*10^(neededLogUnits/2);
 end
