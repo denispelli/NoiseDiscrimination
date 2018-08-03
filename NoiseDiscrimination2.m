@@ -937,11 +937,11 @@ clear o
 
 %% SET UP MISCELLANEOUS
 for oi=1:conditions
-    if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers) && ismac && ~ScriptingOkShowPermission
-        error(['Please give MATLAB permission to control the computer. '...
-            'Use System Preferences:Security and Privacy:Privacy:Accessibility. '...
-            'You''ll need admin privileges to do this.']);
-    end
+%     if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers) && ismac && ~ScriptingOkShowPermission
+%         error(['Please give MATLAB permission to control the computer. '...
+%             'Use System Preferences:Security and Privacy:Privacy:Accessibility. '...
+%             'You''ll need admin privileges to do this.']);
+%     end
     useImresize=exist('imresize','file'); % Requires the Image Processing Toolbox.
     if isnan(oo(oi).annularNoiseSD)
         oo(oi).annularNoiseSD=oo(oi).noiseSD;
