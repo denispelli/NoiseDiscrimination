@@ -1,7 +1,7 @@
 %% Analyze the data collected by EvsNRun.
 
 experiment='EvsN';
-% experiment='NeqOfCrowding';
+experiment='NeqOfCrowding';
 global printConditions makePlotLinear showLegendBox
 showLegendBox=true;
 printConditions=false;
@@ -156,7 +156,7 @@ vars={'experiment' 'conditionName' ...
     'noiseType' 'noiseSD'  'noiseCheckDeg' ...
     'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
     'LBackground'  'dataFilename'};
-t=struct2table(oo);
+t=struct2table(oo,'AsArray',true);
 dataFilename=[oo(1).experiment '-' oo(1).conditionName '.csv'];
 if printConditions
     disp(t(:,vars));
