@@ -20,7 +20,7 @@ function [E0,Neq]=EstimateNeq(E,N,ok)
 % seed for the next fit.
 %
 % May 2018. denis.pelli@nyu.edu
-printFit=true;
+printFit=false;
 if nargin<3
     ok=true(size(E));
 end
