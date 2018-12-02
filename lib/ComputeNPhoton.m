@@ -3,7 +3,9 @@ for oi=1:length(oo)
     if ~isfield(oo(oi),'filterTransmission')
         oo(oi).filterTransmission=1;
     end
-    oo(oi).luminanceAtEye=oo(oi).filterTransmission*oo(oi).LBackground;
+    % I'm unsure whether to include the following line here. It's too long
+    % since I've thought about this code.
+%     oo(oi).luminanceAtEye=oo(oi).filterTransmission*oo(oi).LBackground;
     switch oo(oi).eyes
         case {'left' 'right' 'one'}
             e=1;
