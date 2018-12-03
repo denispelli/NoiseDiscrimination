@@ -19,9 +19,9 @@ o.trialsPerBlock=40;
 o.assessContrast=0;
 o.assessLoadGamma=0;
 
-o.font='Sloan';
+o.targetFont='Sloan';
 o.alphabet = 'DHKNORSVZ';
-% o.font='ITC Bookman Std';
+% o.targetFont='ITC Bookman Std';
 % o.alphabet='abcdefghijklmnopqrstuvwxyz';
 o.alternatives=length(o.alphabet); % number of letters to use from o.alphabet
 o.targetHeightDeg=7.64; % Target size, range 0 to inf. If you ask for too much, it gives you the max possible.
@@ -52,12 +52,12 @@ o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
 % o.targetHeightDeg=7.64; % Target size, range 0 to inf.
 % o.eccentricityDeg=0; % eccentricity [0 8 16 32]
 % o.targetKind='letter';
-% o.font='Sloan';
+% o.targetFont='Sloan';
 % o.alphabet='DHKNORSVZ';
 % o.alternatives=length(o.alphabet); % number of letters to use from o.alphabet
 
 % TO REPLICATE MANOJ
-% o.font='ITC Bookman Std';
+% o.targetFont='ITC Bookman Std';
 % o.alphabet='abcdefghijklmnopqrstuvwxyz';
 % o.alternatives=length(o.alphabet); % number of letters to use from o.alphabet
 % o.targetHeightDeg=2*7.64; % Manoj used xHeight of 7.64 deg.
