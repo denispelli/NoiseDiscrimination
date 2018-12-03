@@ -56,7 +56,7 @@ for oi=1:length(oo)
     end
     % Compute equivalent input noise for 100% transduction efficiency.
     q=1.26e6;
-    oo(oi).NPhoton=1/(q*oo(oi).retinalIlluminanceTd*e);
+    oo(oi).NPhoton=1 ./ (q*oo(oi).retinalIlluminanceTd*e);
 end % for oi=1:length(oo)
 end % function
 
