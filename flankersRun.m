@@ -100,7 +100,7 @@ if ~skipDataCollection && true
       if true
          % Target letter
          o.targetKind='letter';
-         o.font='Sloan';
+         o.targetFont='Sloan';
          o.alphabet='DHKNORSVZ';
       else
          % Target gabor

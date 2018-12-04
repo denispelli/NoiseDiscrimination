@@ -21,12 +21,12 @@ o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
 o.targetHeightDeg=8; % Target size, range 0 to inf.
 eccentricityDeg=0; % eccentricity [0 8 16 32]
 o.targetKind='letter';
-o.font='Sloan';
+o.targetFont='Sloan';
 o.alphabet='DHKNORSVZ';
 o.alternatives=length(o.alphabet); % number of letters to use from o.alphabet
 
 % TO REPLICATE MANOJ
-% o.font='ITC Bookman Std';
+% o.targetFont='ITC Bookman Std';
 % o.alphabet='abcdefghijklmnopqrstuvwxyz';
 % o.alternatives=length(o.alphabet); % number of letters to use from o.alphabet
 % o.targetHeightDeg=2*7.64; % Manoj used xHeight of 7.64 deg.
@@ -71,7 +71,7 @@ if 0
    % IMPORTANT: Use a tape measure or meter stick to measure the distance
    % from your eye to the screen. The number below must be accurate.
    o.distanceCm=70; % viewing distance
-   o.font='Sloan';
+   o.targetFont='Sloan';
    o.alphabet='DHKNORSVZ';
    o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
    o.durationSec = 0.2;
@@ -115,7 +115,7 @@ o.eyes='right'; % 'left', 'right', 'both'.
 % IMPORTANT: Use a tape measure or meter stick to measure the distance
 % from your eye to the screen. The number below must be accurate.
 o.distanceCm=70; % viewing distance
-o.font='Sloan';
+o.targetFont='Sloan';
 o.alphabet='DHKNORSVZ';
 o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
 o.durationSec = 0.2;

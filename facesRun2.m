@@ -27,7 +27,7 @@ o.responseScreenAbsoluteContrast=0.9;
 if false
     % Target letter
     o.targetKind='letter';
-    o.font='Sloan';
+    o.targetFont='Sloan';
     o.alphabet='DHKNORSVZ';
 else
     % Target face

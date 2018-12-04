@@ -21,12 +21,12 @@ o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
 o.targetHeightDeg=7.64; % Target size, range 0 to inf.
 o.eccentricityXYDeg=[0 0]; % [0 8 16 32]
 o.targetKind='letter';
-o.font='Sloan';
+o.targetFont='Sloan';
 o.alphabet='DHKNORSVZ';
 o.alternatives=length(o.alphabet); % number of letters to use from o.alphabet
 
 % TO REPLICATE MANOJ
-% o.font='ITC Bookman Std';
+% o.targetFont='ITC Bookman Std';
 % o.alphabet='abcdefghijklmnopqrstuvwxyz';
 % o.alternatives=length(o.alphabet); % number of letters to use from o.alphabet
 % o.targetHeightDeg=2*7.64; % Manoj used xHeight of 7.64 deg.
@@ -84,7 +84,7 @@ o.printDurations=0;
 % your eye to the screen. The number below must be accurate.
 o.observer='Chen'; % use your name
 o.distanceCm=70; % viewing distance
-o.font='Sloan';
+o.targetFont='Sloan';
 o.alphabet='DHKNORSVZ';
 o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
 % o.durationSec=0.5;

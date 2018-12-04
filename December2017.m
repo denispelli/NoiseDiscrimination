@@ -124,7 +124,7 @@ if 0
       o.blankingRadiusReEccentricity=0;
       if 0
          o.targetKind='letter';
-         o.font='Sloan';
+         o.targetFont='Sloan';
          o.alphabet='DHKNORSVZ';
       else
          o.targetKind='gabor';

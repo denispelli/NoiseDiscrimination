@@ -15,7 +15,7 @@ o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
 o.targetHeightDeg=4; % Target size, range 0 to inf.
 o.eccentricityXYDeg=[0 0]; % (x,y) eccentricity 
 o.targetKind='letter';
-o.font='Sloan';
+o.targetFont='Sloan';
 o.alphabet='DHKNORSVZ';
 o.alternatives=length(o.alphabet); % number of letters to use from o.alphabet
 
@@ -41,7 +41,7 @@ o.speakInstructions=0;
 % your eye to the screen. The actual distance must accurately agree with
 % o.viewingDistanceCm.
 o.viewingDistanceCm=70; % viewing distance
-o.font='Sloan';
+o.targetFont='Sloan';
 o.alphabet='DHKNORSVZ';
 o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
 % Eccentricity = 1, 5 deg

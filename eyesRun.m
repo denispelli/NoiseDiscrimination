@@ -61,7 +61,7 @@ o.fixationCrossDeg=3;
 if false
     % Target letter
     o.targetKind='letter';
-    o.font='Sloan';
+    o.targetFont='Sloan';
     o.alphabet='DHKNORSVZ';
     o.contrast=-1; % negative contrast.
 else

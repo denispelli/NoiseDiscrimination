@@ -64,7 +64,7 @@ o.targetMarkDeg=15;
 if true
     % Target letter
     o.targetKind='letter';
-    o.font='Sloan';
+    o.targetFont='Sloan';
     o.alphabet='DHKNORSVZ';
     o.contrast=-1; % negative contrast.
 else
@@ -114,16 +114,17 @@ if true
     o.noiseRaisedCosineEdgeThicknessDeg=0;
     o.complementNoiseEnvelope=false;
     o.noiseSD=0;
-    oo{end+1}=o;
+%     oo{end+1}=o;
     o.noiseSD=MaxNoiseSD(o.noiseType)/2;
-    oo{end}=[oo{end} o];
+%     oo{end}=[oo{end} o];
     o.noiseSD=MaxNoiseSD(o.noiseType);
-    oo{end}=[oo{end} o];
+%     oo{end}=[oo{end} o];
     o.conditionName='Threshold contrast noise-free target';
     o.noiseRadiusDeg=o.flankerSpacingDeg/2;
     o.noiseRaisedCosineEdgeThicknessDeg=o.flankerSpacingDeg/2;
     o.complementNoiseEnvelope=true;
-    oo{end}=[oo{end} o];
+%     oo{end}=[oo{end} o];
+    oo{end+1}=o;
 end
 if true
 %     o.useDynamicNoiseMovie=false;

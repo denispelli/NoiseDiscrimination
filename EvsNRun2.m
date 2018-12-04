@@ -42,7 +42,7 @@ o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary' or 'ternary'
 if 0
     % Target letter
     o.targetKind='letter';
-    o.font='Sloan';
+    o.targetFont='Sloan';
     o.alphabet='DHKNORSVZ';
 else
     % Target gabor
