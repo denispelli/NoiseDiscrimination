@@ -127,6 +127,9 @@ scriptPath = which('AutoBrightness.applescript');
 forcedToClose=false;
 for i=1:3
     windowIsOpen=~isempty(Screen('Windows'));
+    if isempty(windowIsOpen)
+        windowIsOpen=false;
+    end
     command = ['osascript ', scriptPath ...
         ' ', num2str(screenNumber),...
         ' ', num2str(newSetting), ...
@@ -134,6 +137,11 @@ for i=1:3
     oldSetting=''; % Default in case not set by function. (Unsure whether than can happen.)
     [failed,oldSetting] = system(command);
     oldSetting = str2num(oldSetting);
+    if length(oldSetting)~=1 || length(windowIsOpen)~=1
+        warning('Length is not 1.');
+        oldSetting
+        windowIsOpen
+    end
     if oldSetting==-999 && windowIsOpen
         forcedToClose=true;
         sca;
