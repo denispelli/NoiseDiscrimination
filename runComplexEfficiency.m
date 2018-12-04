@@ -31,16 +31,16 @@ o.experiment='ComplexEfficiency';
 o.eccentricityXYDeg=[0 0];
 o.targetHeightDeg=6;
 o.contrast=-1;
-if 0
+if 1
     % Sloan
     o.targetFont='Sloan';
     o.minimumTargetHeightChecks=8;
     o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
     o.borderLetter='X';
-    o.labelAnswers=true;
+    o.labelAnswers=false;
 %     o.eccentricityXYDeg=[-10 0];
-    o.readAlphabetFromDisk=false;
-    ooo{end+1}=o;
+%     o.readAlphabetFromDisk=false;
+%     ooo{end+1}=o;
 %     o.eccentricityXYDeg=[10 0];
     o.readAlphabetFromDisk=true;
     ooo{end+1}=o;
