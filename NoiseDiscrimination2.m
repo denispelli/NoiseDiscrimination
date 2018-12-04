@@ -1665,7 +1665,7 @@ try
     ffprintf(ff,'%s %s calibrated by %s on %s.\n',cal.localHostName,cal.macModelName,cal.calibratedBy,cal.datestr);
     ffprintf(ff,'%s\n',cal.notes);
     ffprintf(ff,'cal.ScreenConfigureDisplayBrightnessWorks=%.0f;\n',cal.ScreenConfigureDisplayBrightnessWorks);
-    if ~all(ismember({oo.observer},oo(oi).algorithmicObservers)) && ismac && isfield(cal,'profile') && ~any(oo.rush) && any(oo.isFirstBlock)
+    if ~all(ismember({oo.observer},oo(oi).algorithmicObservers)) && ismac && isfield(cal,'profile') && ~any([oo.rush]) && any([oo.isFirstBlock])
         ffprintf(ff,'cal.profile=''%s'';\n',cal.profile);
         fprintf('Setting screen profile. ... ');
         s=GetSecs;
