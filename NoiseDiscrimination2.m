@@ -498,7 +498,8 @@ end
 % variable: o.centralNoiseEnvelopeE1DegDeg
 
 %% GLOBAL AND PERSISTENT
-global rush % Tells CLoseWindowsAndCleanup to skip restoration of brightness.
+global rush % Tells CloseWindowsAndCleanup to skip restoration of brightness.
+global isLastBlock % CloseWindowsAndCleanup skips restoration unless isLastBlock is true.
 persistent window % Retain pointer to open window when this function exits and is called again.
 % This must persist from block to block.
 persistent oOld % Saved from previous block to skip prompts that were already answered in the previous block.
@@ -743,7 +744,6 @@ o.retinalIlluminanceTd=[];
 o.pupilDiameterMm=[];
 o.pupilKnown=false;
 o.annularNoiseEnvelopeRadiusDeg=0;
-o.labelAlternatives=[];
 o.eyes='both';
 o.readAlphabetFromDisk=false;
 o.borderLetter=[];
@@ -787,8 +787,10 @@ o.minimumTargetPix=8;
 o.isFirstBlock=true;
 o.isLastBlock=true;
 o.fixationAtCenter=false;
+o.responseLabels='abcdefghijklmnopqrstuvwxyz1234567890';
+o.labelAnswers=[]; % Add roman letter label to each possible response, for graphics and foreign letters.
 
-o.rush=false; % Speed up debugging by skipping noncritical slow operations: brightness and screen profile.
+o.rush=false; % Speed up debugging by skipping noncritical slow operations: autobrightness, brightness, and screen profile.
 o.deviceIndex=-1; % -1 for all keyboards.
 o.deviceIndex=-3; % -3 for all keyboard/keypad devices.
 % o.deviceIndex=3; % for my built-in keyboard, according to PsychHIDTest
@@ -843,7 +845,7 @@ end
 % field, then we ignore it silently. We warn of unknown fields because they
 % might be typos for input fields.
 initializedFields=fieldnames(o);
-knownOutputFields={'labelAlternatives' 'beginningTime' ...
+knownOutputFields={'labelAnswers' 'beginningTime' ...
     'functionNames' 'cal' 'pixPerDeg' ...
     'lineSpacing' 'stimulusRect' 'noiseCheckPix' ...
     'minLRange' 'targetHeightPix' ...
@@ -874,7 +876,7 @@ knownOutputFields={'labelAlternatives' 'beginningTime' ...
     'A' 'LAT' 'NPhoton' 'logFilename' 'screenrect' 'screenRect'...
     'useCentralNoiseEnvelope' 'useCentralNoiseMask'...
     'fixationAtCenter' 'fixationLineWeightDeg' 'isFirstBlock' ... % From CriticalSpacing
-    'isLastBlock' 'labelAnswers' 'minimumTargetPix' ...
+    'isLastBlock'  'minimumTargetPix' ...
     'practicePresentations' 'repeatedTargets'
     };
 unknownFields={};
@@ -976,14 +978,15 @@ for oi=1:conditions
         oo(oi).alternatives=length(oo(oi).targetGaborOrientationsDeg);
         oo(oi).alphabet=oo(oi).targetGaborNames(1:oo(oi).alternatives);
     end
-    if isempty(oo(oi).labelAlternatives)
+    if isempty(oo(oi).labelAnswers)
         switch oo(oi).targetKind
             case 'gabor'
-                oo(oi).labelAlternatives=true;
+                oo(oi).labelAnswers=true;
             case 'letter'
-                oo(oi).labelAlternatives=false;
+                % Default is none, but useful for foreign alphabets.
+                oo(oi).labelAnswers=false;
             case 'image'
-                oo(oi).labelAlternatives=true;
+                oo(oi).labelAnswers=true;
             otherwise
                 error('Unknown o.targetKind "%s".',oo(oi).targetKind);
         end
@@ -1024,8 +1027,9 @@ clear o
 % Keeping this here is no longer necessary. New version of AutoBrightness,
 % in CriticalSpacing, can be called while windows are open.
 o=oo(1);
-rush=o.rush; % Set global flag, to allow debugging.
-if isempty(o.window) && ~ismember(o.observer,o.algorithmicObservers) && ~o.rush
+rush=o.rush; % Set global flag read by CloseWindowsAndCleanup.
+isLastBlock=o.isLastBlock; % Set global flag read by CloseWindowsAndCleanup.
+if isempty(o.window) && ~ismember(o.observer,o.algorithmicObservers) && ~o.rush && o.isFirstBlock
     useBrightnessFunction=true;
     try
         fprintf('Setting Brightness. ... ');
@@ -1661,7 +1665,7 @@ try
     ffprintf(ff,'%s %s calibrated by %s on %s.\n',cal.localHostName,cal.macModelName,cal.calibratedBy,cal.datestr);
     ffprintf(ff,'%s\n',cal.notes);
     ffprintf(ff,'cal.ScreenConfigureDisplayBrightnessWorks=%.0f;\n',cal.ScreenConfigureDisplayBrightnessWorks);
-    if ~all(ismember({oo.observer},oo(oi).algorithmicObservers)) && ismac && isfield(cal,'profile') && ~any(oo.rush)
+    if ~all(ismember({oo.observer},oo(oi).algorithmicObservers)) && ismac && isfield(cal,'profile') && ~any(oo.rush) && any(oo.isFirstBlock)
         ffprintf(ff,'cal.profile=''%s'';\n',cal.profile);
         fprintf('Setting screen profile. ... ');
         s=GetSecs;
@@ -3854,7 +3858,7 @@ try
                                 desiredLengthPix=RectHeight(o.screenRect);
                                 targetChecks=RectHeight(rect);
                             case 'top'
-                                desiredLengthPix=0.5*RectWidth(o.screenRect);
+                                desiredLengthPix=RectWidth(o.screenRect);
                                 targetChecks=RectWidth(rect);
                         end
                         switch oo(oi).targetKind
@@ -3865,8 +3869,8 @@ try
                             case 'image'
                                 spacingFraction=0;
                         end
-                        if oo(oi).alternatives < 6
-                            desiredLengthPix=desiredLengthPix*oo(oi).alternatives/6;
+                        if oo(oi).alternatives<6
+                            desiredLengthPix=0.5*desiredLengthPix*oo(oi).alternatives/6;
                         end
                         alphaSpaces=oo(oi).alternatives+spacingFraction*(oo(oi).alternatives+1);
                         alphaPix=desiredLengthPix/alphaSpaces;
@@ -3890,9 +3894,13 @@ try
                             case {'left'}
                                 rect=AlignRect(rect,o.screenRect,RectLeft,RectTop);
                                 rect=OffsetRect(rect,alphaGapPix,alphaGapPix); % spacing
-                            case {'right' 'top'}
+                            case 'right'
                                 rect=AlignRect(rect,o.screenRect,RectRight,RectTop);
                                 rect=OffsetRect(rect,-alphaGapPix,alphaGapPix); % spacing
+                            case 'top'
+                                rect=AlignRect(rect,o.screenRect,RectRight,RectTop);
+                                rect=OffsetRect(rect,-alphaGapPix,alphaGapPix); % spacing
+                                rect=OffsetRect(rect,0,oo(oi).textSize); % Avoid the block counter.
                         end
                         rect=round(rect);
                         switch oo(oi).alphabetPlacement
@@ -3904,7 +3912,7 @@ try
                         end
                         for i=1:oo(oi).alternatives
                             img=oo(oi).signal(i).image;
-                            %                             PrintImageStatistics(MFileLineNr,oo(oi),i,'before resize',img)
+                            % PrintImageStatistics(MFileLineNr,oo(oi),i,'before resize',img)
                             if useExpand
                                 img=Expand(oo(oi).signal(i).image,alphaCheckPix);
                             else
@@ -3916,12 +3924,13 @@ try
                                     img=imresize(oo(oi).signal(i).image,[RectHeight(rect), RectWidth(rect)],'bilinear');
                                 else
                                     img=oo(oi).signal(i).image;
-                                    % If the imresize function (in Image Processing
-                                    % Toolbox) is not available then the image resizing
-                                    % by the DrawTexture command below.
+                                    % If the imresize function (in Image
+                                    % Processing Toolbox) is not available
+                                    % then the image is resized by the
+                                    % DrawTexture command below.
                                 end
                             end % if useExpand
-                            %                             PrintImageStatistics(MFileLineNr,oo(oi),i,'after resize',img)
+                            %  PrintImageStatistics(MFileLineNr,oo(oi),i,'after resize',img)
                             if oo(oi).responseScreenAbsoluteContrast<0
                                 error('o.responseScreenAbsoluteContrast %.2f must be positive. Sign will track o.contrast.',...
                                     oo(oi).responseScreenAbsoluteContrast);
@@ -3979,14 +3988,19 @@ try
                             end
                             Screen('DrawTexture',oo(1).window,texture,RectOfMatrix(img),rect);
                             Screen('Close',texture);
-                            if oo(oi).labelAlternatives
+                            if oo(oi).labelAnswers
                                 Screen('TextSize',oo(1).window,oo(oi).textSize);
-                                if streq(oo(oi).targetKind,'gabor')
-                                    textRect=AlignRect([0 0 oo(oi).textSize oo(oi).textSize],rect,'center','top');
-                                else
-                                    textRect=AlignRect([0 0 oo(oi).textSize oo(oi).textSize],rect,'left','top');
+                                switch oo(oi).targetKind
+                                    case 'gabor'
+                                        textRect=AlignRect([0 0 oo(oi).textSize oo(oi).textSize],rect,'center','top');
+                                    case 'letter'
+                                        % Small label letter is centered below big foreign letter.
+                                        textRect=AlignRect([0 0 oo(oi).textSize oo(oi).textSize],rect,'center','bottom');
+                                        textRect=OffsetRect(textRect,0,oo(oi).textSize); % Avoid overlap.
+                                    otherwise
+                                        textRect=AlignRect([0 0 oo(oi).textSize oo(oi).textSize],rect,'left','top');
                                 end
-                                Screen('DrawText',oo(1).window,oo(oi).alphabet(i),textRect(1),textRect(4),black,oo(oi).gray1,1);
+                                Screen('DrawText',oo(1).window,oo(oi).responseLabels(i),textRect(1),textRect(4),black,oo(oi).gray1,1);
                             end
                             rect=OffsetRect(rect,step(1),step(2));
                         end % for i=1:oo(oi).alternatives
@@ -4063,13 +4077,24 @@ try
                 case 'identify'
                     o.quitBlock=false;
                     % Prepare list of keys to enable.
-                    ok=ismember(lower(oo(oi).alphabet),letterNumberCharString);
+                    
+                    if oo(oi).labelAnswers
+                        if length(oo(oi).alphabet)>length(oo(oi).responseLabels)
+                            error('o.labelAnswers is true, but o.alphabet is longer than o.responseLabels: %d > %d.',length(oo(oi).alphabet),length(oo(oi).responseLabels));
+                        end
+                        oo(oi).validResponseLabels=oo(oi).responseLabels(1:length(oo(oi).alphabet));
+                    else
+                        oo(oi).validResponseLabels=oo(oi).alphabet;
+                    end
+
+    
+                    ok=ismember(lower(oo(oi).validResponseLabels),letterNumberCharString);
                     if ~all(ok)
-                        error('Oops. Not all the characters in o.alphabet "%s" are in the list of letterNumber keys: "%s".',oo(oi).alphabet,unique(letterNumberCharString));
+                        error('Oops. Not all the characters in o.validResponseLabels "%s" are in the list of letterNumber keys: "%s".',oo(oi).validResponseLabels,unique(letterNumberCharString));
                     end
                     enableKeyCodes=[escapeKeyCode graveAccentKeyCode];
-                    for i=1:length(oo(oi).alphabet)
-                        enableKeyCodes=[enableKeyCodes letterNumberKeyCodes(lower(oo(oi).alphabet(i))==letterNumberCharString)];
+                    for i=1:length(oo(oi).validResponseLabels)
+                        enableKeyCodes=[enableKeyCodes letterNumberKeyCodes(lower(oo(oi).validResponseLabels(i))==letterNumberCharString)];
                     end
                     responseChar=GetKeypress(enableKeyCodes,oo(oi).deviceIndex);
                     if ismember(responseChar,[escapeChar,graveAccentChar])
@@ -4103,7 +4128,7 @@ try
                         % matrix. So we replace the string by 0.
                         responseChar=0;
                     end
-                    [ok,response]=ismember(lower(responseChar),lower(oo(oi).alphabet));
+                    [ok,response]=ismember(lower(responseChar),lower(oo(oi).validResponseLabels));
                 case 'identifyAll'
                     message=sprintf('Please type all three letters (%s) followed by RETURN:',oo(oi).alphabet(1:oo(oi).alternatives));
                     textRect=[0, 0, oo(oi).textSize, 1.2*oo(oi).textSize];
@@ -4315,7 +4340,7 @@ try
         oo(oi).transcript.intensity(oo(oi).trials)=tTest;
         oo(oi).transcript.isRight{oo(oi).trials}=isRight;
         oo(oi).transcript.condition(oo(oi).trials)=oi;
-        if cal.ScreenConfigureDisplayBrightnessWorks && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers) && ~oo(oi).rush
+        if cal.ScreenConfigureDisplayBrightnessWorks && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers) && ~oo(oi).rush && oo(1).isFirstBlock
             %          Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
             cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
             %          Brightness(cal.screen,cal.brightnessSetting);
@@ -5769,24 +5794,29 @@ end
 %% CloseWindowsAndCleanup
 function CloseWindowsAndCleanup(oo)
 % Close any window opened by the Psychtoolbox Screen command, re-enable
-% keyboard, show cursor, and restore AutoBrightness.
-% global window
-global rush
+% keyboard, show cursor, and restore AutoBrightness. We save times by only
+% restoring brightness etc. if isLastBlock and we're not in a rush
+% (debugging).
+% "RestoreCluts" is quick, but loading a color preference is slow (30 s),
+% so we leave that alone, until we're cleaning up after the last block.
+global rush isLastBlock
+if nargin==1
+    fprintf('CloseWindowsAndCleanup(oo): isFirstBlock=%d, isLastBlock=%d, global isLastBlock=%d.\n',...
+        oo(1).isFirstBlock,oo(1).isLastBlock,isLastBlock);
+    isLastBlock=oo(1).isLastBlock;
+end
 if ~isempty(Screen('Windows'))
     fprintf('Closing the window. ... ');
     s=GetSecs;
     Screen('CloseAll');
     fprintf('Done (%.1f s).\n',GetSecs-s);
-    if ismac && ~rush
+    if ismac && ~rush && isLastBlock
         fprintf('Restoring AutoBrightness. ... ');
         s=GetSecs;
         AutoBrightness(0,1);
         fprintf('Done (%.1f s).\n',GetSecs-s);
+        RestoreCluts; 
     end
-end
-window=[];
-if nargin>0
-    [oo.window]=deal([]);
 end
 Screen('Preference','Verbosity',2); % Restore default level.
 ListenChar; % May already be done by Screen('CloseAll').
