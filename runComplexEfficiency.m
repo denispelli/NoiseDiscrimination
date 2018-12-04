@@ -31,13 +31,13 @@ o.experiment='ComplexEfficiency';
 o.eccentricityXYDeg=[0 0];
 o.targetHeightDeg=6;
 o.contrast=-1;
-if 1
+if 0
     % Sloan
     o.targetFont='Sloan';
     o.minimumTargetHeightChecks=8;
     o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
     o.borderLetter='X';
-    o.labelAnswers=false;
+    o.labelAnswers=true;
 %     o.eccentricityXYDeg=[-10 0];
     o.readAlphabetFromDisk=false;
     ooo{end+1}=o;
@@ -156,15 +156,17 @@ disp(t); % Print the conditions in the Command Window.
 for i=1:length(ooo)
     oo=ooo{i};
     for oi=1:length(oo)
-%         oo(oi).useFractionOfScreen=0.5;
-%         oo(oi).rush=true;
-%         oo(oi).printTargetBounds=true;
-%         oo(oi).isFirstBlock=false;
-%         oo(oi).isLastBlock=false;
+        oo(oi).useFractionOfScreen=0.5;
+        %         oo(oi).rush=true;
+        %         oo(oi).printTargetBounds=true;
+        oo(oi).block=oi;
+        oo(oi).blocksDesired=length(oo);
+        oo(oi).isFirstBlock=false;
+        oo(oi).isLastBlock=false;
+        oo(oi).alternatives=length(oo(oi).alphabet);
         if i==1
             oo(oi).experimenter='Darshan';
             oo(oi).observer='';
-            oo(oi).isFirstBlock=true;
         else
             oo(oi).experimenter=old.experimenter;
             oo(oi).observer=old.observer;
@@ -178,6 +180,7 @@ for i=1:length(ooo)
         oo(oi).targetDurationSecs=0.2; % duration of display of target and flankers
         oo(oi).repeatedTargets=0;
     end
+    ooo{1}(1).isFirstBlock=true;
     ooo{end}(1).isLastBlock=true;
     oo=NoiseDiscrimination2(oo);
     ooo{i}=oo;
