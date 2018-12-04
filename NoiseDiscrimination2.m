@@ -2877,8 +2877,8 @@ try
             power(i)=sum(m(:).^2);
             if streq(oo(oi).targetKind,'letter')
                 err=rms(oo(oi).signal(i).image(:)-round(oo(oi).signal(i).image(:)));
-                if err>.2
-                    error(['Large %.2f rms deviation from 0 and 1 '...
+                if err>.3
+                    warning(['Large %.2f rms deviation from 0 and 1 '...
                         'in letter ''%c'' of ''%s'' font.'], ...
                         err,oo(oi).signal(i).letter,oo(oi).targetFont);
                 end
