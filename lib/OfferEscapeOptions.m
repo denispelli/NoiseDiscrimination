@@ -49,7 +49,9 @@ if nargout==3
 else
    nextTrialMsg='';
 end
-string=['You escaped. Any incomplete trial was canceled. Hit ESCAPE again to quit the whole experiment. '...
+string=['You escaped. Any incomplete trial was canceled. ' ...
+    'Hit RETURN to proceed to next block. ' ...
+    'Hit ESCAPE again to quit the whole experiment. '...
     nextBlockMsg nextTrialMsg];
 DrawFormattedText(window,string,textMarginPix,textMarginPix+0.5*o.textSize+y,black,60,[],[],1.1);
 Screen('Flip',window);
@@ -58,7 +60,7 @@ quitExperiment=ismember(answer,[escapeChar,graveAccentChar]);
 quitBlock=ismember(answer,returnChar)||quitExperiment;
 skipTrial=ismember(answer,' ');
 if o.useSpeech
-    if quitExperiment
+    if quitExperiment || quitBlock && oo(1).isLastBlock
         Speak('Done.');
     elseif quitBlock
         Speak('Proceeding to next block.');
