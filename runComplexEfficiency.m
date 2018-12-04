@@ -31,6 +31,10 @@ o.experiment='ComplexEfficiency';
 o.eccentricityXYDeg=[0 0];
 o.targetHeightDeg=6;
 o.contrast=-1;
+o.noiseType='binary';
+o.blankingRadiusReTargetHeight= 0;
+o.blankingRadiusReEccentricity= 0;
+
 if 1
     % Sloan
     o.targetFont='Sloan';
@@ -140,6 +144,31 @@ end
 %     ooo{i}=oo;
 % end
 
+% Test with zero and high noise.
+for i=1:length(ooo)
+    o=ooo{i};
+    switch o.noiseType
+        case 'gaussian'
+            maxNoiseSD=0.16*2^0.5;
+            p2=0.5;
+        case 'binary'
+            maxNoiseSD=0.16*2^2;
+            p2=2;
+    end
+    o.noiseCheckDeg=o.targetHeightDeg/40;
+    o.block=i;
+    o.fixationAtCenter=true;
+    o.nearPointXYInUnitSquare=[0.5 0.5];
+    o.viewingDistanceCm=40;
+    o.eccentricityXYDeg=[0 0];
+    o.noiseSD=0;
+    oo=o;
+    o.noiseSD=maxNoiseSD;
+    oo(2)=o;
+    ooo{i}=oo;
+end
+
+
 % Print as a table. One row per threshold.
 oo=[];
 for i=1:length(ooo)
@@ -175,7 +204,7 @@ for i=1:length(ooo)
         oo(oi).fixationCrossBlankedNearTarget=false;
         oo(oi).fixationLineWeightDeg=0.1;
         oo(oi).fixationCrossDeg=1; % 0, 3, and inf are typical values.
-        oo(oi).trials=30;
+        oo(oi).trialsPerBlock=40;
         oo(oi).practicePresentations=0;
         oo(oi).targetDurationSecs=0.2; % duration of display of target and flankers
         oo(oi).repeatedTargets=0;
