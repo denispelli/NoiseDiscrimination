@@ -2406,8 +2406,14 @@ try
         oi=find(ok);
         oi=oi(1);
         if isempty(window)
-            %             error('Empty "window" pointer.');
-            r=round(oo(1).useFractionOfScreen*screenBufferRect);
+            % This is a quick hack to allow 'ideal observer' to use
+            % ReadAlphabetFromDisk, which seems to need this call to
+            % CreateLetterTextures, which needs at least a scratch window
+            % in order to create textures.
+            % We never explicitly close this window, so a lot may
+            % accumulate if you call this routine many times before all
+            % windows are closed when the applidation terminates.
+            r=round(0.5*screenBufferRect);
             r=AlignRect(r,screenBufferRect,'right','bottom');
             [window,oo(1).screenRect]=Screen('OpenWindow',cal.screen,1.0,r);
         end
@@ -2457,10 +2463,10 @@ try
     end
            
     %% PREPARE TARGET IMAGE (I.E. SIGNAL)
-    if isfield(oo(oi).signal(1),'image')
-        fprintf('%d: oo(%d).signal(1).image is %d x %d.\n',...
-            MFileLineNr,oi,size(oo(oi).signal(1).image));
-    end
+%     if isfield(oo(oi).signal(1),'image')
+%         fprintf('%d: oo(%d).signal(1).image is %d x %d.\n',...
+%             MFileLineNr,oi,size(oo(oi).signal(1).image));
+%     end
     temporaryWindow=[]; % Perhaps we should keep the temporary window open across blocks, to save time.
     for oi=1:conditions
         switch oo(oi).task
@@ -2525,10 +2531,10 @@ try
         ffprintf(ff,'%d: o.trialsPerBlock %.0f\n',oi,oo(oi).trialsPerBlock);
         
         %% COMPUTE oo(oi).signal(i).image
-        if isfield(oo(oi).signal(1),'image')
-            fprintf('%d: oo(%d).signal(1).image is %d x %d.\n',...
-                MFileLineNr,oi,size(oo(oi).signal(1).image));
-        end
+%         if isfield(oo(oi).signal(1),'image')
+%             fprintf('%d: oo(%d).signal(1).image is %d x %d.\n',...
+%                 MFileLineNr,oi,size(oo(oi).signal(1).image));
+%         end
         tic
         white1=1;
         black0=0;
@@ -3231,8 +3237,8 @@ try
         movieImage={};
         movieSaveWhich=[];
         movieFrameComputeStartSecs=GetSecs;
-        fprintf('%d: oo(%d).signal(1).image is %d x %d.\n',...
-            MFileLineNr,oi,size(oo(oi).signal(1).image));
+%         fprintf('%d: oo(%d).signal(1).image is %d x %d.\n',...
+%             MFileLineNr,oi,size(oo(oi).signal(1).image));
         for iMovieFrame=1:oo(oi).movieFrames
             % On each new frame, retain the (static) signal and regenerate the (dynamic) noise.
             switch oo(oi).task % add noise to signal
