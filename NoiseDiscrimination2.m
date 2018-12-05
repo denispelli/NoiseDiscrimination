@@ -2405,6 +2405,12 @@ try
         end
         oi=find(ok);
         oi=oi(1);
+        if isempty(window)
+            %             error('Empty "window" pointer.');
+            r=round(oo(1).useFractionOfScreen*screenBufferRect);
+            r=AlignRect(r,screenBufferRect,'right','bottom');
+            [window,oo(1).screenRect]=Screen('OpenWindow',cal.screen,1.0,r);
+        end
         [letterStruct,alphabetBounds]=CreateLetterTextures(oi,oo(oi),window);
         % Normalize intensity to be 0 to 1.
         for i=1:length(letterStruct)
