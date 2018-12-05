@@ -11,13 +11,13 @@
 % the observer's name. On subsequent blocks it will remember the observer's
 % name.
 %
-% PLEASE USE BINOCULAR VIEWING, USING BOTH EYES ALL THE TIMES.
+% Please use binocular viewing, using both eyes all the times.
 %
-% The script specifies a viewing distance of 40 cm. PLEASE USE A METER
-% STICK OR TAPE MEASURE TO MEASURE THE VIEWING DISTANCE AND ENSURE THAT THE
-% OBSERVER'S EYE IS ACTUALLY AT THE DISTANCE THAT THE PROGRAM THINKS IT IS.
-% PLEASE ENCOURAGE THE OBSERVER TO MAINTAIN THE SAME VIEWING DISTANCE FOR
-% THE WHOLE EXPERIMENT.
+% The script specifies a viewing distance of 40 cm. Please use a meter
+% stick or tape measure to measure the viewing distance and ensure that the
+% observer's eye is actually at the distance that the program thinks it is.
+% please encourage the observer to maintain the same viewing distance for
+% the whole experiment.
 %
 % denis.pelli@nyu.edu November 20, 2018
 % 646-258-7524
@@ -147,6 +147,7 @@ end
 % Test with zero and high noise.
 for i=1:length(ooo)
     o=ooo{i};
+%     o,observer='ideal';
     switch o.noiseType
         case 'gaussian'
             maxNoiseSD=0.16*2^0.5;
@@ -168,20 +169,17 @@ for i=1:length(ooo)
     ooo{i}=oo;
 end
 
-
-% Print as a table. One row per threshold.
+%% Print as a table. One row per threshold.
 oo=[];
 for i=1:length(ooo)
-    if isempty(oo)
-        oo=ooo{i};
-    else
-        oo(end+1:end+2)=ooo{i};
-    end
+    [ooo{i}(:).block]=deal(i);
+    oo=[oo ooo{i}];
 end
 t=struct2table(oo);
-disp(t); % Print the conditions in the Command Window.
+disp(t(:,{'block' 'experiment' 'targetFont' 'observer' 'noiseSD' 'targetHeightDeg'})); % Print the conditions in the Command Window.
 % return
 
+%% Measure threshold, one block per iteration.
 for i=1:length(ooo)
     oo=ooo{i};
     for oi=1:length(oo)
@@ -194,7 +192,6 @@ for i=1:length(ooo)
         oo(oi).alternatives=length(oo(oi).alphabet);
         if i==1
             oo(oi).experimenter='Darshan';
-            oo(oi).observer='';
         else
             oo(oi).experimenter=old.experimenter;
             oo(oi).observer=old.observer;
@@ -208,10 +205,11 @@ for i=1:length(ooo)
         oo(oi).targetDurationSecs=0.2; % duration of display of target and flankers
         oo(oi).repeatedTargets=0;
     end
+    ooo{i}=oo;
     ooo{1}(1).isFirstBlock=true;
     ooo{end}(1).isLastBlock=true;
+    oo=ooo{i};
     oo=NoiseDiscrimination2(oo);
-    ooo{i}=oo;
     if ~any([oo.quitBlock])
         fprintf('Finished block %d.\n',i);
     end
