@@ -155,6 +155,9 @@ if o.readAlphabetFromDisk
         r=savedAlphabet.rect;
         letterImage=savedAlphabet.images{which}(r(2)+1:r(4),r(1)+1:r(3));
         letterStruct(i).image=letterImage; % Used in NoiseDiscrimination, not in CriticalSpacing.
+        if isempty(window)
+            error('Empty "window" pointer.');
+        end
         if o.contrast==1
             letterStruct(i).texture=Screen('MakeTexture',window,uint8(letterImage));
         else
