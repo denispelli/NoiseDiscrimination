@@ -145,14 +145,16 @@ function oo=NoiseDiscrimination2(ooIn)
 % VIEWING GEOMETRY
 % o.viewingDistanceCm % Distance from eye to near point.
 % o.nearPointXYInUnitSquare=[0.8 0.5]; % Rough location of near point in o.stimlusRect re lower left corner.
-% o.nearPointXYPix % screen coordinate of point on screen closest to viewer's eye.
-% o.nearPointXYDeg % eccentricity of near point re fixation. Right & up are +.
-% 1. Set displayNearPointXYDeg to eccentricityXYDeg, roughly.
+% o.nearPointXYPix % screen coordinate of point on screen closest to viewer's eye. Y goes down.
+% o.nearPointXYDeg % eccentricity of near point re fixation. Y goes up.
+% 1a. If setNearPointEccentrictyTo=='target', set displayNearPointXYDeg=eccentricityXYDeg
+% 1b. If setNearPointEccentrictyTo=='fixation', set displayNearPointXYDeg=[0 0].
+% 1c. If setNearPointEccentrictyTo=='none', assume displayNearPointXYDeg is already set.
 % 2. Set displayNearPointXYPix according to o.nearPointXYInUnitSquare.
 % 3. Ask viewer to adjust display so desired near point is at desired
 % viewing distance and orthogonal to line of sight from eye.
-% 4. If using off-screen fixation, put it at same distance from eye, and
-% compute its position relative to near point.
+% 4. If using off-screen fixation, put fixation at same distance from eye
+% as the near point, and compute its position relative to near point.
 
 %% CURRENT ISSUES/BUGS
 % 1. I would like to add illustrations to the question screens, so you can
@@ -569,115 +571,24 @@ if nargin < 1 || ~exist('ooIn','var')
     ooIn.noInputArgument=true;
 end
 o=[];
-o.questPlusEnable=false;
-o.questPlusSteepnesses=1:0.1:5;
-o.questPlusGuessingRates=nan; % 1/alternatives
-o.questPlusLapseRates=[0:0.01:0.05];
-o.questPlusLogContrasts=-3:0.05:0.5;
-o.questPlusPrint=true;
-o.questPlusPlot=true;
-o.guess=nan;
-o.lapse=0.02;
-o.replicatePelli2006=false;
-o.clutMapLength=2048; % enough for 11-bit precision.
-o.useNative10Bit=false;
-o.useNative11Bit=true;
-o.ditherClut=61696; % Use this only on Denis's PowerBook Pro and iMac 5k.
-o.ditherClut=false; % As of June 28, 2017, there is no measurable effect of this dither control.
-o.enableClutMapping=true; % Required. Using software CLUT.
-o.assessBitDepth=false;
-o.useFractionOfScreen=false; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
+
+% From CriticalSpacing
+o.minimumTargetPix=8;
+o.isFirstBlock=true;
+o.isLastBlock=true;
+o.fixationAtCenter=false;
+
+% Geometry
+o.setNearPointEccentrictyTo='target'; % 'target' or 'fixation' or 'none'
 o.viewingDistanceCm=50; % viewing distance
 o.flipScreenHorizontally=false; % Use this when viewing the display in a mirror.
-o.observer=''; % Name of person or algorithm.
-% o.observer='brightnessSeeker'; % Existing algorithm instead of person.
-% o.observer='blackshot'; % Existing algorithm instead of person.
-% o.observer='maximum'; % Existing algorithm instead of person.
-% o.observer='ideal'; % Existing algorithm instead of person.
-o.algorithmicObservers={'ideal', 'brightnessSeeker', 'blackshot', 'maximum'};
-o.experimenter='';
 o.eyes='both'; % 'left', 'right', 'both', or 'one', which asks user to specify at runtime.
-o.trials=0; % Initialize trial counter so it's defined even if user quits early.
-o.trialsPerBlock=40; % Typically 40.
-o.block=1; % We display the the block number. When o.block==blocksDesired this program says "Congratulations" before returning.
-o.blocksDesired=1; % How many blocks you to plan to run? Used solely for display and congratulations and keeping o.window open until last block.
-o.experiment='';
-o.conditionName='';
-o.speakInstructions=false;
-o.congratulateWhenDone=true; % true or false. Speak after final block (i.e. when o.block==o.blocksDesired).
-o.quitBlock=false; % Returned value is true if the user aborts this block.
-o.quitExperiment=false; % Returned value is true if the observer wants to quit whole experiment now; no more blocks.
-o.targetKind='letter';
-% o.targetKind='gabor'; % one cycle within targetSize
-% o.targetKind='image'; % read from folder of images
-o.targetFont='Sloan';
-% o.targetFont='Bookman';
-% o.allowAnyFont=false; % Old code assumes Sloan font.
-o.allowAnyFont=true; % New code supports any font.
-o.alphabet='DHKNORSVZ';
-o.printTargetBounds=false;
-o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
-o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
-o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
-o.targetCyclesPerDeg=nan;
-o.targetGaborOrientationsDeg=[0 90]; % Orientations relative to vertical.
-o.targetGaborNames='VH';
-o.targetModulates='luminance'; % Display a luminance difference.
-% o.targetModulates='entropy'; % Display an entropy difference.
-% o.targetModulates='noise';  % Display a noise-sd difference.
-o.task='identify'; % 'identify', 'identifyAll' or '4afc' or 'rate'
-% o.thresholdParameter='size';
-% o.thresholdParameter='spacing';
-o.thresholdParameter='contrast'; % Use Quest to measure threshold 'contrast','size', 'spacing', or 'flankerContrast'.
-o.thresholdResponseTo='target'; % 'target' 'flankers'
-o.constantStimuli=[];
-o.useMethodOfConstantStimuli=false;
-o.thresholdPolarity=1; % Must be -1 or 1;
-% WARNING: size and spacing are not yet fully implemented.
-o.alternatives=9; % The number of letters to use from o.alphabet.
-o.tGuess=nan; % Specify a finite value for Quest, or nan for default.
-o.tGuessSd=nan; % Specify a finite value for Quest, or nan for default.
-o.pThreshold=0.75;
-o.steepness=[]; % Typically 1.7, 3.5, or []. [] asks NoiseDiscrimination to set this at runtime.
-o.eccentricityXYDeg=[0 0]; % eccentricity of target center re fixation, + for right & up.
 o.nearPointXYInUnitSquare=[0.5 0.5]; % location of target center on screen. [0 0]  lower right, [1 1] upper right.
-o.targetHeightDeg=2; % Target size, range 0 to inf. If you ask for too
-% much, it gives you the max possible.
-% o.targetHeightDeg=30*o.noiseCheckDeg; % standard for counting neurons
-% project
-o.minimumTargetHeightChecks=8; % Minimum target resolution, in units of the check size.
-o.fullResolutionTarget=false; % True to render signal at full resolution (targetCheckPix=1). False to use noise resolution (targetCheckPix=noiseCheckPix).
-o.targetMargin=0.25; % Minimum gap from edge of target to edge of o.stimulusRect, as fraction of o.targetHeightDeg.
-o.targetDurationSecs=0.2; % Typically 0.2 or inf (wait indefinitely for response).
-o.contrast=1; % Default is positive contrast.
-o.useFlankers=false; % Enable for crowding experiments.
-o.flankerContrast=-0.85; % Negative for dark letters.
-o.flankerContrast=nan; % Nan requests that flanker contrast always equal target contrast.
-o.flankerSpacingDeg=4;
-% o.flankerSpacingDeg=1.4*o.targetHeightDeg; % You can put this in your code, but it won't work here.
-o.flankerArrangement='radial'; % or 'tangential' or 'radialAndTangential;
-o.noiseSD=0.2; % Usually in the range 0 to 0.4. Typically 0.2.
-% o.noiseSD=0; % Usually in the range 0 to 0.4. Typically 0.2.
-o.annularNoiseSD=0; % Typically nan (i.e. use o.noiseSD) or 0.2.
-o.noiseCheckDeg=0.05; % Typically 0.05 or 0.2.
-o.noiseCheckFrames=1;
-o.noiseCheckSecs=[];
-o.noiseRadiusDeg=inf; % When o.task=4afc, the program will set o.noiseRadiusDeg=o.targetHeightDeg/2;
-o.noiseEnvelopeSpaceConstantDeg=inf;
-o.noiseRaisedCosineEdgeThicknessDeg=0; % midpoint of raised cosine is at noiseRadiusDeg.
-o.complementNoiseEnvelope=false; % Set envelope=1-envelope.
-o.noiseSpectrum='white'; % 'pink' or 'white'
-o.showBlackAnnulus=false;
-o.blackAnnulusContrast=-1; % (LBlack-o.LBackground)/o.LBackground. -1 for black line. >-1 for gray line.
-o.blackAnnulusSmallRadiusDeg=2;
-o.blackAnnulusThicknessDeg=0.1;
-o.annularNoiseBigRadiusDeg=inf; % Noise extent in deg, or inf.
-o.annularNoiseSmallRadiusDeg=inf; % Hole extent or 0 (no hole).
-o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
-o.noiseFrozenInTrial=false; % 0 or 1.  If true (1), use same noise at all locations
-o.noiseFrozenInBlock=false; % 0 or 1.  If true (1), use same noise on every trial
-o.noiseFrozenInBlockSeed=0; % 0 or positive integer. If o.noiseFrozenInBlock, then any nonzero positive integer will be used as the seed for the block.
-o.markTargetLocation=false; % Display a mark designating target position?
+o.gapFraction4afc=0.03; % Typically 0, 0.03, or 0.2. Gap, as a fraction of o.targetHeightDeg, between the four squares in 4afc task, ignored in identify task.;
+o.minScreenWidthDeg=nan;
+o.maxViewingDistanceCm=nan;
+
+% Fixation and target mark
 o.targetMarkDeg=1;
 o.useFixation=true;
 o.fixationIsOffscreen=false;
@@ -688,19 +599,35 @@ o.fixationCrossBlankedUntilSecsAfterTarget=0.6; % Pause after stimulus before di
 o.fixationCrossDrawnOnStimulus=false;
 o.blankingRadiusReTargetHeight= nan;
 o.blankingRadiusReEccentricity= 0.5;
-o.textSizeDeg=0.6;
-o.saveSnapshot=false; % 0 or 1.  If true (1), take snapshot for public presentation.;
-o.snapshotContrast=0.2; % nan to request program default. If set, this determines o.tSnapshot.;
-o.tSnapshot=nan; % log intensity, nan to request program defaults.;
-o.cropSnapshot=false; % If true (1), show only the target and noise, without unnecessary gray background.;
-o.snapshotCaptionTextSizeDeg=0.5;
-o.snapshotShowsFixationBefore=true;
-o.snapshotShowsFixationAfter=false;
-o.saveStimulus=false; % saves to o.savedStimulus;
-o.gapFraction4afc=0.03; % Typically 0, 0.03, or 0.2. Gap, as a fraction of o.targetHeightDeg, between the four squares in 4afc task, ignored in identify task.;
-o.showCropMarks=false; % mark the bounding box of the target
-o.showResponseNumbers=true;
-o.responseNumbersInCorners=false;
+
+% QUEST
+o.questPlusEnable=false;
+o.questPlusSteepnesses=1:0.1:5;
+o.questPlusGuessingRates=nan; % 1/alternatives
+o.questPlusLapseRates=[0:0.01:0.05];
+o.questPlusLogContrasts=-3:0.05:0.5;
+o.questPlusPrint=true;
+o.questPlusPlot=true;
+o.guess=nan;
+o.lapse=0.02;
+o.tGuess=nan; % Specify a finite value for Quest, or nan for default.
+o.tGuessSd=nan; % Specify a finite value for Quest, or nan for default.
+o.pThreshold=0.75;
+o.steepness=[]; % Typically 1.7, 3.5, or []. [] asks NoiseDiscrimination to set this at runtime.
+
+% CLUT
+o.clutMapLength=2048; % enough for 11-bit precision.
+o.useNative10Bit=false;
+o.useNative11Bit=true;
+o.ditherClut=61696; % Use this only on Denis's PowerBook Pro and iMac 5k.
+o.ditherClut=false; % As of June 28, 2017, there is no measurable effect of this dither control.
+o.enableClutMapping=true; % Required. Using software CLUT.
+o.assessBitDepth=false;
+
+% Debugging
+o.useFractionOfScreen=false; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
+o.rush=false; % Speed up debugging by skipping noncritical slow operations: autobrightness, brightness, and screen profile.
+o.printTargetBounds=false;
 o.printCrossCorrelation=false;
 o.printLikelihood=false;
 o.assessLinearity=false;
@@ -711,26 +638,161 @@ o.printGrayLuminance=false;
 o.assessLoadGamma=false; % diagnostic information
 o.assessGray=false; % For debugging. Diagnostic printout when we load gamma table.
 o.assessTargetLuminance=false;
-% o.observerQuadratic=-1.2; % estimated from old second harmonic data
-o.observerQuadratic=-0.7; % adjusted to fit noise letter data.
-o.backgroundEntropyLevels=2; % Value used only if o.targetModulates is 'entropy'
-o.idealEOverNThreshold=nan; % You can run the ideal first, and then provide its threshold as a reference when testing human observers.
+o.likelyTargetDurationSecs=[];
+o.measuredTargetDurationSecs=[];
+o.targetDurationListSecs=[];
+o.screenVerbosity=0; % 0 for no messages, 1 for critical, 2 for warnings, 3 default
+% See https://github.com/Psychtoolbox-3/Psychtoolbox-3/wiki/FAQ:-Control-Verbosity-and-Debugging
+o.ignoreOverlyLongTrials=true;
+o.ignoreTrial=false;
+
+% Miscellaneous
+o.replicatePelli2006=false;
 o.screen=0;
 o.screen=max(Screen('Screens'));
-o.alphabetPlacement='top'; % 'top' or 'right';
-o.replicatePelli2006=false;
 o.isWin=IsWin; % override this to simulate Windows on a Mac.
+
+% Names
+o.experimenter='';
+o.observer=''; % Name of person or algorithm.
+% o.observer='brightnessSeeker'; % Existing algorithm instead of person.
+% o.observer='blackshot'; % Existing algorithm instead of person.
+% o.observer='maximum'; % Existing algorithm instead of person.
+% o.observer='ideal'; % Existing algorithm instead of person.
+o.algorithmicObservers={'ideal', 'brightnessSeeker', 'blackshot', 'maximum'};
+o.experiment='';
+o.conditionName='';
+o.age=20; % Assume age 20, unless later specified.
+
+% Procedure
+o.trials=0; % Initialize trial counter so it's defined even if user quits early.
+o.trialsPerBlock=40; % Typically 40.
+o.block=1; % We display the the block number. When o.block==blocksDesired this program says "Congratulations" before returning.
+o.blocksDesired=1; % How many blocks you to plan to run? Used solely for display and congratulations and keeping o.window open until last block.
+o.speakInstructions=false;
+o.congratulateWhenDone=true; % true or false. Speak after final block (i.e. when o.block==o.blocksDesired).
+o.quitBlock=false; % Returned value is true if the user aborts this block.
+o.quitExperiment=false; % Returned value is true if the observer wants to quit whole experiment now; no more blocks.
+o.task='identify'; % 'identify', 'identifyAll' or '4afc' or 'rate'
+% o.thresholdParameter='size';
+% o.thresholdParameter='spacing';
+o.thresholdParameter='contrast'; % Use Quest to measure threshold 'contrast','size', 'spacing', or 'flankerContrast'.
+o.thresholdResponseTo='target'; % 'target' 'flankers'
+o.constantStimuli=[];
+o.useMethodOfConstantStimuli=false;
+o.thresholdPolarity=1; % Must be -1 or 1;
+% WARNING: size and spacing are not yet fully implemented.
+o.alternatives=9; % The number of letters to use from o.alphabet.
+o.skipTrial=0;
+o.trialsSkipped=0;
+
+% Target
+o.targetKind='letter';
+% o.targetKind='gabor'; % one cycle within targetSize
+% o.targetKind='image'; % read from folder of images
+o.targetFont='Sloan';
+% o.targetFont='Bookman';
+% o.allowAnyFont=false; % Old code assumes Sloan font.
+o.allowAnyFont=true; % New code supports any font.
+o.alphabet='DHKNORSVZ';
+o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
+o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
+o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
+o.targetCyclesPerDeg=nan;
+o.targetGaborOrientationsDeg=[0 90]; % Orientations relative to vertical.
+o.targetGaborNames='VH';
+o.targetModulates='luminance'; % Display a luminance difference.
+% o.targetModulates='entropy'; % Display an entropy difference.
+% o.targetModulates='noise';  % Display a noise-sd difference.
+o.eccentricityXYDeg=[0 0]; % eccentricity of target center re fixation, + for right & up.
+o.targetHeightDeg=2; % Target size, range 0 to inf. If you ask for too
+% much, it gives you the max possible.
+% o.targetHeightDeg=30*o.noiseCheckDeg; % standard for counting neurons
+% project
+o.minimumTargetHeightChecks=8; % Minimum target resolution, in units of the check size.
+o.fullResolutionTarget=false; % True to render signal at full resolution (targetCheckPix=1). False to use noise resolution (targetCheckPix=noiseCheckPix).
+o.targetMargin=0.25; % Minimum gap from edge of target to edge of o.stimulusRect, as fraction of o.targetHeightDeg.
+o.targetDurationSecs=0.2; % Typically 0.2 or inf (wait indefinitely for response).
+o.contrast=1; % Default is positive contrast.
+o.readAlphabetFromDisk=false;
+o.targetHeightOverWidth=nan;
+
+% Flankers
+o.useFlankers=false; % Enable for crowding experiments.
+o.flankerContrast=-0.85; % Negative for dark letters.
+o.flankerContrast=nan; % Nan requests that flanker contrast always equal target contrast.
+o.flankerSpacingDeg=4;
+% o.flankerSpacingDeg=1.4*o.targetHeightDeg; % You can put this in your code, but it won't work here.
+o.flankerArrangement='radial'; % or 'tangential' or 'radialAndTangential;
+o.borderLetter=[];
+
+% Noise
+o.noiseSD=0.2; % Usually in the range 0 to 0.4. Typically 0.2.
+% o.noiseSD=0; % Usually in the range 0 to 0.4. Typically 0.2.
+o.annularNoiseSD=0; % Typically nan (i.e. use o.noiseSD) or 0.2.
+o.annularNoiseEnvelopeRadiusDeg=0;
+o.noiseCheckDeg=0.05; % Typically 0.05 or 0.2.
+o.noiseCheckFrames=1;
+o.noiseCheckSecs=[];
+o.noiseRadiusDeg=inf; % When o.task=4afc, the program will set o.noiseRadiusDeg=o.targetHeightDeg/2;
+o.noiseEnvelopeSpaceConstantDeg=inf;
+o.noiseRaisedCosineEdgeThicknessDeg=0; % midpoint of raised cosine is at noiseRadiusDeg.
+o.complementNoiseEnvelope=false; % Set envelope=1-envelope.
+o.noiseSpectrum='white'; % 'pink' or 'white'
+o.annularNoiseBigRadiusDeg=inf; % Noise extent in deg, or inf.
+o.annularNoiseSmallRadiusDeg=inf; % Hole extent or 0 (no hole).
+o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
+o.noiseFrozenInTrial=false; % 0 or 1.  If true (1), use same noise at all locations
+o.noiseFrozenInBlock=false; % 0 or 1.  If true (1), use same noise on every trial
+o.noiseFrozenInBlockSeed=0; % 0 or positive integer. If o.noiseFrozenInBlock, then any nonzero positive integer will be used as the seed for the block.
+o.markTargetLocation=false; % Display a mark designating target position?
+o.backgroundEntropyLevels=2; % Value used only if o.targetModulates is 'entropy'
 o.movieFrameFlipSecs=[]; % flip times (useful to calculate frame drops)
 o.useDynamicNoiseMovie=false; % false for static noise
 o.moviePreSecs=0;
 o.moviePostSecs=0;
-o.likelyTargetDurationSecs=[];
-o.measuredTargetDurationSecs=[];
+o.seed=[];
+
+% Annulus (hardly ever used)
+o.showBlackAnnulus=false;
+o.blackAnnulusContrast=-1; % (LBlack-o.LBackground)/o.LBackground. -1 for black line. >-1 for gray line.
+o.blackAnnulusSmallRadiusDeg=2;
+o.blackAnnulusThicknessDeg=0.1;
+
+% Snapshot
+o.saveSnapshot=false; % 0 or 1.  If true (1), take snapshot for public presentation.;
+o.snapshotContrast=0.2; % nan to request program default. If set, this determines o.tSnapshot.;
+o.tSnapshot=nan; % log intensity, nan to request program defaults.;
+o.cropSnapshot=false; % If true (1), show only the target and noise, without unnecessary gray background.;
+o.snapshotCaptionTextSizeDeg=0.5;
+o.snapshotShowsFixationBefore=true;
+o.snapshotShowsFixationAfter=false;
+o.saveStimulus=false; % saves to o.savedStimulus;
+o.snapshotCaptionTextSize=[];
+
+% Screen annotations
+o.showCropMarks=false; % mark the bounding box of the target
+o.showResponseNumbers=true;
+o.responseNumbersInCorners=false;
+o.alphabetPlacement='top'; % 'top' or 'right';
+o.textSizeDeg=0.6;
+o.textMarginPix=0;
+
+% Response screen
+o.responseScreenAbsoluteContrast=0.99; % Set to [] to maximize possible contrast using CLUT for o.contrast.
+o.labelAnswers=[]; % Add roman letter label to each possible response, for graphics and foreign letters.
+o.responseLabels='abcdefghijklmnopqrstuvwxyz1234567890';
+
+% o.observerQuadratic=-1.2; % estimated from old second harmonic data
+o.observerQuadratic=-0.7; % adjusted to fit noise letter data.
+o.idealEOverNThreshold=nan; % You can run the ideal first, and then provide its threshold as a reference when testing human observers.
+
+% Duration
 o.movieFrameFlipSecs=[];
 o.printDurations=false;
 o.newClutForEachImage=true;
-o.minScreenWidthDeg=nan;
-o.maxViewingDistanceCm=nan;
+
+% Luminance
 o.useFilter=false;
 o.filterTransmission=0.115; % Less than one for dark glasses or neutral density filter. 0.115 for our dark glasses.
 o.desiredRetinalIlluminanceTd=[];
@@ -743,19 +805,16 @@ o.luminanceAtEye=[]; % Set by ComputeNPhoton(), line 2073.
 o.retinalIlluminanceTd=[];
 o.pupilDiameterMm=[];
 o.pupilKnown=false;
-o.annularNoiseEnvelopeRadiusDeg=0;
-o.eyes='both';
-o.readAlphabetFromDisk=false;
-o.borderLetter=[];
-o.seed=[];
-o.targetHeightOverWidth=nan;
+
+% Images
 o.printSignalImages=false;
 o.signalImagesFolder='';
 o.signalImagesAreGammaCorrected=true;
 o.convertSignalImageToGray=false;
-o.skipTrial=0;
-o.trialsSkipped=0;
-o.responseScreenAbsoluteContrast=0.99; % Set to [] to maximize possible contrast using CLUT for o.contrast.
+o.ratingThreshold=4*ones(1,10); % One value per element of o.alphabet.
+o.signalImagesCacheCode=[];
+
+% Data
 o.transcript.responseTimeSecs=[]; % Time of response re o.transcript.stimulusOnsetSecs, for each trial.
 o.transcript.stimulusOnsetSecs=[]; % Value of GetSecs at stimulus onset, for each trial.
 o.transcript.condition=[];
@@ -763,34 +822,27 @@ o.printImageStatistics=false;
 o.localHostName=''; % Copy this from cal.localHostName
 o.dataFilename='';
 o.dataFolder='';
-o.textMarginPix=0;
-o.ratingThreshold=4*ones(1,10); % One value per element of o.alphabet.
-o.ignoreOverlyLongTrials=true;
-o.ignoreTrial=false;
-o.targetDurationListSecs=[];
+
+% Output variables
 o.conditionList=1; % An array of integer condition numbers.
-o.signalImagesCacheCode=[];
-o.age=20; % Assume age 20, unless later specified.
 o.approxRequiredNumber=[];
-o.snapshotCaptionTextSize=[];
 o.printLogOfIdeal=false;
 o.N=[];
 o.E=[];
 o.Neq=[];
 o.E0=[];
 o.NPhoton=[];
-o.screenVerbosity=0; % 0 for no messages, 1 for critical, 2 for warnings, 3 default
-% See https://github.com/Psychtoolbox-3/Psychtoolbox-3/wiki/FAQ:-Control-Verbosity-and-Debugging
 
-% From CriticalSpacing
-o.minimumTargetPix=8;
-o.isFirstBlock=true;
-o.isLastBlock=true;
-o.fixationAtCenter=false;
-o.responseLabels='abcdefghijklmnopqrstuvwxyz1234567890';
-o.labelAnswers=[]; % Add roman letter label to each possible response, for graphics and foreign letters.
+% The user can only set fields that are initialized above. This is meant to
+% catch any mistakes where the user tries to set a field that isn't used
+% below. We ignore input fields that are known output fields. Any field in
+% the input argument o that is neither already initialized (immediately
+% above) or a known output field is flagged as a fatal error, so it gets
+% fixed immediately. Typically the unrecognized input field is a typo, so
+% ignoring it would unhelpfully run a condition different from what the
+% experimenter wanted.
 
-o.rush=false; % Speed up debugging by skipping noncritical slow operations: autobrightness, brightness, and screen profile.
+% Keyboard
 o.deviceIndex=-1; % -1 for all keyboards.
 o.deviceIndex=-3; % -3 for all keyboard/keypad devices.
 % o.deviceIndex=3; % for my built-in keyboard, according to PsychHIDTest
@@ -811,7 +863,7 @@ o.deviceIndex=[]; % Default. This runs MUCH more reliably. Not sure why.
 %
 % My temporary work-around is to call KbCheck([]), but this won't support
 % my wireless keyboards.
-
+%
 % "In my experience the special negative device indexes have been flaky on
 % OS X for years. For example, when using an external Bluetooth keyboard, a
 % device index of -1 does not detect the external keyboard. Rather than
@@ -823,15 +875,6 @@ o.deviceIndex=[]; % Default. This runs MUCH more reliably. Not sure why.
 % iKeyboards=ismember([d(:).usageValue],[6]); % Keyboard
 % dk=d(iKeyboards);
 % [dk.index] % Vector of indices of the keyboards.
-
-% The user can only set fields that are initialized above. This is meant to
-% catch any mistakes where the user tries to set a field that isn't used
-% below. We ignore input fields that are known output fields. Any field in
-% the input argument o that is neither already initialized (immediately
-% above) or a known output field is flagged as a fatal error, so it gets
-% fixed immediately. Typically the unrecognized input field is a typo, so
-% ignoring it would unhelpfully run a condition different from what the
-% experimenter wanted.
 
 %% READ USER-SUPPLIED oo PARAMETERS
 conditions=length(ooIn);
