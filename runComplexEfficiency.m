@@ -130,11 +130,11 @@ if 1
     ooo{end+1}=o;
 end
 
-% Randomly interleave testing left and right.
+% % Randomly interleave testing left and right.
 % for i=1:length(ooo)
 %     o=ooo{i};
 %     o.block=i;
-%     o.fixationAtCenter=true;
+%     o.setNearPointEccentricityTo='fixation';
 %     o.nearPointXYInUnitSquare=[0.5 0.5];
 %     o.viewingDistanceCm=40;
 %     o.eccentricityXYDeg=[-10 0];
@@ -146,27 +146,28 @@ end
 
 % Test with zero and high noise.
 for i=1:length(ooo)
-    o=ooo{i};
-%     o,observer='ideal';
-    switch o.noiseType
-        case 'gaussian'
-            maxNoiseSD=0.16*2^0.5;
-            p2=0.5;
-        case 'binary'
-            maxNoiseSD=0.16*2^2;
-            p2=2;
+    oo=ooo{i};
+    for oi=1:length(oo)
+        oo(oi).observer='';
+        %   oo(oi).observer='ideal';
+        switch oo(oi).noiseType
+            case 'gaussian'
+                maxNoiseSD=0.16*2^0.5;
+                p2=0.5;
+            case 'binary'
+                maxNoiseSD=0.16*2^2;
+                p2=2;
+        end
+        oo(oi).noiseCheckDeg=oo(oi).targetHeightDeg/40;
+        oo(oi).block=i;
+        oo(oi).setNearPointEccentricityTo='fixation';
+        oo(oi).nearPointXYInUnitSquare=[0.5 0.5];
+        oo(oi).viewingDistanceCm=40;
+        oo(oi).noiseSD=0;
     end
-    o.noiseCheckDeg=o.targetHeightDeg/40;
-    o.block=i;
-    o.fixationAtCenter=true;
-    o.nearPointXYInUnitSquare=[0.5 0.5];
-    o.viewingDistanceCm=40;
-    o.eccentricityXYDeg=[0 0];
-    o.noiseSD=0;
-    oo=o;
-    o.noiseSD=maxNoiseSD;
-    oo(2)=o;
-    ooo{i}=oo;
+    ooNoise=oo;
+    [ooNoise.noiseSD]=deal(maxNoiseSD);
+    ooo{i}=[oo ooNoise];
 end
 
 %% Print as a table. One row per threshold.
@@ -176,7 +177,7 @@ for i=1:length(ooo)
     oo=[oo ooo{i}];
 end
 t=struct2table(oo);
-disp(t(:,{'block' 'experiment' 'targetFont' 'observer' 'noiseSD' 'targetHeightDeg'})); % Print the conditions in the Command Window.
+disp(t(:,{'block' 'experiment' 'targetFont' 'observer' 'noiseSD' 'targetHeightDeg' 'eccentricityXYDeg'})); % Print the conditions in the Command Window.
 % return
 
 %% Measure threshold, one block per iteration.
