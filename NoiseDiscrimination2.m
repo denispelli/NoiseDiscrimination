@@ -147,10 +147,11 @@ function oo=NoiseDiscrimination2(ooIn)
 % o.nearPointXYInUnitSquare=[0.8 0.5]; % Rough location of near point in o.stimlusRect re lower left corner.
 % o.nearPointXYPix % screen coordinate of point on screen closest to viewer's eye. Y goes down.
 % o.nearPointXYDeg % eccentricity of near point re fixation. Y goes up.
-% 1a. If setNearPointEccentrictyTo=='target', set displayNearPointXYDeg=eccentricityXYDeg
-% 1b. If setNearPointEccentrictyTo=='fixation', set displayNearPointXYDeg=[0 0].
-% 1c. If setNearPointEccentrictyTo=='none', assume displayNearPointXYDeg is already set.
-% 2. Set displayNearPointXYPix according to o.nearPointXYInUnitSquare.
+% 1. Set nearPointXYPix according to o.nearPointXYInUnitSquare.
+% 2. If setNearPointEccentricityTo==
+% 'target', then set nearPointXYDeg=eccentricityXYDeg
+% 'fixation', then set nearPointXYDeg=[0 0].
+% 'value', then assume nearPointXYDeg is already set.
 % 3. Ask viewer to adjust display so desired near point is at desired
 % viewing distance and orthogonal to line of sight from eye.
 % 4. If using off-screen fixation, put fixation at same distance from eye
@@ -576,10 +577,10 @@ o=[];
 o.minimumTargetPix=8;
 o.isFirstBlock=true;
 o.isLastBlock=true;
-o.fixationAtCenter=false;
 
 % Geometry
-o.setNearPointEccentrictyTo='target'; % 'target' or 'fixation' or 'none'
+o.nearPointXYDeg=[0 0]; % Set this explicitly if you set setNearPointEccentricityTo='value'.
+o.setNearPointEccentricityTo='target'; % 'target' or 'fixation' or 'value'
 o.viewingDistanceCm=50; % viewing distance
 o.flipScreenHorizontally=false; % Use this when viewing the display in a mirror.
 o.eyes='both'; % 'left', 'right', 'both', or 'one', which asks user to specify at runtime.
@@ -902,7 +903,7 @@ knownOutputFields={'labelAnswers' 'beginningTime' ...
     'questSd' 'p' 'trials' 'EOverN' 'efficiency' 'targetDurationSecsMean'...
     'targetDurationSecsSD' 'E' 'signal' 'newCal'...
     'beamPositionQueriesAvailable' ...
-    'drawTextPlugin' 'fixationXYPix' 'maxEntry' 'nearPointXYDeg'...
+    'drawTextPlugin' 'fixationXYPix' 'maxEntry' ...
     'nearPointXYPix' 'pixPerCm' 'psychtoolboxKernelDriverLoaded'...
     'targetXYPix' 'textLineLength' 'textSize' 'unknownFields'...
     'speakEachLetter' 'targetCheckDeg' 'targetCheckPix'...
@@ -918,9 +919,9 @@ knownOutputFields={'labelAnswers' 'beginningTime' ...
     'block'...
     'A' 'LAT' 'NPhoton' 'logFilename' 'screenrect' 'screenRect'...
     'useCentralNoiseEnvelope' 'useCentralNoiseMask'...
-    'fixationAtCenter' 'fixationLineWeightDeg' 'isFirstBlock' ... % From CriticalSpacing
+     'fixationLineWeightDeg' 'isFirstBlock' ... % From CriticalSpacing
     'isLastBlock'  'minimumTargetPix' ...
-    'practicePresentations' 'repeatedTargets'
+    'practicePresentations' 'repeatedTargets' 'isNearPointAdjustible'
     };
 unknownFields={};
 for oi=1:conditions
@@ -2068,23 +2069,24 @@ try
     % VIEWING GEOMETRY: DISPLAY NEAR POINT
     % Typically, we place the target at the near point. However, that
     % is not true when we introduce uncertainty about target point. It
-    % would defeat the point. I often have left vs right uncertainty, i.e.
-    % an eccentricity of -10,0 vs +10,0 deg. In that case it's best to
-    % place fixation at the near point. The flag 
-    % o.fixationAtCenter requests fixation at the center of the screen.
+    % would defeat the point. 
+    % 1. Set nearPointXYPix according to o.nearPointXYInUnitSquare.
+    % 2. If setNearPointEccentricityTo==
+    % 'target', then set nearPointXYDeg=eccentricityXYDeg
+    % 'fixation', then set nearPointXYDeg=[0 0].
+    % 'value', then assume nearPointXYDeg is already set.
+    % 3. Ask viewer to adjust display so desired near point is at desired
+    % viewing distance and orthogonal to line of sight from eye.
+    % 4. If using off-screen fixation, put fixation at same distance from eye
+    % as the near point.
+    % I often have left vs right uncertainty, i.e. an eccentricity of -10,0
+    % vs +10,0 deg. In that case it's best to place fixation at the near
+    % point.
     % o.nearPointXYInUnitSquare % Usually the desired target location in o.stimulusRect re lower-left corner.
     % o.nearPointXYPix % Near-point screen coordinate.
     % o.viewingDistanceCm % Distance from eye to near point.
     % o.nearPointXYDeg % (x,y) eccentricity of near point.
-    % 1. Assign target ecc. to display near point.
-    % 2. Pick a good (x,y) on the screen for the display near point.
-    % 3. Ask viewer to adjust display to adjust display distance from
-    % viewer's eye so (x,y) is at desired viewing distance and orthogonal
-    % to line of sight from eye to (x,y).
-    % 4. If using off-screen fixation, put it at same distance (as near
-    % point) from eye, and compute its position, left or right of (x,y) to
-    % put (x,y) at desired ecc.
-    
+     
     % THE CANVAS: o.canvasSize & canvasRect. The arrays that hold the noise
     % and the stimulus all have size o.canvasSize. canvasRect is just [0 0
     % canvasSize(2) canvasSize(1)]. o.canvasSize is clipped (if necessary)
@@ -2107,18 +2109,31 @@ try
     if length(oo(1).eccentricityXYDeg)~=2
         error('o.eccentricityXYDeg must be an array of two numbers.');
     end
-    % Note that any block may randomly interleave conditions with different
-    % target locations. And interpretation may require that the observer not
-    % know, in which case the location of fixation must be independent of
-    % target location.
-    oo(1).nearPointXYDeg=oo(1).eccentricityXYDeg;
-    if oo(1).fixationAtCenter
-        oo(1).nearPointXYDeg=[0 0];
+    % If a block randomly interleaves several conditions with different
+    % target locations and your interpretation demands that the observer
+    % not know where the target is, then the location of fixation should
+    % not give away target location. In that case, you must not select
+    % 'target', and should instead select 'fixation' or 'value' in every 
+    % condition.
+    switch oo(1).setNearPointEccentricityTo
+        case 'target'
+            oo(1).nearPointXYDeg=oo(1).eccentricityXYDeg;
+        case 'fixation'
+            oo(1).nearPointXYDeg=[0 0];
+        case 'value'
+            % Assume user has set oo(1).nearPointXYDeg.
+        otherwise
+            error('o.setNearPointEccentricityTo has illegal value ''%s''.',...
+                oo(1).setNearPointEccentricityTo);
     end
-    
+        
     fprintf('*Waiting for observer to set viewing distance.\n');
     oo(1).nearPointXYPix=[]; % Add field to struct.
+    oo(1).isNearPointAdjustible = length(oo)==1 || all(ismember([oo.setNearPointEccentricityTo],'target'));
     oo(1)=SetUpNearPoint(oo(1));
+    % Force all conditions to use the same near point. The physics of the
+    % situation guarantee this provided the position of the display and
+    % center of the viewing eye do not move between trials.
     [oo.nearPointXYPix]=deal(oo(1).nearPointXYPix);
     [oo.nearPointXYInUnitSquare]=deal(oo(1).nearPointXYInUnitSquare);
     if oo(1).quitExperiment
@@ -2132,14 +2147,19 @@ try
     oo(1).fixationIsOffscreen=[];
     oo(1).targetXYPix=[];
     oo(1)=SetUpFixation(oo(1),ff);
+    % Arbitrarily assume that all conditions have same fixation.
     [oo.fixationIsOffscreen]=deal(oo(1).fixationIsOffscreen);
-    [oo.targetXYPix]=deal(oo(1).targetXYPix);
     [oo.fixationXYPix]=deal(oo(1).fixationXYPix);
     [oo.fixationIsOffscreen]=deal(oo.fixationIsOffscreen);
+    % Conditions may have different target eccentricities.
+    for oi=1:length(oo)
+        oo(oi).targetXYPix=XYPixOfXYDeg(oo(oi),oo(oi).eccentricityXYDeg);
+    end
     if oo(1).quitExperiment
         CloseWindowsAndCleanup(oo)
         return
     end
+    % Force all conditions to use the same near point.
     [oo.nearPointXYDeg]=deal(oo(1).nearPointXYDeg);
     gapPix=round(oo(1).gapFraction4afc*oo(1).targetHeightPix);
     
@@ -2545,8 +2565,8 @@ try
         end
         oo(oi).targetXYInUnitSquare=(oo(oi).targetXYPix-oo(oi).stimulusRect(1:2))./[RectWidth(oo(oi).stimulusRect) RectHeight(oo(oi).stimulusRect)];
         oo(oi).targetXYInUnitSquare(2)=1-oo(oi).targetXYInUnitSquare(2);
-        string=sprintf('%d: Target is at (%.1f %.1f) deg, (%.2f %.2f) in unit square. ',...
-            oi,oo(oi).eccentricityXYDeg,oo(oi).targetXYInUnitSquare);
+        string=sprintf('%d: Target is at (%.1f %.1f) deg, (%.2f %.2f) in unit square, (%.0f %.0f) screen coord. ',...
+            oi,oo(oi).eccentricityXYDeg,oo(oi).targetXYInUnitSquare,oo(oi).targetXYPix);
         if oo(oi).useFixation
             if oo(oi).fixationIsOffscreen
                 string=[string 'Using off-screen fixation mark.'];
@@ -2557,6 +2577,10 @@ try
             string=[string 'No fixation.'];
         end
         ffprintf(ff,'%s\n',string);
+        ffprintf(ff,'o.eccentricityXYDeg (%.1f %.1f), pix (%.0f %.0f)\n',...
+            oo(oi).eccentricityXYDeg,XYPixOfXYDeg(oo(oi),oo(oi).eccentricityXYDeg));
+        ffprintf(ff,'%d: o.setNearPointEccentricityTo ''%s'', o.nearPointXYDeg (%.0f %.0f), o.nearPointXYPix (%.0f %.0f)\n',...
+            oi,oo(oi).setNearPointEccentricityTo,oo(oi).nearPointXYDeg,oo(oi).nearPointXYPix);
         oo(oi).N=oo(oi).noiseCheckPix^2*oo(oi).pixPerDeg^-2*oo(oi).noiseSD^2;
         if oo(oi).useDynamicNoiseMovie
             oo(oi).noiseCheckSecs=1/movieFrameRate;
@@ -5407,7 +5431,7 @@ xy=o.nearPointXYInUnitSquare;
 xy(2)=1-xy(2); % Move origin from lower left to upper left.
 o.nearPointXYPix=xy.*[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)];
 o.nearPointXYPix=o.nearPointXYPix+o.stimulusRect(1:2);
-% o.nearPointXYPix is screen coordinate.
+% o.nearPointXYPix is a screen coordinate.
 % Require margin between target and edge of stimulusRect.
 r=InsetRect(o.stimulusRect,o.targetMargin*o.targetHeightDeg*o.pixPerDeg,o.targetMargin*o.targetHeightDeg*o.pixPerDeg);
 if ~all(r(1:2)<=r(3:4))
@@ -5418,16 +5442,20 @@ if ~all(r(1:2)<=r(3:4))
         o.viewingDistanceCm,o.targetHeightDeg);
 end
 if ~IsXYInRect(o.nearPointXYPix,r)
-    % Adjust position of near point so target fits on screen.
-    o.nearPointXYPix=LimitXYToRect(o.nearPointXYPix,r);
-    % Update o.nearPointXYInUnitSquare.
-    xy=o.nearPointXYPix;
-    xy=xy-o.stimulusRect(1:2);
-    xy=xy./[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)];
-    xy(2)=1-xy(2);
-    ffprintf(ff,'NOTE: Adjusting o.nearPointXYInUnitSquare from [%.2f %.2f] to [%.2f %.2f] to fit %.1f deg target (with %.2f o.targetMargin) on screen.',...
-        o.nearPointXYInUnitSquare,xy,o.targetHeightDeg,o.targetMargin);
-    o.nearPointXYInUnitSquare=xy;
+    if o.isNearPointAdjustible
+        % Adjust position of near point so target fits on screen.
+        o.nearPointXYPix=LimitXYToRect(o.nearPointXYPix,r);
+        % Update o.nearPointXYInUnitSquare.
+        xy=o.nearPointXYPix;
+        xy=xy-o.stimulusRect(1:2);
+        xy=xy./[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)];
+        xy(2)=1-xy(2);
+        ffprintf(ff,'NOTE: Adjusting o.nearPointXYInUnitSquare from [%.2f %.2f] to [%.2f %.2f] to fit %.1f deg target (with %.2f o.targetMargin) on screen.',...
+            o.nearPointXYInUnitSquare,xy,o.targetHeightDeg,o.targetMargin);
+        o.nearPointXYInUnitSquare=xy;
+    else
+        error('Target does not fit on screen. Try adjusting the near point.');
+    end
 end
 if isempty(o.window)
     return
@@ -5468,6 +5496,8 @@ end % function SetUpNearPoint
 
 %% SetUpFixation
 function o=SetUpFixation(o,ff)
+% We assume all conditions have same fixation.
+% This routine does not read or write the target eccentricity.
 escapeChar=char(27);
 graveAccentChar='`';
 returnChar=char(13);
@@ -5585,7 +5615,6 @@ else
         o.fixationIsOffscreen=false;
     end
 end
-o.targetXYPix=XYPixOfXYDeg(o,o.eccentricityXYDeg);
 if o.fixationCrossBlankedNearTarget
     ffprintf(ff,'Fixation cross is blanked near target. No delay in showing fixation after target.\n');
 else
