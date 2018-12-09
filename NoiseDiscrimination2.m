@@ -1088,7 +1088,8 @@ if isempty(o.window) && ~ismember(o.observer,o.algorithmicObservers) && ~o.rushT
                 % and issue sca to close the window before rethrowing the
                 % error.
                 Brightness(cal.screen,cal.brightnessSetting); % Set brightness.
-                cal.brightnessReading=Brightness(cal.screen); % Read brightness.
+%                 cal.brightnessReading=Brightness(cal.screen); % Read brightness.
+                cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
             else
                 Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
                 cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
@@ -1115,7 +1116,7 @@ if isempty(o.window) && ~ismember(o.observer,o.algorithmicObservers) && ~o.rushT
         % in the Preferences Display panel, and macOS later unpredictably
         % resets the brightness to the level of the slider, not what we
         % asked for. This is a macOS bug in the Apple call used by Screen.
-        ffprintf(ff,'WARNING: This computer does not support control of brightness of this screen.');
+        ffprintf(ff,'\nWARNING: This computer does not support control of brightness of this screen.\n');
         msg=getReport(e);
         ffprintf(ff,msg);
         cal.brightnessReading=NaN;
