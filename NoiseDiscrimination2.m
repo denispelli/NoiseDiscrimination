@@ -1,8 +1,8 @@
 function oo=NoiseDiscrimination2(ooIn)
 % oo=NoiseDiscrimination2(oo);
 %
-% You can now pass a struct array, one element per condition, and it
-% will run them all interleaved.
+% You can now pass a struct array, one element per condition, and
+% NoiseDiscrimination2 will run them all randomly interleaved.
 %
 % Pass all your parameters in the "oo" struct, which will be returned with
 % all the results as additional fields. NoiseDiscrimination may adjust some
@@ -501,7 +501,7 @@ end
 % variable: o.centralNoiseEnvelopeE1DegDeg
 
 %% GLOBAL AND PERSISTENT
-global rush % Tells CloseWindowsAndCleanup to skip restoration of brightness.
+global rushToDebug % Tells CloseWindowsAndCleanup to skip restoration of brightness.
 global isLastBlock % CloseWindowsAndCleanup skips restoration unless isLastBlock is true.
 persistent window % Retain pointer to open window when this function exits and is called again.
 % This must persist from block to block.
@@ -579,12 +579,12 @@ o.isFirstBlock=true;
 o.isLastBlock=true;
 
 % Geometry
-o.nearPointXYDeg=[0 0]; % Set this explicitly if you set setNearPointEccentricityTo='value'.
+o.nearPointXYInUnitSquare=[0.5 0.5]; % location of target center on screen. [0 0]  lower right, [1 1] upper right.
 o.setNearPointEccentricityTo='target'; % 'target' or 'fixation' or 'value'
+o.nearPointXYDeg=[0 0]; % Overwritten unless o.setNearPointEccentricityTo='value'.
 o.viewingDistanceCm=50; % viewing distance
 o.flipScreenHorizontally=false; % Use this when viewing the display in a mirror.
 o.eyes='both'; % 'left', 'right', 'both', or 'one', which asks user to specify at runtime.
-o.nearPointXYInUnitSquare=[0.5 0.5]; % location of target center on screen. [0 0]  lower right, [1 1] upper right.
 o.gapFraction4afc=0.03; % Typically 0, 0.03, or 0.2. Gap, as a fraction of o.targetHeightDeg, between the four squares in 4afc task, ignored in identify task.;
 o.minScreenWidthDeg=nan;
 o.maxViewingDistanceCm=nan;
@@ -626,8 +626,8 @@ o.enableClutMapping=true; % Required. Using software CLUT.
 o.assessBitDepth=false;
 
 % Debugging
-o.useFractionOfScreen=false; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
-o.rush=false; % Speed up debugging by skipping noncritical slow operations: autobrightness, brightness, and screen profile.
+o.useFractionOfScreenToDebug=false; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
+o.rushToDebug=false; % Speed up debugging by skipping noncritical slow operations: autobrightness, brightness, and screen profile.
 o.printTargetBounds=false;
 o.printCrossCorrelation=false;
 o.printLikelihood=false;
@@ -921,7 +921,7 @@ knownOutputFields={'labelAnswers' 'beginningTime' ...
     'useCentralNoiseEnvelope' 'useCentralNoiseMask'...
      'fixationLineWeightDeg' 'isFirstBlock' ... % From CriticalSpacing
     'isLastBlock'  'minimumTargetPix' ...
-    'practicePresentations' 'repeatedTargets' 'isNearPointAdjustible'
+    'practicePresentations' 'repeatedTargets' 'okToShiftCoordinates'
     };
 unknownFields={};
 for oi=1:conditions
@@ -954,8 +954,8 @@ Screen('Preference','Verbosity',o.screenVerbosity);
 screenBufferRect=Screen('Rect',o.screen);
 o.screenRect=Screen('Rect',o.screen,1);
 resolution=Screen('Resolution',o.screen);
-if o.useFractionOfScreen
-    o.screenRect=round(o.useFractionOfScreen*o.screenRect);
+if o.useFractionOfScreenToDebug
+    o.screenRect=round(o.useFractionOfScreenToDebug*o.screenRect);
 end
 [oo.screenRect]=deal(o.screenRect);
 clear o
@@ -1071,9 +1071,9 @@ clear o
 % Keeping this here is no longer necessary. New version of AutoBrightness,
 % in CriticalSpacing, can be called while windows are open.
 o=oo(1);
-rush=o.rush; % Set global flag read by CloseWindowsAndCleanup.
+rushToDebug=o.rushToDebug; % Set global flag read by CloseWindowsAndCleanup.
 isLastBlock=o.isLastBlock; % Set global flag read by CloseWindowsAndCleanup.
-if isempty(o.window) && ~ismember(o.observer,o.algorithmicObservers) && ~o.rush && o.isFirstBlock
+if isempty(o.window) && ~ismember(o.observer,o.algorithmicObservers) && ~o.rushToDebug && o.isFirstBlock
     useBrightnessFunction=true;
     try
         fprintf('Setting Brightness. ... ');
@@ -1134,10 +1134,17 @@ end % if isempty(o.window)
 clear o
 oo=SortFields(oo);
 
+if oo(1).useFractionOfScreenToDebug
+    ffprintf(ff,'WARNING: Using o.useFractionOfScreenToDebug. This may invalidate all results.\n');
+end
+if oo(1).rushToDebug
+    ffprintf(ff,'WARNING: Using o.rushToDebug. This may invalidate all results.\n');
+end
+
 %% OnCleanup
 % Once we call onCleanup, when this program terminates,
 % CloseWindowsAndCleanup will run  and close any open windows. It runs when
-% this function terminates for any reason, whether by reaching the end, the
+% this function terminates for any reason, whether by returning normally, the
 % posting of an error here or in any function called from here, or the user
 % hitting control-C.
 cleanup=onCleanup(@() CloseWindowsAndCleanup);
@@ -1150,7 +1157,7 @@ try
     %% OPEN WINDOW
     Screen('Preference', 'SkipSyncTests',1);
     Screen('Preference','TextAntiAliasing',1);
-    if o.useFractionOfScreen
+    if o.useFractionOfScreenToDebug
         ffprintf(ff,'Using tiny window for debugging.\n');
     end
     if isempty(o.window) && ~ismember(o.observer,o.algorithmicObservers)
@@ -1176,17 +1183,17 @@ try
         end
         fprintf('Opening the window. ...\n'); % New line for Screen warnings.
         s=GetSecs;
-        if ~o.useFractionOfScreen
+        if ~o.useFractionOfScreenToDebug
             [window,o.screenRect]=PsychImaging('OpenWindow',cal.screen,1.0);
         else
-            r=round(o.useFractionOfScreen*screenBufferRect);
+            r=round(o.useFractionOfScreenToDebug*screenBufferRect);
             r=AlignRect(r,screenBufferRect,'right','bottom');
             [window,o.screenRect]=PsychImaging('OpenWindow',cal.screen,1.0,r);
         end
         fprintf('Done opening window (%.1f s).\n',GetSecs-s);
         [oo.window]=deal(window);
         [oo.screenRect]=deal(o.screenRect);
-        if ~o.useFractionOfScreen
+        if ~o.useFractionOfScreenToDebug
             HideCursor;
         end
         
@@ -1225,8 +1232,8 @@ try
         end
     end
     o.screenRect=Screen('Rect',cal.screen,1); % screen rect in UseRetinaResolution mode
-    if o.useFractionOfScreen
-        o.screenRect=round(o.useFractionOfScreen*o.screenRect);
+    if o.useFractionOfScreenToDebug
+        o.screenRect=round(o.useFractionOfScreenToDebug*o.screenRect);
     end
     [oo.screenRect]=deal(o.screenRect);
     clear o
@@ -1709,7 +1716,7 @@ try
     ffprintf(ff,'%s %s calibrated by %s on %s.\n',cal.localHostName,cal.macModelName,cal.calibratedBy,cal.datestr);
     ffprintf(ff,'%s\n',cal.notes);
     ffprintf(ff,'cal.ScreenConfigureDisplayBrightnessWorks=%.0f;\n',cal.ScreenConfigureDisplayBrightnessWorks);
-    if ~all(ismember({oo.observer},oo(oi).algorithmicObservers)) && ismac && isfield(cal,'profile') && ~any([oo.rush]) && any([oo.isFirstBlock])
+    if ~all(ismember({oo.observer},oo(oi).algorithmicObservers)) && ismac && isfield(cal,'profile') && ~any([oo.rushToDebug]) && any([oo.isFirstBlock])
         ffprintf(ff,'cal.profile=''%s'';\n',cal.profile);
         fprintf('Setting screen profile. ... ');
         s=GetSecs;
@@ -2065,27 +2072,7 @@ try
         end
     end
     
-    %% LOCATE FIXATION AND NEAR-POINT OF DISPLAY
-    % VIEWING GEOMETRY: DISPLAY NEAR POINT
-    % Typically, we place the target at the near point. However, that
-    % is not true when we introduce uncertainty about target point. It
-    % would defeat the point. 
-    % 1. Set nearPointXYPix according to o.nearPointXYInUnitSquare.
-    % 2. If setNearPointEccentricityTo==
-    % 'target', then set nearPointXYDeg=eccentricityXYDeg
-    % 'fixation', then set nearPointXYDeg=[0 0].
-    % 'value', then assume nearPointXYDeg is already set.
-    % 3. Ask viewer to adjust display so desired near point is at desired
-    % viewing distance and orthogonal to line of sight from eye.
-    % 4. If using off-screen fixation, put fixation at same distance from eye
-    % as the near point.
-    % I often have left vs right uncertainty, i.e. an eccentricity of -10,0
-    % vs +10,0 deg. In that case it's best to place fixation at the near
-    % point.
-    % o.nearPointXYInUnitSquare % Usually the desired target location in o.stimulusRect re lower-left corner.
-    % o.nearPointXYPix % Near-point screen coordinate.
-    % o.viewingDistanceCm % Distance from eye to near point.
-    % o.nearPointXYDeg % (x,y) eccentricity of near point.
+    %% SET UP FIXATION AND NEAR-POINT OF DISPLAY
      
     % THE CANVAS: o.canvasSize & canvasRect. The arrays that hold the noise
     % and the stimulus all have size o.canvasSize. canvasRect is just [0 0
@@ -2098,42 +2085,22 @@ try
     % on the screen as the near point. It seems more appropiate to center
     % the canvasRect on the target position, o.eccentricityXYDeg.
     % denis.pelli@nyu.edu April 4, 2018.
-    
-    % PLACE TARGET AT NEAR POINT
-    % Imaging is best (highest resolution) at the near point, so it's a
-    % good idea to place the target at or near the near point. However, I
-    % believe none of this program assumes any particular relation between
-    % the two, other that the statement immediately below that locates the
-    % target at the near point.
-    
-    if length(oo(1).eccentricityXYDeg)~=2
-        error('o.eccentricityXYDeg must be an array of two numbers.');
-    end
-    % If a block randomly interleaves several conditions with different
-    % target locations and your interpretation demands that the observer
-    % not know where the target is, then the location of fixation should
-    % not give away target location. In that case, you must not select
-    % 'target', and should instead select 'fixation' or 'value' in every 
-    % condition.
-    switch oo(1).setNearPointEccentricityTo
-        case 'target'
-            oo(1).nearPointXYDeg=oo(1).eccentricityXYDeg;
-        case 'fixation'
-            oo(1).nearPointXYDeg=[0 0];
-        case 'value'
-            % Assume user has set oo(1).nearPointXYDeg.
-        otherwise
-            error('o.setNearPointEccentricityTo has illegal value ''%s''.',...
-                oo(1).setNearPointEccentricityTo);
-    end
-        
+      
     fprintf('*Waiting for observer to set viewing distance.\n');
     oo(1).nearPointXYPix=[]; % Add field to struct.
-    oo(1).isNearPointAdjustible = length(oo)==1 || all(ismember([oo.setNearPointEccentricityTo],'target'));
+    % Enabling okToShiftCoordinates will typical result in different
+    % fixation locations for each condition. That may be ok for some
+    % experiments, but is not ok when the randomization matters and we
+    % don't want the locaiton of fixation to inform the observer about
+    % which condition is being tested by this trial. THe current criterion
+    % for okToShiftCoordinates may be overly strict and could be relaxed
+    % somewhat.
+    oo(1).okToShiftCoordinates = length(oo)==1 || all(ismember([oo.setNearPointEccentricityTo],'target'));
+    [oo.okToShiftCoordinates]=deal(oo(1).okToShiftCoordinates);
     oo(1)=SetUpNearPoint(oo(1));
     % Force all conditions to use the same near point. The physics of the
     % situation guarantee this provided the position of the display and
-    % center of the viewing eye do not move between trials.
+    % center of the viewing eye do not move from trial to trial.
     [oo.nearPointXYPix]=deal(oo(1).nearPointXYPix);
     [oo.nearPointXYInUnitSquare]=deal(oo(1).nearPointXYInUnitSquare);
     if oo(1).quitExperiment
@@ -2162,6 +2129,62 @@ try
     % Force all conditions to use the same near point.
     [oo.nearPointXYDeg]=deal(oo(1).nearPointXYDeg);
     gapPix=round(oo(1).gapFraction4afc*oo(1).targetHeightPix);
+ 
+    %% ASSIGN A VISUAL ECCENTRICITY TO THE NEAR POINT
+    % VIEWING GEOMETRY: DISPLAY NEAR POINT
+    % Because of the perspective transform, imaging of a flat screen is
+    % best (highest resolution) at the near point, so when there is just
+    % one condition, no uncertainty, we typically place the target at the
+    % near point, which is a fixed location.  However, when interleaving
+    % several conditions with different target locations we typically don't
+    % want the observer to know which condition is the current trial,
+    % including where the target will be, so instead we let the target
+    % wander, and lock down fixation (currently at the near point, but it
+    % could be anywhere) so location of fixation is not informative about
+    % which condition is being tested on this trial.
+    % 1. Set nearPointXYPix according to o.nearPointXYInUnitSquare.
+    % 2. If setNearPointEccentricityTo==
+    % 'target', then set nearPointXYDeg=eccentricityXYDeg
+    % 'fixation', then set nearPointXYDeg=[0 0].
+    % 'value', then assume nearPointXYDeg is already set.
+    % 3. Ask viewer to adjust display so desired near point is at desired
+    % viewing distance and orthogonal to line of sight from eye.
+    % 4. If using off-screen fixation, put fixation at the same distance
+    % from eye as the near point.
+    % If a block randomly interleaves several conditions with different
+    % target locations and your interpretation demands that the observer
+    % not know where the target is, then the location of fixation should
+    % not reveal target location. In that case, you must not select
+    % 'target', and should instead select 'fixation' or 'value' in every 
+    % condition.
+    % I often have left vs right uncertainty, i.e. an eccentricity of -10,0
+    % vs +10,0 deg. In that case it's best to select 'fixation' to place
+    % fixation at the near point.
+    % o.nearPointXYInUnitSquare % Usually the desired target location in o.stimulusRect re lower-left corner.
+    % o.nearPointXYPix % Near-point screen coordinate.
+    % o.viewingDistanceCm % Distance from eye to near point.
+    % o.nearPointXYDeg % (x,y) eccentricity of near point.
+    for oi=1:length(oo)
+        if length(oo(oi).eccentricityXYDeg)~=2
+            error('%d: o.eccentricityXYDeg must be an array of two numbers.',oi);
+        end
+        switch oo(oi).setNearPointEccentricityTo
+            case 'target'
+                oo(oi).nearPointXYDeg=oo(oi).eccentricityXYDeg;
+            case 'fixation'
+                oo(oi).nearPointXYDeg=[0 0];
+            case 'value'
+                % Assume user has set oo(oi).nearPointXYDeg.
+            otherwise
+                error('o.setNearPointEccentricityTo has illegal value ''%s''.',...
+                    oo(oi).setNearPointEccentricityTo);
+        end
+        % If necessary, try to shift coordinates to get target on screen.
+        % Enabled by o.okToShiftCoordinates.
+        xy=XYPixOfXYDeg(oo(oi),oo(oi).eccentricityXYDeg); % Target screen location
+        radiusDeg=oo(oi).targetHeightDeg*(0.5+oo(oi).targetMargin);
+        oo(oi)=ShiftPointIntoRect(oo(oi),ff,'target',xy,radiusDeg,oo(oi).stimulusRect);
+    end % for oi
     
     %% PUPIL SIZE
     % Measured December 2017 by Darshan.
@@ -4419,7 +4442,7 @@ try
         oo(oi).transcript.intensity(oo(oi).trials)=tTest;
         oo(oi).transcript.isRight{oo(oi).trials}=isRight;
         oo(oi).transcript.condition(oo(oi).trials)=oi;
-        if cal.ScreenConfigureDisplayBrightnessWorks && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers) && ~oo(oi).rush && oo(1).isFirstBlock
+        if cal.ScreenConfigureDisplayBrightnessWorks && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers) && ~oo(oi).rushToDebug && oo(1).isFirstBlock
             %          Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
             cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
             %          Brightness(cal.screen,cal.brightnessSetting);
@@ -4561,7 +4584,14 @@ try
             end
         end
         
-        
+        %% WARN IF IN DEBUG MODE
+        if oo(1).useFractionOfScreenToDebug
+            ffprintf(ff,'WARNING: Using o.useFractionOfScreenToDebug. This may invalidate all results.\n');
+        end
+        if oo(1).rushToDebug
+            ffprintf(ff,'WARNING: Using o.rushToDebug. This may invalidate all results.\n');
+        end
+
         %% PRINT BOLD SUMMARY OF CONDITION oi
         oo(oi).E=10^(2*oo(oi).questMean)*oo(oi).E1;
         if oi==1
@@ -5400,16 +5430,8 @@ end
 isTrue=IsInRect(xy(1),xy(2),rect);
 end
 
-function xy=LimitXYToRect(xy,rect)
-% Restrict x and y to lie inside rect.
-assert(all(rect(1:2)<=rect(3:4)));
-xy=max(xy,rect(1:2));
-xy=min(xy,rect(3:4));
-end
-
 %% SetUpNearPoint at correct slant and viewing distance.
 function o=SetUpNearPoint(o)
-global ff
 black=0; % The CLUT color code for black.
 white=1; % The CLUT color code for white.
 escapeChar=char(27);
@@ -5425,7 +5447,12 @@ if ~all(isfinite(o.eccentricityXYDeg))
         o.eccentricityXYDeg,mat2str(o.useFixation));
 end
 if ~IsXYInRect(o.nearPointXYInUnitSquare,[0 0 1 1])
-    error('o.nearPointXYInUnitSquare (%.2f %.2f) must be in unit square [0 0 1 1].',o.nearPointXYInUnitSquare);
+    % Our intructions to the observer to adjust viewing distance and swivel
+    % of the display assume that the near point is on the display. It would
+    % be harder to design instructions for the case where the near point is
+    % off the dislay.
+    error('o.nearPointXYInUnitSquare (%.2f %.2f) must be in unit square [0 0 1 1].',...
+        o.nearPointXYInUnitSquare(1),o.nearPointXYInUnitSquare(2));
 end
 xy=o.nearPointXYInUnitSquare;
 xy(2)=1-xy(2); % Move origin from lower left to upper left.
@@ -5441,28 +5468,13 @@ if ~all(r(1:2)<=r(3:4))
         [RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)]/o.pixPerDeg,...
         o.viewingDistanceCm,o.targetHeightDeg);
 end
-if ~IsXYInRect(o.nearPointXYPix,r)
-    if o.isNearPointAdjustible
-        % Adjust position of near point so target fits on screen.
-        o.nearPointXYPix=LimitXYToRect(o.nearPointXYPix,r);
-        % Update o.nearPointXYInUnitSquare.
-        xy=o.nearPointXYPix;
-        xy=xy-o.stimulusRect(1:2);
-        xy=xy./[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)];
-        xy(2)=1-xy(2);
-        ffprintf(ff,'NOTE: Adjusting o.nearPointXYInUnitSquare from [%.2f %.2f] to [%.2f %.2f] to fit %.1f deg target (with %.2f o.targetMargin) on screen.',...
-            o.nearPointXYInUnitSquare,xy,o.targetHeightDeg,o.targetMargin);
-        o.nearPointXYInUnitSquare=xy;
-    else
-        error('Target does not fit on screen. Try adjusting the near point.');
-    end
-end
 if isempty(o.window)
     return
 end
-string=sprintf('Please adjust the viewing distance so the X is %.1f cm (%.1f inches) from the observer''s eye. ',...
+string=sprintf(['Please adjust the viewing distance so the ' ...
+    '"X" is %.1f cm (%.1f inches) from the observer''s eye. '], ...
     o.viewingDistanceCm,o.viewingDistanceCm/2.54);
-string=[string 'Tilt and swivel the display so the X is orthogonal to the observer''s line of sight. '...
+string=[string 'Tilt and swivel the display so the "X" is orthogonal to the observer''s line of sight. '...
     'Then hit RETURN to continue.\n'];
 Screen('TextSize',o.window,o.textSize);
 Screen('TextFont',o.window,'Verdana');
@@ -5496,8 +5508,10 @@ end % function SetUpNearPoint
 
 %% SetUpFixation
 function o=SetUpFixation(o,ff)
-% We assume all conditions have same fixation.
-% This routine does not read or write the target eccentricity.
+% We assume all conditions have same fixation. Perhaps there is some
+% purpose for which one might want to allow each condition to have a unique
+% fixation, but I've never needed it. It would be easy to enhance the code
+% to allow it. This routine does not read or write the target eccentricity.
 escapeChar=char(27);
 graveAccentChar='`';
 returnChar=char(13);
@@ -5515,8 +5529,8 @@ else
     white=WhiteIndex(o.window); % Retrieves the CLUT color code for white.
     if ~IsXYInRect(o.fixationXYPix,o.stimulusRect)
         o.fixationIsOffscreen=true;
-        % o.fixationXYPix is in plane of display. Off-screen fixation is
-        % not! It is the same distance from the eye as the near point.
+        % o.fixationXYPix is in the plane of display. Off-screen fixation
+        % is not! It is the same distance from the eye as the near point.
         % fixationOffsetXYCm is the vector from near point to fixation.
         rDeg=sqrt(sum(o.nearPointXYDeg.^2));
         ori=atan2d(-o.nearPointXYDeg(2),-o.nearPointXYDeg(1));
@@ -5613,8 +5627,8 @@ else
         end
     else
         o.fixationIsOffscreen=false;
-    end
-end
+    end % if ~IsXYInRect(o.fixationXYPix,o.stimulusRect)
+end %  ~o.useFixation || isempty(o.window)
 if o.fixationCrossBlankedNearTarget
     ffprintf(ff,'Fixation cross is blanked near target. No delay in showing fixation after target.\n');
 else
@@ -5879,11 +5893,11 @@ end
 function CloseWindowsAndCleanup(oo)
 % Close any window opened by the Psychtoolbox Screen command, re-enable
 % keyboard, show cursor, and restore AutoBrightness. We save times by only
-% restoring brightness etc. if isLastBlock and we're not in a rush
+% restoring brightness etc. if isLastBlock and we're not in a rush.
 % (debugging).
 % "RestoreCluts" is quick, but loading a color preference is slow (30 s),
 % so we leave that alone, until we're cleaning up after the last block.
-global rush isLastBlock
+global rushToDebug isLastBlock
 if nargin==1
     fprintf('CloseWindowsAndCleanup(oo): isFirstBlock=%d, isLastBlock=%d, global isLastBlock=%d.\n',...
         oo(1).isFirstBlock,oo(1).isLastBlock,isLastBlock);
@@ -5894,7 +5908,7 @@ if ~isempty(Screen('Windows'))
     s=GetSecs;
     Screen('CloseAll');
     fprintf('Done (%.1f s).\n',GetSecs-s);
-    if ismac && ~rush && isLastBlock
+    if ismac && ~rushToDebug && isLastBlock
         fprintf('Restoring AutoBrightness. ... ');
         s=GetSecs;
         AutoBrightness(0,1);
