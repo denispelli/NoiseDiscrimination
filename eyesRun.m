@@ -42,7 +42,7 @@ if isempty(o.seed)
 else
     rng(o.seed);
 end
-% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+% o.useFractionOfScreenToDebug=0.4; % 0: normal, 0.5: small for debugging.
 
 %% CREATE LIST OF CONDITIONS TO BE TESTED
 % In each of the 3 domains: photon, cortical, ganglion
@@ -82,7 +82,7 @@ if false
     o.questPlusPrint=true;
     o.questPlusPlot=true;
 end
-% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+% o.useFractionOfScreenToDebug=0.4; % 0: normal, 0.5: small for debugging.
 
 %% SAVE CONDITIONS IN oo
 oo={};

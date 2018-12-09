@@ -6,7 +6,7 @@ function oOut=RunExperiment(oo)
 % unpleasant for observers to wait through those delays more than once. To
 % eliminate needless waiting, the first time we call NoiseDiscrimination to
 % run a block of trials, it opens a window. That window typically fills the
-% whole screen, unless you've set o.useFractionOfScreen less than 1 (to
+% whole screen, unless you've set o.useFractionOfScreenToDebug less than 1 (to
 % facilitate debugging). That window stays open when NoiseDiscrimination
 % returns, so it's ready for the next block, and so on, until we reach the
 % end of the experiment (end of the "oo" cell array), or the user hits

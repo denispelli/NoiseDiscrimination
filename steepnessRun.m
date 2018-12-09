@@ -127,7 +127,7 @@ if ~skipDataCollection && 0
    clear oOut
    for oi=1:length(oo) % Edit this line to select conditions you want to run now.
       o=oo(oi);
-%       o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+%       o.useFractionOfScreenToDebug=0.4; % 0: normal, 0.5: small for debugging.
       o.trialsPerBlock=128;
       o.experimenter='';
       o.observer=''; % Enter observer's name at run time.

@@ -24,7 +24,7 @@ addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same dire
 cal=OurScreenCalibrations(0);
 
 %% CREATE LIST OF CONDITIONS TO BE TESTED
-% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+% o.useFractionOfScreenToDebug=0.4; % 0: normal, 0.5: small for debugging.
 o.seed=[]; % Fresh.
 % o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
 o.symmetricLuminanceRange=true;

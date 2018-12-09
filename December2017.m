@@ -118,7 +118,7 @@ if 0
    % that you want to run now. Select them from the printout of "t" above.
    for oi=13
       o=oo(oi);
-%       o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+%       o.useFractionOfScreenToDebug=0.4; % 0: normal, 0.5: small for debugging.
       o.experimenter='';
       o.observer=''; 
       o.blankingRadiusReEccentricity=0;

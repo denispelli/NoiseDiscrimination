@@ -56,7 +56,7 @@ o.snapshotShowsFixationAfter=0;
 o.speakInstructions=0;
 
 % DEBUGGING
-o.useFractionOfScreen=0; % 0: normal, 0.5: small for debugging.
+o.useFractionOfScreenToDebug=0; % 0: normal, 0.5: small for debugging.
 o.flipClick=0;
 o.assessContrast=0;
 o.assessLoadGamma=0;

@@ -21,7 +21,7 @@ if o.questPlusEnable && ~exist('qpInitialize','file')
 end
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % Folder in same directory as this M file.
 cal=OurScreenCalibrations(0);
-% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+% o.useFractionOfScreenToDebug=0.4; % 0: normal, 0.5: small for debugging.
 % o.observer='ideal';
 % o.trialsPerBlock=100;
 

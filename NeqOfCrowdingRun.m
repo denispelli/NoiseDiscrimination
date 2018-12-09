@@ -33,7 +33,7 @@ end
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % Folder in same directory as this M file.
 cal=OurScreenCalibrations(0);
 o.localHostName=cal.localHostName;
-% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+% o.useFractionOfScreenToDebug=0.4; % 0: normal, 0.5: small for debugging.
 
 %% SPECIFY BASIC CONDITION
 o.experiment='NeqOfCrowding';

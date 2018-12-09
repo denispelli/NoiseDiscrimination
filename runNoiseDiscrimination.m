@@ -1,5 +1,5 @@
 clear o
-% o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+% o.useFractionOfScreenToDebug=0.4; % 0: normal, 0.5: small for debugging.
 o.eccentricityXYDeg=[-5 5];
 o.markTargetLocation=1;
 o.targetHeightDeg=4;

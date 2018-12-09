@@ -14,7 +14,7 @@
 
 %% GET READY
 clear o oo
-o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+o.useFractionOfScreenToDebug=0.4; % 0: normal, 0.5: small for debugging.
 skipDataCollection=false; % Enable skipDataCollection to check plotting before we have data.
 o.seed=[]; % Fresh.
 % o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.

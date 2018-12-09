@@ -32,7 +32,7 @@ o.ditherCLUT=false; % As of June 28, 2017, there is no measurable effect of this
 o.enableCLUTMapping=false; % 
 o.assessBitDepth=false;
 o.luminanceFactor=1;
-o.useFractionOfScreen=false; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
+o.useFractionOfScreenToDebug=false; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
 o.observer=''; % Name of person or existing algorithm.
 o.pupilDiameterMm=[];
 o.useFilter=false;
@@ -45,8 +45,8 @@ o.retinalIlluminanceTd=[];
 screenBufferRect=Screen('Rect',o.screen);
 screenRect=Screen('Rect',o.screen,1);
 resolution=Screen('Resolution',o.screen);
-if o.useFractionOfScreen
-   screenRect=round(o.useFractionOfScreen*screenRect);
+if o.useFractionOfScreenToDebug
+   screenRect=round(o.useFractionOfScreenToDebug*screenRect);
 end
 
 %% GET SCREEN CALIBRATION cal
@@ -119,7 +119,7 @@ try
    %% OPEN WINDOW
    Screen('Preference', 'SkipSyncTests',1);
    Screen('Preference','TextAntiAliasing',1);
-   if o.useFractionOfScreen
+   if o.useFractionOfScreenToDebug
       ffprintf(ff,'Using tiny window for debugging.\n');
    end
    PsychImaging('PrepareConfiguration');
@@ -154,16 +154,16 @@ try
    else
       loadOnNextFlip=true; % Load hardware CLUT: 0. now; 1. on flip.
    end
-   if ~o.useFractionOfScreen
+   if ~o.useFractionOfScreenToDebug
       [window,screenRect]=PsychImaging('OpenWindow',cal.screen,1.0);
    else
-      r=round(o.useFractionOfScreen*screenBufferRect);
+      r=round(o.useFractionOfScreenToDebug*screenBufferRect);
       r=AlignRect(r,screenBufferRect,'right','bottom');
       [window,screenRect]=PsychImaging('OpenWindow',cal.screen,1.0,r);
    end
    screenRect=Screen('Rect',cal.screen,1); % screen rect in UseRetinaResolution mode
-   if o.useFractionOfScreen
-      screenRect=round(o.useFractionOfScreen*screenRect);
+   if o.useFractionOfScreenToDebug
+      screenRect=round(o.useFractionOfScreenToDebug*screenRect);
    end
    o.desiredRetinalIlluminanceTd=100;
    while 1

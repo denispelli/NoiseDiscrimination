@@ -130,7 +130,7 @@ if ~skipDataCollection && 1
    clear oOut
    for oi=1:length(oo) % Edit this line to select the conditions you want to run now.
       o=oo(oi);
-      % o.useFractionOfScreen=0.4; % 0: normal, 0.5: small for debugging.
+      % o.useFractionOfScreenToDebug=0.4; % 0: normal, 0.5: small for debugging.
       o.trialsPerBlock=40;
       if exist('oOut','var')
          % Copy answers from immediately preceding block.

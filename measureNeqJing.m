@@ -31,7 +31,7 @@ o.blankingRadiusReTargetHeight=0;
 o.speakInstructions=0;
 
 % DEBUGGING
-% o.useFractionOfScreen=0.3; % 0: normal, 0.5: small for debugging.
+% o.useFractionOfScreenToDebug=0.3; % 0: normal, 0.5: small for debugging.
 
 % REPEAT
 % If the two threshold contrasts, after repetition, differ by 2x or more,

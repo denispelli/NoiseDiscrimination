@@ -61,7 +61,7 @@ o.alphabetPlacement='top'; % show possible answers on 'top' or 'right' for lette
 % o.fixationCrossWeightDeg=0.05; % target line thickness
 o.speakInstructions=1;
 o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar, for Linux compatibility.
-% o.useFractionOfScreen=0.3; % 0: normal, 0.5: small for debugging.
+% o.useFractionOfScreenToDebug=0.3; % 0: normal, 0.5: small for debugging.
 
 o=NoiseDiscrimination(o);
 sca;
