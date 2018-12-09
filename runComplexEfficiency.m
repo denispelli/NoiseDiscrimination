@@ -184,8 +184,8 @@ disp(t(:,{'block' 'experiment' 'targetFont' 'observer' 'noiseSD' 'targetHeightDe
 for i=1:length(ooo)
     oo=ooo{i};
     for oi=1:length(oo)
-%         oo(oi).useFractionOfScreenToDebugToDebug=0.5;
-        oo(oi).rushToDebug=true; % USE ONLY FOR DEBUGGING.
+%         oo(oi).useFractionOfScreenToDebug=0.5;
+%         oo(oi).rushToDebug=true; % USE ONLY FOR DEBUGGING.
         oo(oi).block=oi;
         oo(oi).blocksDesired=length(oo);
         oo(oi).isFirstBlock=false;
