@@ -1076,17 +1076,18 @@ isLastBlock=o.isLastBlock; % Set global flag read by CloseWindowsAndCleanup.
 if isempty(o.window) && ~ismember(o.observer,o.algorithmicObservers) && ~o.rushToDebug && o.isFirstBlock
     useBrightnessFunction=true;
     try
+        % Currently, in December 2018, my brightness function
+        % writes reliably but seems to always fail when reading,
+        % returning -1. So we use my function to write (since
+        % Screen is unreliable there) and use Screen to read (since
+        % my Brightness is failing to read). By the way, the Screen
+        % function is quick writing and reading while my function
+        % is very slow (20 s) writing and reading.
         fprintf('Setting Brightness. ... ');
         s=GetSecs;
         for i=1:3
             if useBrightnessFunction
-                % Currently Brightness.m insists that no window be open.
-                % I'm considering removing that restriction. We need to
-                % avoid the situation of issuing an error while the Command
-                % window is obscured by the Psychtoolbox window. The better
-                % solution is to use a try-catch block to catch the error
-                % and issue sca to close the window before rethrowing the
-                % error.
+                % Brightness.m formerly insisted that no window be open.
                 Brightness(cal.screen,cal.brightnessSetting); % Set brightness.
 %                 cal.brightnessReading=Brightness(cal.screen); % Read brightness.
                 cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
@@ -4017,16 +4018,16 @@ try
                             img=oo(oi).signal(i).image;
                             % PrintImageStatistics(MFileLineNr,oo(oi),i,'before resize',img)
                             if useExpand
-                                img=Expand(oo(oi).signal(i).image,alphaCheckPix);
+                                img=Expand(img,alphaCheckPix);
                             else
                                 if useImresize
-                                    % We use 'bilinear' method to make sure that all
-                                    % new values are within the old range. That's
-                                    % important because we set up the CLUT with the old
+                                    % We use 'bilinear' method to make sure
+                                    % that all new values are within the
+                                    % old range. That's important because
+                                    % we set up the CLUT with the old
                                     % range.
-                                    img=imresize(oo(oi).signal(i).image,[RectHeight(rect), RectWidth(rect)],'bilinear');
+                                    img=imresize(img,[RectHeight(rect), RectWidth(rect)],'bilinear');
                                 else
-                                    img=oo(oi).signal(i).image;
                                     % If the imresize function (in Image
                                     % Processing Toolbox) is not available
                                     % then the image is resized by the
@@ -4039,6 +4040,10 @@ try
                                     oo(oi).responseScreenAbsoluteContrast);
                             end
                             % Note alphabet placement on top or right.
+                            % Using ReadAlphabetFromDisk, I get the right
+                            % polarity if I set signalIsBinary. However,
+                            % the clipping threshold is way off so the
+                            % letters are oddly distorted. denis 2018
                             if oo(oi).signalIsBinary
                                 if oo(oi).thresholdPolarity<0
                                     if ~isempty(oo(oi).responseScreenAbsoluteContrast) && ~ismember(oo(oi).responseScreenAbsoluteContrast,[0.99 1])
@@ -4129,7 +4134,8 @@ try
                     Screen('LoadNormalizedGammaTable',oo(1).window,cal.gamma,loadOnNextFlip);
                 end
                 Screen('Flip',oo(1).window,0,1); % Display instructions.
-            end % if ~isempty(o.window)
+            
+                dend % if ~isempty(o.window)
             if oo(oi).saveStimulus
                 oo(oi).savedResponseScreen=Screen('GetImage',oo(1).window,oo(oi).stimulusRect,'frontBuffer');
                 ffprintf(ff,'oo(oi).savedResponseScreen\n');
