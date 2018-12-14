@@ -2,10 +2,6 @@
 % MATLAB script to run NoiseDiscrimination.m
 % Copyright 2018 Denis G. Pelli, denis.pelli@nyu.edu
 %
-% I estimate that runComplexity will take ?? minutes to complete. It
-% measures ?? thresholds. It tests two locations: (-5,0) deg and (+5,0)
-% deg. At each location it measure acuity for many alphabets.
-%
 % The script specifies "Darshan" as experimenter. You can change that in
 % the script below if necessary. On the first block the program will ask
 % the observer's name. On subsequent blocks it will remember the observer's
@@ -27,6 +23,7 @@
 
 clear o oo ooo
 ooo={};
+o.recordGaze=true;
 o.experiment='ComplexEfficiency';
 o.eccentricityXYDeg=[0 0];
 o.targetHeightDeg=6;
@@ -43,7 +40,7 @@ if 1
     o.borderLetter='X';
     o.labelAnswers=false;
 %     o.eccentricityXYDeg=[-10 0];
-%     o.readAlphabetFromDisk=false;
+%     o.readAlphabetFromDisk=true;
 %     ooo{end+1}=o;
 %     o.eccentricityXYDeg=[10 0];
     o.readAlphabetFromDisk=true;
@@ -184,7 +181,7 @@ disp(t(:,{'block' 'experiment' 'targetFont' 'observer' 'noiseSD' 'targetHeightDe
 for i=1:length(ooo)
     oo=ooo{i};
     for oi=1:length(oo)
-%         oo(oi).useFractionOfScreenToDebug=0.5;
+%         oo(oi).useFractionOfScreenToDebug=0.5; % USE ONLY FOR DEBUGGING.
 %         oo(oi).rushToDebug=true; % USE ONLY FOR DEBUGGING.
         oo(oi).block=oi;
         oo(oi).blocksDesired=length(oo);
@@ -201,7 +198,7 @@ for i=1:length(ooo)
         oo(oi).fixationCrossBlankedNearTarget=false;
         oo(oi).fixationLineWeightDeg=0.1;
         oo(oi).fixationCrossDeg=1; % 0, 3, and inf are typical values.
-        oo(oi).trialsPerBlock=40;
+        oo(oi).trialsPerBlock=50;
         oo(oi).practicePresentations=0;
         oo(oi).targetDurationSecs=0.2; % duration of display of target and flankers
         oo(oi).repeatedTargets=0;
