@@ -600,6 +600,7 @@ o.fixationCrossBlankedUntilSecsAfterTarget=0.6; % Pause after stimulus before di
 o.fixationCrossDrawnOnStimulus=false;
 o.blankingRadiusReTargetHeight= nan;
 o.blankingRadiusReEccentricity= 0.5;
+o.recordGaze=false;
 
 % QUEST
 o.questPlusEnable=false;
@@ -919,7 +920,7 @@ knownOutputFields={'labelAnswers' 'beginningTime' ...
     'block'...
     'A' 'LAT' 'NPhoton' 'logFilename' 'screenrect' 'screenRect'...
     'useCentralNoiseEnvelope' 'useCentralNoiseMask'...
-     'fixationLineWeightDeg' 'isFirstBlock' ... % From CriticalSpacing
+    'fixationLineWeightDeg' 'isFirstBlock' ... % From CriticalSpacing
     'isLastBlock'  'minimumTargetPix' ...
     'practicePresentations' 'repeatedTargets' 'okToShiftCoordinates'
     };
@@ -1089,7 +1090,7 @@ if isempty(o.window) && ~ismember(o.observer,o.algorithmicObservers) && ~o.rushT
             if useBrightnessFunction
                 % Brightness.m formerly insisted that no window be open.
                 Brightness(cal.screen,cal.brightnessSetting); % Set brightness.
-%                 cal.brightnessReading=Brightness(cal.screen); % Read brightness.
+                %                 cal.brightnessReading=Brightness(cal.screen); % Read brightness.
                 cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
             else
                 Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
@@ -1212,7 +1213,7 @@ try
         %     ffprintf(ff,'We are using it in its native %d x %d resolution.\n',resolution.width,resolution.height);
         %     ffprintf(ff,'You can use Switch Res X (http://www.madrau.com/) to select a pure resolution, not HiDPI.\n');
         % end
-    end
+    end % if isempty(o.window) && ~ismember(o.observer,o.algorithmicObservers)
     % We assume that all conditions specify the same screen parameters. It
     % would be good to confirm that and flag and error if they differ.
     o=oo(1);
@@ -1477,7 +1478,17 @@ try
     end
     assert(logFid > -1);
     ff=[1 logFid];
-    fprintf('Saving results in log and data files:\n');
+    fprintf('Saving results in .txt and .mat files:\n');
+    if any([oo.recordGaze])
+        videoExtension='.avi'; % '.avi', '.mp4' or '.mj2'
+        clear cam
+        cam=webcam;
+        gazeFile=fullfile(oo(1).dataFolder,[oo(1).dataFilename videoExtension]);
+        vidWriter=VideoWriter(gazeFile);
+        vidWriter.FrameRate=1; % frame/s.
+        open(vidWriter);
+        ffprintf(ff,'Recording gaze (of conditions %s) in %s file:\n',num2str(find([oo.recordGaze])),videoExtension);
+    end
     ffprintf(ff,'<strong>%s</strong>\n',oo(1).dataFilename);
     ffprintf(ff,'observer %s, task %s, alternatives %d,  steepness %.1f\n',oo(1).observer,oo(1).task,oo(1).alternatives,oo(1).steepness);
     ffprintf(ff,'Experiment: %s. ',oo(1).experiment);
@@ -2075,7 +2086,7 @@ try
     end
     
     %% SET UP FIXATION AND NEAR-POINT OF DISPLAY
-     
+    
     % THE CANVAS: o.canvasSize & canvasRect. The arrays that hold the noise
     % and the stimulus all have size o.canvasSize. canvasRect is just [0 0
     % canvasSize(2) canvasSize(1)]. o.canvasSize is clipped (if necessary)
@@ -2087,7 +2098,7 @@ try
     % on the screen as the near point. It seems more appropiate to center
     % the canvasRect on the target position, o.eccentricityXYDeg.
     % denis.pelli@nyu.edu April 4, 2018.
-      
+    
     fprintf('*Waiting for observer to set viewing distance.\n');
     oo(1).nearPointXYPix=[]; % Add field to struct.
     % Enabling okToShiftCoordinates will typical result in different
@@ -2131,7 +2142,7 @@ try
     % Force all conditions to use the same near point.
     [oo.nearPointXYDeg]=deal(oo(1).nearPointXYDeg);
     gapPix=round(oo(1).gapFraction4afc*oo(1).targetHeightPix);
- 
+    
     %% ASSIGN A VISUAL ECCENTRICITY TO THE NEAR POINT
     % VIEWING GEOMETRY: DISPLAY NEAR POINT
     % Because of the perspective transform, imaging of a flat screen is
@@ -2157,7 +2168,7 @@ try
     % target locations and your interpretation demands that the observer
     % not know where the target is, then the location of fixation should
     % not reveal target location. In that case, you must not select
-    % 'target', and should instead select 'fixation' or 'value' in every 
+    % 'target', and should instead select 'fixation' or 'value' in every
     % condition.
     % I often have left vs right uncertainty, i.e. an eccentricity of -10,0
     % vs +10,0 deg. In that case it's best to select 'fixation' to place
@@ -2549,12 +2560,12 @@ try
             oo(oi).targetHeightPix=RectHeight(sRect)*oo(oi).targetCheckPix;
         end
     end
-           
+    
     %% PREPARE TARGET IMAGE (I.E. SIGNAL)
-%     if isfield(oo(oi).signal(1),'image')
-%         fprintf('%d: oo(%d).signal(1).image is %d x %d.\n',...
-%             MFileLineNr,oi,size(oo(oi).signal(1).image));
-%     end
+    %     if isfield(oo(oi).signal(1),'image')
+    %         fprintf('%d: oo(%d).signal(1).image is %d x %d.\n',...
+    %             MFileLineNr,oi,size(oo(oi).signal(1).image));
+    %     end
     temporaryWindow=[]; % Perhaps we should keep the temporary window open across blocks, to save time.
     for oi=1:conditions
         switch oo(oi).task
@@ -2623,10 +2634,10 @@ try
         ffprintf(ff,'%d: o.trialsPerBlock %.0f\n',oi,oo(oi).trialsPerBlock);
         
         %% COMPUTE oo(oi).signal(i).image
-%         if isfield(oo(oi).signal(1),'image')
-%             fprintf('%d: oo(%d).signal(1).image is %d x %d.\n',...
-%                 MFileLineNr,oi,size(oo(oi).signal(1).image));
-%         end
+        %         if isfield(oo(oi).signal(1),'image')
+        %             fprintf('%d: oo(%d).signal(1).image is %d x %d.\n',...
+        %                 MFileLineNr,oi,size(oo(oi).signal(1).image));
+        %         end
         tic
         white1=1;
         black0=0;
@@ -3329,8 +3340,8 @@ try
         movieImage={};
         movieSaveWhich=[];
         movieFrameComputeStartSecs=GetSecs;
-%         fprintf('%d: oo(%d).signal(1).image is %d x %d.\n',...
-%             MFileLineNr,oi,size(oo(oi).signal(1).image));
+        %         fprintf('%d: oo(%d).signal(1).image is %d x %d.\n',...
+        %             MFileLineNr,oi,size(oo(oi).signal(1).image));
         for iMovieFrame=1:oo(oi).movieFrames
             % On each new frame, retain the (static) signal and regenerate the (dynamic) noise.
             switch oo(oi).task % add noise to signal
@@ -3792,6 +3803,16 @@ try
         if ~isempty(oo(1).window)
             Screen('LoadNormalizedGammaTable',oo(1).window,cal.gamma,loadOnNextFlip);
             if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
+                if oo(oi).recordGaze
+                    try
+                        img=snapshot(cam);
+                    catch e
+                        warning(e)
+                    end
+                    % FUTURE: Write trial number and condition number in corner of
+                    % image.
+                    writeVideo(vidWriter,img); % Write frame to video
+                end
                 Snd('Play',purr); % Pre-announce that image is up, awaiting response.
                 assert(oo(oi).trials>0,'oo(oi).trials must be >0');
                 oo(oi).movieFrameFlipSecs(1:oo(oi).movieFrames+1,oo(oi).trials)=nan;
@@ -4134,8 +4155,8 @@ try
                     Screen('LoadNormalizedGammaTable',oo(1).window,cal.gamma,loadOnNextFlip);
                 end
                 Screen('Flip',oo(1).window,0,1); % Display instructions.
-            
-                dend % if ~isempty(o.window)
+                
+            end % if ~isempty(o.window)
             if oo(oi).saveStimulus
                 oo(oi).savedResponseScreen=Screen('GetImage',oo(1).window,oo(oi).stimulusRect,'frontBuffer');
                 ffprintf(ff,'oo(oi).savedResponseScreen\n');
@@ -4195,8 +4216,8 @@ try
                     else
                         oo(oi).validResponseLabels=oo(oi).alphabet;
                     end
-
-    
+                    
+                    
                     ok=ismember(lower(oo(oi).validResponseLabels),letterNumberCharString);
                     if ~all(ok)
                         error('Oops. Not all the characters in o.validResponseLabels "%s" are in the list of letterNumber keys: "%s".',oo(oi).validResponseLabels,unique(letterNumberCharString));
@@ -4598,7 +4619,7 @@ try
         if oo(1).rushToDebug
             ffprintf(ff,'WARNING: Using o.rushToDebug. This may invalidate all results.\n');
         end
-
+        
         %% PRINT BOLD SUMMARY OF CONDITION oi
         oo(oi).E=10^(2*oo(oi).questMean)*oo(oi).E1;
         if oi==1
@@ -4718,8 +4739,16 @@ try
             warning('Failed to save .transcript.json file.');
             warning(e.message);
         end % save transcript to .json file
-        fprintf('Results saved as %s with extensions .txt, .mat, and .json \nin the data folder: %s/\n\n',oo(oi).dataFilename,oo(oi).dataFolder);
+        fprintf('Results saved as %s with extensions .txt, .mat, and .json \n',oo(oi).dataFilename);
+        if oo(oi).recordGaze
+            fprintf('Gaze recorded with extension %s\n',videoExtension);
+        end
+        fprintf('in the data folder: %s/\n\n',oo(oi).dataFolder);
     end % for oi=1:conditions
+    if exist('vidWriter','var')
+        close(vidWriter);
+        clear cam
+    end
     
     %% GOODBYE
     if oo(oi).speakInstructions
@@ -5906,9 +5935,9 @@ function CloseWindowsAndCleanup(oo)
 % so we leave that alone, until we're cleaning up after the last block.
 global rushToDebug isLastBlock
 if nargin==1
-    fprintf('CloseWindowsAndCleanup(oo): isFirstBlock=%d, isLastBlock=%d, global isLastBlock=%d.\n',...
-        oo(1).isFirstBlock,oo(1).isLastBlock,isLastBlock);
-    isLastBlock=oo(1).isLastBlock;
+%     fprintf('CloseWindowsAndCleanup(oo): isFirstBlock=%d, isLastBlock=%d, global isLastBlock=%d.\n',...
+%         oo(1).isFirstBlock,oo(1).isLastBlock,isLastBlock);
+%     isLastBlock=oo(1).isLastBlock;
 end
 if ~isempty(Screen('Windows'))
     fprintf('Closing the window. ... ');
@@ -5920,7 +5949,7 @@ if ~isempty(Screen('Windows'))
         s=GetSecs;
         AutoBrightness(0,1);
         fprintf('Done (%.1f s).\n',GetSecs-s);
-        RestoreCluts; 
+        RestoreCluts;
     end
 end
 Screen('Preference','Verbosity',2); % Restore default level.
