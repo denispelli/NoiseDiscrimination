@@ -558,7 +558,7 @@ end
 
 ff=1; % Once we open a data file, ff will print to both screen and data file.
 
-%% DEFAULT VALUE FOR EVERY "o" PARAMETER
+%% DEFAULT VALUE FOR EVERY "o" FIELD
 % These default values are overridden by what you explicitly provide in
 % the argument array struct ooIn. Any empty [] fields in ooIn will be ignored
 % and will not override the default. This is necessary because when you
@@ -683,20 +683,23 @@ o.thresholdResponseTo='target'; % 'target' 'flankers'
 o.constantStimuli=[];
 o.useMethodOfConstantStimuli=false;
 o.thresholdPolarity=1; % Must be -1 or 1;
-% WARNING: size and spacing are not yet fully implemented.
-o.alternatives=9; % The number of letters to use from o.alphabet.
 o.skipTrial=0;
 o.trialsSkipped=0;
 
 % Target
-o.targetKind='letter';
+o.targetKind='letter'; % Put the letters in array o.alphabet.
+% o.targetKind='word'; % Put the words in cell array o.words.
 % o.targetKind='gabor'; % one cycle within targetSize
 % o.targetKind='image'; % read from folder of images
 o.targetFont='Sloan';
 % o.targetFont='Bookman';
 % o.allowAnyFont=false; % Old code assumes Sloan font.
 o.allowAnyFont=true; % New code supports any font.
+o.alternatives=9; % The number of letters to use from o.alphabet or o.words.
+% When o.targetKind='letter' then we use o.alphabet(1:o.alternatives).
+% When o.targetKind='word' then we use o.words{1:o.alternatives} and whole o.alphabet.
 o.alphabet='DHKNORSVZ';
+o.words={'help' 'make' 'nick' 'four'};
 o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
 o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
 o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
@@ -776,8 +779,8 @@ o.snapshotCaptionTextSize=[];
 o.showCropMarks=false; % mark the bounding box of the target
 o.showResponseNumbers=true;
 o.responseNumbersInCorners=false;
-o.alphabetPlacement='top'; % 'top' or 'right';
-o.textSizeDeg=0.6;
+o.alphabetPlacement='top'; % 'top' or 'right' while awaiting response.
+o.textSizeDeg=2;
 o.textMarginPix=0;
 
 % Response screen
@@ -1025,13 +1028,11 @@ for oi=1:conditions
     end
     if isempty(oo(oi).labelAnswers)
         switch oo(oi).targetKind
-            case 'gabor'
+            case {'gabor' 'image'}
                 oo(oi).labelAnswers=true;
-            case 'letter'
-                % Default is none, but useful for foreign alphabets.
+            case {'letter' 'word'}
+                % labelAnswers=true is useful for foreign alphabets.
                 oo(oi).labelAnswers=false;
-            case 'image'
-                oo(oi).labelAnswers=true;
             otherwise
                 error('Unknown o.targetKind "%s".',oo(oi).targetKind);
         end
@@ -1199,7 +1200,6 @@ try
         if ~o.useFractionOfScreenToDebug
             HideCursor;
         end
-        
         % if cal.hiDPIMultiple~=1
         %     ffprintf(ff,'HiDPI: It doesn''t matter, but you might be curious to know.\n');
         %     if ismac
@@ -1243,7 +1243,7 @@ try
     
     %% ASK EXPERIMENTER NAME
     [oo.textMarginPix]=deal(round(0.08*min(RectWidth(oo(1).screenRect),RectHeight(oo(1).screenRect))));
-    [oo.textSize]=deal(39);
+    %     [oo.textSize]=deal(39);
     [oo.textFont]=deal('Verdana');
     black=0; % The CLUT color code for black.
     white=1; % Retrieves the CLUT color code for white.
@@ -1259,7 +1259,8 @@ try
         text.question='Experimenter name:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
         fprintf('*Waiting for experimenter name.\n');
-        [reply,oo(1)]=AskQuestion(oo,text);
+        [reply,o]=AskQuestion(oo,text);
+        oo(1).quitBlock=o.quitBlock;
         if oo(1).quitBlock
             CloseWindowsAndCleanup(oo);
             return
@@ -1278,7 +1279,8 @@ try
         text.question='Observer name:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
         fprintf('*Waiting for observer name.\n');
-        [reply,oo(1)]=AskQuestion(oo,text);
+        [reply,o]=AskQuestion(oo,text);
+        oo(1).quitBlock=o.quitBlock;
         if oo(1).quitBlock
             CloseWindowsAndCleanup(oo);
             return
@@ -1303,7 +1305,7 @@ try
             text.question='';
             text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
             fprintf('*Waiting for observer to remove sunglasses.\n');
-            [~,oo(1)]=AskQuestion(oo,text);
+            AskQuestion(oo,text);
         end
     else % if ~o.useFilter
         text.big={'Please use a filter or sunglasses to reduce the luminance.' '(Our lab sunglasses transmit 0.115)' 'Please slowly type its transmission (between 0.000 and 1.000)' 'followed by RETURN.'};
@@ -1317,7 +1319,8 @@ try
         text.question='Filter transmission:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
         fprintf('*Waiting for observer to put on sunglasses.\n');
-        [reply,oo(1)]=AskQuestion(oo,text);
+        [reply,o]=AskQuestion(oo,text);
+        oo(1).quitBlock=o.quitBlock;
         if ~oo(1).quitBlock
             if ~isempty(reply)
                 oo(1).filterTransmission=str2num(reply);
@@ -1612,6 +1615,12 @@ try
                     %                                       % value for letters, which are
                     %                                       % strong right up to the edge of
                     %                                       % the target height.
+                case 'word'
+                    oo(oi).blankingRadiusReTargetHeight=1.5; % Make blanking radius 1.5 times
+                    %                                       % target height. That's a good
+                    %                                       % value for letters, which are
+                    %                                       % strong right up to the edge of
+                    %                                       % the target height.
                 case 'gabor'
                     oo(oi).blankingRadiusReTargetHeight=0.5; % Make blanking radius 0.5 times
                     %                                       % target height. That's good for gabors,
@@ -1621,7 +1630,7 @@ try
                     oo(oi).blankingRadiusReTargetHeight=1.5; % Make blanking radius 1.5 times
                     %                                       % target height. That's a good
                     %                                       % value for images, which are
-                    %                                       % strong right up to the edge of
+                    %                                       % typically strong right up to the edge of
                     %                                       % the target height.
             end
         end
@@ -1694,14 +1703,39 @@ try
         end
         
         %% NUMBER OF POSSIBLE SIGNALS
-        if oo(oi).alternatives > length(oo(oi).alphabet)
-            error('Too many o.alternatives');
+        switch oo(oi).targetKind
+            case 'word'
+                if oo(oi).alternatives > length(oo(oi).words)
+                    error('Too many o.alternatives %d, given only %d words.',...
+                        oo(oi).alternatives,length(oo(oi).words));
+                end
+                n=[];
+                for i=1:length(oo(oi).words)
+                    n(i)=length(oo(oi).words{i});
+                end
+                if length(unique(n))~=1
+                    error('All the o.words must have the same length.');
+                end
+                letters=unique([oo(oi).words{:}]);
+                a=ismember(lower(letters),lower(oo(oi).alphabet));
+                if ~all(a)
+                    error('Some letters ''%s'' in o.words are not in o.alphabet.',letters(~a));
+                end
+            otherwise
+                if oo(oi).alternatives > length(oo(oi).alphabet)
+                    error('Too many o.alternatives %d, given only %d letters in o.alphabet.',...
+                        oo(oi).alternatives,length(oo(oi).alphabet));
+                end
         end
         oo(oi).signal=[];
         for i=1:oo(oi).alternatives
-            oo(oi).signal(i).letter=oo(oi).alphabet(i);
+            switch oo(oi).targetKind
+                case 'word'
+                    oo(oi).signal(i).letter=oo(oi).words{i};
+                otherwise
+                    oo(oi).signal(i).letter=oo(oi).alphabet(i);
+            end
         end
-        
         %         % USE THE ALREADY-LOADED ON-DISK FONT.
         %         if oo(oi).readAlphabetFromDisk
         %             for i=1:length(oo(oi).signal)
@@ -1734,6 +1768,9 @@ try
         fprintf('Setting screen profile. ... ');
         s=GetSecs;
         if Screen(oo(1).window,'WindowKind') == 1
+            % Set text size.
+            %             oo(oi).textSize=TextSizeToFit(oo(1).window)/2; % Set optimum text size.
+            Screen('TextSize',oo(1).window,oo(oi).textSize);
             % Tell observer what's happening.
             Screen('LoadNormalizedGammaTable',oo(1).window,cal.old.gamma,loadOnNextFlip);
             Screen('FillRect',oo(1).window);
@@ -2286,7 +2323,7 @@ try
                 ffprintf(ff,'%d: Minimum letter resolution is %.0f checks.\n',oi,oo(oi).minimumTargetHeightChecks);
         end
         switch oo(oi).targetKind
-            case {'letter' 'image'}
+            case {'letter' 'word'}
                 ffprintf(ff,'%d: o.targetFont %s\n',oi,oo(oi).targetFont);
             case 'gabor'
                 ffprintf(ff,'%d: o.targetCyclesPerDeg %.1f\n',oi,oo(oi).targetCyclesPerDeg);
@@ -2295,6 +2332,7 @@ try
                 ffprintf(ff,'%d: o.targetGaborOrientationsDeg [',oi);
                 ffprintf(ff,' %.0f',oo(oi).targetGaborOrientationsDeg);
                 ffprintf(ff,']\n');
+            case 'image'
             otherwise
                 error('%d: Unknown o.targetKind "%s".',oi,oo(oi).targetKind);
         end
@@ -2656,7 +2694,7 @@ try
                 oo(oi).signal(1).image=ones(targetRect(3:4));
             case {'identify' 'identifyAll' 'rate'}
                 switch oo(oi).targetKind
-                    case 'letter'
+                    case {'letter' 'word'}
                         if ~oo(oi).readAlphabetFromDisk
                             if isempty(oo(1).window) && isempty(temporaryWindow)
                                 % Some window must already be open before we call
@@ -2667,12 +2705,20 @@ try
                                 fprintf('Done (%.1f s).\n',GetSecs-s);
                             end
                             scratchHeight=round(3*oo(oi).targetHeightPix/oo(oi).targetCheckPix);
-                            [scratchWindow,scratchRect]=Screen('OpenOffscreenWindow',-1,[],[0 0 scratchHeight scratchHeight],8);
+                            switch oo(oi).targetKind
+                                case 'letter'
+                                    wordLength=1;
+                                case 'word'
+                                    % Currently all words have same length.
+                                    wordLength=length(oo(oi).words{1});
+                            end
+                            scratchWidth=round((2+wordLength)*oo(oi).targetHeightPix/oo(oi).targetCheckPix);
+                            [scratchWindow,scratchRect]=Screen('OpenOffscreenWindow',-1,[],[0 0 scratchWidth scratchHeight],8);
                             if ~streq(oo(oi).targetFont,'Sloan') && ~oo(oi).allowAnyFont
-                                warning('You should set o.allowAnyFont=1 unless o.targetFont=''Sloan''.');
+                                warning('You should set o.allowAnyFont=true unless o.targetFont=''Sloan''.');
                             end
                             oldFont=Screen('TextFont',scratchWindow,oo(oi).targetFont);
-                            Screen('DrawText',scratchWindow,oo(oi).alternatives(1),0,scratchRect(4)); % Must draw first to learn actual font used.
+                            Screen('DrawText',scratchWindow,oo(oi).alternatives(1),0,scratchRect(4)); % Must draw first to learn actual font in use.
                             font=Screen('TextFont',scratchWindow);
                             if ~streq(font,oo(oi).targetFont)
                                 error('Font missing! Requested font "%s", but got "%s". Please install the missing font.\n',oo(oi).targetFont,font);
@@ -2683,6 +2729,8 @@ try
                             if oo(oi).allowAnyFont
                                 clear letters
                                 for i=1:oo(oi).alternatives
+                                    % The "letter" is a word if
+                                    % o.targetKind='word'.
                                     letters{i}=oo(oi).signal(i).letter;
                                 end
                                 % Measure bounds of this alphabet.
@@ -2730,13 +2778,13 @@ try
                                     % position.
                                     bounds=Screen('TextBounds',scratchWindow,oo(oi).signal(i).letter,x,y,1);
                                     if oo(oi).printTargetBounds
-                                        fprintf('%c bounds [%4.0f %4.0f %4.0f %4.0f]\n',oo(oi).signal(i).letter,bounds);
+                                        fprintf('%s bounds [%4.0f %4.0f %4.0f %4.0f]\n',oo(oi).signal(i).letter,bounds);
                                     end
                                     width=bounds(3);
                                     x=x-width/2;
                                 end
                                 if oo(oi).printTargetBounds
-                                    fprintf('%c %4.0f, %4.0f\n',oo(oi).signal(i).letter,x,y);
+                                    fprintf('%s %4.0f, %4.0f\n',oo(oi).signal(i).letter,x,y);
                                 end
                                 Screen('DrawText',scratchWindow,oo(oi).signal(i).letter,x,y,black0,white1,1);
                                 Screen('DrawingFinished',scratchWindow,[],1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
@@ -2990,11 +3038,11 @@ try
                 m=0.2989*m(:,:,1)+0.5870*m(:,:,2)+0.1140*m(:,:,3);
             end
             power(i)=sum(m(:).^2);
-            if streq(oo(oi).targetKind,'letter')
+            if ismember(oo(oi).targetKind,{'letter' 'word'})
                 err=rms(oo(oi).signal(i).image(:)-round(oo(oi).signal(i).image(:)));
-                if err>.3
+                if err>0.3
                     warning(['Large %.2f rms deviation from 0 and 1 '...
-                        'in letter ''%c'' of ''%s'' font.'], ...
+                        'in letter(s) ''%s'' of font ''%s''.'], ...
                         err,oo(oi).signal(i).letter,oo(oi).targetFont);
                 end
             end
@@ -3937,6 +3985,7 @@ try
                     case 'left'
                         x=x+RectHeight(o.screenRect)/max(6,oo(oi).alternatives);
                 end
+                Screen('TextSize',oo(1).window,oo(oi).textSize);
                 Screen('DrawText',oo(1).window,message,x,oo(oi).textSize/2,black,oo(oi).gray1);
                 % Print instructions in lower left corner.
                 factor=1;
@@ -3944,7 +3993,13 @@ try
                     case '4afc'
                         message='Please click 1 to 4 times for location 1 to 4, or more clicks to escape.';
                     case 'identify'
-                        message=sprintf('Please type the letter: %s, or ESCAPE to cancel a trial or quit.',oo(oi).alphabet(1:oo(oi).alternatives));
+                        if ismember(oo(oi).targetKind,{'word'}) && ~oo(oi).labelAnswers
+                            message=sprintf('Please type the %d-letter word. Ignore capitalization. Or ESCAPE to cancel a trial or quit.',...
+                                length(oo(oi).words{1}));
+                        else
+                            message=sprintf('Please type the letter: %s. Or ESCAPE to cancel a trial or quit.',...
+                                oo(oi).alphabet(1:oo(oi).alternatives));
+                        end
                     case 'identifyAll'
                         factor=1.3;
                         switch oo(oi).thresholdResponseTo
@@ -3987,7 +4042,7 @@ try
                                 targetChecks=RectWidth(rect);
                         end
                         switch oo(oi).targetKind
-                            case 'letter'
+                            case {'letter' 'word'}
                                 spacingFraction=0.25;
                             case 'gabor'
                                 spacingFraction=0;
@@ -4035,104 +4090,112 @@ try
                                 step=[RectWidth(rect)+alphaGapPix 0];
                                 rect=OffsetRect(rect,-(oo(oi).alternatives-1)*step(1),0);
                         end
-                        for i=1:oo(oi).alternatives
-                            img=oo(oi).signal(i).image;
-                            % PrintImageStatistics(MFileLineNr,oo(oi),i,'before resize',img)
-                            if useExpand
-                                img=Expand(img,alphaCheckPix);
-                            else
-                                if useImresize
-                                    % We use 'bilinear' method to make sure
-                                    % that all new values are within the
-                                    % old range. That's important because
-                                    % we set up the CLUT with the old
-                                    % range.
-                                    img=imresize(img,[RectHeight(rect), RectWidth(rect)],'bilinear');
+                        %                         if streq(oo(oi).targetKind,'word') && ~oo(oi).labelAnswers
+                        %                             Screen('TextSize',oo(1).window,oo(oi).textSize);
+                        %                             str=sprintf('Please type the %d-letter word. Ignore case.',length(oo(oi).words{1}));
+                        %                             Screen('DrawText',oo(1).window,str,oo(oi).textMarginPix,rect(4),0,oo(oi).gray1,1);
+                        %                         end
+                        suppressResponses=streq(oo(oi).targetKind,'word') && oo(oi).alternatives>10;
+                        if ~suppressResponses
+                            for i=1:oo(oi).alternatives
+                                img=oo(oi).signal(i).image;
+                                % PrintImageStatistics(MFileLineNr,oo(oi),i,'before resize',img)
+                                if useExpand
+                                    img=Expand(img,alphaCheckPix);
                                 else
-                                    % If the imresize function (in Image
-                                    % Processing Toolbox) is not available
-                                    % then the image is resized by the
-                                    % DrawTexture command below.
-                                end
-                            end % if useExpand
-                            %  PrintImageStatistics(MFileLineNr,oo(oi),i,'after resize',img)
-                            if oo(oi).responseScreenAbsoluteContrast<0
-                                error('o.responseScreenAbsoluteContrast %.2f must be positive. Sign will track o.contrast.',...
-                                    oo(oi).responseScreenAbsoluteContrast);
-                            end
-                            % Note alphabet placement on top or right.
-                            % Using ReadAlphabetFromDisk, I get the right
-                            % polarity if I set signalIsBinary. However,
-                            % the clipping threshold is way off so the
-                            % letters are oddly distorted. denis 2018
-                            if oo(oi).signalIsBinary
-                                if oo(oi).thresholdPolarity<0
-                                    if ~isempty(oo(oi).responseScreenAbsoluteContrast) && ~ismember(oo(oi).responseScreenAbsoluteContrast,[0.99 1])
-                                        ffprintf(ff,['Ignoring o.responseScreenAbsoluteContrast (%.2f). '...
-                                            'Response screen for negative contrast binary signals is always nearly 100% contrast.\n'],...
-                                            oo(oi).responseScreenAbsoluteContrast);
-                                        error('Ignoring o.responseScreenAbsoluteContrast (%.2f). Please use default [].',oo(oi).responseScreenAbsoluteContrast);
+                                    if useImresize
+                                        % We use 'bilinear' method to make sure
+                                        % that all new values are within the
+                                        % old range. That's important because
+                                        % we set up the CLUT with the old
+                                        % range.
+                                        img=imresize(img,[RectHeight(rect), RectWidth(rect)],'bilinear');
+                                    else
+                                        % If the imresize function (in Image
+                                        % Processing Toolbox) is not available
+                                        % then the image is resized by the
+                                        % DrawTexture command below.
                                     end
-                                    texture=Screen('MakeTexture',oo(1).window,~img*oo(oi).gray1,0,0,1); % Uses only two clut entries (0 1), nicely antialiased.
+                                end % if useExpand
+                                %  PrintImageStatistics(MFileLineNr,oo(oi),i,'after resize',img)
+                                if oo(oi).responseScreenAbsoluteContrast<0
+                                    error('o.responseScreenAbsoluteContrast %.2f must be positive. Sign will track o.contrast.',...
+                                        oo(oi).responseScreenAbsoluteContrast);
+                                end
+                                % Note alphabet placement on top or right.
+                                % Using ReadAlphabetFromDisk, I get the right
+                                % polarity if I set signalIsBinary. However,
+                                % the clipping threshold is way off so the
+                                % letters are oddly distorted. denis 2018
+                                if oo(oi).signalIsBinary
+                                    if oo(oi).thresholdPolarity<0
+                                        if ~isempty(oo(oi).responseScreenAbsoluteContrast) && ~ismember(oo(oi).responseScreenAbsoluteContrast,[0.99 1])
+                                            ffprintf(ff,['Ignoring o.responseScreenAbsoluteContrast (%.2f). '...
+                                                'Response screen for negative contrast binary signals is always nearly 100% contrast.\n'],...
+                                                oo(oi).responseScreenAbsoluteContrast);
+                                            error('Ignoring o.responseScreenAbsoluteContrast (%.2f). Please use default [].',oo(oi).responseScreenAbsoluteContrast);
+                                        end
+                                        texture=Screen('MakeTexture',oo(1).window,~img*oo(oi).gray1,0,0,1); % Uses only two clut entries (0 1), nicely antialiased.
+                                    else
+                                        if isempty(oo(oi).responseScreenAbsoluteContrast)
+                                            c=(cal.LLast-oo(oi).LBackground)/oo(oi).LBackground; % Max possible contrast.
+                                            c=min(c,1);
+                                        else
+                                            c=oo(oi).responseScreenAbsoluteContrast;
+                                        end
+                                        texture=Screen('MakeTexture',oo(1).window,(c*img+1)*oo(oi).gray,0,0,1);
+                                    end
                                 else
+                                    PrintImageStatistics(MFileLineNr,oo(oi),i,'after MakeTexture',img)
                                     if isempty(oo(oi).responseScreenAbsoluteContrast)
-                                        c=(cal.LLast-oo(oi).LBackground)/oo(oi).LBackground; % Max possible contrast.
-                                        c=min(c,1);
+                                        % Maximize absolute contrast.
+                                        if oo(oi).thresholdPolarity>0
+                                            c=(cal.LLast-oo(oi).LBackground)/oo(oi).LBackground; % Max possible contrast.
+                                            c=min(c,1);
+                                        else
+                                            c=(cal.LFirst-oo(oi).LBackground)/oo(oi).LBackground; % Most negative possible contrast.
+                                            c=max(c,-1);
+                                        end
                                     else
                                         c=oo(oi).responseScreenAbsoluteContrast;
                                     end
-                                    texture=Screen('MakeTexture',oo(1).window,(c*img+1)*oo(oi).gray,0,0,1);
-                                end
-                            else
-                                PrintImageStatistics(MFileLineNr,oo(oi),i,'after MakeTexture',img)
-                                if isempty(oo(oi).responseScreenAbsoluteContrast)
-                                    % Maximize absolute contrast.
-                                    if oo(oi).thresholdPolarity>0
-                                        c=(cal.LLast-oo(oi).LBackground)/oo(oi).LBackground; % Max possible contrast.
-                                        c=min(c,1);
-                                    else
-                                        c=(cal.LFirst-oo(oi).LBackground)/oo(oi).LBackground; % Most negative possible contrast.
-                                        c=max(c,-1);
+                                    im=1+c*img;
+                                    if oo(oi).printImageStatistics
+                                        fprintf('%d: o.signalMin %.2f, o.signalMax %.2f\n',...
+                                            MFileLineNr,oo(oi).signalMin,oo(oi).signalMax);
+                                        fprintf('%d: c %.2f, 1+c*o.signalMin %.2f, 1+c*o.signalMax %.2f\n',...
+                                            MFileLineNr,c,1+c*oo(oi).signalMin,1+c*oo(oi).signalMax);
+                                        fprintf('%d: o.LBackground %.1f, LB*(1+c*o.signalMin) %.2f, LB*(1+c*o.signalMax) %.2f\n',...
+                                            MFileLineNr,oo(oi).LBackground,oo(oi).LBackground*(1+c*[oo(oi).signalMin oo(oi).signalMax]));
+                                        fprintf('%d: "1+signal  " im: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f\n',...
+                                            MFileLineNr,size(im,1),size(im,2),size(im,3),mean(im(:)),std(im(:)),min(im(:)),max(im(:)));
                                     end
-                                else
-                                    c=oo(oi).responseScreenAbsoluteContrast;
+                                    im=IndexOfLuminance(cal,im*oo(oi).LBackground)/oo(oi).maxEntry;
+                                    if oo(oi).printImageStatistics
+                                        fprintf('%d: "index         " im: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f\n',...
+                                            MFileLineNr,size(im,1),size(im,2),size(im,3),mean(im(:)),std(im(:)),min(im(:)),max(im(:)));
+                                    end
+                                    texture=Screen('MakeTexture',oo(1).window,im,0,0,1);
                                 end
-                                im=1+c*img;
-                                if oo(oi).printImageStatistics
-                                    fprintf('%d: o.signalMin %.2f, o.signalMax %.2f\n',...
-                                        MFileLineNr,oo(oi).signalMin,oo(oi).signalMax);
-                                    fprintf('%d: c %.2f, 1+c*o.signalMin %.2f, 1+c*o.signalMax %.2f\n',...
-                                        MFileLineNr,c,1+c*oo(oi).signalMin,1+c*oo(oi).signalMax);
-                                    fprintf('%d: o.LBackground %.1f, LB*(1+c*o.signalMin) %.2f, LB*(1+c*o.signalMax) %.2f\n',...
-                                        MFileLineNr,oo(oi).LBackground,oo(oi).LBackground*(1+c*[oo(oi).signalMin oo(oi).signalMax]));
-                                    fprintf('%d: "1+signal  " im: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f\n',...
-                                        MFileLineNr,size(im,1),size(im,2),size(im,3),mean(im(:)),std(im(:)),min(im(:)),max(im(:)));
+                                Screen('DrawTexture',oo(1).window,texture,RectOfMatrix(img),rect);
+                                Screen('Close',texture);
+                                if oo(oi).labelAnswers
+                                    Screen('TextSize',oo(1).window,oo(oi).textSize);
+                                    switch oo(oi).targetKind
+                                        case 'gabor'
+                                            textRect=AlignRect([0 0 oo(oi).textSize oo(oi).textSize],rect,'center','top');
+                                        case {'letter' 'word'}
+                                            % Small label letter is centered below big foreign letter.
+                                            textRect=AlignRect([0 0 oo(oi).textSize oo(oi).textSize],rect,'center','bottom');
+                                            textRect=OffsetRect(textRect,0,oo(oi).textSize); % Avoid overlap.
+                                        otherwise
+                                            textRect=AlignRect([0 0 oo(oi).textSize oo(oi).textSize],rect,'left','top');
+                                    end
+                                    Screen('DrawText',oo(1).window,oo(oi).responseLabels(i),textRect(1),textRect(4),black,oo(oi).gray1,1);
                                 end
-                                im=IndexOfLuminance(cal,im*oo(oi).LBackground)/oo(oi).maxEntry;
-                                if oo(oi).printImageStatistics
-                                    fprintf('%d: "index         " im: size %dx%dx%d, mean %.2f, sd %.2f, min %.2f, max %.2f\n',...
-                                        MFileLineNr,size(im,1),size(im,2),size(im,3),mean(im(:)),std(im(:)),min(im(:)),max(im(:)));
-                                end
-                                texture=Screen('MakeTexture',oo(1).window,im,0,0,1);
-                            end
-                            Screen('DrawTexture',oo(1).window,texture,RectOfMatrix(img),rect);
-                            Screen('Close',texture);
-                            if oo(oi).labelAnswers
-                                Screen('TextSize',oo(1).window,oo(oi).textSize);
-                                switch oo(oi).targetKind
-                                    case 'gabor'
-                                        textRect=AlignRect([0 0 oo(oi).textSize oo(oi).textSize],rect,'center','top');
-                                    case 'letter'
-                                        % Small label letter is centered below big foreign letter.
-                                        textRect=AlignRect([0 0 oo(oi).textSize oo(oi).textSize],rect,'center','bottom');
-                                        textRect=OffsetRect(textRect,0,oo(oi).textSize); % Avoid overlap.
-                                    otherwise
-                                        textRect=AlignRect([0 0 oo(oi).textSize oo(oi).textSize],rect,'left','top');
-                                end
-                                Screen('DrawText',oo(1).window,oo(oi).responseLabels(i),textRect(1),textRect(4),black,oo(oi).gray1,1);
-                            end
-                            rect=OffsetRect(rect,step(1),step(2));
-                        end % for i=1:oo(oi).alternatives
+                                rect=OffsetRect(rect,step(1),step(2));
+                            end % for i=1:oo(oi).alternatives
+                        end % if suppressResponses
                         leftEdgeOfResponse=rect(1);
                 end % switch oo(oi).task
                 if oo(oi).assessLoadGamma
@@ -4206,31 +4269,69 @@ try
                     response=clicks;
                 case 'identify'
                     o.quitBlock=false;
-                    % Prepare list of keys to enable.
                     
+                    % Prepare list of keys to enable.
                     if oo(oi).labelAnswers
-                        if length(oo(oi).alphabet)>length(oo(oi).responseLabels)
-                            error('o.labelAnswers is true, but o.alphabet is longer than o.responseLabels: %d > %d.',length(oo(oi).alphabet),length(oo(oi).responseLabels));
+                        if oo(oi).alternatives>length(oo(oi).responseLabels)
+                            error('o.labelAnswers is true, but o.alternatives %d exceeds length %d of o.responseLabels.',oo(oi).alternatives,length(oo(oi).responseLabels));
                         end
-                        oo(oi).validResponseLabels=oo(oi).responseLabels(1:length(oo(oi).alphabet));
+                        oo(oi).validResponseKeys=oo(oi).responseLabels(1:oo(oi).alternatives);
                     else
-                        oo(oi).validResponseLabels=oo(oi).alphabet;
+                        switch oo(oi).targetKind
+                            case 'word'
+                                % oo(oi).validResponseKeys=unique([oo(oi).words{1:oo(oi).alternatives}]);
+                                oo(oi).validResponseKeys=oo(oi).alphabet;
+                            otherwise
+                                oo(oi).validResponseKeys=oo(oi).alphabet(1:oo(oi).alternatives);
+                        end
                     end
                     
-                    
-                    ok=ismember(lower(oo(oi).validResponseLabels),letterNumberCharString);
+                    ok=ismember(lower(oo(oi).validResponseKeys),letterNumberCharString);
                     if ~all(ok)
-                        error('Oops. Not all the characters in o.validResponseLabels "%s" are in the list of letterNumber keys: "%s".',oo(oi).validResponseLabels,unique(letterNumberCharString));
+                        error('Oops. Not all the characters in o.validResponseKeys "%s" are in the list of letterNumber keys: "%s".',oo(oi).validResponseKeys,unique(letterNumberCharString));
                     end
                     enableKeyCodes=[escapeKeyCode graveAccentKeyCode];
-                    for i=1:length(oo(oi).validResponseLabels)
-                        enableKeyCodes=[enableKeyCodes letterNumberKeyCodes(lower(oo(oi).validResponseLabels(i))==letterNumberCharString)];
+                    for i=1:length(oo(oi).validResponseKeys)
+                        enableKeyCodes=[enableKeyCodes letterNumberKeyCodes(lower(oo(oi).validResponseKeys(i))==letterNumberCharString)];
                     end
-                    responseChar=GetKeypress(enableKeyCodes,oo(oi).deviceIndex);
-                    if ismember(responseChar,[escapeChar,graveAccentChar])
-                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(oo(1).window,oo,oo(oi).textMarginPix);
-                        trial=trial-1;
-                        oo(oi).trials=oo(oi).trials-1;
+                    if streq(oo(oi).targetKind,'word') && ~oo(oi).labelAnswers
+                        % Observer must supply enough characters for
+                        % longest possible word.
+                        n=[];
+                        for i=1:length(oo(oi).words)
+                            n(i)=length(oo(oi).words{i});
+                        end
+                        responseChars=max(n);
+                    else
+                        responseChars=1;
+                    end
+                    responseWord='';
+                    for iResponse=1:responseChars
+                        responseChar=GetKeypress(enableKeyCodes,oo(oi).deviceIndex);
+                        if ismember(responseChar,[escapeChar,graveAccentChar])
+                            [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(oo(1).window,oo,oo(oi).textMarginPix);
+                            trial=trial-1;
+                            oo(oi).trials=oo(oi).trials-1;
+                            break
+                        end
+                        if iResponse==1
+                            oo(oi).transcript.responseTimeSecs(oo(oi).trials)=GetSecs-oo(oi).transcript.stimulusOnsetSecs(oo(oi).trials);
+                        end
+                        if length(responseChar) > 1
+                            % GetKeypress might return a multi-character string,
+                            % but our code assumes the response is a scalar, not a
+                            % matrix. So we replace the string by 0.
+                            responseChar=char(0);
+                        end
+                        responseWord(end+1)=responseChar;
+                        if responseChars>1
+                            Speak(responseChar);
+                        end
+                    end
+                    if streq(oo(oi).targetKind,'word') && ~oo(oi).labelAnswers
+                        [ok,response]=ismember(lower(responseWord),lower(oo(oi).words));
+                    else
+                        [ok,response]=ismember(lower(responseChar),lower(oo(oi).validResponseKeys));
                     end
                     if o.quitExperiment
                         oo(1).quitExperiment=true;
@@ -4251,14 +4352,6 @@ try
                         ffprintf(ff,'*** User typed ESCAPE. Proceeding to next trial.\n');
                         continue
                     end
-                    oo(oi).transcript.responseTimeSecs(oo(oi).trials)=GetSecs-oo(oi).transcript.stimulusOnsetSecs(oo(oi).trials);
-                    if length(responseChar) > 1
-                        % GetKeypress might return a multi-character string,
-                        % but our code assumes the response is a scalar, not a
-                        % matrix. So we replace the string by 0.
-                        responseChar=0;
-                    end
-                    [ok,response]=ismember(lower(responseChar),lower(oo(oi).validResponseLabels));
                 case 'identifyAll'
                     message=sprintf('Please type all three letters (%s) followed by RETURN:',oo(oi).alphabet(1:oo(oi).alternatives));
                     textRect=[0, 0, oo(oi).textSize, 1.2*oo(oi).textSize];
@@ -4698,9 +4791,10 @@ try
         oo(1).newCal=cal;
         save(fullfile(oo(1).dataFolder,[oo(1).dataFilename '.mat']),'oo','cal');
         try % save to .json file
-            if streq(oo(oi).targetKind,'image')
+            if ismember(oo(oi).targetKind,{'image' 'word'})
                 % json encoding of 12 faces takes 60 s, which is
                 % unbearable, so we omit the signals from the json file.
+                % Omit words too, since there may be many.
                 oo1=rmfield(oo,'signal');
             else
                 oo1=oo;
@@ -5935,9 +6029,9 @@ function CloseWindowsAndCleanup(oo)
 % so we leave that alone, until we're cleaning up after the last block.
 global rushToDebug isLastBlock
 if nargin==1
-%     fprintf('CloseWindowsAndCleanup(oo): isFirstBlock=%d, isLastBlock=%d, global isLastBlock=%d.\n',...
-%         oo(1).isFirstBlock,oo(1).isLastBlock,isLastBlock);
-%     isLastBlock=oo(1).isLastBlock;
+    %     fprintf('CloseWindowsAndCleanup(oo): isFirstBlock=%d, isLastBlock=%d, global isLastBlock=%d.\n',...
+    %         oo(1).isFirstBlock,oo(1).isLastBlock,isLastBlock);
+    %     isLastBlock=oo(1).isLastBlock;
 end
 if ~isempty(Screen('Windows'))
     fprintf('Closing the window. ... ');
