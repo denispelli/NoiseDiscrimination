@@ -221,6 +221,8 @@ o.nearPointXYInUnitSquare=[0.5 0.5];
 o.viewingDistanceCm=40;
 o.noiseSD=0;
 o.observer=''; % Test human
+o.fixationLineWeightDeg=0.2;
+o.fixationCrossDeg=3; % 0, 3, and inf are typical values.
 
 if 1
     % Calibri
@@ -257,6 +259,9 @@ if 1
     o.conditionName='Efficiency';
     o.eccentricityXYDeg=[0 0];
     o.observer=''; % Test human
+    o.blankingRadiusReTargetHeight= 1.5;
+    o.fixationLineWeightDeg=0.2;
+    o.fixationCrossDeg=40; % 0, 3, and inf are typical values.
     switch o.noiseType
         case 'gaussian'
             maxNoiseSD=0.16*2^0.5;
@@ -293,7 +298,7 @@ end
 t=struct2table(oo,'AsArray',true);
 % Print the conditions in the Command Window.
 disp(t(:,{'block' 'experiment' 'conditionName' 'targetFont' 'observer' 'noiseSD' 'targetHeightDeg' 'eccentricityXYDeg'})); 
-return
+% return
 
 %% Measure threshold, one block per iteration.
 for i=1:length(ooo)
@@ -302,8 +307,8 @@ for i=1:length(ooo)
 %         oo(oi).useFractionOfScreenToDebug=0.5; % USE ONLY FOR DEBUGGING.
 %         oo(oi).rushToDebug=true; % USE ONLY FOR DEBUGGING.
         oo(oi).blocksDesired=length(ooo);
-        oo(oi).isFirstBlock=false;
-        oo(oi).isLastBlock=false;
+        oo(oi).isFirstBlock=(i==1);
+        oo(oi).isLastBlock=(i==length(ooo));
         if i==1
             oo(oi).experimenter='Darshan';
         else
@@ -311,19 +316,14 @@ for i=1:length(ooo)
             oo(oi).observer=old.observer;
             oo(oi).viewingDistanceCm=old.viewingDistanceCm;
         end
-        oo(oi).fixationCrossBlankedNearTarget=false;
-        oo(oi).fixationLineWeightDeg=0.1;
-        oo(oi).fixationCrossDeg=1; % 0, 3, and inf are typical values.
-        oo(oi).trialsPerBlock=50;
+        oo(oi).fixationCrossBlankedNearTarget=true;
+        oo(oi).trialsPerBlock=40;
         oo(oi).practicePresentations=0;
         oo(oi).targetDurationSecs=0.2; % duration of display of target and flankers
         oo(oi).repeatedTargets=0;
     end
-    ooo{i}=oo;
-    ooo{1}(1).isFirstBlock=true;
-    ooo{end}(1).isLastBlock=true;
-    oo=ooo{i};
     oo=NoiseDiscrimination2(oo);
+    ooo{i}=oo;
     if ~any([oo.quitBlock])
         fprintf('Finished block %d.\n',i);
     end
