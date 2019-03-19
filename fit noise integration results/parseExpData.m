@@ -71,11 +71,11 @@ for i=1:length(parsefiles)
             pdata{j,3}=sqrt(2*6);
         else
             pdata{j,3}=round(o.targetHeightDeg);
-        end;
+        end
         pdata{j,4}=o.noiseSD; %noise contrast
         if o.noiseRadiusDeg==inf && o.noiseCheckDeg==0 % hard edge no noise
             pdata{j, 4}=0;
-        end;
+        end
         pdata{j,5}=o.noiseEnvelopeSpaceConstantDeg; %noise decay radius
         pdata{j,6}=o.eccentricityDeg; %eccentricity
         %pdata(j,)=o.; %seconds per trials
@@ -95,14 +95,14 @@ for i=1:length(parsefiles)
             E=o.EOverN*N;
             E1=E/o.contrast^2;
             pdata{j,14}=E1;
-        end;
+        end
         if isfield(o, 'N')
             pdata{j,15}=o.N; % noise power spectral density
             N = o.N;
         else % for old data without o.N
             N = (o.noiseSD^2)*o.noiseCheckDeg^2;
             pdata{j,15}=N;
-        end;
+        end
         %end;
         
         E = E1*o.contrast^2;
@@ -116,35 +116,35 @@ for i=1:length(parsefiles)
             pdata{j,18}=o.targetCross;
         else
             pdata{j,18}=0;
-        end;
+        end
         
         if isfield(o,'noiseSpectrum')
             if strcmp(o.noiseSpectrum, 'white')
                 pdata{j,19}=0;
             elseif strcmp(o.noiseSpectrum, 'pink')
                 pdata{j,19}=1;
-            end;
+            end
         else
             pdata{j,19}=0; % data in week 1&2, all white noise
-        end;
+        end
         % 0 is white and 1 is pink, for computing in getStats
         % would be converted back after getStats
         
         pdata{j,20}=o.noiseCheckDeg;
         
         if isfield(o,'targetKind')
-            if strcmp(o.targetKind, 'letter')
+            if ismember(o.targetKind, {'letter' 'word'}) % March 2019 DGP
                 pdata{j,21}=0;
             elseif strcmp(o.targetKind, 'gabor')
                 pdata{j,21}=1;
-            end;
+            end
         else
             pdata{j,21}=0; % data before, all letters
-        end;
+        end
         
         j = j+1;
         
-    end;
+    end
     clear o;
 end
 pdata( all(cellfun(@isempty,pdata),2), : ) = []; %removes empty cell rows
