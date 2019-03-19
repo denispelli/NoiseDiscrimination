@@ -46,7 +46,12 @@ for oi=1:length(oo)
         switch oo(oi).targetKind
             case {'letter' 'image'}
                 oo(oi).A=oo(oi).targetHeightDeg^2;
-            case {'gabor'}
+            case 'word'
+                % Estimate letter width as half the height.
+                % Perhaps we could read the actual ratio of width/height of
+                % the signal image.
+                oo(oi).A=0.5*length(oo(oi).words{1})*oo(oi).targetHeightDeg^2;
+            case 'gabor'
                 oo(oi).targetCyclesPerDeg=oo(oi).targetGaborCycles/oo(oi).targetHeightDeg;
                 oo(oi).A=oo(oi).targetCyclesPerDeg^-2;
         end
