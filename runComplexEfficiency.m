@@ -46,7 +46,7 @@ if 1
     o.readAlphabetFromDisk=true;
     ooo{end+1}=o;
 end
-if 1
+if 0
     % Checkers alphabet
     o.targetFont='Checkers';
     o.minimumTargetHeightChecks=16;
@@ -184,7 +184,7 @@ for i=1:length(ooo)
 %         oo(oi).useFractionOfScreenToDebug=0.5; % USE ONLY FOR DEBUGGING.
 %         oo(oi).rushToDebug=true; % USE ONLY FOR DEBUGGING.
         oo(oi).block=oi;
-        oo(oi).blocksDesired=length(oo);
+        oo(oi).blocksDesired=length(ooo);
         oo(oi).isFirstBlock=false;
         oo(oi).isLastBlock=false;
         oo(oi).alternatives=length(oo(oi).alphabet);
