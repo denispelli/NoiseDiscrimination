@@ -301,7 +301,6 @@ for i=1:length(ooo)
     for oi=1:length(oo)
 %         oo(oi).useFractionOfScreenToDebug=0.5; % USE ONLY FOR DEBUGGING.
 %         oo(oi).rushToDebug=true; % USE ONLY FOR DEBUGGING.
-        oo(oi).block=oi;
         oo(oi).blocksDesired=length(ooo);
         oo(oi).isFirstBlock=false;
         oo(oi).isLastBlock=false;
