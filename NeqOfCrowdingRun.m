@@ -1,6 +1,6 @@
 % NeqOfCrowdingRun.m
-% Show target with two flankers. Measure threshold
-% contrast of flankers to bring target identification to 75% correct.
+% Show target with two flankers. Measure threshold contrast of flankers to
+% bring target identification to 75% correct.
 % P=0.75, assuming 9 alternatives
 % luminance 250 cd/m2
 % binocular, 15 deg vertical eccentricity.
