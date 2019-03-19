@@ -274,7 +274,7 @@ if 1
     ooo{end+1}=[o oNoise];
 end
 if 1
-    % Test ideal.
+    % Test ideal too.
     oo=ooo{end};
     [oo.observer]=deal('ideal');
     ooo{end+1}=oo;
@@ -292,19 +292,18 @@ end
 t=struct2table(oo,'AsArray',true);
 % Print the conditions in the Command Window.
 disp(t(:,{'block' 'experiment' 'conditionName' 'targetFont' 'observer' 'noiseSD' 'targetHeightDeg' 'eccentricityXYDeg'})); 
-% return
+return
 
 %% Measure threshold, one block per iteration.
 for i=1:length(ooo)
     oo=ooo{i};
     for oi=1:length(oo)
-        %         oo(oi).useFractionOfScreenToDebug=0.5; % USE ONLY FOR DEBUGGING.
-        oo(oi).rushToDebug=true; % USE ONLY FOR DEBUGGING.
+%         oo(oi).useFractionOfScreenToDebug=0.5; % USE ONLY FOR DEBUGGING.
+%         oo(oi).rushToDebug=true; % USE ONLY FOR DEBUGGING.
         oo(oi).block=oi;
         oo(oi).blocksDesired=length(ooo);
         oo(oi).isFirstBlock=false;
         oo(oi).isLastBlock=false;
-        %         oo(oi).alternatives=length(oo(oi).alphabet);
         if i==1
             oo(oi).experimenter='Darshan';
         else
