@@ -500,7 +500,7 @@ for iStyle=1:length(sfList)
     switch oo(1).targetKind
         case 'gabor'
             legendText=sprintf('%.1f c/deg',sf);
-        case 'letter'
+        case {'letter' 'word'} % March 2019 DGP
             legendText=sprintf('%.1f deg',oo(1).targetGaborCycles/sf);
     end
     switch field
