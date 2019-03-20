@@ -207,13 +207,30 @@ o.words={'abed' 'able' 'ably' 'aces' 'ache' 'acid' 'acre' 'acts' 'adds' ...
     'yaws' 'yeah' 'year' 'yell' 'yelp' 'yeti' 'yoga' 'yogi' 'yoke' 'yolk' ...
     'yore' 'your' 'yule' 'zeal' 'zebu' 'zero' 'zest' 'zinc' 'zing' 'zone' ...
     'zoom' }; 
-% 1817 words, after removing contractions, proper nouns, and three obscenities.
+% 1817 words, after removing contractions, proper nouns, and three
+% obscenities.
+o.labelAnswers=false;
+o.targetKind='word';
+o.alphabet='abcdefghijklmnopqrstuvwxyz'; % alphabet for o.words
+o.alternatives=length(o.words);
+o.readAlphabetFromDisk=false;
+o.targetFont='Monaco';
+o.minimumTargetHeightChecks=8;
+
 o.experiment='Words';
 o.recordGaze=false;
 o.eccentricityXYDeg=[0 0];
 o.targetHeightDeg=3;
 o.contrast=-1;
 o.noiseType='binary';
+switch o.noiseType
+    case 'gaussian'
+        maxNoiseSD=0.16*2^0.5;
+        p2=0.5;
+    case 'binary'
+        maxNoiseSD=0.16*2^2;
+        p2=2;
+end
 o.blankingRadiusReTargetHeight= 0;
 o.blankingRadiusReEccentricity= 0;
 o.noiseCheckDeg=o.targetHeightDeg/40;
@@ -221,95 +238,73 @@ o.setNearPointEccentricityTo='fixation';
 o.nearPointXYInUnitSquare=[0.5 0.5];
 o.viewingDistanceCm=40;
 o.noiseSD=0;
+o.observer=''; % Test human.
+o.setNearPointEccentricityTo='fixation';
+o.nearPointXYInUnitSquare=[0.5 0.5];
 o.observer=''; % Test human
-o.fixationLineWeightDeg=0.2;
-o.fixationCrossDeg=3; % 0, 3, and inf are typical values.
+o.fixationCrossBlankedNearTarget=true;
+o.trialsPerBlock=40;
+o.targetDurationSecs=0.2; % duration of display of target and flankers
+o.practicePresentations=0;
+o.repeatedTargets=0;
+o.eyes='both';
+o.noiseCheckDeg=o.targetHeightDeg/40;
+o.setNearPointEccentricityTo='fixation';
+o.noiseSD=0;
+% USE THESE ONLY FOR DEBUGGING!
+% o.useFractionOfScreenToDebug=0.5; % USE ONLY FOR DEBUGGING.
+% o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 
 if 1
-    % Calibri
     o.conditionName='Peripheral acuity';
+    % Block 1. Two conditions, up and down.
     o.thresholdParameter='size';
     o.eccentricityXYDeg=[0 10];
-    o.targetFont='Monaco';
-    o.minimumTargetHeightChecks=8;
-    %     o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
-    %     o.borderLetter='X';
-    o.labelAnswers=false;
-    o.targetKind='word';
-    o.alphabet='abcdefghijklmnopqrstuvwxyz'; % alphabet for o.words
-    o.alternatives=length(o.words);
-    o.readAlphabetFromDisk=false;
-    ooo{end+1}=o;
-end
-
-% Randomly interleave testing up and down.
-for i=1:length(ooo)
-    o=ooo{i};
-    o.setNearPointEccentricityTo='fixation';
-    o.nearPointXYInUnitSquare=[0.5 0.5];
-    o.viewingDistanceCm=40;
+    o.fixationLineWeightDeg=0.2;
+    o.fixationCrossDeg=3; % 0, 3, and inf are typical values.
+    o.blankingRadiusReTargetHeight= 1.5;
+    % Randomly interleave testing up and down.
     oo=[o o];
     oo(2).eccentricityXYDeg=-oo(2).eccentricityXYDeg;
-    ooo{i}=oo;
+    ooo={oo};
 end
 
 if 1
-    % Test once with zero and twice with high noise, interleaved.
-    o=ooo{1}(1);
     o.conditionName='Efficiency';
+    % Block 2. Three thresholds, one in zero and two in high noise.
     o.thresholdParameter='contrast';
     o.eccentricityXYDeg=[0 0];
-    o.observer=''; % Test human
-    o.blankingRadiusReTargetHeight= 1.5;
     o.fixationLineWeightDeg=0.2;
     o.fixationCrossDeg=40; % 0, 3, and inf are typical values.
-    switch o.noiseType
-        case 'gaussian'
-            maxNoiseSD=0.16*2^0.5;
-            p2=0.5;
-        case 'binary'
-            maxNoiseSD=0.16*2^2;
-            p2=2;
-    end
     o.noiseCheckDeg=o.targetHeightDeg/40;
     o.setNearPointEccentricityTo='fixation';
-    o.nearPointXYInUnitSquare=[0.5 0.5];
-    o.viewingDistanceCm=40;
     o.noiseSD=0;
     oNoise=o;
     oNoise.noiseSD=maxNoiseSD;
     ooo{end+1}=[o oNoise oNoise];
 end
 if 1
-    % Test ideal too.
-    oo=ooo{end};
-    [oo.observer]=deal('ideal');
-    ooo{end+1}=oo;
+    % Test ideal.
+    % Block 3. Three thresholds, one in zero and two in high noise.
+    ooo{end+1}=ooo{end};
+    [ooo{end}.observer]=deal('ideal');
 end
 
 for i=1:length(ooo)
-    oo=ooo{i};
-    for oi=1:length(oo)
-        oo(oi).fixationCrossBlankedNearTarget=true;
-        oo(oi).trialsPerBlock=40;
-        oo(oi).practicePresentations=0;
-        oo(oi).targetDurationSecs=0.2; % duration of display of target and flankers
-        oo(oi).repeatedTargets=0;
-        oo(oi).eyes='both';
-        % USE THESE ONLY FOR DEBUGGING! %
-%         oo(oi).useFractionOfScreenToDebug=0.5; % USE ONLY FOR DEBUGGING.
-%         oo(oi).skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
-    end
-    ooo{i}=oo;
+    [ooo{i}.block]=deal(i);
 end
 
 %% Print as a table. One row per threshold.
 for i=1:length(ooo)
-    [ooo{i}.block]=deal(i);
     if i==1
         oo=ooo{1};
     else
+        try
         oo=[oo ooo{i}];
+        catch e
+            fprintf('Success with %d conditions in %d blocks. Failed on next block.\n',length(oo),max([oo.block]));
+            throw(e)
+        end
     end
 end
 t=struct2table(oo,'AsArray',true);
