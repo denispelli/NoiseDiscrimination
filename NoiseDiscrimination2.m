@@ -18,6 +18,12 @@ function oo=NoiseDiscrimination2(ooIn)
 % that you don't carry over any values from a prior iteration or
 % experiment.
 %
+% o.targetKind can now be 'word', in addition to 'letter' 'gabor' and
+% 'image'. March 20, 2019
+%
+% o.thresholdParameter can now be 'size' or 'contrast'. ('spacing' isn't
+% yet fully implemented.) March 20, 2019
+%
 % OFF THE NYU CAMPUS: If you have an NYU netid and you're using the NYU
 % MATLAB license server then you can work from off campus if you install
 % NYU's free VPN software on your computer:
@@ -684,7 +690,7 @@ o.quitBlock=false; % Returned value is true if the user aborts this block.
 o.quitExperiment=false; % Returned value is true if the observer wants to quit whole experiment now; no more blocks.
 o.task='identify'; % 'identify', 'identifyAll' or '4afc' or 'rate'
 % o.thresholdParameter='size';
-% o.thresholdParameter='spacing';
+% o.thresholdParameter='spacing'; % Not yet fully implemented.
 o.thresholdParameter='contrast'; % Use Quest to measure threshold 'contrast','size', 'spacing', or 'flankerContrast'.
 o.thresholdResponseTo='target'; % 'target' 'flankers'
 o.constantStimuli=[];
