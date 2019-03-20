@@ -20,6 +20,8 @@
 
 % Acuity at ±10 deg ecc.
 % Efficiency at 0 deg ecc.
+myPath=fileparts(mfilename('fullpath')); % Takes 0.1 s.
+addpath(fullfile(myPath,'lib')); % Folder in same directory as this M file.
 
 clear o oo ooo
 ooo={};
@@ -210,7 +212,7 @@ o.words={'abed' 'able' 'ably' 'aces' 'ache' 'acid' 'acre' 'acts' 'adds' ...
 o.experiment='Words';
 o.recordGaze=false;
 o.eccentricityXYDeg=[0 0];
-o.targetHeightDeg=6;
+o.targetHeightDeg=3;
 o.contrast=-1;
 o.noiseType='binary';
 o.blankingRadiusReTargetHeight= 0;
@@ -227,10 +229,9 @@ o.fixationCrossDeg=3; % 0, 3, and inf are typical values.
 if 1
     % Calibri
     o.conditionName='Peripheral acuity';
-    o.eccentricityXYDeg=[0 10];
     o.thresholdParameter='size';
-    o.thresholdParameter='contrast';
-    o.targetFont='Calibri';
+    o.eccentricityXYDeg=[0 10];
+    o.targetFont='Monaco';
     o.minimumTargetHeightChecks=8;
     %     o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
     %     o.borderLetter='X';
@@ -242,7 +243,7 @@ if 1
     ooo{end+1}=o;
 end
 
-% Randomly interleave testing left and right.
+% Randomly interleave testing up and down.
 for i=1:length(ooo)
     o=ooo{i};
     o.setNearPointEccentricityTo='fixation';
@@ -254,9 +255,10 @@ for i=1:length(ooo)
 end
 
 if 1
-    % Test with zero and high noise, interleaved.
+    % Test once with zero and twice with high noise, interleaved.
     o=ooo{1}(1);
     o.conditionName='Efficiency';
+    o.thresholdParameter='contrast';
     o.eccentricityXYDeg=[0 0];
     o.observer=''; % Test human
     o.blankingRadiusReTargetHeight= 1.5;
@@ -270,20 +272,36 @@ if 1
             maxNoiseSD=0.16*2^2;
             p2=2;
     end
-    o.noiseCheckDeg=oo(oi).targetHeightDeg/40;
+    o.noiseCheckDeg=o.targetHeightDeg/40;
     o.setNearPointEccentricityTo='fixation';
     o.nearPointXYInUnitSquare=[0.5 0.5];
     o.viewingDistanceCm=40;
     o.noiseSD=0;
     oNoise=o;
     oNoise.noiseSD=maxNoiseSD;
-    ooo{end+1}=[o oNoise];
+    ooo{end+1}=[o oNoise oNoise];
 end
 if 1
     % Test ideal too.
     oo=ooo{end};
     [oo.observer]=deal('ideal');
     ooo{end+1}=oo;
+end
+
+for i=1:length(ooo)
+    oo=ooo{i};
+    for oi=1:length(oo)
+        oo(oi).fixationCrossBlankedNearTarget=true;
+        oo(oi).trialsPerBlock=40;
+        oo(oi).practicePresentations=0;
+        oo(oi).targetDurationSecs=0.2; % duration of display of target and flankers
+        oo(oi).repeatedTargets=0;
+        oo(oi).eyes='both';
+        % USE THESE ONLY FOR DEBUGGING! %
+        oo(oi).useFractionOfScreenToDebug=0.5; % USE ONLY FOR DEBUGGING.
+%         oo(oi).skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+    end
+    ooo{i}=oo;
 end
 
 %% Print as a table. One row per threshold.
@@ -300,35 +318,4 @@ t=struct2table(oo,'AsArray',true);
 disp(t(:,{'block' 'experiment' 'conditionName' 'targetFont' 'observer' 'noiseSD' 'targetHeightDeg' 'eccentricityXYDeg'})); 
 % return
 
-%% Measure threshold, one block per iteration.
-for i=1:length(ooo)
-    oo=ooo{i};
-    for oi=1:length(oo)
-%         oo(oi).useFractionOfScreenToDebug=0.5; % USE ONLY FOR DEBUGGING.
-%         oo(oi).rushToDebug=true; % USE ONLY FOR DEBUGGING.
-        oo(oi).blocksDesired=length(ooo);
-        oo(oi).isFirstBlock=(i==1);
-        oo(oi).isLastBlock=(i==length(ooo));
-        if i==1
-            oo(oi).experimenter='Darshan';
-        else
-            oo(oi).experimenter=old.experimenter;
-            oo(oi).observer=old.observer;
-            oo(oi).viewingDistanceCm=old.viewingDistanceCm;
-        end
-        oo(oi).fixationCrossBlankedNearTarget=true;
-        oo(oi).trialsPerBlock=40;
-        oo(oi).practicePresentations=0;
-        oo(oi).targetDurationSecs=0.2; % duration of display of target and flankers
-        oo(oi).repeatedTargets=0;
-    end
-    oo=NoiseDiscrimination2(oo);
-    ooo{i}=oo;
-    if ~any([oo.quitBlock])
-        fprintf('Finished block %d.\n',i);
-    end
-    if any([oo.quitExperiment])
-        break
-    end
-    old=oo(1); % Allow reuse of settings.
-end
+ooo=RunExperiment2(ooo);
