@@ -28,6 +28,9 @@ function [oldLevel,status] = Brightness(screenNumber,newLevel)
 % June 28, 2017, Fixed type of returned value, formerly a string, to now be
 % a number.
 % July 20, 2017. Enhanced to cope with spaces in the path to the applescript.
+% December 1, 2018. Put try-catch block around the code, to gracefully cope
+% with error while Screen window obscures the MATLAB Command Window.
+% Elimited the check for Screen window, which is no longer an issue.
 %
 % This MATLAB function calls my Brightness applescript. The applescript is
 % equivalent to manually opening the System Preferences:Displays panel and
@@ -106,22 +109,27 @@ if ~IsOSX
     status = 1; % Signal failure on this unsupported OS:
     return;
 end
-if length(Screen('Windows')) > 0
-    error(['"Brightness" called while onscreen windows are open. '...
-       'Only call this function before opening the first onscreen window!']);
-end
-scriptPath = which('Brightness.applescript');
-command = ['osascript "' scriptPath '"']; % Double quotes cope with spaces.
-if nargin > 0
-    command = [command,' ',num2str(screenNumber)];
-end
-if nargin > 1
-    command = [command,' ',num2str(newLevel)];
-end
-[status,oldString] = system(command); % THIS LINE TAKES 4.7 s ON MY MACBOOK PRO!
-oldLevel=str2double(oldString);
-if isempty(oldLevel)
-   error('Brightness applescript error: %s',oldString);
+% if length(Screen('Windows')) > 0
+%     error(['"Brightness" called while onscreen windows are open. '...
+%        'Only call this function before opening the first onscreen window!']);
+% end
+try
+    scriptPath = which('Brightness.applescript');
+    command = ['osascript "' scriptPath '"']; % Double quotes cope with spaces.
+    if nargin > 0
+        command = [command,' ',num2str(screenNumber)];
+    end
+    if nargin > 1
+        command = [command,' ',num2str(newLevel)];
+    end
+    [status,oldString] = system(command); % THIS LINE TAKES 4.7 s ON MY MACBOOK PRO!
+    oldLevel=str2double(oldString);
+    if isempty(oldLevel)
+        error('Brightness applescript error: %s',oldString);
+    end
+catch e
+    sca;
+    error(e);
 end
 % When I ran Brightness today, I got an error message saying something like
 % "System Preferences application not running". Once I manually opened
