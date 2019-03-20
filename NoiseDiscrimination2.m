@@ -501,9 +501,14 @@ end
 % variable: o.centralNoiseEnvelopeE1DegDeg
 
 %% GLOBAL AND PERSISTENT
-global rushToDebug % Tells CloseWindowsAndCleanup to skip restoration of brightness.
-global isLastBlock % CloseWindowsAndCleanup skips restoration unless isLastBlock is true.
-persistent window % Retain pointer to open window when this function exits and is called again.
+global isScreenCalibrated % True once we've set profile, brightness, and autobrightness.
+if isempty(isScreenCalibrated)
+    isScreenCalibrated=false; % Make it a logical value.
+end
+global skipScreenCalibration % Saves time by skipping the setting of profile, brightness, and autobrightness.
+global isLastBlock % Skip screen restore and leave window open unless isLastBlock is true.
+global temporaryWindow % Initialized to empty.
+global window % Retain pointer to open window when this function exits and is called again.
 % This must persist from block to block.
 persistent oOld % Saved from previous block to skip prompts that were already answered in the previous block.
 global fixationLines fixationCrossWeightPix labelBounds ...
@@ -573,10 +578,7 @@ if nargin < 1 || ~exist('ooIn','var')
 end
 o=[];
 
-% From CriticalSpacing
 o.minimumTargetPix=8;
-o.isFirstBlock=true;
-o.isLastBlock=true;
 
 % Geometry
 o.nearPointXYInUnitSquare=[0.5 0.5]; % location of target center on screen. [0 0]  lower right, [1 1] upper right.
@@ -628,7 +630,7 @@ o.assessBitDepth=false;
 
 % Debugging
 o.useFractionOfScreenToDebug=false; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
-o.rushToDebug=false; % Speed up debugging by skipping noncritical slow operations: autobrightness, brightness, and screen profile.
+o.skipScreenCalibration=false; % Speed up debugging by skipping noncritical slow operations: autobrightness, brightness, and screen color profile.
 o.printTargetBounds=false;
 o.printCrossCorrelation=false;
 o.printLikelihood=false;
@@ -669,10 +671,15 @@ o.age=20; % Assume age 20, unless later specified.
 % Procedure
 o.trials=0; % Initialize trial counter so it's defined even if user quits early.
 o.trialsPerBlock=40; % Typically 40.
-o.block=1; % We display the the block number. When o.block==blocksDesired this program says "Congratulations" before returning.
-o.blocksDesired=1; % How many blocks you to plan to run? Used solely for display and congratulations and keeping o.window open until last block.
+o.block=1; % We display the the block number. 
+o.blocksDesired=1; % How many blocks you to plan to run. Used solely for display in upper left corner of screen.
+% To save time, we only setup the screen and open the window in the first
+% block and postpone restore the screen and close window until after the
+% last block (including quitting early). RunExperiment2.m properly sets
+% isLastBlock.
+o.isLastBlock=true; % Default. Set this false for all but last block.
 o.speakInstructions=false;
-o.congratulateWhenDone=true; % true or false. Speak after final block (i.e. when o.block==o.blocksDesired).
+o.congratulateWhenDone=true; % true or false. Speak after final block (i.e. when o.isLastBlock).
 o.quitBlock=false; % Returned value is true if the user aborts this block.
 o.quitExperiment=false; % Returned value is true if the observer wants to quit whole experiment now; no more blocks.
 o.task='identify'; % 'identify', 'identifyAll' or '4afc' or 'rate'
@@ -780,7 +787,7 @@ o.showCropMarks=false; % mark the bounding box of the target
 o.showResponseNumbers=true;
 o.responseNumbersInCorners=false;
 o.alphabetPlacement='top'; % 'top' or 'right' while awaiting response.
-o.textSizeDeg=2;
+o.textSizeDeg=1;
 o.textMarginPix=0;
 
 % Response screen
@@ -925,7 +932,8 @@ knownOutputFields={'labelAnswers' 'beginningTime' ...
     'useCentralNoiseEnvelope' 'useCentralNoiseMask'...
     'fixationLineWeightDeg' 'isFirstBlock' ... % From CriticalSpacing
     'isLastBlock'  'minimumTargetPix' ...
-    'practicePresentations' 'repeatedTargets' 'okToShiftCoordinates'
+    'practicePresentations' 'repeatedTargets' 'okToShiftCoordinates' ...
+    'skipThisBlock' ...
     };
 unknownFields={};
 for oi=1:conditions
@@ -1061,30 +1069,31 @@ for oi=1:conditions
         error('This screen has not yet been calibrated. Please use CalibrateScreenLuminance to calibrate it.\n');
     end
     % Check the persistent "window" pointer and clear it unless it's valid.
-    if Screen(window,'WindowKind')~=1
-        window=[];
+    if ~isempty(window)
+        if Screen(window,'WindowKind')~=1
+            error('Illegal window pointer.');
+        end
     end
-    % From here on, assume that a nonempty window is valid.
+    % It's valid.
     oo(oi).window=window;
 end % for oi=1:conditions
 clear o
 
 %% Brightness
-% Keeping this here is no longer necessary. New version of AutoBrightness,
-% in CriticalSpacing, can be called while windows are open.
+% Keeping this brightness code here is no longer necessary. New version of
+% AutoBrightness, in CriticalSpacing, can be called while windows are open.
 o=oo(1);
-rushToDebug=o.rushToDebug; % Set global flag read by CloseWindowsAndCleanup.
+skipScreenCalibration=o.skipScreenCalibration; % Set global flag.
 isLastBlock=o.isLastBlock; % Set global flag read by CloseWindowsAndCleanup.
-if isempty(o.window) && ~ismember(o.observer,o.algorithmicObservers) && ~o.rushToDebug && o.isFirstBlock
+if ~isScreenCalibrated && ~skipScreenCalibration && ~ismember(o.observer,o.algorithmicObservers) 
     useBrightnessFunction=true;
     try
-        % Currently, in December 2018, my brightness function
-        % writes reliably but seems to always fail when reading,
-        % returning -1. So we use my function to write (since
-        % Screen is unreliable there) and use Screen to read (since
-        % my Brightness is failing to read). By the way, the Screen
-        % function is quick writing and reading while my function
-        % is very slow (20 s) writing and reading.
+        % Currently, in December 2018, my brightness function writes
+        % reliably but seems to always fail when reading, returning -1. So
+        % we use my function to write (since Screen is unreliable there)
+        % and use Screen to read (since my Brightness is failing to read).
+        % By the way, the Screen function is quick writing and reading
+        % while my function is very slow (20 s) writing and reading.
         fprintf('Setting Brightness. ... ');
         s=GetSecs;
         for i=1:3
@@ -1134,15 +1143,15 @@ if isempty(o.window) && ~ismember(o.observer,o.algorithmicObservers) && ~o.rushT
         AutoBrightness(cal.screen,0);
         ffprintf(ff,'Done (%.1f s)\n',GetSecs-s);
     end
-end % if isempty(o.window)
+end % if ~isScreenCalibrated && ~skipScreenCalibration && ~ismember(o.observer,o.algorithmicObservers)
 clear o
 oo=SortFields(oo);
 
 if oo(1).useFractionOfScreenToDebug
     ffprintf(ff,'WARNING: Using o.useFractionOfScreenToDebug. This may invalidate all results.\n');
 end
-if oo(1).rushToDebug
-    ffprintf(ff,'WARNING: Using o.rushToDebug. This may invalidate all results.\n');
+if oo(1).skipScreenCalibration
+    ffprintf(ff,'WARNING: Using o.skipScreenCalibration. This may invalidate all results.\n');
 end
 
 %% OnCleanup
@@ -1152,8 +1161,6 @@ end
 % posting of an error here or in any function called from here, or the user
 % hitting control-C.
 cleanup=onCleanup(@() CloseWindowsAndCleanup);
-global isLastBlock
-isLastBlock=true;
 
 %% TRY-CATCH BLOCK CONTAINS ALL CODE IN WHICH THE WINDOW IS OPEN
 try
@@ -1255,7 +1262,7 @@ try
         text.small={'I''ll remember your answers, and skip these questions on the next block.' ...
             'If the keyboard seems dead, please hit Control-C twice to quit, ' ...
             'then quit and restart MATLAB, and run your MATLAB script again.'};
-        text.fine='NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.';
+        text.fine='NoiseDiscrimination Test, Copyright 2016, 2017, 2018, 2019 Denis Pelli. All rights reserved.';
         text.question='Experimenter name:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
         fprintf('*Waiting for experimenter name.\n');
@@ -1275,7 +1282,7 @@ try
         text.small={'I''ll remember your answers, and skip these questions on the next block.' ...
             'If the keyboard seems dead, please hit Control-C twice to quit, ' ...
             'then quit and restart MATLAB, and run your MATLAB script again.'};
-        text.fine='NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.';
+        text.fine='NoiseDiscrimination Test, Copyright 2016, 2017, 2018, 2019 Denis Pelli. All rights reserved.';
         text.question='Observer name:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
         fprintf('*Waiting for observer name.\n');
@@ -1682,9 +1689,6 @@ try
                 if isempty(oo(oi).trialsPerBlock) || ~isfinite(oo(oi).trialsPerBlock)
                     oo(oi).trialsPerBlock=1000;
                 end
-                if isempty(oo(oi).blocksDesired) || ~isfinite(oo(oi).blocksDesired)
-                    oo(oi).blocksDesired=10;
-                end
                 %         degPerCm=57/oo(oi).viewingDistanceCm;
                 %         oo(oi).pixPerCm=45; % for MacBook at native resolution.
                 %         oo(oi).pixPerDeg=oo(oi).pixPerCm/degPerCm;
@@ -1763,13 +1767,15 @@ try
     ffprintf(ff,'%s %s calibrated by %s on %s.\n',cal.localHostName,cal.macModelName,cal.calibratedBy,cal.datestr);
     ffprintf(ff,'%s\n',cal.notes);
     ffprintf(ff,'cal.ScreenConfigureDisplayBrightnessWorks=%.0f;\n',cal.ScreenConfigureDisplayBrightnessWorks);
-    if ~all(ismember({oo.observer},oo(oi).algorithmicObservers)) && ismac && isfield(cal,'profile') && ~any([oo.rushToDebug]) && any([oo.isFirstBlock])
+    if ~isScreenCalibrated && ismac && isfield(cal,'profile') ...
+            && ~all(ismember({oo.observer},oo(oi).algorithmicObservers)) ...
+            && ~skipScreenCalibration
         ffprintf(ff,'cal.profile=''%s'';\n',cal.profile);
-        fprintf('Setting screen profile. ... ');
+        fprintf('Setting screen color profile. ... ');
         s=GetSecs;
         if Screen(oo(1).window,'WindowKind') == 1
             % Set text size.
-            %             oo(oi).textSize=TextSizeToFit(oo(1).window)/2; % Set optimum text size.
+            % oo(oi).textSize=TextSizeToFit(oo(1).window)/2; % Set optimum text size.
             Screen('TextSize',oo(1).window,oo(oi).textSize);
             % Tell observer what's happening.
             Screen('LoadNormalizedGammaTable',oo(1).window,cal.old.gamma,loadOnNextFlip);
@@ -1790,8 +1796,14 @@ try
             end
         end
         ScreenProfile(cal.screen,cal.profile);
-        fprintf('Done setting screen profile (%.1f s).\n',GetSecs-s);
+        fprintf('Done setting screen color profile (%.1f s).\n',GetSecs-s);
     end
+    if ~isScreenCalibrated ...
+            && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers) ...
+            && ~skipScreenCalibration
+        % This is the only place where we set it to true.
+        isScreenCalibrated=true;
+    end % if ~isScreenCalibrated
     Screen('Preference','SkipSyncTests',1);
     oldVisualDebugLevel=Screen('Preference','VisualDebugLevel',0);
     oldSupressAllWarnings=Screen('Preference','SuppressAllWarnings',1);
@@ -1970,7 +1982,7 @@ try
             oo(1).gray=0.5;
         end % if exist('cal','var')
         Screen('Flip',oo(1).window); % Load gamma table
-        if ~isfinite(oo(1).window) || oo(1).window == 0
+        if isempty(oo(1).window) || oo(1).window==0
             ffprintf(ff,'error\n');
             error('Screen OpenWindow failed. Please try again.');
         end
@@ -2019,6 +2031,7 @@ try
                         Speak('Quitting.');
                     end
                     oo(1).quitExperiment=true;
+                    isLastBlock=true; % global DGP
                     CloseWindowsAndCleanup(oo)
                     return
                 end
@@ -2057,6 +2070,7 @@ try
                             Speak('Quitting.');
                         end
                         oo(1).quitExperiment=true;
+                        isLastBlock=true; % global DGP
                         CloseWindowsAndCleanup(oo)
                         return
                     end
@@ -2077,6 +2091,7 @@ try
                             Speak('Quitting.');
                         end
                         oo(1).quitExperiment=true;
+                        isLastBlock=true; % global DGP
                         CloseWindowsAndCleanup(oo)
                         return
                     end
@@ -2098,6 +2113,7 @@ try
                         Speak('Quitting.');
                     end
                     oo(1).quitExperiment=true;
+                    isLastBlock=true; % global DGP
                     CloseWindowsAndCleanup(oo)
                     return
                 end
@@ -2154,7 +2170,7 @@ try
     [oo.nearPointXYPix]=deal(oo(1).nearPointXYPix);
     [oo.nearPointXYInUnitSquare]=deal(oo(1).nearPointXYInUnitSquare);
     if oo(1).quitExperiment
-        oo(1).quitExperiment=true;
+        isLastBlock=true; % global DGP
         CloseWindowsAndCleanup(oo)
         return
     end
@@ -2173,6 +2189,7 @@ try
         oo(oi).targetXYPix=XYPixOfXYDeg(oo(oi),oo(oi).eccentricityXYDeg);
     end
     if oo(1).quitExperiment
+        isLastBlock=true; % global DGP
         CloseWindowsAndCleanup(oo)
         return
     end
@@ -2181,36 +2198,39 @@ try
     gapPix=round(oo(1).gapFraction4afc*oo(1).targetHeightPix);
     
     %% ASSIGN A VISUAL ECCENTRICITY TO THE NEAR POINT
-    % VIEWING GEOMETRY: DISPLAY NEAR POINT
-    % Because of the perspective transform, imaging of a flat screen is
-    % best (highest resolution) at the near point, so when there is just
-    % one condition, no uncertainty, we typically place the target at the
-    % near point, which is a fixed location.  However, when interleaving
-    % several conditions with different target locations we typically don't
-    % want the observer to know which condition is the current trial,
-    % including where the target will be, so instead we let the target
-    % wander, and lock down fixation (currently at the near point, but it
-    % could be anywhere) so location of fixation is not informative about
-    % which condition is being tested on this trial.
-    % 1. Set nearPointXYPix according to o.nearPointXYInUnitSquare.
-    % 2. If setNearPointEccentricityTo==
-    % 'target', then set nearPointXYDeg=eccentricityXYDeg
-    % 'fixation', then set nearPointXYDeg=[0 0].
-    % 'value', then assume nearPointXYDeg is already set.
-    % 3. Ask viewer to adjust display so desired near point is at desired
-    % viewing distance and orthogonal to line of sight from eye.
+    % VIEWING GEOMETRY: DISPLAY NEAR POINT Because of the perspective
+    % transform, imaging of a flat screen is best (highest resolution) at
+    % the near point, so when there is just one condition, no uncertainty,
+    % we typically place the target at the near point, which is a fixed
+    % location.  However, when interleaving several conditions with
+    % different target locations we typically don't want the observer to
+    % know which condition the current trial is, including where the target
+    % will be, so instead we let the target wander, and lock down fixation
+    % (currently at the near point, but it could be anywhere) so location
+    % of fixation will not be informative about which condition is being
+    % tested on this trial. nearPointXYPix specifies where on the screen.
+    % nearPointXYDeg specifies where in visual space, i.e. eccentricity.
+    % Here's what NoiseDiscrimination does:
+    % 1. Set o.nearPointXYPix according to o.nearPointXYInUnitSquare.
+    % 2. If o.setNearPointEccentricityTo
+    % =='target', then set nearPointXYDeg=eccentricityXYDeg
+    % =='fixation', then set nearPointXYDeg=[0 0].
+    % =='value', then assume nearPointXYDeg is already set.
+    % 3. Ask viewer to adjust display so desired near point is
+    % at desired viewing distance and orthogonal to line of sight from eye.
     % 4. If using off-screen fixation, put fixation at the same distance
-    % from eye as the near point.
-    % If a block randomly interleaves several conditions with different
-    % target locations and your interpretation demands that the observer
-    % not know where the target is, then the location of fixation should
-    % not reveal target location. In that case, you must not select
-    % 'target', and should instead select 'fixation' or 'value' in every
-    % condition.
-    % I often have left vs right uncertainty, i.e. an eccentricity of -10,0
-    % vs +10,0 deg. In that case it's best to select 'fixation' to place
-    % fixation at the near point.
-    % o.nearPointXYInUnitSquare % Usually the desired target location in o.stimulusRect re lower-left corner.
+    % from eye as the near point. If a block randomly interleaves several
+    % conditions with different target locations and your interpretation
+    % demands that the observer not know where the target is, then the
+    % location of fixation should not reveal target location. In that case,
+    % you must not set o.setNearPointEccentricityTo='target', and should
+    % instead set o.setNearPointEccentricityTo='fixation' or 'value' in
+    % every condition. I often use left vs right uncertainty, i.e. an
+    % eccentricity of -10,0 vs +10,0 deg. In that case it's best to select
+    % 'fixation' to place fixation at the near point.
+    
+    % o.nearPointXYInUnitSquare % Usually the desired target location in
+    %                           % o.stimulusRect re lower-left corner.
     % o.nearPointXYPix % Near-point screen coordinate.
     % o.viewingDistanceCm % Distance from eye to near point.
     % o.nearPointXYDeg % (x,y) eccentricity of near point.
@@ -2229,9 +2249,10 @@ try
                 error('o.setNearPointEccentricityTo has illegal value ''%s''.',...
                     oo(oi).setNearPointEccentricityTo);
         end
-        % If necessary, try to shift coordinates to get target on screen.
-        % Enabled by o.okToShiftCoordinates.
-        xy=XYPixOfXYDeg(oo(oi),oo(oi).eccentricityXYDeg); % Target screen location
+        % If necessary and o.okToShiftCoordinates then adjust the near-point eccentricity
+        % o.nearPointXYDeg to fit an object (e.g. the target) with
+        % specified eccentricity (corresponding to xy) fits on the screen.
+        xy=XYPixOfXYDeg(oo(oi),oo(oi).eccentricityXYDeg); % screen location of target
         radiusDeg=oo(oi).targetHeightDeg*(0.5+oo(oi).targetMargin);
         oo(oi)=ShiftPointIntoRect(oo(oi),ff,'target',xy,radiusDeg,oo(oi).stimulusRect);
     end % for oi
@@ -2374,6 +2395,7 @@ try
         oo(oi).annularNoiseBigSize=2*round(oo(oi).annularNoiseBigSize/2); % An even number, so we can center it on center of letter.
         oo(oi).annularNoiseBigRadiusDeg=0.5*oo(oi).annularNoiseBigSize(1)/(oo(oi).pixPerDeg/oo(oi).noiseCheckPix);
         
+        
         % Make o.canvasSize just big enough to hold everything we're
         % showing, including signal, flankers, and noise. o.canvasSize is
         % in units of targetChecks. We limit o.canvasSize to fit in
@@ -2390,7 +2412,13 @@ try
             % April 2018, Denis changed denominator to targetCheckPix.
             oo(oi).canvasSize=max(oo(oi).canvasSize,2*oo(oi).annularNoiseBigRadiusDeg*[1 1]*oo(oi).pixPerDeg/oo(oi).targetCheckPix);
         end
-        if oo(oi).complementNoiseEnvelope
+        % March 2019, I'm adding support for o.thresholdParameter='size'.
+        % Thus the signal size will changes from trial to trial. Currently
+        % the canvas size is defined once, before we run any trials. Rather
+        % than dynamically set canvas size within the trial loop, I'm
+        % simply making the canvas as big as possible, all of
+        % o.stimulusRect.
+        if oo(oi).complementNoiseEnvelope || streq(oo(oi).thresholdParameter,'size')
             oo(oi).canvasSize=[inf inf];
         end
         switch oo(oi).task
@@ -2403,7 +2431,7 @@ try
                 % o.stimulusRect. This is not currently causing problems, so
                 % I'm letting this sleeping dog lie.
                 oo(oi).canvasSize=min(oo(oi).canvasSize,floor([RectHeight(oo(oi).stimulusRect) RectWidth(oo(oi).stimulusRect)]/oo(oi).targetCheckPix));
-                oo(oi).canvasSize=2*ceil(oo(oi).canvasSize/2); % Even number of checks, so we can center it on letter.
+                oo(oi).canvasSize=2*ceil(oo(oi).canvasSize/2); % Even number of checks, so we can center it on target.
             case '4afc'
                 oo(oi).canvasSize=min(oo(oi).canvasSize,floor([maxStimulusHeight maxStimulusWidth]/oo(oi).targetCheckPix));
                 oo(oi).canvasSize=ceil(oo(oi).canvasSize);
@@ -2543,13 +2571,13 @@ try
         oi=find(ok);
         oi=oi(1);
         if isempty(window)
-            % This is a quick hack to allow 'ideal observer' to use
+            % This is a quick hack to allow the 'ideal observer' to use
             % ReadAlphabetFromDisk, which seems to need this call to
             % CreateLetterTextures, which needs at least a scratch window
             % in order to create textures.
-            % We never explicitly close this window, so a lot may
+            % We never explicitly close this window, so many may
             % accumulate if you call this routine many times before all
-            % windows are closed when the applidation terminates.
+            % windows are closed when the application terminates.
             r=round(0.5*screenBufferRect);
             r=AlignRect(r,screenBufferRect,'right','bottom');
             [window,oo(1).screenRect]=Screen('OpenWindow',cal.screen,1.0,r);
@@ -2562,7 +2590,7 @@ try
         % Copy from letterStruct().image to oo(oi).signal().image
         for oi=find(ok)
             for i=1:length(oo(oi).alphabet)
-                [yes,j]=ismember(oo(oi).alphabet(i),[letterStruct.letter]);
+                [~,j]=ismember(oo(oi).alphabet(i),[letterStruct.letter]);
                 assert(length(j)==1);
                 if j==0
                     error('%2: letter ''%c'' not in ''%s'' alphabet ''%s''.\n',...
@@ -2580,10 +2608,9 @@ try
             r=round(oo(oi).targetHeightPix/oo(oi).targetCheckPix)/RectHeight(sRect);
             oo(oi).targetRectLocal=round(r*sRect);
             if r~=1
-                % We use the 'bilinear' method to make sure that all
-                % new values are within the old range. That's
-                % important because we set up the CLUT with the old
-                % range.
+                % We use the 'bilinear' method to make sure that all new
+                % pixel values are within the old range. That's important
+                % because we set up the CLUT with the old range.
                 for i=1:length(oo(oi).signal)
                     %% Scale to desired size.
                     oo(oi).signal(i).image=imresize(oo(oi).signal(i).image,...
@@ -2604,7 +2631,6 @@ try
     %         fprintf('%d: oo(%d).signal(1).image is %d x %d.\n',...
     %             MFileLineNr,oi,size(oo(oi).signal(1).image));
     %     end
-    temporaryWindow=[]; % Perhaps we should keep the temporary window open across blocks, to save time.
     for oi=1:conditions
         switch oo(oi).task
             case '4afc'
@@ -2699,10 +2725,13 @@ try
                             if isempty(oo(1).window) && isempty(temporaryWindow)
                                 % Some window must already be open before we call
                                 % OpenOffscreenWindow.
-                                fprintf('Opening temporaryWindow. ... ');
+                                fprintf('%d: Opening temporaryWindow. ... ',MFileLineNr);
                                 s=GetSecs;
+                                n1=length(Screen('Windows'));
                                 temporaryWindow=Screen('OpenWindow',0,1,[0 0 100 100]);
+                                n2=length(Screen('Windows'));
                                 fprintf('Done (%.1f s).\n',GetSecs-s);
+                                fprintf('%d: Open temporaryWindow. %d windows before, %d after.\n',MFileLineNr,n1,n2);
                             end
                             scratchHeight=round(3*oo(oi).targetHeightPix/oo(oi).targetCheckPix);
                             switch oo(oi).targetKind
@@ -2791,13 +2820,14 @@ try
                                 %                   WaitSecs(0.1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
                                 letter=Screen('GetImage',scratchWindow,targetRect,'drawBuffer');
                                 
-                                % 1in 2015-7 we occasionally got scrambled
-                                % letters, which I tracked down to malfunction
-                                % of 'GetImage'. Mario suggested various things
-                                % to try. Using 'DrawingFinished' seemed to
-                                % solve it; simply adding a delay did not. I
-                                % don't know if the issue still persists today
-                                % in 2018 (Mojave).
+                                % In 2015-7 we occasionally got scrambled
+                                % letters, which I tracked down to
+                                % malfunction of 'GetImage', above. Mario
+                                % Kleiner suggested various things to try.
+                                % Using 'DrawingFinished' seemed to solve
+                                % it; simply adding a delay did not. I
+                                % don't know if the issue still persists
+                                % today in 2018 (Mojave). -- denis pelli
                                 %
                                 % Mario: The scrambling sounds like something is going wrong in detiling of read
                                 % back renderbuffer memory, maybe a race condition in the driver. Maybe
@@ -2826,8 +2856,8 @@ try
                                 % We have now drawn letter(i) into
                                 % oo(oi).signal(i).image, using binary
                                 % pixels. The target size is given by
-                                % oo(oi).targetRectLocal. Only if
-                                % o.allowAnyFont=false is this a square
+                                % oo(oi).targetRectLocal. If
+                                % o.allowAnyFont=false then this a square
                                 % [0񁒷�1]*o.targetHeightPix/o.targetCheckPix.
                                 % In general, it need not be square. Any
                                 % code that needs a bounding rect for the
@@ -2926,9 +2956,9 @@ try
                     ffprintf(ff,'%c    ',oo(oi).alphabet(1:oo(oi).alternatives));
                     ffprintf(ff,'\n');
                 end
-                fprintf('%d: targetRectLocal ',MFileLineNr);
-                fprintf(' %d',oo(oi).targetRectLocal);
-                fprintf('\n');
+                %                 fprintf('%d: targetRectLocal ',MFileLineNr);
+                %                 fprintf(' %d',oo(oi).targetRectLocal);
+                %                 fprintf('\n');
                 assert(~isempty(oo(oi).targetRectLocal));
                 if oo(oi).allowAnyFont
                     targetRect=CenterRect(oo(oi).targetRectLocal,oo(oi).stimulusRect);
@@ -3049,9 +3079,7 @@ try
         end
         oo(oi).E1=mean(power)*(oo(oi).targetCheckPix/oo(oi).pixPerDeg)^2;
         ffprintf(ff,'%d: log E1/deg^2 %.2f, where E1 is energy at unit contrast.\n',oi,log10(oo(oi).E1));
-        if ismember(oo(oi).observer,oo(oi).algorithmicObservers)
-            window=[];
-            oo(oi).window=[];
+        if isempty(window) && ismember(oo(oi).observer,oo(oi).algorithmicObservers)
             LMin=0;
             LMax=200;
             oo(oi).LBackground=100;
@@ -3068,7 +3096,7 @@ try
         end
     end % for oi=1:conditions
     
-    if ~isempty(temporaryWindow)
+    if ~isempty(temporaryWindow) && false
         % Perhaps we should keep the temporary window open across blocks.
         % This might speed up the opening of our main window by 2.5 s.
         fprintf('Closing temporaryWindow. ... ');
@@ -3263,6 +3291,10 @@ try
         if oo(oi).saveSnapshot
             tTest=oo(oi).tSnapshot;
         end
+        if streq(oo(oi).targetModulates,'luminance')
+            % Needed by ComputeClut.
+            oo(oi).r=1;
+        end
         switch oo(oi).thresholdParameter
             case 'spacing'
                 spacingDeg=10^tTest;
@@ -3271,8 +3303,8 @@ try
                 fprintf('flankerSpacingPix %d\n',flankerSpacingPix);
             case 'size'
                 targetSizeDeg=10^tTest;
-                oo(oi).targetHeightPix=targetSizeDeg*oo(oi).pixPerDeg;
-                oo(oi).targetWidthPix=oo(oi).targetHeightPix;
+                oo(oi).desiredTargetHeightPix=round(targetSizeDeg*oo(oi).pixPerDeg);
+%                 oo(oi).targetWidthPix=oo(oi).targetHeightPix;
             case 'contrast'
                 switch oo(oi).targetModulates
                     case 'luminance'
@@ -3287,6 +3319,8 @@ try
                     case {'noise', 'entropy'}
                         oo(oi).r=1+10^tTest;
                         oo(oi).contrast=0;
+                    otherwise
+                        error('o.targetModulates has unknown value ''%s''.',oo(oi).targetModulates);
                 end
             case 'flankerContrast'
                 assert(streq(oo(oi).targetModulates,'luminance'),'The flanker software assumes o.targetModulates is ''luminance''.');
@@ -3397,11 +3431,12 @@ try
                     canvasRect=[0 0 oo(oi).canvasSize(2) oo(oi).canvasSize(1)];
                     sRect=RectOfMatrix(oo(oi).signal(1).image);
                     sRect=round(CenterRect(sRect,canvasRect));
-                    assert(IsRectInRect(sRect,canvasRect),'There isn''t enough room for four targets. Reduce o.targetHeightDeg or o.viewingDistanceCm.');
+                    assert(IsRectInRect(sRect,canvasRect),...
+                        'There isn''t enough room for four targets. Reduce o.targetHeightDeg or o.viewingDistanceCm.');
                     signalImageIndex=logical(FillRectInMatrix(true,sRect,zeros(oo(oi).canvasSize)));
                     locations=4;
                     location=struct('image',{[] [] [] []}); % Four-element struct array.
-                    %                     rng('shuffle'); TAKES 0.01 s.
+                    % rng('shuffle'); TAKES 0.01 s.
                     if iMovieFrame == 1
                         signalLocation=randi(locations);
                         movieSaveWhich=signalLocation;
@@ -3456,10 +3491,22 @@ try
                 case {'identify' 'identifyAll' 'rate'}
                     locations=1;
                     location=struct('image',[]);
-                    %                     rng('shuffle'); % THIS CALL TAKES 3 ms.
+                    % rng('shuffle'); % THIS CALL TAKES 3 ms.
                     if iMovieFrame == 1
+                        % We could move this first-frame code to be in
+                        % front of the movie loop. That would allow the
+                        % size scaling to apply to all tasks, not just
+                        % {'identify' 'identifyAll' 'rate'}.
                         whichSignal=randi(oo(oi).alternatives);
                         movieSaveWhich=whichSignal;
+                        switch oo(oi).thresholdParameter
+                            case 'size'
+                                % Use o.desiredTargetHeightPix to resize
+                                % signal(whichSignal).image and dependent metrics.
+                                oSignal=ResizeImage(oo(oi),whichSignal,oo(oi).desiredTargetHeightPix);
+                            otherwise
+                                oSignal=oo(oi);
+                        end
                         if oo(oi).measureContrast
                             WaitSecs(0.3);
                             if oo(oi).speakInstructions
@@ -3481,7 +3528,7 @@ try
                     end
                     canvasRect=RectOfMatrix(noise); % units of targetChecks
                     assert(all(canvasRect==[0 0 oo(oi).canvasSize(2) oo(oi).canvasSize(1)]));
-                    sRect=RectOfMatrix(oo(oi).signal(1).image); % units of targetChecks
+                    sRect=RectOfMatrix(oSignal.signal(whichSignal).image); % units of targetChecks
                     % Center the target in canvasRect.
                     sRect=CenterRect(sRect,canvasRect);
                     if ~IsRectInRect(sRect,canvasRect)
@@ -3490,7 +3537,7 @@ try
                     % signalImageIndex is true for every number in
                     % canvasRect that is in the centered signal rect.
                     signalImageIndex=logical(FillRectInMatrix(true,sRect,zeros(oo(oi).canvasSize))); % TAKES 0.5 ms
-                    if size(oo(oi).signal(1).image,3)==3
+                    if size(oSignal.signal(whichSignal).image,3)==3
                         signalImageIndex=repmat(signalImageIndex,1,1,3); % Support color.
                     end
                     % figure(1);imshow(signalImageIndex);
@@ -3500,7 +3547,9 @@ try
                     if (iMovieFrame > oo(oi).moviePreFrames ...
                             && iMovieFrame <= oo(oi).moviePreFrames+oo(oi).movieSignalFrames)
                         % Add in signal only during the signal interval.
-                        signalImage(signalImageIndex)=oo(oi).signal(whichSignal).image(:); % Support color.
+                        % oSignal.signal(whichSignal).image has been resized to
+                        % o.desiredTargetPix.
+                        signalImage(signalImageIndex)=oSignal.signal(whichSignal).image(:); % Support color.
                     end
                     % figure(2);imshow(signalImage);
                     signalMask=true(size(signalImage(:,:,1))); % TAKES 0.3 ms
@@ -3514,7 +3563,7 @@ try
                         end
                     end
                     signalMask=repmat(signalMask,1,1,length(white)); % Support color.
-                    %                     figure(1);subplot(1,3,1);imshow(signalImage);subplot(1,3,2);imshow(signalMask);
+                    % figure(1);subplot(1,3,1);imshow(signalImage);subplot(1,3,2);imshow(signalMask);
                     switch oo(oi).targetModulates
                         case 'luminance'
                             % location(1).image has size canvasSize. Each
@@ -3848,7 +3897,7 @@ try
         end
         
         %% PLAY MOVIE
-        if ~isempty(oo(1).window)
+        if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
             Screen('LoadNormalizedGammaTable',oo(1).window,cal.gamma,loadOnNextFlip);
             if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
                 if oo(oi).recordGaze
@@ -3994,10 +4043,10 @@ try
                         message='Please click 1 to 4 times for location 1 to 4, or more clicks to escape.';
                     case 'identify'
                         if ismember(oo(oi).targetKind,{'word'}) && ~oo(oi).labelAnswers
-                            message=sprintf('Please type the %d-letter word. Ignore capitalization. Or ESCAPE to cancel a trial or quit.',...
+                            message=sprintf('While fixating, please type the %d-letter word. Ignore capitalization. Or ESCAPE to cancel a trial or quit.',...
                                 length(oo(oi).words{1}));
                         else
-                            message=sprintf('Please type the letter: %s. Or ESCAPE to cancel a trial or quit.',...
+                            message=sprintf('While fixating, please type the letter: %s. Or ESCAPE to cancel a trial or quit.',...
                                 oo(oi).alphabet(1:oo(oi).alternatives));
                         end
                     case 'identifyAll'
@@ -4021,10 +4070,10 @@ try
                 Screen('FillRect',oo(1).window,oo(oi).gray1,bottomCaptionRect);
                 Screen('DrawText',oo(1).window,message,textRect(1),textRect(4),black,oo(oi).gray1,1);
                 Screen('TextSize',oo(1).window,oo(oi).textSize);
-            end % if ~ismember(observer,algorithmicObservers);
+            end % if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
             
             %% DISPLAY RESPONSE ALTERNATIVES
-            if ~isempty(oo(1).window)
+            if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
                 switch oo(oi).task
                     case '4afc'
                         leftEdgeOfResponse=o.screenRect(3);
@@ -4218,8 +4267,7 @@ try
                     Screen('LoadNormalizedGammaTable',oo(1).window,cal.gamma,loadOnNextFlip);
                 end
                 Screen('Flip',oo(1).window,0,1); % Display instructions.
-                
-            end % if ~isempty(o.window)
+            end % if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
             if oo(oi).saveStimulus
                 oo(oi).savedResponseScreen=Screen('GetImage',oo(1).window,oo(oi).stimulusRect,'frontBuffer');
                 ffprintf(ff,'oo(oi).savedResponseScreen\n');
@@ -4315,7 +4363,11 @@ try
                             break
                         end
                         if iResponse==1
-                            oo(oi).transcript.responseTimeSecs(oo(oi).trials)=GetSecs-oo(oi).transcript.stimulusOnsetSecs(oo(oi).trials);
+                            if isfield(oo(oi).transcript,'stimulusOnsetSecs')
+                                oo(oi).transcript.responseTimeSecs(oo(oi).trials)=GetSecs-oo(oi).transcript.stimulusOnsetSecs(oo(oi).trials);
+                            else
+                                warning('oo(oi).transcript lacks field "stimulusOnsetSecs".');
+                            end
                         end
                         if length(responseChar) > 1
                             % GetKeypress might return a multi-character string,
@@ -4368,7 +4420,11 @@ try
                     else
                         [responseString,terminatorChar]=GetEchoString(oo(1).window,message,textRect(1),textRect(4)-oo(oi).textSize,black,oo(oi).gray,1,oo(oi).deviceIndex);
                     end
-                    oo(oi).transcript.responseTimeSecs(oo(oi).trials)=GetSecs-oo(oi).transcript.stimulusOnsetSecs(oo(oi).trials);
+                    if isfield(oo(oi).transcript,'stimulusOnsetSecs')
+                        oo(oi).transcript.responseTimeSecs(oo(oi).trials)=GetSecs-oo(oi).transcript.stimulusOnsetSecs(oo(oi).trials);
+                    else
+                        warning('oo(oi).transcript lacks field "stimulusOnsetSecs".');
+                    end
                     %                Screen('FillRect',oo(1).window,oo(oi).gray1,bottomCaptionRect);
                     Screen('TextSize',oo(1).window,oo(oi).textSize);
                     if ismember(terminatorChar,[escapeChar,graveAccentChar])
@@ -4431,7 +4487,11 @@ try
                     o.quitBlock=false;
                     responseChar=GetKeypress([numberKeyCodes ...
                         escapeKeyCode graveAccentKeyCode],oo(oi).deviceIndex);
-                    oo(oi).transcript.responseTimeSecs(oo(oi).trials)=GetSecs-oo(oi).transcript.stimulusOnsetSecs(oo(oi).trials);
+                    if isfield(oo(oi).transcript,'stimulusOnsetSecs')
+                        oo(oi).transcript.responseTimeSecs(oo(oi).trials)=GetSecs-oo(oi).transcript.stimulusOnsetSecs(oo(oi).trials);
+                    else
+                        warning('oo(oi).transcript lacks field "stimulusOnsetSecs".');
+                    end
                     if ismember(responseChar,[escapeChar,graveAccentChar])
                         [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(oo(1).window,oo,oo(oi).textMarginPix);
                         trial=trial-1;
@@ -4541,15 +4601,15 @@ try
                 spacingDeg=flankerSpacingPix/oo(oi).pixPerDeg;
                 tTest=log10(spacingDeg);
             case 'size'
-                targetSizeDeg=oo(oi).targetHeightPix/oo(oi).pixPerDeg;
+                targetSizeDeg=oo(oi).desiredTargetHeightPix/oo(oi).pixPerDeg;
                 tTest=log10(targetSizeDeg);
             case 'contrast'
             case 'flankerContrast'
         end
         trialsRight=trialsRight+sum(isRight);
         oo(oi).trialsRight=oo(oi).trialsRight+sum(isRight);
-        %             fprintf('%d: trial %d, %d:%d, noiseSD %.2f tTest %.1f contrast %.2f isRight %d\n',...
-        %                 oi,trial,oi,oo(oi).trials,oo(oi).noiseSD,tTest,-10^tTest,isRight);
+                    fprintf('%d: trial %d, %d:%d, noiseSD %.2f tTest %.1f contrast %.2f isRight %d\n',...
+                        oi,trial,oi,oo(oi).trials,oo(oi).noiseSD,tTest,-10^tTest,isRight); % DGP
         for i=1:size(isRight)
             oo(oi).q=QuestUpdate(oo(oi).q,tTest,isRight(i)); % Add the new datum (actual test intensity and observer isRight) to the database.
             if oo(oi).questPlusEnable
@@ -4563,7 +4623,10 @@ try
         oo(oi).transcript.intensity(oo(oi).trials)=tTest;
         oo(oi).transcript.isRight{oo(oi).trials}=isRight;
         oo(oi).transcript.condition(oo(oi).trials)=oi;
-        if cal.ScreenConfigureDisplayBrightnessWorks && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers) && ~oo(oi).rushToDebug && oo(1).isFirstBlock
+        if ~isScreenCalibrated ...
+                && cal.ScreenConfigureDisplayBrightnessWorks ...
+                && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers) ...
+                && ~skipScreenCalibration 
             %          Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
             cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
             %          Brightness(cal.screen,cal.brightnessSetting);
@@ -4573,7 +4636,7 @@ try
                 ffprintf(ff,string);
                 error(string);
             end
-        end
+        end % if ~isScreenCalibrated
         if oo(oi).printLogOfIdeal && trial/100==round(trial/100) && ismember(oo(oi).observer,oo(oi).algorithmicObservers)
             fprintf('%d: trial %3d, block %2d of %2d, t %.2f, isRight %d, %dx%d, %2.0f s, %.1f kpix/s.\n',...
                 oi,trial,oo(oi).block,oo(oi).blocksDesired,tTest,isRight,oo(oi).canvasSize,GetSecs-blockStartSecs,...
@@ -4709,8 +4772,8 @@ try
         if oo(1).useFractionOfScreenToDebug
             ffprintf(ff,'WARNING: Using o.useFractionOfScreenToDebug. This may invalidate all results.\n');
         end
-        if oo(1).rushToDebug
-            ffprintf(ff,'WARNING: Using o.rushToDebug. This may invalidate all results.\n');
+        if skipScreenCalibration
+            ffprintf(ff,'WARNING: Using o.skipScreenCalibration. This may invalidate all results.\n');
         end
         
         %% PRINT BOLD SUMMARY OF CONDITION oi
@@ -4849,7 +4912,7 @@ try
         if o.quitExperiment && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
             Speak('QUITTING now. Done.');
         else
-            if ~o.quitBlock && oo(oi).block == oo(oi).blocksDesired && oo(oi).congratulateWhenDone && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
+            if ~o.quitBlock && oo(oi).isLastBlock && oo(oi).congratulateWhenDone && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
                 Speak('Congratulations. End of block.');
             end
         end
@@ -4867,7 +4930,8 @@ try
     end
     ListenChar(0); % flush
     ListenChar;
-    if ~isempty(oo(1).window) && (o.quitExperiment || oo(oi).block >= oo(oi).blocksDesired)
+    if ~isempty(oo(1).window) && (o.quitExperiment || oo(oi).isLastBlock)
+        isLastBlock=true; % global DGP
         CloseWindowsAndCleanup(oo);
     end
     if ismac && false
@@ -4900,6 +4964,7 @@ try
     oOld.secs=GetSecs; % Date for staleness.
 catch e
     %% MATLAB catch
+    isLastBlock=true;
     CloseWindowsAndCleanup(oo)
     if exist('cal','var') && isfield(cal,'old') && isfield(cal.old,'gamma')
         Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
@@ -5091,6 +5156,7 @@ switch o.targetModulates
 end
 o.trialsPerBlock=1;
 o.blocksDesired=1;
+o.isLastBlock=true;
 ffprintf(ff,'SUCCESS: o.saveSnapshot is done. Image saved, now returning.\n');
 fclose(logFid);
 logFid=-1;
@@ -5965,7 +6031,7 @@ switch o.task
         if IsOSX && ismember(MacModelName,{'MacBook10,1' 'MacBookAir6,2' 'MacBookPro11,5' ... % Mine, without touch bar, just to test this code.
                 'MacBookPro13,2' 'MacBookPro13,3' ... % 2016 with touch bar.
                 'MacBookPro14,1' 'MacBookPro14,2' 'MacBookPro14,3'}) % 2017 with touch bar.
-            footnote='For your convenience, hitting the accent grave tilde key `~ is equivalent to hitting the ESCAPE key immediately above it.\n';
+            footnote='For your convenience, hitting the tilde accent grave tilde key ~` is equivalent to hitting the ESCAPE key immediately above it.\n';
         else
             footnote='';
         end
@@ -6023,28 +6089,45 @@ end
 function CloseWindowsAndCleanup(oo)
 % Close any window opened by the Psychtoolbox Screen command, re-enable
 % keyboard, show cursor, and restore AutoBrightness. We save times by only
-% restoring brightness etc. if isLastBlock and we're not in a rush.
-% (debugging).
+% restoring brightness etc. if isLastBlock and we're not skipScreenCalibration.
 % "RestoreCluts" is quick, but loading a color preference is slow (30 s),
 % so we leave that alone, until we're cleaning up after the last block.
-global rushToDebug isLastBlock
+global skipScreenCalibration isLastBlock isScreenCalibrated
+global window temporaryWindow
 if nargin==1
-    %     fprintf('CloseWindowsAndCleanup(oo): isFirstBlock=%d, isLastBlock=%d, global isLastBlock=%d.\n',...
-    %         oo(1).isFirstBlock,oo(1).isLastBlock,isLastBlock);
+    %     fprintf('CloseWindowsAndCleanup(oo): isLastBlock=%d, global isLastBlock=%d isScreenCalibrated=%d.\n',...
+    %         oo(1).isLastBlock,isLastBlock,isScreenCalibrated);
     %     isLastBlock=oo(1).isLastBlock;
+    if any([oo.quitExperiment])
+        isLastBlock=true;
+    end
+%     fprintf('##CloseWindowsAndCleanup: %d windows of any kind open. isScreenCalibrated %d, isLastBlock %d, block %d\n',...
+%         length(Screen('Windows')),isScreenCalibrated,isLastBlock,oo(1).block);
+else
+%     fprintf('##CloseWindowsAndCleanup: %d windows of any kind open.  isScreenCalibrated %d, isLastBlock %d\n',...
+%         length(Screen('Windows')),isScreenCalibrated,isLastBlock);
 end
-if ~isempty(Screen('Windows'))
-    fprintf('Closing the window. ... ');
+if ~isempty(temporaryWindow) && isLastBlock
+    Screen('Close',temporaryWindow);
+    temporaryWindow=[];
+end
+if ~isempty(Screen('Windows')) && isLastBlock
+    fprintf('Closing all windows. ... ');
     s=GetSecs;
     Screen('CloseAll');
+    temporaryWindow=[];
+    window=[];
     fprintf('Done (%.1f s).\n',GetSecs-s);
-    if ismac && ~rushToDebug && isLastBlock
-        fprintf('Restoring AutoBrightness. ... ');
-        s=GetSecs;
-        AutoBrightness(0,1);
-        fprintf('Done (%.1f s).\n',GetSecs-s);
-        RestoreCluts;
-    end
+end
+if isScreenCalibrated && ~skipScreenCalibration && isLastBlock && ismac
+    fprintf('Restoring AutoBrightness. ... ');
+    s=GetSecs;
+    AutoBrightness(0,1);
+    fprintf('Done (%.1f s).\n',GetSecs-s);
+    RestoreCluts;
+    % This is the only place we set it false.
+    % MATLAB initializes it false.
+    isScreenCalibrated=false;
 end
 Screen('Preference','Verbosity',2); % Restore default level.
 ListenChar; % May already be done by Screen('CloseAll').
