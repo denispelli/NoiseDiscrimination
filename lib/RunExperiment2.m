@@ -80,23 +80,33 @@ for block=1:length(ooo)
         end
         thisBlockDone=false;
     end
-    if thisBlockDone
-        continue
-    end
+    [ooo{block}.skipThisBlock]=deal(thisBlockDone);
+end
+s=[];
+for i=1:length(ooo)
+    s(i)=ooo{i}(1).skipThisBlock;
+end
+blockList=find(~s);
+ooPrior=[];
+for block=blockList
     % Prepare this block.
+    oo=ooo{block};
     [oo.block]=deal(block);
-    [oo.blocksDesired]=deal(length(ooo)); % Displayed on screen.
+    [oo.blocksDesired]=deal(length(ooo)); % Display on screen.
+    [oo.isLastBlock]=deal(block==blockList(end)); % March 2019 DGP
     [oo.localHostName]=deal(localHostName);
     if ~isempty(ooPrior)
         % Reuse answers from immediately preceding block.
         [oo.experimenter]=deal(ooPrior(1).experimenter);
-        [oo.observer]=deal(ooPrior(1).observer);
+        if isempty(oo(1).observer)
+            [oo.observer]=deal(ooPrior(1).observer);
+        end
         [oo.filterTransmission]=deal(ooPrior(1).filterTransmission);
         % Setting o.useFilter to false forces o.filterTransmission=1.
     end
     % Run this block.
     ooPrior=NoiseDiscrimination2(oo); % Run a block.
-    ooo{block}=ooPrior; % Put it back into the experiment.
+    ooo{block}=ooPrior; % Save results in ooo.
     if any([ooPrior.quitExperiment])
         break
     end
@@ -104,8 +114,7 @@ end % for block=1:length(ooo)
 oooOut=ooo;
 
 %% HOW MANY BLOCKS ARE DONE?
-% The criterion for "done" should be a reasonable number of trials,
-% currently o.trialsPerBlock trials.
+% The criterion for "done" is at least o.trialsPerBlock trials.
 blocksDone=0;
 for block=1:length(ooo)
     thisBlockDone=true; % Initial value.
@@ -114,8 +123,8 @@ for block=1:length(ooo)
         % Check each condition in a block.
         if isfield(oo(oi),'trials') && isfield(oo(oi),'trialsPerBlock') && oo(oi).trials>=oo(oi).trialsPerBlock
             % Gather components of filename.
-            experiment=ooo{1}(oi).experiment;
-            observer=ooo{1}(oi).observer;
+            experiment=oo(oi).experiment;
+            observer=oo(oi).observer;
             continue
         end
         thisBlockDone=false;
@@ -150,7 +159,7 @@ function CloseWindowsAndCleanup()
 % Close any window opened by the Psychtoolbox Screen command, and re-enable keyboard.
 global window
 if ~isempty(Screen('Windows'))
-    % Screen CloseAll is very slow, so call it only if we need to.
+    % Screen CloseAll is very slow, so we call it only if we need to.
     Screen('CloseAll');
     %     sca;
     if ismac
