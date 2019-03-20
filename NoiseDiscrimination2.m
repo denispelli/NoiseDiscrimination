@@ -4608,8 +4608,10 @@ try
         end
         trialsRight=trialsRight+sum(isRight);
         oo(oi).trialsRight=oo(oi).trialsRight+sum(isRight);
-                    fprintf('%d: trial %d, %d:%d, noiseSD %.2f tTest %.1f contrast %.2f isRight %d\n',...
-                        oi,trial,oi,oo(oi).trials,oo(oi).noiseSD,tTest,-10^tTest,isRight); % DGP
+        if false
+            fprintf('%d: trial %d, %d:%d, noiseSD %.2f tTest %.1f contrast %.2f isRight %d\n',...
+                oi,trial,oi,oo(oi).trials,oo(oi).noiseSD,tTest,-10^tTest,isRight); % DGP
+        end
         for i=1:size(isRight)
             oo(oi).q=QuestUpdate(oo(oi).q,tTest,isRight(i)); % Add the new datum (actual test intensity and observer isRight) to the database.
             if oo(oi).questPlusEnable
