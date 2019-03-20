@@ -179,7 +179,7 @@ try
          Screen('DrawText',window,'Please slowly type your name followed by RETURN.',...
             textMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
          Screen('TextSize',window,round(o.textSize*0.35));
-         Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, 2018, Denis Pelli. All rights reserved.'),textMarginPix,screenRect(4)-0.5*textMarginPix,black,o.gray1,1);
+         Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, 2018, 2019, Denis Pelli. All rights reserved.'),textMarginPix,screenRect(4)-0.5*textMarginPix,black,o.gray1,1);
          Screen('TextSize',window,o.textSize);
          if IsWindows
             background=[];
