@@ -1,11 +1,9 @@
-% test Words.m
+% runWords.m
 % MATLAB script to run NoiseDiscrimination.m
 % Copyright 2019 Denis G. Pelli, denis.pelli@nyu.edu
 %
-% The script specifies "Darshan" as experimenter. You can change that in
-% the script below if necessary. On the first block the program will ask
-% the observer's name. On subsequent blocks it will remember the observer's
-% name.
+% IMPORTANT: the experimenter and observer names are incorporated into the
+% file name of the data. Please enter both names consistently in every run.
 %
 % Please use binocular viewing, using both eyes, for all conditions.
 %
@@ -15,11 +13,12 @@
 % please encourage the observer to maintain the same viewing distance for
 % the whole experiment.
 %
-% denis.pelli@nyu.edu March 18, 2019
+% denis.pelli@nyu.edu March 20, 2019
 % 646-258-7524
 
-% Acuity at ±10 deg ecc.
-% Efficiency at 0 deg ecc.
+% Word acuity at [0 ±10] deg ecc.
+% Word efficiency at [0 0] deg ecc.
+
 myPath=fileparts(mfilename('fullpath')); % Takes 0.1 s.
 addpath(fullfile(myPath,'lib')); % Folder in same directory as this M file.
 
@@ -298,7 +297,7 @@ for i=1:length(ooo)
         oo(oi).repeatedTargets=0;
         oo(oi).eyes='both';
         % USE THESE ONLY FOR DEBUGGING! %
-        oo(oi).useFractionOfScreenToDebug=0.5; % USE ONLY FOR DEBUGGING.
+%         oo(oi).useFractionOfScreenToDebug=0.5; % USE ONLY FOR DEBUGGING.
 %         oo(oi).skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
     end
     ooo{i}=oo;
