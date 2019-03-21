@@ -1802,7 +1802,7 @@ try
             end
         end
         ScreenProfile(cal.screen,cal.profile);
-        ffprintf(ff,'Done setting screen color profile (%.1f s).\n',GetSecs-s);
+        ffprintf(ff,'Done (%.1f s).\n',GetSecs-s);
     end
     if ~isScreenCalibrated ...
             && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers) ...
