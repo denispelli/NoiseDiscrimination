@@ -257,7 +257,7 @@ o.noiseSD=0;
 
 if 1
     o.conditionName='Peripheral acuity';
-    % Block 1. Two conditions, up and down.
+    % Block 1. Measure two thresholds, above and below fixation.
     o.thresholdParameter='size';
     o.eccentricityXYDeg=[0 10];
     o.fixationLineWeightDeg=0.2;
@@ -271,7 +271,7 @@ end
 
 if 1
     o.conditionName='Efficiency';
-    % Block 2. Three thresholds, one in zero and two in high noise.
+    % Block 2. Measure three thresholds, one in zero and two in high noise.
     o.thresholdParameter='contrast';
     o.eccentricityXYDeg=[0 0];
     o.fixationLineWeightDeg=0.2;
@@ -285,7 +285,7 @@ if 1
 end
 if 1
     % Test ideal.
-    % Block 3. Three thresholds, one in zero and two in high noise.
+    % Block 3. Measure three thresholds, one in zero and two in high noise.
     ooo{end+1}=ooo{end};
     [ooo{end}.observer]=deal('ideal');
 end
