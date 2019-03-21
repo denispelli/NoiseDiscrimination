@@ -122,9 +122,6 @@ for block=1:length(ooo)
     for oi=1:length(oo)
         % Check each condition in a block.
         if isfield(oo(oi),'trials') && isfield(oo(oi),'trialsPerBlock') && oo(oi).trials>=oo(oi).trialsPerBlock
-            % Gather components of filename.
-            experiment=oo(oi).experiment;
-            observer=oo(oi).observer;
             continue
         end
         thisBlockDone=false;
@@ -133,12 +130,18 @@ for block=1:length(ooo)
         blocksDone=blocksDone+1;
     end
 end
-    
+ 
 %% SAVE THE EXPERIMENT
 % If no block has been completed, then save nothing. If we have at least
 % one block done, then save the whole experiment in a MAT file. If
 % complete, it is labeled "-done". Otherwise it is labelled "-partial",
 % indicating that the observer can later resume and finish the experiment.
+
+% Gather components of filename from first condition of first block of
+% experiment.
+experiment=ooo{1}(1).experiment;
+observer=ooo{1}(1).observer;
+
 if blocksDone<length(ooo)
     partialString='-partial';
 else
