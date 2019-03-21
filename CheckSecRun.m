@@ -165,11 +165,11 @@ end
 disp(tt) % Print list of conditions.
 
 %% RUN THE CONDITIONS.
-ooo=RunExperiment2(ooo);
+ooo=RunExperiment(ooo);
 % oo=[o o];
 % oo(1).noiseSD=0.5;
 % oo(1).noiseSD=0;
-% oo=NoiseDiscrimination2(oo);
+% oo=NoiseDiscrimination(oo);
 
 %% PRINT SUMMARY OF RESULTS AS TABLE TT.
 % Include whatever you're intersted in. We skip rows missing any value.

@@ -207,7 +207,7 @@ for i=1:length(ooo)
     ooo{1}(1).isFirstBlock=true;
     ooo{end}(1).isLastBlock=true;
     oo=ooo{i};
-    oo=NoiseDiscrimination2(oo);
+    oo=NoiseDiscrimination(oo);
     if ~any([oo.quitBlock])
         fprintf('Finished block %d.\n',i);
     end

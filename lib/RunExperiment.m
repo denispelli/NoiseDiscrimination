@@ -1,5 +1,5 @@
-function oooOut=RunExperiment2(ooo)
-% ooo=RunExperiment2(ooo);
+function oooOut=RunExperiment(ooo)
+% ooo=RunExperiment(ooo);
 %
 % ooo is a cell array representing an experiment. Each cell represents one
 % block of the experiment, and contains an array struct oo, with one "o"
@@ -105,7 +105,7 @@ for block=blockList
         % Setting o.useFilter to false forces o.filterTransmission=1.
     end
     % Run this block.
-    ooPrior=NoiseDiscrimination2(oo); % Run a block.
+    ooPrior=NoiseDiscrimination(oo); % Run a block.
     ooo{block}=ooPrior; % Save results in ooo.
     if any([ooPrior.quitExperiment])
         break

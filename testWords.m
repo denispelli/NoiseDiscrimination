@@ -146,4 +146,4 @@ t=struct2table(oo,'AsArray',true);
 disp(t(:,{'block' 'experiment' 'conditionName' 'targetFont' 'observer' 'noiseSD' 'targetHeightDeg' 'eccentricityXYDeg'})); 
 % return
 
-ooo=RunExperiment2(ooo);
+ooo=RunExperiment(ooo);

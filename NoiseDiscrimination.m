@@ -1,8 +1,8 @@
-function oo=NoiseDiscrimination2(ooIn)
-% oo=NoiseDiscrimination2(oo);
+function oo=NoiseDiscrimination(ooIn)
+% oo=NoiseDiscrimination(oo);
 %
 % You can now pass a struct array, one element per condition, and
-% NoiseDiscrimination2 will run them all randomly interleaved.
+% NoiseDiscrimination will run them all randomly interleaved.
 %
 % Pass all your parameters in the "oo" struct, which will be returned with
 % all the results as additional fields. NoiseDiscrimination may adjust some
@@ -681,7 +681,7 @@ o.block=1; % We display the the block number.
 o.blocksDesired=1; % How many blocks you to plan to run. Used solely for display in upper left corner of screen.
 % To save time, we only setup the screen and open the window in the first
 % block and postpone restore the screen and close window until after the
-% last block (including quitting early). RunExperiment2.m properly sets
+% last block (including quitting early). RunExperiment.m properly sets
 % isLastBlock.
 o.isLastBlock=true; % Default. Set this false for all but last block.
 o.speakInstructions=false;
@@ -1359,7 +1359,7 @@ try
     %% LUMINANCE
     % LStandard is the highest o.LBackground luminance at which we can
     % display a sinusoid at a contrast of nearly 100%. I have done most
-    % of my experiments at that luminance. NoiseDiscrimination2 FORCES ALL
+    % of my experiments at that luminance. NoiseDiscrimination FORCES ALL
     % INTERLEAVED CONDITIONS TO HAVE THE SAME LUMINANCE AND ASSUMES THEY
     % HAVE SAME LUMINANCE SETTINGS, e.g. o.desiredLuminanceFactor,
     % o.desiredLuminanceAtEye, and o.desiredRetinalIlluminanceTd.
@@ -1424,7 +1424,7 @@ try
         case 2
             oo(1).functionNames=[stack(2).name '-' stack(1).name];
         case 3
-            if ismember(stack(2).name,{'RunExperiment' 'RunExperiment2'})
+            if ismember(stack(2).name,{'RunExperiment' 'RunExperiment'})
                 oo(1).functionNames=[stack(3).name '-' stack(1).name]; % Omit 'RunExperiment'
             else
                 oo(1).functionNames=[stack(3).name '-' stack(2).name '-' stack(1).name];
@@ -1470,9 +1470,9 @@ try
         oo(1).scriptName=st(i).name; % Save name of calling script.
         try
             %             hide=contains(oo(1).scriptName,'RunExperiment');
-            hide=ismember(oo(1).scriptName,{'RunExperiment' 'RunExperiment2'});
+            hide=ismember(oo(1).scriptName,{'RunExperiment' 'RunExperiment'});
         catch e
-            ffprintf(ff,'Error in ismember(''%s'',{''RunExperiment2''})\n',oo(1).scriptName);
+            ffprintf(ff,'Error in ismember(''%s'',{''RunExperiment''})\n',oo(1).scriptName);
             oo(1).scriptName
             rethrow(e)
         end

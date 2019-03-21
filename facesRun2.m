@@ -137,7 +137,7 @@ end
 disp(tt) % Print list of conditions.
 
 %% RUN THE CONDITIONS
-ooo=RunExperiment2(ooo);
+ooo=RunExperiment(ooo);
 
 %% PRINT SUMMARY OF RESULTS AS TABLE TT
 % Include whatever you're intersted in. We skip rows missing any value.
