@@ -2748,7 +2748,7 @@ try
                                     wordLength=length(oo(oi).words{1});
                             end
                             scratchWidth=round((2+wordLength)*oo(oi).targetHeightPix/oo(oi).targetCheckPix);
-                            ffprintf(ff,'Opening scratchWindow. ...'); s=GetSecs;
+                            ffprintf(ff,'Opening scratchWindow. ... '); s=GetSecs;
                             [scratchWindow,scratchRect]=Screen('OpenOffscreenWindow',-1,[],[0 0 scratchWidth scratchHeight],8);
                             ffprintf(ff,'Done (%.1f s).\n',GetSecs-s);
                             if ~streq(oo(oi).targetFont,'Sloan') && ~oo(oi).allowAnyFont
@@ -2875,9 +2875,9 @@ try
                                 % solely to set the nominal font size
                                 % ("points"), in pixels.
                             end
-                            ffprintf(ff,'Opening scratchWindow. ...'); s=GetSecs;
+                            ffprintf(ff,'Closing scratchWindow. ... '); s=GetSecs;
                             Screen('Close',scratchWindow);
-                            ffprintf(ff,'Done. (%.1f s).\n',GetSecs-s);
+                            ffprintf(ff,'Done (%.1f s).\n',GetSecs-s);
                             scratchWindow=[];
                         end
                     case 'gabor'
@@ -6134,10 +6134,10 @@ if ~isempty(Screen('Windows')) && isLastBlock
     fprintf('Done (%.1f s).\n',GetSecs-s);
 end
 if isScreenCalibrated && ~skipScreenCalibration && isLastBlock && ismac
-    ffprintf(ff,'Restoring AutoBrightness. ... ');
+    fprintf('Restoring AutoBrightness. ... ');
     s=GetSecs;
     AutoBrightness(0,1);
-    ffprintf(ff,'Done (%.1f s).\n',GetSecs-s);
+    fprintf('Done (%.1f s).\n',GetSecs-s);
     RestoreCluts;
     % This is the only place we set it false.
     % MATLAB initializes it false.
