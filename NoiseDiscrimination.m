@@ -6125,12 +6125,13 @@ if ~isempty(temporaryWindow) && isLastBlock
     temporaryWindow=[];
 end
 if ~isempty(Screen('Windows')) && isLastBlock
-    ffprintf(ff,'Closing all windows. ... ');
+    % We can't use ff here, because it's not defined.
+    fprintf('Closing all windows. ... ');
     s=GetSecs;
     Screen('CloseAll');
     temporaryWindow=[];
     window=[];
-    ffprintf(ff,'Done (%.1f s).\n',GetSecs-s);
+    fprintf('Done (%.1f s).\n',GetSecs-s);
 end
 if isScreenCalibrated && ~skipScreenCalibration && isLastBlock && ismac
     ffprintf(ff,'Restoring AutoBrightness. ... ');
