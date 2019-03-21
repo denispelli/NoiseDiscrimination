@@ -6102,11 +6102,12 @@ end
 function CloseWindowsAndCleanup(oo)
 % Close any window opened by the Psychtoolbox Screen command, re-enable
 % keyboard, show cursor, and restore AutoBrightness. We save times by only
-% restoring brightness etc. if isLastBlock and we're not skipScreenCalibration.
-% "RestoreCluts" is quick, but loading a color preference is slow (30 s),
-% so we leave that alone, until we're cleaning up after the last block.
+% restoring brightness etc. if isLastBlock and we're not
+% skipScreenCalibration. "RestoreCluts" is quick, but loading a color
+% preference is slow (30 s), so we leave that alone, until we're cleaning
+% up after the last block.
 global skipScreenCalibration isLastBlock isScreenCalibrated
-global window temporaryWindow
+global window temporaryWindow ff
 if nargin==1
     %     fprintf('CloseWindowsAndCleanup(oo): isLastBlock=%d, global isLastBlock=%d isScreenCalibrated=%d.\n',...
     %         oo(1).isLastBlock,isLastBlock,isScreenCalibrated);
@@ -6114,30 +6115,29 @@ if nargin==1
     if any([oo.quitExperiment])
         isLastBlock=true;
     end
-%     fprintf('##CloseWindowsAndCleanup: %d windows of any kind open. isScreenCalibrated %d, isLastBlock %d, block %d\n',...
-%         length(Screen('Windows')),isScreenCalibrated,isLastBlock,oo(1).block);
+    %     fprintf('##CloseWindowsAndCleanup: %d windows of any kind open. isScreenCalibrated %d, isLastBlock %d, block %d\n',...
+    %         length(Screen('Windows')),isScreenCalibrated,isLastBlock,oo(1).block);
 else
-%     fprintf('##CloseWindowsAndCleanup: %d windows of any kind open.  isScreenCalibrated %d, isLastBlock %d\n',...
-%         length(Screen('Windows')),isScreenCalibrated,isLastBlock);
+    %     fprintf('##CloseWindowsAndCleanup: %d windows of any kind open.  isScreenCalibrated %d, isLastBlock %d\n',...
+    %         length(Screen('Windows')),isScreenCalibrated,isLastBlock);
 end
 if ~isempty(temporaryWindow) && isLastBlock
     Screen('Close',temporaryWindow);
     temporaryWindow=[];
 end
 if ~isempty(Screen('Windows')) && isLastBlock
-    % We can't use ff here, because it's not defined.
-    fprintf('Closing all windows. ... ');
+    ffprintf(ff,'Closing all windows. ... ');
     s=GetSecs;
     Screen('CloseAll');
     temporaryWindow=[];
     window=[];
-    fprintf('Done (%.1f s).\n',GetSecs-s);
+    ffprintf(ff,'Done (%.1f s).\n',GetSecs-s);
 end
 if isScreenCalibrated && ~skipScreenCalibration && isLastBlock && ismac
-    fprintf('Restoring AutoBrightness. ... ');
+    ffprintf(ff,'Restoring AutoBrightness. ... ');
     s=GetSecs;
     AutoBrightness(0,1);
-    fprintf('Done (%.1f s).\n',GetSecs-s);
+    ffprintf(ff,'Done (%.1f s).\n',GetSecs-s);
     RestoreCluts;
     % This is the only place we set it false.
     % MATLAB initializes it false.
