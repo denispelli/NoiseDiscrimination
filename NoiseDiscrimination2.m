@@ -1100,7 +1100,7 @@ if ~isScreenCalibrated && ~skipScreenCalibration && ~ismember(o.observer,o.algor
         % and use Screen to read (since my Brightness is failing to read).
         % By the way, the Screen function is quick writing and reading
         % while my function is very slow (20 s) writing and reading.
-        fprintf('Setting Brightness. ... ');
+        ffprintf(ff,'Setting Brightness. ... ');
         s=GetSecs;
         for i=1:3
             if useBrightnessFunction
@@ -1121,7 +1121,7 @@ if ~isScreenCalibrated && ~skipScreenCalibration && ~ismember(o.observer,o.algor
             % If it failed, try again two more times. The first call to
             % Brightness sometimes fails. Not sure why. Maybe it times out.
         end
-        fprintf('Done (%.1f s).\n',GetSecs-s);
+        ffprintf(ff,'Done (%.1f s).\n',GetSecs-s);
     catch e
         % Caution: Screen ConfigureDisplay Brightness gives a fatal error
         % if not supported, and is unsupported on many devices, including a
@@ -1163,9 +1163,9 @@ end
 %% OnCleanup
 % Once we call onCleanup, when this program terminates,
 % CloseWindowsAndCleanup will run  and close any open windows. It runs when
-% this function terminates for any reason, whether by returning normally, the
-% posting of an error here or in any function called from here, or the user
-% hitting control-C.
+% this function terminates for any reason, whether by returning normally,
+% the posting of an error here or in any function called from here, or the
+% user hitting control-C.
 cleanup=onCleanup(@() CloseWindowsAndCleanup);
 
 %% TRY-CATCH BLOCK CONTAINS ALL CODE IN WHICH THE WINDOW IS OPEN
@@ -1198,7 +1198,7 @@ try
         else
             warning('You need EnableClutMapping to control contrast.');
         end
-        fprintf('Opening the window. ...\n'); % New line for Screen warnings.
+        ffprintf(ff,'Opening the window. ...\n'); % New line for Screen warnings.
         s=GetSecs;
         if ~o.useFractionOfScreenToDebug
             [window,o.screenRect]=PsychImaging('OpenWindow',cal.screen,1.0);
@@ -1207,7 +1207,7 @@ try
             r=AlignRect(r,screenBufferRect,'right','bottom');
             [window,o.screenRect]=PsychImaging('OpenWindow',cal.screen,1.0,r);
         end
-        fprintf('Done opening window (%.1f s).\n',GetSecs-s);
+        ffprintf(ff,'Done opening window (%.1f s).\n',GetSecs-s);
         [oo.window]=deal(window);
         [oo.screenRect]=deal(o.screenRect);
         if ~o.useFractionOfScreenToDebug
@@ -1472,7 +1472,7 @@ try
             %             hide=contains(oo(1).scriptName,'RunExperiment');
             hide=ismember(oo(1).scriptName,{'RunExperiment' 'RunExperiment2'});
         catch e
-            fprintf('Error in ismember(''%s'',{''RunExperiment2''})\n',oo(1).scriptName);
+            ffprintf(ff,'Error in ismember(''%s'',{''RunExperiment2''})\n',oo(1).scriptName);
             oo(1).scriptName
             rethrow(e)
         end
@@ -1494,7 +1494,7 @@ try
     end
     assert(logFid > -1);
     ff=[1 logFid];
-    fprintf('Saving results in .txt and .mat files:\n');
+    ffprintf(ff,'Saving results in .txt and .mat files:\n');
     if any([oo.recordGaze])
         videoExtension='.avi'; % '.avi', '.mp4' or '.mj2'
         clear cam
@@ -1777,7 +1777,7 @@ try
             && ~all(ismember({oo.observer},oo(oi).algorithmicObservers)) ...
             && ~skipScreenCalibration
         ffprintf(ff,'cal.profile=''%s'';\n',cal.profile);
-        fprintf('Setting screen color profile. ... ');
+        ffprintf(ff,'Setting screen color profile. ... ');
         s=GetSecs;
         if Screen(oo(1).window,'WindowKind') == 1
             % Set text size.
@@ -1802,7 +1802,7 @@ try
             end
         end
         ScreenProfile(cal.screen,cal.profile);
-        fprintf('Done setting screen color profile (%.1f s).\n',GetSecs-s);
+        ffprintf(ff,'Done setting screen color profile (%.1f s).\n',GetSecs-s);
     end
     if ~isScreenCalibrated ...
             && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers) ...
@@ -2731,13 +2731,13 @@ try
                             if isempty(oo(1).window) && isempty(temporaryWindow)
                                 % Some window must already be open before we call
                                 % OpenOffscreenWindow.
-                                fprintf('%d: Opening temporaryWindow. ... ',MFileLineNr);
+                                ffprintf(ff,'%d: Opening temporaryWindow. ... ',MFileLineNr);
                                 s=GetSecs;
                                 n1=length(Screen('Windows'));
                                 temporaryWindow=Screen('OpenWindow',0,1,[0 0 100 100]);
                                 n2=length(Screen('Windows'));
-                                fprintf('Done (%.1f s).\n',GetSecs-s);
-                                fprintf('%d: Open temporaryWindow. %d windows before, %d after.\n',MFileLineNr,n1,n2);
+                                ffprintf(ff,'Done (%.1f s).\n',GetSecs-s);
+                                ffprintf(ff,'%d: Open temporaryWindow. %d windows before, %d after.\n',MFileLineNr,n1,n2);
                             end
                             scratchHeight=round(3*oo(oi).targetHeightPix/oo(oi).targetCheckPix);
                             switch oo(oi).targetKind
@@ -2748,7 +2748,9 @@ try
                                     wordLength=length(oo(oi).words{1});
                             end
                             scratchWidth=round((2+wordLength)*oo(oi).targetHeightPix/oo(oi).targetCheckPix);
+                            ffprintf(ff,'Opening scratchWindow. ...'); s=GetSecs;
                             [scratchWindow,scratchRect]=Screen('OpenOffscreenWindow',-1,[],[0 0 scratchWidth scratchHeight],8);
+                            ffprintf(ff,'Done (%.1f s).\n',GetSecs-s);
                             if ~streq(oo(oi).targetFont,'Sloan') && ~oo(oi).allowAnyFont
                                 warning('You should set o.allowAnyFont=true unless o.targetFont=''Sloan''.');
                             end
@@ -2873,7 +2875,9 @@ try
                                 % solely to set the nominal font size
                                 % ("points"), in pixels.
                             end
+                            ffprintf(ff,'Opening scratchWindow. ...'); s=GetSecs;
                             Screen('Close',scratchWindow);
+                            ffprintf(ff,'Done. (%.1f s).\n',GetSecs-s);
                             scratchWindow=[];
                         end
                     case 'gabor'
@@ -2976,7 +2980,7 @@ try
                 boundsRect=CenterRect(targetRect,[oo(oi).targetXYPix oo(oi).targetXYPix]);
                 % targetRect not used. boundsRect used solely for the snapshot.
         end % switch oo(oi).task
-        fprintf('%d: Prepare the %d signals, each %dx%d. ... Done (%.1f).\n',...
+        ffprintf(ff,'%d: Prepare the %d signals, each %dx%d. ... Done (%.1f).\n',...
             oi,oo(oi).alternatives,size(oo(oi).signal(1).image,1),size(oo(oi).signal(1).image,2),toc);
         
         % Compute o.signalIsBinary, o.signalMin, o.signalMax.
@@ -3105,11 +3109,11 @@ try
     if ~isempty(temporaryWindow) && false
         % Perhaps we should keep the temporary window open across blocks.
         % This might speed up the opening of our main window by 2.5 s.
-        fprintf('Closing temporaryWindow. ... ');
+        ffprintf(ff,'Closing temporaryWindow. ... ');
         s=GetSecs;
         Screen('Close',temporaryWindow);
         temporaryWindow=[];
-        fprintf('Done (%.1f s).\n',GetSecs-s);
+        ffprintf(ff,'Done (%.1f s).\n',GetSecs-s);
     end
     
     %% SET PARAMETERS FOR QUEST
@@ -4904,11 +4908,11 @@ try
             warning('Failed to save .transcript.json file.');
             warning(e.message);
         end % save transcript to .json file
-        fprintf('Results saved as %s with extensions .txt, .mat, and .json \n',oo(oi).dataFilename);
+        ffprintf(ff,'Results saved as %s with extensions .txt, .mat, and .json \n',oo(oi).dataFilename);
         if oo(oi).recordGaze
-            fprintf('Gaze recorded with extension %s\n',videoExtension);
+            ffprintf(ff,'Gaze recorded with extension %s\n',videoExtension);
         end
-        fprintf('in the data folder: %s/\n\n',oo(oi).dataFolder);
+        ffprintf(ff,'in the data folder: %s/\n\n',oo(oi).dataFolder);
     end % for oi=1:conditions
     if exist('vidWriter','var')
         close(vidWriter);
@@ -5323,7 +5327,8 @@ function AssessLinearity(o)
 % variables into a new struct called "my". It would be received as an
 % argument and might need to be returned as an output. Note that if "o" is
 % modified here, it too may need to be returned as an output argument, or
-% made global.fprintf('Assess linearity.\n');
+% made global.
+fprintf('Assess linearity.\n');
 gratingL=o.LBackground*repmat([0.2 1.8],400,200); % 400x400 grating
 gratingImg=IndexOfLuminance(cal,gratingL);
 texture=Screen('MakeTexture',o.window,gratingImg/o.maxEntry,0,0,1);
@@ -6120,18 +6125,18 @@ if ~isempty(temporaryWindow) && isLastBlock
     temporaryWindow=[];
 end
 if ~isempty(Screen('Windows')) && isLastBlock
-    fprintf('Closing all windows. ... ');
+    ffprintf(ff,'Closing all windows. ... ');
     s=GetSecs;
     Screen('CloseAll');
     temporaryWindow=[];
     window=[];
-    fprintf('Done (%.1f s).\n',GetSecs-s);
+    ffprintf(ff,'Done (%.1f s).\n',GetSecs-s);
 end
 if isScreenCalibrated && ~skipScreenCalibration && isLastBlock && ismac
-    fprintf('Restoring AutoBrightness. ... ');
+    ffprintf(ff,'Restoring AutoBrightness. ... ');
     s=GetSecs;
     AutoBrightness(0,1);
-    fprintf('Done (%.1f s).\n',GetSecs-s);
+    ffprintf(ff,'Done (%.1f s).\n',GetSecs-s);
     RestoreCluts;
     % This is the only place we set it false.
     % MATLAB initializes it false.
