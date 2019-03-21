@@ -2980,7 +2980,7 @@ try
                 boundsRect=CenterRect(targetRect,[oo(oi).targetXYPix oo(oi).targetXYPix]);
                 % targetRect not used. boundsRect used solely for the snapshot.
         end % switch oo(oi).task
-        ffprintf(ff,'%d: Prepare the %d signals, each %dx%d. ... Done (%.1f).\n',...
+        ffprintf(ff,'%d: Prepare the %d signals, each %dx%d. ... Done (%.1f s).\n',...
             oi,oo(oi).alternatives,size(oo(oi).signal(1).image,1),size(oo(oi).signal(1).image,2),toc);
         
         % Compute o.signalIsBinary, o.signalMin, o.signalMax.
