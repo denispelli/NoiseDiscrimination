@@ -1,9 +1,9 @@
-function ooo=OfferToResumeExperiment2(ooo)
-% Offer to resume any saved incomplete experiment on the given
-% o.experiment and computer. We don't know the observer name yet, so we
-% offer all available. We search by filename in the data folder. The
-% filename is assumed to be experiment-observer-localHostName-partial.m
-% where experiment=o.experiment, observer= future value of o.observer,
+function ooo=OfferToResumeExperiment(ooo)
+% Offer to resume any saved incomplete run of the given o.experiment on
+% this computer. We don't know the observer name yet, so we offer all
+% available. We search by filename in the data folder. The filename is
+% assumed to be experiment-observer-localHostName-partial.m where
+% experiment=o.experiment, observer= future value of o.observer,
 % localHostName is cal.localHostName and "partial" is a literal. Such files
 % are produced by RunExperiment.
 KbName('UnifyKeyNames');
