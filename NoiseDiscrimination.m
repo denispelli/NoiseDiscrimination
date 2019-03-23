@@ -672,6 +672,7 @@ o.observer=''; % Name of person or algorithm.
 o.algorithmicObservers={'ideal', 'brightnessSeeker', 'blackshot', 'maximum'};
 o.experiment='';
 o.conditionName='';
+o.condition=[];
 o.age=20; % Assume age 20, unless later specified.
 
 % Procedure
@@ -1014,6 +1015,9 @@ for oi=1:conditions
     %             'Use System Preferences:Security and Privacy:Privacy:Accessibility. '...
     %             'You''ll need admin privileges to do this.']);
     %     end
+    if isempty(oo(oi).condition)
+        oo(oi).condition=oi;
+    end
     useImresize=exist('imresize','file'); % Requires the Image Processing Toolbox.
     if isnan(oo(oi).annularNoiseSD)
         oo(oi).annularNoiseSD=oo(oi).noiseSD;
@@ -4043,7 +4047,7 @@ try
                 switch oo(oi).alphabetPlacement
                     case {'top' 'right'}
                     case 'left'
-                        x=x+RectHeight(o.screenRect)/max(6,oo(oi).alternatives);
+                        x=x+RectHeight(oo(oi).screenRect)/max(6,oo(oi).alternatives);
                 end
                 Screen('TextSize',oo(1).window,oo(oi).textSize);
                 Screen('DrawText',oo(1).window,message,x,oo(oi).textSize/2,black,oo(oi).gray1);
@@ -5585,62 +5589,6 @@ switch o.observer
 end % switch
 end % function ModelObserver(o,signal,location)
 
-function xyPix=XYPixOfXYDeg(o,xyDeg)
-% Convert position from deg (relative to fixation) to (x,y) coordinate in
-% o.stimulusRect. Deg increase right and up. Pix are in Apple screen
-% coordinates which increase down and right. In terms of geometry, the
-% perspective transformation is relative to location of near point, which
-% is orthogonal to line of sight. "location" refers to the near point. We
-% typically put the target there, but that is not assumed in this routine.
-% In spatial-uncertainty experiments, we typically put fixation at the near
-% point.
-xyDeg=xyDeg-o.nearPointXYDeg;
-rDeg=sqrt(sum(xyDeg.^2));
-rPix=o.pixPerCm*o.viewingDistanceCm*tand(rDeg);
-if rDeg>0
-    xyPix=xyDeg*rPix/rDeg;
-    xyPix(2)=-xyPix(2); % Apple y goes down.
-else
-    xyPix=[0 0];
-end
-xyPix=xyPix+o.nearPointXYPix;
-end
-
-function xyDeg=XYDegOfXYPix(o,xyPix)
-% Convert position from (x,y) coordinate in o.stimulusRect to deg (relative
-% to fixation). Deg increase right and up. Pix are in Apple screen
-% coordinates which increase down and right. The perspective transformation
-% is relative to location of near point, which is orthogonal to line of
-% sight. We typically put the target at the near point, but that is not
-% assumed in this routine.
-if isempty(o.nearPointXYPix)
-    error('You must set o.nearPointXYPix before calling XYDegOfXYPix.');
-end
-if isempty(o.pixPerCm) || isempty(o.viewingDistanceCm)
-    error('You must set o.pixPerCm and o.viewingDistanceCm before calling XYDegOfXYPix.');
-end
-xyPix=xyPix-o.nearPointXYPix;
-rPix=sqrt(sum(xyPix.^2));
-rDeg=atan2d(rPix/o.pixPerCm,o.viewingDistanceCm);
-if rPix>0
-    xyPix(2)=-xyPix(2); % Apple y goes down.
-    xyDeg=xyPix*rDeg/rPix;
-else
-    xyDeg=[0 0];
-end
-xyDeg=xyDeg+o.nearPointXYDeg;
-end
-
-function isTrue=IsXYInRect(xy,rect)
-if nargin~=2
-    error('Need two args for function isTrue=IsXYInRect(xy,rect)');
-end
-if ~all(size(xy)==[1 2])
-    error('First arg to IsXYInRect(xy,rect) must be [x y] pair.');
-end
-isTrue=IsInRect(xy(1),xy(2),rect);
-end
-
 %% SetUpNearPoint at correct slant and viewing distance.
 function o=SetUpNearPoint(o)
 black=0; % The CLUT color code for black.
@@ -5966,6 +5914,15 @@ ListenChar(2); % no echo
 Screen('FillRect',o.window,o.gray1);
 Screen('TextSize',o.window,o.textSize);
 Screen('TextFont',o.window,o.textFont,0);
+
+% Display block count and experiment name.
+message=sprintf('Block %d of %d.',o.block,o.blocksDesired);
+if isfield(o,'experiment')
+    message=[message ' Experiment "' o.experiment '".'];
+end
+Screen('DrawText',o.window,message,o.textMarginPix,o.textMarginPix,black,o.gray1);
+
+% Display question.
 y=o.screenRect(4)/2-(1+2*length(text.big))*o.textSize;
 for i=1:length(text.big)
     Screen('DrawText',o.window,text.big{i},o.textMarginPix,y,black,o.gray1);
