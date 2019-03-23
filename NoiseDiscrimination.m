@@ -1121,7 +1121,7 @@ if ~isScreenCalibrated && ~skipScreenCalibration && ~ismember(o.observer,o.algor
             % If it failed, try again two more times. The first call to
             % Brightness sometimes fails. Not sure why. Maybe it times out.
         end
-        ffprintf(ff,'Done (%.1f s).\n',GetSecs-s);
+        ffprintf(ff,'Done (%.1f s).\n',GetSecs-s); % Setting Brightness.
     catch e
         % Caution: Screen ConfigureDisplay Brightness gives a fatal error
         % if not supported, and is unsupported on many devices, including a
@@ -1147,7 +1147,7 @@ if ~isScreenCalibrated && ~skipScreenCalibration && ~ismember(o.observer,o.algor
         ffprintf(ff,'Turning AutoBrightness off. ... ');
         s=GetSecs;
         AutoBrightness(cal.screen,0);
-        ffprintf(ff,'Done (%.1f s)\n',GetSecs-s);
+        ffprintf(ff,'Done (%.1f s)\n',GetSecs-s); % AutoBrightness
     end
 end % if ~isScreenCalibrated && ~skipScreenCalibration && ~ismember(o.observer,o.algorithmicObservers)
 clear o
@@ -1506,6 +1506,7 @@ try
         ffprintf(ff,'Recording gaze (of conditions %s) in %s file:\n',num2str(find([oo.recordGaze])),videoExtension);
     end
     ffprintf(ff,'<strong>%s</strong>\n',oo(1).dataFilename);
+    ffprintf(ff,'Block %d of %d.\n',oo(1).block,oo(1).blocksDesired);
     ffprintf(ff,'observer %s, task %s, alternatives %d,  steepness %.1f\n',oo(1).observer,oo(1).task,oo(1).alternatives,oo(1).steepness);
     ffprintf(ff,'Experiment: %s. ',oo(1).experiment);
     ffprintf(ff,'%d conditions: ',conditions);
@@ -1601,7 +1602,7 @@ try
                 maxStimulusHeight/oo(oi).pixPerDeg,oo(oi).viewingDistanceCm);
         end
         if oo(oi).noiseRadiusDeg > maxStimulusHeight/oo(oi).pixPerDeg
-            ffprintf(ff,'%d: Reducing requested o.noiseRadiusDeg (%.1f deg) to %.1f deg, the max possible.\n',...
+            ffprintf(ff,'%d: Reducing requested o.noiseRadiusDeg %.1f deg to %.1f deg, the max possible.\n',...
                 oi,oo(oi).noiseRadiusDeg,maxStimulusHeight/oo(oi).pixPerDeg);
             oo(oi).noiseRadiusDeg=maxStimulusHeight/oo(oi).pixPerDeg;
         end
@@ -1802,7 +1803,7 @@ try
             end
         end
         ScreenProfile(cal.screen,cal.profile);
-        ffprintf(ff,'Done (%.1f s).\n',GetSecs-s);
+        ffprintf(ff,'Done (%.1f s).\n',GetSecs-s); % Open window.
     end
     if ~isScreenCalibrated ...
             && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers) ...
@@ -2683,8 +2684,8 @@ try
             string=[string 'No fixation.'];
         end
         ffprintf(ff,'%s\n',string);
-        ffprintf(ff,'o.eccentricityXYDeg (%.1f %.1f), pix (%.0f %.0f)\n',...
-            oo(oi).eccentricityXYDeg,XYPixOfXYDeg(oo(oi),oo(oi).eccentricityXYDeg));
+        ffprintf(ff,'%d: o.eccentricityXYDeg (%.1f %.1f), pix (%.0f %.0f)\n',...
+            oi,oo(oi).eccentricityXYDeg,XYPixOfXYDeg(oo(oi),oo(oi).eccentricityXYDeg));
         ffprintf(ff,'%d: o.setNearPointEccentricityTo ''%s'', o.nearPointXYDeg (%.0f %.0f), o.nearPointXYPix (%.0f %.0f)\n',...
             oi,oo(oi).setNearPointEccentricityTo,oo(oi).nearPointXYDeg,oo(oi).nearPointXYPix);
         oo(oi).N=oo(oi).noiseCheckPix^2*oo(oi).pixPerDeg^-2*oo(oi).noiseSD^2;
@@ -2736,7 +2737,7 @@ try
                                 n1=length(Screen('Windows'));
                                 temporaryWindow=Screen('OpenWindow',0,1,[0 0 100 100]);
                                 n2=length(Screen('Windows'));
-                                ffprintf(ff,'Done (%.1f s).\n',GetSecs-s);
+                                ffprintf(ff,'Done (%.1f s).\n',GetSecs-s); % Opening temporaryWindow
                                 ffprintf(ff,'%d: Open temporaryWindow. %d windows before, %d after.\n',MFileLineNr,n1,n2);
                             end
                             scratchHeight=round(3*oo(oi).targetHeightPix/oo(oi).targetCheckPix);
@@ -2748,9 +2749,9 @@ try
                                     wordLength=length(oo(oi).words{1});
                             end
                             scratchWidth=round((2+wordLength)*oo(oi).targetHeightPix/oo(oi).targetCheckPix);
-                            ffprintf(ff,'Opening scratchWindow. ... '); s=GetSecs;
+                            % ffprintf(ff,'%d: Opening scratchWindow. ... ',oi); s=GetSecs; % Takes less than 0.1 s.
                             [scratchWindow,scratchRect]=Screen('OpenOffscreenWindow',-1,[],[0 0 scratchWidth scratchHeight],8);
-                            ffprintf(ff,'Done (%.1f s).\n',GetSecs-s);
+                            % ffprintf(ff,'Done (%.1f s).\n',GetSecs-s); % Opening scratchWindow
                             if ~streq(oo(oi).targetFont,'Sloan') && ~oo(oi).allowAnyFont
                                 warning('You should set o.allowAnyFont=true unless o.targetFont=''Sloan''.');
                             end
@@ -2875,9 +2876,9 @@ try
                                 % solely to set the nominal font size
                                 % ("points"), in pixels.
                             end
-                            ffprintf(ff,'Closing scratchWindow. ... '); s=GetSecs;
+                            % ffprintf(ff,'%d: Closing scratchWindow. ... ',oi); s=GetSecs; % Takes less than 0.1 s.
                             Screen('Close',scratchWindow);
-                            ffprintf(ff,'Done (%.1f s).\n',GetSecs-s);
+                            % ffprintf(ff,'Done (%.1f s).\n',GetSecs-s); % Closing scratchWindo
                             scratchWindow=[];
                         end
                     case 'gabor'
@@ -3113,7 +3114,7 @@ try
         s=GetSecs;
         Screen('Close',temporaryWindow);
         temporaryWindow=[];
-        ffprintf(ff,'Done (%.1f s).\n',GetSecs-s);
+        ffprintf(ff,'Done (%.1f s).\n',GetSecs-s); % Closing temporaryWindow
     end
     
     %% SET PARAMETERS FOR QUEST
@@ -4779,6 +4780,7 @@ try
                 ffprintf(ff,'%.0f ms/trial, across all conditions.\n',secs*1000);
             end
         end
+        ffprintf(ff,'Block %d of %d.\n',oo(1).block,oo(oi).blocksDesired);
         
         %% WARN IF IN DEBUG MODE
         if oo(1).useFractionOfScreenToDebug
@@ -4793,7 +4795,7 @@ try
         if oi==1
             ffprintf(ff,'\n');
         end
-        msg=sprintf(['%d of %d "%s" %d trials, %.0f%% right, noiseSD %.2f, '...
+        msg=sprintf(['Condition %d of %d "%s" %d trials, %.0f%% right, noiseSD %.2f, '...
             'Threshold log c %.2f',plusMinusChar,'%.2f,'],...
             oi,length(oo),oo(oi).conditionName,oo(oi).trials,100*oo(oi).trialsRight/oo(oi).trials,oo(oi).noiseSD,t,sd);
         switch oo(oi).targetModulates
@@ -6131,13 +6133,13 @@ if ~isempty(Screen('Windows')) && isLastBlock
     Screen('CloseAll');
     temporaryWindow=[];
     window=[];
-    ffprintf(ff,'Done (%.1f s).\n',GetSecs-s);
+    ffprintf(ff,'Done (%.1f s).\n',GetSecs-s); % Closing all windows.
 end
 if isScreenCalibrated && ~skipScreenCalibration && isLastBlock && ismac
     ffprintf(ff,'Restoring AutoBrightness. ... ');
     s=GetSecs;
     AutoBrightness(0,1);
-    ffprintf(ff,'Done (%.1f s).\n',GetSecs-s);
+    ffprintf(ff,'Done (%.1f s).\n',GetSecs-s); % Restoring AutoBrightness.
     RestoreCluts;
     % This is the only place we set it false.
     % MATLAB initializes it false.
