@@ -1526,7 +1526,7 @@ try
         oo(oi).pixPerDeg=oo(oi).pixPerCm/degPerCm;
         oo(oi).textSize=round(oo(oi).textSizeDeg*oo(oi).pixPerDeg);
         oo(oi).textSizeDeg=oo(oi).textSize/oo(oi).pixPerDeg;
-        oo(oi).textLineLength=floor(2.0*RectWidth(oo(1).screenRect)/oo(oi).textSize);
+        oo(oi).textLineLength=floor(1.95*RectWidth(oo(1).screenRect)/oo(oi).textSize);
         oo(oi).lineSpacing=1.5;
         oo(oi).stimulusRect=InsetRect(oo(1).screenRect,0,oo(oi).lineSpacing*1.2*oo(oi).textSize); % Allow room for captions at top and bottom of screen.
         if streq(oo(oi).task,'identifyAll')
@@ -2427,6 +2427,7 @@ try
         if oo(oi).useFlankers
             oo(oi).canvasSize=oo(oi).canvasSize+[3 3]*flankerSpacingPix/oo(oi).targetCheckPix;
         end
+        
         oo(oi).canvasSize=max(oo(oi).canvasSize,oo(oi).noiseSize*oo(oi).noiseCheckPix/oo(oi).targetCheckPix);
         if oo(oi).annularNoiseBigRadiusDeg > oo(oi).annularNoiseSmallRadiusDeg
             % April 2018, Denis changed denominator to targetCheckPix.
@@ -3328,8 +3329,16 @@ try
             case 'size'
                 targetSizeDeg=10^tTest;
                 oo(oi).desiredTargetHeightPix=round(targetSizeDeg*oo(oi).pixPerDeg);
-%                 oo(oi).targetWidthPix=oo(oi).targetHeightPix;
-            case 'contrast'
+                % Restrict size to fit in canvasRect.
+                sz=size(oo(oi).signal(1).image);
+                heightOverWidth=sz(1)/sz(2);
+                maxHeightPix=floor(min(oo(oi).canvasSize*oo(oi).targetCheckPix.*[1 heightOverWidth]));
+                oo(oi).desiredTargetHeightPix=min(oo(oi).desiredTargetHeightPix,maxHeightPix);
+                oo(oi).desiredTargetHeightPix=oo(oi).targetCheckPix* ...
+                    floor(oo(oi).desiredTargetHeightPix/oo(oi).targetCheckPix);
+%                 ffprintf(ff,'o.desiredTargetHeightPix %d, maxHeightPix %d\n',...
+%                     oo(oi).desiredTargetHeightPix,maxHeightPix);
+           case 'contrast'
                 switch oo(oi).targetModulates
                     case 'luminance'
                         oo(oi).r=1;
@@ -3527,7 +3536,7 @@ try
                             case 'size'
                                 % Use o.desiredTargetHeightPix to resize
                                 % signal(whichSignal).image and dependent metrics.
-                                oSignal=ResizeImage(oo(oi),whichSignal,oo(oi).desiredTargetHeightPix);
+                                oSignal=ResizeImage(oo(oi),whichSignal,oo(oi).desiredTargetHeightPix/oo(oi).targetCheckPix);
                             otherwise
                                 oSignal=oo(oi);
                         end
@@ -6025,7 +6034,7 @@ Screen(o.window,'TextSize',o.textSize);
 sz=round(0.8*o.textSize);
 Screen(o.window,'TextSize',sz);
 ratio=sz/o.textSize;
-DrawFormattedText(o.window,footnote,x,y,black,o.textLineLength/ratio,[],[],1.3);
+DrawFormattedText(o.window,footnote,x,y,black,floor(o.textLineLength/ratio),[],[],1.3);
 Screen('Flip',o.window,0,1); % Proceeding to the trial.
 if o.speakInstructions
     if ismac
