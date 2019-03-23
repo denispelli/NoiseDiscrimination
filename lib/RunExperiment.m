@@ -60,7 +60,7 @@ elseif computer.osx || computer.macintosh
 end
 
 %% LOOK FOR PARTIAL RUNS OF THIS EXPERIMENT.
-ooo=OfferToResumeExperiment2(ooo);
+ooo=OfferToResumeExperiment(ooo);
 
 %% RUN THE CONDITIONS IN EXPERIMENT ooo, WHETHER OLD OR NEW.
 % You pass a cell array ooo that represents the whole experiment. Each cell
