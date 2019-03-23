@@ -2295,6 +2295,15 @@ try
         [oo.pupilKnown]=deal(oo(1).pupilKnown);
     end
     
+    %% EXPLAIN DELAY TO OBSERVER
+    if Screen(oo(1).window,'WindowKind') == 1
+        Screen('TextSize',oo(1).window,oo(oi).textSize);
+        Screen('FillRect',oo(1).window,oo(1).gray1);
+        Screen('DrawText',oo(1).window,'Preparing stimuli. ... ',...
+            oo(oi).textSize,2*oo(oi).textSize,black,oo(1).gray1,1);
+        Screen('Flip',oo(1).window); % Display message.
+    end
+
     %% Compute NPhoton
     oo=ComputeNPhoton(oo);
     % If pupilDiameterMm is not specified, then ComputeNPhoton gets an
