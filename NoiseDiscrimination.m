@@ -6012,7 +6012,7 @@ switch o.task
         if IsOSX && ismember(MacModelName,{'MacBook10,1' 'MacBookAir6,2' 'MacBookPro11,5' ... % Mine, without touch bar, just to test this code.
                 'MacBookPro13,2' 'MacBookPro13,3' ... % 2016 with touch bar.
                 'MacBookPro14,1' 'MacBookPro14,2' 'MacBookPro14,3'}) % 2017 with touch bar.
-            footnote='For your convenience, hitting the tilde accent grave tilde key ~` is equivalent to hitting the ESCAPE key immediately above it.\n';
+            footnote='For your convenience, hitting the tilde accent grave key ~` is equivalent to hitting the ESCAPE key immediately above it.\n';
         else
             footnote='';
         end
