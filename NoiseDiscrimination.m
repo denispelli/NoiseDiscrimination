@@ -3328,16 +3328,14 @@ try
                 fprintf('flankerSpacingPix %d\n',flankerSpacingPix);
             case 'size'
                 targetSizeDeg=10^tTest;
-                oo(oi).desiredTargetHeightPix=round(targetSizeDeg*oo(oi).pixPerDeg);
-                % Restrict size to fit in canvasRect.
-                sz=size(oo(oi).signal(1).image);
-                heightOverWidth=sz(1)/sz(2);
-                maxHeightPix=floor(min(oo(oi).canvasSize*oo(oi).targetCheckPix.*[1 heightOverWidth]));
-                oo(oi).desiredTargetHeightPix=min(oo(oi).desiredTargetHeightPix,maxHeightPix);
+                oo(oi).desiredTargetHeightPix=targetSizeDeg*oo(oi).pixPerDeg;
                 oo(oi).desiredTargetHeightPix=oo(oi).targetCheckPix* ...
                     floor(oo(oi).desiredTargetHeightPix/oo(oi).targetCheckPix);
-%                 ffprintf(ff,'o.desiredTargetHeightPix %d, maxHeightPix %d\n',...
-%                     oo(oi).desiredTargetHeightPix,maxHeightPix);
+                % Restrict o.desiredTargetHeightPix so target fits in canvasRect.
+                sz=size(oo(oi).signal(1).image);
+                heightOverWidth=sz(1)/sz(2);
+                maxHeightPix=oo(oi).targetCheckPix.*floor(min(oo(oi).canvasSize.*[1 heightOverWidth]));
+                oo(oi).desiredTargetHeightPix=min(oo(oi).desiredTargetHeightPix,maxHeightPix);
            case 'contrast'
                 switch oo(oi).targetModulates
                     case 'luminance'
