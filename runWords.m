@@ -260,7 +260,7 @@ if 1
     % Block 1. Measure two thresholds, above and below fixation.
     o.thresholdParameter='size';
     o.eccentricityXYDeg=[0 10];
-    o.fixationLineWeightDeg=0.2;
+    o.fixationLineWeightDeg=0.4;
     o.fixationCrossDeg=3; % 0, 3, and inf are typical values.
     o.blankingRadiusReTargetHeight= 1.5;
     % Randomly interleave testing up and down.
@@ -274,7 +274,7 @@ if 1
     % Block 2. Measure three thresholds, one in zero and two in high noise.
     o.thresholdParameter='contrast';
     o.eccentricityXYDeg=[0 0];
-    o.fixationLineWeightDeg=0.2;
+    o.fixationLineWeightDeg=0.3;
     o.fixationCrossDeg=40; % 0, 3, and inf are typical values.
     o.noiseCheckDeg=o.targetHeightDeg/40;
     o.setNearPointEccentricityTo='fixation';
