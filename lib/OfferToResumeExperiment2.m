@@ -45,7 +45,7 @@ if ~isempty(matFiles)
 %                 % This partial experiment has no data. Skip it.
 %                 continue
 %             end
-            s=sprintf('<strong>%s, %s, Observer: %s</strong>\n',matFiles(i).name,matFiles(i).date,[o.observer ' ']);
+            s=sprintf('<strong>%s, %s, Observer: %s </strong>\n',matFiles(i).name,matFiles(i).date,o.observer);
             fprintf('%s',s);
             fprintf('Type Y for: Yes, use it. Hit RETURN to ignore it, or DELETE to delete it: ');
             responseChar=GetKeypress([KbName('y') KbName('delete') returnKeyCode escapeKeyCode graveAccentKeyCode]);
