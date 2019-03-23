@@ -237,6 +237,7 @@ o.noiseCheckDeg=o.targetHeightDeg/40;
 o.setNearPointEccentricityTo='fixation';
 o.nearPointXYInUnitSquare=[0.5 0.5];
 o.viewingDistanceCm=40;
+% o.viewingDistanceCm=30;
 o.noiseSD=0;
 o.observer=''; % Test human.
 o.setNearPointEccentricityTo='fixation';
@@ -252,8 +253,8 @@ o.noiseCheckDeg=o.targetHeightDeg/40;
 o.setNearPointEccentricityTo='fixation';
 o.noiseSD=0;
 % USE THESE ONLY FOR DEBUGGING!
-% o.useFractionOfScreenToDebug=0.5; % USE ONLY FOR DEBUGGING.
-% o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+% o.useFractionOfScreenToDebug=0.5; % FOR DEBUGGING.
+% o.skipScreenCalibration=true; % FOR DEBUGGING.
 
 if 1
     o.conditionName='Peripheral acuity';
@@ -268,7 +269,6 @@ if 1
     oo(2).eccentricityXYDeg=-oo(2).eccentricityXYDeg;
     ooo={oo};
 end
-
 if 1
     o.conditionName='Efficiency';
     % Block 2. Measure three thresholds, one in zero and two in high noise.
