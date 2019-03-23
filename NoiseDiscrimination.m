@@ -696,7 +696,7 @@ o.thresholdParameter='contrast'; % Use Quest to measure threshold 'contrast','si
 o.thresholdResponseTo='target'; % 'target' 'flankers'
 o.constantStimuli=[];
 o.useMethodOfConstantStimuli=false;
-o.thresholdPolarity=1; % Must be -1 or 1;
+o.contrastPolarity=1; % Must be -1 or 1;
 o.skipTrial=0;
 o.trialsSkipped=0;
 
@@ -3158,18 +3158,26 @@ try
             case 'spacing'
                 nominalCriticalSpacingDeg=0.3*(rDeg+0.45); % Eq. 14 from Song, Levi, and Pelli (2014).
                 tGuess=log10(2*nominalCriticalSpacingDeg);
-            case 'size'
+                oo(oi).contrastPolarity=sign(oo(oi).contrast); % Set response screen polarity. DGP
+                if isempty(oo(oi).contrastPolarity) || ~isfinite(oo(oi).contrastPolarity)
+                    error('You must specify o.contrast to indicate + or - desired sign of contrast.');
+                end
+           case 'size'
                 nominalAcuityDeg=0.029*(rDeg+2.72); % Eq. 13 from Song, Levi, and Pelli (2014).
                 tGuess=log10(2*nominalAcuityDeg);
-            case 'contrast'
-                oo(oi).thresholdPolarity=sign(oo(oi).contrast);
-                if isempty(oo(oi).thresholdPolarity) || ~isfinite(oo(oi).thresholdPolarity)
+                oo(oi).contrastPolarity=sign(oo(oi).contrast); % Set response screen polarity. DGP
+                if isempty(oo(oi).contrastPolarity) || ~isfinite(oo(oi).contrastPolarity)
+                    error('You must specify o.contrast to indicate + or - desired sign of contrast.');
+                end
+           case 'contrast'
+                oo(oi).contrastPolarity=sign(oo(oi).contrast);
+                if isempty(oo(oi).contrastPolarity) || ~isfinite(oo(oi).contrastPolarity)
                     error('You must specify o.contrast to indicate + or - desired sign of contrast.');
                 end
             case 'flankerContrast'
                 assert(oo(oi).useFlankers);
-                oo(oi).thresholdPolarity=sign(oo(oi).flankerContrast);
-                if ~isfinite(oo(oi).thresholdPolarity)
+                oo(oi).contrastPolarity=sign(oo(oi).flankerContrast);
+                if ~isfinite(oo(oi).contrastPolarity)
                     error('You must specify o.flankerContrast to indicate + or - desired sign of contrast.');
                 end
             otherwise
@@ -3305,7 +3313,7 @@ try
                 oo(oi).thresholdParameterValueList=Shuffle(oo(oi).thresholdParameterValueList);
             end
             c=oo(oi).thresholdParameterValueList(oo(oi).trials);
-            oo(oi).thresholdPolarity=sign(c);
+            oo(oi).contrastPolarity=sign(c);
             tTest=log10(abs(c));
         end
         if ~isfinite(tTest)
@@ -3340,7 +3348,7 @@ try
                 switch oo(oi).targetModulates
                     case 'luminance'
                         oo(oi).r=1;
-                        oo(oi).contrast=oo(oi).thresholdPolarity*10^tTest; % Use negative contrast to get dark letters.
+                        oo(oi).contrast=oo(oi).contrastPolarity*10^tTest; % Use negative contrast to get dark letters.
                         if oo(oi).saveSnapshot && isfinite(oo(oi).snapshotContrast)
                             oo(oi).contrast=-oo(oi).snapshotContrast;
                         end
@@ -3356,7 +3364,7 @@ try
             case 'flankerContrast'
                 assert(streq(oo(oi).targetModulates,'luminance'),'The flanker software assumes o.targetModulates is ''luminance''.');
                 oo(oi).r=1;
-                oo(oi).flankerContrast=oo(oi).thresholdPolarity*10^tTest;
+                oo(oi).flankerContrast=oo(oi).contrastPolarity*10^tTest;
                 if oo(oi).saveSnapshot && isfinite(oo(oi).snapshotContrast)
                     oo(oi).flankerContrast=-oo(oi).snapshotContrast;
                 end
@@ -4203,12 +4211,13 @@ try
                                         oo(oi).responseScreenAbsoluteContrast);
                                 end
                                 % Note alphabet placement on top or right.
-                                % Using ReadAlphabetFromDisk, I get the right
-                                % polarity if I set signalIsBinary. However,
-                                % the clipping threshold is way off so the
-                                % letters are oddly distorted. denis 2018
+                                % Using ReadAlphabetFromDisk, I get the
+                                % right polarity if I set signalIsBinary.
+                                % However, the clipping threshold is way
+                                % off so the letters are slightly distorted.
+                                % denis 2018
                                 if oo(oi).signalIsBinary
-                                    if oo(oi).thresholdPolarity<0
+                                    if oo(oi).contrastPolarity<0
                                         if ~isempty(oo(oi).responseScreenAbsoluteContrast) && ~ismember(oo(oi).responseScreenAbsoluteContrast,[0.99 1])
                                             ffprintf(ff,['Ignoring o.responseScreenAbsoluteContrast (%.2f). '...
                                                 'Response screen for negative contrast binary signals is always nearly 100% contrast.\n'],...
@@ -4229,7 +4238,7 @@ try
                                     PrintImageStatistics(MFileLineNr,oo(oi),i,'after MakeTexture',img)
                                     if isempty(oo(oi).responseScreenAbsoluteContrast)
                                         % Maximize absolute contrast.
-                                        if oo(oi).thresholdPolarity>0
+                                        if oo(oi).contrastPolarity>0
                                             c=(cal.LLast-oo(oi).LBackground)/oo(oi).LBackground; % Max possible contrast.
                                             c=min(c,1);
                                         else
@@ -4708,9 +4717,9 @@ try
             case 'size'
                 ffprintf(ff,'%s: p %.0f%%, ecc. %.1f deg, threshold size %.3f deg.\n',oo(oi).observer,100*oo(oi).p,rDeg,10^oo(oi).questMean);
             case 'contrast'
-                oo(oi).contrast=oo(oi).thresholdPolarity*10^oo(oi).questMean;
+                oo(oi).contrast=oo(oi).contrastPolarity*10^oo(oi).questMean;
             case 'flankerContrast'
-                oo(oi).flankerContrast=oo(oi).thresholdPolarity*10^oo(oi).questMean;
+                oo(oi).flankerContrast=oo(oi).contrastPolarity*10^oo(oi).questMean;
         end
         oo(oi).EOverN=oo(oi).contrast^2*oo(oi).E1/oo(oi).N;
         oo(oi).efficiency=oo(oi).idealEOverNThreshold/oo(oi).EOverN;
@@ -4732,7 +4741,7 @@ try
                 ffprintf(ff,'QuestPlus: Max likelihood estimate:     log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
                     psiParamsFit(1)/20,psiParamsFit(2),psiParamsFit(3),psiParamsFit(4));
             end
-            oo(oi).qpContrast=oo(oi).thresholdPolarity*10^(psiParamsFit(1)/20);	% threshold contrast
+            oo(oi).qpContrast=oo(oi).contrastPolarity*10^(psiParamsFit(1)/20);	% threshold contrast
             switch oo(oi).thresholdParameter
                 case 'contrast'
                     oo(oi).contrast=oo(oi).qpContrast;
@@ -4821,7 +4830,7 @@ try
         switch oo(oi).targetModulates
             case 'luminance'
                 ffprintf(ff,'<strong>%s contrast %.4f, log E/N %.2f, efficiency %.5f</strong>\n',...
-                    msg,oo(oi).thresholdPolarity*10^t,log10(oo(oi).EOverN),oo(oi).efficiency);
+                    msg,oo(oi).contrastPolarity*10^t,log10(oo(oi).EOverN),oo(oi).efficiency);
             case {'noise' 'entropy'}
                 ffprintf(ff,'<strong>%s log(o.r-1) %.2f',plusMinusChar,'%.2f, approxRequiredNumber %.0f</strong>\n',...
                     msg,oo(oi).approxRequiredNumber);
@@ -5099,7 +5108,7 @@ saveFont=Screen('TextFont',snapshotTexture,'Courier');
 caption={''};
 switch o.targetModulates
     case 'luminance'
-        caption{1}=sprintf('signal %.3f',o.thresholdPolarity*10^tTest);
+        caption{1}=sprintf('signal %.3f',o.contrastPolarity*10^tTest);
         caption{2}=sprintf('noise sd %.3f',o.noiseSD);
     case 'noise'
         caption{1}=sprintf('noise sd %.3f',o.noiseSD);
@@ -5155,7 +5164,7 @@ switch o.targetModulates
     case 'luminance'
         filename=sprintf('%s_%s_%s%s_%.3fc_%.0fpix_%s',...
             signalDescription,o.task,o.noiseType,freezing,...
-            o.thresholdPolarity*10^tTest,o.targetHeightPix/o.noiseCheckPix,...
+            o.contrastPolarity*10^tTest,o.targetHeightPix/o.noiseCheckPix,...
             answerString);
     case {'noise', 'entropy'}
         filename=sprintf('%s_%s_%s%s_%.3fr_%.0fpix_%.0freq_%s',...
