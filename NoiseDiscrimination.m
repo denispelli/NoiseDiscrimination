@@ -1526,7 +1526,7 @@ try
         oo(oi).pixPerDeg=oo(oi).pixPerCm/degPerCm;
         oo(oi).textSize=round(oo(oi).textSizeDeg*oo(oi).pixPerDeg);
         oo(oi).textSizeDeg=oo(oi).textSize/oo(oi).pixPerDeg;
-        oo(oi).textLineLength=floor(1.9*RectWidth(oo(1).screenRect)/oo(oi).textSize);
+        oo(oi).textLineLength=floor(2.0*RectWidth(oo(1).screenRect)/oo(oi).textSize);
         oo(oi).lineSpacing=1.5;
         oo(oi).stimulusRect=InsetRect(oo(1).screenRect,0,oo(oi).lineSpacing*1.2*oo(oi).textSize); % Allow room for captions at top and bottom of screen.
         if streq(oo(oi).task,'identifyAll')
@@ -6018,12 +6018,14 @@ switch o.task
         end
 end
 msg=[message readyString '\n'];
-Screen('DrawText',o.window,' ',0,0,1,o.gray1,1); % Set background color.
 black=0;
+Screen('DrawText',o.window,' ',0,0,black,o.gray1,1); % Set background color.
 Screen(o.window,'TextSize',o.textSize);
 [x,y]=DrawFormattedText(o.window,msg,0.5*o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
-Screen(o.window,'TextSize',round(0.8*o.textSize));
-DrawFormattedText(o.window,footnote,x,y,black,o.textLineLength/0.8,[],[],1.3);
+sz=round(0.8*o.textSize);
+Screen(o.window,'TextSize',sz);
+ratio=sz/o.textSize;
+DrawFormattedText(o.window,footnote,x,y,black,o.textLineLength/ratio,[],[],1.3);
 Screen('Flip',o.window,0,1); % Proceeding to the trial.
 if o.speakInstructions
     if ismac
