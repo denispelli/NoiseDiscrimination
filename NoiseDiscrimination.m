@@ -4780,7 +4780,7 @@ try
                 ffprintf(ff,'%.0f ms/trial, across all conditions.\n',secs*1000);
             end
         end
-        ffprintf(ff,'Block %d of %d.\n',oo(1).block,oo(oi).blocksDesired);
+        ffprintf(ff,'Block %d of %d.\n',oo(1).block,oo(1).blocksDesired);
         
         %% WARN IF IN DEBUG MODE
         if oo(1).useFractionOfScreenToDebug
