@@ -3146,13 +3146,6 @@ try
                     oo(oi).guess=0;
             end
         end
-        if streq(oo(oi).targetModulates,'luminance')
-            tGuess=-0.5;
-            tGuessSd=2;
-        else
-            tGuess=0;
-            tGuessSd=4;
-        end
         rDeg=sqrt(sum(oo(oi).eccentricityXYDeg.^2));
         switch oo(oi).thresholdParameter
             case 'spacing'
@@ -3169,19 +3162,33 @@ try
                 if isempty(oo(oi).contrastPolarity) || ~isfinite(oo(oi).contrastPolarity)
                     error('You must specify o.contrast to indicate + or - desired sign of contrast.');
                 end
-           case 'contrast'
+            case 'contrast'
+                if streq(oo(oi).targetModulates,'luminance')
+                    tGuess=-0.5;
+                    tGuessSd=2;
+                else
+                    tGuess=0;
+                    tGuessSd=4;
+                end
                 oo(oi).contrastPolarity=sign(oo(oi).contrast);
                 if isempty(oo(oi).contrastPolarity) || ~isfinite(oo(oi).contrastPolarity)
                     error('You must specify o.contrast to indicate + or - desired sign of contrast.');
                 end
             case 'flankerContrast'
+                if streq(oo(oi).targetModulates,'luminance')
+                    tGuess=-0.5;
+                    tGuessSd=2;
+                else
+                    tGuess=0;
+                    tGuessSd=4;
+                end
                 assert(oo(oi).useFlankers);
                 oo(oi).contrastPolarity=sign(oo(oi).flankerContrast);
                 if ~isfinite(oo(oi).contrastPolarity)
                     error('You must specify o.flankerContrast to indicate + or - desired sign of contrast.');
                 end
             otherwise
-                error('Unknown o.thresholdParameter "%s".',oo(oi).thresholdParameter);
+                error('Unknown o.thresholdParameter ''%s''.',oo(oi).thresholdParameter);
         end
         if ~isfinite(oo(oi).tGuess)
             oo(oi).tGuess=tGuess;
