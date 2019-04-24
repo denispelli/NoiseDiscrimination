@@ -5927,3 +5927,4 @@ if streq(cal.datestr,'none')
     warning('Failed to find a calibration for your screen. Did you change the computer name?');
     warning('Your screen is uncalibrated. Use CalibrateScreenLuminance to calibrate it.');
 end
+
