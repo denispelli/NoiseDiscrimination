@@ -1,11 +1,10 @@
-function acuityDeg=NominalAcuityDeg(eccentricityXYDeg)
+function nominalAcuityDeg=NominalAcuityDeg(eccentricityXYDeg)
+% nominalAcuityDeg=NominalAcuityDeg(eccentricityXYDeg);
 % Eq. 13 from Song, Levi, and Pelli (2014).
-% The argument can be a scalar radial eccentricity in deg, or a vector of x
-% and y eccentricity in deg.
+% You can pass one or more eccentricities. Each row is one eccentry.
+% The result is a column with one value per row.
 % See also: NominalCriticalSpacingDeg
-if length(eccentricityXYDeg)<1 || length(eccentricityXYDeg)>2
-    error('The eccentricityXYDeg argument must be a scalar (radial) or an x y vector (cartesian).');
-end
-radialEccDeg=sqrt(sum(eccentricityXYDeg.^2));
-acuityDeg=0.029*(radialEccDeg+2.72);
+assert(size(eccentricityXYDeg,2)==2)
+ecc=sqrt(sum(eccentricityXYDeg.^2,2));
+nominalAcuityDeg=0.029*(ecc+2.72);
 
