@@ -2,8 +2,11 @@ function response = GetKeypress(enableKeys,deviceIndex,returnOneChar)
 % response = GetKeypress(enableKeys,deviceIndex,returnOneChar); 
 % Wait for a keypress, and return it. 
 %
-% Based on KbCheck and RestrictKeysForKbCheck. We  pass enableKeys to  
-% RestrictKeysForKbCheck.
+% We  pass enableKeys to RestrictKeysForKbCheck.
+%
+% Note that the 2017 MacBook Pro with the track bar has no escape key. My
+% workaround, in my programs using GetKeyPress, is to accept as equivalent
+% a press of the normally nearby grave accent '`' key.
 %
 % If returnOneChar is true (default) then "response" is just one character,
 % if possible. (Some keynames, like 'left_shift', have no obviously
@@ -11,10 +14,6 @@ function response = GetKeypress(enableKeys,deviceIndex,returnOneChar)
 % between pressing a number key on the main or separate numeric keyboard.
 % If returnOneChar is false, then the full descriptive output of KbName is
 % returned, unmodified, e.g. 'a', '1!', 'ESCAPE', or 'left_shift'.
-%
-% To specify a number key on a regular keyboard, use both characters on the
-% key, e.g. KbName('1!'). Using KbName('1') specifies the '1' key on a
-% numeric key pad.
 %
 % To specify a number key on a regular keyboard, use both characters on the
 % key, e.g. KbName('1!'). Using KbName('1') specifies the '1' key on a
