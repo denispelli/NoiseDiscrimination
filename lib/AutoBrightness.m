@@ -98,8 +98,8 @@ function [oldSetting,failed] = AutoBrightness(screenNumber,newSetting)
 % and sharing the result with me and the Psychtoolbox forum.
 %
 % See also:
-% ScriptingOk.m ??
-% ScriptingOkShowPermission.m ??
+% ScriptingOk.m
+% ScriptingOkShowPermission.m
 % ScreenProfile.m
 
 % http://www.manpagez.com/man/1/osascript/
@@ -167,6 +167,6 @@ for i=1:3
     end
 end
 if forcedToClose
-    error('Program window was closed to allow user to grant permission. Please run your MATLAB program again.');
+    error('Screen window was closed to allow user to grant permission. Please run your MATLAB program again.');
 end
 end
