@@ -1,4 +1,5 @@
 function isTrue=IsXYInRect(xy,rect)
+% isTrue=IsXYInRect(xy,rect)
 if nargin~=2
     error('Need two args for function isTrue=IsXYInRect(xy,rect)');
 end
