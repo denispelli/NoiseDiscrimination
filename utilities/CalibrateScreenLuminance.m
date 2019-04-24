@@ -249,7 +249,8 @@ try
         useConnectedPhotometer=ismember(reply(1),{'y' 'Y'});
     end
     if useConnectedPhotometer
-        luminances=64+1;
+%         luminances=64+1;
+        luminances=32+1; % DGP. Faster April 24, 2019
     else
         luminances=32+1;
     end
@@ -305,15 +306,18 @@ try
             end
             AutoBrightness(cal.screen,0); % Disable Apple's automatic adjustment of brightness
             cal.autoBrightnessDisabled=true;
-            useBrightness=true; % In macOS 10.12.5 ScreenConfigureDisplayBrightnessWorks works erratically.
             cal.BrightnessWorks=true; % Default value
-            cal.ScreenConfigureDisplayBrightnessWorks=false; % Default value.
+            cal.ScreenConfigureDisplayBrightnessWorks=false; % In macOS 10.12.5 ScreenConfigureDisplayBrightnessWorks works erratically.
+            useBrightness=true;
             if useBrightness
                 cal.brightnessSetting=Brightness(cal.screen);
             else
                 cal.brightnessSetting=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
             end
-            desiredBrightness=[(0:4)/4 cal.brightnessSetting];
+            if ~isfinite(cal.brightnessSetting)
+                warning('Could not read Brightness.');
+            end
+            desiredBrightness=[0.5 1 cal.brightnessSetting];
             brightness=zeros(size(desiredBrightness));
             for i=1:length(desiredBrightness)
                 if useBrightness
@@ -354,50 +358,52 @@ try
             cal.ScreenConfigureDisplayBrightnessWorks=false;
             cal.brightnessRmsError=nan;
         end
-        fprintf('When using a flat-panel display, we usually run at maximum "brightness".\n');
-        if cal.ScreenConfigureDisplayBrightnessWorks || cal.BrightnessWorks
-            fprintf('Your display is currently at %.0f%% brightness.\n',100*cal.brightnessSetting);
-            if forceMaximumBrightness
-                b=100;
-            else
-                b=[];
-                while ~isfloat(b) || length(b)~=1 || b<0 || b>100
-                    if useSpeech
-                        Speak('We usually run at 100% brightness. What percent brightness do you want?');
-                        Speak('Please type a number from 0 to 100, followed by return.');
+        if ~makeItQuickForDebugging
+            fprintf('When using a flat-panel display, we usually run at maximum "brightness".\n');
+            if cal.ScreenConfigureDisplayBrightnessWorks || cal.BrightnessWorks
+                fprintf('Your display is currently at %.0f%% brightness.\n',100*cal.brightnessSetting);
+                if forceMaximumBrightness
+                    b=100;
+                else
+                    b=[];
+                    while ~isfloat(b) || length(b)~=1 || b<0 || b>100
+                        if useSpeech
+                            Speak('We usually run at 100% brightness. What percent brightness do you want?');
+                            Speak('Please type a number from 0 to 100, followed by return.');
+                        end
+                        b=input('We suggest 100. What brightness percentage do you want (0 to 100)?');
                     end
-                    b=input('We suggest 100. What brightness percentage do you want (0 to 100)?');
                 end
-            end
-            cal.brightnessSetting=b/100;
-            if cal.ScreenConfigureDisplayBrightnessWorks
-                Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
-                brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
+                cal.brightnessSetting=b/100;
+                if cal.ScreenConfigureDisplayBrightnessWorks
+                    Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
+                    brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
+                else
+                    Brightness(cal.screen,cal.brightnessSetting);
+                    brightnessReading=Brightness(cal.screen);
+                end
+                if abs(cal.brightnessSetting-brightnessReading)>0.01
+                    fprintf('Brightness was set to %.0f%%, but now reads as %.0f%%.\n',100*cal.brightnessSetting,100*brightnessReading);
+                    sca;
+                    if useSpeech
+                        Speak('Error. The screen brightness changed during calibration. In System Preferences Displays please turn off "Automatically adjust brightness".');
+                    end
+                    error('Screen brighness changed during calibration. In System Preferences:Displays, please turn off "Automatically adjust brightness".');
+                end
             else
-                Brightness(cal.screen,cal.brightnessSetting);
-                brightnessReading=Brightness(cal.screen);
-            end
-            if abs(cal.brightnessSetting-brightnessReading)>0.01
-                fprintf('Brightness was set to %.0f%%, but now reads as %.0f%%.\n',100*cal.brightnessSetting,100*brightnessReading);
-                sca;
+                cal.brightnessSetting=1.0;
+                cal.brightnessReading=nan;
                 if useSpeech
-                    Speak('Error. The screen brightness changed during calibration. In System Preferences Displays please turn off "Automatically adjust brightness".');
+                    Speak('Please set your screen to maximum brightness, then hit return');
                 end
-                error('Screen brighness changed during calibration. In System Preferences:Displays, please turn off "Automatically adjust brightness".');
+                fprintf('Please set your screen to maximum brightness.\n');
+                input('Hit return when ready to proceed:\n','s');
             end
-        else
-            cal.brightnessSetting=1.0;
-            cal.brightnessReading=nan;
-            if useSpeech
-                Speak('Please set your screen to maximum brightness, then hit return');
-            end
-            fprintf('Please set your screen to maximum brightness.\n');
-            input('Hit return when ready to proceed:\n','s');
         end
-    end
+    end % if IsOSX
     
     % Get the gamma table.
-    % In April 2018 Mario Kleiner says that "dacBits" cannot be trusted and may be removed. So I stopped saving it.
+    % In April 2018 Mario Kleiner said that "dacBits" cannot be trusted and may be removed. So I stopped saving it.
     %    [cal.old.gamma,cal.dacBits]=Screen('ReadNormalizedGammaTable',cal.screen,cal.screenOutput);
     cal.old.gamma=Screen('ReadNormalizedGammaTable',cal.screen,cal.screenOutput);
     cal.old.gammaIndexMax=length(cal.old.gamma)-1; % Index into gamma table is 0..gammaIndexMax.
@@ -707,7 +713,16 @@ try
     mypath=fileparts(fileparts(mfilename('fullpath')));
     fullfilename=fullfile(mypath,'lib',filename);
     fid=fopen(fullfilename,'a+');
+    [mac,st]=MACAddress;
+    if streq(st.Description,'Failed to find network adapter')
+        mac='';
+    end
+    cal.MACAddress=mac;
     for f=[1,fid]
+        if ~isempty(cal.MACAddress)
+            fprintf(f,'if streq(MACAddress,''%s'')\n',cal.MACAddress);
+            fprintf(f,'\t%% ');
+        end
         fprintf(f,'if ');
         if IsWin
             fprintf(f,'IsWin && ');
@@ -727,6 +742,16 @@ try
             fprintf(f,' && streq(cal.localHostName,''%s'')',prep(cal.localHostName));
         end
         fprintf(f,'\n');
+        if ~isempty(cal.MACAddress)
+            fprintf(f,'\tcal.OSName=OSName; %% ''%s'';\n',OSName);
+            if ismac
+                fprintf(f,'\t%% cal.macModelName=''%s'';\n',prep(cal.macModelName));
+                fprintf(f,'\t%% cal.localHostName=''%s'';\n',prep(cal.localHostName));
+            end
+            fprintf(f,'\t%% cal.screen=%d;\n',cal.screen);
+            fprintf(f,'\t%% cal.screenWidthMm=%g;\n',cal.screenWidthMm);
+            fprintf(f,'\t%% cal.screenHeightMm=%g;\n',cal.screenHeightMm);
+        end
         if length(cal.screenOutput)==1
             fprintf(f,'\tcal.screenOutput=%.0f; %% used only under Linux\n',cal.screenOutput);
         else
