@@ -1,5 +1,5 @@
 function bounds=TextBounds(w,text,yPositionIsBaseline,centerTheText)
-% bounds=TextBounds(window, string [, yPositionIsBaseline=0] [, centerTheText])
+% bounds=TextBounds(window, string [, yPositionIsBaseline=0][, centerTheText=0])
 %
 % Returns the smallest enclosing rect for the drawn text, relative to the
 % current location. This bound is based on the actual pixels drawn, so it
@@ -71,9 +71,11 @@ function bounds=TextBounds(w,text,yPositionIsBaseline,centerTheText)
 % 01/6/17  dgp Added fourth argument to implement the tiny change needed for
 %              TextCenteredBounds. This makes TextCenteredBounds a trivial wrapper that
 %              automatically tracks improvements made to TextBounds.
+% 10/10/18 dgp For unicode support, we now pass the string to DrawText as a
+%              double.
 
 if nargin < 2 || isempty(text)
-   error('Require at least 2 arguments. bounds=TextBounds(window,string [,yPositionIsBaseline] [,centerTheText])');
+    error('Require at least 2 arguments. bounds=TextBounds(window, string [, yPositionIsBaseline][, centerTheText])');
 end
 
 if nargin < 3 || isempty(yPositionIsBaseline)
@@ -108,19 +110,19 @@ end
 % We've only got one scratch window, so we compute the widths for centering
 % in advance, so as not to mess up the accumulation of letters for the
 % bounds.
-dx=zeros(length(text));
+dx=zeros(1,length(text));
 if centerTheText
    if iscell(text)
       for i=1:length(text)
          string=char(text(i));
-         bounds=Screen('TextBounds',w,string);
+            bounds=Screen('TextBounds',w,double(string));
          width=bounds(3);
          dx(i)=-width/2;
       end
    else
       for i=1:size(text,1)
          string=char(text(i,:));
-         bounds=Screen('TextBounds',w,string);
+            bounds=Screen('TextBounds',w,double(string));
          width=bounds(3);
          dx(i)=-width/2;
       end
@@ -130,17 +132,23 @@ end
 if iscell(text)
    for i=1:length(text)
       string=char(text(i));
-      Screen('DrawText',w,string,x0+dx(i),y0,white,[],yPositionIsBaseline);
+        % Unicode support requires that we pass the string as a double.
+        Screen('DrawText',w,double(string),x0+dx(i),y0,white,[],yPositionIsBaseline);
    end
 else
    for i=1:size(text,1)
       string=char(text(i,:));
-      Screen('DrawText',w,string,x0+dx(i),y0,white,[],yPositionIsBaseline);
+        % Unicode support requires that we pass the string as a double.
+        Screen('DrawText',w,double(string),x0+dx(i),y0,white,[],yPositionIsBaseline);
    end
 end
 
 % Read back only 1 color channel for efficiency reasons:
 image1=Screen('GetImage', w, [], 'drawBuffer', 0, 1);
+
+% if unique(image1)==0
+%     error('The image of letter ''%s'' is blank.',string);
+% end
 
 % Find all nonzero, i.e. non background, pixels:
 [y,x]=find(image1(:,:));
