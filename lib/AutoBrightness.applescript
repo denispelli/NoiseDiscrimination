@@ -1,7 +1,8 @@
 -- AutoBrightness.applescript
 -- Denis G. Pelli, denis.pelli@nyu.edu
 -- February 29, 2016. 
---July 26, 2018.
+-- July 26, 2018.
+-- April 24, 2019.
 --
 -- HISTORY
 -- May 21, 2015. First version.
@@ -20,6 +21,7 @@
 --In that case, if we need to give the user instructions we just return with error -999.
 --In case of return value -999, the calling MATLAB program should close the window and
 --try again.
+-- April 24, 2019. I was getting occasional failures, so I cleaned up the error handling. -- It now correctly reports AppleScript errors.
 --
 -- COMPATIBILITY
 -- Works on Mavericks, Yosemite, and El Capitan (macOS 10.9 to 10.11).
