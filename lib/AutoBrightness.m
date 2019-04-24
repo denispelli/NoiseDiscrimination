@@ -1,5 +1,5 @@
-function [oldSetting,failed] = AutoBrightness(screenNumber, newSetting)
-% [oldSetting, failed] = AutoBrightness([screenNumber=0][, newSetting])
+function [oldSetting,failed] = AutoBrightness(screenNumber,newSetting)
+% [oldSetting,failed] = AutoBrightness([screenNumber=0][, newSetting])
 %
 % AUTOBRIGHTNESS Get and set the checkbox called "Automatically adjust
 % brightness" on the macOS: System Preferences: Displays panel. The first
@@ -82,7 +82,9 @@ function [oldSetting,failed] = AutoBrightness(screenNumber, newSetting)
 %
 % MULTIPLE SCREENS. The first argument specifies which screen, but has so
 % far only been tested for screen 0. All my computers have only one screen,
-% so I couldn't test that feature. 
+% so I couldn't test that feature. If you specify nonexitent
+% screenNumber~=0, on a one-screen system, it returns normally and always
+% says autobrightness is off.
 %
 % SYSTEM COMPATIBILITY. It works with macOS 10.9 (Mavericks) through 10.13
 % (High Sierra), and seems likely work with future releases.
@@ -112,7 +114,8 @@ if ~IsOSX
     % I believe that Applescript works only within macOS. However, it is
     % conceivable that Apple's auto brightness feature is implemented on
     % Macintoshes running Linux or Windows, in which case someone might
-    % enhance this program to return a correct answer for those cases.
+    % enhance this MATLAB program to return a correct answer for those
+    % cases.
     oldSetting = 0;
     failed = true; % Report failure on this unsupported OS.
     return;
@@ -125,28 +128,41 @@ if nargin <2
 end
 scriptPath = which('AutoBrightness.applescript');
 forcedToClose=false;
+if newSetting==-1
+    s=sprintf('You called AutoBrightness(%d).',screenNumber);
+else
+    s=sprintf('You called AutoBrightness(%d,%d).',screenNumber,newSetting);
+end
+windowIsOpen=~isempty(Screen('Windows'));
+% if ~ismember(screenNumber,Screen('Windows'))
+%     warning(sprintf('%s There is no window with screenNumber %d in the Screen(''Windows'') list.\n',s,screenNumber));
+% end
+command = ['osascript ', scriptPath ...
+    ' ', num2str(screenNumber),...
+    ' ', num2str(newSetting), ...
+    ' ', num2str(windowIsOpen)];
 for i=1:3
-    windowIsOpen=~isempty(Screen('Windows'));
-    if isempty(windowIsOpen)
-        windowIsOpen=false;
-    end
-    command = ['osascript ', scriptPath ...
-        ' ', num2str(screenNumber),...
-        ' ', num2str(newSetting), ...
-        ' ', num2str(windowIsOpen)];
-    oldSetting=''; % Default in case not set by function. (Unsure whether than can happen.)
+    oldSetting=''; % Default in case not set by function.
     [failed,oldSetting] = system(command);
-    oldSetting = str2num(oldSetting);
-    if length(oldSetting)~=1 || length(windowIsOpen)~=1
-        warning('Length is not 1.');
-        oldSetting
-        windowIsOpen
+    % Occasionally oldSetting is empty, possibly because that's how we
+    % initialized it. I don't know why or what that means.
+    if failed
+        msg=sprintf('%s The osascript failed with the following error, trying again.\n%s'...
+            ,s,oldSetting);
+        warning(msg);
+        continue
     end
-    if oldSetting==-999 && windowIsOpen
+    if isempty(oldSetting)
+        msg=sprintf('%s It returned empty oldSetting.\n',s);
+        warning(msg);
+        continue
+    end
+    oldSetting=str2num(oldSetting);
+    if ~isempty(oldSetting) && oldSetting==-999 && windowIsOpen
         forcedToClose=true;
         sca;
     end
-    if ismember(oldSetting,1:2)
+    if ismember(oldSetting,0:1)
         break
     end
 end
