@@ -3147,6 +3147,7 @@ try
             end
         end
         rDeg=sqrt(sum(oo(oi).eccentricityXYDeg.^2));
+        tGuessSd=2;
         switch oo(oi).thresholdParameter
             case 'spacing'
                 nominalCriticalSpacingDeg=0.3*(rDeg+0.45); % Eq. 14 from Song, Levi, and Pelli (2014).
