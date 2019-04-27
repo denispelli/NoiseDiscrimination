@@ -1,4 +1,5 @@
 function CalibrateScreenLuminance(screen,screenOutput)
+% CalibrateScreenLuminance(screen,screenOutput)
 % This will calibrate the luminance of your screen. This is often called
 % "gamma" calibration, because in the days of CRTs a power law with
 % exponent "gamma" was often used to describe the relation of screen
@@ -259,6 +260,10 @@ try
     end
     if useConnectedPhotometer
         msg=sprintf('Ok. I''ll take %d readings automatically, using the colorimeter.',luminances);
+        msg=[msg '\nBy the way, an easy way to point the colorimeter at the screen,\n'...
+            'if you''re using a laptop, is to rest the back of the screen on the table,\n'...
+            'angling the keyboard to be vertical, so it won''t fall,\n'...
+            'and then gently resting the colorimeter photocell directly on the screen.'];
     else
         msg=sprintf('We''ll take %d readings manually, one by one.',luminances);
     end
