@@ -735,6 +735,7 @@ o.targetDurationSecs=0.2; % Typically 0.2 or inf (wait indefinitely for response
 o.contrast=1; % Default is positive contrast.
 o.readAlphabetFromDisk=false;
 o.targetHeightOverWidth=nan;
+o.wordFilename='';
 
 % Flankers
 o.useFlankers=false; % Enable for crowding experiments.
