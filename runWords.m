@@ -28,11 +28,14 @@ ooo={};
 o.readAlphabetFromDisk=false;
 o.targetFont='Monaco';
 o.alphabet='abcdefghijklmnopqrstuvwxyz'; % alphabet for o.words
+o.alternatives=length(o.alphabet);
 o.minimumTargetHeightChecks=8;
 o.labelAnswers=false;
 o.contrast=-1;
 if 0
     o.targetKind='letter';
+    o.targetFont='Sloan';
+    o.alphabet='DHKNORSTVZ';
     o.alternatives=length(o.alphabet);
     % WHY IS ALPHABET WHITE?
 end
@@ -83,7 +86,7 @@ o.noiseSD=0;
 % o.useFractionOfScreenToDebug=0.5; % FOR DEBUGGING.
 % o.skipScreenCalibration=true; % FOR DEBUGGING.
 
-if 1
+if 0
     o.conditionName='Peripheral acuity';
     % Block 1. Measure two thresholds, above and below fixation.
     o.thresholdParameter='size';
