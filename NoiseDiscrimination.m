@@ -1730,7 +1730,8 @@ try
                     n(i)=length(oo(oi).words{i});
                 end
                 if length(unique(n))~=1
-                    error('All the o.words must have the same length.');
+                    msg=sprintf('%d ',unique(n));
+                    error('All the o.words must have the same length. Encountered lengths: %s',msg);
                 end
                 letters=unique([oo(oi).words{:}]);
                 a=ismember(lower(letters),lower(oo(oi).alphabet));
