@@ -4407,7 +4407,8 @@ try
                     for iResponse=1:responseChars
                         responseChar=GetKeypress(enableKeyCodes,oo(oi).deviceIndex);
                         if ismember(responseChar,[escapeChar,graveAccentChar])
-                            [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(oo(1).window,oo,oo(oi).textMarginPix);
+                            [o.quitExperiment,o.quitBlock,o.skipTrial]=...
+                                OfferEscapeOptions(oo(1).window,oo,oo(oi).textMarginPix);
                             trial=trial-1;
                             oo(oi).trials=oo(oi).trials-1;
                             break
