@@ -1,5 +1,6 @@
 function oo=NoiseDiscrimination(ooIn)
 % oo=NoiseDiscrimination(oo);
+% BUGS: why are stimulus letters white on response screen?
 %
 % You can now pass a struct array, one element per condition, and
 % NoiseDiscrimination will run them all randomly interleaved.
@@ -515,7 +516,8 @@ global skipScreenCalibration % Saves time by skipping the setting of profile, br
 global isLastBlock % Skip screen restore and leave window open unless isLastBlock is true.
 global temporaryWindow % Initialized to empty.
 global window % Retain pointer to open window when this function exits and is called again.
-% This must persist from block to block.
+% "window" must persist from block to block. It's important to clear it
+% when we close the window, so we don't try to use a closed window.
 persistent oOld % Saved from previous block to skip prompts that were already answered in the previous block.
 global fixationLines fixationCrossWeightPix labelBounds ...
     tTest leftEdgeOfResponse cal ...
@@ -660,7 +662,7 @@ o.ignoreTrial=false;
 o.replicatePelli2006=false;
 o.screen=0;
 o.screen=max(Screen('Screens'));
-o.isWin=IsWin; % override this to simulate Windows on a Mac.
+o.isWin=IsWin; % You might override this to partially simulate the Windows OS on a Mac.
 
 % Names
 o.experimenter='';
@@ -1082,7 +1084,9 @@ for oi=1:conditions
     % Check the persistent "window" pointer and clear it unless it's valid.
     if ~isempty(window)
         if Screen(window,'WindowKind')~=1
-            error('Illegal window pointer.');
+            % error('Illegal window pointer.');
+            window=[];
+            oo(1).isFirstBlock=true;
         end
     end
     % It's valid.
@@ -1235,7 +1239,7 @@ try
     % We assume that all conditions specify the same screen parameters. It
     % would be good to confirm that and flag and error if they differ.
     o=oo(1);
-    if ~isempty(o.window)
+    if ~isempty(o.window) %&& ~ismember(o.observer,o.algorithmicObservers)
         if o.enableClutMapping
             [oo.maxEntry]=deal(o.clutMapLength-1);
             cal.gamma=repmat((0:o.maxEntry)'/o.maxEntry,1,3); % Identity.
@@ -1881,8 +1885,8 @@ try
         end
         
         % Recommended by Mario Kleiner, July 2017.
-        winfo=Screen('GetWindowInfo',oo(1).window);
-        oo(1).beamPositionQueriesAvailable= winfo.Beamposition ~= -1 && winfo.VBLEndline ~= -1;
+        windowInfo=Screen('GetWindowInfo',oo(1).window);
+        oo(1).beamPositionQueriesAvailable= windowInfo.Beamposition ~= -1 && windowInfo.VBLEndline ~= -1;
         ffprintf(ff,'o.beamPositionQueries %s %% true for best timing.\n',mat2str(oo(1).beamPositionQueriesAvailable));
         [oo.beamPositionQueriesAvailable]=deal(oo(1).beamPositionQueriesAvailable);
         if ismac
@@ -2192,7 +2196,7 @@ try
     oo(1).fixationXYPix=[]; % Add fields to struct.
     oo(1).fixationIsOffscreen=[];
     oo(1).targetXYPix=[];
-    oo(1)=SetUpFixation(oo(1),ff);
+    oo(1)=SetUpFixation(oo(1),ff); % xxx dgp
     % Arbitrarily assume that all conditions have same fixation.
     [oo.fixationIsOffscreen]=deal(oo(1).fixationIsOffscreen);
     [oo.fixationXYPix]=deal(oo(1).fixationXYPix);
@@ -4819,22 +4823,13 @@ try
             else
                 ffprintf(ff,'%.0f ms/trial, across all conditions.\n',secs*1000);
             end
-        end
-        ffprintf(ff,'Block %d of %d.\n',oo(1).block,oo(1).blocksDesired);
-        
-        %% WARN IF IN DEBUG MODE
-        if oo(1).useFractionOfScreenToDebug
-            ffprintf(ff,'WARNING: Using o.useFractionOfScreenToDebug. This may invalidate all results.\n');
-        end
-        if skipScreenCalibration
-            ffprintf(ff,'WARNING: Using o.skipScreenCalibration. This may invalidate all results.\n');
-        end
-        
-        %% PRINT BOLD SUMMARY OF CONDITION oi
-        oo(oi).E=10^(2*oo(oi).questMean)*oo(oi).E1;
-        if oi==1
             ffprintf(ff,'\n');
         end
+               
+        ffprintf(ff,'Block %d of %d.\n',oo(1).block,oo(1).blocksDesired);
+
+        %% PRINT BOLD SUMMARY OF CONDITION oi
+        oo(oi).E=10^(2*oo(oi).questMean)*oo(oi).E1;
         msg=sprintf(['Condition %d of %d "%s" %d trials, %.0f%% right, noiseSD %.2f, '...
             'Threshold log c %.2f',plusMinusChar,'%.2f,'],...
             oi,length(oo),oo(oi).conditionName,oo(oi).trials,100*oo(oi).trialsRight/oo(oi).trials,oo(oi).noiseSD,t,sd);
@@ -4901,6 +4896,14 @@ try
             ffprintf(ff,['"%s" Across %d trials, target duration %.3f',plusMinusChar,'%.3f s (m',plusMinusChar,'sd).\n'],...
                 oo(oi).conditionName,length(oo(oi).likelyTargetDurationSecs),...
                 oo(oi).targetDurationSecsMean,oo(oi).targetDurationSecsSD);
+        end
+        
+        %% WARN IF IN DEBUG MODE
+        if oo(1).useFractionOfScreenToDebug
+            ffprintf(ff,'WARNING: Using o.useFractionOfScreenToDebug. This may invalidate all results.\n');
+        end
+        if skipScreenCalibration
+            ffprintf(ff,'WARNING: Using o.skipScreenCalibration. This may invalidate all results.\n');
         end
         
         %% SAVE EACH THRESHOLD IN ITS OWN FILE, WITH A SUFFIX DESIGNATING THE CONDITION NUMBER.
@@ -5663,13 +5666,13 @@ if ~all(r(1:2)<=r(3:4))
         [RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)]/o.pixPerDeg,...
         o.viewingDistanceCm,o.targetHeightDeg);
 end
-if isempty(o.window)
+if isempty(o.window) || ismember(o.observer,o.algorithmicObservers)
     return
 end
 string=sprintf(['Please adjust the viewing distance so the ' ...
-    '"X" is %.1f cm (%.1f inches) from the observer''s eye. '], ...
+    'X below is %.1f cm (%.1f inches) from the observer''s eye. '], ...
     o.viewingDistanceCm,o.viewingDistanceCm/2.54);
-string=[string 'Tilt and swivel the display so the "X" is orthogonal to the observer''s line of sight. '...
+string=[string 'Tilt and swivel the display so the X is orthogonal to the observer''s line of sight. '...
     'Then hit RETURN to continue.\n'];
 Screen('TextSize',o.window,o.textSize);
 Screen('TextFont',o.window,'Verdana');
@@ -5717,7 +5720,7 @@ spaceKeyCode=KbName('space');
 returnKeyCode=KbName('return');
 o.fixationXYPix=round(XYPixOfXYDeg(o,[0 0]));
 
-if ~o.useFixation || isempty(o.window)
+if ~o.useFixation || isempty(o.window) || ismember(o.observer,o.algorithmicObservers)
     o.fixationIsOffscreen=false;
 else
     black=BlackIndex(o.window); % Retrieves the CLUT color code for black.
@@ -5823,7 +5826,7 @@ else
     else
         o.fixationIsOffscreen=false;
     end % if ~IsXYInRect(o.fixationXYPix,o.stimulusRect)
-end %  ~o.useFixation || isempty(o.window)
+end %  ~o.useFixation || isempty(o.window) || ismember(o.observer,o.algorithmicObservers)
 if o.fixationCrossBlankedNearTarget
     ffprintf(ff,'Fixation cross is blanked near target. No delay in showing fixation after target.\n');
 else
@@ -5938,7 +5941,7 @@ function [reply,o]=AskQuestion(oo,text)
 % line. text.fine and text.question are strings.
 global ff
 o=oo(1);
-if isempty(o.window)
+if isempty(o.window) || ismember(o.observer,o.algorithmicObservers)
     reply='';
     return
 end
@@ -6104,7 +6107,7 @@ function CloseWindowsAndCleanup(oo)
 % preference is slow (30 s), so we leave that alone, until we're cleaning
 % up after the last block.
 global skipScreenCalibration isLastBlock isScreenCalibrated
-global window temporaryWindow ff
+global window temporaryWindow
 if nargin==1
     %     fprintf('CloseWindowsAndCleanup(oo): isLastBlock=%d, global isLastBlock=%d isScreenCalibrated=%d.\n',...
     %         oo(1).isLastBlock,isLastBlock,isScreenCalibrated);
@@ -6123,18 +6126,18 @@ if ~isempty(temporaryWindow) && isLastBlock
     temporaryWindow=[];
 end
 if ~isempty(Screen('Windows')) && isLastBlock
-    ffprintf(ff,'Closing all windows. ... ');
+    fprintf('Closing all windows. ... ');
     s=GetSecs;
     Screen('CloseAll');
     temporaryWindow=[];
     window=[];
-    ffprintf(ff,'Done (%.1f s).\n',GetSecs-s); % Closing all windows.
+    fprintf('Done (%.1f s).\n',GetSecs-s); % Closing all windows.
 end
 if isScreenCalibrated && ~skipScreenCalibration && isLastBlock && ismac
-    ffprintf(ff,'Restoring AutoBrightness. ... ');
+    fprintf('Restoring AutoBrightness. ... ');
     s=GetSecs;
     AutoBrightness(0,1);
-    ffprintf(ff,'Done (%.1f s).\n',GetSecs-s); % Restoring AutoBrightness.
+    fprintf('Done (%.1f s).\n',GetSecs-s); % Restoring AutoBrightness.
     RestoreCluts;
     % This is the only place we set it false.
     % MATLAB initializes it false.
