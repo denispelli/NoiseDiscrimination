@@ -721,7 +721,7 @@ o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian 
 o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
 o.targetCyclesPerDeg=nan;
 o.targetGaborOrientationsDeg=[0 90]; % Orientations relative to vertical.
-o.targetGaborNames='VH';
+o.responseLabels='VH';
 o.targetModulates='luminance'; % Display a luminance difference.
 % o.targetModulates='entropy'; % Display an entropy difference.
 % o.targetModulates='noise';  % Display a noise-sd difference.
@@ -802,7 +802,7 @@ o.textMarginPix=0;
 
 % Response screen
 o.responseScreenAbsoluteContrast=0.99; % Set to [] to maximize possible contrast using CLUT for o.contrast.
-o.labelAnswers=[]; % Add roman letter label to each possible response, for graphics and foreign letters.
+o.labelAnswers=[]; % =true to add a roman letter label to each possible response, for graphics and foreign letters.
 o.responseLabels='abcdefghijklmnopqrstuvwxyz1234567890';
 
 % o.observerQuadratic=-1.2; % estimated from old second harmonic data
@@ -1043,9 +1043,9 @@ for oi=1:conditions
         end
     end
     if streq(oo(oi).targetKind,'gabor')
-        assert(length(oo(oi).targetGaborNames) >= length(oo(oi).targetGaborOrientationsDeg))
+        assert(length(oo(oi).responseLabels) >= length(oo(oi).targetGaborOrientationsDeg))
         oo(oi).alternatives=length(oo(oi).targetGaborOrientationsDeg);
-        oo(oi).alphabet=oo(oi).targetGaborNames(1:oo(oi).alternatives);
+%         oo(oi).alphabet=oo(oi).responseLabels(1:oo(oi).alternatives);
     end
     if isempty(oo(oi).labelAnswers)
         switch oo(oi).targetKind
@@ -2906,12 +2906,12 @@ try
                         % o.targetGaborSpaceConstantCycles=1.5; % The 1/e space constant of the gaussian envelope in periods of the sinewave.
                         % o.targetGaborCycles=3; % cycles of the sinewave.
                         % o.targetGaborOrientationsDeg=[0 90]; % Orientations relative to vertical.
-                        % o.targetGaborNames='VH';
+                        % o.responseLabels='VH';
                         targetRect=round([0 0 oo(oi).targetHeightPix oo(oi).targetHeightPix]/oo(oi).targetCheckPix);
                         oo(oi).targetRectLocal=targetRect;
                         widthChecks=RectWidth(targetRect)-1;
                         axisValues=-widthChecks/2:widthChecks/2; % axisValues is used in creating the meshgrid.
-                        [x, y]=meshgrid(axisValues,axisValues);
+                        [x,y]=meshgrid(axisValues,axisValues);
                         spaceConstantChecks=oo(oi).targetGaborSpaceConstantCycles*(oo(oi).targetHeightPix/oo(oi).targetCheckPix)/oo(oi).targetGaborCycles;
                         cyclesPerCheck=oo(oi).targetGaborCycles/(oo(oi).targetHeightPix/oo(oi).targetCheckPix);
                         for i=1:oo(oi).alternatives
