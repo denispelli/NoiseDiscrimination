@@ -7,8 +7,13 @@ function xyPix=XYPixOfXYDeg(o,xyDeg)
 % typically put the target there, but that is not assumed in this routine.
 % In spatial-uncertainty experiments, we typically put fixation at the near
 % point.
+assert(isfield(o,'nearPointXYDeg'));
+assert(length(o.nearPointXYDeg)==2,'Require that length(o.nearPointXYDeg)==2');
+assert(isfield(o,'nearPointXYPix'));
+assert(length(o.nearPointXYPix)==2,'Require that length(o.nearPointXYPix)==2');
+assert(length(xyDeg)==2);
 xyDeg=xyDeg-o.nearPointXYDeg;
-rDeg=sqrt(sum(xyDeg.^2));
+rDeg=norm(xyDeg);
 rPix=o.pixPerCm*o.viewingDistanceCm*tand(rDeg);
 if rDeg>0
     xyPix=xyDeg*rPix/rDeg;
