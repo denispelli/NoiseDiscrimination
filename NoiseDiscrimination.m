@@ -1,7 +1,5 @@
 function oo=NoiseDiscrimination(ooIn)
 % oo=NoiseDiscrimination(oo);
-% BUGS: why are stimulus letters white on response screen?
-%
 % You can now pass a struct array, one element per condition, and
 % NoiseDiscrimination will run them all randomly interleaved.
 %
@@ -524,10 +522,10 @@ global fixationLines fixationCrossWeightPix labelBounds ...
     ff whichSignal logFid ...
     signalImageIndex signalMask % for function ModelObserver
 % This list of global variables is shared only with the several subroutines
-% at the end of this file. The list may be incomplete as the new routines
-% haven't yet been tested as subroutines, and some of their formerly
-% locally variables need to either be made global or become fields of the o
-% struct.
+% at the end of this file. The list may be incomplete as I'm not sure
+% whether all the new routines have yet been tested as subroutines. Thus
+% some of their formerly locally variables may need to either be made
+% global or become fields of the o struct.
 
 %% FILES
 myPath=fileparts(mfilename('fullpath')); % Takes 0.1 s.
@@ -721,7 +719,7 @@ o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian 
 o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
 o.targetCyclesPerDeg=nan;
 o.targetGaborOrientationsDeg=[0 90]; % Orientations relative to vertical.
-o.responseLabels='VH';
+o.responseLabels='VH'; % One for each targetGaborOrientationsDeg.
 o.targetModulates='luminance'; % Display a luminance difference.
 % o.targetModulates='entropy'; % Display an entropy difference.
 % o.targetModulates='noise';  % Display a noise-sd difference.
@@ -4261,6 +4259,7 @@ try
                                         end
                                     else
                                         c=oo(oi).responseScreenAbsoluteContrast;
+                                        c=c*oo(oi).contrastPolarity;
                                     end
                                     im=1+c*img;
                                     if oo(oi).printImageStatistics
