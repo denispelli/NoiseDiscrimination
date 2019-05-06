@@ -23,6 +23,8 @@
 
 clear o oo ooo
 ooo={};
+% o.useFractionOfScreenToDebug=0.5; % USE ONLY FOR DEBUGGING.
+% o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 o.recordGaze=false;
 o.experiment='ComplexEfficiency';
 o.eccentricityXYDeg=[0 0];
@@ -182,8 +184,6 @@ disp(t(:,{'block' 'experiment' 'targetKind' 'targetFont' 'observer' 'noiseSD' 't
 for i=1:length(ooo)
     oo=ooo{i};
     for oi=1:length(oo)
-%         oo(oi).useFractionOfScreenToDebug=0.5; % USE ONLY FOR DEBUGGING.
-%         oo(oi).skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
         oo(oi).block=oi;
         oo(oi).blocksDesired=length(ooo);
         oo(oi).isFirstBlock=false;
