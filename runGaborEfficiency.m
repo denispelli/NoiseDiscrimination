@@ -36,7 +36,7 @@ o.targetFont='Sloan';
 
 o.experiment='GaborEfficiency';
 o.targetHeightDeg=6;
-o.contrast=-1;
+o.contrast=1;
 o.noiseType='gaussian';
 o.blankingRadiusReTargetHeight=0;
 o.blankingRadiusReEccentricity=0;
