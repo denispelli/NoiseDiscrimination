@@ -7,12 +7,12 @@
 % the observer's name. On subsequent blocks it will remember the observer's
 % name.
 %
-% Please use binocular viewing, using both eyes all the times.
+% Please use binocular viewing, using both eyes at all times.
 %
 % The script specifies a viewing distance of 40 cm. Please use a meter
 % stick or tape measure to measure the viewing distance and ensure that the
 % observer's eye is actually at the distance that the program thinks it is.
-% please encourage the observer to maintain the same viewing distance for
+% Please encourage the observer to maintain the same viewing distance for
 % the whole experiment.
 %
 % denis.pelli@nyu.edu November 20, 2018
@@ -23,15 +23,16 @@
 
 clear o oo ooo
 ooo={};
-o.recordGaze=true;
+o.recordGaze=false;
 o.experiment='ComplexEfficiency';
 o.eccentricityXYDeg=[0 0];
 o.targetHeightDeg=6;
 o.contrast=-1;
 o.noiseType='binary';
-o.blankingRadiusReTargetHeight= 0;
-o.blankingRadiusReEccentricity= 0;
-
+o.blankingRadiusReTargetHeight=0;
+o.blankingRadiusReEccentricity=0;
+o.targetKind='letter'; 
+o.targetHeightDeg=6;
 if 1
     % Sloan
     o.targetFont='Sloan';
@@ -46,7 +47,7 @@ if 1
     o.readAlphabetFromDisk=true;
     ooo{end+1}=o;
 end
-if 0
+if 1
     % Checkers alphabet
     o.targetFont='Checkers';
     o.minimumTargetHeightChecks=16;
@@ -174,7 +175,7 @@ for i=1:length(ooo)
     oo=[oo ooo{i}];
 end
 t=struct2table(oo);
-disp(t(:,{'block' 'experiment' 'targetFont' 'observer' 'noiseSD' 'targetHeightDeg' 'eccentricityXYDeg'})); % Print the conditions in the Command Window.
+disp(t(:,{'block' 'experiment' 'targetKind' 'targetFont' 'observer' 'noiseSD' 'targetHeightDeg' 'eccentricityXYDeg'})); % Print the conditions in the Command Window.
 % return
 
 %% Measure threshold, one block per iteration.
