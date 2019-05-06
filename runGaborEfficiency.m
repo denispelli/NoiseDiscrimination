@@ -49,8 +49,6 @@ o.targetCyclesPerDeg=nan;
 o.targetGaborOrientationsDeg=[0 45 90 135]; % Orientations relative to vertical.
 o.responseLabels='1234';
 o.alternatives=length(o.targetGaborOrientationsDeg);
-% o.targetGaborNames='1234'; % NoiseDiscrimination forces 'abcd'.
-% o.alphabet='1234'; % NoiseDiscrimination forces 'abcd'.
 
 if 1
     % Gabor
