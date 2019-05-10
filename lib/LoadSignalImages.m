@@ -58,7 +58,7 @@ for i=1:length(ok)
 end
 d=d(ok);
 if length(d)<length(o.alphabet)
-   error('Sorry. Folder %s has only %d images, and you requested %d.',o.signalImagesFolder,length(d),length(o.alphabet));
+   error('Sorry. Folder ''%s'' has only %d images, and you requested %d.',o.signalImagesFolder,length(d),length(o.alphabet));
 end
 
 % Read from disk into "savedAlphabet".
