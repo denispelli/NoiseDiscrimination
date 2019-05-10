@@ -40,28 +40,19 @@ o.contrast=1;
 o.noiseType='gaussian';
 o.blankingRadiusReTargetHeight=0;
 o.blankingRadiusReEccentricity=0;
-% o.targetKind='letter'; 
-
-o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
-o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
-o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
-o.targetCyclesPerDeg=nan;
+o.trials=50; 
 o.targetGaborOrientationsDeg=[0 45 90 135]; % Orientations relative to vertical.
 o.responseLabels='1234';
 o.alternatives=length(o.targetGaborOrientationsDeg);
 
 if 1
     % Gabor
-    %     o.eccentricityXYDeg=[-10 0];
-    %     o.readAlphabetFromDisk=true;
-    %     ooo{end+1}=o;
-    %     o.eccentricityXYDeg=[10 0];
-    o.conditionName='big';
     o.targetKind='gabor'; % one cycle within targetSize
     o.eccentricityXYDeg=[5 0];
     o.viewingDistanceCm=40;
     o.targetCyclesPerDeg=nan;
     o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
+    o.conditionName='big';
     o.targetHeightDeg=6;
     o.targetGaborSpaceConstantCycles=0.75*3; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
     o.targetGaborCycles=3*3; % cycles of the sinewave in targetHeight
