@@ -79,7 +79,8 @@ function oo=NoiseDiscrimination(ooIn)
 % o.snapshotCaptionTextSizeDeg=0.5;
 %
 % Standard condition for counting V1 neurons: o.noiseCheckPix=13;
-% height=30*o.noiseCheckPix; o.viewingDistanceCm=45; SD=0.2, o.targetDurationSecs=0.2 s.
+% height=30*o.noiseCheckPix; o.viewingDistanceCm=45; SD=0.2, 
+% o.targetDurationSecs=0.2 s.
 %
 % BRIGHTNESS SEEKER. Observer 'brightnessSeeker' is a model of the human
 % observer with a saturation of brightness, based on an old research
@@ -1237,7 +1238,7 @@ try
     % We assume that all conditions specify the same screen parameters. It
     % would be good to confirm that and flag and error if they differ.
     o=oo(1);
-    if ~isempty(o.window) %&& ~ismember(o.observer,o.algorithmicObservers)
+    if ~isempty(o.window)
         if o.enableClutMapping
             [oo.maxEntry]=deal(o.clutMapLength-1);
             cal.gamma=repmat((0:o.maxEntry)'/o.maxEntry,1,3); % Identity.
@@ -2582,7 +2583,7 @@ try
     % letterStruct(i).bounds % the bounds of black ink in the rect
     % alphabetBounds % union of bounds for all letters.
     ok=[oo.readAlphabetFromDisk];
-    if any(ok)
+    if any(ok) % read in font from disk
         for oi=find(ok)
             oo(oi).targetSizeIsHeight=true;
             oo(oi).targetPix=oo(oi).targetHeightPix/oo(oi).targetCheckPix;
@@ -2600,7 +2601,7 @@ try
             % ReadAlphabetFromDisk, which seems to need this call to
             % CreateLetterTextures, which needs at least a scratch window
             % in order to create textures.
-            % We never explicitly close this window, so many may
+            % We never explicitly close this window, so many will
             % accumulate if you call this routine many times before all
             % windows are closed when the application terminates.
             r=round(0.5*screenBufferRect);
@@ -2649,7 +2650,7 @@ try
             oo(oi).targetHeightOverWidth=RectHeight(sRect)/RectWidth(sRect);
             oo(oi).targetHeightPix=RectHeight(sRect)*oo(oi).targetCheckPix;
         end
-    end
+    end % read in font from disk
     
     %% PREPARE TARGET IMAGE (I.E. SIGNAL)
     %     if isfield(oo(oi).signal(1),'image')
@@ -2937,7 +2938,9 @@ try
                                 end
                             end
                         end
-                        assert(~isempty(oo(oi).targetRectLocal));
+                        % This test seems spurious. Since we'll load the
+                        % variable in a few lines. DGP
+%                         assert(~isempty(oo(oi).targetRectLocal));
                         if oo(oi).useCache
                             oo(oi).targetRectLocal=oo(oiCache).targetRectLocal;
                             oo(oi).signal=oo(oiCache).signal;
