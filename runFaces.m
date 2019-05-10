@@ -1,4 +1,4 @@
-% facesRun.m
+% runFaces.m
 % April 11, 2018
 % Denis Pelli
 
@@ -14,7 +14,8 @@ if o.questPlusEnable && ~exist('qpInitialize','file')
 end
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % Folder in same directory as this M file.
 cal=OurScreenCalibrations(0);
-% o.useFractionOfScreenToDebug=0.4; % 0: normal, 0.5: small for debugging.
+o.useFractionOfScreenToDebug=0.4; % 0: normal, 0.5: small for debugging.
+o.skipScreenCalibration=true; % Skip calibration to save time.
 % o.printImageStatistics=true;
 
 %% SPECIFY BASIC CONDITION
@@ -37,7 +38,7 @@ else
 end
 o.ratingThreshold=4*ones(size(o.alphabet)); % Beauty threshold for each member of o.alphabet.
 o.targetMargin=0;
-viewingDistanceCm=40;
+o.viewingDistanceCm=40;
 o.contrast=1; % Select contrast polarity.
 o.useDynamicNoiseMovie=false;
 o.experiment='faces';
@@ -45,7 +46,7 @@ o.experiment='faces';
 o.task='identify';
 o.eccentricityXYDeg=[0 0];
 o.targetHeightDeg=15;
-o.targetDurationSec=0.2;
+o.targetDurationSecs=0.2;
 o.trialsPerBlock=40;
 o.lapse=nan;
 o.steepness=nan;
@@ -76,16 +77,16 @@ end
 
 %% SAVE CONDITIONS IN STRUCT oo
 oo={};
-for beautyTask=1 %Shuffle(0:1)
+for beautyTask=0 %Shuffle(0:1)
     if beautyTask
         o.task='rate';
     else
         o.task='identify';
     end
-    o.targetDurationListSec=[0.2 2];
+    o.targetDurationListSecs=[0.2 2];
     oo{end+1}=o;
 %     for duration=Shuffle([0.2 1])
-%         o.targetDurationSec=duration;
+%         o.targetDurationSecs=duration;
 %         oo{end+1}=o;
 %     end
 end
@@ -96,7 +97,7 @@ end
 
 %% PRINT THE CONDITIONS (ONE PER ROW) AS TABLE TT
 % Include whatever's interesting. All the fields named in vars must be defined in every condition.
-vars={'condition' 'trials' 'task' 'targetDurationSec' 'targetHeightDeg' 'noiseSD'};
+vars={'condition' 'trials' 'task' 'targetDurationSecs' 'targetHeightDeg' 'noiseSD'};
 tt=table;
 for i=1:length(oo)
     t=struct2table(oo{i},'AsArray',true);
@@ -109,7 +110,7 @@ oo=RunExperiment(oo);
 
 %% PRINT SUMMARY OF RESULTS AS TABLE TT
 % Include whatever you're intersted in. We skip rows missing any value.
-vars={'condition' 'observer' 'trials'  'task' 'targetDurationSec' 'targetHeightDeg' 'contrast' 'guess' 'lapse' 'steepness'};
+vars={'condition' 'observer' 'trials'  'task' 'targetDurationSecs' 'targetHeightDeg' 'contrast' 'guess' 'lapse' 'steepness'};
 tt=Experiment2Table(oo,vars);
 disp(tt) % Print summary.
 if isempty(tt)
@@ -124,13 +125,13 @@ save(fullfile(o.dataFolder,[o.summaryFilename '.mat']),'tt','oo');
 fprintf('Summary saved in data folder as "%s" with extensions ".csv" and ".mat".\n',o.summaryFilename);
 
 %% PLOT IT
-tBeauty=t(streq(t.task,'rate'),{'targetDurationSec' 'contrast'});
-tBeauty=sortrows(tBeauty,'targetDurationSec');
-tId=t(streq(t.task,'identify'),{'targetDurationSec' 'contrast'});
-tId=sortrows(tId,'targetDurationSec');
+tBeauty=t(streq(t.task,'rate'),{'targetDurationSecs' 'contrast'});
+tBeauty=sortrows(tBeauty,'targetDurationSecs');
+tId=t(streq(t.task,'identify'),{'targetDurationSecs' 'contrast'});
+tId=sortrows(tId,'targetDurationSecs');
 close all % Get rid of any existing figures.
 figure(1)
-loglog(tId.targetDurationSec,tId.contrast,'r-o',tBeauty.targetDurationSec,tBeauty.contrast,'k-x');
+loglog(tId.targetDurationSecs,tId.contrast,'r-o',tBeauty.targetDurationSecs,tBeauty.contrast,'k-x');
 ylabel('Threshold contrast');
 xlabel('Duration (s)');
 xlim([0.05 2]);
