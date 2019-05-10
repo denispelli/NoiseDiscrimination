@@ -1,5 +1,5 @@
 % runFaces.m
-% April 11, 2018
+% May 2019
 % Denis Pelli
 
 %% GET READY
@@ -32,7 +32,7 @@ else
     o.signalImagesFolder='faces';
     o.signalImagesAreGammaCorrected=true;
     o.targetKind='image';
-    o.alphabet='abcdefg';
+    o.alphabet='abcdefghijk';
     o.convertSignalImageToGray=false;
     o.alphabetPlacement='right'; % 'top' or 'right';
 end
