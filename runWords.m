@@ -37,7 +37,6 @@ if 0
     o.targetFont='Sloan';
     o.alphabet='DHKNORSTVZ';
     o.alternatives=length(o.alphabet);
-    % WHY IS ALPHABET WHITE?
 end
 if 1
     % twoLetterWords; % Load o.words with list of words.
