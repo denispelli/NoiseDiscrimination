@@ -25,16 +25,18 @@ if isfield(o,'trials') && isfield(o,'trialsPerBlock')
         trialsDesired=trialsDesired+oo(oi).trialsPerBlock;
     end
 end
-if isfield(o,'block') && isfield(o,'blocksDesired') && isfield(o,'textSize')
-   message=sprintf('Trial %d of %d. Block %d of %d.',trials,trialsDesired,o.block,o.blocksDesired);
-   if isfield(o,'experiment')
-      message=[message ' Experiment "' o.experiment '".'];
-   end
-   Screen('DrawText',window,message,o.textSize/2,o.textSize/2,black,backgroundColor);
-   y=o.textSize;
-else
-    y=0;
-end
+% if isfield(o,'block') && isfield(o,'blocksDesired') && isfield(o,'textSize')
+%    message=sprintf('Trial %d of %d. Block %d of %d.',trials,trialsDesired,o.block,o.blocksDesired);
+%    if isfield(o,'experiment')
+%       message=[message ' Experiment "' o.experiment '".'];
+%    end
+%    Screen('DrawText',window,message,o.textSize/2,o.textSize/2,black,backgroundColor);
+%    y=o.textSize;
+% else
+%     y=0;
+% end
+y=0;
+DrawCounter(o);
 Screen('TextSize',window,o.textSize);
 % Set background color for DrawFormattedText.
 Screen('DrawText',window,' ',0,0,black,backgroundColor,1);
