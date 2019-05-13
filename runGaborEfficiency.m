@@ -22,8 +22,11 @@
 % Acuity at ±10 deg ecc.
 
 clear o oo ooo
-o.useFractionOfScreenToDebug=0.5; % USE ONLY FOR DEBUGGING.
-o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+% 
+
+
+% o.useFractionOfScreenToDebug=0.5; % USE ONLY FOR DEBUGGING.
+% o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 
 ooo={};
 o.targetFont='Sloan';
