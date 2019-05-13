@@ -2,7 +2,7 @@ function maxNoiseSD=MaxNoiseSD(noiseType)
 %% MAX SD OF EACH NOISE TYPE
 % With the same bound on range, we can reach 3.3 times higher noiseSD using
 % binary instead of gaussian noise. In the code below, we use steps of
-% 2^0.5=1.4, so i increase max noiseSD by a factor of 2^1.5=2.8 when using
+% 2^0.5=1.4, so I increase max noiseSD by a factor of 2^1.5=2.8 when using
 % binary noise.
 persistent maxSD
 if isempty(maxSD)
