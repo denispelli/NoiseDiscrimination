@@ -53,6 +53,10 @@ KbName('UnifyKeyNames');
 while KbCheck; end
 [~,keyCode] = KbStrokeWait(deviceIndex);
 response = KbName(keyCode);
+if ~ischar(response)
+	response
+	warning('"response" is not char.')
+end
 if printLog;fprintf('You pressed "%s", ',response);end
 if returnOneChar
    response=lower(response);
