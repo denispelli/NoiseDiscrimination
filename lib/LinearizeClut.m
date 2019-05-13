@@ -122,7 +122,7 @@ if cal.LFirst-min(cal.old.L)<-0.1 % Ignore clipping of less than 0.1 cd/m^2
 end
 cal.LFirst=max(cal.LFirst,min(cal.old.L));
 if cal.LLast-max(cal.old.L)>0.1 % Ignore clipping of less than 0.1 cd/m^2 
-    warning('Requested cal.LLast %.1f clipped to %.1f cd/m^2.',cal.LFirst,max(cal.old.L));
+    warning('Requested cal.LLast %.1f clipped to %.1f cd/m^2.',cal.LLast,max(cal.old.L));
 end
 cal.LLast=min(cal.LLast,max(cal.old.L));
 cal.LLast=max(cal.LLast,min(cal.old.L));
