@@ -152,10 +152,12 @@ signalBounds=savedAlphabet.rect;
 
 % Get images, one per letter.
 for i=1:length(letters)
-   which=strfind([savedAlphabet.letters],letters(i));
-   if length(which)~=1
-      error('Image %c is not in "%s" folder, which only has "%s".',letters(i),o.signalImagesFolder,savedAlphabet.letters);
-   end
+    which=strfind([savedAlphabet.letters],letters(i));
+    if length(which)~=1
+        string=char([savedAlphabet.letters]);
+        error('Image "%c" is not in the "%s" folder, which only has "%s".',...
+            letters(i),o.signalImagesFolder,string);
+    end
    assert(length(which)==1);
    r=savedAlphabet.rect;
    letterImage=savedAlphabet.images{which}(r(2)+1:r(4),r(1)+1:r(3),:);
