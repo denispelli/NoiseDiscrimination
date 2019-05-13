@@ -23,23 +23,89 @@
 
 clear o oo ooo
 ooo={};
-% o.useFractionOfScreenToDebug=0.5; % USE ONLY FOR DEBUGGING.
-% o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+% o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
+o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 o.recordGaze=false;
 o.experiment='ComplexEfficiency';
 o.eccentricityXYDeg=[0 0];
 o.targetHeightDeg=6;
 o.contrast=-1;
-o.noiseType='binary';
+o.noiseType='gaussian';
 o.blankingRadiusReTargetHeight=0;
 o.blankingRadiusReEccentricity=0;
 o.targetKind='letter'; 
 o.targetHeightDeg=6;
+o.thresholdParameter='contrast';
+o.observer='';
+o.trialsPerBlock=40;
+o.brightnessSetting=0.87;
+o.conditionName='Sloan';
+o.targetFont='Sloan';
+o.minimumTargetHeightChecks=8;
+o.alphabet=''; 
+o.borderLetter='';
+o.labelAnswers=false;
+o.readAlphabetFromDisk=false;
+% o.printGrayLuminance=false;
+% o.assessGray=true;
+% o.assessLoadGamma=true;
+% o.printContrastBounds=true;
 if 1
+    o.brightnessSetting=1;
+    o.symmetricLuminanceRange=false; % False for maximum brightness.
+    o.desiredLuminanceFactor=1.1; % 1.8 for maximize brightness.
+    o.responseScreenAbsoluteContrast=0.9;
+    if false
+        % Target letter
+        o.conditionName='Sloan';
+        o.targetKind='letter';
+        o.targetFont='Sloan';
+        o.alphabet='DHKNORSVZ';
+    else
+        % Target face
+        o.conditionName='face';
+        o.signalImagesFolder='faces';
+        o.signalImagesAreGammaCorrected=true;
+        o.convertSignalImageToGray=true;
+        o.alphabetPlacement='right'; % 'top' or 'right';
+        o.targetKind='image';
+        o.alphabet='abcdefghijk';
+        o.brightnessSetting=1;
+        o.labelAnswers=true;
+  end
+    o.targetMargin=0;
+    o.viewingDistanceCm=40;
+    o.contrast=1; % Select contrast polarity.
+    o.task='identify';
+    % o.eccentricityXYDeg=[0 0];
+    o.targetHeightDeg=10;
+    o.targetDurationSecs=0.15;
+    o.trialsPerBlock=40;
+    o.lapse=nan;
+    o.steepness=nan;
+    o.guess=nan;
+    o.observer='';
+    o.noiseSD=0;
+    o.thresholdParameter='contrast';
+    % o.blankingRadiusReTargetHeight=0;
+    % o.targetMarkDeg=1;
+    % o.fixationCrossDeg=3;
+    % o.alternatives=length(o.alphabet);
+    % if all(o.eccentricityXYDeg==0)
+    %     o.markTargetLocation=false;
+    % else
+    %     o.markTargetLocation=true;
+    % end
+    ooo{end+1}=o;
+end
+
+if 0
     % Sloan
+    o.conditionName='Sloan';
     o.targetFont='Sloan';
     o.minimumTargetHeightChecks=8;
     o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
+    o.targetKind='letter';
     o.borderLetter='X';
     o.labelAnswers=false;
 %     o.eccentricityXYDeg=[-10 0];
@@ -47,10 +113,12 @@ if 1
 %     ooo{end+1}=o;
 %     o.eccentricityXYDeg=[10 0];
     o.readAlphabetFromDisk=true;
+    o.contrast=-1;
     ooo{end+1}=o;
 end
-if 1
+if 0
     % Checkers alphabet
+    o.conditionName='Checkers';
     o.targetFont='Checkers';
     o.minimumTargetHeightChecks=16;
     o.alphabet='abcdefghijklmnopqrstuvwxyz';
@@ -59,9 +127,10 @@ if 1
     o.readAlphabetFromDisk=true;
     ooo{end+1}=o;
 end
-if 1
+if 0
     % Sans Forgetica
     o.targetFont='Sans Forgetica';
+    o.conditionName=o.targetFont;
     o.minimumTargetHeightChecks=8;
     o.alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     o.borderLetter='$';
@@ -69,9 +138,10 @@ if 1
     o.readAlphabetFromDisk=true;
     ooo{end+1}=o;
 end
-if 1
+if 0
     % Kuenstler
     o.targetFont='Kuenstler Script LT Medium';
+    o.conditionName=o.targetFont;
     o.minimumTargetHeightChecks=12;
     o.alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     o.borderLetter='$';
@@ -79,9 +149,10 @@ if 1
     o.readAlphabetFromDisk=true;
     ooo{end+1}=o;
 end
-if 1
+if 0
     % Black Sabbath
     o.targetFont='SabbathBlackRegular';
+    o.conditionName=o.targetFont;
     o.minimumTargetHeightChecks=10;
     o.alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     o.borderLetter='$';
@@ -89,9 +160,10 @@ if 1
     o.readAlphabetFromDisk=true;
     ooo{end+1}=o;
 end
-if 1
+if 0
     % Chinese from Qihan
     o.targetFont='Songti TC Regular';
+    o.conditionName=o.targetFont;
     o.minimumTargetHeightChecks=16;
     o.alphabet=[20687 30524 38590 33310 28982 23627 29245 27169 32032 21338 26222 ...
         31661 28246 36891 24808 38065 22251 23500 39119 40517];
@@ -101,11 +173,12 @@ if 1
     o.readAlphabetFromDisk=true;
     ooo{end+1}=o;
 end
-if 1
-    % Japanese: Katakan, Hiragani, and Kanji
+if 0
+    % Japanese: Katakana, Hiragani, and Kanji
     % from Ayaka
     o.targetFont='Hiragino Mincho ProN W3';
     japaneseScript='Kanji';
+    o.conditionName=japaneseScript;
     switch japaneseScript
         case 'Katakana'
             o.alphabet=[12450 12452 12454 12456 12458 12459 12461 12463 12465 12467 12469 ... % Katakana from Ayaka
@@ -129,67 +202,78 @@ if 1
     o.readAlphabetFromDisk=true;
     ooo{end+1}=o;
 end
-
-% % Randomly interleave testing left and right.
-% for i=1:length(ooo)
-%     o=ooo{i};
-%     o.block=i;
-%     o.setNearPointEccentricityTo='fixation';
-%     o.nearPointXYInUnitSquare=[0.5 0.5];
-%     o.viewingDistanceCm=40;
-%     o.eccentricityXYDeg=[-10 0];
-%     oo=o;
-%     o.eccentricityXYDeg=[10 0];
-%     oo(2)=o;
-%     ooo{i}=oo;
-% end
-
-% Test with zero and high noise.
-for i=1:length(ooo)
-    oo=ooo{i};
+% Test with zero and high noise, interleaved.
+for block=1:length(ooo)
+    oo=ooo{block};
     for oi=1:length(oo)
-        oo(oi).observer='';
-        %   oo(oi).observer='ideal';
-        switch oo(oi).noiseType
-            case 'gaussian'
-                maxNoiseSD=0.16*2^0.5;
-                p2=0.5;
-            case 'binary'
-                maxNoiseSD=0.16*2^2;
-                p2=2;
+        maxNoiseSD=MaxNoiseSD(oo(oi).noiseType);
+        if ismember(oo(oi).targetKind,{'image'})
+            maxNoiseSD=0.8*maxNoiseSD;
         end
         oo(oi).noiseCheckDeg=oo(oi).targetHeightDeg/40;
-        oo(oi).block=i;
         oo(oi).setNearPointEccentricityTo='fixation';
         oo(oi).nearPointXYInUnitSquare=[0.5 0.5];
-        oo(oi).viewingDistanceCm=40;
         oo(oi).noiseSD=0;
     end
     ooNoise=oo;
     [ooNoise.noiseSD]=deal(maxNoiseSD);
-    ooo{i}=[oo ooNoise];
+    ooo{block}=[oo ooNoise];
+end
+
+if false
+    % Measure threshold size at +/-10 deg.
+    % Randomly interleave testing left and right.
+    for block=1:length(ooo)
+        o=ooo{block}(1);
+        o.targetHeightDeg=10;
+        o.brightnessSetting=1;
+        o.thresholdParameter='size';
+        o.setNearPointEccentricityTo='fixation';
+        o.nearPointXYInUnitSquare=[0.5 0.5];
+        o.viewingDistanceCm=30;
+        o.eccentricityXYDeg=[10 0];
+        oo=o;
+        o.eccentricityXYDeg=-o.eccentricityXYDeg;
+        oo(2)=o;
+        ooo{end+1}=oo;
+    end
+end
+
+if true
+    % Retest contrast thresholds with ideal observer.
+    for block=1:length(ooo)
+        oo=ooo{block};
+        if ~ismember(oo(1).thresholdParameter,{'contrast'})
+            continue
+        end
+        for oi=1:length(oo)
+            oo(oi).observer='ideal';
+            oo(oi).trialsPerBlock=200;
+        end
+        ooo{end+1}=oo;
+    end
 end
 
 %% Print as a table. One row per threshold.
 oo=[];
-for i=1:length(ooo)
-    [ooo{i}(:).block]=deal(i);
-    oo=[oo ooo{i}];
+for block=1:length(ooo)
+    [ooo{block}(:).block]=deal(block);
+    oo=[oo ooo{block}];
 end
-t=struct2table(oo);
-disp(t(:,{'block' 'experiment' 'targetKind' 'targetFont' 'observer' 'noiseSD' 'targetHeightDeg' 'eccentricityXYDeg'})); % Print the conditions in the Command Window.
+t=struct2table(oo,'AsArray',true);
+disp(t(:,{'block' 'experiment' 'targetKind' 'thresholdParameter' 'contrast' 'conditionName' 'observer' 'noiseSD' 'targetHeightDeg' 'eccentricityXYDeg'})); % Print the conditions in the Command Window.
 % return
 
 %% Measure threshold, one block per iteration.
-for i=1:length(ooo)
-    oo=ooo{i};
+for block=1:length(ooo)
+    oo=ooo{block};
     for oi=1:length(oo)
-        oo(oi).block=oi;
+        oo(oi).block=block;
         oo(oi).blocksDesired=length(ooo);
         oo(oi).isFirstBlock=false;
         oo(oi).isLastBlock=false;
         oo(oi).alternatives=length(oo(oi).alphabet);
-        if i==1
+        if block==1
             oo(oi).experimenter='Darshan';
         else
             oo(oi).experimenter=old.experimenter;
@@ -204,13 +288,13 @@ for i=1:length(ooo)
         oo(oi).targetDurationSecs=0.2; % duration of display of target and flankers
         oo(oi).repeatedTargets=0;
     end
-    ooo{i}=oo;
+    ooo{block}=oo;
     ooo{1}(1).isFirstBlock=true;
     ooo{end}(1).isLastBlock=true;
-    oo=ooo{i};
+    oo=ooo{block};
     oo=NoiseDiscrimination(oo);
     if ~any([oo.quitBlock])
-        fprintf('Finished block %d.\n',i);
+        fprintf('Finished block %d.\n',block);
     end
     if any([oo.quitExperiment])
         break
