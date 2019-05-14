@@ -18,7 +18,7 @@ end
 if Screen('WindowKind',scratchWindow)==0
     error('scratchWindow is invalid');
 end
-Screen('TextFont',window,'Verdana');
+oldFont=Screen('TextFont',window,'Verdana');
 message='';
 if ~isempty(blockTrial)
     message=sprintf('Trial %d of %d. ',blockTrial,blockTrials);
@@ -48,6 +48,7 @@ black=BlackIndex(window);
 oldTextSize=Screen('TextSize',window,counterSize);
 % Use whatever background is currently in use. Don't insist on white.
 Screen('DrawText',window,message,counterBounds(1),counterBounds(4),black,[],1);
-Screen('TextSize',window,oldTextSize);
+Screen('TextFont',window,oldFont); % Restore.
+Screen('TextSize',window,oldTextSize); % Restore.
 bounds=counterBounds;
 end
