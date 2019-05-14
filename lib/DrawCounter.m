@@ -1,7 +1,10 @@
 function bounds=DrawCounter(oo)
 % bounds=DrawCounter(oo);
-% In NoiseDiscrimination, we use lower right corner of screenRect. In
-% CriticalSpacing, we user lower right corner of stimulusRect.
+% Use o.counterPlacement to specify alignment with stimulusRect.
+
+% It would be great to display "INVALID DATA" when in debugging mode. I.e.
+% whenever o.useFractionOfScreenToDebug~=0 or o.skipScreenCalibration=true.
+
 global window scratchWindow scratchRect
 global blockTrial blockTrials
 persistent counterSize counterBounds
