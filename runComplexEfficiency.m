@@ -23,7 +23,7 @@
 
 clear o oo ooo
 ooo={};
-% o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
+o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
 o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 o.recordGaze=false;
 o.experiment='ComplexEfficiency';
@@ -46,6 +46,9 @@ o.alphabet='';
 o.borderLetter='';
 o.labelAnswers=false;
 o.readAlphabetFromDisk=false;
+o.fixationCrossBlankedNearTarget=true;
+o.fixationCrossBlankedUntilSecsAfterTarget=0.6;
+o.fixationCrossDrawnOnStimulus=false;
 % o.printGrayLuminance=false;
 % o.assessGray=true;
 % o.assessLoadGamma=true;
@@ -220,7 +223,7 @@ for block=1:length(ooo)
     ooo{block}=[oo ooNoise];
 end
 
-if false
+if true
     % Measure threshold size at +/-10 deg.
     % Randomly interleave testing left and right.
     for block=1:length(ooo)
@@ -232,6 +235,9 @@ if false
         o.nearPointXYInUnitSquare=[0.5 0.5];
         o.viewingDistanceCm=30;
         o.eccentricityXYDeg=[10 0];
+        o.fixationCrossBlankedNearTarget=false;
+        o.fixationCrossBlankedUntilSecsAfterTarget=0;
+        o.fixationCrossDrawnOnStimulus=true;
         oo=o;
         o.eccentricityXYDeg=-o.eccentricityXYDeg;
         oo(2)=o;
@@ -239,7 +245,7 @@ if false
     end
 end
 
-if true
+if false
     % Retest contrast thresholds with ideal observer.
     for block=1:length(ooo)
         oo=ooo{block};
@@ -265,39 +271,4 @@ disp(t(:,{'block' 'experiment' 'targetKind' 'thresholdParameter' 'contrast' 'con
 % return
 
 %% Measure threshold, one block per iteration.
-for block=1:length(ooo)
-    oo=ooo{block};
-    for oi=1:length(oo)
-        oo(oi).block=block;
-        oo(oi).blocksDesired=length(ooo);
-        oo(oi).isFirstBlock=false;
-        oo(oi).isLastBlock=false;
-        oo(oi).alternatives=length(oo(oi).alphabet);
-        if block==1
-            oo(oi).experimenter='Darshan';
-        else
-            oo(oi).experimenter=old.experimenter;
-            oo(oi).observer=old.observer;
-            oo(oi).viewingDistanceCm=old.viewingDistanceCm;
-        end
-        oo(oi).fixationCrossBlankedNearTarget=false;
-        oo(oi).fixationLineWeightDeg=0.1;
-        oo(oi).fixationCrossDeg=1; % 0, 3, and inf are typical values.
-        oo(oi).trialsPerBlock=50;
-        oo(oi).practicePresentations=0;
-        oo(oi).targetDurationSecs=0.2; % duration of display of target and flankers
-        oo(oi).repeatedTargets=0;
-    end
-    ooo{block}=oo;
-    ooo{1}(1).isFirstBlock=true;
-    ooo{end}(1).isLastBlock=true;
-    oo=ooo{block};
-    oo=NoiseDiscrimination(oo);
-    if ~any([oo.quitBlock])
-        fprintf('Finished block %d.\n',block);
-    end
-    if any([oo.quitExperiment])
-        break
-    end
-    old=oo(1); % Allow reuse of settings.
-end
+ooo=RunExperiment(ooo);
