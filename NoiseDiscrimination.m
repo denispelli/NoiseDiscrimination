@@ -3638,7 +3638,10 @@ try
                             case 'size'
                                 % Use o.desiredTargetHeightPix to resize
                                 % signal(whichSignal).image and dependent metrics.
-                                oSignal=ResizeImage(oo(oi),whichSignal,oo(oi).desiredTargetHeightPix/oo(oi).targetCheckPix);
+                                sz=oo(oi).desiredTargetHeightPix/oo(oi).targetCheckPix;
+                                sz=max([sz oo(oi).minimumTargetHeightChecks]);
+                                oo(oi).desiredTargetHeightPix=sz*oo(oi).targetCheckPix;
+                                oSignal=ResizeImage(oo(oi),whichSignal,sz);
                             otherwise
                                 oSignal=oo(oi);
                         end
@@ -3682,17 +3685,17 @@ try
                     if (iMovieFrame > oo(oi).moviePreFrames ...
                             && iMovieFrame <= oo(oi).moviePreFrames+oo(oi).movieSignalFrames)
                         % Add in signal only during the signal interval.
-                        % oSignal.signal(whichSignal).image has been resized to
-                        % o.desiredTargetPix.
+                        % oSignal.signal(whichSignal).image has been
+                        % resized to o.desiredTargetPix.
                         signalImage(signalImageIndex)=oSignal.signal(whichSignal).image(:); % Support color.
                     end
                     % figure(2);imshow(signalImage);
                     signalMask=true(size(signalImage(:,:,1))); % TAKES 0.3 ms
                     if oo(oi).signalIsBinary
-                        % signalMask is true where the signal is true.
+                        % signalMask is true where the signal is true (e.g. the inked area of a font).
                         signalMask=signalMask & signalImage;
                     else
-                        % signalMask is true where the signal is not white.
+                        % signalMask is true where the signal is present, i.e. not white.
                         for i=1:length(white) % support color
                             signalMask=signalMask & signalImage(:,:,i)~=white(i); % TAKES 0.3 ms
                         end
@@ -3847,8 +3850,7 @@ try
                 % Compute CLUT for all noises given o.signal,
                 % o.contrast, and o.noiseSD. Note: The gray screen in the
                 % non-stimulus areas is drawn with CLUT index 1.
-                fprintf('ComputeClut o.contrast %.2f\n',...
-                    oo(oi).contrast);
+%                 fprintf('ComputeClut o.contrast %.2f\n',oo(oi).contrast);
                 [cal,oo(oi)]=ComputeClut(cal,oo(oi));
                 % gray is computed by ComputeClute. No need to do it here.
 %                 oo(1).gray=IndexOfLuminance(cal,oo(1).LBackground)/oo(1).maxEntry;
@@ -4048,8 +4050,8 @@ try
                     catch e
                         warning(e)
                     end
-                    % FUTURE: Write trial number and condition number in corner of
-                    % image.
+                    % FUTURE: Write trial number and condition number in
+                    % corner of recorded movie image. 
                     writeVideo(vidWriter,img); % Write frame to video
                 end
                 Snd('Play',purr); % Pre-announce that image is up, awaiting response.
@@ -4104,9 +4106,9 @@ try
                     return
                 end
                 if oo(oi).assessTargetLuminance
-                    % Reading from the buffer, the image has already been converted
-                    % from index to RGB. We use our calibration to estimate
-                    % luminance from G.
+                    % Reading from the buffer, the image has already been
+                    % converted from index to RGB. We use our calibration
+                    % to estimate luminance from G.
                     rect=CenterRect(oo(oi).targetCheckPix*oo(oi).targetRectLocal,oo(oi).stimulusRect);
                     oo(oi).actualStimulus=Screen('GetImage',oo(1).window,rect,'frontBuffer',1);
                     % Get first and second mode.
@@ -4127,10 +4129,12 @@ try
                     end
                     ffprintf(ff,' cd/m^2, contrast %.4f, oo(oi).contrast %.4f\n',c,oo(oi).contrast);
                     ffprintf(ff,'\n');
-                    %             Print stimulus as table of numbers.
-                    %             dx=round(size(oo(oi).actualStimulus,2)/10);
-                    %             dy=round(dx*0.7);
-                    %             oo(oi).actualStimulus(1:dy:end,1:dx:end,2)
+                    if false
+                        % Print stimulus as table of numbers.
+                        dx=round(size(oo(oi).actualStimulus,2)/10);
+                        dy=round(dx*0.7);
+                        oo(oi).actualStimulus(1:dy:end,1:dx:end,2)
+                    end
                 end
                 if isfinite(oo(oi).targetDurationSecs) % End the movie
                     Screen('FillRect',oo(1).window,oo(oi).gray,dstRect); % Erase only the movie, sparing the rest of the screen.
@@ -4168,22 +4172,13 @@ try
                 saveContrast=oo(oi).contrast;
                 oo(oi).contrast=rc;
                 oo(oi).responseScreenContrast=rc;
-                fprintf('ComputeClut o.responseScreenAbsoluteContrast %.2f\n',...
-                    oo(oi).responseScreenAbsoluteContrast);
+%                 fprintf('ComputeClut o.responseScreenAbsoluteContrast %.2f\n',...
+%                     oo(oi).responseScreenAbsoluteContrast);
                 [cal,oo(oi)]=ComputeClut(cal,oo(oi));
                 oo(oi).contrast=saveContrast;
                 oo(oi).noiseSD=saveNoiseSD;
                 % Print instruction in upper left corner.
                 Screen('FillRect',oo(1).window,oo(oi).gray1,topCaptionRect);
-%                 message='';
-%                 x=oo(oi).textSize/2;
-%                 switch oo(oi).alphabetPlacement
-%                     case {'top' 'right' 'bottom'}
-%                     case 'left'
-%                         x=x+RectHeight(oo(oi).screenRect)/max(8,oo(oi).alternatives);
-%                 end
-%                 Screen('TextSize',oo(1).window,oo(oi).textSize);
-% %                 Screen('DrawText',oo(1).window,message,x,oo(oi).textSize/2,black,oo(oi).gray1);
                 DrawCounter(oo);
                 % Print instructions for response.
                 factor=1;
