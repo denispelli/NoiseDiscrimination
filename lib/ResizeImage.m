@@ -1,7 +1,8 @@
 function oNew=ResizeImage(o,si,desiredTargetHeightChecks)
 % o=ResizeImage(oo(oi),desiredTargetHeightChecks);
-% Scale o.signal(si).image to size specified by desiredTargetHeightChecks.
-% For speed, we rescale only that image, selected by the index si.
+% Scale o.signal(si).image (each of whose pixels represents a target check)
+% to size specified by desiredTargetHeightChecks. For speed, we rescale
+% only the image selected by index si.
 % denis.pelli@nyu.edu, March, 2019
 if desiredTargetHeightChecks<1
     error('desiredTargetHeightChecks %.1f too small.',desiredTargetHeightChecks);
