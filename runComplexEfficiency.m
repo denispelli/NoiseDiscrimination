@@ -23,8 +23,8 @@
 
 clear o oo ooo
 ooo={};
-o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
-o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+% o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
+% o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 o.recordGaze=false;
 o.experiment='ComplexEfficiency';
 o.eccentricityXYDeg=[0 0];
@@ -33,7 +33,7 @@ o.contrast=-1;
 o.noiseType='gaussian';
 o.blankingRadiusReTargetHeight=0;
 o.blankingRadiusReEccentricity=0;
-o.targetKind='letter'; 
+o.targetKind='letter';
 o.targetHeightDeg=6;
 o.thresholdParameter='contrast';
 o.observer='';
@@ -42,18 +42,19 @@ o.brightnessSetting=0.87;
 o.conditionName='Sloan';
 o.targetFont='Sloan';
 o.minimumTargetHeightChecks=8;
-o.alphabet=''; 
+o.alphabet='';
 o.borderLetter='';
 o.labelAnswers=false;
 o.readAlphabetFromDisk=false;
 o.fixationCrossBlankedNearTarget=true;
 o.fixationCrossBlankedUntilSecsAfterTarget=0.6;
 o.fixationCrossDrawnOnStimulus=false;
+o.fullResolutionTarget=false;
 % o.printGrayLuminance=false;
 % o.assessGray=true;
 % o.assessLoadGamma=true;
 % o.printContrastBounds=true;
-if 1
+if true
     o.brightnessSetting=1;
     o.symmetricLuminanceRange=false; % False for maximum brightness.
     o.desiredLuminanceFactor=1.1; % 1.8 for maximize brightness.
@@ -75,7 +76,7 @@ if 1
         o.alphabet='abcdefghijk';
         o.brightnessSetting=1;
         o.labelAnswers=true;
-  end
+    end
     o.targetMargin=0;
     o.viewingDistanceCm=40;
     o.contrast=1; % Select contrast polarity.
@@ -102,7 +103,7 @@ if 1
     ooo{end+1}=o;
 end
 
-if 0
+if 1
     % Sloan
     o.conditionName='Sloan';
     o.targetFont='Sloan';
@@ -111,10 +112,10 @@ if 0
     o.targetKind='letter';
     o.borderLetter='X';
     o.labelAnswers=false;
-%     o.eccentricityXYDeg=[-10 0];
-%     o.readAlphabetFromDisk=true;
-%     ooo{end+1}=o;
-%     o.eccentricityXYDeg=[10 0];
+    %     o.eccentricityXYDeg=[-10 0];
+    %     o.readAlphabetFromDisk=true;
+    %     ooo{end+1}=o;
+    %     o.eccentricityXYDeg=[10 0];
     o.readAlphabetFromDisk=true;
     o.contrast=-1;
     ooo{end+1}=o;
@@ -224,10 +225,11 @@ for block=1:length(ooo)
 end
 
 if true
-    % Measure threshold size at +/-10 deg.
+    % Measure threshold size at +/-10 deg. No noise.
     % Randomly interleave testing left and right.
     for block=1:length(ooo)
         o=ooo{block}(1);
+        o.fullResolutionTarget=true;
         o.targetHeightDeg=10;
         o.brightnessSetting=1;
         o.thresholdParameter='size';
@@ -245,7 +247,7 @@ if true
     end
 end
 
-if false
+if true
     % Retest contrast thresholds with ideal observer.
     for block=1:length(ooo)
         oo=ooo{block};
