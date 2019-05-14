@@ -3393,7 +3393,7 @@ try
         oo(oi).trials=oo(oi).trials+1;
         assert(trial>0,'Error: trial<=0');
         assert(oo(oi).trials>0,'Error oo(oi).trials<=0');
-         if waitForObserver && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
+        if waitForObserver && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
             o=WaitUntilObserverIsReady(o,oo,waitMessage);
             waitMessage='Continuing. ';
             if o.quitBlock
@@ -6216,7 +6216,7 @@ msg=[message readyString '\n'];
 black=0;
 Screen('DrawText',o.window,' ',0,0,black,o.gray1,1); % Set background color.
 Screen(o.window,'TextSize',o.textSize);
-[x,y]=DrawFormattedText(o.window,msg,0.5*o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+[x,y]=DrawFormattedText(o.window,msg,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
 sz=round(0.8*o.textSize);
 Screen(o.window,'TextSize',sz);
 ratio=sz/o.textSize;
