@@ -4,10 +4,9 @@ function oNew=ResizeImage(o,i,desiredTargetHeightPix)
 % For speed, we rescale only that image, selected by the index i.
 % denis.pelli@nyu.edu, March, 2019
 if desiredTargetHeightPix<1
-    error('desiredTargetHeightPix %.0f too small.',...
-        desiredTargetHeightPix);
+    error('desiredTargetHeightPix %.0f too small.',desiredTargetHeightPix);
 end
-sRect=RectOfMatrix(o.signal(1).image); % units of targetChecks
+sRect=RectOfMatrix(o.signal(i).image); % units of targetChecks
 ratio=desiredTargetHeightPix/o.targetHeightPix;
 targetRectLocal=ceil(ratio*sRect);
 if RectWidth(targetRectLocal)~=RectWidth(o.targetRectLocal)
@@ -19,7 +18,7 @@ if RectWidth(targetRectLocal)~=RectWidth(o.targetRectLocal)
     sz=[RectHeight(targetRectLocal) RectWidth(targetRectLocal)];
     o.signal(i).image=imresize(o.signal(i).image,sz,'bilinear');
     o.signal(i).bounds=ImageBounds(o.signal(i).image,1);
-    sRect=RectOfMatrix(o.signal(1).image); % units of targetChecks
+    sRect=RectOfMatrix(o.signal(i).image); % units of targetChecks
 end
 o.targetRectLocal=sRect;
 o.targetHeightOverWidth=RectHeight(sRect)/RectWidth(sRect);
