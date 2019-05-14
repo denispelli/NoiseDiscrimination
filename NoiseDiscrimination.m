@@ -1296,7 +1296,7 @@ try
     [oo.gray1]=deal(white); % Temporary, until we LinearizeClut.
     [oo.speakEachLetter]=deal(false);
     [oo.useSpeech]=deal(false);
-    if isempty(oo(1).experimenter)
+    while isempty(oo(1).experimenter)
         text.big={'Hello,' 'Please slowly type the experimenter''s name followed by RETURN.'};
         text.small={'I''ll remember your answers, and skip these questions on the next block.' ...
             'If the keyboard seems dead, please hit Control-C twice to quit, ' ...
@@ -1311,27 +1311,42 @@ try
             CloseWindowsAndCleanup(oo);
             return
         end
-        [oo.experimenter]=deal(reply);
+        if length(reply)>2
+            [oo.experimenter]=deal(reply);
+            break
+        end
     end
     clear o
     
     %% ASK OBSERVER NAME
-    if isempty(oo(1).observer)
-        text.big={'Hello Observer,' 'Please slowly type your name followed by RETURN.'};
-        text.small={'I''ll remember your answers, and skip these questions on the next block.' ...
-            'If the keyboard seems dead, please hit Control-C twice to quit, ' ...
+    preface={'Hello Observer,' 'Please slowly type your full name.'};
+    while isempty(oo(1).observer)
+        text.big=[preface ...
+            {'Type your first name followed by a SPACE and your last name. '...
+            'Then hit RETURN.'}];
+        text.small={'Please include both your first and last names, '...
+            'like "Jane Doe" or "John Smith", in exactly the same way every time.' ...
+            '(If you don''t have a first name, then please type a space before your last name.)' ...
+            'I''ll remember your answers, and skip these questions on the next block.' ...
+            'If the keyboard seems dead, please hit Control-C twice to quit,' ...
             'then quit and restart MATLAB, and run your MATLAB script again.'};
-        text.fine='NoiseDiscrimination Test, Copyright 2016, 2017, 2018, 2019 Denis Pelli. All rights reserved.';
-        text.question='Observer name:';
+        text.fine=['NoiseDiscrimination Test, Copyright ' char(169) ' 2016, 2017, 2018, 2019 Denis Pelli. All rights reserved.'];
+        text.question='Observer name (First Last):';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
         fprintf('*Waiting for observer name.\n');
-        [reply,o]=AskQuestion(oo,text);
+        Screen('FillRect',window,oo(1).gray1);
+        Screen('Flip',window);
+        [name,o]=AskQuestion(oo,text);
         oo(1).quitBlock=o.quitBlock;
         if oo(1).quitBlock
             CloseWindowsAndCleanup(oo);
             return
         end
-        [oo.observer]=deal(reply);
+        if length(split(name))>1
+            [oo.observer]=deal(name);
+            break
+        end
+        preface={['Sorry. ''' name ''' is not enough.'] 'Please enter your first and last names.'};
     end
     clear o
     
@@ -3013,7 +3028,7 @@ try
                         oo(oi).targetFont=oo(oi).targetFont;
                         oo(oi).showLineOfLetters=true;
                         oo(oi).useCache=false;
-                        if oi>1 && isfield(oo(oi),'signalImagesCacheCode') && ~isempty(oo(oi).signalImagesCacheCode)
+                        if oi>1 && ~isempty(oo(oi).signalImagesCacheCode)
                             for oiCache=1:oi-1
                                 if oo(oiCache).signalImagesCacheCode==oo(oi).signalImagesCacheCode
                                     oo(oi).useCache=true;
@@ -3021,9 +3036,6 @@ try
                                 end
                             end
                         end
-                        % This test seems spurious. Since we'll load the
-                        % variable in a few lines. DGP
-%                         assert(~isempty(oo(oi).targetRectChecks));
                         if oo(oi).useCache
                             oo(oi).targetRectChecks=oo(oiCache).targetRectChecks;
                             oo(oi).signal=oo(oiCache).signal;
@@ -6110,13 +6122,7 @@ ListenChar(2); % no echo
 Screen('FillRect',o.window,o.gray1);
 Screen('TextSize',o.window,o.textSize);
 Screen('TextFont',o.window,o.textFont,0);
-
-% % Display block count and experiment name.
-% message=sprintf('Block %d of %d.',o.block,o.blocksDesired);
-% if isfield(o,'experiment')
-%     message=[message ' Experiment "' o.experiment '".'];
-% end
-% Screen('DrawText',o.window,message,o.textMarginPix,o.textMarginPix,black,o.gray1);
+Screen('FillRect',o.window,o.gray1,o.screenRect);
 DrawCounter(o);
 
 % Display question.
