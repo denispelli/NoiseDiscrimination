@@ -922,7 +922,7 @@ knownOutputFields={'labelAnswers' 'beginningTime' ...
     'movieSignalFrames' 'moviePostFrames' 'movieFrames' 'noiseSize'...
     'annularNoiseSmallSize' 'annularNoiseBigSize' 'canvasSize'...
     'noiseListMin' 'noiseListMax' 'noiseIsFiltered' 'noiseListSd' 'N' 'NUnits' ...
-    'targetRectLocal' 'xHeightPix' 'xHeightDeg' 'HHeightPix' ...
+    'targetRectChecks' 'xHeightPix' 'xHeightDeg' 'HHeightPix' ...
     'HHeightDeg' 'alphabetHeightDeg' 'annularNoiseEnvelopeRadiusDeg' ...
     'centralNoiseEnvelopeE1DegDeg' 'E1' 'data' 'psych' 'questMean'...
     'questSd' 'p' 'trials' 'EOverN' 'efficiency' 'targetDurationSecsMean'...
@@ -1809,7 +1809,7 @@ try
         %                         oo(oi).signal(i).letter,oo(oi).targetFont,[letterStruct.letter]);
         %                 end
         %                 oo(oi).signal(i).image=letterStruct(j).image;
-        % %                 oo(oi).targetRectLocal=alphabetBounds;
+        % %                 oo(oi).targetRectChecks=alphabetBounds;
         %             end
         %         end
     end % for oi=1:conditions
@@ -1850,7 +1850,7 @@ try
             Screen('TextSize',oo(1).window,oo(oi).textSize);
             string=sprintf('Setting screen color profile. ... ');
             DrawFormattedText(oo(1).window,string,...
-                oo(oi).textSize,2*oo(oi).textSize,black,oo(oi).textLineLength,[],[],1.3);
+                oo(oi).textSize,1.5*oo(oi).textSize,black,oo(oi).textLineLength,[],[],1.3);
             DrawCounter(oo);
             Screen('Flip',oo(1).window); % Display message.
         end
@@ -2366,7 +2366,7 @@ try
         Screen('TextSize',oo(1).window,oo(oi).textSize);
         Screen('FillRect',oo(1).window,oo(1).gray1);
         Screen('DrawText',oo(1).window,'Preparing stimuli. ... ',...
-            oo(oi).textSize,2*oo(oi).textSize,black,oo(1).gray1,1);
+            oo(oi).textSize,1.5*oo(oi).textSize,black,oo(1).gray1,1);
         DrawCounter(oo);
         Screen('Flip',oo(1).window); % Display message.
     end
@@ -2481,7 +2481,6 @@ try
         oo(oi).annularNoiseBigSize=2*round(oo(oi).annularNoiseBigSize/2); % An even number, so we can center it on center of letter.
         oo(oi).annularNoiseBigRadiusDeg=0.5*oo(oi).annularNoiseBigSize(1)/(oo(oi).pixPerDeg/oo(oi).noiseCheckPix);
         
-        
         % Make o.canvasSize just big enough to hold everything we're
         % showing, including signal, flankers, and noise. o.canvasSize is
         % in units of targetChecks. We limit o.canvasSize to fit in
@@ -2512,11 +2511,11 @@ try
             case {'identify' 'identifyAll' 'rate'}
                 % Clip o.canvasSize to fit inside o.stimulusRect (after
                 % converting targetChecks to pixels). The target will be
-                % centered in the canvas, so the code below to constrain the
-                % canvas size ought to assume it's centered on the target, but
-                % instead it seems to assume that the canvas is centered in
-                % o.stimulusRect. This is not currently causing problems, so
-                % I'm letting this sleeping dog lie.
+                % centered in the canvas, so the code below to constrain
+                % the canvas size ought to assume it's centered on the
+                % target, but instead it seems to assume that the canvas is
+                % centered in o.stimulusRect. This is not currently causing
+                % problems, so I'm letting this sleeping dog lie.
                 oo(oi).canvasSize=min(oo(oi).canvasSize,floor([RectHeight(oo(oi).stimulusRect) RectWidth(oo(oi).stimulusRect)]/oo(oi).targetCheckPix));
                 oo(oi).canvasSize=2*ceil(oo(oi).canvasSize/2); % Even number of checks, so we can center it on target.
             case '4afc'
@@ -2698,21 +2697,21 @@ try
             end
             % "r" is the scale factor from signal pixels to target checks.
             r=round(oo(oi).targetHeightPix/oo(oi).targetCheckPix)/RectHeight(sRect);
-            oo(oi).targetRectLocal=round(r*sRect);
+            oo(oi).targetRectChecks=round(r*sRect);
             if r~=1
                 % We use the 'bilinear' method to make sure that all new
                 % pixel values are within the old range. That's important
                 % because we set up the CLUT with that range.
                 for i=1:length(oo(oi).signal)
                     %% Scale to desired size.
-                    sz=[RectHeight(oo(oi).targetRectLocal) RectWidth(oo(oi).targetRectLocal)];
+                    sz=[RectHeight(oo(oi).targetRectChecks) RectWidth(oo(oi).targetRectChecks)];
                     oo(oi).signal(i).image=imresize(oo(oi).signal(i).image,...
                         sz,'bilinear');
                     oo(oi).signal(i).bounds=ImageBounds(oo(oi).signal(i).image,1);
                 end
                 sRect=RectOfMatrix(oo(oi).signal(1).image); % units of targetChecks
             end
-            oo(oi).targetRectLocal=sRect;
+            oo(oi).targetRectChecks=sRect;
             oo(oi).targetHeightOverWidth=RectHeight(sRect)/RectWidth(sRect);
             oo(oi).targetHeightPix=RectHeight(sRect)*oo(oi).targetCheckPix;
         end
@@ -2870,11 +2869,11 @@ try
                                     letters{i}=oo(oi).signal(i).letter;
                                 end
                                 % Measure bounds of this alphabet.
-                                oo(oi).targetRectLocal=TextCenteredBounds(scratchWindow,letters,1);
+                                oo(oi).targetRectChecks=TextCenteredBounds(scratchWindow,letters,1);
                             else
-                                oo(oi).targetRectLocal=round([0 0 oo(oi).targetHeightPix oo(oi).targetHeightPix]/oo(oi).targetCheckPix);
+                                oo(oi).targetRectChecks=round([0 0 oo(oi).targetHeightPix oo(oi).targetHeightPix]/oo(oi).targetCheckPix);
                             end
-                            assert(~isempty(oo(oi).targetRectLocal));
+                            assert(~isempty(oo(oi).targetRectChecks));
                             r=TextBounds(scratchWindow,'x',1);
                             oo(oi).xHeightPix=RectHeight(r)*oo(oi).targetCheckPix;
                             oo(oi).xHeightDeg=oo(oi).xHeightPix/oo(oi).pixPerDeg;
@@ -2883,18 +2882,18 @@ try
                             oo(oi).HHeightDeg=oo(oi).HHeightPix/oo(oi).pixPerDeg;
                             ffprintf(ff,'%d: o.xHeightDeg %.2f deg (traditional typographer''s x-height)\n',oi,oo(oi).xHeightDeg);
                             ffprintf(ff,'%d: o.HHeightDeg %.2f deg (capital H ascender height)\n',oi,oo(oi).HHeightDeg);
-                            alphabetHeightPix=RectHeight(oo(oi).targetRectLocal)*oo(oi).targetCheckPix;
+                            alphabetHeightPix=RectHeight(oo(oi).targetRectChecks)*oo(oi).targetCheckPix;
                             oo(oi).alphabetHeightDeg=alphabetHeightPix/oo(oi).pixPerDeg;
                             ffprintf(ff,'%d: o.alphabetHeightDeg %.2f deg (bounding box for letters used, including any ascenders and descenders)\n',...
                                 oi,oo(oi).alphabetHeightDeg);
                             if oo(oi).printTargetBounds
-                                fprintf('%d: o.targetRectLocal [%d %d %d %d]\n',...
-                                    MFileLineNr,oo(oi).targetRectLocal);
+                                fprintf('%d: o.targetRectChecks [%d %d %d %d]\n',...
+                                    MFileLineNr,oo(oi).targetRectChecks);
                             end
                             for i=1:oo(oi).alternatives
                                 Screen('FillRect',scratchWindow,white1);
                                 rect=CenterRect(canvasRect,scratchRect);
-                                targetRect=CenterRect(oo(oi).targetRectLocal,rect);
+                                targetRect=CenterRect(oo(oi).targetRectChecks,rect);
                                 if ~oo(oi).allowAnyFont
                                     % Draw position is left at baseline
                                     % targetRect is just big enough to hold any Sloan letter.
@@ -2902,16 +2901,18 @@ try
                                     x=targetRect(1);
                                     y=targetRect(4);
                                 else
-                                    % Desired draw position is horizontal middle at baseline.
-                                    % targetRect is just big enough to hold any letter.
-                                    % targetRect allows for descenders and extension in any
-                                    % direction.
+                                    % Desired draw position is horizontal
+                                    % middle at baseline. targetRect is
+                                    % just big enough to hold any letter.
+                                    % targetRect allows for descenders and
+                                    % extension in any direction.
                                     % targetRect=round([a b c d]*oo(oi).targetHeightPix/oo(oi).targetCheckPix),
                                     % where a b c and d depend on the font.
                                     x=(targetRect(1)+targetRect(3))/2; % horizontal middle
-                                    y=targetRect(4)-oo(oi).targetRectLocal(4); % baseline
-                                    % DrawText draws from left, so shift left by half letter width, to center letter at desired draw
-                                    % position.
+                                    y=targetRect(4)-oo(oi).targetRectChecks(4); % baseline
+                                    % DrawText draws from left, so shift
+                                    % left by half letter width, to center
+                                    % letter at desired draw position.
                                     bounds=Screen('TextBounds',scratchWindow,oo(oi).signal(i).letter,x,y,1);
                                     if oo(oi).printTargetBounds
                                         fprintf('%s bounds [%4.0f %4.0f %4.0f %4.0f]\n',oo(oi).signal(i).letter,bounds);
@@ -2963,12 +2964,12 @@ try
                                 % We have now drawn letter(i) into
                                 % oo(oi).signal(i).image, using binary
                                 % pixels. The target size is given by
-                                % oo(oi).targetRectLocal. If
+                                % oo(oi).targetRectChecks. If
                                 % o.allowAnyFont=false then this a square
                                 % [0񁒷�1]*o.targetHeightPix/o.targetCheckPix.
                                 % In general, it need not be square. Any
                                 % code that needs a bounding rect for the
-                                % target should use o.targetRectLocal, not
+                                % target should use o.targetRectChecks, not
                                 % o.targetHeightPix. In the letter
                                 % generation, targetHeightPix is used
                                 % solely to set the nominal font size
@@ -2988,7 +2989,7 @@ try
                         % o.targetGaborOrientationsDeg=[0 90]; % Orientations relative to vertical.
                         % o.responseLabels='VH';
                         targetRect=round([0 0 oo(oi).targetHeightPix oo(oi).targetHeightPix]/oo(oi).targetCheckPix);
-                        oo(oi).targetRectLocal=targetRect;
+                        oo(oi).targetRectChecks=targetRect;
                         widthChecks=RectWidth(targetRect)-1;
                         axisValues=-widthChecks/2:widthChecks/2; % axisValues is used in creating the meshgrid.
                         [x,y]=meshgrid(axisValues,axisValues);
@@ -3000,7 +3001,7 @@ try
                             oo(oi).signal(i).image=sin(a*x+b*y+oo(oi).targetGaborPhaseDeg*pi/180).*exp(-(x.^2+y.^2)/spaceConstantChecks^2);
                         end
                     case 'image'
-                        % Allow for color images.
+                        % Allow color images.
                         % Scale to range -1 (black) to 1 (white).
                         Screen('DrawText',oo(1).window,' ',0,0,1,oo(oi).gray1,1); % Set background color.
                         string=sprintf('Reading images from disk. ... ');
@@ -3022,13 +3023,13 @@ try
                         end
                         % This test seems spurious. Since we'll load the
                         % variable in a few lines. DGP
-%                         assert(~isempty(oo(oi).targetRectLocal));
+%                         assert(~isempty(oo(oi).targetRectChecks));
                         if oo(oi).useCache
-                            oo(oi).targetRectLocal=oo(oiCache).targetRectLocal;
+                            oo(oi).targetRectChecks=oo(oiCache).targetRectChecks;
                             oo(oi).signal=oo(oiCache).signal;
                         else
                             [signalStruct,bounds]=LoadSignalImages(oo(oi));
-                            oo(oi).targetRectLocal=bounds;
+                            oo(oi).targetRectChecks=bounds;
                             sz=size(signalStruct(1).image);
                             white=signalStruct(1).image(1,1,:);
                             if oo(oi).convertSignalImageToGray
@@ -3046,11 +3047,11 @@ try
                                 %                         imshow((oo(oi).signal(i).image+1));
                             end
                         end % if oo(oi).useCache
-                        assert(~isempty(oo(oi).targetRectLocal));
+                        assert(~isempty(oo(oi).targetRectChecks));
                     otherwise
                         error('Unknown o.targetKind "%s".',oo(oi).targetKind);
                 end % switch oo(oi).targetKind
-                assert(~isempty(oo(oi).targetRectLocal)); % FAILS HERE
+                assert(~isempty(oo(oi).targetRectChecks)); % FAILS HERE
                 
                 if oo(oi).printCrossCorrelation
                     ffprintf(ff,'Cross-correlation of the letters.\n');
@@ -3070,12 +3071,12 @@ try
                     ffprintf(ff,'%c    ',oo(oi).alphabet(1:oo(oi).alternatives));
                     ffprintf(ff,'\n');
                 end
-                %                 fprintf('%d: targetRectLocal ',MFileLineNr);
-                %                 fprintf(' %d',oo(oi).targetRectLocal);
+                %                 fprintf('%d: targetRectChecks ',MFileLineNr);
+                %                 fprintf(' %d',oo(oi).targetRectChecks);
                 %                 fprintf('\n');
-                assert(~isempty(oo(oi).targetRectLocal));
+                assert(~isempty(oo(oi).targetRectChecks));
                 if oo(oi).allowAnyFont
-                    targetRect=CenterRect(oo(oi).targetRectLocal,oo(oi).stimulusRect);
+                    targetRect=CenterRect(oo(oi).targetRectChecks,oo(oi).stimulusRect);
                 else
                     targetRect=[0, 0, oo(oi).targetWidthPix, oo(oi).targetHeightPix];
                     targetRect=CenterRect(targetRect,oo(oi).stimulusRect);
@@ -3437,12 +3438,25 @@ try
                 targetSizeDeg=10^tTest;
                 oo(oi).desiredTargetHeightPix=targetSizeDeg*oo(oi).pixPerDeg;
                 oo(oi).desiredTargetHeightPix=oo(oi).targetCheckPix* ...
-                    floor(oo(oi).desiredTargetHeightPix/oo(oi).targetCheckPix);
-                % Restrict o.desiredTargetHeightPix so target fits in canvasRect.
+                    round(oo(oi).desiredTargetHeightPix/oo(oi).targetCheckPix);
+                % Restrict o.desiredTargetHeightPix to fit in canvasRect.
                 sz=size(oo(oi).signal(1).image);
                 heightOverWidth=sz(1)/sz(2);
-                maxHeightPix=oo(oi).targetCheckPix.*floor(min(oo(oi).canvasSize.*[1 heightOverWidth]));
+                maxHeightPix=oo(oi).targetCheckPix*floor(min(oo(oi).canvasSize.*[1 heightOverWidth]));
+                if oo(oi).desiredTargetHeightPix>maxHeightPix
+                    ffprintf(ff,['WARNING: o.desiredTargetHeightPix %d = %.1f deg '...
+                        'reduced to maxHeightPix %d = %.1f deg. '...
+                        'Screen %dx%d.\n'],...
+                        oo(oi).desiredTargetHeightPix*[1 1/oo(oi).pixPerDeg],...
+                        maxHeightPix*[1 1/oo(oi).pixPerDeg],...
+                        oo(oi).screenRect([4 3]));
+                end
                 oo(oi).desiredTargetHeightPix=min(oo(oi).desiredTargetHeightPix,maxHeightPix);
+                % Restrict o.desiredTargetHeightPix to have at least
+                % o.minimumTargetHeightChecks.
+                sz=oo(oi).desiredTargetHeightPix/oo(oi).targetCheckPix;
+                sz=max([sz oo(oi).minimumTargetHeightChecks]);
+                oo(oi).desiredTargetHeightPix=sz*oo(oi).targetCheckPix;
            case 'contrast'
                 switch oo(oi).targetModulates
                     case 'luminance'
@@ -3637,11 +3651,20 @@ try
                         switch oo(oi).thresholdParameter
                             case 'size'
                                 % Use o.desiredTargetHeightPix to resize
-                                % signal(whichSignal).image and dependent metrics.
-                                sz=oo(oi).desiredTargetHeightPix/oo(oi).targetCheckPix;
-                                sz=max([sz oo(oi).minimumTargetHeightChecks]);
-                                oo(oi).desiredTargetHeightPix=sz*oo(oi).targetCheckPix;
-                                oSignal=ResizeImage(oo(oi),whichSignal,sz);
+                                % signal(whichSignal).image and dependent
+                                % metrics. The lower bound on
+                                % desiredTargetHeightPix is redundant with
+                                % code above, but i'm leaving it here just
+                                % it case it's possible to get here without
+                                % passing through the code above.
+                                checks=oo(oi).desiredTargetHeightPix/oo(oi).targetCheckPix;
+                                checks=max([checks oo(oi).minimumTargetHeightChecks]);
+                                oo(oi).desiredTargetHeightPix=checks*oo(oi).targetCheckPix;
+                                oSignal=ResizeImage(oo(oi),whichSignal,checks);
+                                if oSignal.targetHeightPix~=oo(oi).desiredTargetHeightPix
+                                    fprintf('WARNING: o.desiredTargetHeightPix %.0f, but o.targetHeightPix %.0f.\n',...
+                                        oo(oi).desiredTargetHeightPix,oSignal.targetHeightPix);
+                                end
                             otherwise
                                 oSignal=oo(oi);
                         end
@@ -4109,7 +4132,7 @@ try
                     % Reading from the buffer, the image has already been
                     % converted from index to RGB. We use our calibration
                     % to estimate luminance from G.
-                    rect=CenterRect(oo(oi).targetCheckPix*oo(oi).targetRectLocal,oo(oi).stimulusRect);
+                    rect=CenterRect(oo(oi).targetCheckPix*oo(oi).targetRectChecks,oo(oi).stimulusRect);
                     oo(oi).actualStimulus=Screen('GetImage',oo(1).window,rect,'frontBuffer',1);
                     % Get first and second mode.
                     p=oo(oi).actualStimulus(:,:,2);
@@ -5094,7 +5117,7 @@ try
         Screen('DrawText',oo(1).window,' ',0,0,1,1,1); % Set background color.
         string=sprintf('Saving results to disk. ... ');
         DrawFormattedText(oo(1).window,string,...
-            oo(oi).textSize,2*oo(oi).textSize,black,oo(oi).textLineLength,[],[],1.3);
+            oo(oi).textSize,1.5*oo(oi).textSize,black,oo(oi).textLineLength,[],[],1.3);
         DrawCounter(oo);
         Screen('Flip',oo(1).window); % Display message.
     end
