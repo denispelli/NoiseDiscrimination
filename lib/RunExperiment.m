@@ -164,12 +164,12 @@ global window
 if ~isempty(Screen('Windows'))
     % Screen CloseAll is very slow, so we call it only if we need to.
     Screen('CloseAll');
-    %     sca;
+    %     sca; % Originally equivalent to Screen('CloseAll').
     if ismac
         AutoBrightness(0,1);
     end
 end
 window=[];
-ListenChar; % May already be done by sca.
-ShowCursor; % May already be done by sca.
+ListenChar; % May already be done by Screen('CloseAll').
+ShowCursor; % May already be done by Screen('CloseAll').
 end % function CloseWindowsAndCleanup()
