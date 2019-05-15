@@ -4,7 +4,7 @@ o=oo(1);
 if o.speakEachLetter && o.useSpeech
    Speak('Escape');
 end
-o.textSize=TextSizeToFit(window); % Set optimum text size.
+textSize=TextSizeToFit(window); % Set optimum text size.
 escapeKeyCode=KbName('ESCAPE');
 spaceKeyCode=KbName('space');
 returnKeyCode=KbName('return');
@@ -26,7 +26,7 @@ if isfield(o,'trials') && isfield(o,'trialsPerBlock')
     end
 end
 DrawCounter(o);
-Screen('TextSize',window,o.textSize);
+Screen('TextSize',window,textSize);
 % Set background color for DrawFormattedText.
 Screen('DrawText',window,' ',0,0,black,backgroundColor,1);
 lastBlock=isfield(o,'block') && isfield(o,'blocksDesired') && o.block>=o.blocksDesired;
@@ -44,7 +44,7 @@ string=['You escaped. Any incomplete trial was canceled. ' ...
     'Hit RETURN to proceed to next block. ' ...
     'Hit ESCAPE again to quit the whole experiment. '...
     nextBlockMsg nextTrialMsg];
-DrawFormattedText(window,string,textMarginPix,textMarginPix+0.5*o.textSize,black,60,[],[],1.1);
+DrawFormattedText(window,string,textMarginPix,textMarginPix+0.5*textSize,black,60,[],[],1.1);
 Screen('Flip',window);
 answer=GetKeypress([spaceKeyCode returnKeyCode escapeKeyCode graveAccentKeyCode],o.deviceIndex);
 quitExperiment=ismember(answer,[escapeChar,graveAccentChar]);
