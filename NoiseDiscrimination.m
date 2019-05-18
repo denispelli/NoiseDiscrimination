@@ -1,7 +1,7 @@
 function oo=NoiseDiscrimination(ooIn)
 % oo=NoiseDiscrimination(oo);
 % You can now pass a struct array, one element per condition, and
-% NoiseDiscrimination will run them all randomly interleaved.
+% NoiseDiscrimination will run them all, randomly interleaved.
 %
 % Pass all your parameters in the "oo" struct, which will be returned with
 % all the results as additional fields. NoiseDiscrimination may adjust some
@@ -16,6 +16,24 @@ function oo=NoiseDiscrimination(ooIn)
 % beginning of your script, I recommend calling "clear o oo" to make sure
 % that you don't carry over any values from a prior iteration or
 % experiment.
+%
+% WISHES:
+% Tell observer when we?re running ideal.
+% We should warn about need for wireless keyboard before the first block.
+%
+% HISTORY:
+%
+% Added DrawCounter from CriticalSpacing. The the trial and block counter
+% is always there throughout the experiment. May 2019.
+%
+% Require that observer give name including a space before the end.May
+% 2019.
+%
+% Enhanced ComputClut to no longer assume the luminance range of the CLUT
+% is symmetric about o.BackgroundLuminance. May, 2019
+%
+% ResizeImage now works correctly and supports o.thresholdParameter='size'.
+% May, 2019.
 %
 % o.targetKind can now be 'word', in addition to 'letter' 'gabor' and
 % 'image'. March 20, 2019
@@ -3536,6 +3554,8 @@ try
                         tTest=log10(abs(oo(oi).flankerContrast));
                     case 'contrast'
                         tTest=log10(abs(oo(oi).contrast));
+                    case 'size'
+                        tTest=log10(oo(oi).desiredTargetHeightDeg); % May 17 2019 DGP
                 end
             case 'entropy'
                 a=128/oo(oi).backgroundEntropyLevels;
@@ -3568,11 +3588,11 @@ try
         end % if oo(oi).noiseFrozenInBlock
         
         %% RESTRICT tTest TO LEGAL VALUE IN QUESTPLUS
-        % Hmm. This will be slightly inconsistent with oo(oi).contrast.
-        % We should recompute oo(oi).contrast.
-        % Oops. Actually, this value of tTest is overwritten below when
-        % tTest is recomputed from spacingDeg and targetSizeDeg. Probably
-        % I need a loop to do both twice.
+        % Hmm. This will be slightly inconsistent with oo(oi).contrast. We
+        % should recompute oo(oi).contrast. Oops. Actually, this value of
+        % tTest is overwritten below when tTest is recomputed from
+        % spacingDeg and targetSizeDeg. Probably I need a loop to do both
+        % twice.
         if oo(oi).questPlusEnable
             i=knnsearch(contrastDB'/20,tTest);
             tTest=contrastDB(i)/20;
@@ -4874,9 +4894,13 @@ try
         rDeg=sqrt(sum(oo(oi).eccentricityXYDeg.^2));
         switch oo(oi).thresholdParameter
             case 'spacing'
-                ffprintf(ff,'%s: p %.0f%%, size %.2f deg, ecc. %.1f deg, critical spacing %.2f deg.\n',oo(oi).observer,100*oo(oi).p,targetSizeDeg,rDeg,10^oo(oi).questMean);
+                ffprintf(ff,'%s: p %.0f%%, size %.2f deg, ecc. %.1f deg, crowding distance %.2f deg.\n',...
+                    oo(oi).observer,100*oo(oi).p,targetSizeDeg,rDeg,10^oo(oi).questMean);
+                oo(oi).spacingDeg=10^oo(oi).questMean; % May 17, 2019 DGP
             case 'size'
-                ffprintf(ff,'%s: p %.0f%%, ecc. %.1f deg, threshold size %.3f deg.\n',oo(oi).observer,100*oo(oi).p,rDeg,10^oo(oi).questMean);
+                ffprintf(ff,'%s: p %.0f%%, ecc. %.1f deg, threshold size %.3f deg.\n',...
+                    oo(oi).observer,100*oo(oi).p,rDeg,10^oo(oi).questMean);
+                oo(oi).targetHeightDeg=10^oo(oi).questMean; % May 17, 2019 DGP
             case 'contrast'
                 oo(oi).contrast=oo(oi).contrastPolarity*10^oo(oi).questMean;
             case 'flankerContrast'
