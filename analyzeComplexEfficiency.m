@@ -1,6 +1,6 @@
 %% Analyze the data collected by runComplexEfficiency.
 
-experiment='runComplexEfficiency';
+experiment='ComplexEfficiency';
 % global printConditions makePlotLinear showLegendBox
 % showLegendBox=true;
 % printConditions=false;
@@ -25,34 +25,105 @@ vars={'condition' 'conditionName' 'experiment' 'dataFilename' ...
     'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
     'contrast' 'E' 'E1' 'N' 'LBackground' 'luminanceAtEye' 'luminanceFactor'...
     'filterTransmission' 'useFilter' 'retinalIlluminanceTd' 'pupilDiameterMm'...
-    'pixPerCm'  'nearPointXYPix' 'NUnits' 'beginningTime'};
+    'pixPerCm'  'nearPointXYPix' 'NUnits' 'beginningTime' 'thresholdParameter'...
+    'questMean'};
 oo=ReadExperimentData(experiment,vars); % Adds date and missingFields.
 
-% SELECT CONDITION(S)
-for oi=length(oo):-1:1
-    switch experiment
-        case 'runComplexEfficiency'
-            if any(ismember(oo(oi).observer,{'d' ''}))
-                oo(oi)=[];
-            end
+% COMPUTE EFFICIENCY
+% Select thresholdParameter='contrast', for each conditionName, 
+% For each observer, including ideal, use all (E,N) data to estimate deltaNOverE and Neq. 
+% Compute efficiency by comparing deltaNOverE of each to that of the ideal.
+conditionNames=unique({oo.conditionName});
+observers=unique({oo.observer});
+aa=[];
+for conditionName=conditionNames
+    for observer=observers
+        match=ismember({oo.conditionName},conditionName) & ismember({oo.observer},observer);
+        match=match & ismember({oo.thresholdParameter},{'contrast'});
+        if sum(match)>0
+            E=[oo(match).E];
+            N=[oo(match).N];
+            [E0,Neq,deltaEOverN]=EstimateNeq(E,N);
+            aa(end+1).conditionName=conditionName{1};
+            aa(end).observer=observer{1};
+            aa(end).E=E;
+            aa(end).N=N;
+            aa(end).E0=E0;
+            aa(end).Neq=Neq;
+            aa(end).deltaEOverN=deltaEOverN;
+            oi=find(match,1);
+            aa(end).thresholdParameter=oo(oi).thresholdParameter;
+        end
     end
 end
+for conditionName=conditionNames
+    for observer=observers
+        match=ismember({aa.thresholdParameter},{'contrast'});
+        match=match & ismember({aa.conditionName},conditionName);
+        idealMatch=match & ismember({aa.observer},{'ideal'});
+        match = match & ismember({aa.observer},observer);
+        if sum(match)>0 && sum(idealMatch)>0
+            assert(sum(match)==1 & sum(idealMatch)==1);
+            aa(match).efficiency=aa(idealMatch).deltaEOverN/aa(match).deltaEOverN;
+        end
+    end
+end
+human=~ismember({aa.observer},'ideal');
+aa=struct2table(aa(human));
+aa=sortrows(aa,'conditionName');
+disp(aa(:,{'conditionName','efficiency','observer'}));
+
+% Size data.
+for oi=length(oo):-1:1
+    if ismember(oo(oi).thresholdParameter,{'size'})
+        oo(oi).targetHeightDeg=10^oo(oi).questMean;
+    end
+end
+bb=[];
+for conditionName=conditionNames
+    for observer=observers
+        match=ismember({oo.thresholdParameter},{'size'});
+        match=match & ismember({oo.conditionName},conditionName);
+        match=match & ismember({oo.observer},observer);
+        if sum(match)>0
+            bb(end+1).targetHeightDeg=mean([oo(match).targetHeightDeg]);
+            bb(end).observer=observer{1};
+            bb(end).conditionName=conditionName{1};
+            bb(end).thresholdParameter='size';
+            bb(end).complexity=bb(end).targetHeightDeg.^2/(6*6);
+        end
+    end
+end
+t=struct2table(bb);
+disp(t(:,{'conditionName' 'observer' 'targetHeightDeg' 'complexity'}));
+return
+
+% SELECT CONDITION(S)
+% for oi=length(oo):-1:1
+%     if ~ismember(oo(oi).conditionName,{'face' 'Sloan'}) || oo(oi).trials<30
+%         oo(oi)=[];
+%     end
+% end
 
 if isempty(oo)
     error('No conditions selected.');
 end
 
 % oo=ComputeNPhoton(oo);
+% Compute efficiency
 
 % Report the luminance fields of each file.
 t=struct2table(oo);
+fprintf('Ready to analyze %d thresholds:\n',length(oo));
 if printFilenames
-    fprintf('Ready to analyze %d thresholds:\n',length(oo));
-    t=sortrows(t,{'targetFont','N','observer'});
-    disp(t(:,{'targetFont','N','E','observer','noiseSD'}));
-    tt=t(:,{'targetFont','N','E','observer','noiseSD'});
-    writetable(tt,'ComplexEfficiency.xlsx');
+    %     t=sortrows(t,{'targetFont','N','observer'});
+    %     disp(t(:,{'targetFont','N','E','observer','noiseSD'}));
+    %     tt=t(:,{'targetFont','N','E','observer','noiseSD'});
+    %     t=sortrows(t,{'conditionName' 'thresholdParameter' 'N' 'observer'});
+    disp(t(:,{'observer' 'conditionName' 'thresholdParameter' 'N' 'E' 'targetHeightDeg'  'noiseSD' 'contrast'}));
 end
+tt=t(:,{'conditionName' 'thresholdParameter' 'N' 'E' 'targetHeightDeg' 'observer' 'noiseSD' 'contrast'});
+writetable(tt,'ComplexEfficiency.xlsx');
 return
 
 
