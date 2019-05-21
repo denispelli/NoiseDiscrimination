@@ -27,8 +27,13 @@ vars={'condition' 'conditionName' 'experiment' 'dataFilename' ...
     'filterTransmission' 'useFilter' 'retinalIlluminanceTd' 'pupilDiameterMm'...
     'pixPerCm'  'nearPointXYPix' 'NUnits' 'beginningTime' 'thresholdParameter'...
     'questMean'};
+% experiment='runComplexEfficiency';
+% oo1=ReadExperimentData(experiment,vars); % Adds date and missingFields.
+% fprintf('%s %d thresholds.\n',experiment,length(oo1));
+experiment='ComplexEfficiency';
 oo=ReadExperimentData(experiment,vars); % Adds date and missingFields.
-
+fprintf('%s %d thresholds.\n',experiment,length(oo));
+% oo=[oo1 oo2];
 % COMPUTE EFFICIENCY
 % Select thresholdParameter='contrast', for each conditionName, 
 % For each observer, including ideal, use all (E,N) data to estimate deltaNOverE and Neq. 
@@ -72,6 +77,8 @@ human=~ismember({aa.observer},'ideal');
 aa=struct2table(aa(human));
 aa=sortrows(aa,'conditionName');
 disp(aa(:,{'conditionName','efficiency','observer'}));
+dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
+writetable(aa,fullfile(dataFolder,'efficiency.xls'));
 
 % Size data.
 for oi=length(oo):-1:1
@@ -96,6 +103,7 @@ for conditionName=conditionNames
 end
 t=struct2table(bb);
 disp(t(:,{'conditionName' 'observer' 'targetHeightDeg' 'complexity'}));
+writetable(t,fullfile(dataFolder,'complexity.xls'));
 return
 
 % SELECT CONDITION(S)
