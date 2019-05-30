@@ -1311,7 +1311,7 @@ try
     [oo.textFont]=deal('Verdana');
     black=0; % The CLUT color code for black.
     white=1; % Retrieves the CLUT color code for white.
-    [oo.gray1]=deal(0.5); % Temporary, until we LinearizeClut.
+    [oo.gray1]=deal(1); % Temporary background (for questions) until we LinearizeClut.
     [oo.speakEachLetter]=deal(false);
     [oo.useSpeech]=deal(false);
     while isempty(oo(1).experimenter)
