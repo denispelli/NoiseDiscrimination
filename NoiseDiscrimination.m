@@ -5403,7 +5403,7 @@ function assessBitDepth(o)
 % that if "o" is modified here, it too may need to be returned as an output
 % argument, or made global.
 % n=o.assessBitDepth.
-global cal
+global cal ff
 LMin=min(cal.old.L);
 LMax=max(cal.old.L);
 o.LBackground=(LMax+LMin)/2;
