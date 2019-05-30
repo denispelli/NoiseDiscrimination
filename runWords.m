@@ -25,6 +25,9 @@ addpath(fullfile(myPath,'words')); % Folder in same directory as this M file.
 
 clear o oo ooo
 ooo={};
+% o.useFractionOfScreenToDebug=0.3;
+% o.skipScreenCalibration=true;
+
 o.readAlphabetFromDisk=false;
 o.targetFont='Monaco';
 o.alphabet='abcdefghijklmnopqrstuvwxyz'; % alphabet for o.words
