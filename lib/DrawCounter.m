@@ -27,7 +27,11 @@ message=sprintf('%sBlock %d of %d.',message,oo(1).block,oo(1).blocksDesired);
 if isempty(scratchWindow)
     [scratchWindow,scratchRect]=Screen('OpenOffscreenWindow',window);
 end
-counterSize=round(0.6*oo(1).textSize);
+if isfield(oo(1),'textSize')
+    counterSize=round(0.6*oo(1).textSize);
+else
+    counterSize=20;
+end
 Screen('TextSize',scratchWindow,counterSize);
 Screen('TextFont',scratchWindow,Screen('TextFont',window));
 counterBounds=TextBounds(scratchWindow,message,1);
