@@ -6027,6 +6027,7 @@ function [cal,o]=ComputeClut(cal,o)
 % will support. We make this range just big enough to include all the
 % luminances our signal in noise may need, using the known min and max of
 % the signal and noise.
+global ff
 cal.LFirst=o.LBackground*(1+o.noiseListMin*o.r*o.noiseSD/o.noiseListSd);
 cal.LLast=o.LBackground*(1+o.noiseListMax*o.r*o.noiseSD/o.noiseListSd);
 if ~o.useFlankers
