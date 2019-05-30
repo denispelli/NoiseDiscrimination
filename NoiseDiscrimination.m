@@ -1311,7 +1311,7 @@ try
     [oo.textFont]=deal('Verdana');
     black=0; % The CLUT color code for black.
     white=1; % Retrieves the CLUT color code for white.
-    [oo.gray1]=deal(white); % Temporary, until we LinearizeClut.
+    [oo.gray1]=deal(0.5); % Temporary, until we LinearizeClut.
     [oo.speakEachLetter]=deal(false);
     [oo.useSpeech]=deal(false);
     while isempty(oo(1).experimenter)
@@ -2009,7 +2009,7 @@ try
             oo(1).gray1=1/oo(1).maxEntry;
             [oo.gray1]=deal(oo(1).gray1);
             assert(oo(1).gray1*oo(1).maxEntry <= oo(1).firstGrayClutEntry-1);
-            % o.gray1 is between black and the darkest stimulus luminance.
+            % o.gray1 is between the index of black and the index of the darkest stimulus luminance.
             cal.LFirst=oo(1).LBackground;
             cal.LLast=oo(1).LBackground;
             cal.nFirst=oo(1).gray1*oo(1).maxEntry;
@@ -2071,7 +2071,13 @@ try
                     disp(interp1(cal.old.G,cal.old.L,g,'pchip'));
                 end
             end
-            oo(1).gray=oo(1).gray1; % DGP. Immune to update of asymmetric CLUT.
+%             oo(1).gray=oo(1).gray1; % DGP. Immune to update of asymmetric CLUT.
+% While it's true that the gray1 index produces a mid gray unaffected by
+% the CLUT updates, we later call LuminanceOfIndex, which  forces all
+% pixels to be within the specified dynamic range of the CLUT, so "gray1"
+% will generate a warning and be replaced with the darkest value in the
+% CLUT range. That's bad. So it's better to just tolerate the screen
+% flicker that occurs when we update the CLUT.
             [oo.gray]=deal(oo(1).gray);
             Screen('LoadNormalizedGammaTable',oo(1).window,cal.gamma,loadOnNextFlip);
             if oo(1).assessLoadGamma
@@ -3906,7 +3912,7 @@ try
                 % non-stimulus areas is drawn with CLUT index 1.
 %                 fprintf('ComputeClut o.contrast %.2f\n',oo(oi).contrast);
                 [cal,oo(oi)]=ComputeClut(cal,oo(oi));
-                % gray is computed by ComputeClute. No need to do it here.
+                % gray is computed by ComputeClut. No need to do it here.
 %                 oo(1).gray=IndexOfLuminance(cal,oo(1).LBackground)/oo(1).maxEntry;
 %                 oo(1).gray=oo(1).gray1; % DGP. Immune to update of asymmetric CLUT.
                 [oo.gray]=deal(oo(oi).gray);
