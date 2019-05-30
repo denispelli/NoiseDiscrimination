@@ -817,6 +817,7 @@ o.showResponseNumbers=true;
 o.responseNumbersInCorners=false;
 o.alphabetPlacement='top'; % 'top' 'bottom' 'right' or 'left' while awaiting response.
 o.textSizeDeg=0.9;
+o.textSize=20; % Initial value so DrawCounter won't fail.
 o.textMarginPix=0;
 o.counterPlacement='bottomRight';
 o.instructionPlacement='topLeft'; % 'topLeft' 'bottomLeft'
@@ -1325,6 +1326,7 @@ try
         fprintf('*Waiting for experimenter name.\n');
         [reply,o]=AskQuestion(oo,text);
         oo(1).quitBlock=o.quitBlock;
+        oo(1).quitExperiment=o.quitExperiment;
         if oo(1).quitBlock
             CloseWindowsAndCleanup(oo);
             return
@@ -1355,7 +1357,8 @@ try
         Screen('Flip',window);
         [name,o]=AskQuestion(oo,text);
         oo(1).quitBlock=o.quitBlock;
-        if oo(1).quitBlock
+        oo(1).quitExperiment=o.quitExperiment;
+       if oo(1).quitBlock
             CloseWindowsAndCleanup(oo);
             return
         end
@@ -1399,6 +1402,7 @@ try
         fprintf('*Waiting for observer to put on sunglasses.\n');
         [reply,o]=AskQuestion(oo,text);
         oo(1).quitBlock=o.quitBlock;
+        oo(1).quitExperiment=o.quitExperiment;
         if ~oo(1).quitBlock
             if ~isempty(reply)
                 oo(1).filterTransmission=str2num(reply);
@@ -2138,13 +2142,17 @@ try
                 fprintf('*Confirming observer name.\n');
                 response=GetKeypress([escapeKeyCode graveAccentKeyCode returnKeyCode],oo(1).deviceIndex);
                 if ismember(response,[escapeChar,graveAccentChar])
-                    if oo(1).speakInstructions
-                        Speak('Quitting.');
+                    [oo(1).quitExperiment,oo(1).quitBlock]=OfferEscapeOptions(oo(1).window,oo,oo(1).textMarginPix);
+                    if oo(1).quitBlock
+                        if oo(1).speakInstructions
+                            Speak('Quitting.');
+                        end
+                        if oo(1).quitExperiment
+                            isLastBlock=true; % global DGP
+                        end
+                        CloseWindowsAndCleanup(oo)
+                        return
                     end
-                    oo(1).quitExperiment=true;
-                    isLastBlock=true; % global DGP
-                    CloseWindowsAndCleanup(oo)
-                    return
                 end
             end
         end
@@ -2178,13 +2186,17 @@ try
                     fprintf('*Asking which eye(s).\n');
                     response=GetKeypress([escapeKeyCode graveAccentKeyCode returnKeyCode],oo(1).deviceIndex);
                     if ismember(response,[escapeChar,graveAccentChar])
-                        if oo(1).speakInstructions
-                            Speak('Quitting.');
+                        [oo(1).quitExperiment,oo(1).quitBlock]=OfferEscapeOptions(oo(1).window,oo,oo(1).textMarginPix);
+                        if oo(1).quitBlock
+                            if oo(1).speakInstructions
+                                Speak('Quitting.');
+                            end
+                            if oo(1).quitExperiment
+                                isLastBlock=true; % global DGP
+                            end
+                            CloseWindowsAndCleanup(oo)
+                            return
                         end
-                        oo(1).quitExperiment=true;
-                        isLastBlock=true; % global DGP
-                        CloseWindowsAndCleanup(oo)
-                        return
                     end
                 case {'left','right'}
                     Screen('Preference','TextAntiAliasing',1);
@@ -2294,7 +2306,7 @@ try
     oo(1).fixationXYPix=[]; % Add fields to struct.
     oo(1).fixationIsOffscreen=[];
     oo(1).targetXYPix=[];
-    oo(1)=SetUpFixation(oo(1),ff); % xxx dgp
+    oo(1)=SetUpFixation(oo(1),ff); % dgp
     % Arbitrarily assume that all conditions have same fixation.
     [oo.fixationIsOffscreen]=deal(oo(1).fixationIsOffscreen);
     [oo.fixationXYPix]=deal(oo(1).fixationXYPix);
