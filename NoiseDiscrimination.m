@@ -556,12 +556,18 @@ addpath(fullfile(myPath,'lib')); % Folder in same directory as this M file.
 % diary ./diary.log
 
 %% USEFUL CONSTANTS
-% [~, vStruct]=PsychtoolboxVersion;
-% if IsOSX && vStruct.major*1000+vStruct.minor*100+vStruct.point < 3013
-%    error('Your Mac OSX Psychtoolbox is too old. We need at least Version 3.0.13. Please run: UpdatePsychtoolbox');
+% [~,ver]=PsychtoolboxVersion;
+% if ver.major*1000+ver.minor*100+ver.point < 3013
+%    error(['Your Psychtoolbox %d.%d.%d is too old. '...
+%         'We need at least Version 3.0.13. '...
+%         'Please run: UpdatePsychtoolbox'],...
+%           ver.major,ver.minor,ver.point);
 % end
 rng('shuffle'); % Use time to seed the random number generator. TAKES 0.01 s.
-plusMinusChar=char(177); % Use this instead of literal plus minus sign to prevent corruption of this non-ASCII character.
+plusMinusChar=char(177); % Use this instead of literal plus minus sign to 
+% prevent corruption of this non-ASCII character. MATLAB can print
+% non-ASCII chars, but currently the text files are just 8 bits, by
+% default.
 escapeChar=char(27);
 graveAccentChar='`';
 returnChar=char(13);
@@ -699,7 +705,7 @@ o.age=20; % Assume age 20, unless later specified.
 
 % Procedure
 o.trials=0; % Initialize trial counter so it's defined even if user quits early.
-o.trialsPerBlock=40; % Typically 40.
+o.trialsInBlock=40; % Typically 40.
 o.block=1; % We display the the block number. 
 o.blocksDesired=1; % How many blocks you to plan to run. Used solely for display in upper left corner of screen.
 % To save time, we only setup the screen and open the window in the first
@@ -890,8 +896,8 @@ o.NPhoton=[];
 % Keyboard
 o.deviceIndex=-1; % -1 for all keyboards.
 o.deviceIndex=-3; % -3 for all keyboard/keypad devices.
-% o.deviceIndex=3; % for my built-in keyboard, according to PsychHIDTest
-% o.deviceIndex=6; % for my bluetooth wireless keyboard, according to PsychHIDTest
+% o.deviceIndex=3; % my built-in keyboard, according to PsychHIDTest
+% o.deviceIndex=6; % my bluetooth wireless keyboard, according to PsychHIDTest
 o.deviceIndex=[]; % Default. This runs MUCH more reliably. Not sure why.
 % April, 2018. KbCheck([]) succeeds, but I'm experiencing a fatal error
 % when I call KbCheck(deviceIndex) with deviceIndex -1 or -3 or the
@@ -1022,7 +1028,7 @@ clear o
 %     % https://psych.nyu.edu/pelli/papers.html
 %     o.idealEOverNThreshold=10^(-2.59--3.60); % from Table A of Pelli et al. 2006
 %     o.observer='ideal';
-%     o.trialsPerBlock=1000;
+%     o.trialsInBlock=1000;
 %     o.alphabet='CDHKNORSVZ'; % As in Pelli et al. (2006)
 %     o.alternatives=10; % As in Pelli et al. (2006).
 %     o.pThreshold=0.64; % As in Pelli et al. (2006).
@@ -1122,7 +1128,7 @@ clear o
 
 if ~isfield(oo(1),'isFirstBlock') || oo(1).isFirstBlock
     blockTrial=1;
-    blockTrials=sum([oo.trialsPerBlock]);
+    blockTrials=sum([oo.trialsInBlock]);
 end
 
 %% Brightness
@@ -1781,8 +1787,8 @@ try
                 if isempty(oo(oi).steepness) || ~isfinite(oo(oi).steepness)
                     oo(oi).steepness=1.7;
                 end
-                if isempty(oo(oi).trialsPerBlock) || ~isfinite(oo(oi).trialsPerBlock)
-                    oo(oi).trialsPerBlock=1000;
+                if isempty(oo(oi).trialsInBlock) || ~isfinite(oo(oi).trialsInBlock)
+                    oo(oi).trialsInBlock=1000;
                 end
                 %         degPerCm=57/oo(oi).viewingDistanceCm;
                 %         oo(oi).pixPerCm=45; % for MacBook at native resolution.
@@ -2427,6 +2433,11 @@ try
     % estimate from PupilDiameter(), based on luminance, field area, age,
     % and number of eyes.
     
+    %% o.trialsInBlock
+    for oi=1:conditions
+        ffprintf(ff,'%d: o.trialsInBlock %d\n',oi,oo(oi).trialsInBlock);
+    end
+    
     %% SET NOISE PARAMETERS
     for oi=1:conditions
         oo(oi).targetWidthPix=oo(oi).targetHeightPix;
@@ -2836,7 +2847,7 @@ try
         ffprintf(ff,'%d: %s noise power spectral density N %s log=%.2f\n', ...
             oi,temporal,oo(oi).NUnits,log10(oo(oi).N));
         ffprintf(ff,'%d: pThreshold %.2f, steepness %.1f\n',oi,oo(oi).pThreshold,oo(oi).steepness);
-        ffprintf(ff,'%d: o.trialsPerBlock %.0f\n',oi,oo(oi).trialsPerBlock);
+        ffprintf(ff,'%d: o.trialsInBlock %.0f\n',oi,oo(oi).trialsInBlock);
         
         %% COMPUTE oo(oi).signal(i).image
         %         if isfield(oo(oi).signal(1),'image')
@@ -3456,9 +3467,11 @@ try
             if oo(oi).trials==1
                 assert(size(oo(oi).constantStimuli,1)==1)
                 oo(oi).thresholdParameterValueList=...
-                    repmat(oo(oi).constantStimuli,1,ceil(oo(oi).trialsPerBlock/length(oo(oi).constantStimuli)));
+                    repmat(oo(oi).constantStimuli,1,ceil(oo(oi).trialsInBlock/length(oo(oi).constantStimuli)));
                 oo(oi).thresholdParameterValueList=Shuffle(oo(oi).thresholdParameterValueList);
             end
+            assert(ismember(oo(oi).thresholdParameter,{'contrast'}),...
+                'Sorry, o.useMethodOfConstantStimuli is supported only if o.thresholdParameter is ''contrast''.');
             c=oo(oi).thresholdParameterValueList(oo(oi).trials);
             oo(oi).contrastPolarity=sign(c);
             tTest=log10(abs(c));
@@ -5240,7 +5253,7 @@ global fixationLines fixationCrossWeightPix labelBounds location  ...
     tTest leftEdgeOfResponse ff whichSignal logFid
 % Hasn't been tested since it became a subroutine. It may need more of its
 % variables to be declared "global". A more elegant solution, more
-% transparent that "global" would be to put all the currently global
+% transparent than "global" would be to put all the currently global
 % variables into a new struct called "my". It would be received as an
 % argument and might need to be returned as an output. Note that if "o" is
 % modified here, it too may need to be returned as an output argument, or
@@ -5400,7 +5413,7 @@ switch o.targetModulates
     case 'entropy'
         ffprintf(ff,'ratio o.r=signalLevels/backgroundLevels %.3f, log(o.r-1) %.2f\n',1+10^tTest,tTest);
 end
-o.trialsPerBlock=1;
+o.trialsInBlock=1;
 o.blocksDesired=1;
 o.isLastBlock=true;
 ffprintf(ff,'SUCCESS: o.saveSnapshot is done. Image saved, now returning.\n');
@@ -5586,10 +5599,10 @@ end % function AssessLinearity(o)
 %% FUNCTION ModelObserver
 function response=ModelObserver(o,signal,movieImage)
 global signalImageIndex signalMask
-% ModelObserver now works for identifying a luminance/noise/entropy letter
+% ModelObserver now correctly identifies a luminance/noise/entropy letter
 % in noise. Hasn't yet been critically tested to see if its performance
 % matches theoretical benchmarks. But the thresholds seem reasonable, and
-% quest succesfully homes in on 75%. Instead of globals, we could put
+% Quest succesfully homes in on 75%. Instead of globals, we could put
 % the currently global variables into a new struct called "model".
 % NOTE: the movie's pre and post frames have already been removed.
 location=movieImage{1};
@@ -6213,7 +6226,7 @@ escapeKeyCode=KbName('escape');
 graveAccentKeyCode=KbName('`~');
 spaceKeyCode=KbName('space');
 Screen('FillRect',o.window,o.gray1);
-Screen('FillRect',o.window,o.gray1,o.stimulusRect);
+% Screen('FillRect',o.window,o.gray1,o.stimulusRect);
 % fprintf('o.gray1*o.maxEntry %.1f, o.gray*o.maxEntry %.1f, o.maxEntry %.0f\n',o.gray1*o.maxEntry,o.gray*o.maxEntry,o.maxEntry);
 if o.showCropMarks
     TrimMarks(o.window,frameRect);
