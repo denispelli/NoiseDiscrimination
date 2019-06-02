@@ -5,7 +5,7 @@
 
 clear o
 o.experiment='measureNeqJing';
-o.trialsPerBlock=40;
+o.trialsInBlock=40;
 o.useDynamicNoiseMovie = 1; % 0 for static noise
 o.moviePreSec = 0.1; % ignored for static noise
 o.moviePostSec = 0.2; % ignored for static noise

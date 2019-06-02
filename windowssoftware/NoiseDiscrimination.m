@@ -101,7 +101,7 @@ o.observer='junk'; % Name of person or existing algorithm.
 % o.observer='brightnessSeeker'; % Existing algorithm instead of person.
 % o.observer='maximum'; % Existing algorithm instead of person.
 % o.observer='ideal'; % Existing algorithm instead of person.
-o.trialsPerBlock=40; % Typically 40.
+o.trialsInBlock=40; % Typically 40.
 o.block=1; % For display only, indicate the run number. When o.block==blocksDesired this program says "Congratulations" before returning.
 o.blocksDesired=1; % How many runs you to plan to do, used solely for display (and congratulations).
 o.congratulateWhenDone=1; % 0 or 1. Spoken after last run (i.e. when o.block==0.blocksDesired). You can turn this off.
@@ -198,7 +198,7 @@ if o.replicatePelli2006 || isfield(oIn,'replicatePelli2006') && oIn.replicatePel
     % https://psych.nyu.edu/pelli/papers.html
     o.idealEOverNThreshold=10^(-2.59 - -3.60); % from Table A of Pelli et al. 2006
     o.observer='ideal';
-    o.trialsPerBlock=1000;
+    o.trialsInBlock=1000;
     o.alphabet='CDHKNORSVZ'; % As in Pelli et al. (2006)
     o.alternatives=10; % As in Pelli et al. (2006).
     o.pThreshold=0.64; % As in Pelli et al. (2006).
@@ -314,8 +314,8 @@ switch o.observer
         if ~isfield(o,'beta') || ~isfinite(o.beta)
             o.beta=1.7;
         end
-        if ~isfield(o,'trialsPerBlock') || ~isfinite(o.trialsPerBlock)
-            o.trialsPerBlock=1000;
+        if ~isfield(o,'trialsInBlock') || ~isfinite(o.trialsInBlock)
+            o.trialsInBlock=1000;
         end
         if ~isfield(o,'blocksDesired') || ~isfinite(o.blocksDesired)
             o.blocksDesired=10;
@@ -325,7 +325,7 @@ switch o.observer
         %         cal.pixPerDeg=pixPerCm/degPerCm;
     otherwise
         if o.measureBeta
-            o.trialsPerBlock=max(200,o.trialsPerBlock);
+            o.trialsInBlock=max(200,o.trialsInBlock);
         end
         if ~isfield(o,'beta') || ~isfinite(o.beta)
             switch o.signalKind
@@ -788,7 +788,7 @@ Screen('FillRect',window,gray1);
         tGuessSd=4;
     end
     ffprintf(ff,'Your (log) guess is %.2f ± %.2f\n',tGuess,tGuessSd);
-    ffprintf(ff,'o.trialsPerBlock %.0f\n',o.trialsPerBlock);
+    ffprintf(ff,'o.trialsInBlock %.0f\n',o.trialsInBlock);
     
     switch o.task
         case '4afc'
@@ -955,7 +955,7 @@ Screen('FillRect',window,gray1);
     trialsRight=0;
     sigmaWarningCount=0;
     runStart=GetSecs;
-    for trial=1:o.trialsPerBlock
+    for trial=1:o.trialsInBlock
         tTest=QuestQuantile(q);
         if o.measureBeta
             offsetToMeasureBeta=Shuffle(offsetToMeasureBeta);
@@ -1419,7 +1419,7 @@ Screen('FillRect',window,gray1);
                 end
                 eraseRect=ClipRect(eraseRect,o.stimulusRect);
                 Screen('FillRect',window,gray1,topCaptionRect);
-                message=sprintf('Trial %d of %d. Run %d of %d.',trial,o.trialsPerBlock,o.block,o.blocksDesired);
+                message=sprintf('Trial %d of %d. Run %d of %d.',trial,o.trialsInBlock,o.block,o.blocksDesired);
                 Screen('DrawText',window,message,textSize/2,textSize/2,black);
                 
                 % Print instructions in lower left corner.
@@ -1627,7 +1627,7 @@ Screen('FillRect',window,gray1);
                     imwrite(img,fullfile(mypath,filename),'png');
                     ffprintf(ff,'Saving image to file "%s" ',filename);
                     ffprintf(ff,'approx required n %.0f, sd ratio %.3f, log(sd-1) %.2f\n',approxRequiredN,1+10^tTest,tTest);
-                    o.trialsPerBlock=1;
+                    o.trialsInBlock=1;
                     o.blocksDesired=1;
                     throw(MException('o.saveSnapshot:Done','SUCCESS: Image saved, now returning.'));
                 end

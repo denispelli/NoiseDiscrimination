@@ -75,7 +75,7 @@ for block=1:length(ooo)
     oo=ooo{block}; % Get a block.
     thisBlockDone=true;
     for oi=1:length(oo)
-        if isfield(oo(oi),'trials') && oo(oi).trials>=oo(oi).trialsPerBlock
+        if isfield(oo(oi),'trials') && oo(oi).trials>=oo(oi).trialsInBlock
             continue
         end
         thisBlockDone=false;
@@ -114,14 +114,14 @@ end % for block=1:length(ooo)
 oooOut=ooo;
 
 %% HOW MANY BLOCKS ARE DONE?
-% The criterion for "done" is at least o.trialsPerBlock trials.
+% The criterion for "done" is at least o.trialsInBlock trials.
 blocksDone=0;
 for block=1:length(ooo)
     thisBlockDone=true; % Initial value.
     oo=ooo{block}; % Get a block.
     for oi=1:length(oo)
         % Check each condition in a block.
-        if isfield(oo(oi),'trials') && isfield(oo(oi),'trialsPerBlock') && oo(oi).trials>=oo(oi).trialsPerBlock
+        if isfield(oo(oi),'trials') && isfield(oo(oi),'trialsInBlock') && oo(oi).trials>=oo(oi).trialsInBlock
             continue
         end
         thisBlockDone=false;

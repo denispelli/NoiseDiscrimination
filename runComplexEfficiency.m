@@ -25,7 +25,7 @@ clear o oo ooo
 ooo={};
 % o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
 % o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
-o.recordGaze=false;
+o.recordGaze=true;
 o.experiment='ComplexEfficiency';
 o.eccentricityXYDeg=[0 0];
 o.targetHeightDeg=6;
@@ -37,7 +37,7 @@ o.targetKind='letter';
 o.targetHeightDeg=6;
 o.thresholdParameter='contrast';
 o.observer='';
-o.trialsPerBlock=40;
+o.trialsInBlock=40;
 o.brightnessSetting=0.87;
 o.conditionName='Sloan';
 o.targetFont='Sloan';
@@ -84,7 +84,7 @@ if true
     % o.eccentricityXYDeg=[0 0];
     o.targetHeightDeg=10;
     o.targetDurationSecs=0.15;
-    o.trialsPerBlock=40;
+    o.trialsInBlock=40;
     o.lapse=nan;
     o.steepness=nan;
     o.guess=nan;
@@ -94,7 +94,7 @@ if true
     % o.blankingRadiusReTargetHeight=0;
     % o.targetMarkDeg=1;
     % o.fixationCrossDeg=3;
-    % o.alternatives=length(o.alphabet);
+    o.alternatives=length(o.alphabet);
     % if all(o.eccentricityXYDeg==0)
     %     o.markTargetLocation=false;
     % else
@@ -256,7 +256,7 @@ if true
         end
         for oi=1:length(oo)
             oo(oi).observer='ideal';
-            oo(oi).trialsPerBlock=200;
+            oo(oi).trialsInBlock=200;
         end
         ooo{end+1}=oo;
     end
@@ -270,7 +270,7 @@ for block=1:length(ooo)
 end
 t=struct2table(oo,'AsArray',true);
 disp(t(:,{'block' 'experiment' 'targetKind' 'thresholdParameter' 'contrast' 'conditionName' 'observer' 'noiseSD' 'targetHeightDeg' 'eccentricityXYDeg'})); % Print the conditions in the Command Window.
-return
+% return
 
 %% Measure threshold, one block per iteration.
 ooo=RunExperiment(ooo);

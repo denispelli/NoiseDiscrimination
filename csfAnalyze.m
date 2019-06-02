@@ -51,7 +51,7 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
         'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
         'contrast' 'E' 'N' 'LBackground' 'luminanceAtEye' 'luminanceFactor'...
         'filterTransmission' 'useFilter' 'retinalIlluminanceTd' 'pupilDiameterMm'...
-        'pixPerCm' 'nearPointXYPix' 'trialsPerBlock' 'NUnits' 'useDynamicNoiseMovie' 'noiseCheckFrames'};
+        'pixPerCm' 'nearPointXYPix' 'trialsInBlock' 'NUnits' 'useDynamicNoiseMovie' 'noiseCheckFrames'};
     for iFile=1:length(matFiles) % One file per iteration.
         % Extract the desired fields into "oo", one cell-row per threshold.
         d=load(matFiles(iFile).name);
@@ -68,7 +68,7 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
             end
             ooo=d.ooo;
         else
-            if ~isfield(d,'o') || d.o.trials<d.o.trialsPerBlock
+            if ~isfield(d,'o') || d.o.trials<d.o.trialsInBlock
                 continue
             end
             ooo={d.o};
@@ -104,7 +104,7 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
     % DISCARD THRESHOLDS WITH INSUFFICIENT TRIALS
     s=sprintf('condition(trials):');
     for oi=length(oo):-1:1
-        if isempty(oo(oi).trials) || oo(oi).trials<oo(oi).trialsPerBlock
+        if isempty(oo(oi).trials) || oo(oi).trials<oo(oi).trialsInBlock
             s=[s sprintf(' %d(%d),',oi,oo(oi).trials)];
             oo(oi)=[];
             continue
@@ -115,8 +115,8 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
         %             continue
         %         end
     end
-    if sum([oo.trials]<oo(1).trialsPerBlock)>0
-        warning('Discarding %d threshold(s) with fewer than %d trials: %s',sum([oo.trials]<oo(1).trialsPerBlock),oo(oi).trialsPerBlock,s);
+    if sum([oo.trials]<oo(1).trialsInBlock)>0
+        warning('Discarding %d threshold(s) with fewer than %d trials: %s',sum([oo.trials]<oo(1).trialsInBlock),oo(oi).trialsInBlock,s);
     end
     
     % COMPUTE DERIVED QUANTITIES

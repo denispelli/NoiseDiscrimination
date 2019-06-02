@@ -23,7 +23,7 @@ addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % Folder in same dire
 cal=OurScreenCalibrations(0);
 % o.useFractionOfScreenToDebug=0.4; % 0: normal, 0.5: small for debugging.
 % o.observer='ideal';
-o.trialsPerBlock=1;
+o.trialsInBlock=1;
 % o.printLogOfIdeal=true;
 % Screen('Preference', 'Verbosity',0);
 
