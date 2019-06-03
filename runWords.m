@@ -28,6 +28,7 @@ ooo={};
 % o.useFractionOfScreenToDebug=0.3;
 % o.skipScreenCalibration=true;
 
+o.fixationTest=false;
 o.readAlphabetFromDisk=false;
 o.targetFont='Monaco';
 o.alphabet='abcdefghijklmnopqrstuvwxyz'; % alphabet for o.words
@@ -47,6 +48,7 @@ if 1
     o.wordFilename='fourLetterWords';
     %     sevenLetterWords; % Load o.words with list of words.
     o.alternatives=length(o.words);
+    o.alternatives=10;
     o.targetKind='word';
 end
 o.experiment='Words';
@@ -76,8 +78,8 @@ o.setNearPointEccentricityTo='fixation';
 o.nearPointXYInUnitSquare=[0.5 0.5];
 o.observer=''; % Test human
 o.fixationCrossBlankedNearTarget=true;
-o.trialsPerBlock=40;
-o.targetDurationSecs=0.2; % duration of display of target and flankers
+o.trialsInBlock=40;
+o.targetDurationSecs=0.15; % duration of display of target and flankers
 o.practicePresentations=0;
 o.repeatedTargets=0;
 o.eyes='both';
@@ -88,20 +90,20 @@ o.noiseSD=0;
 % o.useFractionOfScreenToDebug=0.5; % FOR DEBUGGING.
 % o.skipScreenCalibration=true; % FOR DEBUGGING.
 
-if 0
+if 1
     o.conditionName='Peripheral acuity';
-    % Block 1. Measure two thresholds, above and below fixation.
+    % Measure two thresholds, above and below fixation.
     o.thresholdParameter='size';
     o.eccentricityXYDeg=[0 10];
     o.fixationLineWeightDeg=0.4;
     o.fixationCrossDeg=3; % 0, 3, and inf are typical values.
     o.blankingRadiusReTargetHeight= 1.5;
-    % Randomly interleave testing up and down.
+    % Randomly interleave testing on opposite sides of fixation.
     oo=[o o];
     oo(2).eccentricityXYDeg=-oo(2).eccentricityXYDeg;
     ooo={oo};
 end
-if 1
+if 0
     o.conditionName='Efficiency';
     % Block 2. Measure three thresholds, one in zero and two in high noise.
     o.thresholdParameter='contrast';
@@ -115,6 +117,28 @@ if 1
     oNoise.noiseSD=maxNoiseSD;
     ooo{end+1}=[o oNoise oNoise];
 end
+if 1
+    o.conditionName='Fixation Test';
+    o.fixationTest=true;
+    % This fails when I select 'spacing'. 
+    % oo(oi).targetSizeDeg is undefined in:
+    % Error in NoiseDiscrimination (line 4987)
+    o.thresholdParameter='size';
+    o.targetHeightDeg=1;
+    o.eccentricityXYDeg=[0 0];
+    o.fixationLineWeightDeg=0.4;
+    o.fixationCrossDeg=40; % 0, 3, and inf are typical values.
+    o.blankingRadiusReTargetHeight=1.5;
+    for block=1:length(ooo)
+        % Add a fixation test condition to each block that does peripheral
+        % testing.
+        if norm(ooo{block}(1).eccentricityXYDeg)>0
+            ooo{block}(end+1)=o;
+        end
+    end
+    o.fixationTest=false;
+end
+
 if 1
     % Test ideal.
     % Block 3. Measure three thresholds, one in zero and two in high noise.
