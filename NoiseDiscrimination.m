@@ -727,6 +727,8 @@ o.useMethodOfConstantStimuli=false;
 o.contrastPolarity=1; % Must be -1 or 1;
 o.skipTrial=0;
 o.trialsSkipped=0;
+o.fixationTest=false; % True designates condition as a fixation test.
+o.fixationTestMakeupTrials=2; % After a mistake, how many right answers to require.
 
 % Target
 o.targetKind='letter'; % Put the letters in array o.alphabet.
@@ -1574,12 +1576,17 @@ try
     if any([oo.recordGaze])
         videoExtension='.avi'; % '.avi', '.mp4' or '.mj2'
         clear cam
-        cam=webcam;
-        gazeFile=fullfile(oo(1).dataFolder,[oo(1).dataFilename videoExtension]);
-        vidWriter=VideoWriter(gazeFile);
-        vidWriter.FrameRate=1; % frame/s.
-        open(vidWriter);
-        ffprintf(ff,'Recording gaze (of conditions %s) in %s file:\n',num2str(find([oo.recordGaze])),videoExtension);
+        if exist('matlab.webcam.internal.Utility.isMATLABOnline','class')
+            cam=webcam;
+            gazeFile=fullfile(oo(1).dataFolder,[oo(1).dataFilename videoExtension]);
+            vidWriter=VideoWriter(gazeFile);
+            vidWriter.FrameRate=1; % frame/s.
+            open(vidWriter);
+            ffprintf(ff,'Recording gaze (of conditions %s) in %s file:\n',num2str(find([oo.recordGaze])),videoExtension);
+        else
+            ffprintf(ff,'WARNING: Cannot record gaze. Lack webcam link. Set o.recordGaze=false.\n');
+            return
+        end
     end
     ffprintf(ff,'<strong>%s</strong>\n',oo(1).dataFilename);
     ffprintf(ff,'Block %d of %d.\n',oo(1).block,oo(1).blocksDesired);
@@ -3365,9 +3372,29 @@ try
     end % for oi=1:conditions
     
     %% SET UP conditionList
-    oo(1).conditionList=repmat(1:conditions,1,oo(1).trialsPerBlock);
-    oo(1).conditionList=Shuffle(oo(1).conditionList);
-    
+    % For all conditions we include the specified number of trials,
+    % o.trialInBlock, for that condition. For most conditions we simply
+    % shuffle the list of conditions. The exception is that we always
+    % begin with one trial of each condition for which oo(oi).fixationTest
+    % is true.
+    list=[];
+    for oi=1:conditions
+        if ~oo(oi).fixationTest
+            list=[list oi*ones(1,oo(oi).trialsInBlock)];
+        else
+            % Reserve one instance to place at beginning.
+            list=[list oi*ones(1,oo(oi).trialsInBlock-1)];
+        end
+    end
+    list=Shuffle(list);
+    for oi=1:conditions
+        if oo(oi).fixationTest
+            % Insert one instance at beginning.
+            list=[oi list];
+        end
+    end
+    oo(1).conditionList=list;
+
     %% GET READY TO DO A BLOCK OF INTERLEAVED CONDITIONS.
     [oo.data]=deal([]);
     for oi=1:conditions
@@ -3419,18 +3446,33 @@ try
     oi=oo(1).conditionList(1);
     
     %% DO A BLOCK OF TRIALS.
+    encourageFixation=false;
+    fixationTestTrialsOwed=0;
     while trial<length(oo(1).conditionList)
-        waitForObserver=(trial==0 || o.skipTrial);
+        % We compute waitForObserver before o.skipTrial and
+        % encourageFixation are cleared.
+        waitForObserver= (trial==0 || o.skipTrial || encourageFixation) ...
+            && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers);
         if o.skipTrial || o.ignoreTrial
-            % ignoreTrial is like skipTrial, without the wait. skipTrial is
-            % requested by the observer. ignoreTrial is requested by the
-            % software after a stimulus artifact (movie too long).
+            % ignoreTrial is like skipTrial, without the waitForObserver.
+            % skipTrial is requested by the observer. ignoreTrial is
+            % requested by NoiseDiscrimination after a stimulus artifact
+            % (movie too long). The trial sequence is originally produced
+            % by shuffling all the conditions, each with specifed
+            % o.trialsInBlock. When we discard a trial, we consider it not
+            % yet done, and shuffle its condition with the rest of the
+            % instances of conditions not yet done. The trial counter was
+            % already decremented, so we don't do that here.
             assert(trial>=0,'Error: trial<0');
             assert(oo(oi).trials>=0,'Error: oo(oi).trials<0');
             oo(oi).trialsSkipped=oo(oi).trialsSkipped+1;
             o.skipTrial=false;
             o.ignoreTrial=false;
             oo(1).conditionList(trial+1:end)=Shuffle(oo(1).conditionList(trial+1:end));
+        end
+        if fixationTestTrialsOwed>0
+            % Repeat the last condition.
+            oo(1).conditionList(trial+1:end+1)=oo(1).conditionList(trial:end);
         end
         trial=trial+1;
         blockTrial=trial; % For DrawCounter
@@ -3439,13 +3481,15 @@ try
         oo(oi).trials=oo(oi).trials+1;
         assert(trial>0,'Error: trial<=0');
         assert(oo(oi).trials>0,'Error oo(oi).trials<=0');
-        if waitForObserver && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
+        if waitForObserver
             o=WaitUntilObserverIsReady(o,oo,waitMessage);
             waitMessage='Continuing. ';
             if o.quitBlock
+                oo(1).quitBlock=o.quitBlock;
                 oo(1).quitExperiment=o.quitExperiment;
                 break
             end
+            encourageFixation=false;
         end
         if o.skipTrial
             trial=trial-1;
@@ -3490,12 +3534,20 @@ try
         end
         switch oo(oi).thresholdParameter
             case 'spacing'
-                spacingDeg=10^tTest;
+                if ~oo(oi).fixationTest
+                    spacingDeg=10^tTest;
+                else
+                    spacingDeg=oo(oi).spacingDeg;
+                end
                 flankerSpacingPix=spacingDeg*oo(oi).pixPerDeg;
                 flankerSpacingPix=max(flankerSpacingPix,1.2*oo(oi).targetHeightPix);
                 fprintf('flankerSpacingPix %d\n',flankerSpacingPix);
             case 'size'
-                targetSizeDeg=10^tTest;
+                if ~oo(oi).fixationTest
+                    targetSizeDeg=10^tTest;
+                else
+                    targetSizeDeg=oo(oi).targetHeightDeg;
+                end
                 oo(oi).desiredTargetHeightPix=targetSizeDeg*oo(oi).pixPerDeg;
                 oo(oi).desiredTargetHeightPix=oo(oi).targetCheckPix* ...
                     round(oo(oi).desiredTargetHeightPix/oo(oi).targetCheckPix);
@@ -3521,7 +3573,9 @@ try
                 switch oo(oi).targetModulates
                     case 'luminance'
                         oo(oi).r=1;
-                        oo(oi).contrast=oo(oi).contrastPolarity*10^tTest; % Dark letters have negative contrast.
+                        if ~oo(oi).fixationTest
+                            oo(oi).contrast=oo(oi).contrastPolarity*10^tTest; % Dark letters have negative contrast.
+                        end
                         if oo(oi).saveSnapshot && isfinite(oo(oi).snapshotContrast)
                             oo(oi).contrast=-oo(oi).snapshotContrast;
                         end
@@ -3530,6 +3584,7 @@ try
                             oo(oi).contrast=max([-1 oo(oi).contrast]);
                         end
                     case {'noise', 'entropy'}
+                        assert(~oo(oi).fixationTest);
                         oo(oi).r=1+10^tTest;
                         oo(oi).contrast=0;
                     otherwise
@@ -3537,6 +3592,7 @@ try
                 end
             case 'flankerContrast'
                 assert(streq(oo(oi).targetModulates,'luminance'),'The flanker software assumes o.targetModulates is ''luminance''.');
+                assert(~oo(oi).fixationTest);
                 oo(oi).r=1;
                 oo(oi).flankerContrast=oo(oi).contrastPolarity*10^tTest;
                 if oo(oi).saveSnapshot && isfinite(oo(oi).snapshotContrast)
@@ -3586,7 +3642,7 @@ try
                     case 'contrast'
                         tTest=log10(abs(oo(oi).contrast));
                     case 'size'
-                        tTest=log10(oo(oi).desiredTargetHeightDeg); % May 17 2019 DGP
+                        tTest=log10(oo(oi).targetHeightDeg); % June 1 2019 DGP
                 end
             case 'entropy'
                 a=128/oo(oi).backgroundEntropyLevels;
@@ -4896,7 +4952,34 @@ try
                 oi,trial,oo(oi).block,oo(oi).blocksDesired,tTest,isRight,oo(oi).canvasSize,GetSecs-blockStartSecs,...
                 1e-3*oo(oi).alternatives*prod(oo(oi).canvasSize)*trial/(GetSecs-blockStartSecs));
         end
-    end % while trial<oo(oi).trialsPerBlock
+        if fixationTestTrialsOwed>0
+            % Trial was not canceled, so count it.
+            fixationTestTrialsOwed=fixationTestTrialsOwed-1;
+        end
+        if ~isRight && oo(oi).fixationTest
+            % The observer failed to correctly identify an easy foveal
+            % target. Before the next trial, encourage them to always have
+            % their eye on the center of the fixation mark when they hit
+            % the response key, initiating the next trial. We insist that
+            % the observer get right several (o.fixationTestMakeupTrials)
+            % consecutive trials of this condition oi before proceeding
+            % with the rest of the condition list.
+            % This requests showing of a message before the next trial.
+            encourageFixation=true;
+            waitMessage=['Oops. Wrong response. '...
+                'Perhaps you didn''t have your eye on the center '...
+                'of the cross. '...
+                'Please always place your eye '...
+                'at the center of the cross '...
+                'before initiating the next trial. '];
+            % Repeat the current condition for several trials.
+            assert(oo(oi).fixationTestMakeupTrials>=0,...
+                'o.fixationTestMakeupTrials must be a nonnegative integer.');
+            fixationTestTrialsOwed=oo(oi).fixationTestMakeupTrials;
+          else
+            encourageFixation=false;
+        end
+    end % while trial<length(oo(1).conditionList)
     
     %% DONE. REPORT THRESHOLD FOR THIS BLOCK.
     for oi=1:conditions
@@ -4926,7 +5009,7 @@ try
         switch oo(oi).thresholdParameter
             case 'spacing'
                 ffprintf(ff,'%s: p %.0f%%, size %.2f deg, ecc. %.1f deg, crowding distance %.2f deg.\n',...
-                    oo(oi).observer,100*oo(oi).p,targetSizeDeg,rDeg,10^oo(oi).questMean);
+                    oo(oi).observer,100*oo(oi).p,oo(oi).targetSizeDeg,rDeg,10^oo(oi).questMean);
                 oo(oi).spacingDeg=10^oo(oi).questMean; % May 17, 2019 DGP
             case 'size'
                 ffprintf(ff,'%s: p %.0f%%, ecc. %.1f deg, threshold size %.3f deg.\n',...
@@ -5652,6 +5735,35 @@ switch o.observer
                         % The signal is always static. The noise may be
                         % static or dynamic. Averaging over time is optimal
                         % because the signal is static.
+                        % When thresholdParameter='size', the signal.image
+                        % was resized for display, so we need to take that
+                        % into account.
+                        sRectChecks=RectOfMatrix(signal(1).image); % units of targetChecks
+                        % xxx
+                        if ismember(o.thresholdParameter,'size')
+                            ratio=o.desiredTargetHeightPix/o.targetCheckPix/RectHeight(sRectChecks);
+                        else
+                            ratio=o.targetHeightPix/o.targetCheckPix/RectHeight(sRectChecks);
+                            ratio=1;
+                        end
+                        targetRectChecks=round(ratio*sRectChecks);
+                        sz=targetRectChecks([4 3]);
+                        im=zeros(sz);
+                        imSum=im;
+                        if false
+                            % Print outs to debug the template size.
+                            bounds=ImageBounds(signalImageIndex,0);
+                            fprintf(['%d: ''%s'', signalImageIndex size %d %d, sum %d, ' ...
+                                'bounds [%d %d %d %d] = [%d %d %d %d], target size (checks) %d %d.\n'],...
+                                MFileLineNr,o.conditionName,...
+                                size(signalImageIndex),sum(signalImageIndex(:)),...
+                                bounds,OffsetRect(bounds,-bounds(1),-bounds(2)),sz);
+                            fprintf('%d: signal size %d %d, pixels %d.\n',...
+                                MFileLineNr,size(im),length(im(:)));
+                        end
+                        if sum(signalImageIndex(:))~=length(im(:))
+                            warning('Wrong size in template-matching ideal.');
+                        end
                         for iMovieFrame=1:length(movieImage)
                             location=movieImage{iMovieFrame};
                             % signalImageIndex selects the pixels in the
@@ -5661,17 +5773,21 @@ switch o.observer
                         end
                         im=imSum/length(movieImage);
                         likely=zeros(1,o.alternatives);
-                        global tTest
-                        %                         fprintf('trials %d, ModelObserver noiseSD %.2f tTest %.1f contrast %.2f \n',...
-                        %                             o.trials,o.noiseSD,tTest,o.contrast);
+                        % global tTest
+                        % fprintf('trials %d, ModelObserver noiseSD %.2f tTest %.1f contrast %.2f \n',...
+                        %      o.trials,o.noiseSD,tTest,o.contrast);
                         for i=1:o.alternatives
-                            d=im-(1+o.contrast*signal(i).image);
+                            signalImage=signal(i).image;
+                            if size(im,1)~=size(signalImage,1)
+                                signalImage=imresize(signalImage,size(im),'bilinear');
+                            end
+                            d=im-(1+o.contrast*signalImage);
                             % We compute rms difference between each
                             % possible signal and the average stimulus
                             % frame (over the signal part of the movie).
-                            %                             imshow(im);
-                            %                             imshow((1+o.contrast*signal(i).image));
-                            %                             imshow(d+1);
+                            % imshow(im);
+                            % imshow(1+o.contrast*signalImage);
+                            % imshow(d+1);
                             likely(i)=-sqrt(mean(d(:).^2));
                         end
                     case {'noise' 'entropy'}
@@ -5681,14 +5797,15 @@ switch o.observer
                         % "paper" pixels. It knows the sd that ink and
                         % paper are supposed to have.
                         %
-                        % sdPaper and sdInk are scalars. im is 20x21
-                        % pixels, a letter displayed as an increment in
-                        % (gaussian) noise contrast. signalMask is 20x21
-                        % binary pixels, 1 means ink, 0 means paper. ink is
-                        % a vector, 238x1 for letter "S", the pixels in im
-                        % hypothesized to be ink. paper is a vector, 182x1
-                        % for letter "S", the pixels in im hypothesized to
-                        % be paper. likely is a vector, 1x9, with a value
+                        % sdPaper and sdInk are scalars. 
+                        % im is 20x21 pixels, a letter displayed as an increment in
+                        % (gaussian) noise contrast. 
+                        % signalMask is 20x21 binary pixels, 1 means ink, 0 means paper. 
+                        % ink is a vector, 238x1 for letter "S", the pixels in im
+                        % hypothesized to be ink. 
+                        % paper is a vector, 182x1 for letter "S", the pixels in im hypothesized to
+                        % be paper. 
+                        % likely is a vector, 1x9, with a value
                         % for each possible letter.
                         sdPaper=o.noiseSD;
                         sdInk=o.r*o.noiseSD;
