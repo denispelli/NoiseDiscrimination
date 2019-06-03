@@ -35,12 +35,16 @@ if ~isempty(matFiles)
     matFiles=matFiles(index);
     expt={expt{index}}; % Sort by date.
     fprintf('Found %d partial runs of this experiment on this computer.\n',length(matFiles));
-    fprintf('For each file, type: Y to resume that old experiment; or hit RETURN to pass it; or hit DELETE to delete it; or ESCAPE to run a fresh new experiment.\n');
+    fprintf(['For each file: \n'...
+        'type Y to resume that old experiment, \n'...
+        'or hit RETURN to skip it, \n'...
+        'or hit DELETE to delete it, \n'...
+        'or ESCAPE to run a fresh new experiment.\n']);
     try
         ListenChar(2); % no echo
         resumeExperiment=false;
         for i=1:length(expt)
-            o=expt{i}.ooo{1};
+            o=expt{i}.ooo{1}(1);
 %             if isempty(o.observer) || o.trials<o.trialsInBlock
 %                 % This partial experiment has no data. Skip it.
 %                 continue
