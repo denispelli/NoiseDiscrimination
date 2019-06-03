@@ -697,7 +697,7 @@ o.observer=''; % Name of person or algorithm.
 % o.observer='blackshot'; % Existing algorithm instead of person.
 % o.observer='maximum'; % Existing algorithm instead of person.
 % o.observer='ideal'; % Existing algorithm instead of person.
-o.algorithmicObservers={'ideal', 'brightnessSeeker', 'blackshot', 'maximum'};
+o.algorithmicObservers={'ideal' 'brightnessSeeker' 'blackshot' 'maximum'};
 o.experiment='';
 o.conditionName='';
 o.condition=[];
@@ -1209,7 +1209,7 @@ clear o
 oo=SortFields(oo);
 
 if oo(1).useFractionOfScreenToDebug
-    ffprintf(ff,'WARNING: Using o.useFractionOfScreenToDebug. This may invalidate all results.\n');
+    ffprintf(ff,'WARNING: Using o.useFractionOfScreenToDebug. This will invalidate all results.\n');
 end
 if oo(1).skipScreenCalibration
     ffprintf(ff,'WARNING: Using o.skipScreenCalibration. This may invalidate all results.\n');
@@ -1288,7 +1288,7 @@ try
         ffprintf(ff,'Done (%.1f s).\n',GetSecs-s); % Opening scratchWindow
     end
     % We assume that all conditions specify the same screen parameters. It
-    % would be good to confirm that and flag and error if they differ.
+    % would be good to confirm that and flag an error if they differ.
     o=oo(1);
     if ~isempty(o.window)
         if o.enableClutMapping
@@ -3395,6 +3395,18 @@ try
     end
     oo(1).conditionList=list;
 
+    %% IF RUNNING ALGORITHMIC OBSERVER, TELL THE HUMAN OBSERVER.
+    if ismember(oo(1).observer,oo(1).algorithmicObservers)
+        if Screen(oo(1).window,'WindowKind')==1
+            Screen('TextSize',oo(1).window,oo(oi).textSize);
+            Screen('FillRect',oo(1).window,oo(1).gray1);
+            Screen('DrawText',oo(1).window,'Running simulated observer. ... ',...
+                oo(oi).textSize,1.5*oo(oi).textSize,black,oo(1).gray1,1);
+            DrawCounter(oo);
+            Screen('Flip',oo(1).window); % Display message.
+        end
+    end
+
     %% GET READY TO DO A BLOCK OF INTERLEAVED CONDITIONS.
     [oo.data]=deal([]);
     for oi=1:conditions
@@ -3414,6 +3426,7 @@ try
             oo(oi).transcript.targetResponse={}; % Regardless of o.thresholdResponseTo.
         end
     end % for oi=1:conditions
+    
     for oi=1:conditions
         if streq(oo(oi).thresholdParameter,'flankerContrast') && streq(oo(oi).thresholdResponseTo,'target')
             % Falling psychometric function for crowding of target as a function
