@@ -1330,6 +1330,8 @@ try
             case 'bottomLeft'
                 % Allow room for instruction at bottom of screen.
                 oo(oi).stimulusRect(4)=oo(oi).stimulusRect(4)-1.3*oo(oi).textSize;
+            otherwise
+                error('Unknown o.instructionPlacement ''%s''.',o.instructionPlacement);
         end
         % Allow room for counter.
         bounds=DrawCounter(oo(oi));
@@ -4346,7 +4348,7 @@ try
                 %% DRAW RESPONSE SCREEN
                 % Print instructions for response, according to o.instructionPlacement.
                 %                 Screen('FillRect',oo(1).window,oo(oi).gray1,topCaptionRect);
-                DrawCounter(oo(oi));
+                counterBounds=DrawCounter(oo(oi));
                 factor=1;
                 switch oo(oi).task
                     case '4afc'
@@ -4390,6 +4392,10 @@ try
                 bounds=round(bounds);
                 r=oo(oi).screenRect;
                 r=InsetRect(r,textSize/4,textSize/8);
+                switch oo(oi).counterPlacement
+                    case {'bottomRight' 'bottomLeft' 'bottomCenter'}
+                        r(4)=r(4)-1.5*RectHeight(counterBounds);
+                end
                 switch oo(oi).instructionPlacement
                     case 'topLeft'
                         % Put instruction at top of screen.
@@ -4586,16 +4592,17 @@ try
                                 Screen('DrawTexture',oo(1).window,texture,RectOfMatrix(img),rect);
                                 Screen('Close',texture);
                                 if oo(oi).labelAnswers
-                                    Screen('TextSize',oo(1).window,oo(oi).textSize);
+                                    labelSize=round(0.8*oo(oi).textSize);
+                                    Screen('TextSize',oo(1).window,labelSize);
                                     switch oo(oi).targetKind
                                         case 'gabor'
-                                            textRect=AlignRect([0 0 oo(oi).textSize oo(oi).textSize],rect,'center','top');
+                                            textRect=AlignRect([0 0 labelSize labelSize],rect,'center','top');
                                         case {'letter' 'word'}
                                             % Small label letter is centered below big foreign letter.
-                                            textRect=AlignRect([0 0 oo(oi).textSize oo(oi).textSize],rect,'center','bottom');
-                                            textRect=OffsetRect(textRect,0,oo(oi).textSize); % Avoid overlap.
+                                            textRect=AlignRect([0 0 labelSize labelSize],rect,'center','bottom');
+                                            textRect=OffsetRect(textRect,0,labelSize); % Avoid overlap.
                                         otherwise
-                                            textRect=AlignRect([0 0 oo(oi).textSize oo(oi).textSize],rect,'left','top');
+                                            textRect=AlignRect([0 0 labelSize labelSize],rect,'left','top');
                                     end
                                     Screen('DrawText',oo(1).window,oo(oi).responseLabels(i),textRect(1),textRect(4),black,oo(oi).gray1,1);
                                 end
