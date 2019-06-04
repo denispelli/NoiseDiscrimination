@@ -97,7 +97,7 @@ function oo=NoiseDiscrimination(ooIn)
 % o.snapshotCaptionTextSizeDeg=0.5;
 %
 % Standard condition for counting V1 neurons: o.noiseCheckPix=13;
-% height=30*o.noiseCheckPix; o.viewingDistanceCm=45; SD=0.2, 
+% height=30*o.noiseCheckPix; o.viewingDistanceCm=45; SD=0.2,
 % o.targetDurationSecs=0.2 s.
 %
 % BRIGHTNESS SEEKER. Observer 'brightnessSeeker' is a model of the human
@@ -543,10 +543,11 @@ global fixationLines fixationCrossWeightPix labelBounds ...
     ff whichSignal logFid ...
     signalImageIndex signalMask % for function ModelObserver
 % This list of global variables is shared only with the several subroutines
-% at the end of this file. The list may be incomplete as I'm not sure
-% whether all the new routines have yet been tested as subroutines. Thus
-% some of their formerly locally variables may need to either be made
-% global or become fields of the o struct.
+% at the end of this file (and a few routines that have been pulled out
+% into their own files). The list may be incomplete as I'm not sure whether
+% all the new routines have yet been tested as subroutines. Thus some of
+% their formerly locally variables may need to either be made global or
+% become fields of the o struct.
 
 %% FILES
 myPath=fileparts(mfilename('fullpath')); % Takes 0.1 s.
@@ -564,7 +565,7 @@ addpath(fullfile(myPath,'lib')); % Folder in same directory as this M file.
 %           ver.major,ver.minor,ver.point);
 % end
 rng('shuffle'); % Use time to seed the random number generator. TAKES 0.01 s.
-plusMinusChar=char(177); % Use this instead of literal plus minus sign to 
+plusMinusChar=char(177); % Use this instead of literal plus minus sign to
 % prevent corruption of this non-ASCII character. MATLAB can print
 % non-ASCII chars, but currently the text files are just 8 bits, by
 % default.
@@ -706,7 +707,7 @@ o.age=20; % Assume age 20, unless later specified.
 % Procedure
 o.trials=0; % Initialize trial counter so it's defined even if user quits early.
 o.trialsInBlock=40; % Typically 40.
-o.block=1; % We display the the block number. 
+o.block=1; % We display the the block number.
 o.blocksDesired=1; % How many blocks you to plan to run. Used solely for display in upper left corner of screen.
 % To save time, we only setup the screen and open the window in the first
 % block and postpone restore the screen and close window until after the
@@ -825,7 +826,6 @@ o.showResponseNumbers=true;
 o.responseNumbersInCorners=false;
 o.alphabetPlacement='top'; % 'top' 'bottom' 'right' or 'left' while awaiting response.
 o.textSizeDeg=0.9;
-o.textSize=20; % Initial value so DrawCounter won't fail.
 o.textMarginPix=0;
 o.counterPlacement='bottomRight';
 o.instructionPlacement='topLeft'; % 'topLeft' 'bottomLeft'
@@ -1078,7 +1078,7 @@ for oi=1:conditions
     if streq(oo(oi).targetKind,'gabor')
         assert(length(oo(oi).responseLabels) >= length(oo(oi).targetGaborOrientationsDeg))
         oo(oi).alternatives=length(oo(oi).targetGaborOrientationsDeg);
-%         oo(oi).alphabet=oo(oi).responseLabels(1:oo(oi).alternatives);
+        %         oo(oi).alphabet=oo(oi).responseLabels(1:oo(oi).alternatives);
     end
     if isempty(oo(oi).labelAnswers)
         switch oo(oi).targetKind
@@ -1139,7 +1139,7 @@ end
 o=oo(1);
 skipScreenCalibration=o.skipScreenCalibration; % Set global flag.
 isLastBlock=o.isLastBlock; % Set global flag read by CloseWindowsAndCleanup.
-if ~isScreenCalibrated && ~skipScreenCalibration && ~ismember(o.observer,o.algorithmicObservers) 
+if ~isScreenCalibrated && ~skipScreenCalibration && ~ismember(o.observer,o.algorithmicObservers)
     useBrightnessFunction=true;
     try
         % Currently, in December 2018, my (applescript-based) brightness
@@ -1154,7 +1154,7 @@ if ~isScreenCalibrated && ~skipScreenCalibration && ~ismember(o.observer,o.algor
         else
             cal.brightnessSetting=0.87; % default value
         end
-
+        
         ffprintf(ff,'Setting Brightness. ... ');
         s=GetSecs;
         for i=1:3
@@ -1366,7 +1366,7 @@ try
         [name,o]=AskQuestion(oo,text);
         oo(1).quitBlock=o.quitBlock;
         oo(1).quitExperiment=o.quitExperiment;
-       if oo(1).quitBlock
+        if oo(1).quitBlock
             CloseWindowsAndCleanup(oo);
             return
         end
@@ -1713,7 +1713,7 @@ try
         % The actual clipping is done using o.stimulusRect. This
         % restriction of noiseRadius and annularNoiseBigRadius is merely to
         % save time (and excessive texture size) by not computing pixels
-        % that won't be seen. 
+        % that won't be seen.
         oo(oi).noiseRadiusDeg=max(oo(oi).noiseRadiusDeg,0);
         oo(oi).noiseRadiusDeg=min(oo(oi).noiseRadiusDeg,RectWidth(oo(1).screenRect)/oo(oi).pixPerDeg);
         oo(oi).noiseRaisedCosineEdgeThicknessDeg=max(0,oo(oi).noiseRaisedCosineEdgeThicknessDeg);
@@ -1766,7 +1766,7 @@ try
         % border on all four sides of the screen. The caption rects overlap
         % at the corners of the screen.
         topCaptionRect=oo(1).screenRect;
-        topCaptionRect(4)=oo(oi).stimulusRect(2); % top caption (trial number)
+        topCaptionRect(4)=oo(oi).stimulusRect(2); % top caption (instructions)
         bottomCaptionRect=oo(1).screenRect;
         bottomCaptionRect(2)=oo(oi).stimulusRect(4); % bottom caption (instructions)
         rightCaptionRect=oo(1).screenRect;
@@ -1774,9 +1774,9 @@ try
         leftCaptionRect=oo(1).screenRect;
         leftCaptionRect(3)=oo(oi).stimulusRect(1); % left caption
         % The caption rects are hardly used. It turns out that I typically
-        % do a FillRect of screenRect with the caption background (1), and
-        % then a smaller FillRect of stimulusRect with the stimulus
-        % background (128).
+        % do a FillRect of screenRect with gray1 (caption background), and
+        % then a smaller FillRect of stimulusRect with gray (stimulus
+        % background).
         textStyle=0; % plain
     end % for oi=1:conditions
     clear o
@@ -1891,7 +1891,7 @@ try
         if Screen(oo(1).window,'WindowKind') == 1
             % Set text size.
             % oo(oi).textSize=TextSizeToFit(oo(1).window)/2; % Set optimum text size.
-%             Screen('TextSize',oo(1).window,oo(oi).textSize);
+            %             Screen('TextSize',oo(1).window,oo(oi).textSize);
             % Tell observer what's happening.
             Screen('LoadNormalizedGammaTable',oo(1).window,cal.old.gamma,loadOnNextFlip);
             Screen('FillRect',oo(1).window);
@@ -1900,7 +1900,7 @@ try
             string=sprintf('Setting screen color profile. ... ');
             DrawFormattedText(oo(1).window,string,...
                 oo(oi).textSize,1.5*oo(oi).textSize,black,oo(oi).textLineLength,[],[],1.3);
-            DrawCounter(oo);
+            DrawCounter(oo(oi));
             Screen('Flip',oo(1).window); % Display message.
         end
         oldProfile=ScreenProfile(cal.screen);
@@ -2088,13 +2088,13 @@ try
                     disp(interp1(cal.old.G,cal.old.L,g,'pchip'));
                 end
             end
-%             oo(1).gray=oo(1).gray1; % DGP. Immune to update of asymmetric CLUT.
-% While it's true that the gray1 index produces a mid gray unaffected by
-% the CLUT updates, we later call LuminanceOfIndex, which  forces all
-% pixels to be within the specified dynamic range of the CLUT, so "gray1"
-% will generate a warning and be replaced with the darkest value in the
-% CLUT range. That's bad. So it's better to just tolerate the screen
-% flicker that occurs when we update the CLUT.
+            %             oo(1).gray=oo(1).gray1; % DGP. Immune to update of asymmetric CLUT.
+            % While it's true that the gray1 index produces a mid gray unaffected by
+            % the CLUT updates, we later call LuminanceOfIndex, which  forces all
+            % pixels to be within the specified dynamic range of the CLUT, so "gray1"
+            % will generate a warning and be replaced with the darkest value in the
+            % CLUT range. That's bad. So it's better to just tolerate the screen
+            % flicker that occurs when we update the CLUT.
             [oo.gray]=deal(oo(1).gray);
             Screen('LoadNormalizedGammaTable',oo(1).window,cal.gamma,loadOnNextFlip);
             if oo(1).assessLoadGamma
@@ -2616,7 +2616,7 @@ try
         clear tSample
         
         % Compute noiseList
-         switch oo(oi).noiseType % Fill noiseList with desired kind of noise.
+        switch oo(oi).noiseType % Fill noiseList with desired kind of noise.
             case 'gaussian'
                 oo(oi).noiseListMin=-2;
                 oo(oi).noiseListMax=2;
@@ -3311,7 +3311,7 @@ try
                 if isempty(oo(oi).contrastPolarity) || ~isfinite(oo(oi).contrastPolarity)
                     error('You must specify o.contrast to indicate + or - desired sign of contrast.');
                 end
-           case 'size'
+            case 'size'
                 nominalAcuityDeg=0.029*(rDeg+2.72); % Eq. 13 from Song, Levi, and Pelli (2014).
                 tGuess=log10(2*nominalAcuityDeg);
                 oo(oi).contrastPolarity=sign(oo(oi).contrast); % Set response screen polarity. DGP
@@ -3394,7 +3394,7 @@ try
         end
     end
     oo(1).conditionList=list;
-
+    
     %% IF RUNNING ALGORITHMIC OBSERVER, TELL THE HUMAN OBSERVER.
     if ismember(oo(1).observer,oo(1).algorithmicObservers)
         if Screen(oo(1).window,'WindowKind')==1
@@ -3402,11 +3402,11 @@ try
             Screen('FillRect',oo(1).window,oo(1).gray1);
             Screen('DrawText',oo(1).window,'Running simulated observer. ... ',...
                 oo(oi).textSize,1.5*oo(oi).textSize,black,oo(1).gray1,1);
-            DrawCounter(oo);
+            DrawCounter(oo(oi));
             Screen('Flip',oo(1).window); % Display message.
         end
     end
-
+    
     %% GET READY TO DO A BLOCK OF INTERLEAVED CONDITIONS.
     [oo.data]=deal([]);
     for oi=1:conditions
@@ -3582,7 +3582,7 @@ try
                 sz=oo(oi).desiredTargetHeightPix/oo(oi).targetCheckPix;
                 sz=max([sz oo(oi).minimumTargetHeightChecks]);
                 oo(oi).desiredTargetHeightPix=sz*oo(oi).targetCheckPix;
-           case 'contrast'
+            case 'contrast'
                 switch oo(oi).targetModulates
                     case 'luminance'
                         oo(oi).r=1;
@@ -4004,11 +4004,11 @@ try
                 % Compute CLUT for all noises given o.signal,
                 % o.contrast, and o.noiseSD. Note: The gray screen in the
                 % non-stimulus areas is drawn with CLUT index 1.
-%                 fprintf('ComputeClut o.contrast %.2f\n',oo(oi).contrast);
+                %                 fprintf('ComputeClut o.contrast %.2f\n',oo(oi).contrast);
                 [cal,oo(oi)]=ComputeClut(cal,oo(oi));
                 % gray is computed by ComputeClut. No need to do it here.
-%                 oo(1).gray=IndexOfLuminance(cal,oo(1).LBackground)/oo(1).maxEntry;
-%                 oo(1).gray=oo(1).gray1; % DGP. Immune to update of asymmetric CLUT.
+                %                 oo(1).gray=IndexOfLuminance(cal,oo(1).LBackground)/oo(1).maxEntry;
+                %                 oo(1).gray=oo(1).gray1; % DGP. Immune to update of asymmetric CLUT.
                 [oo.gray]=deal(oo(oi).gray);
             end % if oo(oi).newClutForEachImage
             if oo(oi).assessContrast
@@ -4159,7 +4159,11 @@ try
                             location(4).labelRect=AlignRect(r,labelBounds,'right','bottom');
                             for i=1:locations
                                 [x, y]=RectCenter(location(i).labelRect);
-                                Screen('DrawText',oo(1).window,sprintf('%d',i),x-oo(oi).textSize/2,y+0.4*oo(oi).textSize,black,oo(oi).gray1,1);
+                                Screen('DrawText',oo(1).window,...
+                                    sprintf('%d',i),...
+                                    x-oo(oi).textSize/2,...
+                                    y+0.4*oo(oi).textSize,...
+                                    black,oo(oi).gray1,1);
                             end
                         end
                 end % switch oo(oi).task
@@ -4326,15 +4330,16 @@ try
                 saveContrast=oo(oi).contrast;
                 oo(oi).contrast=rc;
                 oo(oi).responseScreenContrast=rc;
-%                 fprintf('ComputeClut o.responseScreenAbsoluteContrast %.2f\n',...
-%                     oo(oi).responseScreenAbsoluteContrast);
+                %                 fprintf('ComputeClut o.responseScreenAbsoluteContrast %.2f\n',...
+                %                     oo(oi).responseScreenAbsoluteContrast);
                 [cal,oo(oi)]=ComputeClut(cal,oo(oi));
                 oo(oi).contrast=saveContrast;
                 oo(oi).noiseSD=saveNoiseSD;
-                % Print instruction in upper left corner.
-                Screen('FillRect',oo(1).window,oo(oi).gray1,topCaptionRect);
-                DrawCounter(oo);
-                % Print instructions for response.
+                
+                %% DRAW RESPONSE SCREEN
+                % Print instructions for response, according to o.instructionPlacement.
+                %                 Screen('FillRect',oo(1).window,oo(oi).gray1,topCaptionRect);
+                DrawCounter(oo(oi));
                 factor=1;
                 switch oo(oi).task
                     case '4afc'
@@ -4433,6 +4438,9 @@ try
                         useExpand=alphaCheckPix == round(alphaCheckPix);
                         rect=[0 0 oo(oi).targetWidthPix oo(oi).targetHeightPix]/oo(oi).targetCheckPix; % size of oo(oi).signal(1).image
                         rect=round(rect*alphaCheckPix);
+                        % Logically, it would be better to blank the
+                        % alphabet background before drawing the
+                        % instructional text
                         blankRect=o.screenRect;
                         switch oo(oi).alphabetPlacement
                             case {'left'}
@@ -4443,6 +4451,8 @@ try
                                 rect=AlignRect(rect,o.screenRect,RectRight,RectTop);
                                 rect=OffsetRect(rect,-alphaGapPix,alphaGapPix); % spacing
                                 blankRect(1)=blankRect(3)-round(1.5*(blankRect(3)-rect(1)));
+                                % Don't erase the top caption.
+                                blankRect(2)=max(blankRect(2),topCaptionRect(4));
                             case 'top'
                                 rect=AlignRect(rect,o.screenRect,RectRight,RectTop);
                                 rect=OffsetRect(rect,-alphaGapPix,alphaGapPix); % spacing
@@ -4450,7 +4460,7 @@ try
                             case 'bottom'
                                 rect=AlignRect(rect,o.screenRect,RectLeft,RectBottom);
                                 rect=OffsetRect(rect,-alphaGapPix,alphaGapPix); % spacing
-                                bounds=DrawCounter(oo);
+                                bounds=DrawCounter(oo(oi));
                                 rect=OffsetRect(rect,0,-RectHeight(bounds)); % Avoid the counter.
                                 blankRect(2)=rect(2);
                         end
@@ -4690,8 +4700,8 @@ try
                     for iResponse=1:responseChars
                         responseChar=GetKeypress(enableKeyCodes,oo(oi).deviceIndex);
                         if ~ischar(responseChar)
-                        	responseChar
-                        	error('"responseChar" is not char.')
+                            responseChar
+                            error('"responseChar" is not char.')
                         end
                         if ismember(responseChar,[escapeChar,graveAccentChar])
                             [o.quitExperiment,o.quitBlock,o.skipTrial]=...
@@ -4966,7 +4976,7 @@ try
         if ~isScreenCalibrated ...
                 && cal.ScreenConfigureDisplayBrightnessWorks ...
                 && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers) ...
-                && ~skipScreenCalibration 
+                && ~skipScreenCalibration
             %          Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
             cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
             %          Brightness(cal.screen,cal.brightnessSetting);
@@ -5006,7 +5016,7 @@ try
             assert(oo(oi).fixationTestMakeupTrials>=0,...
                 'o.fixationTestMakeupTrials must be a nonnegative integer.');
             fixationTestTrialsOwed=oo(oi).fixationTestMakeupTrials;
-          else
+        else
             encourageFixation=false;
         end
     end % while trial<length(oo(1).conditionList)
@@ -5030,7 +5040,7 @@ try
     %% TELL OBSERVER: Saving to disk.
     if Screen(oo(1).window,'WindowKind') == 1
         % Tell observer what's happening.
-%         Screen('LoadNormalizedGammaTable',oo(1).window,cal.old.gamma,loadOnNextFlip);
+        %         Screen('LoadNormalizedGammaTable',oo(1).window,cal.old.gamma,loadOnNextFlip);
         Screen('FillRect',oo(1).window,oo(1).gray1);
         Screen('DrawText',oo(1).window,' ',0,0,1,oo(1).gray1); % Set background color.
         string=sprintf('Saving results to disk. ... ');
@@ -5039,10 +5049,10 @@ try
         % Copied from OfferEscapeOptions
         DrawFormattedText(oo(1).window,string,...
             oo(1).textMarginPix,oo(1).textMarginPix+0.5*oo(oi).textSize,black,60,[],[],1.3);
-        DrawCounter(oo);
+        DrawCounter(oo(oi));
         Screen('Flip',oo(1).window); % Display message.
     end
-       
+    
     %% LOOP THROUGH ALL THE CONDITIONS, TO REPORT ONE THRESHOLD PER CONDITION.
     savingToDiskSecs=GetSecs;
     for oi=1:conditions
@@ -5156,9 +5166,9 @@ try
             end
             ffprintf(ff,'\n');
         end
-               
+        
         ffprintf(ff,'Block %d of %d.\n',oo(1).block,oo(1).blocksDesired);
-
+        
         %% PRINT BOLD SUMMARY OF CONDITION oi
         oo(oi).E=10^(2*oo(oi).questMean)*oo(oi).E1;
         msg=sprintf(['Condition %d of %d "%s" %d trials, %.0f%% right, noiseSD %.2f, '...
@@ -5848,14 +5858,14 @@ switch o.observer
                         % "paper" pixels. It knows the sd that ink and
                         % paper are supposed to have.
                         %
-                        % sdPaper and sdInk are scalars. 
+                        % sdPaper and sdInk are scalars.
                         % im is 20x21 pixels, a letter displayed as an increment in
-                        % (gaussian) noise contrast. 
-                        % signalMask is 20x21 binary pixels, 1 means ink, 0 means paper. 
+                        % (gaussian) noise contrast.
+                        % signalMask is 20x21 binary pixels, 1 means ink, 0 means paper.
                         % ink is a vector, 238x1 for letter "S", the pixels in im
-                        % hypothesized to be ink. 
+                        % hypothesized to be ink.
                         % paper is a vector, 182x1 for letter "S", the pixels in im hypothesized to
-                        % be paper. 
+                        % be paper.
                         % likely is a vector, 1x9, with a value
                         % for each possible letter.
                         sdPaper=o.noiseSD;
@@ -6000,6 +6010,7 @@ end % function ModelObserver(o,signal,location)
 
 %% SetUpNearPoint at correct slant and viewing distance.
 function o=SetUpNearPoint(o)
+% o=SetUpNearPoint(o);
 black=0; % The CLUT color code for black.
 white=1; % The CLUT color code for white.
 escapeChar=char(27);
@@ -6258,7 +6269,7 @@ if o.annularNoiseBigRadiusDeg > o.annularNoiseSmallRadiusDeg
 end
 if o.symmetricLuminanceRange
     % Use smallest range centered on o.LBackground that includes LFirst and
-    % LLast. 
+    % LLast.
     % 1. Having a fixed index for "gray" (o.LBackground) assures us
     % that the gray areas (most of the screen) won't change when the CLUT
     % is updated. I no longer think that's important.
@@ -6430,7 +6441,7 @@ switch o.task
         if IsOSX && ismember(MacModelName,{'MacBook10,1' 'MacBookAir6,2' 'MacBookPro11,5' ... % Mine, without touch bar, just to test this code.
                 'MacBookPro13,2' 'MacBookPro13,3' ... % 2016 with touch bar.
                 'MacBookPro14,1' 'MacBookPro14,2' 'MacBookPro14,3'}) % 2017 with touch bar.
-            footnote='For your convenience, hitting the tilde accent grave key ~` is equivalent to hitting the ESCAPE key immediately above it.\n';
+            footnote='For your convenience, hitting the tilde key ~ is equivalent to hitting the ESCAPE key immediately above it.\n';
         else
             footnote='';
         end
@@ -6439,7 +6450,7 @@ msg=[message readyString '\n'];
 black=0;
 Screen('DrawText',o.window,' ',0,0,black,o.gray1,1); % Set background color.
 Screen(o.window,'TextSize',o.textSize);
-[x,y]=DrawFormattedText(o.window,msg,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+[x,y]=DrawFormattedText(o.window,msg,o.textSize,1.5*o.textSize,black,o.textLineLength-2,[],[],1.3);
 sz=round(0.8*o.textSize);
 Screen(o.window,'TextSize',sz);
 ratio=sz/o.textSize;
