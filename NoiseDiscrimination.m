@@ -1314,9 +1314,64 @@ try
     [oo.screenRect]=deal(o.screenRect);
     clear o
     
+    %% STIMULUS PARAMETERS
+    [oo.textSize]=deal(TextSizeToFit(window));
+    for oi=1:conditions
+        oo(oi).pixPerCm=RectWidth(oo(1).screenRect)/(0.1*screenWidthMm);
+        degPerCm=57/oo(oi).viewingDistanceCm;
+        oo(oi).pixPerDeg=oo(oi).pixPerCm/degPerCm;
+        oo(oi).textSizeDeg=oo(oi).textSize/oo(oi).pixPerDeg;
+        oo(oi).textLineLength=floor(1.9*RectWidth(oo(1).screenRect)/oo(oi).textSize);
+        oo(oi).lineSpacing=1.5;
+        switch oo(oi).instructionPlacement
+            case 'topLeft'
+                % Allow room for instruction at top of screen.
+                oo(oi).stimulusRect(2)=oo(oi).stimulusRect(2)+1.3*oo(oi).textSize;
+            case 'bottomLeft'
+                % Allow room for instruction at bottom of screen.
+                oo(oi).stimulusRect(4)=oo(oi).stimulusRect(4)-1.3*oo(oi).textSize;
+        end
+        % Allow room for counter.
+        bounds=DrawCounter(oo(oi));
+        switch oo(oi).counterPlacement
+            case {'bottomRight' 'bottomLeft' 'bottomCenter'}
+                oo(oi).stimulusRect(4)=oo(oi).stimulusRect(4)-1.5*RectHeight(bounds);
+            otherwise
+                error('Unknown o.counterPlacement ''%s''.',o.counterPlacement);
+        end
+        if streq(oo(oi).task,'identifyAll')
+            % Allow extra room at bottom for this 2-line caption.
+            oo(oi).stimulusRect(4)=oo(oi).stimulusRect(4)-oo(oi).lineSpacing*0.8*oo(oi).textSize;
+        end
+        oo(oi).stimulusRect=round(oo(oi).stimulusRect);
+        oo(oi).noiseCheckPix=round(oo(oi).noiseCheckDeg*oo(oi).pixPerDeg);
+        switch oo(oi).task
+            case {'identify' 'identifyAll' 'rate'}
+                oo(oi).noiseCheckPix=min(oo(oi).noiseCheckPix,RectHeight(oo(oi).stimulusRect));
+            case '4afc'
+                oo(oi).noiseCheckPix=min(oo(oi).noiseCheckPix,floor(RectHeight(oo(oi).stimulusRect)/(2+oo(oi).gapFraction4afc)));
+                oo(oi).noiseRadiusDeg=oo(oi).targetHeightDeg/2;
+        end
+        oo(oi).noiseCheckPix=max(oo(oi).noiseCheckPix,1);
+        oo(oi).noiseCheckDeg=oo(oi).noiseCheckPix/oo(oi).pixPerDeg;
+        if oo(oi).fullResolutionTarget
+            oo(oi).targetCheckPix=1;
+        else
+            oo(oi).targetCheckPix=oo(oi).noiseCheckPix;
+        end
+        oo(oi).targetCheckDeg=oo(oi).targetCheckPix/oo(oi).pixPerDeg;
+        % We use nearly the whole clut (entries 2 to 254) for stimulus generation.
+        % We reserve first and last (0 and o.maxEntry), for black and white.
+        oo(oi).firstGrayClutEntry=2;
+        oo(oi).lastGrayClutEntry=oo(oi).clutMapLength-2;
+        assert(oo(oi).lastGrayClutEntry<oo(oi).maxEntry);
+        assert(oo(oi).firstGrayClutEntry>1);
+        assert(mod(oo(oi).firstGrayClutEntry+oo(oi).lastGrayClutEntry,2) == 0) % Must be even, so middle is an integer.
+        oo(oi).minLRange=0;
+    end % for oi=1:conditions
+    
     %% ASK EXPERIMENTER NAME
     [oo.textMarginPix]=deal(round(0.08*min(RectWidth(oo(1).screenRect),RectHeight(oo(1).screenRect))));
-    %     [oo.textSize]=deal(39);
     [oo.textFont]=deal('Verdana');
     black=0; % The CLUT color code for black.
     white=1; % Retrieves the CLUT color code for white.
