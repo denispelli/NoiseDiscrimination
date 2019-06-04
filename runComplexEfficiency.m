@@ -1,6 +1,6 @@
 % runComplexEfficiency.m
 % MATLAB script to run NoiseDiscrimination.m
-% Copyright 2018 Denis G. Pelli, denis.pelli@nyu.edu
+% Copyright 2019 Denis G. Pelli, denis.pelli@nyu.edu
 %
 % The script specifies "Darshan" as experimenter. You can change that in
 % the script below if necessary. On the first block the program will ask
@@ -24,18 +24,21 @@
 clear o oo ooo
 ooo={};
 % o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
-% o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
-o.recordGaze=true;
+o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+o.recordGaze=false;
 o.experiment='ComplexEfficiency';
 o.eccentricityXYDeg=[0 0];
 o.targetHeightDeg=6;
 o.contrast=-1;
 o.noiseType='gaussian';
+o.setNearPointEccentricityTo='fixation';
+o.nearPointXYInUnitSquare=[0.5 0.5];
 o.blankingRadiusReTargetHeight=0;
 o.blankingRadiusReEccentricity=0;
 o.targetKind='letter';
 o.targetHeightDeg=6;
 o.thresholdParameter='contrast';
+o.flankerSpacingDeg=0.2; % Used only for fixation test.
 o.observer='';
 o.trialsInBlock=40;
 o.brightnessSetting=0.87;
@@ -46,16 +49,19 @@ o.alphabet='';
 o.borderLetter='';
 o.labelAnswers=false;
 o.readAlphabetFromDisk=false;
+o.fixationTest=false;
 o.fixationCrossBlankedNearTarget=true;
 o.fixationCrossBlankedUntilSecsAfterTarget=0.6;
 o.fixationCrossDrawnOnStimulus=false;
 o.fullResolutionTarget=false;
+o.useFlankers=false;
+o.flankerContrast=-1;
 % o.printGrayLuminance=false;
 % o.assessGray=true;
 % o.assessLoadGamma=true;
 % o.printContrastBounds=true;
-if true
-    o.brightnessSetting=1;
+if 1
+    o.brightnessSetting=0.87;
     o.symmetricLuminanceRange=false; % False for maximum brightness.
     o.desiredLuminanceFactor=1.1; % 1.8 for maximize brightness.
     o.responseScreenAbsoluteContrast=0.9;
@@ -73,8 +79,8 @@ if true
         o.convertSignalImageToGray=true;
         o.alphabetPlacement='right'; % 'top' or 'right';
         o.targetKind='image';
-        o.alphabet='abcdefghijk';
-        o.brightnessSetting=1;
+        o.alphabet='abcdefghi';
+        o.brightnessSetting=0.87;
         o.labelAnswers=true;
     end
     o.targetMargin=0;
@@ -103,7 +109,7 @@ if true
     ooo{end+1}=o;
 end
 
-if 1
+if 0
     % Sloan
     o.conditionName='Sloan';
     o.targetFont='Sloan';
@@ -112,10 +118,6 @@ if 1
     o.targetKind='letter';
     o.borderLetter='X';
     o.labelAnswers=false;
-    %     o.eccentricityXYDeg=[-10 0];
-    %     o.readAlphabetFromDisk=true;
-    %     ooo{end+1}=o;
-    %     o.eccentricityXYDeg=[10 0];
     o.readAlphabetFromDisk=true;
     o.contrast=-1;
     ooo{end+1}=o;
@@ -206,43 +208,62 @@ if 0
     o.readAlphabetFromDisk=true;
     ooo{end+1}=o;
 end
-% Test with zero and high noise, interleaved.
-for block=1:length(ooo)
-    oo=ooo{block};
-    for oi=1:length(oo)
-        maxNoiseSD=MaxNoiseSD(oo(oi).noiseType);
-        if ismember(oo(oi).targetKind,{'image'})
-            maxNoiseSD=0.8*maxNoiseSD;
+if false
+    % Test with zero and high noise, interleaved.
+    for block=1:length(ooo)
+        oo=ooo{block};
+        for oi=1:length(oo)
+            maxNoiseSD=MaxNoiseSD(oo(oi).noiseType);
+            if ismember(oo(oi).targetKind,{'image'})
+                maxNoiseSD=0.8*maxNoiseSD;
+            end
+            oo(oi).noiseCheckDeg=oo(oi).targetHeightDeg/40;
+            oo(oi).setNearPointEccentricityTo='fixation';
+            oo(oi).nearPointXYInUnitSquare=[0.5 0.5];
+            oo(oi).noiseSD=0;
         end
-        oo(oi).noiseCheckDeg=oo(oi).targetHeightDeg/40;
-        oo(oi).setNearPointEccentricityTo='fixation';
-        oo(oi).nearPointXYInUnitSquare=[0.5 0.5];
-        oo(oi).noiseSD=0;
+        ooNoise=oo;
+        [ooNoise.noiseSD]=deal(maxNoiseSD);
+        ooo{block}=[oo ooNoise];
     end
-    ooNoise=oo;
-    [ooNoise.noiseSD]=deal(maxNoiseSD);
-    ooo{block}=[oo ooNoise];
 end
 
 if true
     % Measure threshold size at +/-10 deg. No noise.
     % Randomly interleave testing left and right.
+    % Add fixation test.
     for block=1:length(ooo)
         o=ooo{block}(1);
         o.fullResolutionTarget=true;
         o.targetHeightDeg=10;
-        o.brightnessSetting=1;
+        o.brightnessSetting=0.87;
         o.thresholdParameter='size';
         o.setNearPointEccentricityTo='fixation';
         o.nearPointXYInUnitSquare=[0.5 0.5];
         o.viewingDistanceCm=30;
         o.eccentricityXYDeg=[10 0];
         o.fixationCrossBlankedNearTarget=false;
-        o.fixationCrossBlankedUntilSecsAfterTarget=0;
-        o.fixationCrossDrawnOnStimulus=true;
+        o.fixationCrossBlankedUntilSecsAfterTarget=0.5;
+        o.fixationCrossDrawnOnStimulus=false;
         oo=o;
         o.eccentricityXYDeg=-o.eccentricityXYDeg;
         oo(2)=o;
+        o.conditionName='Fixation test';
+        o.fixationTest=true;
+        o.eccentricityXYDeg=[0 0];
+        o.thresholdParameter='spacing';
+        o.targetHeightDeg=0.3;
+        o.flankerSpacingDeg=1.4*o.targetHeightDeg;
+        o.useFlankers=true;
+        o.flankerContrast=-1;
+        o.contrast=-1;
+        o.targetFont='Sloan';
+        o.minimumTargetHeightChecks=8;
+        o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
+        o.targetKind='letter';
+        o.labelAnswers=false;
+        o.readAlphabetFromDisk=true;
+        oo(3)=o;
         ooo{end+1}=oo;
     end
 end
@@ -266,6 +287,8 @@ end
 oo=[];
 for block=1:length(ooo)
     [ooo{block}(:).block]=deal(block);
+    % This will fail unless there is a perfect agreement in fields between
+    % oo and ooo{block}.
     oo=[oo ooo{block}];
 end
 t=struct2table(oo,'AsArray',true);
