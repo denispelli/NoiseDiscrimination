@@ -2,7 +2,7 @@ function [quitExperiment,quitBlock,skipTrial]=OfferEscapeOptions(window,oo,textM
 % [quitExperiment,quitBlock,skipTrial]=OfferEscapeOptions(window,oo,textMarginPix);
 o=oo(1);
 if o.speakEachLetter && o.useSpeech
-   Speak('Escape');
+    Speak('Escape');
 end
 textSize=TextSizeToFit(window); % Set optimum text size.
 escapeKeyCode=KbName('ESCAPE');
@@ -36,28 +36,39 @@ else
     nextBlockMsg='Or hit RETURN to proceed to the next block. ';
 end
 if nargout==3
-   nextTrialMsg='Or hit SPACE to proceed to the next trial.';
+    nextTrialMsg='Or hit SPACE to proceed to the next trial.';
 else
-   nextTrialMsg='';
+    nextTrialMsg='';
 end
 string=['You escaped. Any incomplete trial was canceled. ' ...
     'Hit RETURN to proceed to next block. ' ...
     'Hit ESCAPE again to quit the whole experiment. '...
     nextBlockMsg nextTrialMsg];
-DrawFormattedText(window,string,textMarginPix,textMarginPix+0.5*textSize,black,60,[],[],1.1);
+DrawFormattedText(window,string,textMarginPix,textMarginPix+0.5*textSize,black,60,[],[],1.3);
 Screen('Flip',window);
 answer=GetKeypress([spaceKeyCode returnKeyCode escapeKeyCode graveAccentKeyCode],o.deviceIndex);
 quitExperiment=ismember(answer,[escapeChar,graveAccentChar]);
 quitBlock=ismember(answer,returnChar)||quitExperiment;
 skipTrial=ismember(answer,' ');
-if o.useSpeech
-    if quitExperiment || quitBlock && oo(1).isLastBlock
-        Speak('Done.');
-    elseif quitBlock
-        Speak('Proceeding to next block.');
-    elseif skipTrial
-        Speak('Proceeding to next trial.');
-    end
+if quitExperiment || quitBlock && oo(1).isLastBlock
+    string='Done.';
+elseif quitBlock
+    string='Proceeding to next block. ...';
+elseif skipTrial
+    string='Proceeding to next trial. ...';
 end
-Screen('FillRect',window);
+Screen('FillRect',window,backgroundColor);
+DrawFormattedText(window,string,textMarginPix,textMarginPix+0.5*textSize,black,60,[],[],1.3);
+DrawCounter(o);
+Screen('Flip',window);
+if o.useSpeech
+    %     if quitExperiment || quitBlock && oo(1).isLastBlock
+    %         Speak('Done.');
+    %     elseif quitBlock
+    %         Speak('Proceeding to next block.');
+    %     elseif skipTrial
+    %         Speak('Proceeding to next trial.');
+    %     end
+    Speak(string);
+end
 end
