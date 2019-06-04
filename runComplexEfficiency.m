@@ -24,7 +24,7 @@
 clear o oo ooo
 ooo={};
 % o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
-% o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 o.recordGaze=false;
 o.experiment='ComplexEfficiency';
 o.eccentricityXYDeg=[0 0];
@@ -79,9 +79,13 @@ if 1
         o.convertSignalImageToGray=true;
         o.alphabetPlacement='right'; % 'top' or 'right';
         o.targetKind='image';
-        o.alphabet='abcdefghi';
+        o.alphabet='abcdefghijklmnopq';
         o.brightnessSetting=0.87;
         o.labelAnswers=true;
+        o.alphabetPlacement='top'; % 'top' 'bottom' 'right' or 'left' while awaiting response.
+        o.counterPlacement='bottomRight';
+        o.instructionPlacement='bottomLeft'; % 'topLeft' 'bottomLeft'
+
     end
     o.targetMargin=0;
     o.viewingDistanceCm=40;
