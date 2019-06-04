@@ -1,6 +1,6 @@
 function textSize=TextSizeToFit(window,lineOfText,o)
 % textSize=TextSizeToFit(window,lineOfText,o);
-% Set textSize so our lineOfText just fits in window.
+% Set textSize so our lineOfText just fits in window width, with two o.textMarginPix.
 if nargin<1
     error('You must provide "window" when calling textSize=TextSizeToFit(window,lineOfText,o).');
 end
@@ -24,7 +24,8 @@ if ~streq(font,o.textFont)
 end
 boundsRect=Screen('TextBounds',window,lineOfText);
 fraction=RectWidth(boundsRect)/(RectWidth(screenRect)-2*o.textMarginPix);
-% Adjust textSize so our line fits perfectly.
+% Adjust textSize so the line length fit perfectly within the screen width,
+% with o.textMargin on each size.
 textSize=round(o.textSize/fraction);
 Screen('TextSize',window,textSize);
 end
