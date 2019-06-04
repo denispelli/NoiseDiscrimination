@@ -24,7 +24,7 @@
 clear o oo ooo
 ooo={};
 % o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
-o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+% o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 o.recordGaze=false;
 o.experiment='ComplexEfficiency';
 o.eccentricityXYDeg=[0 0];
@@ -252,7 +252,7 @@ if true
         o.fixationTest=true;
         o.eccentricityXYDeg=[0 0];
         o.thresholdParameter='spacing';
-        o.targetHeightDeg=0.3;
+        o.targetHeightDeg=0.4;
         o.flankerSpacingDeg=1.4*o.targetHeightDeg;
         o.useFlankers=true;
         o.flankerContrast=-1;
