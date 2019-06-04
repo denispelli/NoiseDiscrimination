@@ -1,14 +1,13 @@
-function bounds=DrawCounter(oo)
-% bounds=DrawCounter(oo);
-% Use o.counterPlacement to specify alignment with stimulusRect.
-
-% It would be great to display "INVALID DATA" when in debugging mode. I.e.
-% whenever o.useFractionOfScreenToDebug~=0 or o.skipScreenCalibration=true.
+function bounds=DrawCounter(o)
+% bounds=DrawCounter(o);
+% Use o.counterPlacement to specify alignment of counter in screenRect.
+% Displays "INVALID DATA" when in debugging mode. I.e. whenever
+% o.useFractionOfScreenToDebug~=0 or o.skipScreenCalibration=true.
 
 global window scratchWindow scratchRect
 global blockTrial blockTrials
 persistent counterSize counterBounds
-% Display counter in lower right corner.
+% Check arguments.
 if isempty(window)
     error('Require open window.');
 end
@@ -18,29 +17,37 @@ end
 if Screen('WindowKind',scratchWindow)==0
     error('scratchWindow is invalid');
 end
-oldFont=Screen('TextFont',window,'Verdana');
+if isempty(scratchWindow)
+    [scratchWindow,scratchRect]=Screen('OpenOffscreenWindow',window);
+end
+% Compose the message.
 message='';
 if ~isempty(blockTrial)
     message=sprintf('Trial %d of %d. ',blockTrial,blockTrials);
 end
-message=sprintf('%sBlock %d of %d.',message,oo(1).block,oo(1).blocksDesired);
-if isempty(scratchWindow)
-    [scratchWindow,scratchRect]=Screen('OpenOffscreenWindow',window);
+message=sprintf('%sBlock %d of %d.',message,o.block,o.blocksDesired);
+if isfield(o,'viewingDistanceCm')
+    message=sprintf('%s At %.0f cm.',message,o.viewingDistanceCm);
 end
-if isfield(oo(1),'textSize')
-    counterSize=round(0.6*oo(1).textSize);
+if o.useFractionOfScreenToDebug~=0 || o.skipScreenCalibration
+    message=['WARNING: This debugging mode invalidates data. ' message];
+end
+% Set size and font.
+if isfield(o,'textSize')
+    counterSize=round(0.6*o.textSize);
 else
     counterSize=20;
 end
 Screen('TextSize',scratchWindow,counterSize);
+oldFont=Screen('TextFont',window,'Verdana');
 Screen('TextFont',scratchWindow,Screen('TextFont',window));
 counterBounds=TextBounds(scratchWindow,message,1);
-r=oo(1).screenRect;
-if isfield(oo(1),'stimulusRect')
-    r(3)=oo(1).stimulusRect(3);
+r=o.screenRect;
+if isfield(o,'stimulusRect')
+    r(3)=o.stimulusRect(3);
 end
-r=InsetRect(r,counterSize/4,counterSize/4);
-switch oo(1).counterPlacement
+r=InsetRect(r,counterSize/4,counterSize/8);
+switch o.counterPlacement
     case 'bottomRight'
         counterBounds=AlignRect(counterBounds,r,'right','bottom');
     case 'bottomLeft'
