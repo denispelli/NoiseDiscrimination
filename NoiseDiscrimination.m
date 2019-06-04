@@ -6368,12 +6368,11 @@ end
 escapeChar=char(27);
 graveAccentChar='`';
 black=0;
-o.textSize=TextSizeToFit(o.window);
+% o.textSize=TextSizeToFit(o.window); % Leave as set by user.
 ListenChar(2); % no echo
 Screen('FillRect',o.window,o.gray1);
 Screen('TextSize',o.window,o.textSize);
 Screen('TextFont',o.window,o.textFont,0);
-Screen('FillRect',o.window,o.gray1,o.screenRect);
 DrawCounter(o);
 
 % Display question.
