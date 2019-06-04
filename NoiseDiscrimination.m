@@ -23,7 +23,7 @@ function oo=NoiseDiscrimination(ooIn)
 %
 % HISTORY:
 %
-% Added DrawCounter from CriticalSpacing. The the trial and block counter
+% Added DrawCounter from CriticalSpacing. This trial and block counter
 % is always there throughout the experiment. May 2019.
 %
 % Require that observer give name including a space before the end.May
@@ -3550,7 +3550,7 @@ try
                 if ~oo(oi).fixationTest
                     spacingDeg=10^tTest;
                 else
-                    spacingDeg=oo(oi).spacingDeg;
+                    spacingDeg=oo(oi).flankerSpacingDeg;
                 end
                 flankerSpacingPix=spacingDeg*oo(oi).pixPerDeg;
                 flankerSpacingPix=max(flankerSpacingPix,1.2*oo(oi).targetHeightPix);
@@ -4341,11 +4341,16 @@ try
                         message='Please click 1 to 4 times for location 1 to 4, or more clicks to escape.';
                     case 'identify'
                         if ismember(oo(oi).targetKind,{'word'}) && ~oo(oi).labelAnswers
-                            message=sprintf('While fixating, please type the %d-letter word. Ignore capitalization. Or ESC to cancel a trial or quit.',...
+                            message=sprintf('While fixating the cross, type the %d-letter word. Ignore capitalization. Or ESC to cancel a trial or quit.',...
                                 length(oo(oi).words{1}));
                         else
-                            message=sprintf('While fixating, please type the letter: %s. Or ESC to cancel a trial or quit.',...
-                                oo(oi).alphabet(1:oo(oi).alternatives));
+                            if oo(oi).useFlankers
+                                object='middle letter';
+                            else
+                                object='letter';
+                            end
+                            message=sprintf('While fixating the cross, type the %s: %s. Or ESC to cancel a trial or quit.',...
+                                object,oo(oi).alphabet(1:oo(oi).alternatives));
                         end
                     case 'identifyAll'
                         factor=1.3;
@@ -4428,22 +4433,34 @@ try
                         useExpand=alphaCheckPix == round(alphaCheckPix);
                         rect=[0 0 oo(oi).targetWidthPix oo(oi).targetHeightPix]/oo(oi).targetCheckPix; % size of oo(oi).signal(1).image
                         rect=round(rect*alphaCheckPix);
+                        blankRect=o.screenRect;
                         switch oo(oi).alphabetPlacement
                             case {'left'}
                                 rect=AlignRect(rect,o.screenRect,RectLeft,RectTop);
                                 rect=OffsetRect(rect,alphaGapPix,alphaGapPix); % spacing
+                                blankRect(3)=round(1.5*rect(3));
                             case 'right'
                                 rect=AlignRect(rect,o.screenRect,RectRight,RectTop);
                                 rect=OffsetRect(rect,-alphaGapPix,alphaGapPix); % spacing
+                                blankRect(1)=blankRect(3)-round(1.5*(blankRect(3)-rect(1)));
                             case 'top'
                                 rect=AlignRect(rect,o.screenRect,RectRight,RectTop);
                                 rect=OffsetRect(rect,-alphaGapPix,alphaGapPix); % spacing
+                                blankRect(4)=rect(4);
                             case 'bottom'
                                 rect=AlignRect(rect,o.screenRect,RectLeft,RectBottom);
                                 rect=OffsetRect(rect,-alphaGapPix,alphaGapPix); % spacing
                                 bounds=DrawCounter(oo);
                                 rect=OffsetRect(rect,0,-RectHeight(bounds)); % Avoid the counter.
+                                blankRect(2)=rect(2);
                         end
+                        % When we interleave conditions with different
+                        % response screens, it's confusing if there is any
+                        % remnant of the other response screen. So we erase
+                        % the response area, while trying to leave other
+                        % annotations untouched, without distracting
+                        % flicker.
+                        Screen('FillRect',window,o.gray1,blankRect);
                         rect=round(rect);
                         switch oo(oi).alphabetPlacement
                             case {'left' 'right'}
@@ -5010,7 +5027,24 @@ try
         oo(oi).psych=psych;
     end % for oi=1:conditions
     
+    %% TELL OBSERVER: Saving to disk.
+    if Screen(oo(1).window,'WindowKind') == 1
+        % Tell observer what's happening.
+%         Screen('LoadNormalizedGammaTable',oo(1).window,cal.old.gamma,loadOnNextFlip);
+        Screen('FillRect',oo(1).window,oo(1).gray1);
+        Screen('DrawText',oo(1).window,' ',0,0,1,oo(1).gray1); % Set background color.
+        string=sprintf('Saving results to disk. ... ');
+        %         DrawFormattedText(oo(1).window,string,...
+        %             oo(oi).textSize,1.5*oo(oi).textSize,black,oo(oi).textLineLength,[],[],1.3);
+        % Copied from OfferEscapeOptions
+        DrawFormattedText(oo(1).window,string,...
+            oo(1).textMarginPix,oo(1).textMarginPix+0.5*oo(oi).textSize,black,60,[],[],1.3);
+        DrawCounter(oo);
+        Screen('Flip',oo(1).window); % Display message.
+    end
+       
     %% LOOP THROUGH ALL THE CONDITIONS, TO REPORT ONE THRESHOLD PER CONDITION.
+    savingToDiskSecs=GetSecs;
     for oi=1:conditions
         oo(oi).questMean=QuestMean(oo(oi).q);
         oo(oi).questSd=QuestSd(oo(oi).q);
@@ -5022,8 +5056,8 @@ try
         switch oo(oi).thresholdParameter
             case 'spacing'
                 ffprintf(ff,'%s: p %.0f%%, size %.2f deg, ecc. %.1f deg, crowding distance %.2f deg.\n',...
-                    oo(oi).observer,100*oo(oi).p,oo(oi).targetSizeDeg,rDeg,10^oo(oi).questMean);
-                oo(oi).spacingDeg=10^oo(oi).questMean; % May 17, 2019 DGP
+                    oo(oi).observer,100*oo(oi).p,oo(oi).targetHeightDeg,rDeg,10^oo(oi).questMean);
+                oo(oi).flankerSpacingDeg=10^oo(oi).questMean; % May 17, 2019 DGP % June 3 added "flanker" prefix.
             case 'size'
                 ffprintf(ff,'%s: p %.0f%%, ecc. %.1f deg, threshold size %.3f deg.\n',...
                     oo(oi).observer,100*oo(oi).p,rDeg,10^oo(oi).questMean);
@@ -5256,6 +5290,7 @@ try
         end
         ffprintf(ff,'in the data folder: %s/\n\n',oo(oi).dataFolder);
     end % for oi=1:conditions
+    ffprintf(ff,'Saving to disk took %.0f s\n',GetSecs-savingToDiskSecs);
     if exist('vidWriter','var')
         close(vidWriter);
         clear cam
@@ -5272,20 +5307,23 @@ try
         end
     end
     % RestoreCluts;
-    if Screen(oo(1).window,'WindowKind') == 1
-        % Tell observer what's happening.
-        Screen('LoadNormalizedGammaTable',oo(1).window,cal.old.gamma,loadOnNextFlip);
-        Screen('FillRect',oo(1).window);
-        Screen('DrawText',oo(1).window,' ',0,0,1,1,1); % Set background color.
-        string=sprintf('Saving results to disk. ... ');
-        DrawFormattedText(oo(1).window,string,...
-            oo(oi).textSize,1.5*oo(oi).textSize,black,oo(oi).textLineLength,[],[],1.3);
-        DrawCounter(oo);
-        Screen('Flip',oo(1).window); % Display message.
-    end
     ListenChar(0); % flush
     ListenChar;
     if ~isempty(oo(1).window) && (o.quitExperiment || oo(oi).isLastBlock)
+        if Screen(oo(1).window,'WindowKind') == 1
+            % Tell observer what's happening.
+            Screen('LoadNormalizedGammaTable',oo(1).window,cal.old.gamma,loadOnNextFlip);
+            Screen('FillRect',oo(1).window);
+            Screen('DrawText',oo(1).window,' ',0,0,1,1,1); % Set background color.
+            string=sprintf('Closing windows. Goodbye. ');
+            % DrawFormattedText(oo(1).window,string,...
+            %    oo(oi).textSize,1.5*oo(oi).textSize,black,oo(oi).textLineLength,[],[],1.3);
+            % Copied from OfferEscapeOptions
+            DrawFormattedText(oo(1).window,string,...
+                oo(1).textMarginPix,oo(1).textMarginPix+0.5*oo(oi).textSize,black,60,[],[],1.3);
+            DrawCounter(oo);
+            Screen('Flip',oo(1).window); % Display message.
+        end
         isLastBlock=true; % global DGP
         CloseWindowsAndCleanup(oo);
     end
