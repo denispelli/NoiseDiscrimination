@@ -3909,7 +3909,7 @@ try
                             if ~all(oo(oi).eccentricityXYDeg==0)
                                 theta=atan2d(oo(oi).eccentricityXYDeg(2),oo(oi).eccentricityXYDeg(1)); % Direction of target from fixation.
                             else
-                                theta=90; % For target at fixation, default direction is up, .
+                                theta=0; % For target at fixation, default direction is right.
                             end
                             % "theta" is the angle of the vector from
                             % fixation to target.
