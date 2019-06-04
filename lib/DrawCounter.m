@@ -58,7 +58,7 @@ end
 black=BlackIndex(window);
 oldTextSize=Screen('TextSize',window,counterSize);
 % Use whatever background is currently in use. Don't insist on white.
-Screen('DrawText',window,message,counterBounds(1),counterBounds(4),black,[],1);
+Screen('DrawText',window,message,counterBounds(1),counterBounds(2),black,[]);
 Screen('TextFont',window,oldFont); % Restore.
 Screen('TextSize',window,oldTextSize); % Restore.
 bounds=counterBounds;
