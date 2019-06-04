@@ -2123,7 +2123,7 @@ try
         white=1; % CLUT color code for white.
         Screen('FillRect',oo(1).window,oo(1).gray1);
         Screen('FillRect',oo(1).window,oo(1).gray,oo(1).stimulusRect);
-        DrawCounter(oo);
+        DrawCounter(oo(oi));
         Screen('Flip',oo(1).window); % Screen is now all gray, at o.LBackground.
         oo(1).screenRect=Screen('Rect',oo(1).window,1);
         screenWidthPix=RectWidth(oo(1).screenRect);
@@ -2154,7 +2154,7 @@ try
                 string=sprintf('%s Right?\nHit RETURN to continue, or ESCAPE to quit.',string);
                 Screen('DrawText',oo(1).window,' ',0,0,1,oo(1).gray1,1); % Set background color.
                 DrawFormattedText(oo(1).window,string,oo(1).textSize,1.5*oo(1).textSize,black,oo(1).textLineLength,[],[],1.3);
-                DrawCounter(oo);
+                DrawCounter(oo(oi));
                 Screen('Flip',oo(1).window); % Display request.
                 if oo(1).speakInstructions
                     Speak(sprintf('Observer %s, right? If ok, hit RETURN to continue, otherwise hit ESCAPE to quit.',oo(1).observer));
@@ -2198,7 +2198,7 @@ try
                     string='Please use both eyes.\nHit RETURN to continue, or ESCAPE to quit.';
                     Screen('DrawText',oo(1).window,' ',0,0,1,oo(1).gray1,1); % Set background color.
                     DrawFormattedText(oo(1).window,string,oo(1).textSize,1.5*oo(1).textSize,black,oo(1).textLineLength,[],[],1.3);
-                    DrawCounter(oo);
+                    DrawCounter(oo(oi));
                     Screen('Flip',oo(1).window); % Display request.
                     if oo(1).speakInstructions
                         Speak('Please use both eyes. Hit RETURN to continue, or ESCAPE to quit.');
@@ -2223,7 +2223,7 @@ try
                     string=sprintf('Please use just your %s eye. Cover your other eye.\nHit RETURN to continue, or ESCAPE to quit.',oo(1).eyes);
                     Screen('DrawText',oo(1).window,' ',0,0,1,oo(1).gray1,1); % Set background color.
                     DrawFormattedText(oo(1).window,string,oo(1).textSize,1.5*oo(1).textSize,black,oo(1).textLineLength,[],[],1.3);
-                    DrawCounter(oo);
+                    DrawCounter(oo(oi));
                     Screen('Flip',oo(1).window); % Display request.
                     if oo(1).speakInstructions
                         string=sprintf('Please use just your %s eye. Cover your other eye. Hit RETURN to continue, or ESCAPE to quit.',oo(1).eyes);
@@ -2247,7 +2247,7 @@ try
                 string=[string 'Which eye will you use, left or right? Please type L or R:'];
                 Screen('DrawText',oo(1).window,' ',0,0,1,oo(1).gray1,1); % Set background color.
                 DrawFormattedText(oo(1).window,string,oo(1).textSize,1.5*oo(1).textSize,black,oo(1).textLineLength,[],[],1.3);
-                DrawCounter(oo);
+                DrawCounter(oo(oi));
                 Screen('Flip',oo(1).window); % Display request.
                 if oo(1).speakInstructions
                     Speak(string);
@@ -2274,7 +2274,7 @@ try
                 end
             end
             Screen('FillRect',oo(1).window,oo(1).gray1);
-            DrawCounter(oo);
+            DrawCounter(oo(oi));
             Screen('Flip',oo(1).window); % Blank to acknowledge response.
         end
         switch oo(1).eyes
@@ -2437,10 +2437,10 @@ try
         Screen('FillRect',oo(1).window,oo(1).gray1);
         Screen('DrawText',oo(1).window,'Preparing stimuli. ... ',...
             oo(oi).textSize,1.5*oo(oi).textSize,black,oo(1).gray1,1);
-        DrawCounter(oo);
+        DrawCounter(oo(oi));
         Screen('Flip',oo(1).window); % Display message.
     end
-
+    
     %% Compute NPhoton
     oo=ComputeNPhoton(oo);
     % If pupilDiameterMm is not specified, then ComputeNPhoton gets an
@@ -3082,7 +3082,7 @@ try
                         string=sprintf('Reading images from disk. ... ');
                         DrawFormattedText(oo(1).window,string,...
                             oo(oi).textSize,1.5*oo(oi).textSize,black,oo(oi).textLineLength,[],[],1.3);
-                        DrawCounter(oo);
+                        DrawCounter(oo(oi));
                         Screen('Flip',oo(1).window); % Display request.
                         oo(oi).targetPix=round(oo(oi).targetHeightDeg/oo(oi).noiseCheckDeg);
                         oo(oi).targetFont=oo(oi).targetFont;
@@ -4206,7 +4206,7 @@ try
         
         %% PLAY MOVIE
         if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
-            DrawCounter(oo);
+            DrawCounter(oo(oi));
             Screen('LoadNormalizedGammaTable',oo(1).window,cal.gamma,loadOnNextFlip);
             if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
                 if oo(oi).recordGaze
@@ -4216,7 +4216,7 @@ try
                         warning(e)
                     end
                     % FUTURE: Write trial number and condition number in
-                    % corner of recorded movie image. 
+                    % corner of recorded movie image.
                     writeVideo(vidWriter,img); % Write frame to video
                 end
                 Snd('Play',purr); % Pre-announce that image is up, awaiting response.
@@ -4320,7 +4320,7 @@ try
                         Screen('DrawLines',oo(1).window,fixationLines,fixationCrossWeightPix,black); % fixation
                     end
                     % After o.fixationCrossBlankedUntilSecsAfterTarget, display new fixation.
-                    DrawCounter(oo);
+                    DrawCounter(oo(oi));
                     Screen('Flip',oo(1).window,oo(oi).movieFrameFlipSecs(iMovieFrame+1,oo(oi).trials)+0.3,1);
                 end % if isfinite(oo(oi).targetDurationSecs)
                 for iMovieFrame=1:oo(oi).movieFrames
@@ -4605,7 +4605,7 @@ try
                     ffprintf(ff,'Line %d: Gray index is %d (%.1f cd/m^2). Corner is %d.\n',...
                         MFileLineNr,oo(oi).gray*oo(oi).maxEntry,LuminanceOfIndex(cal,oo(oi).gray*oo(oi).maxEntry),pp(1));
                 end
-                if trial == 1
+                if trial==1 % && oo(1).block==1
                     WaitSecs(0.5); % First time is slow. Mario suggested a work around, explained at beginning of this file.
                 end
                 if isfinite(oo(oi).targetDurationSecs)
@@ -4615,9 +4615,11 @@ try
                     % CLUT as it is.
                     Screen('LoadNormalizedGammaTable',oo(1).window,cal.gamma,loadOnNextFlip);
                 end
-                DrawCounter(oo);
+                DrawCounter(oo(oi));
                 Screen('Flip',oo(1).window,0,1); % Display instructions.
             end % if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
+            
+            %% SAVE STIMULUS TO DISK
             if oo(oi).saveStimulus
                 oo(oi).savedResponseScreen=Screen('GetImage',oo(1).window,oo(oi).stimulusRect,'frontBuffer');
                 ffprintf(ff,'oo(oi).savedResponseScreen\n');
@@ -5338,7 +5340,7 @@ try
             % Copied from OfferEscapeOptions
             DrawFormattedText(oo(1).window,string,...
                 oo(1).textMarginPix,oo(1).textMarginPix+0.5*oo(oi).textSize,black,60,[],[],1.3);
-            DrawCounter(oo);
+            DrawCounter(oo(oi));
             Screen('Flip',oo(1).window); % Display message.
         end
         isLastBlock=true; % global DGP
