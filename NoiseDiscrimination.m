@@ -4375,24 +4375,32 @@ try
                     case 'rate'
                         message=sprintf('Please rate the beauty: 0 to 9, or ESCAPE to cancel a trial or quit.');
                 end
+                % The instructions should be as big as possible, for
+                % readability, but musn't occupy more than one line. So we
+                % scale it to exactly fit in one line at top or bottom of
+                % screen. We set only the local "textSize", leaving
+                % o.textSize as set by user script.
                 Screen('TextSize',oo(1).window,oo(oi).textSize);
-                bounds=Screen('TextBounds',oo(1).window,message);
+                bounds=Screen('TextBounds',oo(1).window,message,[],[],1);
                 bounds=round(bounds);
                 ratio=(RectWidth(bounds)+0.5*oo(oi).textSize)/RectWidth(o.stimulusRect);
                 textSize=floor(oo(oi).textSize/max([ratio factor]));
                 Screen('TextSize',oo(1).window,textSize);
+                bounds=Screen('TextBounds',oo(1).window,message,[],[],1);
+                bounds=round(bounds);
                 r=oo(oi).screenRect;
-                r=InsetRect(r,textSize/4,textSize/4);
+                r=InsetRect(r,textSize/4,textSize/8);
                 switch oo(oi).instructionPlacement
                     case 'topLeft'
                         % Put instruction at top of screen.
+                        Screen('FillRect',window,oo(oi).gray1,topCaptionRect);
                         bounds=AlignRect(bounds,r,'left','top');
                     case 'bottomLeft'
                         % Put instruction at bottom of screen.
+                        Screen('FillRect',window,oo(oi).gray1,bottomCaptionRect);
                         bounds=AlignRect(bounds,r,'left','bottom');
                 end
-                Screen('FillRect',oo(1).window,oo(oi).gray1,bottomCaptionRect);
-                Screen('DrawText',oo(1).window,message,bounds(1),bounds(4),black,oo(oi).gray1,1);
+                Screen('DrawText',oo(1).window,message,bounds(1),bounds(2),black,oo(oi).gray1);
                 Screen('TextSize',oo(1).window,oo(oi).textSize);
             end % if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
             
