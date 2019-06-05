@@ -19,10 +19,10 @@ black=0;
 Screen('Preference','TextAntiAliasing',0);
 trials=0;
 trialsDesired=0;
-if isfield(o,'trials') && isfield(o,'trialsInBlock')
+if isfield(o,'trials') && isfield(o,'trialsDesired')
     for oi=1:length(oo)
         trials=trials+oo(oi).trials;
-        trialsDesired=trialsDesired+oo(oi).trialsInBlock;
+        trialsDesired=trialsDesired+oo(oi).trialsDesired;
     end
 end
 DrawCounter(o);

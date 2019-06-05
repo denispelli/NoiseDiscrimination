@@ -45,7 +45,7 @@ if ~isempty(matFiles)
         resumeExperiment=false;
         for i=1:length(expt)
             o=expt{i}.ooo{1}(1);
-%             if isempty(o.observer) || o.trials<o.trialsInBlock
+%             if isempty(o.observer) || o.trials<o.trialsDesired
 %                 % This partial experiment has no data. Skip it.
 %                 continue
 %             end

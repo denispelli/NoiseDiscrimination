@@ -94,7 +94,7 @@ o.noiseType='ternary';
 
 if false
     o.contrast=-0.15;
-    o.trialsInBlock=300;
+    o.trialsDesired=300;
     o.constantStimuli=-10 .^ (-1.1:0.05:-0.6);
     o.useMethodOfConstantStimuli=true;
     o.conditionName='various flanker contrasts';
@@ -106,7 +106,7 @@ end
 o.useMethodOfConstantStimuli=false;
 if true
     o.conditionName='Threshold contrast';
-    o.trialsInBlock=40;
+    o.trialsDesired=40;
     o.useFlankers=false;
     o.thresholdParameter='contrast';
     o.task='identify';
@@ -130,7 +130,7 @@ if true
 %     o.useDynamicNoiseMovie=false;
 %     o.targetDurationSecs=inf;
     o.conditionName='Threshold flanker contrast for crowding';
-    o.trialsInBlock=40;
+    o.trialsDesired=40;
     o.useFlankers=true;
     o.contrast=-0.4;
     o.thresholdParameter='flankerContrast';
@@ -169,7 +169,7 @@ oo=OfferToResumeExperiment(oo);
 
 %% PRINT THE CONDITIONS (ONE PER ROW) AS TABLE TT
 % All these vars must be defined in every condition.
-vars={'conditionName' 'trialsInBlock' 'noiseSD' 'targetHeightDeg' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'thresholdParameter'};
+vars={'conditionName' 'trialsDesired' 'noiseSD' 'targetHeightDeg' 'flankerSpacingDeg' 'eccentricityXYDeg' 'contrast' 'thresholdParameter'};
 tt=table;
 for i=1:length(oo)
     t=struct2table(oo{i},'AsArray',true);

@@ -71,7 +71,7 @@ o.thresholdParameter='contrast';
 %% PUT THE EXPERIMENT'S CONDITIONS IN STRUCT oo
 oo={};
 if true
-    o.trialsInBlock=100;
+    o.trialsDesired=100;
     o.task='identify';
     o.targetModulates='noise';
     o.targetKind='letter';
@@ -152,7 +152,7 @@ oo=OfferToResumeExperiment(oo);
 
 %% PRINT THE CONDITIONS (ONE PER ROW) AS TABLE TT
 % All these vars must be defined in every condition.
-vars={'condition' 'conditionName' 'trialsInBlock' 'noiseSD' 'targetHeightDeg'  'task' 'targetModulates' 'contrast'};
+vars={'condition' 'conditionName' 'trialsDesired' 'noiseSD' 'targetHeightDeg'  'task' 'targetModulates' 'contrast'};
 tt=table;
 for i=1:length(oo)
     t=struct2table(oo{i},'AsArray',true);

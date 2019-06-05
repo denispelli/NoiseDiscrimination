@@ -106,7 +106,7 @@ if skipDataCollection
    data=table2struct(t);
    for i=1:length(data)
       data(i).E=10*data(i).noiseSD+1e-5*(1+floor((i-1)/8));
-      data(i).trialsInBlock=40;
+      data(i).trialsDesired=40;
       data(i).N=data(i).noiseSD;
       data(i).experimenter='Experimenter';
       data(i).observer='Observer';
@@ -124,7 +124,7 @@ if ~skipDataCollection && 0
    for oi=1:length(oo) % Edit this line to select conditions you want to run now.
       o=oo(oi);
       %       o.useFractionOfScreenToDebug=0.4; % 0: normal, 0.5: small for debugging.
-      o.trialsInBlock=40;
+      o.trialsDesired=40;
       o.experimenter='';
       o.observer=''; % Enter observer's name at run time.
       if exist('oOut','var') && isempty(o.observer)

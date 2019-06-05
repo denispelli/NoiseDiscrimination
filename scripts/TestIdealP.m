@@ -25,7 +25,7 @@ for height=2
             o.idealEOverNThreshold = nan;
     end
     o.observer='ideal';
-    o.trialsInBlock=1000;
+    o.trialsDesired=1000;
     o.replicatePelli2006=1;
     o=NoiseDiscrimination(o);
     if 0

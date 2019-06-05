@@ -57,4 +57,4 @@ o.noiseSD=0.1;
 % o.snapshotCaptionTextSizeDeg=0.5;
 % o.snapshotShowsFixationBefore=1;
 % o.snapshotShowsFixationAfter=0;
-o.trialsInBlock=100;
+o.trialsDesired=100;

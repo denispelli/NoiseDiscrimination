@@ -33,11 +33,11 @@ for eccentricity=Shuffle(eccentricities)
     end
     if ~isfield(o,'idealEOverNThreshold') || ~isfinite(o.idealEOverNThreshold)
         o.observer='ideal';
-        o.trialsInBlock=1000;
+        o.trialsDesired=1000;
         o=NoiseDiscrimination(o);
         o.idealEOverNThreshold=o.EOverN;
     end
-    o.trialsInBlock=40;
+    o.trialsDesired=40;
     o.observer='jacob';
     o.observer='nick';
     o.observer='junk';

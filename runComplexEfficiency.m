@@ -48,7 +48,7 @@ o.targetHeightDeg=6;
 o.thresholdParameter='contrast';
 o.flankerSpacingDeg=0.2; % Used only for fixation test.
 o.observer='';
-o.trialsInBlock=40;
+o.trialsDesired=40;
 o.brightnessSetting=0.87;
 o.conditionName='Sloan';
 o.targetFont='Sloan';
@@ -103,7 +103,7 @@ if 0
     o.eccentricityXYDeg=[0 0];
     o.targetHeightDeg=10;
     o.targetDurationSecs=0.15;
-    o.trialsInBlock=40;
+    o.trialsDesired=40;
     o.lapse=nan;
     o.steepness=nan;
     o.guess=nan;
@@ -294,7 +294,7 @@ if true
         end
         for oi=1:length(oo)
             oo(oi).observer='ideal';
-            oo(oi).trialsInBlock=200;
+            oo(oi).trialsDesired=200;
         end
         ooo{end+1}=oo;
     end

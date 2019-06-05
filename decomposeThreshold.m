@@ -265,7 +265,7 @@ o.observer=observer;
 o.weightIdealWithNoise=0;
 o.distanceCm=50; % viewing distance
 o.durationSec=0.2;
-o.trialsInBlock=1e4;
+o.trialsDesired=1e4;
 
 %For noise with Gaussian envelope (soft)
 %o.noiseRadiusDeg=inf;

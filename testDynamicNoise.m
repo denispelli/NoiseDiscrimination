@@ -2,7 +2,7 @@ clear o
 % o.observer='denis'; % use your name
 % o.distanceCm=60; % viewing distance
 % o.durationSec=0.5; % signal duration. [0.05, 0.5] for 50 ms and 500 ms
-% o.trialsInBlock=40;
+% o.trialsDesired=40;
 
 % NOISE
 o.useDynamicNoiseMovie = 1; % 0 for static noise
@@ -15,7 +15,7 @@ o.observer='denis'; % use your name
 o.weightIdealWithNoise=0;
 o.distanceCm=70; % viewing distance
 o.durationSec=0.2; % [0.05, 0.5] for 50 ms and 500 ms
-o.trialsInBlock=40;
+o.trialsDesired=40;
 o.assessContrast=0;
 o.assessLoadGamma=0;
 

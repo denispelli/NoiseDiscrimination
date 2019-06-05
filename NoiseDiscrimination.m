@@ -706,7 +706,7 @@ o.age=20; % Assume age 20, unless later specified.
 
 % Procedure
 o.trials=0; % Initialize trial counter so it's defined even if user quits early.
-o.trialsInBlock=40; % Typically 40.
+o.trialsDesired=40; % Typically 40.
 o.block=1; % We display the the block number.
 o.blocksDesired=1; % How many blocks you to plan to run. Used solely for display in upper left corner of screen.
 % To save time, we only setup the screen and open the window in the first
@@ -1030,7 +1030,7 @@ clear o
 %     % https://psych.nyu.edu/pelli/papers.html
 %     o.idealEOverNThreshold=10^(-2.59--3.60); % from Table A of Pelli et al. 2006
 %     o.observer='ideal';
-%     o.trialsInBlock=1000;
+%     o.trialsDesired=1000;
 %     o.alphabet='CDHKNORSVZ'; % As in Pelli et al. (2006)
 %     o.alternatives=10; % As in Pelli et al. (2006).
 %     o.pThreshold=0.64; % As in Pelli et al. (2006).
@@ -1130,7 +1130,7 @@ clear o
 
 if ~isfield(oo(1),'isFirstBlock') || oo(1).isFirstBlock
     blockTrial=1;
-    blockTrials=sum([oo.trialsInBlock]);
+    blockTrials=sum([oo.trialsDesired]);
 end
 
 %% Brightness
@@ -1803,8 +1803,8 @@ try
                 if isempty(oo(oi).steepness) || ~isfinite(oo(oi).steepness)
                     oo(oi).steepness=1.7;
                 end
-                if isempty(oo(oi).trialsInBlock) || ~isfinite(oo(oi).trialsInBlock)
-                    oo(oi).trialsInBlock=1000;
+                if isempty(oo(oi).trialsDesired) || ~isfinite(oo(oi).trialsDesired)
+                    oo(oi).trialsDesired=1000;
                 end
                 %         degPerCm=57/oo(oi).viewingDistanceCm;
                 %         oo(oi).pixPerCm=45; % for MacBook at native resolution.
@@ -2459,9 +2459,9 @@ try
     % estimate from PupilDiameter(), based on luminance, field area, age,
     % and number of eyes.
     
-    %% o.trialsInBlock
+    %% o.trialsDesired
     for oi=1:conditions
-        ffprintf(ff,'%d: o.trialsInBlock %d\n',oi,oo(oi).trialsInBlock);
+        ffprintf(ff,'%d: o.trialsDesired %d\n',oi,oo(oi).trialsDesired);
     end
     
     %% SET NOISE PARAMETERS
@@ -2873,7 +2873,7 @@ try
         ffprintf(ff,'%d: %s noise power spectral density N %s log=%.2f\n', ...
             oi,temporal,oo(oi).NUnits,log10(oo(oi).N));
         ffprintf(ff,'%d: pThreshold %.2f, steepness %.1f\n',oi,oo(oi).pThreshold,oo(oi).steepness);
-        ffprintf(ff,'%d: o.trialsInBlock %.0f\n',oi,oo(oi).trialsInBlock);
+        ffprintf(ff,'%d: o.trialsDesired %.0f\n',oi,oo(oi).trialsDesired);
         
         %% COMPUTE oo(oi).signal(i).image
         %         if isfield(oo(oi).signal(1),'image')
@@ -3399,10 +3399,10 @@ try
     list=[];
     for oi=1:conditions
         if ~oo(oi).fixationTest
-            list=[list oi*ones(1,oo(oi).trialsInBlock)];
+            list=[list oi*ones(1,oo(oi).trialsDesired)];
         else
             % Reserve one instance to place at beginning.
-            list=[list oi*ones(1,oo(oi).trialsInBlock-1)];
+            list=[list oi*ones(1,oo(oi).trialsDesired-1)];
         end
     end
     list=Shuffle(list);
@@ -3491,7 +3491,7 @@ try
             % requested by NoiseDiscrimination after a stimulus artifact
             % (movie too long). The trial sequence is originally produced
             % by shuffling all the conditions, each with specifed
-            % o.trialsInBlock. When we discard a trial, we consider it not
+            % o.trialsDesired. When we discard a trial, we consider it not
             % yet done, and shuffle its condition with the rest of the
             % instances of conditions not yet done. The trial counter was
             % already decremented, so we don't do that here.
@@ -3543,7 +3543,7 @@ try
             if oo(oi).trials==1
                 assert(size(oo(oi).constantStimuli,1)==1)
                 oo(oi).thresholdParameterValueList=...
-                    repmat(oo(oi).constantStimuli,1,ceil(oo(oi).trialsInBlock/length(oo(oi).constantStimuli)));
+                    repmat(oo(oi).constantStimuli,1,ceil(oo(oi).trialsDesired/length(oo(oi).constantStimuli)));
                 oo(oi).thresholdParameterValueList=Shuffle(oo(oi).thresholdParameterValueList);
             end
             assert(ismember(oo(oi).thresholdParameter,{'contrast'}),...
@@ -5640,7 +5640,7 @@ switch o.targetModulates
     case 'entropy'
         ffprintf(ff,'ratio o.r=signalLevels/backgroundLevels %.3f, log(o.r-1) %.2f\n',1+10^tTest,tTest);
 end
-o.trialsInBlock=1;
+o.trialsDesired=1;
 o.blocksDesired=1;
 o.isLastBlock=true;
 ffprintf(ff,'SUCCESS: o.saveSnapshot is done. Image saved, now returning.\n');

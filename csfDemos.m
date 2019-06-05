@@ -18,7 +18,7 @@ addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % Folder in same dire
 cal=OurScreenCalibrations(0);
 o.useFractionOfScreenToDebug=0.4; % 0: normal, 0.5: small for debugging.
 o.observer='junk';
-o.trialsInBlock=3;
+o.trialsDesired=3;
 o.printLogOfIdeal=true;
 Screen('Preference', 'Verbosity',0);
 o.saveStimulus=true;
@@ -130,8 +130,8 @@ end % for ecc
 for i=1:length(ooo)
     [ooo{i}.block]=deal(i); % Number the blocks
 end
-% ooo{1}(1).trialsInBlock=1;
-% ooo{2}(1).trialsInBlock=1;
+% ooo{1}(1).trialsDesired=1;
+% ooo{2}(1).trialsDesired=1;
 % ooo=ooo(1:2);
 % o.useFractionOfScreenToDebug=0.4; % 0: normal, 0.5: small for debugging.
 

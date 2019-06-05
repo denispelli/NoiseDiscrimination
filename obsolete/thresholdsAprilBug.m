@@ -4,7 +4,7 @@
 
 clear o
 o.durationSec=0.5; % signal duration. [0.05, 0.5]
-o.trialsInBlock=50;
+o.trialsDesired=50;
 
 % NOISE
 o.useDynamicNoiseMovie = 1; % 0 for static noise

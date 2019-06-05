@@ -6,7 +6,7 @@ clear o
 o.experimenter='junk';
 o.observer='junk';
 % o.observer='ideal';
-o.trialsInBlock=40;
+o.trialsDesired=40;
 
 o.experiment='countReceptiveFields';
 o.blankingRadiusReTargetHeight= 0;

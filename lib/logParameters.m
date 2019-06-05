@@ -28,8 +28,8 @@ for run=1:o.blocksDesired
         o.durationSec=inf;
         o.noiseType='gaussian';
         o.noiseCheckDeg=(1/10)*o.targetHeightDeg;
-%         o.trialsInBlock =70 ; 
-        o.trialsInBlock =50; 
+%         o.trialsDesired =70 ; 
+        o.trialsDesired =50; 
         o.useFlankers=0;
 
                 noiseRadiusDeg=0;

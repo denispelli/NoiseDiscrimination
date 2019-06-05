@@ -25,7 +25,7 @@ if 1
     o.annularNoiseBigRadiusDeg=inf;
     o.annularNoiseSmallRadiusDeg=inf;
     % Returns: o.centralNoiseEnvelopeE1degdeg
-    o.trialsInBlock=4;
+    o.trialsDesired=4;
     o=NoiseDiscrimination(o)
     fprintf('Soft envelope "area": %.2f deg^2\n',o.centralNoiseEnvelopeE1degdeg);
 end
@@ -38,7 +38,7 @@ if 1
     o.annularNoiseBigRadiusDeg=3.2; % Noise extent re target. Typically 1 or inf.
     o.annularNoiseSmallRadiusDeg=2.8; % Typically 1 or 0 (no hole).
     % Returns: o.centralNoiseEnvelopeE1degdeg
-    o.trialsInBlock=4;
+    o.trialsDesired=4;
     o=NoiseDiscrimination(o)
     fprintf('Hard envelope "area": %.2f deg^2\n',o.centralNoiseEnvelopeE1degdeg);
 end
@@ -64,5 +64,5 @@ end
 % o.snapshotCaptionTextSizeDeg=0.5;
 % o.snapshotShowsFixationBefore=1;
 % o.snapshotShowsFixationAfter=0;
-% o.trialsInBlock=4;
+% o.trialsDesired=4;
 % o=NoiseDiscrimination(o)

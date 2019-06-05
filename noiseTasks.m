@@ -70,7 +70,7 @@ if false
     o.questPlusPlot=true;
 end
 o.thresholdParameter='contrast';
-o.trialsInBlock=40;
+o.trialsDesired=40;
 
 %% PUT THE EXPERIMENT'S CONDITIONS IN STRUCT oo
 o.targetHeightDeg=11;
@@ -161,7 +161,7 @@ end
 
 %% PRINT THE CONDITIONS (ONE PER ROW) AS TABLE TT
 % All these vars must be defined in every condition.
-vars={'condition' 'conditionName' 'trialsInBlock' 'noiseSD' 'targetHeightDeg'  'task' 'targetModulates' 'contrast'};
+vars={'condition' 'conditionName' 'trialsDesired' 'noiseSD' 'targetHeightDeg'  'task' 'targetModulates' 'contrast'};
 tt=table;
 for i=1:length(oo)
     t=struct2table(oo{i},'AsArray',true);
