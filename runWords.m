@@ -86,9 +86,6 @@ o.eyes='both';
 o.noiseCheckDeg=o.targetHeightDeg/40;
 o.setNearPointEccentricityTo='fixation';
 o.noiseSD=0;
-% USE THESE ONLY FOR DEBUGGING!
-% o.useFractionOfScreenToDebug=0.5; % FOR DEBUGGING.
-% o.skipScreenCalibration=true; % FOR DEBUGGING.
 
 if 1
     o.conditionName='Peripheral acuity';
