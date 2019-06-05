@@ -6538,7 +6538,9 @@ switch o.task
         readyString=[readyString word ' CLICK when ready to proceed.'];
     case {'identify' 'identifyAll' 'rate'}
         readyString=[readyString word ' press the SPACE bar when ready to proceed.'];
-        if IsOSX && ismember(MacModelName,{'MacBook10,1' 'MacBookAir6,2' 'MacBookPro11,5' ... % Mine, without touch bar, just to test this code.
+        if ~streq(message(1:4),'Oops') && IsOSX && ...
+                ismember(MacModelName,{...
+                'MacBook10,1' 'MacBookAir6,2' 'MacBookPro11,5' ... % Mine, without touch bar, just to test this code.
                 'MacBookPro13,2' 'MacBookPro13,3' ... % 2016 with touch bar.
                 'MacBookPro14,1' 'MacBookPro14,2' 'MacBookPro14,3'}) % 2017 with touch bar.
             footnote='For your convenience, hitting the tilde key ~ is equivalent to hitting the ESCAPE key immediately above it.\n';
