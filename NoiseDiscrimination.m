@@ -4349,15 +4349,52 @@ try
                 saveContrast=oo(oi).contrast;
                 oo(oi).contrast=rc;
                 oo(oi).responseScreenContrast=rc;
-                %                 fprintf('ComputeClut o.responseScreenAbsoluteContrast %.2f\n',...
-                %                     oo(oi).responseScreenAbsoluteContrast);
+                % fprintf('ComputeClut o.responseScreenAbsoluteContrast %.2f\n',...
+                %     oo(oi).responseScreenAbsoluteContrast);
                 [cal,oo(oi)]=ComputeClut(cal,oo(oi));
                 oo(oi).contrast=saveContrast;
                 oo(oi).noiseSD=saveNoiseSD;
                 
                 %% DRAW RESPONSE SCREEN
-                % Print instructions for response, according to o.instructionPlacement.
+                % Print instructions for response, according to
+                % o.instructionPlacement, o.alphabetPlacement, and
+                % o.counterPlacement.
+                %
+                % Erasing is complicated when diverse conditions are
+                % interleaved. Different conditions may have different
+                % o.stimulusRect o.topCaptionRect etc. Furthermore the
+                % instructions after a wrong o.fixationTest trial cover a
+                % lot of the screen, extending over both o.topCaptionRect
+                % and o.stimulusRect. I don't want to erase anything before
+                % presenting the stimulus, because that would distract the
+                % observer, so we erase the junk before drawing the
+                % response screen. This means that we must redraw fixation,
+                % since it will be erased.
+                %
+                % Designing the fixation mark to show now is not trivial as
+                % the condition in the next trial is typically different
+                % from the current one. Currently the optional blanking of
+                % fixation to avoid masking the target considers only the
+                % current condition. However, in my experiments it is
+                % usually important that the observer not know which
+                % condition is next, so there should be a common fixation
+                % mark for all interleaved conditions, which could usefully
+                % be blanked for ALL possible targets and locations
+                % represented by the several interleaved conditions. That
+                % would avoid masking the target without revealing which
+                % condition is coming. The code to compute the fixation
+                % mark should cycle through all the conditions, and all the
+                % conditions should use the same fixation mark.
+                % xxx
+                Screen('FillRect',window,o.gray1); % DGP Jun 4, 2019
+                % When testing faces, gray1 matches the face background,
+                % and gray is about half that. I think it's safe to always
+                % use gray1. DGP June 4, 2019
+%                 Screen('FillRect',window,o.gray,oo(oi).stimulusRect); % DGP Jun 4, 2019
                 %                 Screen('FillRect',oo(1).window,oo(oi).gray1,topCaptionRect);
+                if ~isempty(oo(oi).window) && ~isempty(fixationLines)
+                    Screen('DrawLines',oo(oi).window,fixationLines,fixationCrossWeightPix,black); % fixation
+                end
                 counterBounds=DrawCounter(oo(oi));
                 factor=1;
                 switch oo(oi).task
@@ -4501,7 +4538,7 @@ try
                         % the response area, while trying to leave other
                         % annotations untouched, without distracting
                         % flicker.
-                        Screen('FillRect',window,o.gray1,blankRect);
+%                         Screen('FillRect',window,o.gray1,blankRect);
                         rect=round(rect);
                         switch oo(oi).alphabetPlacement
                             case {'left' 'right'}
@@ -4552,9 +4589,9 @@ try
                                     if oo(oi).contrastPolarity<0
                                         if ~isempty(oo(oi).responseScreenAbsoluteContrast) && ~ismember(oo(oi).responseScreenAbsoluteContrast,[0.99 1])
                                             ffprintf(ff,['Ignoring o.responseScreenAbsoluteContrast (%.2f). '...
-                                                'Response screen for negative contrast binary signals is always nearly 100% contrast.\n'],...
+                                                'Response screen for negative contrast binary signals is always nearly 100%% contrast.\n'],...
                                                 oo(oi).responseScreenAbsoluteContrast);
-                                            error('Ignoring o.responseScreenAbsoluteContrast (%.2f). Please use default [].',oo(oi).responseScreenAbsoluteContrast);
+                                            warning('Ignoring o.responseScreenAbsoluteContrast (%.2f) for binary image. Please use default [].',oo(oi).responseScreenAbsoluteContrast);
                                         end
                                         texture=Screen('MakeTexture',oo(1).window,~img*oo(oi).gray1,0,0,1); % Uses only two clut entries (0 1), nicely antialiased.
                                     else
