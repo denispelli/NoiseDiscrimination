@@ -1383,9 +1383,9 @@ try
     while isempty(oo(1).experimenter)
         text.big={'Hello,' 'Please slowly type the experimenter''s name followed by RETURN.'};
         text.small={'In the following blocks, I''ll remember your answers and skip these questions. ' ...
-            'If the keyboard seems dead, please hit Control-C twice to quit, ' ...
+            'If the keyboard seems dead, please hit Control-C twice to quit this program, ' ...
             'then quit and restart MATLAB, and run your MATLAB script again.'};
-        text.fine='NoiseDiscrimination Test, Copyright 2016, 2017, 2018, 2019 Denis Pelli. All rights reserved.';
+        text.fine=['NoiseDiscrimination Test, Copyright ' char(169) ' 2016, 2017, 2018, 2019 Denis Pelli. All rights reserved.'];
         text.question='Experimenter name:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
         fprintf('*Waiting for experimenter name.\n');
@@ -2155,7 +2155,8 @@ try
                 end
                 string=sprintf('%s Right?\nHit RETURN to continue, or ESCAPE to quit.',string);
                 Screen('DrawText',oo(1).window,' ',0,0,1,oo(1).gray1,1); % Set background color.
-                DrawFormattedText(oo(1).window,string,oo(1).textSize,1.5*oo(1).textSize,black,oo(1).textLineLength,[],[],1.3);
+                DrawFormattedText(oo(1).window,string,...
+                    oo(1).textSize,1.5*oo(1).textSize,black,oo(1).textLineLength,[],[],1.3);
                 DrawCounter(oo(oi));
                 Screen('Flip',oo(1).window); % Display request.
                 if oo(1).speakInstructions
@@ -2199,7 +2200,8 @@ try
                     Screen('Preference','TextAntiAliasing',1);
                     string='Please use both eyes.\nHit RETURN to continue, or ESCAPE to quit.';
                     Screen('DrawText',oo(1).window,' ',0,0,1,oo(1).gray1,1); % Set background color.
-                    DrawFormattedText(oo(1).window,string,oo(1).textSize,1.5*oo(1).textSize,black,oo(1).textLineLength,[],[],1.3);
+                    DrawFormattedText(oo(1).window,string,...
+                        oo(1).textSize,1.5*oo(1).textSize,black,oo(1).textLineLength,[],[],1.3);
                     DrawCounter(oo(oi));
                     Screen('Flip',oo(1).window); % Display request.
                     if oo(1).speakInstructions
@@ -2224,7 +2226,8 @@ try
                     Screen('Preference','TextAntiAliasing',1);
                     string=sprintf('Please use just your %s eye. Cover your other eye.\nHit RETURN to continue, or ESCAPE to quit.',oo(1).eyes);
                     Screen('DrawText',oo(1).window,' ',0,0,1,oo(1).gray1,1); % Set background color.
-                    DrawFormattedText(oo(1).window,string,oo(1).textSize,1.5*oo(1).textSize,black,oo(1).textLineLength,[],[],1.3);
+                    DrawFormattedText(oo(1).window,string,...
+                        oo(1).textSize,1.5*oo(1).textSize,black,oo(1).textLineLength,[],[],1.3);
                     DrawCounter(oo(oi));
                     Screen('Flip',oo(1).window); % Display request.
                     if oo(1).speakInstructions
@@ -2252,7 +2255,8 @@ try
                 Screen('Preference','TextAntiAliasing',1);
                 string=[string 'Which eye will you use, left or right? Please type L or R:'];
                 Screen('DrawText',oo(1).window,' ',0,0,1,oo(1).gray1,1); % Set background color.
-                DrawFormattedText(oo(1).window,string,oo(1).textSize,1.5*oo(1).textSize,black,oo(1).textLineLength,[],[],1.3);
+                DrawFormattedText(oo(1).window,string,...
+                    oo(1).textSize,1.5*oo(1).textSize,black,oo(1).textLineLength,[],[],1.3);
                 DrawCounter(oo(oi));
                 Screen('Flip',oo(1).window); % Display request.
                 if oo(1).speakInstructions
@@ -6143,7 +6147,8 @@ Screen('TextSize',o.window,o.textSize);
 Screen('TextFont',o.window,'Verdana');
 Screen('FillRect',o.window,o.gray1);
 Screen('DrawText',o.window,' ',0,0,1,o.gray1,1); % Set background color.
-DrawFormattedText(o.window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+DrawFormattedText(o.window,string,...
+    o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
 x=o.nearPointXYPix(1);
 y=o.nearPointXYPix(2);
 a=0.05*RectHeight(o.stimulusRect);
@@ -6247,7 +6252,8 @@ else
         Screen('TextFont',o.window,'Verdana');
         Screen('FillRect',o.window,o.gray1);
         Screen('DrawText',o.window,' ',0,0,1,o.gray1,1); % Set background color.
-        DrawFormattedText(o.window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+        DrawFormattedText(o.window,string,...
+            o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
         x=o.nearPointXYPix(1);
         y=o.nearPointXYPix(2);
         a=0.1*RectHeight(o.stimulusRect);
@@ -6463,16 +6469,17 @@ DrawCounter(o);
 y=o.screenRect(4)/2-(1+2*length(text.big))*o.textSize;
 for i=1:length(text.big)
     Screen('DrawText',o.window,text.big{i},o.textMarginPix,y,black,o.gray1);
-    y=y+2*o.textSize;
+    y=y+1.3*o.textSize;
 end
-y=y-0.5*o.textSize;
+% y=y-0.5*o.textSize;
 Screen('TextSize',o.window,round(0.6*o.textSize));
 for i=1:length(text.small)
     Screen('DrawText',o.window,text.small{i},o.textMarginPix,y,black,o.gray1);
-    y=y+2*0.6*o.textSize;
+    y=y+1.3*0.6*o.textSize;
 end
 Screen('TextSize',o.window,round(o.textSize*0.35));
-Screen('DrawText',o.window,text.fine,o.textMarginPix,o.screenRect(4)-0.5*o.textMarginPix,black,o.gray1,1);
+Screen('DrawText',o.window,text.fine,...
+    o.textMarginPix,o.screenRect(4)-0.5*o.textMarginPix,black,o.gray1,1);
 Screen('TextSize',o.window,o.textSize);
 if IsWindows
     background=[];
@@ -6552,11 +6559,13 @@ msg=[message readyString '\n'];
 black=0;
 Screen('DrawText',o.window,' ',0,0,black,o.gray1,1); % Set background color.
 Screen(o.window,'TextSize',o.textSize);
-[x,y]=DrawFormattedText(o.window,msg,o.textSize,1.5*o.textSize,black,o.textLineLength-2,[],[],1.3);
+[x,y]=DrawFormattedText(o.window,msg,...
+    o.textSize,1.5*o.textSize,black,o.textLineLength-2,[],[],1.3);
 sz=round(0.8*o.textSize);
 Screen(o.window,'TextSize',sz);
 ratio=sz/o.textSize;
-DrawFormattedText(o.window,footnote,x,y,black,floor(o.textLineLength/ratio),[],[],1.3);
+DrawFormattedText(o.window,footnote,...
+    x,y,black,floor(o.textLineLength/ratio),[],[],1.3);
 DrawCounter(o);
 Screen('Flip',o.window,0,1); % Proceeding to the trial.
 if o.speakInstructions
