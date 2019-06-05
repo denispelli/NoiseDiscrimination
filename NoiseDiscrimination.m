@@ -6094,6 +6094,7 @@ end % function ModelObserver(o,signal,location)
 %% SetUpNearPoint at correct slant and viewing distance.
 function o=SetUpNearPoint(o)
 % o=SetUpNearPoint(o);
+global ff
 black=0; % The CLUT color code for black.
 white=1; % The CLUT color code for white.
 escapeChar=char(27);
