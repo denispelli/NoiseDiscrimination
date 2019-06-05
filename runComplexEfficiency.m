@@ -2,20 +2,28 @@
 % MATLAB script to run NoiseDiscrimination.m
 % Copyright 2019 Denis G. Pelli, denis.pelli@nyu.edu
 %
-% The script specifies "Darshan" as experimenter. You can change that in
-% the script below if necessary. On the first block the program will ask
-% the observer's name. On subsequent blocks it will remember the observer's
-% name.
+% June 4, 2019. Added "Fixation test" condition that is meant to be
+% interleaved with all peripheral conditions. It presents an unvarying easy
+% foveal identification task (a target letter between two flankers), which
+% will be crowded beyond recognition if the observer's eye is more than 2
+% deg from fixation. If the observer gets it wrong the program encourages
+% better fixation, and runs two more foveal trials. Thus an observer who
+% frequently fixates away from fixation will generate many errors and many
+% extra trials. I hope this will help the observer learn to fixate
+% reliably.
+%
+% On the first block the program will ask the experimenter's and observer's
+% names. On subsequent blocks it will remember the names.
 %
 % Please use binocular viewing, using both eyes at all times.
 %
-% The script specifies a viewing distance of 40 cm. Please use a meter
-% stick or tape measure to measure the viewing distance and ensure that the
+% The script specifies the viewing distance. Please use a meter stick or
+% tape measure to measure the viewing distance and ensure that the
 % observer's eye is actually at the distance that the program thinks it is.
 % Please encourage the observer to maintain the same viewing distance for
 % the whole experiment.
 %
-% denis.pelli@nyu.edu November 20, 2018
+% denis.pelli@nyu.edu June 4, 2019
 % 646-258-7524
 
 % Crowding distance at ±10 deg ecc x 2 orientation.
@@ -24,7 +32,7 @@
 clear o oo ooo
 ooo={};
 % o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
-o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+% o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 o.recordGaze=false;
 o.experiment='ComplexEfficiency';
 o.eccentricityXYDeg=[0 0];
@@ -60,11 +68,14 @@ o.flankerContrast=-1;
 % o.assessGray=true;
 % o.assessLoadGamma=true;
 % o.printContrastBounds=true;
-if 1
+o.symmetricLuminanceRange=true; % False for maximum brightness.
+o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
+o.viewingDistanceCm=40;
+o.alphabetPlacement='top'; % 'top' 'bottom' 'right' or 'left' while awaiting response.
+o.counterPlacement='bottomRight';
+o.instructionPlacement='bottomLeft'; % 'topLeft' 'bottomLeft'
+if 0
     o.brightnessSetting=0.87;
-    o.symmetricLuminanceRange=false; % False for maximum brightness.
-    o.desiredLuminanceFactor=1.1; % 1.8 for maximize brightness.
-    o.responseScreenAbsoluteContrast=0.9;
     if false
         % Target letter
         o.conditionName='Sloan';
@@ -82,16 +93,14 @@ if 1
         o.alphabet='abcdefghijklmnopq';
         o.brightnessSetting=0.87;
         o.labelAnswers=true;
-        o.alphabetPlacement='top'; % 'top' 'bottom' 'right' or 'left' while awaiting response.
-        o.counterPlacement='bottomRight';
-        o.instructionPlacement='bottomLeft'; % 'topLeft' 'bottomLeft'
-
+        o.symmetricLuminanceRange=false; % False for maximum brightness.
+        o.desiredLuminanceFactor=1.1; % 1.8 for maximize brightness.
     end
     o.targetMargin=0;
     o.viewingDistanceCm=40;
     o.contrast=1; % Select contrast polarity.
     o.task='identify';
-    % o.eccentricityXYDeg=[0 0];
+    o.eccentricityXYDeg=[0 0];
     o.targetHeightDeg=10;
     o.targetDurationSecs=0.15;
     o.trialsInBlock=40;
@@ -101,19 +110,12 @@ if 1
     o.observer='';
     o.noiseSD=0;
     o.thresholdParameter='contrast';
-    % o.blankingRadiusReTargetHeight=0;
-    % o.targetMarkDeg=1;
-    % o.fixationCrossDeg=3;
     o.alternatives=length(o.alphabet);
-    % if all(o.eccentricityXYDeg==0)
-    %     o.markTargetLocation=false;
-    % else
-    %     o.markTargetLocation=true;
-    % end
     ooo{end+1}=o;
 end
-
-if 0
+o.symmetricLuminanceRange=true; % False for maximum brightness.
+o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
+if 1
     % Sloan
     o.conditionName='Sloan';
     o.targetFont='Sloan';
@@ -124,6 +126,7 @@ if 0
     o.labelAnswers=false;
     o.readAlphabetFromDisk=true;
     o.contrast=-1;
+    o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
 if 0
@@ -135,6 +138,7 @@ if 0
     o.borderLetter='';
     o.labelAnswers=true;
     o.readAlphabetFromDisk=true;
+    o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
 if 0
@@ -146,6 +150,7 @@ if 0
     o.borderLetter='$';
     o.labelAnswers=false;
     o.readAlphabetFromDisk=true;
+    o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
 if 0
@@ -157,6 +162,7 @@ if 0
     o.borderLetter='$';
     o.labelAnswers=true;
     o.readAlphabetFromDisk=true;
+    o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
 if 0
@@ -168,6 +174,7 @@ if 0
     o.borderLetter='$';
     o.labelAnswers=true;
     o.readAlphabetFromDisk=true;
+    o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
 if 0
@@ -181,9 +188,10 @@ if 0
     o.borderLetter='';
     o.labelAnswers=true;
     o.readAlphabetFromDisk=true;
+    o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-if 0
+if 1
     % Japanese: Katakana, Hiragani, and Kanji
     % from Ayaka
     o.targetFont='Hiragino Mincho ProN W3';
@@ -210,9 +218,10 @@ if 0
     o.borderLetter='';
     o.labelAnswers=true;
     o.readAlphabetFromDisk=true;
+    o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-if false
+if 1
     % Test with zero and high noise, interleaved.
     for block=1:length(ooo)
         oo=ooo{block};
@@ -252,13 +261,16 @@ if true
         oo=o;
         o.eccentricityXYDeg=-o.eccentricityXYDeg;
         oo(2)=o;
+        %% FIXATION TEST
+        o.symmetricLuminanceRange=true; % False for maximum brightness.
+        o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
         o.conditionName='Fixation test';
         o.fixationTest=true;
         o.eccentricityXYDeg=[0 0];
         o.thresholdParameter='spacing';
+        o.useFlankers=true;
         o.targetHeightDeg=0.4;
         o.flankerSpacingDeg=1.4*o.targetHeightDeg;
-        o.useFlankers=true;
         o.flankerContrast=-1;
         o.contrast=-1;
         o.targetFont='Sloan';
@@ -266,7 +278,8 @@ if true
         o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
         o.targetKind='letter';
         o.labelAnswers=false;
-        o.readAlphabetFromDisk=true;
+        o.readAlphabetFromDisk=false;
+        o.alternatives=length(o.alphabet);
         oo(3)=o;
         ooo{end+1}=oo;
     end
@@ -289,10 +302,39 @@ end
 
 %% Print as a table. One row per threshold.
 oo=[];
+ok=true;
 for block=1:length(ooo)
     [ooo{block}(:).block]=deal(block);
+end
+for block=2:length(ooo)
     % This will fail unless there is a perfect agreement in fields between
-    % oo and ooo{block}.
+    % all blocks.
+    fBlock1=fieldnames(ooo{1});
+    fBlock=fieldnames(ooo{block});
+    if isfield(ooo{block},'conditionName')
+        cond=[ooo{block}(1).conditionName ' '];
+    else
+        cond='';
+    end
+    for i=1:length(fBlock1)
+        f=fBlock1{i};
+        if ~ismember(f,fBlock)
+            fprintf('%sBlock %d is missing field ''%s'', present in earlier blocks.\n',cond,block,f);
+            ok=false;
+        end
+    end
+    for i=1:length(fBlock)
+        f=fBlock{i};
+        if ~ismember(f,fBlock1)
+            fprintf('%sBlock %d has field ''%s'', not in earlier blocks.\n',cond,block,f);
+            ok=false;
+        end
+    end
+end
+if ~ok
+    error('Please fix the script so all blocks have the same set of fields. Sorry.');
+end
+for block=1:length(ooo)
     oo=[oo ooo{block}];
 end
 t=struct2table(oo,'AsArray',true);
