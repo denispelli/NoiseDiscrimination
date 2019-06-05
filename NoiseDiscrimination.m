@@ -5319,14 +5319,23 @@ try
         end
         
         %% SAVE EACH THRESHOLD IN ITS OWN FILE, WITH A SUFFIX DESIGNATING THE CONDITION NUMBER.
+        ffprintf(ff,'%d: begin saving mat file at %.0f s\n',oi,GetSecs-savingToDiskSecs);
         oo=SortFields(oo);
         oo(1).newCal=cal;
         save(fullfile(oo(1).dataFolder,[oo(1).dataFilename '.mat']),'oo','cal');
+        ffprintf(ff,'%d: done saving mat file at %.0f s\n',oi,GetSecs-savingToDiskSecs);
         try % save to .json file
-            if ismember(oo(oi).targetKind,{'image' 'word'})
-                % json encoding of 12 faces takes 60 s, which is
-                % unbearable, so we omit the signals from the json file.
-                % Omit words too, since there may be many.
+            if isfield(oo,'signal')
+                x={oo.signal};
+                s=whos('x');
+                clear x
+                bytes=s.bytes;
+            else
+                bytes=0;
+            end
+            if bytes>1e5
+                % json encoding of large images "oo.signal" is very slow
+                % and takes up a lot of disk space, so we omit oo.signal.
                 oo1=rmfield(oo,'signal');
             else
                 oo1=oo;
@@ -5345,6 +5354,8 @@ try
             warning('Failed to save .json file.');
             warning(e.message);
         end % save to .json file
+        ffprintf(ff,'%d: done saving json data at %.0f s\n',oi,GetSecs-savingToDiskSecs);
+
         try % save transcript to .json file
             if isempty(oo(oi).transcript.intensity)
                 if oo(oi).trials>1
@@ -5365,6 +5376,7 @@ try
             warning('Failed to save .transcript.json file.');
             warning(e.message);
         end % save transcript to .json file
+        ffprintf(ff,'%d: done saving json transcript at %.0f s\n',oi,GetSecs-savingToDiskSecs);
         ffprintf(ff,'Results saved as %s with extensions .txt, .mat, and .json \n',oo(oi).dataFilename);
         if oo(oi).recordGaze
             ffprintf(ff,'Gaze recorded with extension %s\n',videoExtension);
