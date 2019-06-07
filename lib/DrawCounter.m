@@ -3,11 +3,12 @@ function bounds=DrawCounter(o)
 % Use o.counterPlacement to specify alignment of counter in screenRect.
 % Displays "INVALID DATA" when in debugging mode. I.e. whenever
 % o.useFractionOfScreenToDebug~=0 or o.skipScreenCalibration=true.
+o=o(1); % Allow caller to send o or oo.
 
 global window scratchWindow scratchRect
 global blockTrial blockTrials
 persistent counterSize counterBounds
-% Check arguments.
+% Check arguments and globals.
 if isempty(window)
     error('Require open window.');
 end
@@ -47,6 +48,9 @@ if isfield(o,'stimulusRect')
     r(3)=o.stimulusRect(3);
 end
 r=InsetRect(r,counterSize/4,counterSize/8);
+if ~isfield(o,'counterPlacement')
+	o.counterPlacement='bottomRight';
+end
 switch o.counterPlacement
     case 'bottomRight'
         counterBounds=AlignRect(counterBounds,r,'right','bottom');
