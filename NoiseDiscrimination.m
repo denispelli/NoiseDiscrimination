@@ -3396,17 +3396,17 @@ try
     
     %% SET UP conditionList
     % For all conditions we include the specified number of trials,
-    % o.trialInBlock, for that condition. For most conditions we simply
+    % o.trialsDesired, for that condition. For most conditions we simply
     % shuffle the list of conditions. The exception is that we always
     % begin with one trial of each condition for which oo(oi).fixationTest
     % is true.
     list=[];
     for oi=1:conditions
-        if ~oo(oi).fixationTest
-            list=[list oi*ones(1,oo(oi).trialsDesired)];
+         if ~oo(oi).fixationTest
+           condList=[condList repmat(oi,1,oo(oi).trialsDesired)];
         else
-            % Reserve one instance to place at beginning.
-            list=[list oi*ones(1,oo(oi).trialsDesired-1)];
+            % Hold back one instance to place at beginning.
+            condList=[condList repmat(oi,1,oo(oi).trialsDesired-1)];
         end
     end
     list=Shuffle(list);
@@ -5075,16 +5075,16 @@ try
             % The observer failed to correctly identify an easy foveal
             % target. Before the next trial, encourage them to always have
             % their eye on the center of the fixation mark when they hit
-            % the response key, initiating the next trial. We insist that
-            % the observer get right several (o.fixationTestMakeupTrials)
-            % consecutive trials of this condition oi before proceeding
-            % with the rest of the condition list.
+            % the response key, which initiates the next trial. We insist
+            % that the observer get right several
+            % (o.fixationTestMakeupTrials) consecutive trials of this
+            % condition before proceeding with the rest of the condition
+            % list.
             % This requests showing of a message before the next trial.
             encourageFixation=true;
             waitMessage=['Oops. Wrong response. '...
                 'Perhaps you didn''t have your eye on the center '...
-                'of the cross. '...
-                'Please always place your eye '...
+                'of the cross. Please always place your eye '...
                 'at the center of the cross '...
                 'before initiating the next trial. '];
             % Repeat the current condition for several trials.
