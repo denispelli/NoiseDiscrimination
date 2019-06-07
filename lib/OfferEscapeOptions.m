@@ -1,8 +1,15 @@
 function [quitExperiment,quitBlock,skipTrial]=OfferEscapeOptions(window,oo,textMarginPix)
 % [quitExperiment,quitBlock,skipTrial]=OfferEscapeOptions(window,oo,textMarginPix);
 o=oo(1);
+if nargin<2
+    error('Need at least two args.');
+end
+assert(isfield(o,'textFont') && ~isempty(o.textFont));
+if nargin<3
+    textMarginPix=2*o.textSize;
+end
 if o.speakEachLetter && o.useSpeech
-    Speak('Escape');
+   Speak('Escape');
 end
 textSize=TextSizeToFit(window); % Set optimum text size.
 escapeKeyCode=KbName('ESCAPE');
@@ -15,6 +22,7 @@ graveAccentChar='`';
 backgroundColor=o.gray1;
 Screen('FillRect',window,backgroundColor);
 Screen('TextFont',window,o.textFont,0);
+Screen('TextSize',window,textSize);
 black=0;
 Screen('Preference','TextAntiAliasing',0);
 trials=0;
@@ -26,7 +34,6 @@ if isfield(o,'trials') && isfield(o,'trialsDesired')
     end
 end
 DrawCounter(o);
-Screen('TextSize',window,textSize);
 % Set background color for DrawFormattedText.
 Screen('DrawText',window,' ',0,0,black,backgroundColor,1);
 lastBlock=isfield(o,'block') && isfield(o,'blocksDesired') && o.block>=o.blocksDesired;
@@ -36,10 +43,11 @@ else
     nextBlockMsg='Or hit RETURN to proceed to the next block. ';
 end
 if nargout==3
-    nextTrialMsg='Or hit SPACE to proceed to the next trial.';
+    nextTrialMsg='Or hit SPACE to resume from where you escaped.';
 else
-    nextTrialMsg='';
+   nextTrialMsg='';
 end
+%     'Hit RETURN to proceed to the next block. ' 
 string=['You escaped. Any incomplete trial was canceled. ' ...
     'Hit ESCAPE again to quit the whole experiment. '...
     nextBlockMsg nextTrialMsg];
