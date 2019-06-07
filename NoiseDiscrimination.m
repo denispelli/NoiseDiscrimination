@@ -728,7 +728,7 @@ o.useMethodOfConstantStimuli=false;
 o.contrastPolarity=1; % Must be -1 or 1;
 o.skipTrial=0;
 o.trialsSkipped=0;
-o.fixationTest=false; % True designates condition as a fixation test.
+o.fixationCheck=false; % True designates condition as a fixation test.
 o.fixationTestMakeupTrials=2; % After a mistake, how many right answers to require.
 
 % Target
@@ -3398,11 +3398,11 @@ try
     % For all conditions we include the specified number of trials,
     % o.trialsDesired, for that condition. For most conditions we simply
     % shuffle the list of conditions. The exception is that we always
-    % begin with one trial of each condition for which oo(oi).fixationTest
+    % begin with one trial of each condition for which oo(oi).fixationCheck
     % is true.
     list=[];
     for oi=1:conditions
-         if ~oo(oi).fixationTest
+         if ~oo(oi).fixationCheck
            condList=[condList repmat(oi,1,oo(oi).trialsDesired)];
         else
             % Hold back one instance to place at beginning.
@@ -3411,7 +3411,7 @@ try
     end
     list=Shuffle(list);
     for oi=1:conditions
-        if oo(oi).fixationTest
+        if oo(oi).fixationCheck
             % Insert one instance at beginning.
             list=[oi list];
         end
@@ -3570,7 +3570,7 @@ try
         end
         switch oo(oi).thresholdParameter
             case 'spacing'
-                if ~oo(oi).fixationTest
+                if ~oo(oi).fixationCheck
                     spacingDeg=10^tTest;
                 else
                     spacingDeg=oo(oi).flankerSpacingDeg;
@@ -3579,7 +3579,7 @@ try
                 flankerSpacingPix=max(flankerSpacingPix,1.2*oo(oi).targetHeightPix);
                 fprintf('flankerSpacingPix %d\n',flankerSpacingPix);
             case 'size'
-                if ~oo(oi).fixationTest
+                if ~oo(oi).fixationCheck
                     targetSizeDeg=10^tTest;
                 else
                     targetSizeDeg=oo(oi).targetHeightDeg;
@@ -3609,7 +3609,7 @@ try
                 switch oo(oi).targetModulates
                     case 'luminance'
                         oo(oi).r=1;
-                        if ~oo(oi).fixationTest
+                        if ~oo(oi).fixationCheck
                             oo(oi).contrast=oo(oi).contrastPolarity*10^tTest; % Dark letters have negative contrast.
                         end
                         if oo(oi).saveSnapshot && isfinite(oo(oi).snapshotContrast)
@@ -3620,7 +3620,7 @@ try
                             oo(oi).contrast=max([-1 oo(oi).contrast]);
                         end
                     case {'noise', 'entropy'}
-                        assert(~oo(oi).fixationTest);
+                        assert(~oo(oi).fixationCheck);
                         oo(oi).r=1+10^tTest;
                         oo(oi).contrast=0;
                     otherwise
@@ -3628,7 +3628,7 @@ try
                 end
             case 'flankerContrast'
                 assert(streq(oo(oi).targetModulates,'luminance'),'The flanker software assumes o.targetModulates is ''luminance''.');
-                assert(~oo(oi).fixationTest);
+                assert(~oo(oi).fixationCheck);
                 oo(oi).r=1;
                 oo(oi).flankerContrast=oo(oi).contrastPolarity*10^tTest;
                 if oo(oi).saveSnapshot && isfinite(oo(oi).snapshotContrast)
@@ -4367,7 +4367,7 @@ try
                 % Erasing is complicated when diverse conditions are
                 % interleaved. Different conditions may have different
                 % o.stimulusRect o.topCaptionRect etc. Furthermore the
-                % instructions after a wrong o.fixationTest trial cover a
+                % instructions after a wrong o.fixationCheck trial cover a
                 % lot of the screen, extending over both o.topCaptionRect
                 % and o.stimulusRect. I don't want to erase anything before
                 % presenting the stimulus, because that would distract the
@@ -5071,7 +5071,7 @@ try
             % Trial was not canceled, so count it.
             fixationTestTrialsOwed=fixationTestTrialsOwed-1;
         end
-        if ~isRight && oo(oi).fixationTest
+        if ~isRight && oo(oi).fixationCheck
             % The observer failed to correctly identify an easy foveal
             % target. Before the next trial, encourage them to always have
             % their eye on the center of the fixation mark when they hit

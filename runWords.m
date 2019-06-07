@@ -28,7 +28,7 @@ ooo={};
 % o.useFractionOfScreenToDebug=0.3;
 % o.skipScreenCalibration=true;
 
-o.fixationTest=false;
+o.fixationCheck=false;
 o.readAlphabetFromDisk=false;
 o.targetFont='Monaco';
 o.alphabet='abcdefghijklmnopqrstuvwxyz'; % alphabet for o.words
@@ -116,7 +116,7 @@ if 0
 end
 if 1
     o.conditionName='Fixation Test';
-    o.fixationTest=true;
+    o.fixationCheck=true;
     % This fails when I select 'spacing'. 
     % oo(oi).targetSizeDeg is undefined in:
     % Error in NoiseDiscrimination (line 4987)
@@ -133,7 +133,7 @@ if 1
             ooo{block}(end+1)=o;
         end
     end
-    o.fixationTest=false;
+    o.fixationCheck=false;
 end
 
 if 1

@@ -57,7 +57,7 @@ o.alphabet='';
 o.borderLetter='';
 o.labelAnswers=false;
 o.readAlphabetFromDisk=false;
-o.fixationTest=false;
+o.fixationCheck=false;
 o.fixationCrossBlankedNearTarget=true;
 o.fixationCrossBlankedUntilSecsAfterTarget=0.6;
 o.fixationCrossDrawnOnStimulus=false;
@@ -265,7 +265,7 @@ if true
         o.symmetricLuminanceRange=true; % False for maximum brightness.
         o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
         o.conditionName='Fixation test';
-        o.fixationTest=true;
+        o.fixationCheck=true;
         o.eccentricityXYDeg=[0 0];
         o.thresholdParameter='spacing';
         o.useFlankers=true;
