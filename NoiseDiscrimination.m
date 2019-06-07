@@ -728,8 +728,8 @@ o.useMethodOfConstantStimuli=false;
 o.contrastPolarity=1; % Must be -1 or 1;
 o.skipTrial=0;
 o.trialsSkipped=0;
-o.fixationCheck=false; % True designates condition as a fixation test.
-o.fixationTestMakeupTrials=2; % After a mistake, how many right answers to require.
+o.fixationCheck=false; % True designates the condition as a fixation check.
+o.fixationCheckMakeupTrials=2; % After a mistake, how many right answers to require.
 
 % Target
 o.targetKind='letter'; % Put the letters in array o.alphabet.
@@ -5077,7 +5077,7 @@ try
             % their eye on the center of the fixation mark when they hit
             % the response key, which initiates the next trial. We insist
             % that the observer get right several
-            % (o.fixationTestMakeupTrials) consecutive trials of this
+            % (o.fixationCheckMakeupTrials) consecutive trials of this
             % condition before proceeding with the rest of the condition
             % list.
             % This requests showing of a message before the next trial.
@@ -5088,9 +5088,9 @@ try
                 'at the center of the cross '...
                 'before initiating the next trial. '];
             % Repeat the current condition for several trials.
-            assert(oo(oi).fixationTestMakeupTrials>=0,...
-                'o.fixationTestMakeupTrials must be a nonnegative integer.');
-            fixationTestTrialsOwed=oo(oi).fixationTestMakeupTrials;
+            assert(oo(oi).fixationCheckMakeupTrials>=0,...
+                'o.fixationCheckMakeupTrials must be a nonnegative integer.');
+            fixationTestTrialsOwed=oo(oi).fixationCheckMakeupTrials;
         else
             encourageFixation=false;
         end

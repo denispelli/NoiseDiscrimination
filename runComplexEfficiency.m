@@ -2,7 +2,7 @@
 % MATLAB script to run NoiseDiscrimination.m
 % Copyright 2019 Denis G. Pelli, denis.pelli@nyu.edu
 %
-% June 4, 2019. Added "Fixation test" condition that is meant to be
+% June 4, 2019. Added "Fixation check" condition that is meant to be
 % interleaved with all peripheral conditions. It presents an unvarying easy
 % foveal identification task (a target letter between two flankers), which
 % will be crowded beyond recognition if the observer's eye is more than 2
@@ -46,7 +46,7 @@ o.blankingRadiusReEccentricity=0;
 o.targetKind='letter';
 o.targetHeightDeg=6;
 o.thresholdParameter='contrast';
-o.flankerSpacingDeg=0.2; % Used only for fixation test.
+o.flankerSpacingDeg=0.2; % Used only for fixation check.
 o.observer='';
 o.trialsDesired=40;
 o.brightnessSetting=0.87;
@@ -244,7 +244,7 @@ end
 if true
     % Measure threshold size at +/-10 deg. No noise.
     % Randomly interleave testing left and right.
-    % Add fixation test.
+    % Add fixation check.
     for block=1:length(ooo)
         o=ooo{block}(1);
         o.fullResolutionTarget=true;
@@ -264,7 +264,7 @@ if true
         %% FIXATION TEST
         o.symmetricLuminanceRange=true; % False for maximum brightness.
         o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
-        o.conditionName='Fixation test';
+        o.conditionName='Fixation check';
         o.fixationCheck=true;
         o.eccentricityXYDeg=[0 0];
         o.thresholdParameter='spacing';
