@@ -480,6 +480,11 @@ function oo=NoiseDiscrimination(ooIn)
 %
 % -mario
 
+if verLessThan('matlab','9.1')
+    % https://en.wikipedia.org/wiki/MATLAB#Release_history
+    error('%s requires MATLAB 9.1 (R2016b) or later, for "split" function.',mfilename);
+end
+
 %% INPUT ARGUMENT
 if exist('ooIn','var') && isfield(ooIn,'quitExperiment') && ooIn(1).quitExperiment
     % If the user wants to quit the experiment, then return immediately.
@@ -730,6 +735,7 @@ o.skipTrial=0;
 o.trialsSkipped=0;
 o.fixationCheck=false; % True designates the condition as a fixation check.
 o.fixationCheckMakeupTrials=2; % After a mistake, how many right answers to require.
+o.etaMin=0; % Estimated time till completion, in minutes.
 
 % Target
 o.targetKind='letter'; % Put the letters in array o.alphabet.
@@ -3328,7 +3334,7 @@ try
         tGuessSd=2;
         switch oo(oi).thresholdParameter
             case 'spacing'
-                nominalCriticalSpacingDeg=0.3*(rDeg+0.45); % Eq. 14 from Song, Levi, and Pelli (2014).
+                nominalCriticalSpacingDeg=0.3*(rDeg+0.15); % from Pelli et al. (2017).
                 tGuess=log10(2*nominalCriticalSpacingDeg);
                 oo(oi).contrastPolarity=sign(oo(oi).contrast); % Saved to set response screen polarity. DGP
                 if isempty(oo(oi).contrastPolarity) || ~isfinite(oo(oi).contrastPolarity)
@@ -3400,23 +3406,23 @@ try
     % shuffle the list of conditions. The exception is that we always
     % begin with one trial of each condition for which oo(oi).fixationCheck
     % is true.
-    list=[];
+    condList=[];
     for oi=1:conditions
-         if ~oo(oi).fixationCheck
-           condList=[condList repmat(oi,1,oo(oi).trialsDesired)];
+        if ~oo(oi).fixationCheck
+            condList=[condList repmat(oi,1,oo(oi).trialsDesired)];
         else
             % Hold back one instance to place at beginning.
             condList=[condList repmat(oi,1,oo(oi).trialsDesired-1)];
         end
     end
-    list=Shuffle(list);
+    condList=Shuffle(condList);
     for oi=1:conditions
         if oo(oi).fixationCheck
             % Insert one instance at beginning.
-            list=[oi list];
+            condList=[oi condList];
         end
     end
-    oo(1).conditionList=list;
+    oo(1).conditionList=condList;
     
     %% IF RUNNING ALGORITHMIC OBSERVER, TELL THE HUMAN OBSERVER.
     if ismember(oo(1).observer,oo(1).algorithmicObservers)
@@ -3577,7 +3583,7 @@ try
                 end
                 flankerSpacingPix=spacingDeg*oo(oi).pixPerDeg;
                 flankerSpacingPix=max(flankerSpacingPix,1.2*oo(oi).targetHeightPix);
-                fprintf('flankerSpacingPix %d\n',flankerSpacingPix);
+                fprintf('%d: flankerSpacingPix %d, o.spacingDeg %.1f, o.targetHeightDeg %.1f\n',oi,flankerSpacingPix,oo(oi).spacingDeg,oo(oi).targetHeightDeg);
             case 'size'
                 if ~oo(oi).fixationCheck
                     targetSizeDeg=10^tTest;
