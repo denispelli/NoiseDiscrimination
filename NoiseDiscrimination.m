@@ -3579,16 +3579,17 @@ try
                 if ~oo(oi).fixationCheck
                     spacingDeg=10^tTest;
                 else
-                    spacingDeg=oo(oi).flankerSpacingDeg;
+                    spacingDeg=0.3;
                 end
                 flankerSpacingPix=spacingDeg*oo(oi).pixPerDeg;
                 flankerSpacingPix=max(flankerSpacingPix,1.2*oo(oi).targetHeightPix);
-                fprintf('%d: flankerSpacingPix %d, o.spacingDeg %.1f, o.targetHeightDeg %.1f\n',oi,flankerSpacingPix,oo(oi).spacingDeg,oo(oi).targetHeightDeg);
+                fprintf('%d: flankerSpacingPix %d, spacingDeg %.1f, o.targetHeightDeg %.1f\n',...
+                    oi,flankerSpacingPix,spacingDeg,oo(oi).targetHeightDeg);
             case 'size'
                 if ~oo(oi).fixationCheck
                     targetSizeDeg=10^tTest;
                 else
-                    targetSizeDeg=oo(oi).targetHeightDeg;
+                    targetSizeDeg=0.3/1.4;
                 end
                 oo(oi).desiredTargetHeightPix=targetSizeDeg*oo(oi).pixPerDeg;
                 oo(oi).desiredTargetHeightPix=oo(oi).targetCheckPix* ...
@@ -3612,12 +3613,11 @@ try
                 sz=max([sz oo(oi).minimumTargetHeightChecks]);
                 oo(oi).desiredTargetHeightPix=sz*oo(oi).targetCheckPix;
             case 'contrast'
+                assert(~oo(oi).fixationCheck);
                 switch oo(oi).targetModulates
                     case 'luminance'
                         oo(oi).r=1;
-                        if ~oo(oi).fixationCheck
-                            oo(oi).contrast=oo(oi).contrastPolarity*10^tTest; % Dark letters have negative contrast.
-                        end
+                        oo(oi).contrast=oo(oi).contrastPolarity*10^tTest; % Dark letters have negative contrast.
                         if oo(oi).saveSnapshot && isfinite(oo(oi).snapshotContrast)
                             oo(oi).contrast=-oo(oi).snapshotContrast;
                         end
@@ -4372,17 +4372,18 @@ try
                 %
                 % Erasing is complicated when diverse conditions are
                 % interleaved. Different conditions may have different
-                % o.stimulusRect o.topCaptionRect etc. Furthermore the
-                % instructions after a wrong o.fixationCheck trial cover a
-                % lot of the screen, extending over both o.topCaptionRect
-                % and o.stimulusRect. I don't want to erase anything before
-                % presenting the stimulus, because that would distract the
-                % observer, so we erase the junk before drawing the
-                % response screen. This means that we must redraw fixation,
-                % since it will be erased.
+                % o.stimulusRect o.topCaptionRect etc. I don't want to
+                % erase anything before presenting the stimulus, because
+                % that would distract the observer, so we erase the junk
+                % after the stimulus, before drawing the response screen.
+                % This means that we must redraw fixation, since it will be
+                % erased.
                 %
-                % Designing the fixation mark to show now is not trivial as
-                % the condition in the next trial is typically different
+                % Using the fixation check implies interleaving central and
+                % peripheral conditions. This make it more challenging to
+                % design the fixation mark to avoid masking or crowding the
+                % target without giving away which condition is coming.
+                % The condition in the next trial is typically different
                 % from the current one. Currently the optional blanking of
                 % fixation to avoid masking the target considers only the
                 % current condition. However, in my experiments it is
