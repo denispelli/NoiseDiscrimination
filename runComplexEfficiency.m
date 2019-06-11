@@ -299,6 +299,23 @@ if true
         ooo{end+1}=oo;
     end
 end
+%% ESTIMATED TIME OF ARRIVAL (ETA)
+etaMin=0;
+for block=1:length(ooo)
+    oo=ooo{block};
+    for oi=1:length(oo)
+        if ~ismember(oo(oi).observer,{'ideal'})
+            etaMin=etaMin+[oo(oi).trialsDesired]/10;
+        end
+    end
+    [ooo{block}(:).etaMin]=deal(etaMin);
+end
+%% COMPUTE MAX VIEWING DISTANCE IN REMAINING BLOCKS
+maxCm=0;
+for block=length(ooo):-1:1
+    maxCm=max([maxCm ooo{block}(1).viewingDistanceCm]);
+    [ooo{block}(:).maxViewingDistanceCm]=deal(maxCm);
+end
 
 %% Print as a table. One row per threshold.
 oo=[];
@@ -307,8 +324,7 @@ for block=1:length(ooo)
     [ooo{block}(:).block]=deal(block);
 end
 for block=2:length(ooo)
-    % This will fail unless there is a perfect agreement in fields between
-    % all blocks.
+    % Demand perfect agreement in fields between all blocks.
     fBlock1=fieldnames(ooo{1});
     fBlock=fieldnames(ooo{block});
     if isfield(ooo{block},'conditionName')
@@ -319,26 +335,28 @@ for block=2:length(ooo)
     for i=1:length(fBlock1)
         f=fBlock1{i};
         if ~ismember(f,fBlock)
-            fprintf('%sBlock %d is missing field ''%s'', present in earlier blocks.\n',cond,block,f);
+            fprintf('%sBlock %d is missing field ''%s'', present in block 1.\n',cond,block,f);
             ok=false;
         end
     end
     for i=1:length(fBlock)
         f=fBlock{i};
         if ~ismember(f,fBlock1)
-            fprintf('%sBlock %d has field ''%s'', not in earlier blocks.\n',cond,block,f);
+            fprintf('%sBlock %d has field ''%s'', missing in block 1.\n',cond,block,f);
             ok=false;
         end
     end
 end
 if ~ok
-    error('Please fix the script so all blocks have the same set of fields. Sorry.');
+    error('Please fix the script so all blocks have the same set of fields.');
 end
 for block=1:length(ooo)
     oo=[oo ooo{block}];
 end
 t=struct2table(oo,'AsArray',true);
-disp(t(:,{'block' 'experiment' 'targetKind' 'thresholdParameter' 'contrast' 'conditionName' 'observer' 'noiseSD' 'targetHeightDeg' 'eccentricityXYDeg'})); % Print the conditions in the Command Window.
+disp(t(:,{'block' 'experiment' 'targetKind' 'thresholdParameter'...
+    'contrast' 'conditionName' 'observer' 'etaMin' 'noiseSD' ...
+    'targetHeightDeg' 'eccentricityXYDeg'})); % Print the conditions in the Command Window.
 % return
 
 %% Measure threshold, one block per iteration.
