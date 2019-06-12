@@ -5185,7 +5185,7 @@ try
         string=sprintf('Saving results to disk. ... ');
         DrawFormattedText(oo(1).window,string,...
             2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
-            o(oi).textLineLength,[],[],1.3);
+            oo(oi).textLineLength,[],[],1.3);
         DrawCounter(oo(oi));
         Screen('Flip',oo(1).window); % Display message.
     end
@@ -5477,7 +5477,7 @@ try
             string=sprintf('Closing windows. Goodbye. ');
             DrawFormattedText(oo(1).window,string,...
                 2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
-                o(oi).textLineLength,[],[],1.3);
+                oo(oi).textLineLength,[],[],1.3);
             DrawCounter(oo(oi));
             Screen('Flip',oo(1).window); % Display message.
         end
