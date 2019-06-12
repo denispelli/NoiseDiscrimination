@@ -175,18 +175,20 @@ try
          Screen('TextSize',window,o.textSize);
          Screen('TextFont',window,o.textFont,0);
          Screen('DrawText',window,'Hello Observer,',...
-            textMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
+            2*o.textSize,screenRect(4)/2-5*o.textSize,black,o.gray1);
          Screen('DrawText',window,'Please slowly type your name followed by RETURN.',...
-            textMarginPix,screenRect(4)/2-3*o.textSize,black,o.gray1);
+            2*o.textSize,screenRect(4)/2-3*o.textSize,black,o.gray1);
          Screen('TextSize',window,round(o.textSize*0.35));
-         Screen('DrawText',window,double('NoiseDiscrimination Test, Copyright 2016, 2017, 2018, 2019, Denis Pelli. All rights reserved.'),textMarginPix,screenRect(4)-0.5*textMarginPix,black,o.gray1,1);
+         Screen('DrawText',window,...
+             double('NoiseDiscrimination Test, Copyright 2016, 2017, 2018, 2019, Denis Pelli. All rights reserved.'),...
+             2*o.textSize,screenRect(4)-o.textSize,black,o.gray1,1);
          Screen('TextSize',window,o.textSize);
          if IsWindows
             background=[];
          else
             background=o.gray1;
          end
-         [name,terminatorChar]=GetEchoString(window,'Observer name:',textMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
+         [name,terminatorChar]=GetEchoString(window,'Observer name:',2*o.textSize,0.82*screenRect(4),black,background,1,o.deviceIndex);
          if ismember(terminatorChar,[escapeChar graveAccentChar])
             o.quitBlock=true;
             o.quitExperiment=OfferEscapeOptions(window,o,textMarginPix);
@@ -307,7 +309,7 @@ try
             Screen('Preference','TextAntiAliasing',1);
             string='Please use both eyes.\nHit RETURN to continue, or ESCAPE to quit.';
             Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
-            DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+            DrawFormattedText(window,string,2*o.textSize,2.5*o.textSize,black,o.textLineLength,[],[],1.3);
             Screen('Flip',window); % Display request.
             if o.speakInstructions
                Speak('Please use both eyes. Hit RETURN to continue, or ESCAPE to quit.');
@@ -328,7 +330,7 @@ try
             Screen('Preference','TextAntiAliasing',1);
             string=sprintf('Please use just your %s eye. Cover your other eye.\nHit RETURN to continue, or ESCAPE to quit.',o.eyes);
             Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
-            DrawFormattedText(window,string,o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+            DrawFormattedText(window,string,2*o.textSize,2.5*o.textSize,black,o.textLineLength,[],[],1.3);
             Screen('Flip',window); % Display request.
             if o.speakInstructions
                string=sprintf('Please use just your %s eye. Cover your other eye. Hit RETURN to continue, or ESCAPE to quit.',o.eyes);
@@ -353,7 +355,7 @@ try
          Screen('Preference','TextAntiAliasing',1);
          
          Screen('DrawText',window,' ',0,0,1,o.gray1,1); % Set background color.
-         DrawFormattedText(window,msg,0.5*o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+         DrawFormattedText(window,msg,2*o.textSize,2.5*o.textSize,black,o.textLineLength,[],[],1.3);
          Screen('Flip',window,0,1); % "Starting new run ..."
          
          while 1
@@ -363,16 +365,16 @@ try
             Screen('TextSize',window,o.textSize);
             Screen('TextFont',window,o.textFont,0);
             Screen('DrawText',window,'Please provide your current estimate of pupil diameter in mm,',...
-               textMarginPix,screenRect(4)/2-7*o.textSize,black,o.gray1);
+               2*o.textSize,screenRect(4)/2-7*o.textSize,black,o.gray1);
             Screen('DrawText',window,'followed by RETURN. Please type slowly. (Just RETURN for default value.)',...
-               textMarginPix,screenRect(4)/2-5*o.textSize,black,o.gray1);
+               2*o.textSize,screenRect(4)/2-5*o.textSize,black,o.gray1);
             if IsWindows
                background=[];
             else
                background=o.gray1;
             end
             [name,terminatorChar]=GetEchoString(window,'Pupil diameter (mm):',...
-               textMarginPix,0.82*screenRect(4),black,background,1,o.deviceIndex);
+               2*o.textSize,0.82*screenRect(4),black,background,1,o.deviceIndex);
             if ~isempty(name)
                o.pupilDiameterMm=str2num(name);
             end
@@ -429,7 +431,7 @@ try
             %% STIMULUS PARAMETERS
             o.textSize=round(o.textSizeDeg*o.pixPerDeg);
             o.textSizeDeg=o.textSize/o.pixPerDeg;
-            o.textLineLength=floor(1.9*RectWidth(screenRect)/o.textSize);
+            o.textLineLength=floor(1.7*RectWidth(screenRect)/o.textSize);
             o.lineSpacing=1.5;
             o.stimulusRect=InsetRect(screenRect,0,o.lineSpacing*1.2*o.textSize);
             BackupCluts(o.screen);
