@@ -1321,13 +1321,15 @@ try
     clear o
     
     %% STIMULUS PARAMETERS
-    [oo.textSize]=deal(TextSizeToFit(window));
+    [oo(1).textSize,oo(1).textLineLength]=TextSizeToFit(window);
+    [oo.textSize]=deal(oo(1).textSize);
+    [oo.textLineLength]=deal(oo(1).textLineLength);
     for oi=1:conditions
         oo(oi).pixPerCm=RectWidth(oo(1).screenRect)/(0.1*screenWidthMm);
         degPerCm=57/oo(oi).viewingDistanceCm;
         oo(oi).pixPerDeg=oo(oi).pixPerCm/degPerCm;
         oo(oi).textSizeDeg=oo(oi).textSize/oo(oi).pixPerDeg;
-        oo(oi).textLineLength=floor(1.9*RectWidth(oo(1).screenRect)/oo(oi).textSize);
+%         oo(oi).textLineLength=floor(1.7*RectWidth(oo(1).screenRect)/oo(oi).textSize);
         oo(oi).lineSpacing=1.5;
         switch oo(oi).instructionPlacement
             case 'topLeft'
@@ -1339,6 +1341,7 @@ try
             otherwise
                 error('Unknown o.instructionPlacement ''%s''.',o.instructionPlacement);
         end
+        oo(oi).stimulusRect=round(oo(oi).stimulusRect);
         % Allow room for counter.
         bounds=DrawCounter(oo(oi));
         switch oo(oi).counterPlacement
@@ -1460,7 +1463,10 @@ try
             AskQuestion(oo,text);
         end
     else % if ~o.useFilter
-        text.big={'Please use a filter or sunglasses to reduce the luminance.' '(Our lab sunglasses transmit 0.115)' 'Please slowly type its transmission (between 0.000 and 1.000)' 'followed by RETURN.'};
+        text.big={'Please use a filter or sunglasses to reduce the luminance.' ...
+            '(Our lab sunglasses transmit 0.115)' ...
+            'Please slowly type its transmission (between 0.000 and 1.000)' ...
+            'followed by RETURN.'};
         if isempty(o.filterTransmission)
             text.big{end}='followed by RETURN.';
         else
@@ -1914,7 +1920,8 @@ try
             Screen('TextSize',oo(1).window,oo(oi).textSize);
             string=sprintf('Setting screen color profile. ... ');
             DrawFormattedText(oo(1).window,string,...
-                oo(oi).textSize,1.5*oo(oi).textSize,black,oo(oi).textLineLength,[],[],1.3);
+                2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
+                oo(oi).textLineLength,[],[],1.3);
             DrawCounter(oo(oi));
             Screen('Flip',oo(1).window); % Display message.
         end
@@ -2162,7 +2169,8 @@ try
                 string=sprintf('%s Right?\nHit RETURN to continue, or ESCAPE to quit.',string);
                 Screen('DrawText',oo(1).window,' ',0,0,1,oo(1).gray1,1); % Set background color.
                 DrawFormattedText(oo(1).window,string,...
-                    oo(1).textSize,1.5*oo(1).textSize,black,oo(1).textLineLength,[],[],1.3);
+                    2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
+                    oo(1).textLineLength,[],[],1.3);
                 DrawCounter(oo(oi));
                 Screen('Flip',oo(1).window); % Display request.
                 if oo(1).speakInstructions
@@ -2207,7 +2215,8 @@ try
                     string='Please use both eyes.\nHit RETURN to continue, or ESCAPE to quit.';
                     Screen('DrawText',oo(1).window,' ',0,0,1,oo(1).gray1,1); % Set background color.
                     DrawFormattedText(oo(1).window,string,...
-                        oo(1).textSize,1.5*oo(1).textSize,black,oo(1).textLineLength,[],[],1.3);
+                        2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
+                        oo(1).textLineLength,[],[],1.3);
                     DrawCounter(oo(oi));
                     Screen('Flip',oo(1).window); % Display request.
                     if oo(1).speakInstructions
@@ -2233,7 +2242,8 @@ try
                     string=sprintf('Please use just your %s eye. Cover your other eye.\nHit RETURN to continue, or ESCAPE to quit.',oo(1).eyes);
                     Screen('DrawText',oo(1).window,' ',0,0,1,oo(1).gray1,1); % Set background color.
                     DrawFormattedText(oo(1).window,string,...
-                        oo(1).textSize,1.5*oo(1).textSize,black,oo(1).textLineLength,[],[],1.3);
+                        2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
+                        oo(1).textLineLength,[],[],1.3);
                     DrawCounter(oo(oi));
                     Screen('Flip',oo(1).window); % Display request.
                     if oo(1).speakInstructions
@@ -2262,7 +2272,8 @@ try
                 string=[string 'Which eye will you use, left or right? Please type L or R:'];
                 Screen('DrawText',oo(1).window,' ',0,0,1,oo(1).gray1,1); % Set background color.
                 DrawFormattedText(oo(1).window,string,...
-                    oo(1).textSize,1.5*oo(1).textSize,black,oo(1).textLineLength,[],[],1.3);
+                    2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
+                    oo(1).textLineLength,[],[],1.3);
                 DrawCounter(oo(oi));
                 Screen('Flip',oo(1).window); % Display request.
                 if oo(1).speakInstructions
@@ -3103,7 +3114,8 @@ try
                         Screen('DrawText',oo(1).window,' ',0,0,1,oo(oi).gray1,1); % Set background color.
                         string=sprintf('Reading images from disk. ... ');
                         DrawFormattedText(oo(1).window,string,...
-                            oo(oi).textSize,1.5*oo(oi).textSize,black,oo(oi).textLineLength,[],[],1.3);
+                            2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
+                            oo(oi).textLineLength,[],[],1.3);
                         DrawCounter(oo(oi));
                         Screen('Flip',oo(1).window); % Display request.
                         oo(oi).targetPix=round(oo(oi).targetHeightDeg/oo(oi).noiseCheckDeg);
@@ -3430,7 +3442,7 @@ try
             Screen('TextSize',oo(1).window,oo(oi).textSize);
             Screen('FillRect',oo(1).window,oo(1).gray1);
             Screen('DrawText',oo(1).window,'Running simulated observer. ... ',...
-                oo(oi).textSize,1.5*oo(oi).textSize,black,oo(1).gray1,1);
+                2*oo(oi).textSize,2.5*oo(oi).textSize,black,oo(1).gray1,1);
             DrawCounter(oo(oi));
             Screen('Flip',oo(1).window); % Display message.
         end
@@ -5126,11 +5138,9 @@ try
         Screen('FillRect',oo(1).window,oo(1).gray1);
         Screen('DrawText',oo(1).window,' ',0,0,1,oo(1).gray1); % Set background color.
         string=sprintf('Saving results to disk. ... ');
-        %         DrawFormattedText(oo(1).window,string,...
-        %             oo(oi).textSize,1.5*oo(oi).textSize,black,oo(oi).textLineLength,[],[],1.3);
-        % Copied from OfferEscapeOptions
         DrawFormattedText(oo(1).window,string,...
-            oo(1).textMarginPix,oo(1).textMarginPix+0.5*oo(oi).textSize,black,60,[],[],1.3);
+            2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
+            o(oi).textLineLength,[],[],1.3);
         DrawCounter(oo(oi));
         Screen('Flip',oo(1).window); % Display message.
     end
@@ -5420,11 +5430,9 @@ try
             Screen('FillRect',oo(1).window);
             Screen('DrawText',oo(1).window,' ',0,0,1,1,1); % Set background color.
             string=sprintf('Closing windows. Goodbye. ');
-            % DrawFormattedText(oo(1).window,string,...
-            %    oo(oi).textSize,1.5*oo(oi).textSize,black,oo(oi).textLineLength,[],[],1.3);
-            % Copied from OfferEscapeOptions
             DrawFormattedText(oo(1).window,string,...
-                oo(1).textMarginPix,oo(1).textMarginPix+0.5*oo(oi).textSize,black,60,[],[],1.3);
+                2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
+                o(oi).textLineLength,[],[],1.3);
             DrawCounter(oo(oi));
             Screen('Flip',oo(1).window); % Display message.
         end
@@ -6155,7 +6163,8 @@ Screen('TextFont',o.window,'Verdana');
 Screen('FillRect',o.window,o.gray1);
 Screen('DrawText',o.window,' ',0,0,1,o.gray1,1); % Set background color.
 DrawFormattedText(o.window,string,...
-    o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+    2*o.textSize,2.5*o.textSize,black,...
+    o.textLineLength,[],[],1.3);
 x=o.nearPointXYPix(1);
 y=o.nearPointXYPix(2);
 a=0.05*RectHeight(o.stimulusRect);
@@ -6260,7 +6269,8 @@ else
         Screen('FillRect',o.window,o.gray1);
         Screen('DrawText',o.window,' ',0,0,1,o.gray1,1); % Set background color.
         DrawFormattedText(o.window,string,...
-            o.textSize,1.5*o.textSize,black,o.textLineLength,[],[],1.3);
+            2*o.textSize,2.5*o.textSize,black,...
+            o.textLineLength,[],[],1.3);
         x=o.nearPointXYPix(1);
         y=o.nearPointXYPix(2);
         a=0.1*RectHeight(o.stimulusRect);
@@ -6567,12 +6577,14 @@ black=0;
 Screen('DrawText',o.window,' ',0,0,black,o.gray1,1); % Set background color.
 Screen(o.window,'TextSize',o.textSize);
 [x,y]=DrawFormattedText(o.window,msg,...
-    o.textSize,1.5*o.textSize,black,o.textLineLength-2,[],[],1.3);
+    2*o.textSize,2.5*o.textSize,black,...
+    o.textLineLength-2,[],[],1.3); % DGP May not need "-2".
 sz=round(0.8*o.textSize);
 Screen(o.window,'TextSize',sz);
 ratio=sz/o.textSize;
 DrawFormattedText(o.window,footnote,...
-    x,y,black,floor(o.textLineLength/ratio),[],[],1.3);
+    x,y,black,...
+    floor(o.textLineLength/ratio),[],[],1.3);
 DrawCounter(o);
 Screen('Flip',o.window,0,1); % Proceeding to the trial.
 if o.speakInstructions
