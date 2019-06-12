@@ -11,7 +11,7 @@ end
 if o.speakEachLetter && o.useSpeech
    Speak('Escape');
 end
-textSize=TextSizeToFit(window); % Set optimum text size.
+[textSize,textLineLength]=TextSizeToFit(window); % Optimal text size.
 escapeKeyCode=KbName('ESCAPE');
 spaceKeyCode=KbName('space');
 returnKeyCode=KbName('return');
@@ -51,7 +51,7 @@ end
 string=['You escaped. Any incomplete trial was canceled. ' ...
     'Hit ESCAPE again to quit the whole experiment. '...
     nextBlockMsg nextTrialMsg];
-DrawFormattedText(window,string,textMarginPix,textMarginPix+0.5*textSize,black,60,[],[],1.3);
+DrawFormattedText(window,string,textMarginPix,textMarginPix+0.5*textSize,black,textLineLength,[],[],1.3);
 Screen('Flip',window);
 answer=GetKeypress([spaceKeyCode returnKeyCode escapeKeyCode graveAccentKeyCode],o.deviceIndex);
 quitExperiment=ismember(answer,[escapeChar,graveAccentChar]);
