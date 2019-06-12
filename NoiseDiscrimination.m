@@ -1390,10 +1390,10 @@ try
     [oo.speakEachLetter]=deal(false);
     [oo.useSpeech]=deal(false);
     while isempty(oo(1).experimenter)
-        text.big={'Hello,' 'Please slowly type the experimenter''s name followed by RETURN.'};
-        text.small={'In the following blocks, I''ll remember your answers and skip these questions. ' ...
+        text.big={'Hello. Please slowly type the experimenter''s name followed by RETURN.'};
+        text.small={['In the following blocks, I''ll remember your answers and skip these questions. ' ...
             'If the keyboard seems dead, please hit Control-C twice to quit this program, ' ...
-            'then quit and restart MATLAB, and run your MATLAB script again.'};
+            'then quit and restart MATLAB, and run your MATLAB script again.']};
         text.fine=['NoiseDiscrimination Test, Copyright ' char(169) ' 2016, 2017, 2018, 2019 Denis Pelli. All rights reserved.'];
         text.question='Experimenter name:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
@@ -1413,16 +1413,16 @@ try
     clear o
     
     %% ASK OBSERVER NAME
-    preface={'Hello Observer,' 'Please slowly type your full name.'};
+    preface='Hello. Please slowly type your full name. ';
     while isempty(oo(1).observer)
-        text.big=[preface ...
-            {'Type your first and last names, separated by a SPACE. '...
-            'Then hit RETURN.'}];
-        text.small={'Please type your full name, like "Jane Doe" or "John Smith", in exactly the same way every time.' ...
-            '(If you don''t have a first name, then please type a SPACE before your last name.)' ...
+        text.big={[preface ...
+            'Type your first and last names, separated by a SPACE. '...
+            'Then hit RETURN.']};
+        text.small={['Please type your full name, like "Jane Doe" or "John Smith", in exactly the same way every time. ' ...
+            '(If you don''t have a first name, then please type a SPACE before your last name.) ' ...
             'In the following blocks, I''ll remember your answers and skip these questions. ' ...
-            'If the keyboard seems dead, please hit Control-C twice to quit,' ...
-            'then quit and restart MATLAB, and run your MATLAB script again.'};
+            'If the keyboard seems dead, please hit Control-C twice to quit, ' ...
+            'then quit and restart MATLAB, and run your MATLAB script again.']};
         text.fine=['NoiseDiscrimination Test, Copyright ' char(169) ' 2016, 2017, 2018, 2019 Denis Pelli. All rights reserved.'];
         text.question='Observer name:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
@@ -1463,15 +1463,13 @@ try
             AskQuestion(oo,text);
         end
     else % if ~o.useFilter
-        text.big={'Please use a filter or sunglasses to reduce the luminance.' ...
-            '(Our lab sunglasses transmit 0.115)' ...
-            'Please slowly type its transmission (between 0.000 and 1.000)' ...
-            'followed by RETURN.'};
-        if isempty(o.filterTransmission)
-            text.big{end}='followed by RETURN.';
-        else
-            text.big{end}=sprintf('followed by RETURN. Or just hit RETURN to say: %.3f',o.filterTransmission);
+        s=['Please use a filter or sunglasses to reduce the luminance. ' ...
+            '(Our lab sunglasses transmit 0.115). ' ...
+            'Please slowly type its transmission (between 0.000 and 1.000) followed by RETURN.'];
+        if ~isempty(o.filterTransmission)
+            s=sprintf('%s Or just hit RETURN to say: %.3f',o.filterTransmission);
         end
+        text.big={s};
         text.small={};
         text.fine='';
         text.question='Filter transmission:';
@@ -6529,19 +6527,32 @@ DrawCounter(o);
 
 % Display question.
 y=o.screenRect(4)/2-(1+2*length(text.big))*o.textSize;
+Screen('DrawText',o.window,' ',0,0,black,o.gray1);
 for i=1:length(text.big)
-    Screen('DrawText',o.window,text.big{i},o.textMarginPix,y,black,o.gray1);
+    [~,y]=DrawFormattedText(o.window,text.big{i},...
+        2*o.textSize,y,black,...
+        o.textLineLength,[],[],1.3);
     y=y+1.3*o.textSize;
 end
 % y=y-0.5*o.textSize;
-Screen('TextSize',o.window,round(0.6*o.textSize));
+scalar=0.6;
+sz=round(scalar*o.textSize);
+scalar=sz/o.textSize;
+Screen('TextSize',o.window,sz);
 for i=1:length(text.small)
-    Screen('DrawText',o.window,text.small{i},o.textMarginPix,y,black,o.gray1);
-    y=y+1.3*0.6*o.textSize;
+    [~,y]=DrawFormattedText(o.window,text.small{i},...
+        2*o.textSize,y,black,...
+        o.textLineLength/scalar,[],[],1.3);
+    y=y+1.3*scalar*o.textSize;
 end
-Screen('TextSize',o.window,round(o.textSize*0.35));
-Screen('DrawText',o.window,text.fine,...
-    o.textMarginPix,o.screenRect(4)-0.5*o.textMarginPix,black,o.gray1,1);
+scalar=0.35;
+sz=round(scalar*o.textSize);
+scalar=sz/o.textSize;
+Screen('TextSize',o.window,sz);
+y=o.screenRect(4)-o.textSize;
+[~,y]=DrawFormattedText(o.window,text.fine,...
+    2*o.textSize,y,black,...
+    o.textLineLength/scalar,[],[],1.3);
 Screen('TextSize',o.window,o.textSize);
 if IsWindows
     background=[];
