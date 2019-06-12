@@ -12,15 +12,15 @@ function [textSize,textLineLength,font]=TextSizeToFit(window,font,lineOfText)
 if nargin<1
     error('You must provide "window" when calling textSize=TextSizeToFit(window,lineOfText,o).');
 end
-% Note that the window's screenRect might be small for debugging.
+% This works even if the window is small during debugging.
 screenRect=Screen('Rect',window);
 if nargin<2 || isempty(font)
     font='Verdana';
 end
 if nargin<3 || isempty(lineOfText)
-    lineOfText='ZZZZStandard line of text xx xxxxx xxxxxxxx xx hhhhhh. Xxxxxxxx.ZZZZ';
+    lineOfText='ZZZPlease slowly type the name of the Experimenter who is sup.ZZZ';
 end
-textSize=39;
+textSize=round(RectWidth(screenRect)/100);
 Screen('TextSize',window,textSize);
 Screen('TextFont',window,font,0);
 actualFont=Screen('TextFont',window);
@@ -32,14 +32,10 @@ if ~streq(actualFont,font)
 end
 boundsRect=Screen('TextBounds',window,lineOfText);
 fraction=RectWidth(boundsRect)/RectWidth(screenRect);
-% Adjust textSize so the line fits perfectly across the full screen width.
-textSize=round(textSize/fraction);
+% Adjust textSize so the line fits perfectly across the screen width.
+textSize=floor(textSize/fraction);
 Screen('TextSize',window,textSize);
 lineOfText=strrep(lineOfText,'z',''); % Remove the margin.
 lineOfText=strrep(lineOfText,'Z',''); % Remove the margin.
-% The 1.1 correction-factor was tweaked by trial and error to get good
-% results using DrawFormattedText with arbitrary strings using the default
-% lineOfText in TextSizeToFit. I'm sure this correction factor will differ
-% for different lineOfText strings.
-textLineLength=round(1.1*length(lineOfText));
+textLineLength=round(length(lineOfText));
 end
