@@ -6623,7 +6623,7 @@ Screen('DrawText',o.window,' ',0,0,black,o.gray1,1); % Set background color.
 Screen(o.window,'TextSize',o.textSize);
 [x,y]=DrawFormattedText(o.window,msg,...
     2*o.textSize,2.5*o.textSize,black,...
-    o.textLineLength-2,[],[],1.3); % DGP May not need "-2".
+    o.textLineLength,[],[],1.3); % DGPxxx
 sz=round(0.8*o.textSize);
 Screen(o.window,'TextSize',sz);
 ratio=sz/o.textSize;
