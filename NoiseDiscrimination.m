@@ -2464,12 +2464,57 @@ try
         [oo.pupilKnown]=deal(oo(1).pupilKnown);
     end
     
+    %% Remind to fixate, then wait for RETURN.
+    if any([oo.useFixation])
+        tryAgain=true;
+        while tryAgain
+            string=['IMPORTANT: Please resist the temptation to type your response as '...
+                'soon as you find a matching response letter. '...
+                'Instead, please hold off responding until your eye is back on the cross. '...
+                'Always wait until you''re fixating the cross before responding. '...
+                'To continue hit RETURN. '];
+            x=2*oo(1).textSize;
+            y=2.5*oo(1).textSize;
+            Screen('TextSize',window,oo(oi).textSize);
+            Screen('DrawText',window,'',x,y,black,white); % Set background.
+            % 'IMPORTANT: ... hit RETURN.
+            Screen('TextStyle',window,1); % Bold
+            DrawFormattedText(window,string,...
+                x,y,[.8 0 0],...
+                0.9*oo(oi).textLineLength,[],[],1.3);
+            Screen('TextStyle',window,0); % Plain
+            string='';
+            DrawCounter(oo);
+            % 'IMPORTANT: ... hit RETURN.
+            Screen('Flip',window,[],1); % Don't clear buffer.
+            fprintf('*Telling observer to fixate.\n');
+            response=GetKeypress([escapeKeyCode graveAccentKeyCode returnKeyCode],oo(1).deviceIndex);
+            if ismember(response,[escapeChar,graveAccentChar])
+                [oo(1).quitExperiment,oo(1).quitBlock,oo(1).skipTrial]=OfferEscapeOptions(oo(1).window,oo,oo(1).textMarginPix);
+                if oo(1).quitBlock
+                    if oo(1).speakInstructions
+                        Speak('Quitting.');
+                    end
+                    if oo(1).quitExperiment
+                        isLastBlock=true; % global DGP
+                    end
+                    CloseWindowsAndCleanup(oo)
+                    return
+                end
+                tryAgain=true;
+            else
+                tryAgain=false;
+            end
+            Screen('FillRect',oo(1).window,oo(1).gray1);
+        end % while tryAgain
+    end % if any([oo.useFixation])
+    
     %% EXPLAIN DELAY TO OBSERVER
     if Screen(oo(1).window,'WindowKind') == 1
         Screen('TextSize',oo(1).window,oo(oi).textSize);
         Screen('FillRect',oo(1).window,oo(1).gray1);
         Screen('DrawText',oo(1).window,'Preparing stimuli. ... ',...
-            oo(oi).textSize,1.5*oo(oi).textSize,black,oo(1).gray1,1);
+            2*oo(oi).textSize,2.5*oo(oi).textSize,black,oo(1).gray1,1);
         DrawCounter(oo(oi));
         Screen('Flip',oo(1).window); % Display message.
     end
