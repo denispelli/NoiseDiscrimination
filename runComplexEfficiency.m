@@ -129,18 +129,18 @@ if 1
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-if 0
-    % Checkers alphabet
-    o.conditionName='Checkers';
-    o.targetFont='Checkers';
-    o.minimumTargetHeightChecks=16;
-    o.alphabet='abcdefghijklmnopqrstuvwxyz';
-    o.borderLetter='';
-    o.labelAnswers=true;
-    o.readAlphabetFromDisk=true;
-    o.alternatives=length(o.alphabet);
-    ooo{end+1}=o;
-end
+% if 0
+%     % Checkers alphabet
+%     o.conditionName='Checkers';
+%     o.targetFont='Checkers';
+%     o.minimumTargetHeightChecks=16;
+%     o.alphabet='abcdefghijklmnopqrstuvwxyz';
+%     o.borderLetter='';
+%     o.labelAnswers=true;
+%     o.readAlphabetFromDisk=true;
+%     o.alternatives=length(o.alphabet);
+%     ooo{end+1}=o;
+% end
 if 0
     % Sans Forgetica
     o.targetFont='Sans Forgetica';
@@ -191,7 +191,7 @@ if 0
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-if 1
+if 0
     % Japanese: Katakana, Hiragani, and Kanji
     % from Ayaka
     o.targetFont='Hiragino Mincho ProN W3';
