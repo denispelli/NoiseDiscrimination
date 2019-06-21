@@ -2478,8 +2478,8 @@ try
             % 'IMPORTANT: ... hit RETURN.
             Screen('TextStyle',window,1); % Bold
             DrawFormattedText(window,string,...
-                x,y,[.8 0 0],...
-                0.9*oo(oi).textLineLength,[],[],1.3);
+                x,y,[.7 0 0],...
+                0.9*oo(oi).textLineLength,[],[],1.5);
             Screen('TextStyle',window,0); % Plain
             string='';
             DrawCounter(oo);
@@ -5138,18 +5138,18 @@ try
             % target. Before the next trial, encourage them to always have
             % their eye on the center of the fixation mark when they hit
             % the response key, which initiates the next trial. We insist
-            % that the observer get right several
-            % (o.fixationCheckMakeupTrials) consecutive trials of this
+            % that the observer get right several (i.e.
+            % o.fixationCheckMakeupTrials) consecutive trials of this
             % condition before proceeding with the rest of the condition
             % list.
-            % This requests showing of a message before the next trial.
+            % This flag requests showing the message before the next trial.
             encourageFixation=true;
             waitMessage=['Oops. Wrong response. '...
                 'Perhaps you didn''t have your eye on the center '...
-                'of the cross. Please always place your eye '...
+                'of the cross. ' ...
+                'Please always place your eye '...
                 'at the center of the cross '...
-                'before initiating the next trial. '];
-            % Repeat the current condition for several trials.
+                'before initiating the next trial.\n    '];
             assert(oo(oi).fixationCheckMakeupTrials>=0,...
                 'o.fixationCheckMakeupTrials must be a nonnegative integer.');
             fixationTestTrialsOwed=oo(oi).fixationCheckMakeupTrials;
