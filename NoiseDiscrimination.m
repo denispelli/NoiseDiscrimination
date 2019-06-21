@@ -1390,10 +1390,10 @@ try
     [oo.speakEachLetter]=deal(false);
     [oo.useSpeech]=deal(false);
     while isempty(oo(1).experimenter)
-        text.big={'Hello. Please slowly type the experimenter''s name followed by RETURN.'};
-        text.small={['In the following blocks, I''ll remember your answers and skip these questions. ' ...
+        text.big='Hello. Please slowly type the experimenter''s name followed by RETURN.';
+        text.small=['In the following blocks, I''ll remember your answers and skip these questions. ' ...
             'If the keyboard seems dead, please hit Control-C twice to quit this program, ' ...
-            'then quit and restart MATLAB, and run your MATLAB script again.']};
+            'then quit and restart MATLAB, and run your MATLAB script again.'];
         text.fine=['NoiseDiscrimination Test, Copyright ' char(169) ' 2016, 2017, 2018, 2019 Denis Pelli. All rights reserved.'];
         text.question='Experimenter name:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
@@ -1415,14 +1415,14 @@ try
     %% ASK OBSERVER NAME
     preface='Hello. Please slowly type your full name. ';
     while isempty(oo(1).observer)
-        text.big={[preface ...
+        text.big=[preface ...
             'Type your first and last names, separated by a SPACE. '...
-            'Then hit RETURN.']};
-        text.small={['Please type your full name, like "Jane Doe" or "John Smith", in exactly the same way every time. ' ...
+            'Then hit RETURN.'];
+        text.small=['Please type your full name, like "Jane Doe" or "John Smith", in exactly the same way every time. ' ...
             '(If you don''t have a first name, then please type a SPACE before your last name.) ' ...
             'In the following blocks, I''ll remember your answers and skip these questions. ' ...
             'If the keyboard seems dead, please hit Control-C twice to quit, ' ...
-            'then quit and restart MATLAB, and run your MATLAB script again.']};
+            'then quit and restart MATLAB, and run your MATLAB script again.'];
         text.fine=['NoiseDiscrimination Test, Copyright ' char(169) ' 2016, 2017, 2018, 2019 Denis Pelli. All rights reserved.'];
         text.question='Observer name:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
@@ -1454,8 +1454,8 @@ try
         if previousBlockUsedFilter
             % If the preceding block had a filter, and this block does not, we ask
             % the observer to remove the filter or sunglasses.
-            text.big={'Please remove any filter or sunglasses. Hit RETURN to continue.'};
-            text.small={};
+            text.big='Please remove any filter or sunglasses. Hit RETURN to continue.';
+            text.small='';
             text.fine='';
             text.question='';
             text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
@@ -1467,10 +1467,10 @@ try
             '(Our lab sunglasses transmit 0.115). ' ...
             'Please slowly type its transmission (between 0.000 and 1.000) followed by RETURN.'];
         if ~isempty(o.filterTransmission)
-            s=sprintf('%s Or just hit RETURN to say: %.3f',o.filterTransmission);
+            s=sprintf('%s Or just hit RETURN to say: %.3f',s,o.filterTransmission);
         end
-        text.big={s};
-        text.small={};
+        text.big=s;
+        text.small='';
         text.fine='';
         text.question='Filter transmission:';
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
@@ -6501,14 +6501,15 @@ end % function ComputeClut
 
 %% AskQuestion
 function [reply,o]=AskQuestion(oo,text)
-% "text" argument is a struct with several fields: text.big, text.small,
-% text.fine, text.question, text.setTextSizeToMakeThisLineFit. We
-% optionally return "o" which the input o, but some fields may be modified:
-% o.textSize o.quitExperiment o.quitBlock and o.skipTrial. If "text" has
-% the field text.setTextSizeToMakeThisLineFit then o.textSize is adjusted
-% to make the line just fit horizontally within o.screenRect. text.big and
-% text.small are cell lists of strings. Each string is printed on its own
-% line. text.fine and text.question are strings.
+% "text" argument is a struct with several fields, each containing a
+% string: text.big, text.small, text.fine, text.question,
+% text.setTextSizeToMakeThisLineFit. We optionally return "o" which the
+% input o, but some fields may be modified: o.textSize o.quitExperiment
+% o.quitBlock and o.skipTrial. If "text" has the field
+% text.setTextSizeToMakeThisLineFit then o.textSize is adjusted to make the
+% line just fit horizontally within o.screenRect. text.big, text.small,
+% text.fine, and text.question are strings. '/n' produces a newline. Each
+% string starts on a new line.
 global ff
 o=oo(1);
 if isempty(o.window) || ismember(o.observer,o.algorithmicObservers)
@@ -6526,32 +6527,31 @@ Screen('TextFont',o.window,o.textFont,0);
 DrawCounter(o);
 
 % Display question.
+x=2*o.textSize;
 y=o.screenRect(4)/2-(1+2*length(text.big))*o.textSize;
 Screen('DrawText',o.window,' ',0,0,black,o.gray1);
-for i=1:length(text.big)
-    [~,y]=DrawFormattedText(o.window,text.big{i},...
-        2*o.textSize,y,black,...
-        o.textLineLength,[],[],1.3);
-    y=y+1.3*o.textSize;
-end
-% y=y-0.5*o.textSize;
+assert(ischar(text.big));
+[~,y]=DrawFormattedText(o.window,text.big,...
+    x,y,black,...
+    o.textLineLength,[],[],1.3);
+y=y+1.3*o.textSize;
 scalar=0.6;
 sz=round(scalar*o.textSize);
 scalar=sz/o.textSize;
 Screen('TextSize',o.window,sz);
-for i=1:length(text.small)
-    [~,y]=DrawFormattedText(o.window,text.small{i},...
-        2*o.textSize,y,black,...
-        o.textLineLength/scalar,[],[],1.3);
-    y=y+1.3*scalar*o.textSize;
-end
+assert(ischar(text.small));
+[~,y]=DrawFormattedText(o.window,text.small,...
+    x,y,black,...
+    o.textLineLength/scalar,[],[],1.3);
+y=y+1.3*scalar*o.textSize;
 scalar=0.35;
 sz=round(scalar*o.textSize);
 scalar=sz/o.textSize;
 Screen('TextSize',o.window,sz);
 y=o.screenRect(4)-o.textSize;
+assert(ischar(text.fine));
 [~,y]=DrawFormattedText(o.window,text.fine,...
-    2*o.textSize,y,black,...
+    x,y,black,...
     o.textLineLength/scalar,[],[],1.3);
 Screen('TextSize',o.window,o.textSize);
 if IsWindows
@@ -6560,7 +6560,8 @@ else
     background=o.gray1;
 end
 % fprintf('%d: o.deviceIndex %.0f.\n',MFileLineNr,o.deviceIndex);
-[reply,terminatorChar]=GetEchoString(o.window,text.question,o.textMarginPix,0.82*o.screenRect(4),black,background,1,o.deviceIndex);
+[reply,terminatorChar]=GetEchoString(o.window,text.question,...
+    o.textMarginPix,0.82*o.screenRect(4),black,background,1,o.deviceIndex);
 if ismember(terminatorChar,[escapeChar graveAccentChar])
     [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(o.window,oo,o.textMarginPix);
     if o.quitExperiment
