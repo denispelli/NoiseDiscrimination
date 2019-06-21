@@ -256,6 +256,8 @@ test(end).ok=true;
 test(end+1).name='AutoBrightness applescript';
 test(end).min='true';
 try
+    fprintf('Testing AutoBrightness(0) ...\n');
+    s=GetSecs;
     AutoBrightness(0);
     test(end).value='true';
     test(end).ok=true;
@@ -264,7 +266,7 @@ catch me
     test(end).ok=false;
     warning(me.message);
 end
-
+fprintf('(%.0f s)\n',GetSecs-s);
 
 %% TRY-CATCH BLOCK CONTAINS ALL CODE IN WHICH THE WINDOW IS OPEN
 try
