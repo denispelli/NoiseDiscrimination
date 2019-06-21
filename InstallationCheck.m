@@ -266,6 +266,8 @@ if IsOSX
     end
     test(end).min='true';
 end
+test(end).min='';
+test(end).ok=true;
 
 % test(end+1).name='Brightness applescript';
 % test(end).min='true';
