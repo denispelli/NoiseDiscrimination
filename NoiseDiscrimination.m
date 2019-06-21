@@ -4462,7 +4462,7 @@ try
                     Screen('DrawLines',oo(oi).window,fixationLines,fixationCrossWeightPix,black); % fixation
                 end
                 counterBounds=DrawCounter(oo(oi));
-                factor=1;
+                maxFactor=1;
                 switch oo(oi).task
                     case '4afc'
                         message='Please click 1 to 4 times for location 1 to 4, or more clicks to escape.';
@@ -4480,7 +4480,7 @@ try
                                 object,oo(oi).alphabet(1:oo(oi).alternatives));
                         end
                     case 'identifyAll'
-                        factor=1.3;
+                        maxFactor=1/1.3;
                         switch oo(oi).thresholdResponseTo
                             case 'target'
                                 message=sprintf('[Ignore case. DELETE to backspace. ESCAPE to cancel a trial or quit. You''ll get feedback on the middle letter.]');
@@ -4497,9 +4497,8 @@ try
                 % o.textSize as set by user script.
                 Screen('TextSize',oo(1).window,oo(oi).textSize);
                 bounds=Screen('TextBounds',oo(1).window,message,[],[],1);
-                bounds=round(bounds);
-                ratio=(RectWidth(bounds)+0.5*oo(oi).textSize)/RectWidth(o.stimulusRect);
-                textSize=floor(oo(oi).textSize/max([ratio factor]));
+                factor=RectWidth(o.stimulusRect)/(RectWidth(bounds)+0.5*oo(oi).textSize);
+                textSize=floor(oo(oi).textSize*min([factor maxFactor]));
                 Screen('TextSize',oo(1).window,textSize);
                 bounds=Screen('TextBounds',oo(1).window,message,[],[],1);
                 bounds=round(bounds);
@@ -4897,8 +4896,9 @@ try
                     textRect=round(textRect);
                     bounds=Screen('TextBounds',oo(1).window,message);
                     ratio=RectWidth(bounds)/(0.93*RectWidth(bottomCaptionRect));
-                    if ratio > 1
-                        Screen('TextSize',oo(1).window,floor(oo(oi).textSize/ratio));
+                    factor=0.93*RectWidth(bottomCaptionRect)/RectWidth(bounds);
+                    if factor<1
+                        Screen('TextSize',oo(1).window,floor(factor*oo(oi).textSize));
                     end
                     if all(oo(oi).alphabet==upper(oo(oi).alphabet))
                         [responseString,terminatorChar]=GetEchoStringUppercase(oo(1).window,message,textRect(1),textRect(4)-oo(oi).textSize,black,oo(oi).gray,1,oo(oi).deviceIndex);
@@ -5947,12 +5947,12 @@ switch o.observer
                         sRectChecks=RectOfMatrix(signal(1).image); % units of targetChecks
                         % xxx
                         if ismember(o.thresholdParameter,'size')
-                            ratio=o.desiredTargetHeightPix/o.targetCheckPix/RectHeight(sRectChecks);
+                            factor=o.desiredTargetHeightPix/o.targetCheckPix/RectHeight(sRectChecks);
                         else
-                            ratio=o.targetHeightPix/o.targetCheckPix/RectHeight(sRectChecks);
-                            ratio=1;
+                            factor=o.targetHeightPix/o.targetCheckPix/RectHeight(sRectChecks);
+                            factor=1;
                         end
-                        targetRectChecks=round(ratio*sRectChecks);
+                        targetRectChecks=round(factor*sRectChecks);
                         sz=targetRectChecks([4 3]);
                         im=zeros(sz);
                         imSum=im;
@@ -6638,10 +6638,10 @@ Screen(o.window,'TextSize',o.textSize);
     o.textLineLength,[],[],1.3); % DGPxxx
 sz=round(0.8*o.textSize);
 Screen(o.window,'TextSize',sz);
-ratio=sz/o.textSize;
+factor=sz/o.textSize;
 DrawFormattedText(o.window,footnote,...
     x,y,black,...
-    floor(o.textLineLength/ratio),[],[],1.3);
+    floor(o.textLineLength/factor),[],[],1.3);
 DrawCounter(o);
 Screen('Flip',o.window,0,1); % Proceeding to the trial.
 if o.speakInstructions
