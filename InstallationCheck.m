@@ -156,44 +156,6 @@ test(end).value=cal.macModelName;
 test(end).min='';
 test(end).ok=true;
 
-e=Snd('Play',MakeBeep(1000,0.5));
-test(end+1).name='Snd';
-if e==0
-    test(end).value='true';
-else
-    test(end).value=e;
-end
-test(end).min='true';
-test(end).ok= e==0;
-
-try
-    test(end+1).name='Speak';
-    test(end).min='true';
-    Speak('Hello');
-    test(end).value='true';
-    test(end).ok=true;
-catch me
-    test(end).value='false';
-    test(end).ok=false;
-    warning(me.message)
-end
-
-if IsOSX
-    % Copied from InitializePsychSound, abbreviating the error messages.
-    try
-        test(end+1).name='PsychPortAudio driver loaded';
-        d=PsychPortAudio('GetDevices');
-        fprintf('PsychPortAudio driver loaded. \n');
-        test(end).value='true';
-        test(end).ok=true;
-    catch em
-        fprintf('Failed to load PsychPortAudio driver with error:\n%s\n\n',em.message);
-        test(end).value=em.message;
-        test(end).ok=false;
-    end
-    test(end).min='true';
-end
-
 test(end+1).name='Screen pixels';
 test(end).value=sprintf('%.0fx%.0f',...
     RectWidth(o.screenRect),RectHeight(o.screenRect));
@@ -267,14 +229,43 @@ if ~verLessThan('matlab','8.1')
     end
 end
 
-test(end+1).name='Screen is calibrated';
-if streq(cal.datestr,'none')
-    test(end).value=false;
+e=Snd('Play',MakeBeep(1000,0.5));
+test(end+1).name='Snd';
+if e==0
+    test(end).value='true';
 else
-    test(end).value=true;
+    test(end).value=e;
 end
-test(end).min=false;
-test(end).ok=true;
+test(end).min='true';
+test(end).ok= e==0;
+
+try
+    test(end+1).name='Speak';
+    test(end).min='true';
+    Speak('Hello');
+    test(end).value='true';
+    test(end).ok=true;
+catch me
+    test(end).value='false';
+    test(end).ok=false;
+    warning(me.message)
+end
+
+if IsOSX
+    % Copied from InitializePsychSound, abbreviating the error messages.
+    try
+        test(end+1).name='PsychPortAudio';
+        d=PsychPortAudio('GetDevices');
+        fprintf('PsychPortAudio driver loaded. \n');
+        test(end).value='true';
+        test(end).ok=true;
+    catch em
+        fprintf('Failed to load PsychPortAudio driver with error:\n%s\n\n',em.message);
+        test(end).value=em.message;
+        test(end).ok=false;
+    end
+    test(end).min='true';
+end
 
 % test(end+1).name='Brightness applescript';
 % test(end).min='true';
@@ -354,7 +345,7 @@ try
         % the MATLAB command window or the program's text.
         %         ListenChar(2); % no echo
         
-        test(end+1).name='DrawText plugin loaded';
+        test(end+1).name='DrawText plugin';
         % Recommended by Mario Kleiner, July 2017.
         % The first 'DrawText' call triggers loading of the plugin, but may fail.
         value=Screen('Preference','TextRenderer')>0;
@@ -370,7 +361,7 @@ try
         %% CHECK FOR NEEDED FONTS
         for f={'Pelli' 'Sloan'}
             font=f{1};
-            test(end+1).name=sprintf('%s font installed',font);
+            test(end+1).name=sprintf('%s font',font);
             Screen('TextFont',window,font);
             % Perform dummy DrawText call, in case the OS has deferred settings.
             Screen('DrawText',window,' ',0,0);
@@ -389,12 +380,12 @@ try
         test(end+1).name='Beam position queries available';
         test(end).value=windowInfo.Beamposition ~= -1 && windowInfo.VBLEndline ~= -1;
         fprintf('Beam position queries %s, and should be true for best timing.\n',mat2str(test(end).value));
-        test(end).min=false;
+        test(end).min='';
         test(end).ok=true;
         
         %% PSYCHTOOLBOX KERNEL DRIVER
         if ismac
-            test(end+1).name='Psychtoolbox kernel driver loaded';
+            test(end+1).name='Psychtoolbox kernel driver';
             % Rec by microfish@fishmonkey.com.au, July 22, 2017
             test(end).value=~system('kextstat -l -k | grep PsychtoolboxKernelDriver > /dev/null');
             test(end).min=true;
@@ -417,7 +408,7 @@ try
         end
     end % if ~isempty(window)
     
-    if 0
+    if false
         %% SAVE TO DISK
         o=SortFields(o);
         o.newCal=cal;
@@ -462,6 +453,15 @@ try
     end
     test(end).min=true;
     test(end).ok=test(end).value;
+    
+    test(end+1).name='Screen is calibrated';
+    if streq(cal.datestr,'none')
+        test(end).value='false';
+    else
+        test(end).value='true';
+    end
+    test(end).min='true';
+    test(end).ok=true;
     
     %% Goodbye
     o.speakInstructions=false;
