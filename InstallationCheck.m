@@ -193,6 +193,7 @@ if ~test(end).value
         ver.major,ver.minor,ver.point);
 end
 test(end).min='3.0.13';
+test(end).help='web http://psychtoolbox.org';
 
 if ~verLessThan('matlab','8.1')
     test(end+1).name='PsychJava';
@@ -227,6 +228,7 @@ if ~verLessThan('matlab','8.1')
         test(end).ok=false;
         warning('Boo! PsychJava does not appear in javaclasspath.txt. Please read "help PsychJavaTrouble".');
     end
+test(end).help='help PsychJavaTrouble';
 end
 
 e=Snd('Play',MakeBeep(1000,0.5));
@@ -268,6 +270,7 @@ if IsOSX
 end
 test(end).min='';
 test(end).ok=true;
+test(end).help='help PsychPortAudio';
 
 % test(end+1).name='Brightness applescript';
 % test(end).min='true';
@@ -279,6 +282,7 @@ test(end).ok=true;
 %     test(end).value='false';
 %     test(end).ok=false;
 %     warning(me.message);
+%     test(end).help='help Brightness';
 % end
 
 if 0
@@ -296,6 +300,7 @@ if 0
         warning(me.message);
     end
     fprintf('(%.0f s)\n',GetSecs-s);
+    test(end).help='help AutoBrightness';
 end
 
 %% TRY-CATCH BLOCK CONTAINS ALL CODE IN WHICH THE WINDOW IS OPEN
@@ -359,6 +364,7 @@ try
         if ~value
             warning('The DrawText plugin failed to load. We need it. See warning above. Read "Install NoiseDiscrimination.docx" B.7 to learn how to install it.');
         end
+        test(end).help='help DrawTextPlugin';
         
         %% CHECK FOR NEEDED FONTS
         for f={'Pelli' 'Sloan'}
@@ -374,6 +380,7 @@ try
             end
             test(end).min=true;
             test(end).ok=test(end).value;
+            test(end).help=['dir ' fullfile(myPath,'fonts')];
         end
         
         %% BEAM POSITION QUERY
@@ -384,6 +391,7 @@ try
         fprintf('Beam position queries %s, and should be true for best timing.\n',mat2str(test(end).value));
         test(end).min='';
         test(end).ok=true;
+        test(end).help='Screen GetWindowInfo?';
         
         %% PSYCHTOOLBOX KERNEL DRIVER
         if ismac
@@ -396,6 +404,7 @@ try
             if ~test(end).ok
                 warning('IMPORTANT: You must install the Psychtoolbox kernel driver, as explained by "*Install NoiseDiscrimination.docx" step B.13.');
             end
+            test(end).help='web http://psychtoolbox.org/docs/PsychtoolboxKernelDriver';
         end
         
         if 0
@@ -455,6 +464,7 @@ try
     end
     test(end).min=true;
     test(end).ok=test(end).value;
+    test(end).help='web https://www.mathworks.com/help/supportpkg/usbwebcams/ug/snapshot.html';
     
     test(end+1).name='Screen is calibrated';
     if streq(cal.datestr,'none')
@@ -464,6 +474,7 @@ try
     end
     test(end).min='true';
     test(end).ok=true;
+    test(end).help='help CalibrateScreenLuminance';
     
     %% Goodbye
     o.speakInstructions=false;
