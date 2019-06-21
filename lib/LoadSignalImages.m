@@ -86,8 +86,14 @@ for i=1:length(d)
            MFileLineNr,i,d(i).name,size(img,1),size(img,2),size(img,3),min(img(:)),max(img(:)));
    end
    if o.signalImagesAreGammaCorrected
-       if verLessThan('matlab','R2017b')
-           error('This MATLAB is too old. We need MATLAB 2017b or better to use the function "rgb2lin".');
+       if ~exist('rgb2lin','builtin')
+           if verLessThan('matlab','R2017b')
+               error('o.signalImagesAreGammaCorrected=true requires the rgb2lin function, which is missing because this MATLAB is too old. You need MATLAB 2017b or better.');
+           end
+           if ~license('test','image_toolbox')
+               error('o.signalImagesAreGammaCorrected=true requires the rgb2lin function, which is missing because you lack the Image Processing Toolbox.');
+           end
+           error('o.signalImagesAreGammaCorrected=true requires the rgb2lin function, which is missing even though you have the Image Processing Toolbox.');
        end
        im = rgb2lin(savedAlphabet.images{i},'OutputType','double');
        savedAlphabet.images{i}=im;
