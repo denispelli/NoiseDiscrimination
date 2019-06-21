@@ -1,5 +1,5 @@
 function InstallationCheck(screen)
-% InstallationCheck(screen); 
+% InstallationCheck(screen);
 % Are this computer and screen ready to run CriticalSpacing and
 % NoiseDiscrimination?
 global window
@@ -138,7 +138,7 @@ fprintf('%s %s calibrated by %s on %s.\n',...
     cal.localHostName,cal.macModelName,cal.calibratedBy,cal.datestr);
 fprintf('%s\n',cal.notes);
 
-  %% MAKE TABLE OF TEST RESULTS
+%% MAKE TABLE OF TEST RESULTS
 test=struct([]);
 
 test(end+1).name='Computer name';
@@ -182,7 +182,7 @@ if IsOSX
     % Copied from InitializePsychSound, abbreviating the error messages.
     try
         test(end+1).name='PsychPortAudio driver loaded';
-        d=PsychPortAudio('GetDevices'); 
+        d=PsychPortAudio('GetDevices');
         fprintf('PsychPortAudio driver loaded. \n');
         test(end).value='true';
         test(end).ok=true;
@@ -209,7 +209,7 @@ test(end+1).name='OS version';
 test(end).value=os;
 test(end).min='';
 test(end).ok=true;
-  
+
 test(end+1).name='MATLAB version';
 test(end).value=version;
 test(end).min='9.1 (R2016b)';
@@ -232,6 +232,41 @@ if ~test(end).value
 end
 test(end).min='3.0.13';
 
+if ~verLessThan('matlab','8.1')
+    test(end+1).name='PsychJava';
+    test(end).min='true';
+    ok=false;
+    classpathFile=which('javaclasspath.txt');
+    if isempty(classpathFile)
+        % Nope. So we try the preference folder.
+        % Retrieve path to preference folder.
+        prefFolder=prefdir(1);
+        classpathFile=[prefFolder filesep 'javaclasspath.txt'];
+    end
+    if exist(classpathFile,'file')
+        fid=fopen(classpathFile);
+        fileContentsWrapped=textscan(fid,'%s','delimiter','\n');
+        fclose(fid);
+        fileContents=fileContentsWrapped{1};
+        for i=1:length(fileContents)
+            % Look for any instance of PsychJava in the classpath.
+            if ~isempty(strfind(fileContents{i},'PsychJava'))
+                ok=true;
+                break
+            end
+        end
+    end
+    if ok
+        test(end).value='true';
+        test(end).ok=true;
+        fprintf('Good! PsychJava appears in javaclasspath.txt.\n');
+    else
+        test(end).value='false';
+        test(end).ok=false;
+        warning('Boo! PsychJava does not appear in javaclasspath.txt. Please read "help PsychJavaTrouble".');
+    end
+end
+
 test(end+1).name='Screen is calibrated';
 if streq(cal.datestr,'none')
     test(end).value=false;
@@ -253,20 +288,22 @@ test(end).ok=true;
 %     warning(me.message);
 % end
 
-test(end+1).name='AutoBrightness applescript';
-test(end).min='true';
-try
-    fprintf('Testing AutoBrightness(0) ...\n');
-    s=GetSecs;
-    AutoBrightness(0);
-    test(end).value='true';
-    test(end).ok=true;
-catch me
-    test(end).value='false';
-    test(end).ok=false;
-    warning(me.message);
+if 0
+    test(end+1).name='AutoBrightness applescript';
+    test(end).min='true';
+    try
+        fprintf('Testing AutoBrightness(0) ...\n');
+        s=GetSecs;
+        AutoBrightness(0);
+        test(end).value='true';
+        test(end).ok=true;
+    catch me
+        test(end).value='false';
+        test(end).ok=false;
+        warning(me.message);
+    end
+    fprintf('(%.0f s)\n',GetSecs-s);
 end
-fprintf('(%.0f s)\n',GetSecs-s);
 
 %% TRY-CATCH BLOCK CONTAINS ALL CODE IN WHICH THE WINDOW IS OPEN
 try
@@ -305,7 +342,7 @@ try
             error('Failed attempt to create data folder: %s',o.dataFolder);
         end
     end
-        
+    
     Screen('Preference','SkipSyncTests',1);
     oldVisualDebugLevel=Screen('Preference','VisualDebugLevel',0);
     oldSupressAllWarnings=Screen('Preference','SuppressAllWarnings',1);
@@ -315,7 +352,7 @@ try
         % ListenChar(2) sets no-echo mode that allows us to collect
         % keyboard responses without any danger of inadvertenly writing to
         % the MATLAB command window or the program's text.
-%         ListenChar(2); % no echo
+        %         ListenChar(2); % no echo
         
         test(end+1).name='DrawText plugin loaded';
         % Recommended by Mario Kleiner, July 2017.
@@ -354,7 +391,7 @@ try
         fprintf('Beam position queries %s, and should be true for best timing.\n',mat2str(test(end).value));
         test(end).min=false;
         test(end).ok=true;
-
+        
         %% PSYCHTOOLBOX KERNEL DRIVER
         if ismac
             test(end+1).name='Psychtoolbox kernel driver loaded';
@@ -431,8 +468,8 @@ try
     if o.speakInstructions && o.congratulateWhenDone
         Speak('Congratulations. Done.');
     end
-%     ListenChar(0); % flush
-%     ListenChar;
+    %     ListenChar(0); % flush
+    %     ListenChar;
     if ~isempty(window)
         if Screen(window,'WindowKind') == 1
             % Tell observer what's happening.
@@ -477,7 +514,7 @@ try
         fprintf(['\n<strong>Please consult "*Install NoiseDiscrimination.docx" to \n'...
             'fix these problems before testing observers.</strong>\n']);
     end
-
+    
 catch e
     %% MATLAB catch
     CloseWindowsAndCleanup
@@ -491,7 +528,7 @@ end % function InstallationCheck(screen)
 %% CloseWindowsAndCleanup
 function CloseWindowsAndCleanup
 % Close any window opened by the Psychtoolbox Screen command, re-enable
-% keyboard, show cursor, and restore AutoBrightness. 
+% keyboard, show cursor, and restore AutoBrightness.
 global window
 
 if ~isempty(Screen('Windows'))
