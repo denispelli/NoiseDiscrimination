@@ -86,7 +86,7 @@ for i=1:length(d)
            MFileLineNr,i,d(i).name,size(img,1),size(img,2),size(img,3),min(img(:)),max(img(:)));
    end
    if o.signalImagesAreGammaCorrected
-       if ~exist('rgb2lin','builtin')
+       if ~exist('rgb2lin','file')
            if verLessThan('matlab','R2017b')
                error('o.signalImagesAreGammaCorrected=true requires the rgb2lin function, which is missing because this MATLAB is too old. You need MATLAB 2017b or better.');
            end
