@@ -129,18 +129,18 @@ if 0
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-% if 0
-%     % Checkers alphabet
-%     o.conditionName='Checkers';
-%     o.targetFont='Checkers';
-%     o.minimumTargetHeightChecks=16;
-%     o.alphabet='abcdefghijklmnopqrstuvwxyz';
-%     o.borderLetter='';
-%     o.labelAnswers=true;
-%     o.readAlphabetFromDisk=true;
-%     o.alternatives=length(o.alphabet);
-%     ooo{end+1}=o;
-% end
+if 0
+    % Checkers alphabet
+    o.conditionName='Checkers';
+    o.targetFont='Checkers';
+    o.minimumTargetHeightChecks=16;
+    o.alphabet='abcdefghijklmnopqrstuvwxyz';
+    o.borderLetter='';
+    o.labelAnswers=true;
+    o.readAlphabetFromDisk=true;
+    o.alternatives=length(o.alphabet);
+    ooo{end+1}=o;
+end
 if 1
     % Animals alphabet
     o.conditionName='Animals';
@@ -368,7 +368,7 @@ end
 t=struct2table(oo,'AsArray',true);
 disp(t(:,{'block' 'experiment' 'targetKind' 'thresholdParameter'...
     'contrast' 'conditionName' 'observer' 'etaMin' 'noiseSD' ...
-    'targetHeightDeg' 'eccentricityXYDeg'})); % Print the conditions in the Command Window.
+    'targetHeightDeg' 'eccentricityXYDeg' 'labelAnswers'})); % Print the conditions in the Command Window.
 % return
 
 %% Measure threshold, one block per iteration.
