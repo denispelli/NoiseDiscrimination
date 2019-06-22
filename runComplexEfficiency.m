@@ -31,8 +31,8 @@
 
 clear o oo ooo
 ooo={};
-o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
-o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+% o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
+% o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 o.recordGaze=false;
 o.experiment='ComplexEfficiency';
 o.eccentricityXYDeg=[0 0];
@@ -74,8 +74,8 @@ o.viewingDistanceCm=40;
 o.alphabetPlacement='top'; % 'top' 'bottom' 'right' or 'left' while awaiting response.
 o.counterPlacement='bottomRight';
 o.instructionPlacement='bottomLeft'; % 'topLeft' 'bottomLeft'
-if 1
-    o.brightnessSetting=0.87;
+o.brightnessSetting=0.87;
+if 0
     if false
         % Target letter
         o.conditionName='Sloan';
@@ -115,7 +115,7 @@ if 1
 end
 o.symmetricLuminanceRange=true; % False for maximum brightness.
 o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
-if 1
+if 0
     % Sloan
     o.conditionName='Sloan';
     o.targetFont='Sloan';
@@ -142,6 +142,18 @@ end
 %     ooo{end+1}=o;
 % end
 if 1
+    % Animals alphabet
+    o.conditionName='Animals';
+    o.targetFont='Animals';
+    o.minimumTargetHeightChecks=16;
+    o.alphabet='abcdefghijklmnopqrstuvwxyz';
+    o.borderLetter='';
+    o.labelAnswers=true;
+    o.readAlphabetFromDisk=false;
+    o.alternatives=length(o.alphabet);
+    ooo{end+1}=o;
+end
+if 0
     % Sans Forgetica
     o.targetFont='Sans Forgetica';
     o.conditionName=o.targetFont;
@@ -153,7 +165,7 @@ if 1
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-if 1
+if 0
     % Kuenstler
     o.targetFont='Kuenstler Script LT Medium';
     o.conditionName=o.targetFont;
@@ -165,7 +177,7 @@ if 1
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-if 1
+if 0
     % Black Sabbath
     o.targetFont='SabbathBlackRegular';
     o.conditionName=o.targetFont;
