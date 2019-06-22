@@ -1441,7 +1441,8 @@ try
             [oo.observer]=deal(name);
             break
         end
-        preface={['Sorry. ''' name ''' is not enough.'] 'Please enter your first and last names.'};
+        preface=['Sorry. ''' name ''' is not enough. '...
+            'Please enter your first and last names.'];
     end
     clear o
     
