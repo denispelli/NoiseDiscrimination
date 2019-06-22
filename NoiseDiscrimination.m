@@ -1428,6 +1428,7 @@ try
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
         fprintf('*Waiting for observer name.\n');
         Screen('FillRect',window,oo(1).gray1);
+        Screen('DrawText',window,'',0,0,black,oo(1).gray1); % Set background.
         Screen('Flip',window);
         [name,o]=AskQuestion(oo,text);
         oo(1).quitBlock=o.quitBlock;
@@ -2122,6 +2123,7 @@ try
                     MFileLineNr,oo(1).contrast,(cal.LLast-cal.LFirst)/(cal.LLast+cal.LFirst));
             end
             Screen('FillRect',oo(1).window,oo(1).gray1);
+            Screen('DrawText',window,'',0,0,black,oo(1).gray1); % Set background.
             Screen('FillRect',oo(1).window,oo(1).gray,oo(1).stimulusRect);
         else
             Screen('FillRect',oo(1).window);
@@ -2135,6 +2137,7 @@ try
         black=0; % CLUT color code for black.
         white=1; % CLUT color code for white.
         Screen('FillRect',oo(1).window,oo(1).gray1);
+        Screen('DrawText',window,'',0,0,black,oo(1).gray1); % Set background.
         Screen('FillRect',oo(1).window,oo(1).gray,oo(1).stimulusRect);
         DrawCounter(oo(oi));
         Screen('Flip',oo(1).window); % Screen is now all gray, at o.LBackground.
@@ -2463,7 +2466,7 @@ try
     end
     
     %% Remind to fixate, then wait for RETURN.
-    if any([oo.useFixation])
+    if any([oo.useFixation]) && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
         tryAgain=true;
         while tryAgain
             string=['IMPORTANT: Please resist the temptation to type your response as '...
@@ -2474,7 +2477,7 @@ try
             x=2*oo(1).textSize;
             y=2.5*oo(1).textSize;
             Screen('TextSize',window,oo(oi).textSize);
-            Screen('DrawText',window,'',x,y,black,white); % Set background.
+%             Screen('DrawText',window,'',x,y,black,white); % Set background.
             % 'IMPORTANT: ... hit RETURN.
             Screen('TextStyle',window,1); % Bold
             DrawFormattedText(window,string,...
@@ -2504,6 +2507,7 @@ try
                 tryAgain=false;
             end
             Screen('FillRect',oo(1).window,oo(1).gray1);
+            Screen('DrawText',window,'',0,0,black,oo(1).gray1); % Set background.
         end % while tryAgain
     end % if any([oo.useFixation])
     
