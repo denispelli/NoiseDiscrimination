@@ -32,7 +32,7 @@
 clear o oo ooo
 ooo={};
 % o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
-% o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 o.recordGaze=false;
 o.experiment='ComplexEfficiency';
 o.eccentricityXYDeg=[0 0];
@@ -72,6 +72,7 @@ o.symmetricLuminanceRange=true; % False for maximum brightness.
 o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
 o.viewingDistanceCm=40;
 o.alphabetPlacement='top'; % 'top' 'bottom' 'right' or 'left' while awaiting response.
+% As of June 23, alphabetPlacement='bottom' prevents showing labels, labelAnswers=true;
 o.counterPlacement='bottomRight';
 o.instructionPlacement='bottomLeft'; % 'topLeft' 'bottomLeft'
 o.brightnessSetting=0.87;
@@ -82,6 +83,7 @@ if 0
         o.targetKind='letter';
         o.targetFont='Sloan';
         o.alphabet='DHKNORSVZ';
+        o.alphabetPlacement='right'; % 'top' or 'right';
     else
         % Target face
         o.conditionName='face';
