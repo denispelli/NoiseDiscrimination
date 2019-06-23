@@ -4598,7 +4598,7 @@ try
                                 blankRect(4)=rect(4);
                             case 'bottom'
                                 rect=AlignRect(rect,o.screenRect,RectLeft,RectBottom);
-                                rect=OffsetRect(rect,-alphaGapPix,alphaGapPix); % spacing
+                                rect=OffsetRect(rect,-alphaGapPix,-alphaGapPix); % spacing
                                 bounds=DrawCounter(oo(oi));
                                 rect=OffsetRect(rect,0,-RectHeight(bounds)); % Avoid the counter.
                                 blankRect(2)=rect(2);
@@ -4614,7 +4614,7 @@ try
                         switch oo(oi).alphabetPlacement
                             case {'left' 'right'}
                                 step=[0 RectHeight(rect)+alphaGapPix];
-                            case 'top'
+                            case {'top' 'bottom'}
                                 step=[RectWidth(rect)+alphaGapPix 0];
                                 rect=OffsetRect(rect,-(oo(oi).alternatives-1)*step(1),0);
                         end
