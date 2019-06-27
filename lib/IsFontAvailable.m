@@ -48,8 +48,9 @@ else
 end
 
 %% CHECK FOR SPECIFIED FONTS
+ok=logical([]);
 for i=1:length(fonts)
-    font=fonts{1};
+    font=fonts{i};
     oldFont=Screen('TextFont',window,font);
     % Perform dummy DrawText call, in case the OS defers setting of the font.
     Screen('DrawText',window,' ',0,0);
