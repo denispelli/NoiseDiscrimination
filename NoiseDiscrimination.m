@@ -1334,10 +1334,10 @@ try
         switch oo(oi).instructionPlacement
             case 'topLeft'
                 % Allow room for instruction at top of screen.
-                oo(oi).stimulusRect(2)=oo(oi).stimulusRect(2)+1.3*oo(oi).textSize;
+                oo(oi).stimulusRect(2)=oo(oi).screenRect(2)+1.3*oo(oi).textSize;
             case 'bottomLeft'
                 % Allow room for instruction at bottom of screen.
-                oo(oi).stimulusRect(4)=oo(oi).stimulusRect(4)-1.3*oo(oi).textSize;
+                oo(oi).stimulusRect(4)=oo(oi).screenRect(4)-1.3*oo(oi).textSize;
             otherwise
                 error('Unknown o.instructionPlacement ''%s''.',o.instructionPlacement);
         end
@@ -1346,7 +1346,7 @@ try
         bounds=DrawCounter(oo(oi));
         switch oo(oi).counterPlacement
             case {'bottomRight' 'bottomLeft' 'bottomCenter'}
-                oo(oi).stimulusRect(4)=oo(oi).stimulusRect(4)-1.5*RectHeight(bounds);
+                oo(oi).stimulusRect(4)=oo(oi).screenRect(4)-1.5*RectHeight(bounds);
             otherwise
                 error('Unknown o.counterPlacement ''%s''.',o.counterPlacement);
         end
@@ -1683,17 +1683,22 @@ try
             % heightOverWidth=size(oo(oi).signal(1).image,1)/size(oo(oi).signal(1).image,2);
             heightOverWidth=0.7;
             width=RectWidth(oo(1).screenRect)/max(16,oo(oi).alternatives);
+            if oo(oi).labelAnswers
+                labelSize=round(0.8*oo(oi).textSize);
+            else
+                labelSize=0;
+            end
             switch oo(oi).alphabetPlacement
                 case 'right'
-                    oo(oi).stimulusRect(3)=oo(oi).stimulusRect(3)-height/heightOverWidth;
+                    oo(oi).stimulusRect(3)=oo(oi).screenRect(3)-height/heightOverWidth-labelSize;
                 case 'left'
-                    oo(oi).stimulusRect(1)=oo(oi).stimulusRect(1)+height/heightOverWidth;
+                    oo(oi).stimulusRect(1)=oo(oi).screenRect(1)+height/heightOverWidth+labelSize;
                 case 'top'
-                    oo(oi).stimulusRect(2)=oo(oi).stimulusRect(2)+width*heightOverWidth;
+                    oo(oi).stimulusRect(2)=oo(oi).screenRect(2)+width*heightOverWidth+labelSize;
                 case 'bottom'
-                    oo(oi).stimulusRect(4)=oo(oi).stimulusRect(4)-width*heightOverWidth;
+                    oo(oi).stimulusRect(4)=oo(oi).screenRect(4)-width*heightOverWidth-labelSize;
                 otherwise
-                    error('Unknown alphabetPlacement "%d".\n',oo(oi).alphabetPlacement);
+                    error('Unknown o.alphabetPlacement "%s".\n',oo(oi).alphabetPlacement);
             end
         end
         oo(oi).stimulusRect=2*round(oo(oi).stimulusRect/2);
@@ -4439,8 +4444,8 @@ try
                 
                 %% DRAW RESPONSE SCREEN
                 % Print instructions for response, according to
-                % o.instructionPlacement, o.alphabetPlacement, and
-                % o.counterPlacement.
+                % o.instructionPlacement, o.alphabetPlacement, 
+                % o.counterPlacement, and o.labelAnswers.
                 %
                 % Erasing is complicated when diverse conditions are
                 % interleaved. Different conditions may have different
@@ -4535,6 +4540,20 @@ try
                         Screen('FillRect',window,oo(oi).gray1,bottomCaptionRect);
                         bounds=AlignRect(bounds,r,'left','bottom');
                 end
+                % Retrict bounds of instruction to not overwrite the
+                % alphabet, which may have labels. We assume that
+                % stimulusRect has been inset to avoid the alphabet and
+                % labels.
+                switch oo(oi).alphabetPlacement
+                    case 'left'
+                        bounds(1)=max(bounds(1),oo(oi).stimulusRect(1));
+                    case 'right'
+                        bounds(3)=min(bounds(3),oo(oi).stimulusRect(3));
+                    case 'top'
+                        bounds(2)=max(bounds(2),oo(oi).stimulusRect(2));
+                    case 'bottom'
+                        bounds(4)=min(bounds(4),oo(oi).stimulusRect(4));
+                end
                 Screen('DrawText',oo(1).window,message,bounds(1),bounds(2),black,oo(oi).gray1);
                 Screen('TextSize',oo(1).window,oo(oi).textSize);
             end % if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
@@ -4590,10 +4609,10 @@ try
                         rect=round(rect*alphaCheckPix);
                         % Logically, it would be better to blank the
                         % alphabet background before drawing the
-                        % instructional text
+                        % instructional text.
                         blankRect=o.screenRect;
                         switch oo(oi).alphabetPlacement
-                            case {'left'}
+                            case 'left'
                                 rect=AlignRect(rect,o.screenRect,RectLeft,RectTop);
                                 rect=OffsetRect(rect,alphaGapPix,alphaGapPix); % spacing
                                 blankRect(3)=round(1.5*rect(3));
@@ -4608,7 +4627,7 @@ try
                                 rect=OffsetRect(rect,-alphaGapPix,alphaGapPix); % spacing
                                 blankRect(4)=rect(4);
                             case 'bottom'
-                                rect=AlignRect(rect,o.screenRect,RectLeft,RectBottom);
+                                rect=AlignRect(rect,o.screenRect,RectRight,RectBottom);
                                 rect=OffsetRect(rect,-alphaGapPix,-alphaGapPix); % spacing
                                 bounds=DrawCounter(oo(oi));
                                 rect=OffsetRect(rect,0,-RectHeight(bounds)); % Avoid the counter.
@@ -4723,15 +4742,24 @@ try
                                 if oo(oi).labelAnswers
                                     labelSize=round(0.8*oo(oi).textSize);
                                     Screen('TextSize',oo(1).window,labelSize);
-                                    switch oo(oi).targetKind
-                                        case 'gabor'
-                                            textRect=AlignRect([0 0 labelSize labelSize],rect,'center','top');
-                                        case {'letter' 'word'}
-                                            % Small label letter is centered below big foreign letter.
+                                    % Small label letter is centered and offset inwards from each big possible target.
+                                    switch oo(oi).alphabetPlacement
+                                        case 'top'
                                             textRect=AlignRect([0 0 labelSize labelSize],rect,'center','bottom');
                                             textRect=OffsetRect(textRect,0,labelSize); % Avoid overlap.
-                                        otherwise
-                                            textRect=AlignRect([0 0 labelSize labelSize],rect,'left','top');
+%                                             oo(oi).stimulusRect(2)=oo(oi).stimulusRect(2)+labelSize;
+                                        case 'bottom'
+                                            textRect=AlignRect([0 0 labelSize labelSize],rect,'center','top');
+                                            textRect=OffsetRect(textRect,0,-1.5*labelSize); % Avoid overlap. Needs the 1.5.
+%                                             oo(oi).stimulusRect(4)=oo(oi).stimulusRect(4)-labelSize;
+                                        case 'right'
+                                            textRect=AlignRect([0 0 labelSize labelSize],rect,'center','left');
+                                            textRect=OffsetRect(textRect,-labelSize,0); % Avoid overlap.
+%                                             oo(oi).stimulusRect(3)=oo(oi).stimulusRect(3)-labelSize;
+                                        case 'left'
+                                            textRect=AlignRect([0 0 labelSize labelSize],rect,'center','right');
+                                            textRect=OffsetRect(textRect,labelSize,0); % Avoid overlap.
+%                                             oo(oi).stimulusRect(1)=oo(oi).stimulusRect(1)-labelSize;
                                     end
                                     Screen('DrawText',oo(1).window,oo(oi).responseLabels(i),textRect(1),textRect(4),black,oo(oi).gray1,1);
                                 end
