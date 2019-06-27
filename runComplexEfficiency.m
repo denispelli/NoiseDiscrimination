@@ -34,7 +34,7 @@ clear KbWait
 clear o oo ooo
 ooo={};
 % o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
-o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+% o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 o.recordGaze=false;
 o.experiment='ComplexEfficiency';
 o.eccentricityXYDeg=[0 0];
@@ -78,7 +78,7 @@ o.alphabetPlacement='top'; % 'top' 'bottom' 'right' or 'left' while awaiting res
 o.counterPlacement='bottomRight';
 o.instructionPlacement='bottomLeft'; % 'topLeft' 'bottomLeft'
 o.brightnessSetting=0.87;
-if 0
+if 1
     if false
         % Target letter
         o.conditionName='Sloan';
@@ -119,7 +119,7 @@ if 0
 end
 o.symmetricLuminanceRange=true; % False for maximum brightness.
 o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
-if 0
+if 1
     % Sloan
     o.conditionName='Sloan';
     o.targetFont='Sloan';
@@ -150,6 +150,7 @@ if 1
     o.conditionName='Animals';
     o.targetFont='Animals';
     o.minimumTargetHeightChecks=16;
+    o.alphabetPlacement='top';
     o.alphabet='abcdefghijklmnopqrstuvwxyz';
     o.borderLetter='';
     o.labelAnswers=true;
@@ -157,7 +158,7 @@ if 1
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-if 0
+if 1
     % Sans Forgetica
     o.targetFont='Sans Forgetica';
     o.conditionName=o.targetFont;
@@ -201,6 +202,7 @@ if 0
     o.alphabet=[20687 30524 38590 33310 28982 23627 29245 27169 32032 21338 26222 ...
         31661 28246 36891 24808 38065 22251 23500 39119 40517];
     o.alphabet=char(o.alphabet);
+    o.alphabetPlacement='top';
     o.borderLetter='';
     o.labelAnswers=true;
     o.readAlphabetFromDisk=true;
@@ -213,6 +215,7 @@ if 0
     o.targetFont='Hiragino Mincho ProN W3';
     japaneseScript='Kanji';
     o.conditionName=japaneseScript;
+    o.alphabetPlacement='top';
     switch japaneseScript
         case 'Katakana'
             o.alphabet=[12450 12452 12454 12456 12458 12459 12461 12463 12465 12467 12469 ... % Katakana from Ayaka
