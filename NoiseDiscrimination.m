@@ -2479,12 +2479,12 @@ try
             x=2*oo(1).textSize;
             y=2.5*oo(1).textSize;
             Screen('TextSize',window,oo(oi).textSize);
-%             Screen('DrawText',window,'',x,y,black,white); % Set background.
+            % Screen('DrawText',window,'',x,y,black,white); % Set background.
             % 'IMPORTANT: ... hit RETURN.
             Screen('TextStyle',window,1); % Bold
             DrawFormattedText(window,string,...
-                x,y,[.7 0 0],...
-                0.9*oo(oi).textLineLength,[],[],1.5);
+                x,y,[0 0 0],...
+                0.9*oo(oi).textLineLength,[],[],1.5)
             Screen('TextStyle',window,0); % Plain
             string='';
             DrawCounter(oo);
@@ -6565,6 +6565,7 @@ if IsWindows
 else
     background=o.gray1;
 end
+Screen('Flip',o.window,0,1); % DGP June 26, 2019.
 % fprintf('%d: o.deviceIndex %.0f.\n',MFileLineNr,o.deviceIndex);
 [reply,terminatorChar]=GetEchoString(o.window,text.question,...
     o.textMarginPix,0.82*o.screenRect(4),black,background,1,o.deviceIndex);
