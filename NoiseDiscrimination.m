@@ -976,7 +976,7 @@ knownOutputFields={'labelAnswers' 'beginningTime' ...
     'idealT64' 'q' 'rWarningCount' 'trialsRight' 'window'...
     'block'...
     'A' 'LAT' 'NPhoton' 'logFilename' 'screenrect' 'screenRect'...
-    'useCentralNoiseEnvelope' 'useCentralNoiseMask'...
+    'useCentralNoiseEnvelope' 'useCentralNoiseMask' 'centralNoiseMask'...
     'fixationLineWeightDeg' 'isFirstBlock' ... % From CriticalSpacing
     'isLastBlock'  'minimumTargetPix' ...
     'practicePresentations' 'repeatedTargets' 'okToShiftCoordinates' ...
@@ -2665,7 +2665,6 @@ try
         if oo(oi).useFlankers
             oo(oi).canvasSize=oo(oi).canvasSize+[3 3]*flankerSpacingPix/oo(oi).targetCheckPix;
         end
-        
         oo(oi).canvasSize=max(oo(oi).canvasSize,oo(oi).noiseSize*oo(oi).noiseCheckPix/oo(oi).targetCheckPix);
         if oo(oi).annularNoiseBigRadiusDeg > oo(oi).annularNoiseSmallRadiusDeg
             % April 2018, Denis changed denominator to targetCheckPix.
@@ -2719,6 +2718,9 @@ try
             Screen('DrawLines',oo(oi).window,fixationLines,fixationCrossWeightPix,black); % fixation
         end
         clear tSample
+        
+        ffprintf(ff,'%d: "%s" o.canvasSize %.0f %.0f\n',...
+            oi,oo(oi).conditionName,oo(oi).canvasSize);
         
         % Compute noiseList
         switch oo(oi).noiseType % Fill noiseList with desired kind of noise.
@@ -2808,7 +2810,8 @@ try
     
     %% OPTIONALLY READ IN FONT FROM DISK
     % AS A SHORTCUT, I'M ASSUMING THAT THE VARIOUS CONDITIONS WITHIN A
-    % BLOCK USE AT MOST ONE ON-DISK FONT.
+    % BLOCK USE AT MOST ONE ON-DISK FONT. THERE IS NO LIMIT ON THE NUMBER
+    % OF SYSTEM FONTS USED, E.G. ONE PER CONDITION.
     % letterStruct(i).letter % char
     % letterStruct(i).image % image
     % letterStruct(i).rect % rect of that image
@@ -3273,28 +3276,28 @@ try
         Screen('Preference','TextAntiAliasing',1);
         
         % Compute hard-edged annular noise mask
-        annularNoiseMask=zeros(oo(oi).canvasSize); % Initialize with 0.
-        rect=RectOfMatrix(annularNoiseMask);
+        oo(oi).annularNoiseMask=zeros(oo(oi).canvasSize); % Initialize with 0.
+        rect=RectOfMatrix(oo(oi).annularNoiseMask);
         r=[0 0 oo(oi).annularNoiseBigSize(1) oo(oi).annularNoiseBigSize(2)];
         r=round(CenterRect(r,rect));
-        annularNoiseMask=FillRectInMatrix(1,r,annularNoiseMask); % Fill big radius with 1.
+        oo(oi).annularNoiseMask=FillRectInMatrix(1,r,oo(oi).annularNoiseMask); % Fill big radius with 1.
         r=[0 0 oo(oi).annularNoiseSmallSize(1) oo(oi).annularNoiseSmallSize(2)];
         r=round(CenterRect(r,rect));
-        annularNoiseMask=FillRectInMatrix(0,r,annularNoiseMask); % Fill small radius with 0.
-        annularNoiseMask=logical(annularNoiseMask);
+        oo(oi).annularNoiseMask=FillRectInMatrix(0,r,oo(oi).annularNoiseMask); % Fill small radius with 0.
+        oo(oi).annularNoiseMask=logical(oo(oi).annularNoiseMask);
         
         % Compute hard-edged central noise mask
-        centralNoiseMask=zeros(oo(oi).canvasSize); % Initialize with 0.
-        rect=RectOfMatrix(centralNoiseMask);
+        oo(oi).centralNoiseMask=zeros(oo(oi).canvasSize); % Initialize with 0.
+        rect=RectOfMatrix(oo(oi).centralNoiseMask);
         r=CenterRect([0 0 oo(oi).noiseSize]*oo(oi).noiseCheckPix/oo(oi).targetCheckPix,rect);
         r=round(r);
-        centralNoiseMask=FillRectInMatrix(1,r,centralNoiseMask); % Fill disk of given radius with 1.
-        centralNoiseMask=logical(centralNoiseMask);
+        oo(oi).centralNoiseMask=FillRectInMatrix(1,r,oo(oi).centralNoiseMask); % Fill disk of given radius with 1.
+        oo(oi).centralNoiseMask=logical(oo(oi).centralNoiseMask);
         if oo(oi).complementNoiseEnvelope
-            centralNoiseMask=true(size(centralNoiseMask));
+            oo(oi).centralNoiseMask=true(size(oo(oi).centralNoiseMask));
         end
-        oo(oi).useCentralNoiseMask=~all(centralNoiseMask(:));
-        
+        oo(oi).useCentralNoiseMask=~all(oo(oi).centralNoiseMask(:));
+
         if isfinite(oo(oi).noiseEnvelopeSpaceConstantDeg) && oo(oi).noiseRaisedCosineEdgeThicknessDeg > 0
             error('Sorry. Please set o.noiseEnvelopeSpaceConstantDeg=inf or set o.noiseRaisedCosineEdgeThicknessDeg=0.');
         end
@@ -3660,7 +3663,7 @@ try
                 end
                 flankerSpacingPix=spacingDeg*oo(oi).pixPerDeg;
                 flankerSpacingPix=max(flankerSpacingPix,1.2*oo(oi).targetHeightPix);
-                fprintf('%d: flankerSpacingPix %d, spacingDeg %.1f, o.targetHeightDeg %.1f\n',...
+                fprintf('%d: flankerSpacingPix %.0f, spacingDeg %.1f, o.targetHeightDeg %.1f\n',...
                     oi,flankerSpacingPix,spacingDeg,oo(oi).targetHeightDeg);
             case 'size'
                 if ~oo(oi).fixationCheck
@@ -3810,7 +3813,9 @@ try
         movieFrameComputeStartSecs=GetSecs;
         %         fprintf('%d: oo(%d).signal(1).image is %d x %d.\n',...
         %             MFileLineNr,oi,size(oo(oi).signal(1).image));
-        for iMovieFrame=1:oo(oi).movieFrames
+%          ffprintf(ff,'%d: %d: %s o.canvasSize %d %d, size(oo(oi).centralNoiseMask) %d %d, \n',...
+%             MFileLineNr,oi,oo(oi).conditionName,oo(oi).canvasSize,size(oo(oi).centralNoiseMask));
+       for iMovieFrame=1:oo(oi).movieFrames
             % On each new frame, retain the (static) signal and regenerate the (dynamic) noise.
             switch oo(oi).task % add noise to signal
                 case '4afc'
@@ -3917,12 +3922,12 @@ try
                     if oo(oi).noiseFrozenInBlock
                         rng(oo(oi).noiseListSeed);
                     end
-                    noise=PsychRandSample(noiseList,oo(oi).canvasSize*oo(oi).targetCheckPix/oo(oi).noiseCheckPix);% TAKES 3 ms. One number per noiseCheck.
+                    noise=PsychRandSample(noiseList,oo(oi).canvasSize*oo(oi).targetCheckPix/oo(oi).noiseCheckPix); % TAKES 3 ms. One number per noiseCheck.
                     noise=Expand(noise,oo(oi).noiseCheckPix/oo(oi).targetCheckPix); % One number per targetCheck.
                     % Each pixel in "noise" now represents a targetCheck.
-                    noise(~centralNoiseMask & ~annularNoiseMask)=0;
+                    noise(~oo(oi).centralNoiseMask & ~oo(oi).annularNoiseMask)=0;
                     if oo(oi).useCentralNoiseEnvelope
-                        noise(centralNoiseMask)=centralNoiseEnvelope(centralNoiseMask).*noise(centralNoiseMask); % TAKES 2 ms.
+                        noise(oo(oi).centralNoiseMask)=centralNoiseEnvelope(oo(oi).centralNoiseMask).*noise(oo(oi).centralNoiseMask); % TAKES 2 ms.
                     end
                     canvasRect=RectOfMatrix(noise); % units of targetChecks
                     assert(all(canvasRect==[0 0 oo(oi).canvasSize(2) oo(oi).canvasSize(1)]));
@@ -3969,11 +3974,13 @@ try
                             % centered in that image.
                             location(1).image=ones(size(signalImage(:,:,1))); % TAKES 0.3 ms.
                             if oo(oi).useCentralNoiseMask
-                                location(1).image(centralNoiseMask)=1+(oo(oi).noiseSD/oo(oi).noiseListSd)*noise(centralNoiseMask); % TAKES 1 ms.
+                                % fprintf('%d: %d: %s o.canvasSize %d %d, size(oo(oi).centralNoiseMask) %d %d, size(noise) %d %d, size(location(1).image) %d %d\n',...
+                                % MFileLineNr,oi,oo(oi).conditionName,oo(oi).canvasSize,size(oo(oi).centralNoiseMask),size(noise),size(location(1).image));
+                                location(1).image(oo(oi).centralNoiseMask)=1+(oo(oi).noiseSD/oo(oi).noiseListSd)*noise(oo(oi).centralNoiseMask); % TAKES 1 ms.
                             else
                                 location(1).image=1+(oo(oi).noiseSD/oo(oi).noiseListSd)*noise; % TAKES ? ms.
                             end
-                            location(1).image(annularNoiseMask)=1+(oo(oi).annularNoiseSD/oo(oi).noiseListSd)*noise(annularNoiseMask);
+                            location(1).image(oo(oi).annularNoiseMask)=1+(oo(oi).annularNoiseSD/oo(oi).noiseListSd)*noise(oo(oi).annularNoiseMask);
                             location(1).image=repmat(location(1).image,1,1,length(white)); % Support color.
                             location(1).image=location(1).image+oo(oi).contrast*signalImage; % Add signal to noise.
                             PrintImageStatistics(MFileLineNr,oo(oi),i,'signalImage',signalImage);
@@ -3981,11 +3988,11 @@ try
                         case 'noise'
                             noise(signalMask)=oo(oi).r*noise(signalMask); % Signal modulates noise.
                             location(1).image=ones(oo(oi).canvasSize);
-                            location(1).image(centralNoiseMask)=1+(oo(oi).noiseSD/oo(oi).noiseListSd)*noise(centralNoiseMask);
-                            location(1).image(annularNoiseMask)=1+(oo(oi).annularNoiseSD/oo(oi).noiseListSd)*noise(annularNoiseMask);
+                            location(1).image(oo(oi).centralNoiseMask)=1+(oo(oi).noiseSD/oo(oi).noiseListSd)*noise(oo(oi).centralNoiseMask);
+                            location(1).image(oo(oi).annularNoiseMask)=1+(oo(oi).annularNoiseSD/oo(oi).noiseListSd)*noise(oo(oi).annularNoiseMask);
                             %                             figure(1);subplot(1,3,3);imshow(location(1).image);
                         case 'entropy'
-                            noise(~centralNoiseMask)=0;
+                            noise(~oo(oi).centralNoiseMask)=0;
                             noise(signalMask)=(0.5+floor(noise(signalMask)*0.499999*signalEntropyLevels))/(0.5*signalEntropyLevels);
                             noise(~signalMask)=(0.5+floor(noise(~signalMask)*0.499999*oo(oi).backgroundEntropyLevels))/(0.5*oo(oi).backgroundEntropyLevels);
                             location(1).image=1+(oo(oi).noiseSD/oo(oi).noiseListSd)*noise;
