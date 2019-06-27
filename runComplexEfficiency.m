@@ -74,32 +74,22 @@ o.symmetricLuminanceRange=true; % False for maximum brightness.
 o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
 o.viewingDistanceCm=40;
 o.alphabetPlacement='top'; % 'top' 'bottom' 'right' or 'left' while awaiting response.
-% As of June 23, alphabetPlacement='bottom' prevents showing labels, labelAnswers=true;
 o.counterPlacement='bottomRight';
 o.instructionPlacement='bottomLeft'; % 'topLeft' 'bottomLeft'
 o.brightnessSetting=0.87;
-if 1
-    if false
-        % Target letter
-        o.conditionName='Sloan';
-        o.targetKind='letter';
-        o.targetFont='Sloan';
-        o.alphabet='DHKNORSVZ';
-        o.alphabetPlacement='right'; % 'top' or 'right';
-    else
-        % Target face
-        o.conditionName='face';
-        o.signalImagesFolder='faces';
-        o.signalImagesAreGammaCorrected=true;
-        o.convertSignalImageToGray=true;
-        o.alphabetPlacement='right'; % 'top' or 'right';
-        o.targetKind='image';
-        o.alphabet='abcdefghijklmnopq';
-        o.brightnessSetting=0.87;
-        o.labelAnswers=true;
-        o.symmetricLuminanceRange=false; % False for maximum brightness.
-        o.desiredLuminanceFactor=1.1; % 1.8 for maximize brightness.
-    end
+if 0
+    % Target face
+    o.conditionName='face';
+    o.signalImagesFolder='faces';
+    o.signalImagesAreGammaCorrected=true;
+    o.convertSignalImageToGray=true;
+    o.alphabetPlacement='top'; % 'top' or 'right';
+    o.targetKind='image';
+    o.alphabet='abcdefghijklmnopq';
+    o.brightnessSetting=0.87;
+    o.labelAnswers=true;
+    o.symmetricLuminanceRange=false; % False for maximum brightness.
+    o.desiredLuminanceFactor=1.1; % 1.8 for maximize brightness.
     o.targetMargin=0;
     o.viewingDistanceCm=40;
     o.contrast=1; % Select contrast polarity.
@@ -119,7 +109,7 @@ if 1
 end
 o.symmetricLuminanceRange=true; % False for maximum brightness.
 o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
-if 1
+if 0
     % Sloan
     o.conditionName='Sloan';
     o.targetFont='Sloan';
@@ -127,30 +117,32 @@ if 1
     o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
     o.targetKind='letter';
     o.borderLetter='X';
+    o.alphabetPlacement='right'; % 'top' or 'right';
     o.labelAnswers=false;
     o.readAlphabetFromDisk=true;
     o.contrast=-1;
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
+% if 0
+%     % Checkers alphabet
+%     o.conditionName='Checkers';
+%     o.targetFont='Checkers';
+%     o.minimumTargetHeightChecks=16;
+%     o.alphabet='abcdefghijklmnopqrstuvwxyz';
+%     o.borderLetter='';
+%     o.labelAnswers=true;
+%     o.readAlphabetFromDisk=true;
+%     o.alternatives=length(o.alphabet);
+%     ooo{end+1}=o;
+% end
 if 0
-    % Checkers alphabet
-    o.conditionName='Checkers';
-    o.targetFont='Checkers';
-    o.minimumTargetHeightChecks=16;
-    o.alphabet='abcdefghijklmnopqrstuvwxyz';
-    o.borderLetter='';
-    o.labelAnswers=true;
-    o.readAlphabetFromDisk=true;
-    o.alternatives=length(o.alphabet);
-    ooo{end+1}=o;
-end
-if 1
     % Animals alphabet
     o.conditionName='Animals';
     o.targetFont='Animals';
     o.minimumTargetHeightChecks=16;
     o.alphabetPlacement='top';
+    o.instructionPlacement='bottomLeft';
     o.alphabet='abcdefghijklmnopqrstuvwxyz';
     o.borderLetter='';
     o.labelAnswers=true;
@@ -158,7 +150,48 @@ if 1
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-if 1
+% if 1
+%     % Animals alphabet
+%     o.conditionName='Animals';
+%     o.targetFont='Animals';
+%     o.minimumTargetHeightChecks=16;
+%     o.alphabetPlacement='left';
+%     o.alphabet='abcdefghijklmnopqrstuvwxyz';
+%     o.borderLetter='';
+%     o.labelAnswers=true;
+%     o.readAlphabetFromDisk=false;
+%     o.alternatives=length(o.alphabet);
+%     ooo{end+1}=o;
+% end
+% 
+% if 1
+%     % Animals alphabet
+%     o.conditionName='Animals';
+%     o.targetFont='Animals';
+%     o.minimumTargetHeightChecks=16;
+%     o.alphabetPlacement='right';
+%     o.alphabet='abcdefghijklmnopqrstuvwxyz';
+%     o.borderLetter='';
+%     o.labelAnswers=true;
+%     o.readAlphabetFromDisk=false;
+%     o.alternatives=length(o.alphabet);
+%     ooo{end+1}=o;
+% end
+% if 1
+%     % Animals alphabet
+%     o.conditionName='Animals';
+%     o.targetFont='Animals';
+%     o.minimumTargetHeightChecks=16;
+%     o.alphabetPlacement='top';
+%     o.alphabet='abcdefghijklmnopqrstuvwxyz';
+%     o.borderLetter='';
+%     o.labelAnswers=true;
+%     o.readAlphabetFromDisk=false;
+%     o.alternatives=length(o.alphabet);
+%     ooo{end+1}=o;
+% end
+
+if 0
     % Sans Forgetica
     o.targetFont='Sans Forgetica';
     o.conditionName=o.targetFont;
@@ -296,6 +329,7 @@ if true
         o.minimumTargetHeightChecks=8;
         o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
         o.targetKind='letter';
+        o.alphabetPlacement='right'; % 'top' or 'right';
         o.labelAnswers=false;
         o.readAlphabetFromDisk=false;
         o.alternatives=length(o.alphabet);
