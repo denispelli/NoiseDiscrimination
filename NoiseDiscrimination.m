@@ -832,7 +832,7 @@ o.showResponseNumbers=true;
 o.responseNumbersInCorners=false;
 o.alphabetPlacement='top'; % 'top' 'bottom' 'right' or 'left' while awaiting response.
 o.textSizeDeg=0.9;
-o.textMarginPix=0;
+o.textMarginPix=0; % Currently always set to 2*o.textSize; used solely in call to OfferEscapeOptions.
 o.counterPlacement='bottomRight';
 o.instructionPlacement='topLeft'; % 'topLeft' 'bottomLeft'
 
@@ -1382,7 +1382,8 @@ try
     end % for oi=1:conditions
     
     %% ASK EXPERIMENTER NAME
-    [oo.textMarginPix]=deal(round(0.08*min(RectWidth(oo(1).screenRect),RectHeight(oo(1).screenRect))));
+%     [oo.textMarginPix]=deal(round(0.08*min(RectWidth(oo(1).screenRect),RectHeight(oo(1).screenRect))));
+    [oo.textMarginPix]=deal(2*oo(1).textSize);
     [oo.textFont]=deal('Verdana');
     black=0; % The CLUT color code for black.
     white=1; % Retrieves the CLUT color code for white.
@@ -2179,12 +2180,16 @@ try
                 DrawCounter(oo(oi));
                 Screen('Flip',oo(1).window); % Display request.
                 if oo(1).speakInstructions
-                    Speak(sprintf('Observer %s, right? If ok, hit RETURN to continue, otherwise hit ESCAPE to quit.',oo(1).observer));
+                    Speak(sprintf(...
+                        ['Observer %s, right? '...
+                        'If ok, hit RETURN to continue, '...
+                        'otherwise hit ESCAPE to quit.'],oo(1).observer));
                 end
                 fprintf('*Confirming observer name.\n');
                 response=GetKeypress([escapeKeyCode graveAccentKeyCode returnKeyCode],oo(1).deviceIndex);
                 if ismember(response,[escapeChar,graveAccentChar])
-                    [oo(1).quitExperiment,oo(1).quitBlock,oo(1).skipTrial]=OfferEscapeOptions(oo(1).window,oo,oo(1).textMarginPix);
+                    [oo(1).quitExperiment,oo(1).quitBlock,oo(1).skipTrial]=...
+                        OfferEscapeOptions(oo(1).window,oo,oo(1).textMarginPix);
                     if oo(1).quitBlock
                         if oo(1).speakInstructions
                             Speak('Quitting.');
@@ -2230,7 +2235,8 @@ try
                     fprintf('*Asking which eye(s).\n');
                     response=GetKeypress([escapeKeyCode graveAccentKeyCode returnKeyCode],oo(1).deviceIndex);
                     if ismember(response,[escapeChar,graveAccentChar])
-                        [oo(1).quitExperiment,oo(1).quitBlock,oo(1).skipTrial]=OfferEscapeOptions(oo(1).window,oo,oo(1).textMarginPix);
+                        [oo(1).quitExperiment,oo(1).quitBlock,oo(1).skipTrial]=...
+                            OfferEscapeOptions(oo(1).window,oo,oo(1).textMarginPix);
                         if oo(1).quitBlock
                             if oo(1).speakInstructions
                                 Speak('Quitting.');
@@ -2258,7 +2264,8 @@ try
                     fprintf('*Telling observer which eye(s) to use.\n');
                     response=GetKeypress([escapeKeyCode graveAccentKeyCode returnKeyCode],oo(1).deviceIndex);
                     if ismember(response,[escapeChar,graveAccentChar])
-                        [oo(1).quitExperiment,oo(1).quitBlock,oo(1).skipTrial]=OfferEscapeOptions(oo(1).window,oo,oo(1).textMarginPix);
+                        [oo(1).quitExperiment,oo(1).quitBlock,oo(1).skipTrial]=...
+                            OfferEscapeOptions(oo(1).window,oo,oo(1).textMarginPix);
                         if oo(1).quitBlock
                             if oo(1).speakInstructions
                                 Speak('Quitting.');
@@ -2287,7 +2294,8 @@ try
                 fprintf('*Asking observer which eye(s).\n');
                 response=GetKeypress([KbName('L') KbName('R') escapeKeyCode graveAccentKeyCode],oo(1).deviceIndex);
                  if ismember(response,[escapeChar,graveAccentChar])
-                    [oo(1).quitExperiment,oo(1).quitBlock,oo(1).skipTrial]=OfferEscapeOptions(oo(1).window,oo,oo(1).textMarginPix);
+                    [oo(1).quitExperiment,oo(1).quitBlock,oo(1).skipTrial]=...
+                    OfferEscapeOptions(oo(1).window,oo,oo(1).textMarginPix);
                     if oo(1).quitBlock
                         if oo(1).speakInstructions
                             Speak('Quitting.');
@@ -2495,7 +2503,8 @@ try
             fprintf('*Telling observer to fixate.\n');
             response=GetKeypress([escapeKeyCode graveAccentKeyCode returnKeyCode],oo(1).deviceIndex);
             if ismember(response,[escapeChar,graveAccentChar])
-                [oo(1).quitExperiment,oo(1).quitBlock,oo(1).skipTrial]=OfferEscapeOptions(oo(1).window,oo,oo(1).textMarginPix);
+                [oo(1).quitExperiment,oo(1).quitBlock,oo(1).skipTrial]=...
+                    OfferEscapeOptions(oo(1).window,oo,oo(1).textMarginPix);
                 if oo(1).quitBlock
                     if oo(1).speakInstructions
                         Speak('Quitting.');
@@ -4777,7 +4786,8 @@ try
                         if oo(oi).speakInstructions
                             Speak('Escape.');
                         end
-                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(oo(1).window,oo,oo(oi).textMarginPix);
+                        [o.quitExperiment,o.quitBlock,o.skipTrial]=...
+                            OfferEscapeOptions(oo(1).window,oo,oo(oi).textMarginPix);
                         trial=trial-1;
                         oo(oi).trials=oo(oi).trials-1;
                     end
@@ -4921,7 +4931,8 @@ try
                     %                Screen('FillRect',oo(1).window,oo(oi).gray1,bottomCaptionRect);
                     Screen('TextSize',oo(1).window,oo(oi).textSize);
                     if ismember(terminatorChar,[escapeChar,graveAccentChar])
-                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(oo(1).window,oo,oo(oi).textMarginPix);
+                        [o.quitExperiment,o.quitBlock,o.skipTrial]=...
+                            OfferEscapeOptions(oo(1).window,oo,oo(oi).textMarginPix);
                         trial=trial-1;
                         oo(oi).trials=oo(oi).trials-1;
                     end
@@ -4986,7 +4997,8 @@ try
                         warning('oo(oi).transcript lacks field "stimulusOnsetSecs".');
                     end
                     if ismember(responseChar,[escapeChar,graveAccentChar])
-                        [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(oo(1).window,oo,oo(oi).textMarginPix);
+                        [o.quitExperiment,o.quitBlock,o.skipTrial]=...
+                            OfferEscapeOptions(oo(1).window,oo,oo(oi).textMarginPix);
                         trial=trial-1;
                         oo(oi).trials=oo(oi).trials-1;
                     end
@@ -6232,7 +6244,8 @@ if o.speakInstructions
 end
 response=GetKeypress([returnKeyCode escapeKeyCode graveAccentKeyCode],o.deviceIndex);
 if ismember(response,[escapeChar,graveAccentChar])
-    [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(o.window,o,o.textMarginPix);
+    [o.quitExperiment,o.quitBlock,o.skipTrial]=...
+        OfferEscapeOptions(o.window,o,o.textMarginPix);
     if o.quitExperiment
         ffprintf(ff,'*** User typed ESCAPE twice. Experiment terminated.\n');
     elseif o.quitBlock
@@ -6360,7 +6373,8 @@ else
         Screen('FillRect',o.window,white);
         Screen('Flip',o.window); % Blank, to acknowledge response.
         if ismember(answer,[escapeChar,graveAccentChar])
-            [o.quitExperiment,o.quitBlock,oo(1).skipTrial]=OfferEscapeOptions(o.window,o,o.textMarginPix);
+            [o.quitExperiment,o.quitBlock,oo(1).skipTrial]=...
+                OfferEscapeOptions(o.window,o,o.textMarginPix);
             if o.quitBlock
                 if o.speakInstructions
                     Speak('Quitting.');
@@ -6567,12 +6581,13 @@ if IsWindows
 else
     background=o.gray1;
 end
-Screen('Flip',o.window,0,1); % DGP June 26, 2019.
+% Screen('Flip',o.window,0,1); % DGP June 26, 2019.
 % fprintf('%d: o.deviceIndex %.0f.\n',MFileLineNr,o.deviceIndex);
 [reply,terminatorChar]=GetEchoString(o.window,text.question,...
-    o.textMarginPix,0.82*o.screenRect(4),black,background,1,o.deviceIndex);
+    x,0.82*o.screenRect(4),black,background,1,o.deviceIndex);
 if ismember(terminatorChar,[escapeChar graveAccentChar])
-    [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(o.window,oo,o.textMarginPix);
+    [o.quitExperiment,o.quitBlock,o.skipTrial]=...
+        OfferEscapeOptions(o.window,oo,o.textMarginPix);
     if o.quitExperiment
         ffprintf(ff,'*** User typed ESCAPE twice. Experiment terminated.\n');
     elseif o.quitBlock
@@ -6669,7 +6684,8 @@ switch o.task
         % This keypress serves mainly to start the first trial, but we
         % offer to quit if the user hits ESCAPE.
         if ismember(responseChar,[escapeChar,graveAccentChar])
-            [o.quitExperiment,o.quitBlock,o.skipTrial]=OfferEscapeOptions(o.window,oo,o.textMarginPix);
+            [o.quitExperiment,o.quitBlock,o.skipTrial]=...
+                OfferEscapeOptions(o.window,oo,o.textMarginPix);
             if o.quitBlock
                 ffprintf(ff,'*** User typed ESCAPE. Quitting block.\n');
                 if o.speakInstructions
