@@ -2,6 +2,29 @@
 % MATLAB script to run NoiseDiscrimination.m
 % Copyright 2019 Denis G. Pelli, denis.pelli@nyu.edu
 %
+% June 26, 2019 Interleaved conditions must use the CLUT in a consistent
+% way. Therefore NoiseDiscrimination now requires that interleaved
+% conditions have consistent values of o.symmetricLuminanceRange and
+% o.desiredLuminanceFactor. I also enforce this in runComplexEfficiency for
+% all blocks at the beginning of the experiment.
+%
+% June 26, 2019 I renamed centralNoiseMask to oo(oi).centralNoiseMask. and
+% renamed annularNoiseMask to oo(oi).annularNoiseMask. They should always
+% have the same size as oo(oi).canvasRect. This was being broken by
+% interleaving very different conditions (faces vs letters), but the fix
+% seems to have solved the problem.
+%
+% June 26, 2019 Cleaned up the code to allow arbitrary
+% instructionPlacement and alphabetPlacement, optionally with addLabel.
+% Most combinations work now. I prefer instructionPlacement='upperLeft',
+% counterPlacement='lowerRight' and alphabetPlacement='top' for long
+% alphabets and ='right' for short alphabets.
+%
+% June 26, 2019 runComplexEfficiency now uses the new routine
+% IsFontAvailable to make sure all needed system fonts are in place before
+% we run the experiment. runCrowdingSurvey uses both IsFontAvailable and
+% IsFontAvailableOnDisk.
+%
 % June 4, 2019. Added "Fixation check" condition that is meant to be
 % interleaved with all peripheral conditions. It presents an unvarying easy
 % foveal identification task (a target letter between two flankers), which
@@ -12,8 +35,11 @@
 % extra trials. I hope this will help the observer learn to fixate
 % reliably.
 %
-% On the first block the program will ask the experimenter's and observer's
-% names. On subsequent blocks it will remember the names.
+% On the first block the program asks for the experimenter's and observer's
+% names. It remembers the names on subsequent blocks. It insists that the
+% experiment's name be at least 3 characters and that the observer's name
+% include first and last names (i.e. at least one character followed by a
+% space followed by at least one character).
 %
 % Please use binocular viewing, using both eyes at all times.
 %
