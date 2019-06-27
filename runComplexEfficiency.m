@@ -344,7 +344,7 @@ if isfield(ooo{1}(1),'targetFont')
         end
     end
     fonts=unique(fonts);
-    if ~FontsAvailable(fonts)
+    if any(~IsFontAvailable(fonts))
         error('Please install missing fonts.');
     end
 end
