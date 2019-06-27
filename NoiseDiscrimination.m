@@ -976,7 +976,7 @@ knownOutputFields={'labelAnswers' 'beginningTime' ...
     'idealT64' 'q' 'rWarningCount' 'trialsRight' 'window'...
     'block'...
     'A' 'LAT' 'NPhoton' 'logFilename' 'screenrect' 'screenRect'...
-    'useCentralNoiseEnvelope' 'useCentralNoiseMask' 'centralNoiseMask'...
+    'useCentralNoiseEnvelope' 'useCentralNoiseMask' 'centralNoiseMask' 'annularNoiseMask'...
     'fixationLineWeightDeg' 'isFirstBlock' ... % From CriticalSpacing
     'isLastBlock'  'minimumTargetPix' ...
     'practicePresentations' 'repeatedTargets' 'okToShiftCoordinates' ...
@@ -1004,6 +1004,14 @@ for oi=1:conditions
 end % for oi=1:conditions
 if ~isempty(unknownFields)
     error(['Unknown field(s) in input struct:' sprintf(' o.%s',unknownFields{:}) '.']);
+end
+
+%% INTERLEAVED CONDITIONS MUST HAVE CONSISTENT CLUTS
+if ~all([oo.symmetricLuminanceRange]) && any([oo.symmetricLuminanceRange])
+    error('o.symmetricLuminanceRange must be consistent among all interleaved conditions.');
+end
+if ~all([oo.desiredLuminanceFactor]) && any([oo.desiredLuminanceFactor])
+    error('o.desiredLuminanceFactor must be consistent among all interleaved conditions.');
 end
 
 %% SCREEN PARAMETERS
@@ -2388,7 +2396,7 @@ try
     end
     if oo(1).quitExperiment
         isLastBlock=true; % global DGP
-        CloseWindowsAndCleanup(oo);
+        CloseWindowsAndCleanup(oo)
         return
     end
     % Force all conditions to use the same near point.
@@ -3813,8 +3821,8 @@ try
         movieFrameComputeStartSecs=GetSecs;
         %         fprintf('%d: oo(%d).signal(1).image is %d x %d.\n',...
         %             MFileLineNr,oi,size(oo(oi).signal(1).image));
-%          ffprintf(ff,'%d: %d: %s o.canvasSize %d %d, size(oo(oi).centralNoiseMask) %d %d, \n',...
-%             MFileLineNr,oi,oo(oi).conditionName,oo(oi).canvasSize,size(oo(oi).centralNoiseMask));
+        % ffprintf(ff,'%d: %d: %s o.canvasSize %d %d, size(oo(oi).centralNoiseMask) %d %d, \n',...
+        %    MFileLineNr,oi,oo(oi).conditionName,oo(oi).canvasSize,size(oo(oi).centralNoiseMask));
        for iMovieFrame=1:oo(oi).movieFrames
             % On each new frame, retain the (static) signal and regenerate the (dynamic) noise.
             switch oo(oi).task % add noise to signal
