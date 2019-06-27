@@ -1661,7 +1661,7 @@ try
         end
     end
     ffprintf(ff,'<strong>%s</strong>\n',oo(1).dataFilename);
-    ffprintf(ff,'Block %d of %d.\n',oo(1).block,oo(1).blocksDesired);
+    ffprintf(ff,'<strong>Block %d of %d.</strong>\n',oo(1).block,oo(1).blocksDesired);
     ffprintf(ff,'observer %s, task %s, alternatives %d,  steepness %.1f\n',oo(1).observer,oo(1).task,oo(1).alternatives,oo(1).steepness);
     ffprintf(ff,'Experiment: %s. ',oo(1).experiment);
     ffprintf(ff,'%d conditions: ',conditions);
@@ -2388,7 +2388,7 @@ try
     end
     if oo(1).quitExperiment
         isLastBlock=true; % global DGP
-        CloseWindowsAndCleanup(oo)
+        CloseWindowsAndCleanup(oo);
         return
     end
     % Force all conditions to use the same near point.
@@ -2499,7 +2499,7 @@ try
             Screen('TextStyle',window,1); % Bold
             DrawFormattedText(window,string,...
                 x,y,[0 0 0],...
-                0.9*oo(oi).textLineLength,[],[],1.5)
+                0.9*oo(oi).textLineLength,[],[],1.5);
             Screen('TextStyle',window,0); % Plain
             string='';
             DrawCounter(oo);
@@ -5350,7 +5350,7 @@ try
             ffprintf(ff,'\n');
         end
         
-        ffprintf(ff,'Block %d of %d.\n',oo(1).block,oo(1).blocksDesired);
+        ffprintf(ff,'<strong>Block %d of %d.</strong>\n',oo(1).block,oo(1).blocksDesired);
         
         %% PRINT BOLD SUMMARY OF CONDITION oi
         oo(oi).E=10^(2*oo(oi).questMean)*oo(oi).E1;
