@@ -34,7 +34,7 @@ clear KbWait
 clear o oo ooo
 ooo={};
 % o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
-o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+% o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 o.recordGaze=false;
 o.experiment='ComplexEfficiency';
 o.eccentricityXYDeg=[0 0];
@@ -299,7 +299,7 @@ if true
     % Add fixation check.
     for block=1:length(ooo)
         o=ooo{block}(1);
-        o.fullResolutionTarget=true;
+         o.fullResolutionTarget=true;
         o.targetHeightDeg=10;
         o.brightnessSetting=0.87;
         o.thresholdParameter='size';
@@ -314,9 +314,8 @@ if true
         o.eccentricityXYDeg=-o.eccentricityXYDeg;
         oo(2)=o;
         % FIXATION TEST
-        o.symmetricLuminanceRange=true; % False for maximum brightness.
-        o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
         o.conditionName='Fixation check';
+        o.targetKind='letter';
         o.fixationCheck=true;
         o.eccentricityXYDeg=[0 0];
         o.thresholdParameter='spacing';
@@ -382,6 +381,24 @@ if isfield(ooo{1}(1),'targetFont')
         error('Please install missing fonts.');
     end
 end
+
+%% INTERLEAVED CONDITIONS MUST HAVE CONSISTENT CLUTS
+bad={};
+for block=1:length(ooo)
+    if ~all([oo.symmetricLuminanceRange]) && any([oo.symmetricLuminanceRange])
+        warning('block %d, o.symmetricLuminanceRange must be consistent among all interleaved conditions.',block);
+        bad{end+1}='o.symmetricLuminanceRange';
+    end
+    if length(unique([oo.desiredLuminanceFactor]))>1
+        warning('block %d, o.desiredLuminanceFactor must be consistent among all interleaved conditions.',block);
+        bad{end+1}='o.desiredLuminanceFactor';
+    end
+end
+bad=unique(bad);
+if ~isempty(bad)
+    error('Make %s consistent within each block. ',bad{:});
+end
+
 %% PRINT TABLE OF CONDITIONS, ONE ROW PER THRESHOLD.
 oo=[];
 ok=true;
