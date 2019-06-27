@@ -1389,8 +1389,9 @@ try
     [oo.gray1]=deal(1); % Temporary background (for questions) until we LinearizeClut.
     [oo.speakEachLetter]=deal(false);
     [oo.useSpeech]=deal(false);
-    while isempty(oo(1).experimenter)
-        text.big='Hello. Please slowly type the experimenter''s name followed by RETURN.';
+    preface='Hello. ';
+    while length(oo(1).experimenter)<3
+        text.big=[preface 'Please slowly type the experimenter''s name followed by RETURN.'];
         text.small=['In the following blocks, I''ll remember your answers and skip these questions. ' ...
             'If the keyboard seems dead, please hit Control-C twice to quit this program, ' ...
             'then quit and restart MATLAB, and run your MATLAB script again.'];
@@ -1405,10 +1406,11 @@ try
             CloseWindowsAndCleanup(oo);
             return
         end
-        if length(reply)>2
+        if length(reply)>=3
             [oo.experimenter]=deal(reply);
             break
         end
+        preface=['Sorry. ''' reply ''' is not enough. This name must have at least 3 characters. '];
     end
     clear o
     
@@ -1442,7 +1444,7 @@ try
             break
         end
         preface=['Sorry. ''' name ''' is not enough. '...
-            'Please enter your first and last names.'];
+            'Please enter your first and last names. '];
     end
     clear o
     
