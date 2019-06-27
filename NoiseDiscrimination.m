@@ -6534,7 +6534,7 @@ DrawCounter(o);
 
 % Display question.
 x=2*o.textSize;
-y=o.screenRect(4)/2-(1+2*length(text.big))*o.textSize;
+y=o.screenRect(4)/2-(1+ceil(length(text.big)/o.textLineLength))*1.3*o.textSize;
 Screen('DrawText',o.window,' ',0,0,black,o.gray1);
 assert(ischar(text.big));
 [~,y]=DrawFormattedText(o.window,text.big,...
