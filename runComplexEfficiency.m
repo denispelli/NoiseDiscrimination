@@ -34,7 +34,7 @@ clear KbWait
 clear o oo ooo
 ooo={};
 % o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
-% o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 o.recordGaze=false;
 o.experiment='ComplexEfficiency';
 o.eccentricityXYDeg=[0 0];
@@ -77,7 +77,7 @@ o.alphabetPlacement='top'; % 'top' 'bottom' 'right' or 'left' while awaiting res
 o.counterPlacement='bottomRight';
 o.instructionPlacement='bottomLeft'; % 'topLeft' 'bottomLeft'
 o.brightnessSetting=0.87;
-if 0
+if 1
     % Target face
     o.conditionName='face';
     o.signalImagesFolder='faces';
@@ -313,7 +313,7 @@ if true
         oo=o;
         o.eccentricityXYDeg=-o.eccentricityXYDeg;
         oo(2)=o;
-        %% FIXATION TEST
+        % FIXATION TEST
         o.symmetricLuminanceRange=true; % False for maximum brightness.
         o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
         o.conditionName='Fixation check';
