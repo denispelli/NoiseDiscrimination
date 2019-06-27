@@ -39,13 +39,24 @@ if isfield(o,'textSize')
 else
     counterSize=20;
 end
+oldTextSize=Screen('TextSize',window,counterSize);
 Screen('TextSize',scratchWindow,counterSize);
 oldFont=Screen('TextFont',window,'Verdana');
-Screen('TextFont',scratchWindow,Screen('TextFont',window));
+Screen('TextFont',scratchWindow,'Verdana');
 counterBounds=TextBounds(scratchWindow,message,1);
 r=o.screenRect;
-if isfield(o,'stimulusRect')
-    r(3)=o.stimulusRect(3);
+if isfield(o,'stimulusRect') && isfield(o,'alphabetPlacement')
+    switch o.alphabetPlacement
+        case 'left'
+            r(1)=max(r(1),o.stimulusRect(1));
+        case 'right'
+            r(3)=min(r(3),o.stimulusRect(3));
+        case 'top'
+            r(2)=max(r(2),o.stimulusRect(2));
+        case 'bottom'
+%             r(4)=min(r(4),o.stimulusRect(4));
+% We want the counter to always be at the bottom of the screen.
+    end
 end
 r=InsetRect(r,counterSize/4,counterSize/8);
 if ~isfield(o,'counterPlacement')
@@ -60,7 +71,6 @@ switch o.counterPlacement
         counterBounds=AlignRect(counterBounds,r,'center','bottom');
 end
 black=BlackIndex(window);
-oldTextSize=Screen('TextSize',window,counterSize);
 % Use whatever background is currently in use. Don't insist on white.
 Screen('DrawText',window,message,counterBounds(1),counterBounds(2),black,[]);
 Screen('TextFont',window,oldFont); % Restore.
