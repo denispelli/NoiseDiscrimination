@@ -335,8 +335,20 @@ for block=length(ooo):-1:1
     maxCm=max([maxCm ooo{block}(1).viewingDistanceCm]);
     [ooo{block}(:).maxViewingDistanceCm]=deal(maxCm);
 end
-
-%% Print as a table. One row per threshold.
+%% MAKE SURE NEEDED FONTS ARE AVAILABLE
+if isfield(ooo{1}(1),'targetFont')
+    fonts={};
+    for block=1:length(ooo)
+        for oi=1:length(ooo{block})
+            fonts{end+1}=ooo{block}(oi).targetFont;
+        end
+    end
+    fonts=unique(fonts);
+    if ~FontsAvailable(fonts)
+        error('Please install missing fonts.');
+    end
+end
+%% PRINT TABLE OF CONDITIONS, ONE ROW PER THRESHOLD.
 oo=[];
 ok=true;
 for block=1:length(ooo)
