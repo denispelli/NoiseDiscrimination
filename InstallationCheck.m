@@ -94,8 +94,7 @@ else
 end
 
 %% GET SCREEN CALIBRATION cal
-cal.screen=o.screen;
-cal=OurScreenCalibrations(cal.screen);
+cal=OurScreenCalibrations(o.screen);
 if isfield(cal,'gamma')
     cal=rmfield(cal,'gamma');
 end
@@ -370,14 +369,7 @@ try
         for f={'Pelli' 'Sloan'}
             font=f{1};
             test(end+1).name=sprintf('%s font',font);
-            Screen('TextFont',window,font);
-            % Perform dummy DrawText call, in case the OS has deferred settings.
-            Screen('DrawText',window,' ',0,0);
-            oldFont=Screen('TextFont',window);
-            test(end).value=streq(oldFont,font);
-            if ~test(end).value
-                warning('The font "%s" is not available. Please install it.',font);
-            end
+            test(end).value=IsFontAvailable(font,'warn');
             test(end).min=true;
             test(end).ok=test(end).value;
             test(end).help=['dir ' fullfile(myPath,'fonts')];
