@@ -87,6 +87,10 @@ for i=1:length(d)
    end
    if o.signalImagesAreGammaCorrected
        if ~exist('rgb2lin','file')
+           v=ver('images');
+           if ~isempty(v)
+               disp([v.Name ' ' v.Version ' ' v.Release ' ' v.Date '\n']);
+           end
            if verLessThan('matlab','R2017b')
                error('o.signalImagesAreGammaCorrected=true requires the rgb2lin function, which is missing because this MATLAB is too old. You need MATLAB 2017b or better.');
            end
