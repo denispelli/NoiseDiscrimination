@@ -3,6 +3,7 @@ function InstallationCheck(screen)
 % Are this computer and screen ready to run CriticalSpacing and
 % NoiseDiscrimination?
 global window
+window=[];
 clear Snd % Clear persistent variables in Snd.
 % clear PsychPortAudio % A mex file.
 clear o test
@@ -21,9 +22,12 @@ o.screenVerbosity=0; % 0 for no messages, 1 for critical, 2 for warnings, 3 defa
 o.textSize=40;
 
 %% FILES
-myPath=fileparts(mfilename('fullpath')); % Takes 0.1 s.
-addpath(fullfile(myPath,'AutoBrightness')); % Folder in same directory as this M file. .
-addpath(fullfile(myPath,'lib')); % Folder in same directory as this M file.
+mainFolder=fileparts(fileparts(mfilename('fullpath'))); %
+if contains(mainFolder,'NoiseDiscrimination')
+    addpath(fullfile(mainFolder,'AutoBrightness')); % "AutoBrightness" folder in same directory as this file
+end
+addpath(fullfile(mainFolder,'lib')); % "lib" folder in same directory as this file
+addpath(fullfile(mainFolder,'utilities')); % "lib" folder in same directory as this file
 
 rng('shuffle'); % Use time to seed the random number generator. TAKES 0.01 s.
 plusMinusChar=char(177); % Use this instead of literal plus minus sign to
@@ -92,23 +96,42 @@ if o.enableClutMapping % How we use LoadNormalizedGammaTable
 else
     loadOnNextFlip=true; % Load hardware CLUT: 0. now; 1. on flip.
 end
-
-%% GET SCREEN CALIBRATION cal
-cal=OurScreenCalibrations(o.screen);
-if isfield(cal,'gamma')
-    cal=rmfield(cal,'gamma');
+if contains(mainFolder,'NoiseDiscrimination')
+    %% GET SCREEN CALIBRATION cal
+    cal=OurScreenCalibrations(o.screen);
+    cal.clutMapLength=o.clutMapLength;
+    if isfield(cal,'gamma')
+        cal=rmfield(cal,'gamma');
+    end
+    if cal.screen>0
+        fprintf('Using external monitor.\n');
+    end
+    if streq(cal.datestr,'none') || isempty(cal.datestr) || ~isfield(cal,'old') || ~isfield(cal.old,'L')
+        warning('Your screen is uncalibrated. Use NoiseDiscrimination/utilities/CalibrateScreenLuminance to calibrate it.');
+    end
+else
+    cal=struct('screen',0);
 end
-if cal.screen > 0
-    fprintf('Using external monitor.\n');
-end
-if streq(cal.datestr,'none')
-    warning('Your screen is uncalibrated. Use CalibrateScreenLuminance to calibrate it.');
-end
-
-cal.clutMapLength=o.clutMapLength;
-if ~isfield(cal,'old') || ~isfield(cal.old,'L')
-    fprintf('This screen has not yet been calibrated. Please use CalibrateScreenLuminance to calibrate it.\n');
-    error('This screen has not yet been calibrated. Please use CalibrateScreenLuminance to calibrate it.\n');
+if ~isfield(cal,'datestr') || streq(cal.datestr,'none') || isempty(cal.datestr)
+    computer=Screen('Computer');
+    if isfield(computer,'processUserLongName')
+        cal.processUserLongName=computer.processUserLongName;
+    else
+        cal.processUserLongName='';
+    end
+    if ~isfield(computer,'localHostName')
+        cal.localHostName='';
+    else
+        cal.localHostName=computer.localHostName;
+    end
+    if ismac
+        cal.macModelName=MacModelName;
+    else
+        cal.macModelName='Not-a-mac';
+    end
+    cal.calibratedBy='';
+    cal.datestr='';
+    cal.notes='';
 end
 % Check the global "window" pointer and clear it unless it's valid.
 if ~isempty(window)
@@ -117,7 +140,6 @@ if ~isempty(window)
         window=[];
     end
 end
-% It's valid.
 
 %% REPORT CONFIGURATION
 c=Screen('Computer'); % Get name and version of OS.
@@ -125,7 +147,7 @@ os=strrep(c.system,'Mac OS','macOS'); % Modernize the spelling.
 [~,v]=PsychtoolboxVersion;
 fprintf('%s, MATLAB %s, Psychtoolbox %d.%d.%d\n',...
     os,version('-release'),v.major,v.minor,v.point);
-[screenWidthMm, screenHeightMm]=Screen('DisplaySize',cal.screen);
+[screenWidthMm,screenHeightMm]=Screen('DisplaySize',cal.screen);
 cal.screenWidthCm=screenWidthMm/10;
 fprintf('Computer %s, %s, screen %d, %dx%d, %.1fx%.1f cm\n',...
     cal.localHostName,cal.macModelName,cal.screen,...
@@ -133,9 +155,11 @@ fprintf('Computer %s, %s, screen %d, %dx%d, %.1fx%.1f cm\n',...
     screenWidthMm/10,screenHeightMm/10);
 assert(cal.screenWidthCm == screenWidthMm/10);
 fprintf('Computer account %s.\n',cal.processUserLongName);
-fprintf('%s %s calibrated by %s on %s.\n',...
-    cal.localHostName,cal.macModelName,cal.calibratedBy,cal.datestr);
-fprintf('%s\n',cal.notes);
+if contains(mainFolder,'NoiseDiscrimination')
+    fprintf('%s %s calibrated by %s on %s.\n',...
+        cal.localHostName,cal.macModelName,cal.calibratedBy,cal.datestr);
+    fprintf('%s\n',cal.notes);
+end
 
 %% MAKE TABLE OF TEST RESULTS
 test=struct([]);
@@ -227,7 +251,7 @@ if ~verLessThan('matlab','8.1')
         test(end).ok=false;
         warning('Boo! PsychJava does not appear in javaclasspath.txt. Please read "help PsychJavaTrouble".');
     end
-test(end).help='help PsychJavaTrouble';
+    test(end).help='help PsychJavaTrouble';
 end
 
 e=Snd('Play',MakeBeep(1000,0.5));
@@ -314,12 +338,14 @@ try
         fprintf('Opening the window. ...\n'); % Newline for Screen warnings.
         s=GetSecs;
         if ~o.useFractionOfScreenToDebug
-            [window,o.screenRect]=Screen('OpenWindow',cal.screen,1.0);
+            [window,o.screenRect]=Screen('OpenWindow',cal.screen,255);
         else
             r=round(o.useFractionOfScreenToDebug*screenBufferRect);
             r=AlignRect(r,screenBufferRect,'right','bottom');
-            [window,o.screenRect]=Screen('OpenWindow',cal.screen,1.0,r);
+            [window,o.screenRect]=Screen('OpenWindow',cal.screen,255,r);
         end
+        Screen('FillRect',window,255);
+        Screen('Flip',window);
         fprintf('Done opening window (%.1f s).\n',GetSecs-s);
         if ~o.useFractionOfScreenToDebug
             HideCursor;
@@ -332,7 +358,7 @@ try
     [o.textSize,o.textLineLength]=TextSizeToFit(window);
     
     %% OPEN OUTPUT FILES
-    o.dataFolder=fullfile(myPath,'data');
+    o.dataFolder=fullfile(mainFolder,'data');
     if ~exist(o.dataFolder,'dir')
         success=mkdir(o.dataFolder);
         if ~success
@@ -372,7 +398,7 @@ try
             test(end).value=IsFontAvailable(font,'warn');
             test(end).min=true;
             test(end).ok=test(end).value;
-            test(end).help=['dir ' fullfile(myPath,'fonts')];
+            test(end).help=['dir ' fullfile(mainFolder,'fonts')];
         end
         
         %% BEAM POSITION QUERY
@@ -394,7 +420,7 @@ try
             test(end).ok=test(end).value;
             fprintf('Psychtoolbox kernel driver loaded %s. Should be true for best timing.\n',mat2str(test(end).value));
             if ~test(end).ok
-                warning('IMPORTANT: You must install the Psychtoolbox kernel driver, as explained by "*Install NoiseDiscrimination.docx" step B.13.');
+                warning('IMPORTANT: You should install the Psychtoolbox kernel driver, as explained by "*Install NoiseDiscrimination.docx" step B.13.');
             end
             test(end).help='web http://psychtoolbox.org/docs/PsychtoolboxKernelDriver';
         end
@@ -458,15 +484,18 @@ try
     test(end).ok=test(end).value;
     test(end).help='web https://www.mathworks.com/help/supportpkg/usbwebcams/ug/snapshot.html';
     
-    test(end+1).name='Screen is calibrated';
-    if streq(cal.datestr,'none')
-        test(end).value='false';
-    else
-        test(end).value='true';
+    if contains(mainFolder,'NoiseDiscrimination')
+        test(end+1).name='Screen is calibrated';
+        if streq(cal.datestr,'none') || isempty(cal.datestr);
+            test(end).value='false';
+            test(end).ok=false;
+        else
+            test(end).value='true';
+            test(end).ok=true;
+        end
+        test(end).min='true';
+        test(end).help='help CalibrateScreenLuminance';
     end
-    test(end).min='true';
-    test(end).ok=true;
-    test(end).help='help CalibrateScreenLuminance';
     
     %% Goodbye
     o.speakInstructions=false;
@@ -479,7 +508,9 @@ try
         if Screen(window,'WindowKind') == 1
             % Tell observer what's happening.
             Screen('TextFont',window,'Verdana');
-            Screen('LoadNormalizedGammaTable',window,cal.old.gamma,loadOnNextFlip);
+            if isfield(cal,'old') && isfield(cal.old,'gamma')
+                Screen('LoadNormalizedGammaTable',window,cal.old.gamma,loadOnNextFlip);
+            end
             Screen('FillRect',window);
             black=0;
             white=255;
