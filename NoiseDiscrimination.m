@@ -576,9 +576,9 @@ global fixationLines fixationCrossWeightPix labelBounds ...
 % become fields of the o struct.
 
 %% FILES
-myPath=fileparts(mfilename('fullpath')); % Takes 0.1 s.
-addpath(fullfile(myPath,'AutoBrightness')); % Folder in same directory as this M file. .
-addpath(fullfile(myPath,'lib')); % Folder in same directory as this M file.
+mainFolder=fileparts(mfilename('fullpath')); % Takes 0.1 s.
+addpath(fullfile(mainFolder,'AutoBrightness')); % Folder in same directory as this M file. .
+addpath(fullfile(mainFolder,'lib')); % Folder in same directory as this M file.
 % echo_executing_commands(2, 'local');
 % diary ./diary.log
 
@@ -1609,7 +1609,7 @@ try
                 oo(1).functionNames=[stack(3).name '-' stack(2).name '-' stack(1).name];
             end
     end
-    oo(1).dataFolder=fullfile(myPath,'data');
+    oo(1).dataFolder=fullfile(mainFolder,'data');
     if ~exist(oo(1).dataFolder,'dir')
         success=mkdir(oo(1).dataFolder);
         if ~success
@@ -3326,7 +3326,6 @@ try
             oo(oi).centralNoiseMask=true(size(oo(oi).centralNoiseMask));
         end
         oo(oi).useCentralNoiseMask=~all(oo(oi).centralNoiseMask(:));
-
         if isfinite(oo(oi).noiseEnvelopeSpaceConstantDeg) && oo(oi).noiseRaisedCosineEdgeThicknessDeg > 0
             error('Sorry. Please set o.noiseEnvelopeSpaceConstantDeg=inf or set o.noiseRaisedCosineEdgeThicknessDeg=0.');
         end
@@ -3844,7 +3843,7 @@ try
         %             MFileLineNr,oi,size(oo(oi).signal(1).image));
         % ffprintf(ff,'%d: %d: %s o.canvasSize %d %d, size(oo(oi).centralNoiseMask) %d %d, \n',...
         %    MFileLineNr,oi,oo(oi).conditionName,oo(oi).canvasSize,size(oo(oi).centralNoiseMask));
-       for iMovieFrame=1:oo(oi).movieFrames
+        for iMovieFrame=1:oo(oi).movieFrames
             % On each new frame, retain the (static) signal and regenerate the (dynamic) noise.
             switch oo(oi).task % add noise to signal
                 case '4afc'
@@ -5491,7 +5490,7 @@ try
             if exist('jsonencode','builtin')
                 json=jsonencode(oo1);
             else
-                addpath(fullfile(myPath,'lib/jsonlab'));
+                addpath(fullfile(mainFolder,'lib/jsonlab'));
                 json=savejson('',oo1);
             end
             clear oo1
@@ -5513,7 +5512,7 @@ try
                 if exist('jsonencode','builtin')
                     json=jsonencode(oo(oi).transcript);
                 else
-                    addpath(fullfile(myPath,'lib/jsonlab'));
+                    addpath(fullfile(mainFolder,'lib/jsonlab'));
                     json=savejson('',oo(oi).transcript);
                 end
                 fid=fopen(fullfile(oo(oi).dataFolder,[oo(oi).dataFilename '.transcript.json']),'w');
@@ -5761,11 +5760,11 @@ switch o.targetModulates
             1+10^tTest,o.targetHeightPix/o.noiseCheckPix,o.approxRequiredNumber,...
             answerString);
 end
-mypath=fileparts(mfilename('fullpath'));
-saveSnapshotFid=fopen(fullfile(mypath,[filename '.png']),'rt');
+mainFolder=fileparts(mfilename('fullpath'));
+saveSnapshotFid=fopen(fullfile(mainFolder,[filename '.png']),'rt');
 if saveSnapshotFid ~= -1
     for suffix='a':'z'
-        saveSnapshotFid=fopen(fullfile(mypath,[filename suffix '.png']),'rt');
+        saveSnapshotFid=fopen(fullfile(mainFolder,[filename suffix '.png']),'rt');
         if saveSnapshotFid == -1
             filename=[filename suffix];
             break
@@ -5776,7 +5775,7 @@ if saveSnapshotFid ~= -1
     end
 end
 filename=[filename '.png'];
-imwrite(img,fullfile(mypath,filename),'png');
+imwrite(img,fullfile(mainFolder,filename),'png');
 ffprintf(ff,'Saving image to file "%s" ',filename);
 switch o.targetModulates
     case 'luminance'
