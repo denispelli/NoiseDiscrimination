@@ -117,7 +117,7 @@ if 1
 end
 o.symmetricLuminanceRange=true; % False for maximum brightness.
 o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
-if 0
+if 1
     % Sloan
     o.conditionName='Sloan';
     o.targetFont='Sloan';
@@ -158,46 +158,6 @@ if 0
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-% if 1
-%     % Animals alphabet
-%     o.conditionName='Animals';
-%     o.targetFont='Animals';
-%     o.minimumTargetHeightChecks=16;
-%     o.alphabetPlacement='left';
-%     o.alphabet='abcdefghijklmnopqrstuvwxyz';
-%     o.borderLetter='';
-%     o.labelAnswers=true;
-%     o.readAlphabetFromDisk=false;
-%     o.alternatives=length(o.alphabet);
-%     ooo{end+1}=o;
-% end
-% 
-% if 1
-%     % Animals alphabet
-%     o.conditionName='Animals';
-%     o.targetFont='Animals';
-%     o.minimumTargetHeightChecks=16;
-%     o.alphabetPlacement='right';
-%     o.alphabet='abcdefghijklmnopqrstuvwxyz';
-%     o.borderLetter='';
-%     o.labelAnswers=true;
-%     o.readAlphabetFromDisk=false;
-%     o.alternatives=length(o.alphabet);
-%     ooo{end+1}=o;
-% end
-% if 1
-%     % Animals alphabet
-%     o.conditionName='Animals';
-%     o.targetFont='Animals';
-%     o.minimumTargetHeightChecks=16;
-%     o.alphabetPlacement='top';
-%     o.alphabet='abcdefghijklmnopqrstuvwxyz';
-%     o.borderLetter='';
-%     o.labelAnswers=true;
-%     o.readAlphabetFromDisk=false;
-%     o.alternatives=length(o.alphabet);
-%     ooo{end+1}=o;
-% end
 
 if 0
     % Sans Forgetica
@@ -211,9 +171,9 @@ if 0
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-if 0
+if 1
     % Kuenstler
-    o.targetFont='Kuenstler Script LT Medium';
+    o.targetFont='Kuenstler Script LT';
     o.conditionName=o.targetFont;
     o.minimumTargetHeightChecks=12;
     o.alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -307,7 +267,7 @@ if true
     % Add fixation check.
     for block=1:length(ooo)
         o=ooo{block}(1);
-         o.fullResolutionTarget=true;
+        o.fullResolutionTarget=true;
         o.targetHeightDeg=10;
         o.brightnessSetting=0.87;
         o.thresholdParameter='size';
