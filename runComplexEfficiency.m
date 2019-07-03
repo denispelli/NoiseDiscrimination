@@ -36,13 +36,14 @@
 
 % Crowding distance at ±10 deg ecc x 2 orientation.
 % Acuity at ±10 deg ecc.
-myPath=fileparts(mfilename('fullpath')); % Takes 0.1 s.
-addpath(fullfile(myPath,'lib')); % Folder in same directory as this M file.
+mainFolder=fileparts(mfilename('fullpath')); % Takes 0.1 s.
+addpath(fullfile(mainFolder,'lib')); % Folder in same directory as this M file.
 clear KbWait
 clear o oo ooo
 ooo={};
-% o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
-% o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+o.useFractionOfScreenToDebug=0.5; % USE ONLY FOR DEBUGGING.
+o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+o.askForPartingComments=true; % New feature.
 o.recordGaze=false;
 o.experiment='ComplexEfficiency';
 o.eccentricityXYDeg=[0 0];
@@ -85,6 +86,7 @@ o.alphabetPlacement='top'; % 'top' 'bottom' 'right' or 'left' while awaiting res
 o.counterPlacement='bottomRight';
 o.instructionPlacement='bottomLeft'; % 'topLeft' 'bottomLeft'
 o.brightnessSetting=0.87;
+o.askExperimenterToSetDistance=true;
 if 1
     % Target face
     o.conditionName='face';
