@@ -41,7 +41,7 @@ function oooOut=RunExperiment(ooo)
 % will run (closing any open windows) when this function terminates for any
 % reason, whether by reaching the end, the posting of an error here or in
 % any function called from here, or the user hitting control-C.
-
+global window
 cleanup=onCleanup(@() CloseWindowsAndCleanup);
 
 if isempty(ooo)
@@ -93,6 +93,7 @@ for block=blockList
     oo=ooo{block};
     [oo.block]=deal(block);
     [oo.blocksDesired]=deal(length(ooo)); % Display on screen.
+    [oo.isFirstBlock]=deal(block==blockList(1)); % June 2019 DGP
     [oo.isLastBlock]=deal(block==blockList(end)); % March 2019 DGP
     [oo.localHostName]=deal(localHostName);
     if ~isempty(ooPrior)
@@ -130,7 +131,17 @@ for block=1:length(ooo)
         blocksDone=blocksDone+1;
     end
 end
- 
+if ooo{1}(1).askForPartingComments && (block==blockList(end) || ooo{block}(1).quitExperiment)
+    query='Done. Thank you. Any thoughts or suggestions? Click OK when done.';
+    if isfield(ooo{1}(1),'textSize')
+        fontSize=ooo{1}(1).textSize;
+    else
+        fontSize=24;
+    end
+    reply=inputdlg2({query},'Comments?',[5 50],{''},'on','FontSize',fontSize);
+    ooo{1}(1).partingComments=reply;
+end
+
 %% SAVE THE EXPERIMENT
 % If no block has been completed, then save nothing. If we have at least
 % one block done, then save the whole experiment in a MAT file. If
@@ -155,7 +166,7 @@ if blocksDone>0
     fprintf('Saved the experiment (%d of %d blocks done) in %s in data folder.\n',...
         blocksDone,length(ooo),experimentFilename);
 end
-end % function
+end % function RunExperiment
 
 %% Clean up whenever RunExperiment terminates, even by control-C.
 function CloseWindowsAndCleanup()
