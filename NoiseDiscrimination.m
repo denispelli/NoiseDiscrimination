@@ -20,6 +20,17 @@ function oo=NoiseDiscrimination(ooIn)
 % WISHES:
 %
 % HISTORY:
+% July 2, 2019. o.askForPartingComments=true causes a pop up dialog at the
+% end of the experiment (whether ending normally or prematurely due to
+% escape) that invites the observer to make comments and suggestions. The
+% typed response is saved as a string in ooo{1}(1).partingComments. The
+% code implementing this is in RunExperiment.m.
+% June 30, 2019. o.askExperimenterToSetDistance=true asks observer to get
+% the experimenter to set the viewing distance each time it changes. The
+% experiment types a "signature key" (first letter of the previously given
+% o.experimenter name) to continue. This responds to a tendency for
+% observers to just click past even bright red screens asking then to set a
+% new viewing distance.
 %
 % June 26, 2019 Interleaved conditions must use the CLUT in a consistent
 % way. Therefore NoiseDiscrimination now requires that interleaved
@@ -716,6 +727,7 @@ o.replicatePelli2006=false;
 o.screen=0;
 o.screen=max(Screen('Screens'));
 o.isWin=IsWin; % You might override this to partially simulate the Windows OS on a Mac.
+o.askForPartingComments=true;
 
 % Names
 o.experimenter='';
@@ -739,6 +751,7 @@ o.blocksDesired=1; % How many blocks you to plan to run. Used solely for display
 % block and postpone restore the screen and close window until after the
 % last block (including quitting early). RunExperiment.m properly sets
 % isLastBlock.
+o.isFirstBlock=true; % Default. Set this false for all but first block.
 o.isLastBlock=true; % Default. Set this false for all but last block.
 o.speakInstructions=false;
 o.congratulateWhenDone=true; % true or false. Speak after final block (i.e. when o.isLastBlock).
@@ -757,6 +770,7 @@ o.trialsSkipped=0;
 o.fixationCheck=false; % True designates the condition as a fixation check.
 o.fixationCheckMakeupTrials=2; % After a mistake, how many right answers to require.
 o.etaMin=0; % Estimated time till completion, in minutes.
+o.askExperimenterToSetDistance=true;
 
 % Target
 o.targetKind='letter'; % Put the letters in array o.alphabet.
@@ -998,7 +1012,7 @@ knownOutputFields={'labelAnswers' 'beginningTime' ...
     'block'...
     'A' 'LAT' 'NPhoton' 'logFilename' 'screenrect' 'screenRect'...
     'useCentralNoiseEnvelope' 'useCentralNoiseMask' 'centralNoiseMask' 'annularNoiseMask'...
-    'fixationLineWeightDeg' 'isFirstBlock' ... % From CriticalSpacing
+    'fixationLineWeightDeg' 'isFirstBlock' ... 
     'isLastBlock'  'minimumTargetPix' ...
     'practicePresentations' 'repeatedTargets' 'okToShiftCoordinates' ...
     'skipThisBlock' ...
@@ -1288,7 +1302,7 @@ try
         else
             warning('You need EnableClutMapping to control contrast.');
         end
-        ffprintf(ff,'Opening the window. ...\n'); % New line for Screen warnings.
+        ffprintf(ff,'Opening the window. ...\n'); % Newline for Screen warnings.
         s=GetSecs;
         if ~o.useFractionOfScreenToDebug
             [window,o.screenRect]=PsychImaging('OpenWindow',cal.screen,1.0);
@@ -2056,8 +2070,8 @@ try
         end
         [oo.psychtoolboxKernelDriverLoaded]=deal(oo(1).psychtoolboxKernelDriverLoaded);
         if ~oo(1).psychtoolboxKernelDriverLoaded
-%             error('IMPORTANT: You must install the Psychtoolbox Kernel Driver, as explained by "*Install NoiseDiscrimination.docx" step B.13.');
-            warning('IMPORTANT: Best to install the Psychtoolbox Kernel Driver, as explained by "*Install NoiseDiscrimination.docx" step B.13.');
+            error('IMPORTANT: You must install the Psychtoolbox Kernel Driver, as explained by "*Install NoiseDiscrimination.docx" step B.13.');
+%             warning('IMPORTANT: Best to install the Psychtoolbox Kernel Driver, as explained by "*Install NoiseDiscrimination.docx" step B.13.');
         end
         
         % Compare hardware CLUT with identity.
@@ -6240,6 +6254,10 @@ end % function ModelObserver(o,signal,location)
 function o=SetUpNearPoint(o)
 % o=SetUpNearPoint(o);
 global ff
+persistent oldViewingDistanceCm
+if o.isFirstBlock
+    oldViewingDistanceCm=nan;
+end
 black=0; % The CLUT color code for black.
 white=1; % The CLUT color code for white.
 escapeChar=char(27);
@@ -6250,76 +6268,105 @@ escapeKeyCode=KbName('escape');
 graveAccentKeyCode=KbName('`~');
 spaceKeyCode=KbName('space');
 returnKeyCode=KbName('return');
-if ~all(isfinite(o.eccentricityXYDeg))
-    error('o.eccentricityXYDeg (%.1f %.1f) must be finite. o.useFixation %s is optional.',...
-        o.eccentricityXYDeg,mat2str(o.useFixation));
-end
-if ~IsXYInRect(o.nearPointXYInUnitSquare,[0 0 1 1])
-    % Our intructions to the observer to adjust viewing distance and swivel
-    % of the display assume that the near point is on the display. It would
-    % be harder to design instructions for the case where the near point is
-    % off the dislay.
-    error('o.nearPointXYInUnitSquare (%.2f %.2f) must be in unit square [0 0 1 1].',...
-        o.nearPointXYInUnitSquare(1),o.nearPointXYInUnitSquare(2));
-end
-xy=o.nearPointXYInUnitSquare;
-xy(2)=1-xy(2); % Move origin from lower left to upper left.
-o.nearPointXYPix=xy.*[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)];
-o.nearPointXYPix=o.nearPointXYPix+o.stimulusRect(1:2);
-% o.nearPointXYPix is a screen coordinate.
-% Require margin between target and edge of stimulusRect.
-r=InsetRect(o.stimulusRect,o.targetMargin*o.targetHeightDeg*o.pixPerDeg,o.targetMargin*o.targetHeightDeg*o.pixPerDeg);
-if ~all(r(1:2)<=r(3:4))
-    error(['%.1f o.targetHeightDeg too big to fit (with %.2f o.targetMargin) in %.1f x %.1f deg screen. '...
-        'Reduce %.1f o.viewingDistanceCm or %.1f o.targetHeightDeg.'],...
-        o.targetHeightDeg,o.targetMargin,...
-        [RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)]/o.pixPerDeg,...
-        o.viewingDistanceCm,o.targetHeightDeg);
-end
-if isempty(o.window) || ismember(o.observer,o.algorithmicObservers)
-    return
-end
-string=sprintf(['Please adjust the viewing distance so the ' ...
-    'X below is %.1f cm (%.1f inches) from the observer''s eye. '], ...
-    o.viewingDistanceCm,o.viewingDistanceCm/2.54);
-string=[string 'Tilt and swivel the display so the X is orthogonal to the observer''s line of sight. '...
-    'Then hit RETURN to continue.\n'];
-Screen('TextSize',o.window,o.textSize);
-Screen('TextFont',o.window,'Verdana');
-Screen('FillRect',o.window,o.gray1);
-Screen('DrawText',o.window,' ',0,0,1,o.gray1,1); % Set background color.
-DrawFormattedText(o.window,string,...
-    2*o.textSize,2.5*o.textSize,black,...
-    o.textLineLength,[],[],1.3);
-x=o.nearPointXYPix(1);
-y=o.nearPointXYPix(2);
-a=0.05*RectHeight(o.stimulusRect);
-[~,~,lineWidthMinMaxPix(1),lineWidthMinMaxPix(2)]=Screen('DrawLines',o.window);
-widthPix=max([min([a/20 lineWidthMinMaxPix(2)]) lineWidthMinMaxPix(1)]);
-Screen('DrawLine',o.window,black,x-a,y-a,x+a,y+a,widthPix);
-Screen('DrawLine',o.window,black,x+a,y-a,x-a,y+a,widthPix);
-DrawCounter(o);
-Screen('Flip',o.window); % Display request.
-if o.speakInstructions
-    string=strrep(string,'.0','');
-    string=strrep(string,'\n','');
-    Speak(string);
-end
-response=GetKeypress([returnKeyCode escapeKeyCode graveAccentKeyCode],o.deviceIndex);
-if ismember(response,[escapeChar,graveAccentChar])
-    [o.quitExperiment,o.quitBlock,o.skipTrial]=...
-        OfferEscapeOptions(o.window,o,o.textMarginPix);
-    if o.quitExperiment
-        ffprintf(ff,'*** User typed ESCAPE twice. Experiment terminated.\n');
-    elseif o.quitBlock
-        ffprintf(ff,'*** User typed ESCAPE. Block terminated.\n');
-    else
-        ffprintf(ff,'*** User typed ESCAPE, but chose to continue.\n');
+set=false;
+while ~set
+    if ~all(isfinite(o.eccentricityXYDeg))
+        error('o.eccentricityXYDeg (%.1f %.1f) must be finite. o.useFixation %s is optional.',...
+            o.eccentricityXYDeg,mat2str(o.useFixation));
     end
-    return
-end
-Screen('FillRect',o.window,o.gray1);
-Screen('Flip',o.window); % Blank, to acknowledge response.
+    if ~IsXYInRect(o.nearPointXYInUnitSquare,[0 0 1 1])
+        % Our instructions to the observer to adjust viewing distance and swivel
+        % of the display assume that the near point is on the display. It would
+        % be harder to design instructions for the case where the near point is
+        % off the dislay.
+        error('o.nearPointXYInUnitSquare (%.2f %.2f) must be in unit square [0 0 1 1].',...
+            o.nearPointXYInUnitSquare(1),o.nearPointXYInUnitSquare(2));
+    end
+    xy=o.nearPointXYInUnitSquare;
+    xy(2)=1-xy(2); % Move origin from lower left to upper left.
+    o.nearPointXYPix=xy.*[RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)];
+    o.nearPointXYPix=o.nearPointXYPix+o.stimulusRect(1:2);
+    % o.nearPointXYPix is a screen coordinate.
+    % Require margin between target and edge of stimulusRect.
+    r=InsetRect(o.stimulusRect,o.targetMargin*o.targetHeightDeg*o.pixPerDeg,o.targetMargin*o.targetHeightDeg*o.pixPerDeg);
+    if ~all(r(1:2)<=r(3:4))
+        error(['%.1f o.targetHeightDeg too big to fit (with %.2f o.targetMargin) in %.1f x %.1f deg screen. '...
+            'Reduce %.1f o.viewingDistanceCm or %.1f o.targetHeightDeg.'],...
+            o.targetHeightDeg,o.targetMargin,...
+            [RectWidth(o.stimulusRect) RectHeight(o.stimulusRect)]/o.pixPerDeg,...
+            o.viewingDistanceCm,o.targetHeightDeg);
+    end
+    if isempty(o.window) || ismember(o.observer,o.algorithmicObservers)
+        return
+    end
+    isNewDisance= o.viewingDistanceCm ~= oldViewingDistanceCm;
+    if isNewDisance
+        if o.askExperimenterToSetDistance
+            string=sprintf(['NEW DISTANCE! Please ask the experimenter to adjust the viewing distance. The ' ...
+                'X below should be %.1f cm (%.1f inches) from the observer''s eye. '], ...
+                o.viewingDistanceCm,o.viewingDistanceCm/2.54);
+        else
+            string=sprintf(['NEW DISTANCE! Please adjust the viewing distance so that the ' ...
+                'X below is %.1f cm (%.1f inches) from the observer''s eye. '], ...
+                o.viewingDistanceCm,o.viewingDistanceCm/2.54);
+        end
+    else
+        string=sprintf(['If necessary, please adjust the viewing distance so that the ' ...
+            'X below is still %.1f cm (%.1f inches) from the observer''s eye. '], ...
+            o.viewingDistanceCm,o.viewingDistanceCm/2.54);
+    end
+    string=[string 'Tilt and swivel the display so the X is orthogonal to the observer''s line of sight. '];
+    if isNewDisance && o.askExperimenterToSetDistance
+        string=[string 'Then the Experimenter will type his or her signature key to continue.\n'];
+    else
+        string=[string 'Then hit RETURN to continue.\n'];
+    end
+    Screen('TextSize',o.window,o.textSize);
+    Screen('TextFont',o.window,'Verdana');
+    Screen('FillRect',o.window,o.gray1);
+    Screen('DrawText',o.window,' ',0,0,1,o.gray1,1); % Set background color.
+    DrawFormattedText(o.window,string,...
+        2*o.textSize,2.5*o.textSize,black,...
+        o.textLineLength,[],[],1.3);
+    x=o.nearPointXYPix(1);
+    y=o.nearPointXYPix(2);
+    a=0.05*RectHeight(o.stimulusRect);
+    [~,~,lineWidthMinMaxPix(1),lineWidthMinMaxPix(2)]=Screen('DrawLines',o.window);
+    widthPix=max([min([a/20 lineWidthMinMaxPix(2)]) lineWidthMinMaxPix(1)]);
+    Screen('DrawLine',o.window,black,x-a,y-a,x+a,y+a,widthPix);
+    Screen('DrawLine',o.window,black,x+a,y-a,x-a,y+a,widthPix);
+    DrawCounter(o);
+    Screen('Flip',o.window); % Display request.
+    if o.speakInstructions
+        string=strrep(string,'.0','');
+        string=strrep(string,'\n','');
+        Speak(string);
+    end
+    if isNewDisance && o.askExperimenterToSetDistance
+        allowedCode=KbName(o.experimenter(1));
+    else
+        allowedCode=returnKeyCode;
+    end
+    response=GetKeypress([allowedCode escapeKeyCode graveAccentKeyCode],o.deviceIndex);
+    if ismember(response,[escapeChar,graveAccentChar])
+        [o.quitExperiment,o.quitBlock,o.skipTrial]=...
+            OfferEscapeOptions(o.window,o,o.textMarginPix);
+        if o.quitExperiment
+            ffprintf(ff,'*** User typed ESCAPE twice. Experiment terminated.\n');
+            return
+        elseif o.quitBlock
+            ffprintf(ff,'*** User typed ESCAPE. Block terminated.\n');
+            return
+        else
+            ffprintf(ff,'*** User typed ESCAPE, but chose to continue.\n');
+        end
+    else
+        set=true; % Done.
+        oldViewingDistanceCm=o.viewingDistanceCm;
+    end
+    Screen('FillRect',o.window,o.gray1);
+    Screen('Flip',o.window); % Blank, to acknowledge response.
+end % while ~set
 end % function SetUpNearPoint
 
 %% SetUpFixation
@@ -6583,86 +6630,6 @@ else
 end
 assert(isfinite(o.gray));
 end % function ComputeClut
-
-%% AskQuestion
-function [reply,o]=AskQuestion(oo,text)
-% "text" argument is a struct with several fields, each containing a
-% string: text.big, text.small, text.fine, text.question,
-% text.setTextSizeToMakeThisLineFit. We optionally return "o" which the
-% input o, but some fields may be modified: o.textSize o.quitExperiment
-% o.quitBlock and o.skipTrial. If "text" has the field
-% text.setTextSizeToMakeThisLineFit then o.textSize is adjusted to make the
-% line just fit horizontally within o.screenRect. text.big, text.small,
-% text.fine, and text.question are strings. '/n' produces a newline. Each
-% string starts on a new line.
-global ff
-o=oo(1);
-if isempty(o.window) || ismember(o.observer,o.algorithmicObservers)
-    reply='';
-    return
-end
-escapeChar=char(27);
-graveAccentChar='`';
-black=0;
-% o.textSize=TextSizeToFit(o.window); % Leave as set by user.
-ListenChar(2); % no echo
-Screen('FillRect',o.window,o.gray1);
-Screen('TextSize',o.window,o.textSize);
-Screen('TextFont',o.window,o.textFont,0);
-DrawCounter(o);
-
-% Display question.
-x=2*o.textSize;
-y=o.screenRect(4)/2-(1+ceil(length(text.big)/o.textLineLength))*1.3*o.textSize;
-Screen('DrawText',o.window,' ',0,0,black,o.gray1);
-assert(ischar(text.big));
-[~,y]=DrawFormattedText(o.window,text.big,...
-    x,y,black,...
-    o.textLineLength,[],[],1.3);
-y=y+1.3*o.textSize;
-scalar=0.6;
-sz=round(scalar*o.textSize);
-scalar=sz/o.textSize;
-Screen('TextSize',o.window,sz);
-assert(ischar(text.small));
-[~,y]=DrawFormattedText(o.window,text.small,...
-    x,y,black,...
-    o.textLineLength/scalar,[],[],1.3);
-y=y+1.3*scalar*o.textSize;
-scalar=0.35;
-sz=round(scalar*o.textSize);
-scalar=sz/o.textSize;
-Screen('TextSize',o.window,sz);
-y=o.screenRect(4)-o.textSize;
-assert(ischar(text.fine));
-[~,y]=DrawFormattedText(o.window,text.fine,...
-    x,y,black,...
-    o.textLineLength/scalar,[],[],1.3);
-Screen('TextSize',o.window,o.textSize);
-if IsWindows
-    background=[];
-else
-    background=o.gray1;
-end
-% Screen('Flip',o.window,0,1); % DGP June 26, 2019.
-% fprintf('%d: o.deviceIndex %.0f.\n',MFileLineNr,o.deviceIndex);
-[reply,terminatorChar]=GetEchoString(o.window,text.question,...
-    x,0.82*o.screenRect(4),black,background,1,o.deviceIndex);
-if ismember(terminatorChar,[escapeChar graveAccentChar])
-    [o.quitExperiment,o.quitBlock,o.skipTrial]=...
-        OfferEscapeOptions(o.window,oo,o.textMarginPix);
-    if o.quitExperiment
-        ffprintf(ff,'*** User typed ESCAPE twice. Experiment terminated.\n');
-    elseif o.quitBlock
-        ffprintf(ff,'*** User typed ESCAPE. Block terminated.\n');
-    else
-        ffprintf(ff,'*** User typed ESCAPE, but chose to continue.\n');
-    end
-end
-Screen('FillRect',o.window,o.gray1);
-DrawCounter(o);
-Screen('Flip',o.window); % Flip screen, to let observer know her answer was accepted.
-end % function AskQuestion
 
 %% WaitUntilObserverIsReady
 function o=WaitUntilObserverIsReady(o,oo,message)
