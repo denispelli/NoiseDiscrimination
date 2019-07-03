@@ -12,7 +12,7 @@ if nargin<1
 else
     o.screen=screen;
 end
-o.useFractionOfScreenToDebug=0.5;
+o.useFractionOfScreenToDebug=0.3;
 o.clutMapLength=2048; % enough for 11-bit precision.
 o.enableClutMapping=true; % Required. Using software CLUT.
 o.useNative10Bit=false;
@@ -180,13 +180,13 @@ test(end).min='';
 test(end).ok=true;
 
 test(end+1).name='Screen pixels';
-test(end).value=sprintf('%.0fx%.0f',...
+test(end).value=sprintf('%.0fx%.0f pixel',...
     RectWidth(o.screenRect),RectHeight(o.screenRect));
 test(end).min='';
 test(end).ok=true;
 
 test(end+1).name='Screen cm';
-test(end).value=sprintf('%.1fx%.1f',screenWidthMm/10,screenHeightMm/10);
+test(end).value=sprintf('%.1fx%.1f cm^2',screenWidthMm/10,screenHeightMm/10);
 test(end).min='';
 test(end).ok=true;
 
@@ -245,11 +245,11 @@ if ~verLessThan('matlab','8.1')
     if ok
         test(end).value='true';
         test(end).ok=true;
-        fprintf('Good! PsychJava appears in javaclasspath.txt.\n');
+%         fprintf('Good! PsychJava appears in javaclasspath.txt.\n');
     else
         test(end).value='false';
         test(end).ok=false;
-        warning('Boo! PsychJava does not appear in javaclasspath.txt. Please read "help PsychJavaTrouble".');
+%         warning('Boo! PsychJava does not appear in javaclasspath.txt. Please read "help PsychJavaTrouble".');
     end
     test(end).help='help PsychJavaTrouble';
 end
@@ -281,7 +281,7 @@ if IsOSX
     try
         test(end+1).name='PsychPortAudio';
         d=PsychPortAudio('GetDevices');
-        fprintf('PsychPortAudio driver loaded. \n');
+%         fprintf('PsychPortAudio driver loaded. \n');
         test(end).value='true';
         test(end).ok=true;
     catch em
@@ -332,7 +332,7 @@ try
     Screen('Preference','SkipSyncTests',1);
     Screen('Preference','TextAntiAliasing',1);
     if o.useFractionOfScreenToDebug
-        fprintf('Using tiny window for debugging.\n');
+%         fprintf('Using tiny window for debugging.\n');
     end
     if isempty(window)
         fprintf('Opening the window. ...\n'); % Newline for Screen warnings.
@@ -385,9 +385,9 @@ try
         test(end).min=true;
         test(end).ok=test(end).value;
         Screen('DrawText',window,' ',0,0,0,1,1);
-        fprintf('Loaded DrawText Plugin %s. Needed for accurate text rendering.\n',mat2str(value));
+%         fprintf('Loaded DrawText Plugin %s. Needed for accurate text rendering.\n',mat2str(value));
         if ~value
-            warning('The DrawText plugin failed to load. We need it. See warning above. Read "Install NoiseDiscrimination.docx" B.7 to learn how to install it.');
+%             warning('The DrawText plugin failed to load. We need it. See warning above. Read "Install NoiseDiscrimination.docx" B.7 to learn how to install it.');
         end
         test(end).help='help DrawTextPlugin';
         
@@ -406,7 +406,20 @@ try
         windowInfo=Screen('GetWindowInfo',window);
         test(end+1).name='Beam position queries available';
         test(end).value=windowInfo.Beamposition ~= -1 && windowInfo.VBLEndline ~= -1;
-        fprintf('Beam position queries %s, and should be true for best timing.\n',mat2str(test(end).value));
+%         fprintf('Beam position queries %s, and should be true for best timing.\n',mat2str(test(end).value));
+        test(end).min='';
+        test(end).ok=true;
+        test(end).help='Screen GetWindowInfo?';
+   
+        %% VIDEO CARD VENDOR
+        windowInfo=Screen('GetWindowInfo',window);
+        test(end+1).name='Built-in display DisplayCoreId';
+        test(end).value=windowInfo.DisplayCoreId;
+        test(end).min='';
+        test(end).ok=true;
+        test(end).help='Screen GetWindowInfo?';
+        test(end+1).name='Built-in display GLRenderer';
+        test(end).value=windowInfo.GLRenderer;
         test(end).min='';
         test(end).ok=true;
         test(end).help='Screen GetWindowInfo?';
@@ -414,14 +427,17 @@ try
         %% PSYCHTOOLBOX KERNEL DRIVER
         if ismac
             test(end+1).name='Psychtoolbox kernel driver';
-            % Rec by microfish@fishmonkey.com.au, July 22, 2017
             test(end).value=~system('kextstat -l -k | grep PsychtoolboxKernelDriver > /dev/null');
-            test(end).min=true;
+            test(end).min=true; % Helpful only if AMD driver.
             test(end).ok=test(end).value;
-            fprintf('Psychtoolbox kernel driver loaded %s. Should be true for best timing.\n',mat2str(test(end).value));
-            if ~test(end).ok
-                warning('IMPORTANT: You should install the Psychtoolbox kernel driver, as explained by "*Install NoiseDiscrimination.docx" step B.13.');
-            end
+            test(end).help='web http://psychtoolbox.org/docs/PsychtoolboxKernelDriver';
+            
+            test(end+1).name='Psychtoolbox kernel driver version';
+            [~,result]=system('kextstat -l -b PsychtoolboxKernelDriver');
+            v=regexp(result,'(?<=\().*(?=\))','match'); % find (version)
+            test(end).value=v{1};
+            test(end).min='';
+            test(end).ok=true;
             test(end).help='web http://psychtoolbox.org/docs/PsychtoolboxKernelDriver';
         end
         
@@ -448,7 +464,7 @@ try
     
     %% USE CAMERA
     o.recordGaze=true;
-    test(end+1).name='Can use camera';
+    test(end+1).name='Camera';
     if o.recordGaze
         videoExtension='.avi'; % '.avi', '.mp4' or '.mj2'
         clear cam
@@ -461,7 +477,7 @@ try
             fprintf('Recording gaze (of conditions %s) in %s file:\n',num2str(find([o.recordGaze])),videoExtension);
             test(end).value=true;
         else
-            fprintf('Cannot record gaze. Lack webcam link. Set o.recordGaze=false.\n');
+%             fprintf('Cannot record gaze. Lack webcam link. Set o.recordGaze=false.\n');
             test(end).value=false;
             o.recordGaze=false;
         end
@@ -547,8 +563,9 @@ try
     if ~isempty(tErr)
         fprintf('\n<strong>This computer failed %d tests:</strong>\n\n',height(tErr));
         disp(tErr);
-        fprintf(['\n<strong>Please consult "*Install NoiseDiscrimination.docx" to \n'...
-            'fix these problems before testing observers.</strong>\n']);
+        fprintf(['\n<strong>Please consult the Word document \n'...
+            '"*Install CriticalSpacing & NoiseDiscrimination.docx"\n'...
+            'to fix these problems before testing observers.</strong>\n']);
     end
     
 catch e
