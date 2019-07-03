@@ -12,14 +12,14 @@ persistent counterSize counterBounds
 if isempty(window)
     error('Require open window.');
 end
-if Screen('WindowKind',window)==0
+if Screen('WindowKind',window)~=1
     error('window is invalid');
 end
-if Screen('WindowKind',scratchWindow)==0
-    error('scratchWindow is invalid');
-end
-if isempty(scratchWindow)
+if isempty(scratchWindow) || Screen('WindowKind',scratchWindow)~=-1
     [scratchWindow,scratchRect]=Screen('OpenOffscreenWindow',window);
+    if Screen('WindowKind',scratchWindow)~=-1
+        error('scratchWindow is invalid');
+    end
 end
 % Compose the message.
 message='';
