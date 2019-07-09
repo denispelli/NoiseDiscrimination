@@ -60,10 +60,10 @@ while KbCheck; end
 [~,keyCode] = KbStrokeWait(deviceIndex);
 response = KbName(keyCode);
 if iscell(response)
-    % If observer pressed multiple character keys, ignore all but one.
     s=sprintf(' ''%s''',response{:});
     ffprintf(ff,'WARNING: GetKeypress: You pressed several keys {%s} at once, ',s);
     printLog=true;
+    % If observer pressed multiple character keys, ignore all but one.
     response=response{1};
 else
     if printLog;fprintf('You pressed ''%s'', ',response);end
