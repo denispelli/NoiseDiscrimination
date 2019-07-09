@@ -138,6 +138,7 @@ if ooo{1}(1).askForPartingComments && (block==blockList(end) || ooo{block}(1).qu
     else
         fontSize=24;
     end
+    fontSize=min(36,fontSize);
     reply=inputdlg2({query},'Comments?',[5 50],{''},'on','FontSize',fontSize);
     ooo{1}(1).partingComments=reply;
 end
