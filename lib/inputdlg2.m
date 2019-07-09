@@ -346,7 +346,7 @@ FigPos(3)=FigWidth;
 FigPos(4)=FigHeight;
 
 % set(InputFig,'Position',getnicedialoglocation(FigPos,get(InputFig,'Units')));
-set(InputFig,'Position',[100 200 500 200]); % DGP
+set(InputFig,'Units','Pixels','Position',[100 100 500 200]); % DGP
 
 OKHandle=uicontrol(InputFig     ,              ...
   BtnInfo      , ...
