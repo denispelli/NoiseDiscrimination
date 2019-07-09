@@ -42,7 +42,7 @@ end
 oldTextSize=Screen('TextSize',window,counterSize);
 Screen('TextSize',scratchWindow,counterSize);
 oldFont=Screen('TextFont',window,'Verdana');
-Screen('TextFont',scratchWindow,'Verdana');
+Screen('TextFont',scratchWindow,Screen('TextFont',window));
 counterBounds=TextBounds(scratchWindow,message,1);
 r=o.screenRect;
 if isfield(o,'stimulusRect') && isfield(o,'alphabetPlacement')
