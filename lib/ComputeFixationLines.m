@@ -30,7 +30,7 @@ function fixationLines=ComputeFixationLines(fix)
 %                                       % 0.5.
 % fix.targetHeightPix=targetHeightPix;  % Blanking radius is proportional
 %                                       % to specified target height.
-% fix.markTargetLocation=1;             % Draw mark indicating
+% fix.markTargetLocation=true;                    % Draw vertical line indicating
 %                                       % target location.
 % fixationLines=ComputeFixationLines(fix);
 % Screen('DrawLines',window,fixationLines,fixationLineWeightPix,black);
@@ -52,7 +52,7 @@ if ~isfield(fix,'bouma') || ~isfinite(fix.bouma)
     fix.bouma=0.5;
 end
 if ~isfield(fix,'markTargetLocation')
-    fix.markTargetLocation=0; % Default is no mark indicating target location.
+    fix.markTargetLocation=false; % Default is no vertical line indicating target location.
 end
 if ~isfield(fix,'fixationCrossBlankedNearTarget')
     fix.fixationCrossBlankedNearTarget=1; % Default is yes.
