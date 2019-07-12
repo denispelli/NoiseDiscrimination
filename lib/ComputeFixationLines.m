@@ -30,7 +30,7 @@ function fixationLines=ComputeFixationLines(fix)
 %                                       % 0.5.
 % fix.targetHeightPix=targetHeightPix;  % Blanking radius is proportional
 %                                       % to specified target height.
-% fix.markTargetLocation=true;                    % Draw vertical line indicating
+% fix.markTargetLocation=true;          % Draw vertical line indicating
 %                                       % target location.
 % fixationLines=ComputeFixationLines(fix);
 % Screen('DrawLines',window,fixationLines,fixationLineWeightPix,black);
