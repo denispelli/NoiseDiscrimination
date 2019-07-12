@@ -59,9 +59,21 @@ for i=1:length(fonts)
     Screen('TextFont',window,oldFont); % Restore old font.
     ok(i)=streq(newFont,font);
     if ~ok(i) && ismember(warn,{'warn'})
+        if true
+            mainFolderPath=fileparts(fileparts(mfilename('fullpath'))); % Assume we're in /lib folder.
+            [~,mainFolder]=fileparts(mainFolderPath);
+            fontsFolderPath=fullfile(mainFolderPath,'fonts');
+            if exist(fontsFolderPath,'dir')
+                msg=sprintf(' Look in folder <strong>%s%s%s%s</strong> .',mainFolder,filesep,'fonts',filesep);
+            else
+                msg='';
+            end
+        else
+            msg='';
+        end
         s=warning('QUERY','BACKTRACE');
         warning OFF BACKTRACE
-        warning('The font ''%s'' is not available. Please install it.',font);
+        warning('The font <strong>%s</strong> is not installed in your OS. Please install it.%s',font,msg);
         warning(s);
     end
 end
