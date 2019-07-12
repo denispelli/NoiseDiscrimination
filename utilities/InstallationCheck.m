@@ -60,19 +60,6 @@ for i=1:length(letterNumberChars)
     letterNumberCharString(i)=letterNumberChars{i}(1);
 end
 
-%% PREPARE SOUNDS
-rightBeep=MakeBeep(2000,0.05);
-rightBeep(end)=0;
-wrongBeep=MakeBeep(500,0.5);
-wrongBeep(end)=0;
-temp=zeros(size(wrongBeep));
-temp(1:length(rightBeep))=rightBeep;
-rightBeep=temp; % extend rightBeep with silence to same length as wrongBeep
-okBeep=[0.03*MakeBeep(1000,0.1) 0*MakeBeep(1000,0.3)];
-purr=MakeBeep(200,0.6);
-purr(end)=0;
-Snd('Open');
-
 %% OnCleanup
 % Once we call onCleanup, when this program terminates,
 % CloseWindowsAndCleanup will run  and close any open windows. It runs when
@@ -254,7 +241,21 @@ if ~verLessThan('matlab','8.1')
     test(end).help='help PsychJavaTrouble';
 end
 
-e=Snd('Play',MakeBeep(1000,0.5));
+try
+    test(end+1).name='Speak';
+    test(end).min='true';
+    Speak('Two beeps');
+    test(end).value='true';
+    test(end).ok=true;
+catch me
+    test(end).value='false';
+    test(end).ok=false;
+    warning(me.message)
+end
+
+%% TEST SOUND
+Snd('Open');
+e=Snd('Play',MakeBeep(1000,0.4));
 test(end+1).name='Snd';
 if e==0
     test(end).value='true';
@@ -263,18 +264,8 @@ else
 end
 test(end).min='true';
 test(end).ok= e==0;
-
-try
-    test(end+1).name='Speak';
-    test(end).min='true';
-    Speak('Hello');
-    test(end).value='true';
-    test(end).ok=true;
-catch me
-    test(end).value='false';
-    test(end).ok=false;
-    warning(me.message)
-end
+WaitSecs(0.5);
+Snd('Play',MakeBeep(1000,0.5));
 
 if IsOSX
     % Copied from InitializePsychSound, abbreviating the error messages.
@@ -436,8 +427,12 @@ try
             [~,result]=system('kextstat -l -b PsychtoolboxKernelDriver');
             v=regexp(result,'(?<=\().*(?=\))','match'); % find (version)
             test(end).value=v{1};
-            test(end).min='';
-            test(end).ok=true;
+            test(end).min='1.1';
+            if ~isempty(test(end).value)
+                test(end).ok= str2num(test(end).value)>=str2num(test(end).min);
+            else
+                test(end).ok=true;
+            end
             test(end).help='web http://psychtoolbox.org/docs/PsychtoolboxKernelDriver';
         end
         
