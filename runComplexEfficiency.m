@@ -41,8 +41,8 @@ addpath(fullfile(mainFolder,'lib')); % Folder in same directory as this M file.
 clear KbWait
 clear o oo ooo
 ooo={};
-o.useFractionOfScreenToDebug=0.5; % USE ONLY FOR DEBUGGING.
-o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+% o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
+% o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 o.askForPartingComments=true; % New feature.
 o.recordGaze=false;
 o.experiment='ComplexEfficiency';
@@ -146,7 +146,7 @@ end
 %     o.alternatives=length(o.alphabet);
 %     ooo{end+1}=o;
 % end
-if 0
+if 1
     % Animals alphabet
     o.conditionName='Animals';
     o.targetFont='Animals';
@@ -161,7 +161,7 @@ if 0
     ooo{end+1}=o;
 end
 
-if 0
+if 1
     % Sans Forgetica
     o.targetFont='Sans Forgetica';
     o.conditionName=o.targetFont;
@@ -185,9 +185,10 @@ if 1
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-if 0
-    % Black Sabbath
-    o.targetFont='SabbathBlackRegular';
+if 1
+    % Sabbath Black
+%     o.targetFont='SabbathBlackRegular';
+    o.targetFont='SabbathBlack OT'; % Now open type, but same design.
     o.conditionName=o.targetFont;
     o.minimumTargetHeightChecks=10;
     o.alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -197,9 +198,9 @@ if 0
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-if 0
+if 1
     % Chinese from Qihan
-    o.targetFont='Songti TC Regular';
+    o.targetFont='Songti TC'; % style Regular
     o.conditionName=o.targetFont;
     o.minimumTargetHeightChecks=16;
     o.alphabet=[20687 30524 38590 33310 28982 23627 29245 27169 32032 21338 26222 ...
@@ -212,10 +213,26 @@ if 0
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-if 0
+if 1
+    % Chinese selected by Amy Lin, July 10, 2019
+    o.targetFont='Songti TC'; % style Regular
+    o.conditionName='simpleChinese'; % Selected by Amy Lin, July 10, 2019
+    o.alphabet=[32769 38263 40479 36523 38585 36208 36784 29916 27668 30690 ...
+        34915 33267 40060 35960 38271 36789 31992 27597 32819 39135 30382 ...
+        33394 24038 21507 24343 40614];
+    o.minimumTargetHeightChecks=16;
+    o.alphabet=char(o.alphabet);
+    o.alphabetPlacement='top';
+    o.borderLetter='';
+    o.labelAnswers=true;
+    o.readAlphabetFromDisk=true;
+    o.alternatives=length(o.alphabet);
+    ooo{end+1}=o;
+end
+if 1
     % Japanese: Katakana, Hiragani, and Kanji
     % from Ayaka
-    o.targetFont='Hiragino Mincho ProN W3';
+    o.targetFont='Hiragino Mincho ProN'; % style W3
     japaneseScript='Kanji';
     o.conditionName=japaneseScript;
     o.alphabetPlacement='top';
@@ -347,9 +364,13 @@ if isfield(ooo{1}(1),'targetFont')
         end
     end
     fonts=unique(fonts);
+    fprintf('Will use these fonts: ');
+    fprintf('%s, ',fonts{:});
+    fprintf('\n');
     if any(~IsFontAvailable(fonts,'warn'))
         error('Please install missing fonts.');
     end
+    fprintf('\n');
 end
 
 %% INTERLEAVED CONDITIONS MUST HAVE CONSISTENT CLUTS
