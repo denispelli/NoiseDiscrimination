@@ -3132,7 +3132,8 @@ try
                                     % DrawText draws from left, so shift
                                     % left by half letter width, to center
                                     % letter at desired draw position.
-                                    bounds=Screen('TextBounds',scratchWindow,oo(oi).signal(i).letter,x,y,1);
+                                    % String must be cast as double to support unicode.
+                                    bounds=Screen('TextBounds',scratchWindow,double(oo(oi).signal(i).letter),x,y,1);
                                     if oo(oi).printTargetBounds
                                         fprintf('%s bounds [%4.0f %4.0f %4.0f %4.0f]\n',oo(oi).signal(i).letter,bounds);
                                     end
