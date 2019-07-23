@@ -1372,7 +1372,6 @@ try
         degPerCm=57/oo(oi).viewingDistanceCm;
         oo(oi).pixPerDeg=oo(oi).pixPerCm/degPerCm;
         oo(oi).textSizeDeg=oo(oi).textSize/oo(oi).pixPerDeg;
-%         oo(oi).textLineLength=floor(1.7*RectWidth(oo(1).screenRect)/oo(oi).textSize);
         oo(oi).lineSpacing=1.5;
         switch oo(oi).instructionPlacement
             case 'topLeft'
@@ -1422,6 +1421,9 @@ try
         assert(oo(oi).firstGrayClutEntry>1);
         assert(mod(oo(oi).firstGrayClutEntry+oo(oi).lastGrayClutEntry,2) == 0) % Must be even, so middle is an integer.
         oo(oi).minLRange=0;
+        % o.textLineLength was computed for full width of screen, but
+        % should fit in width of o.stimulusRect.
+        oo(oi).textLineLength=round(oo(oi).textLineLength*RectWidth(oo(oi).stimulusRect)/RectWidth(oo(oi).screenRect));
     end % for oi=1:conditions
     
     %% ASK EXPERIMENTER NAME
@@ -1474,7 +1476,7 @@ try
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
         fprintf('*Waiting for observer name.\n');
         Screen('FillRect',window,oo(1).gray1);
-        Screen('DrawText',window,'',0,0,black,oo(1).gray1); % Set background.
+        Screen('TextBackgroundColor',window,oo(1).gray1); % Set background.
         Screen('Flip',window);
         [name,o]=AskQuestion(oo,text);
         oo(1).quitBlock=o.quitBlock;
@@ -1967,7 +1969,7 @@ try
             % Tell observer what's happening.
             Screen('LoadNormalizedGammaTable',oo(1).window,cal.old.gamma,loadOnNextFlip);
             Screen('FillRect',oo(1).window);
-            Screen('DrawText',oo(1).window,' ',0,0,1,1,1); % Set background color.
+            Screen('TextBackgroundColor',window,1); % Set background.
             Screen('TextSize',oo(1).window,oo(oi).textSize);
             string=sprintf('Setting screen color profile. ... ');
             DrawFormattedText(oo(1).window,string,...
@@ -2176,7 +2178,7 @@ try
                     MFileLineNr,oo(1).contrast,(cal.LLast-cal.LFirst)/(cal.LLast+cal.LFirst));
             end
             Screen('FillRect',oo(1).window,oo(1).gray1);
-            Screen('DrawText',window,'',0,0,black,oo(1).gray1); % Set background.
+            Screen('TextBackgroundColor',window,oo(1).gray1); % Set background.
             Screen('FillRect',oo(1).window,oo(1).gray,oo(1).stimulusRect);
         else
             Screen('FillRect',oo(1).window);
@@ -2190,7 +2192,7 @@ try
         black=0; % CLUT color code for black.
         white=1; % CLUT color code for white.
         Screen('FillRect',oo(1).window,oo(1).gray1);
-        Screen('DrawText',window,'',0,0,black,oo(1).gray1); % Set background.
+        Screen('TextBackgroundColor',window,oo(1).gray1); % Set background.
         Screen('FillRect',oo(1).window,oo(1).gray,oo(1).stimulusRect);
         DrawCounter(oo(oi));
         Screen('Flip',oo(1).window); % Screen is now all gray, at o.LBackground.
@@ -2221,7 +2223,7 @@ try
                     string=sprintf('%s With filter transmission %.3f?',string,oo(1).filterTransmission);
                 end
                 string=sprintf('%s Right?\nHit RETURN to continue, or ESCAPE to quit.',string);
-                Screen('DrawText',oo(1).window,' ',0,0,1,oo(1).gray1,1); % Set background color.
+                Screen('TextBackgroundColor',oo(1).window,oo(1).gray1); % Set background.
                 DrawFormattedText(oo(1).window,string,...
                     2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
                     oo(1).textLineLength,[],[],1.3);
@@ -2271,7 +2273,7 @@ try
                 case 'both'
                     Screen('Preference','TextAntiAliasing',1);
                     string='Please use both eyes.\nHit RETURN to continue, or ESCAPE to quit.';
-                    Screen('DrawText',oo(1).window,' ',0,0,1,oo(1).gray1,1); % Set background color.
+                    Screen('TextBackgroundColor',window,oo(1).gray1); % Set background.
                     DrawFormattedText(oo(1).window,string,...
                         2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
                         oo(1).textLineLength,[],[],1.3);
@@ -2299,7 +2301,7 @@ try
                 case {'left','right'}
                     Screen('Preference','TextAntiAliasing',1);
                     string=sprintf('Please use just your %s eye. Cover your other eye.\nHit RETURN to continue, or ESCAPE to quit.',oo(1).eyes);
-                    Screen('DrawText',oo(1).window,' ',0,0,1,oo(1).gray1,1); % Set background color.
+                    Screen('TextBackgroundColor',oo(1).window,oo(1).gray1); % Set background.
                     DrawFormattedText(oo(1).window,string,...
                         2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
                         oo(1).textLineLength,[],[],1.3);
@@ -2330,7 +2332,7 @@ try
             while streq(oo(1).eyes,'one')
                 Screen('Preference','TextAntiAliasing',1);
                 string=[string 'Which eye will you use, left or right? Please type L or R:'];
-                Screen('DrawText',oo(1).window,' ',0,0,1,oo(1).gray1,1); % Set background color.
+                Screen('TextBackgroundColor',oo(1).window,oo(1).gray1); % Set background.
                 DrawFormattedText(oo(1).window,string,...
                     2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
                     oo(1).textLineLength,[],[],1.3);
@@ -2537,7 +2539,7 @@ try
             x=2*oo(1).textSize;
             y=2.5*oo(1).textSize;
             Screen('TextSize',window,oo(oi).textSize);
-            % Screen('DrawText',window,'',x,y,black,white); % Set background.
+%             Screen('TextBackgroundColor',window,white); % Set background.
             % 'IMPORTANT: ... hit RETURN.
             Screen('TextStyle',window,1); % Bold
             DrawFormattedText(window,string,...
@@ -2568,7 +2570,7 @@ try
                 tryAgain=false;
             end
             Screen('FillRect',oo(1).window,oo(1).gray1);
-            Screen('DrawText',window,'',0,0,black,oo(1).gray1); % Set background.
+            Screen('TextBackgroundColor',window,oo(1).gray1); % Set background.
         end % while tryAgain
     end % if any([oo.useFixation])
     
@@ -3223,7 +3225,7 @@ try
                     case 'image'
                         % Allow color images.
                         % Scale to range -1 (black) to 1 (white).
-                        Screen('DrawText',oo(1).window,' ',0,0,1,oo(oi).gray1,1); % Set background color.
+                        Screen('TextBackgroundColor',oo(1).window,oo(1).gray1); % Set background.
                         string=sprintf('Reading images from disk. ... ');
                         DrawFormattedText(oo(1).window,string,...
                             2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
@@ -5277,7 +5279,7 @@ try
         % Tell observer what's happening.
         %         Screen('LoadNormalizedGammaTable',oo(1).window,cal.old.gamma,loadOnNextFlip);
         Screen('FillRect',oo(1).window,oo(1).gray1);
-        Screen('DrawText',oo(1).window,' ',0,0,1,oo(1).gray1); % Set background color.
+        Screen('TextBackgroundColor',oo(1).window,oo(1).gray1); % Set background.
         string=sprintf('Saving results to disk. ... ');
         DrawFormattedText(oo(1).window,string,...
             2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
@@ -5569,7 +5571,7 @@ try
             % Tell observer what's happening.
             Screen('LoadNormalizedGammaTable',oo(1).window,cal.old.gamma,loadOnNextFlip);
             Screen('FillRect',oo(1).window);
-            Screen('DrawText',oo(1).window,' ',0,0,1,1,1); % Set background color.
+            Screen('TextBackgroundColor',oo(1).window,1); % Set background.
             string=sprintf('Closing windows. Goodbye. ');
             DrawFormattedText(oo(1).window,string,...
                 2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
@@ -6325,7 +6327,7 @@ while ~set
     Screen('TextSize',o.window,o.textSize);
     Screen('TextFont',o.window,'Verdana');
     Screen('FillRect',o.window,o.gray1);
-    Screen('DrawText',o.window,' ',0,0,1,o.gray1,1); % Set background color.
+    Screen('TextBackgroundColor',o.window,o.gray1); % Set background.
     DrawFormattedText(o.window,string,...
         2*o.textSize,2.5*o.textSize,black,...
         o.textLineLength,[],[],1.3);
@@ -6442,7 +6444,7 @@ else
         Screen('TextSize',o.window,o.textSize);
         Screen('TextFont',o.window,'Verdana');
         Screen('FillRect',o.window,o.gray1);
-        Screen('DrawText',o.window,' ',0,0,1,o.gray1,1); % Set background color.
+        Screen('TextBackgroundColor',o.window,o.gray1); % Set background.
         DrawFormattedText(o.window,string,...
             2*o.textSize,2.5*o.textSize,black,...
             o.textLineLength,[],[],1.3);
@@ -6686,7 +6688,7 @@ switch o.task
 end
 msg=[message readyString '\n'];
 black=0;
-Screen('DrawText',o.window,' ',0,0,black,o.gray1,1); % Set background color.
+Screen('TextBackgroundColor',o.window,o.gray1); % Set background.
 Screen(o.window,'TextSize',o.textSize);
 [x,y]=DrawFormattedText(o.window,msg,...
     2*o.textSize,2.5*o.textSize,black,...
