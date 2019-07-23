@@ -87,7 +87,7 @@ o.counterPlacement='bottomRight';
 o.instructionPlacement='bottomLeft'; % 'topLeft' 'bottomLeft'
 o.brightnessSetting=0.87;
 o.askExperimenterToSetDistance=true;
-if 1
+if 0
     % Target face
     o.conditionName='face';
     o.signalImagesFolder='faces';
@@ -161,7 +161,7 @@ if 1
     ooo{end+1}=o;
 end
 
-if 1
+if 0
     % Sans Forgetica
     o.targetFont='Sans Forgetica';
     o.conditionName=o.targetFont;
@@ -185,7 +185,7 @@ if 1
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-if 1
+if 0
     % Sabbath Black
 %     o.targetFont='SabbathBlackRegular';
     o.targetFont='SabbathBlack OT'; % Now open type, but same design.
@@ -225,11 +225,11 @@ if 1
     o.alphabetPlacement='top';
     o.borderLetter='';
     o.labelAnswers=true;
-    o.readAlphabetFromDisk=true;
+    o.readAlphabetFromDisk=false;
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-if 1
+if 0
     % Japanese: Katakana, Hiragani, and Kanji
     % from Ayaka
     o.targetFont='Hiragino Mincho ProN'; % style W3
