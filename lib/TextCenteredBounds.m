@@ -50,5 +50,5 @@ function bounds=TextCenteredBounds(w,text,yPositionIsBaseline)
 if nargin<3
    yPositionIsBaseline=0;
 end
-centerTheText=1;
+centerTheText=true;
 bounds=TextBounds(w,text,yPositionIsBaseline,centerTheText);
