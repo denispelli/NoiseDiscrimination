@@ -3072,7 +3072,7 @@ try
                                 warning('You should set o.allowAnyFont=true unless o.targetFont=''Sloan''.');
                             end
                             oldFont=Screen('TextFont',scratchWindow,oo(oi).targetFont);
-                            Screen('DrawText',scratchWindow,oo(oi).alternatives(1),0,scratchRect(4)); % Must draw first to learn actual font in use.
+                            Screen('DrawText',scratchWindow,double(oo(oi).alternatives(1)),0,scratchRect(4)); % Must draw first to learn actual font in use.
                             font=Screen('TextFont',scratchWindow);
                             if ~streq(font,oo(oi).targetFont)
                                 error('Font missing! Requested font "%s", but got "%s". Please install the missing font.\n',oo(oi).targetFont,font);
@@ -3142,7 +3142,7 @@ try
                                 if oo(oi).printTargetBounds
                                     fprintf('%s %4.0f, %4.0f\n',oo(oi).signal(i).letter,x,y);
                                 end
-                                Screen('DrawText',scratchWindow,oo(oi).signal(i).letter,x,y,black0,white1,1);
+                                Screen('DrawText',scratchWindow,double(oo(oi).signal(i).letter),x,y,black0,white1,1);
                                 Screen('DrawingFinished',scratchWindow,[],1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
                                 %                   WaitSecs(0.1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
                                 letter=Screen('GetImage',scratchWindow,targetRect,'drawBuffer');
