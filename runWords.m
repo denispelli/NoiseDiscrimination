@@ -29,7 +29,7 @@ ooo={};
 % o.skipScreenCalibration=true;
 
 o.fixationCheck=false;
-o.readAlphabetFromDisk=false;
+o.getAlphabetFromDisk=false;
 o.targetFont='Monaco';
 o.alphabet='abcdefghijklmnopqrstuvwxyz'; % alphabet for o.words
 o.alternatives=length(o.alphabet);

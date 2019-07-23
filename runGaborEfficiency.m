@@ -34,7 +34,7 @@ o.targetFont='Sloan';
 % o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
 % o.borderLetter='X';
 % o.labelAnswers=false;
-% o.readAlphabetFromDisk=true;
+% o.getAlphabetFromDisk=true;
 % o.recordGaze=false;
 
 o.experiment='GaborEfficiency';

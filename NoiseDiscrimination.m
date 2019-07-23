@@ -805,7 +805,7 @@ o.fullResolutionTarget=false; % True to render signal at full resolution (target
 o.targetMargin=0.25; % Minimum gap from edge of target to edge of o.stimulusRect, as fraction of o.targetHeightDeg.
 o.targetDurationSecs=0.15; % Typically 0.2 or inf (wait indefinitely for response).
 o.contrast=1; % Default is positive contrast.
-o.readAlphabetFromDisk=false;
+o.getAlphabetFromDisk=false;
 o.targetHeightOverWidth=nan;
 o.wordFilename='';
 
@@ -1922,7 +1922,7 @@ try
             end
         end
         %         % USE THE ALREADY-LOADED ON-DISK FONT.
-        %         if oo(oi).readAlphabetFromDisk
+        %         if oo(oi).getAlphabetFromDisk
         %             for i=1:length(oo(oi).signal)
         %                 [ok,j]=ismember(oo(oi).signal(i).letter,[letterStruct.letter]);
         %                 if ~ok
@@ -2861,7 +2861,7 @@ try
     % letterStruct(i).texture % Screen texture containing the image
     % letterStruct(i).bounds % the bounds of black ink in the rect
     % alphabetBounds % union of bounds for all letters.
-    ok=[oo.readAlphabetFromDisk];
+    ok=[oo.getAlphabetFromDisk];
     if any(ok) % read in font from disk
         for oi=find(ok)
             oo(oi).targetSizeIsHeight=true;
@@ -2877,7 +2877,7 @@ try
         oi=oi(1);
         if isempty(window)
             % This is a quick hack to allow the 'ideal observer' to use
-            % ReadAlphabetFromDisk, which seems to need this call to
+            % getAlphabetFromDisk, which seems to need this call to
             % CreateLetterTextures, which needs at least a scratch window
             % in order to create textures.
             % We never explicitly close this window, so many will
@@ -3031,7 +3031,7 @@ try
             case {'identify' 'identifyAll' 'rate'}
                 switch oo(oi).targetKind
                     case {'letter' 'word'}
-                        if ~oo(oi).readAlphabetFromDisk
+                        if ~oo(oi).getAlphabetFromDisk
                             if isempty(oo(1).window) && isempty(temporaryWindow)
                                 % Some window must already be open before we call
                                 % OpenOffscreenWindow.
@@ -4731,7 +4731,7 @@ try
                                         oo(oi).responseScreenAbsoluteContrast);
                                 end
                                 % Note alphabet placement on top or right.
-                                % Using ReadAlphabetFromDisk, I get the
+                                % Using getAlphabetFromDisk, I get the
                                 % right polarity if I set signalIsBinary.
                                 % However, the clipping threshold is way
                                 % off so the letters are slightly distorted.

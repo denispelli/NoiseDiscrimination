@@ -65,7 +65,7 @@ if 1
     o.targetKind='word';
     o.alphabet='abcdefghijklmnopqrstuvwxyz'; % alphabet for o.words
     o.alternatives=length(o.words);
-    o.readAlphabetFromDisk=false;
+    o.getAlphabetFromDisk=false;
     ooo{end+1}=o;
 end
 
