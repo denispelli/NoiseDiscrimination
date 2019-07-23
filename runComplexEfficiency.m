@@ -354,26 +354,9 @@ for block=length(ooo):-1:1
     maxCm=max([maxCm ooo{block}(1).viewingDistanceCm]);
     [ooo{block}(:).maxViewingDistanceCm]=deal(maxCm);
 end
+
 %% MAKE SURE NEEDED FONTS ARE AVAILABLE
 CheckExperimentFonts(ooo)
-
-% %% MAKE SURE NEEDED FONTS ARE AVAILABLE
-% if isfield(ooo{1}(1),'targetFont')
-%     fonts={};
-%     for block=1:length(ooo)
-%         for oi=1:length(ooo{block})
-%             fonts{end+1}=ooo{block}(oi).targetFont;
-%         end
-%     end
-%     fonts=unique(fonts);
-%     fprintf('Will use these fonts: ');
-%     fprintf('%s, ',fonts{:});
-%     fprintf('\n');
-%     if any(~IsFontAvailable(fonts,'warn'))
-%         error('Please install missing fonts.');
-%     end
-%     fprintf('\n');
-% end
 
 %% INTERLEAVED CONDITIONS MUST HAVE CONSISTENT CLUTS
 bad={};
