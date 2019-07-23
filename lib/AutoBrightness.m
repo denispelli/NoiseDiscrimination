@@ -9,12 +9,12 @@ function [oldIsEnabled,failed] = AutoBrightness(screenNumber,newIsEnabled)
 % AUTOBRIGHTNESS Get and set the checkbox called "Automatically adjust
 % brightness" on the macOS: System Preferences: Displays panel. The first
 % argument selects a screen, but has been tested only for screen 0 (the
-% main screen). The second argument "newIsEnabled" (integer 0 or 1) is
+% main screen). The second argument "newIsEnabled" (logical false or true) is
 % optional, and, if present, indicates that you want to turn the
-% autobrightness feature on (newIsEnabled==1) or off (newIsEnabled==0). If you
+% autobrightness feature on (newIsEnabled==true) or off (newIsEnabled==false). If you
 % call AutoBrightness without the newIsEnabled argument (or a value other
-% than 0 or 1) then nothing is changed. The current state is always
-% reported in the returned oldIsEnabled (0 or 1). The optionally returned
+% than false or true) then nothing is changed. The current state is always
+% reported in the returned oldIsEnabled (false or true). The optionally returned
 % "failed" is always zero unless the applescript failed.
 %
 % AutoBrightness.m uses the AutoBrightness.applescript to allow you to turn
@@ -66,7 +66,7 @@ function [oldIsEnabled,failed] = AutoBrightness(screenNumber,newIsEnabled)
 % BRIGHTNESS. Psychtoolbox for MATLAB and Macintosh already has a Screen
 % call to get and set the brightness, so, in principle, we don't need
 % applescript for that. The Psychtoolbox call is:
-% [oldBrightness]=Screen('ConfigureDisplay','Brightness', screenId [,outputId][,brightness]);
+% [oldBrightness]=Screen('ConfigureDisplay','Brightness',screenId [,outputId][,brightness]);
 % However, in recent versions of macOS the Screen Brightness control works
 % unreliably, so you might want to check out the Brightness function.
 %
@@ -123,14 +123,14 @@ if ~IsOSX
     % Macintoshes running Linux or Windows, in which case someone might
     % enhance this MATLAB program to return a correct answer for those
     % cases.
-    oldIsEnabled = 0;
+    oldIsEnabled = false;
     failed = true; % Report failure on this unsupported OS.
     return;
 end
-if nargin < 1
+if nargin<1
     screenNumber=0;
 end
-if nargin <2
+if nargin<2 || isempty(newIsEnabled)
     newIsEnabled=-1; % Indicates missing argument.
 end
 scriptPath = which('AutoBrightness.applescript');
@@ -170,7 +170,7 @@ for i=1:3
         forcedToClose=true;
         sca;
     end
-    if ismember(oldIsEnabled,0:1)
+    if ismember(oldIsEnabled,[false true])
         break
     end
 end
