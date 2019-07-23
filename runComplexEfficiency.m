@@ -146,7 +146,7 @@ end
 %     o.alternatives=length(o.alphabet);
 %     ooo{end+1}=o;
 % end
-if 1
+if 0
     % Animals alphabet
     o.conditionName='Animals';
     o.targetFont='Animals';
@@ -160,7 +160,6 @@ if 1
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-
 if 0
     % Sans Forgetica
     o.targetFont='Sans Forgetica';
@@ -209,7 +208,7 @@ if 1
     o.alphabetPlacement='top';
     o.borderLetter='';
     o.labelAnswers=true;
-    o.readAlphabetFromDisk=true;
+    o.readAlphabetFromDisk=false;
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
