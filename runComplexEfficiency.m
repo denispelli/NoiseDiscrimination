@@ -67,7 +67,7 @@ o.minimumTargetHeightChecks=8;
 o.alphabet='';
 o.borderLetter='';
 o.labelAnswers=false;
-o.readAlphabetFromDisk=false;
+o.getAlphabetFromDisk=false;
 o.fixationCheck=false;
 o.fixationCrossBlankedNearTarget=true;
 o.fixationCrossBlankedUntilSecsAfterTarget=0.6;
@@ -129,7 +129,7 @@ if 1
     o.borderLetter='X';
     o.alphabetPlacement='right'; % 'top' or 'right';
     o.labelAnswers=false;
-    o.readAlphabetFromDisk=true;
+    o.getAlphabetFromDisk=true;
     o.contrast=-1;
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
@@ -142,7 +142,7 @@ end
 %     o.alphabet='abcdefghijklmnopqrstuvwxyz';
 %     o.borderLetter='';
 %     o.labelAnswers=true;
-%     o.readAlphabetFromDisk=true;
+%     o.getAlphabetFromDisk=true;
 %     o.alternatives=length(o.alphabet);
 %     ooo{end+1}=o;
 % end
@@ -156,7 +156,7 @@ if 0
     o.alphabet='abcdefghijklmnopqrstuvwxyz';
     o.borderLetter='';
     o.labelAnswers=true;
-    o.readAlphabetFromDisk=false;
+    o.getAlphabetFromDisk=false;
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
@@ -168,7 +168,7 @@ if 0
     o.alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     o.borderLetter='$';
     o.labelAnswers=false;
-    o.readAlphabetFromDisk=true;
+    o.getAlphabetFromDisk=true;
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
@@ -180,7 +180,7 @@ if 1
     o.alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     o.borderLetter='$';
     o.labelAnswers=true;
-    o.readAlphabetFromDisk=true;
+    o.getAlphabetFromDisk=false;
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
@@ -193,7 +193,7 @@ if 0
     o.alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     o.borderLetter='$';
     o.labelAnswers=true;
-    o.readAlphabetFromDisk=true;
+    o.getAlphabetFromDisk=true;
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
@@ -208,7 +208,7 @@ if 1
     o.alphabetPlacement='top';
     o.borderLetter='';
     o.labelAnswers=true;
-    o.readAlphabetFromDisk=false;
+    o.getAlphabetFromDisk=false;
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
@@ -224,7 +224,7 @@ if 1
     o.alphabetPlacement='top';
     o.borderLetter='';
     o.labelAnswers=true;
-    o.readAlphabetFromDisk=false;
+    o.getAlphabetFromDisk=false;
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
@@ -255,7 +255,7 @@ if 0
     o.alphabet=char(o.alphabet);
     o.borderLetter='';
     o.labelAnswers=true;
-    o.readAlphabetFromDisk=true;
+    o.getAlphabetFromDisk=true;
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
@@ -316,7 +316,7 @@ if true
         o.targetKind='letter';
         o.alphabetPlacement='right'; % 'top' or 'right';
         o.labelAnswers=false;
-        o.readAlphabetFromDisk=false;
+        o.getAlphabetFromDisk=false;
         o.alternatives=length(o.alphabet);
         oo(3)=o;
         ooo{end+1}=oo;
@@ -355,22 +355,25 @@ for block=length(ooo):-1:1
     [ooo{block}(:).maxViewingDistanceCm]=deal(maxCm);
 end
 %% MAKE SURE NEEDED FONTS ARE AVAILABLE
-if isfield(ooo{1}(1),'targetFont')
-    fonts={};
-    for block=1:length(ooo)
-        for oi=1:length(ooo{block})
-            fonts{end+1}=ooo{block}(oi).targetFont;
-        end
-    end
-    fonts=unique(fonts);
-    fprintf('Will use these fonts: ');
-    fprintf('%s, ',fonts{:});
-    fprintf('\n');
-    if any(~IsFontAvailable(fonts,'warn'))
-        error('Please install missing fonts.');
-    end
-    fprintf('\n');
-end
+CheckExperimentFonts(ooo)
+
+% %% MAKE SURE NEEDED FONTS ARE AVAILABLE
+% if isfield(ooo{1}(1),'targetFont')
+%     fonts={};
+%     for block=1:length(ooo)
+%         for oi=1:length(ooo{block})
+%             fonts{end+1}=ooo{block}(oi).targetFont;
+%         end
+%     end
+%     fonts=unique(fonts);
+%     fprintf('Will use these fonts: ');
+%     fprintf('%s, ',fonts{:});
+%     fprintf('\n');
+%     if any(~IsFontAvailable(fonts,'warn'))
+%         error('Please install missing fonts.');
+%     end
+%     fprintf('\n');
+% end
 
 %% INTERLEAVED CONDITIONS MUST HAVE CONSISTENT CLUTS
 bad={};
