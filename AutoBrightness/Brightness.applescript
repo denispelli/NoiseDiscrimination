@@ -109,12 +109,10 @@
 -- https://discussions.apple.com/thread/6418291
 
 on run argv
-	--Input arguments: screenNumber newLevel
-	--Output argument: oldLevel
 	-- integer screenNumber. Zero for main screen. Default is zero.
-	-- real newLevel: 0.0 to 1.0 value of brightness slider.
+	-- real newLevel : 0.0 to 1.0 state of the System Preferences:Displays: brightness slider.
 	-- Default is to leave the level unchanged.
-	--Returns oldLevel, 0.0 to 1.0 value of brightness slider.
+	--Returns oldLevel, 0.0 to 1.0.
 	try
 		set newLevel to item 2 of argv as real
 	on error
@@ -126,14 +124,15 @@ on run argv
 		set screenNumber to 0 -- Default is the main screen.
 	end try
 	set windowNumber to screenNumber + 1 -- Has been tested only for screenNumber==0
-	set leaveSystemPrefsRunning to true -- This could be made a third argument.
+	set leaveSystemPrefsRunning to true -- this could be made a third argument
 	tell application "System Preferences"
 		set wasRunning to running
-		reveal anchor "displaysDisplayTab" of pane "com.apple.preference.displays"
+		set the current pane to pane id "com.apple.preference.displays"
+		reveal (first anchor of current pane whose name is "displaysDisplayTab")
 	end tell
 	tell application "System Events"
+		set applicationName to item 1 of (get name of processes whose frontmost is true)
 		if not UI elements enabled then
-			set applicationName to item 1 of (get name of processes whose frontmost is true)
 			tell application "System Preferences"
 				activate
 				reveal anchor "Privacy_Accessibility" of pane id "com.apple.preference.security"
@@ -142,35 +141,39 @@ on run argv
 			end tell
 			return -99
 		end if
-	end tell
-	--tell application "System Events" to tell process "System Preferences" to tell window "Built-in Retina Display"
-	tell application "System Events" to tell process "System Preferences" to tell window windowNumber
-		set ok to true
-		repeat with groupIndex in {1, 2}
-			try
-				tell group groupIndex of tab group 1
-					set oldLevel to value of value indicator 1 of slider 1 -- Get brightness
-					if newLevel ≥ 0 then
-						set value of value indicator 1 of slider 1 to newLevel -- Set brightness
-					end if
-				end tell
-				set ok to true
-			on error
-				set ok to false
-				set oldLevel to -1
-			end try
-			if ok then exit repeat
-		end repeat
+		tell process "System Preferences"
+			--set versionString to system version of (system info)
+			--considering numeric strings
+			--set isYosemiteOrBetter to versionString ≥ "10.10.0"
+			--end considering
+			--if not isYosemiteOrBetter then
+			tell tab group 1 of window windowNumber
+				try
+					tell group 1 -- works on Mac OS X 10.9 Mavericks and sometimes Yosemite
+						set oldLevel to slider 1's value -- Get brightness
+						if newLevel > -1 then
+							set slider 1's value to newLevel -- Set brightness
+						end if
+					end tell
+				on error
+					try
+						tell group 2 -- works other times on Mac OS X 10.10 Yosemite
+							set oldLevel to slider 1's value -- Get brightness
+							if newLevel > -1 then
+								set slider 1's value to newLevel -- Set brightness
+							end if
+						end tell
+					on error
+						set oldLevel to -1.0
+					end try
+				end try
+			end tell
+		end tell
 	end tell
 	if wasRunning or leaveSystemPrefsRunning then
 		-- Leave it running.
 	else
 		quit application "System Preferences"
-	end if
-	if not ok then
-		display alert "Applescript error in setting Brightness."
-		delay 1
-		return -99
 	end if
 	return oldLevel
 end run
