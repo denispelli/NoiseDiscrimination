@@ -131,8 +131,8 @@ on run argv
 		reveal (first anchor of current pane whose name is "displaysDisplayTab")
 	end tell
 	tell application "System Events"
-		set applicationName to item 1 of (get name of processes whose frontmost is true)
 		if not UI elements enabled then
+			set applicationName to item 1 of (get name of processes whose frontmost is true)
 			tell application "System Preferences"
 				activate
 				reveal anchor "Privacy_Accessibility" of pane id "com.apple.preference.security"
@@ -149,7 +149,7 @@ on run argv
 			--if not isYosemiteOrBetter then
 			tell tab group 1 of window windowNumber
 				try
-					tell group 1 -- works on Mac OS X 10.9 Mavericks and sometimes Yosemite
+					tell group 2 -- works sometimes on Mac OS X 10.10, and always on later versions.
 						set oldLevel to slider 1's value -- Get brightness
 						if newLevel > -1 then
 							set slider 1's value to newLevel -- Set brightness
@@ -157,7 +157,7 @@ on run argv
 					end tell
 				on error
 					try
-						tell group 2 -- works other times on Mac OS X 10.10 Yosemite
+						tell group 1 -- works on Mac OS X 10.9 and sometimes 10.10.
 							set oldLevel to slider 1's value -- Get brightness
 							if newLevel > -1 then
 								set slider 1's value to newLevel -- Set brightness
