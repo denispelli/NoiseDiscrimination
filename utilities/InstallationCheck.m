@@ -462,17 +462,20 @@ try
     test(end+1).name='Camera';
     if o.recordGaze
         videoExtension='.avi'; % '.avi', '.mp4' or '.mj2'
-        clear cam
-        if exist('matlab.webcam.internal.Utility.isMATLABOnline','class')
-            cam=webcam;
-            gazeFile=fullfile(o.dataFolder,[o.dataFilename videoExtension]);
-            vidWriter=VideoWriter(gazeFile);
+        clear cam webcam
+        if exist('webcam','file') && exist('VideoWriter','file')
+            cam=webcam(1);
+            preview(cam);
+            WaitSecs(1);
+            o.dataFilename='InstallationCheckPhoto';
+            photoFile=fullfile(o.dataFolder,[o.dataFilename videoExtension]);
+            vidWriter=VideoWriter(photoFile);
             vidWriter.FrameRate=1; % frame/s.
             open(vidWriter);
-            fprintf('Recording gaze (of conditions %s) in %s file:\n',num2str(find([o.recordGaze])),videoExtension);
+            fprintf('Recording snapshot in file: %s\n',photoFile);
             test(end).value=true;
         else
-%             fprintf('Cannot record gaze. Lack webcam link. Set o.recordGaze=false.\n');
+            % fprintf('Cannot take photo. Please install software.\n');
             test(end).value=false;
             o.recordGaze=false;
         end
@@ -483,8 +486,8 @@ try
         catch e
             warning(e)
         end
-        % FUTURE: Write trial number and condition number in
-        % corner of recorded movie image.
+        % FUTURE: Write trial number and condition number in corner of
+        % recorded movie image.
         writeVideo(vidWriter,img); % Write frame to video.
     end
     if exist('vidWriter','var')
@@ -493,21 +496,22 @@ try
     end
     test(end).min=true;
     test(end).ok=test(end).value;
-    test(end).help='web https://www.mathworks.com/help/supportpkg/usbwebcams/ug/snapshot.html';
+    test(end).help='web https://www.mathworks.com/hardware-support/matlab-webcam.html';
     
-    if contains(mainFolder,'NoiseDiscrimination')
-        test(end+1).name='Screen is calibrated';
-        if streq(cal.datestr,'none') || isempty(cal.datestr);
-            test(end).value='false';
-            test(end).ok=false;
-        else
-            test(end).value='true';
-            test(end).ok=true;
+    test(end+1).name='Screen calibrated';
+    test(end).value='false';
+    test(end).ok=false;
+    test(end).min='true';
+    test(end).help='help CalibrateScreenLuminance; % In NoiseDiscrimination/utilities/';
+    if exist('OurScreenCalibrations','file')
+        cal=OurScreenCalibrations(0);
+        if isfield(cal,'old') && isfield(cal.old,'L') && isfield(cal,'datestr')
+            if ~streq(cal.datestr,'none') && ~isempty(cal.datestr)
+                test(end).value='true';
+                test(end).ok=true;
+            end
         end
-        test(end).min='true';
-        test(end).help='help CalibrateScreenLuminance';
     end
-    
     %% Goodbye
     o.speakInstructions=false;
     if o.speakInstructions && o.congratulateWhenDone
