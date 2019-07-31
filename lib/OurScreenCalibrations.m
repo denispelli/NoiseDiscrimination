@@ -89,7 +89,7 @@ cal.MACAddress=MACAddress; % Use subroutine to read it.
 % control.
 
 % Mario says "dacBits" cannot be trusted. We should stop retrieving and
-% saveing it.
+% saving it.
 % [savedGamma,cal.dacBits]=Screen('ReadNormalizedGammaTable',cal.screen);
 % cal.dacMax=(2^cal.dacBits)-1;
 
