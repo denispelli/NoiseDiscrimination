@@ -1,6 +1,5 @@
 function reply=Ask(window,message,textColor,bgColor,replyFun,rectAlign1,rectAlign2,fontsize,dontClear)
 % reply = Ask(window,message,[textColor],[bgColor],[replyFun],[rectAlign1],[rectAlign2],[fontSize=30],dontClear)
-% From Psychtoolbox/PsychOneliner, improved.
 %
 % Draw the message, using textColor against background bgcolor, 
 % right-justified in the upper right of the window, then call 
