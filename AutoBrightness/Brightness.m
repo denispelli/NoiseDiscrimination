@@ -109,10 +109,6 @@ if ~IsOSX
     status = 1; % Signal failure on this unsupported OS:
     return;
 end
-% if length(Screen('Windows')) > 0
-%     error(['"Brightness" called while onscreen windows are open. '...
-%        'Only call this function before opening the first onscreen window!']);
-% end
 try
     scriptPath = which('Brightness.applescript');
     command = ['osascript "' scriptPath '"']; % Double quotes cope with spaces in scriptPath.
@@ -122,13 +118,13 @@ try
     if nargin > 1
         command = [command ' ' num2str(newLevel)];
     end
-    [status,oldString]=system(command); % THIS LINE TAKES 4.7 s ON MY MACBOOK PRO!
+    [status,oldString]=system(command); % Takes 5 s on MacBook Pro, 35 s on MacBook.
     oldLevel=str2double(oldString);
     if isempty(oldLevel)
         error('Make sure you have admin privileges, and that System Preferences is not tied up in a dialog. Brightness applescript error: %s. ',oldString);
     end
 catch e
-    sca;
+    sca; % Close any user windows so error can be seen.
     error(e);
 end
 
