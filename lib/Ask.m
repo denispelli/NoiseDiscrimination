@@ -1,5 +1,6 @@
 function reply=Ask(window,message,textColor,bgColor,replyFun,rectAlign1,rectAlign2,fontsize,dontClear)
 % reply = Ask(window,message,[textColor],[bgColor],[replyFun],[rectAlign1],[rectAlign2],[fontSize=30],dontClear)
+% From Psychtoolbox/PsychOneliner, improved.
 %
 % Draw the message, using textColor against background bgcolor, 
 % right-justified in the upper right of the window, then call 
@@ -42,7 +43,7 @@ function reply=Ask(window,message,textColor,bgColor,replyFun,rectAlign1,rectAlig
 %               small fixes...
 % 6/20/19  mk   Make sort of compatible with unicode strings. Problem that Octave
 %               can not store UCS-4 char() remains.
-% 7/26/19  dgp   added the new "dontClear" argument. 
+% 7/26/19  dgp  added the new "dontClear" argument. 
 
 dontClearOnFlip = 1;
 
