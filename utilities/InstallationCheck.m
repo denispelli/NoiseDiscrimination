@@ -22,10 +22,7 @@ o.screenVerbosity=0; % 0 for no messages, 1 for critical, 2 for warnings, 3 defa
 o.textSize=40;
 
 %% FILES
-mainFolder=fileparts(fileparts(mfilename('fullpath'))); %
-if contains(mainFolder,'NoiseDiscrimination')
-    addpath(fullfile(mainFolder,'AutoBrightness')); % "AutoBrightness" folder in same directory as this file
-end
+mainFolder=fileparts(fileparts(mfilename('fullpath')));
 addpath(fullfile(mainFolder,'lib')); % "lib" folder in same directory as this file
 addpath(fullfile(mainFolder,'utilities')); % "lib" folder in same directory as this file
 
