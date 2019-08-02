@@ -461,9 +461,10 @@ try
     o.recordGaze=true;
     test(end+1).name='Camera';
     if o.recordGaze
+        fprintf('Trying to use the camera to take a photo. ...\n');
         videoExtension='.avi'; % '.avi', '.mp4' or '.mj2'
         clear cam webcam
-        if exist('webcam','file') && exist('VideoWriter','file')
+        try
             cam=webcam(1);
             preview(cam);
             WaitSecs(1);
@@ -474,7 +475,7 @@ try
             open(vidWriter);
             fprintf('Recording snapshot in file: %s\n',photoFile);
             test(end).value=true;
-        else
+        catch
             % fprintf('Cannot take photo. Please install software.\n');
             test(end).value=false;
             o.recordGaze=false;
@@ -497,7 +498,10 @@ try
     test(end).min=true;
     test(end).ok=test(end).value;
     test(end).help='web https://www.mathworks.com/hardware-support/matlab-webcam.html';
-    
+    test(end).help=sprintf(['MATLAB Support Package for USB Webcams has not been installed. \n'...
+        'Open Add-Ons Explorer to install the Webcam Support Package.\n'...
+        'web https://www.mathworks.com/matlabcentral/fileexchange/45182-matlab-support-package-for-usb-webcams\n'...
+        'In the MATLAB Command Window type "webcam(1)" to get the best installation link.']);
     test(end+1).name='Screen calibrated';
     test(end).value='false';
     test(end).ok=false;
