@@ -288,7 +288,6 @@ try
         end
     end
     if IsOSX %|| IsLinux
-        addpath(fullfile(fileparts(fileparts(mfilename('fullpath'))),'AutoBrightness')); % folder in same directory as this M file
         if ~ScriptingOkShowPermission
             error(['Please give MATLAB permission to control the computer. ' ...
                 'You''ll need admin privileges to do this.']);
