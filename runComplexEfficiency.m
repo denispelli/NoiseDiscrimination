@@ -118,12 +118,20 @@ if 0
     ooo{end+1}=o;
 end
 o.symmetricLuminanceRange=true; % False for maximum brightness.
-o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
+o.desiredLuminanceFactor=1; % 1.8 to maximize brightness.
 if 1
     % Sloan with uncertainty
     o.conditionName='Sloan';
     o.uncertainParameter={'eccentricityXYDeg'};
-    o.uncertainValues={{[-10 0] [10 0]}};
+    % Uncertainty is M equally spaced positions along a ring with radius r.
+    r=10;
+    M=100;
+    list={};
+    for i=1:M
+        a=360*i/M; 
+        list{i}=r*[cosd(a) sind(a)];
+    end
+    o.uncertainValues={list};
     o.targetFont='Sloan';
     o.minimumTargetHeightChecks=8;
     o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
@@ -134,8 +142,11 @@ if 1
     o.getAlphabetFromDisk=true;
     o.contrast=-1;
     o.alternatives=length(o.alphabet);
+    o.viewingDistanceCm=30;
+    o.fixationCrossDrawnOnStimulus=true;
     ooo{end+1}=o;
     o.uncertainParameter={};
+    o.fixationCrossDrawnOnStimulus=false;
 end
 if 1
     % Sloan
