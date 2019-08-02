@@ -108,7 +108,6 @@ function o=NoiseDiscrimination(oIn)
 % clear all
 
 mypath=fileparts(mfilename('fullpath'));
-addpath(fullfile(mypath,'AutoBrightness'));
 rng('default');
 clear PsychHID
 if ismac && ~ScriptingOkShowPermission
