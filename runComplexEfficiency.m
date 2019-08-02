@@ -237,7 +237,7 @@ if 1
     o.alphabetPlacement='top';
     o.borderLetter='';
     o.labelAnswers=true;
-    o.getAlphabetFromDisk=false;
+    o.getAlphabetFromDisk=true;
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
