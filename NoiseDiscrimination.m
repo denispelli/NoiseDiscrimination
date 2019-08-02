@@ -2764,10 +2764,16 @@ try
         end
         switch oo(oi).task
             case {'identify' 'identifyAll' 'rate'}
-                % Clip o.canvasSize to fit inside o.stimulusRect (after
-                % converting targetChecks to pixels). 
-                oo(oi).canvasSize=min(oo(oi).canvasSize,floor(2*[RectHeight(oo(oi).stimulusRect) RectWidth(oo(oi).stimulusRect)]/oo(oi).targetCheckPix));
-                oo(oi).canvasSize=2*ceil(oo(oi).canvasSize/2); % Even number of checks, so we can center it on target.
+                % Clip o.canvasSize to fit inside 2*o.stimulusRect (after
+                % converting targetChecks to pixels). A canvasRect of
+                % 2*o.stimulusRect is just big enough to cover the whole
+                % stimulusRect when centered on any point in it. The
+                % canvasRect is always centered on target position,
+                % eccentricityXYDeg, which may be uncertain, from trial to
+                % trial.
+                oo(oi).canvasSize=min(oo(oi).canvasSize,...
+                    round(2*[RectHeight(oo(oi).stimulusRect) RectWidth(oo(oi).stimulusRect)]/oo(oi).targetCheckPix));
+                oo(oi).canvasSize=2*ceil(oo(oi).canvasSize/2); % Even number of checks, so we can exactly center it on target.
             case '4afc'
                 oo(oi).canvasSize=min(oo(oi).canvasSize,floor([maxStimulusHeight maxStimulusWidth]/oo(oi).targetCheckPix));
                 oo(oi).canvasSize=ceil(oo(oi).canvasSize);
@@ -4310,25 +4316,25 @@ try
                         img=location(1).image;
                         PrintImageStatistics(MFileLineNr,oo(oi),i,'before IndexOfLuminance',img);
                         img=IndexOfLuminance(cal,img*oo(oi).LBackground)/oo(oi).maxEntry;
-                        %                         im=LuminanceOfIndex(cal,img*oo(oi).maxEntry);
-                        %                         PrintImageStatistics(MFileLineNr,oo(oi),i,'LuminanceOfIndex(IndexOfLuminance)',im);
+                        % im=LuminanceOfIndex(cal,img*oo(oi).maxEntry);
+                        % PrintImageStatistics(MFileLineNr,oo(oi),i,'LuminanceOfIndex(IndexOfLuminance)',im);
                         img=Expand(img,oo(oi).targetCheckPix);
                         if oo(oi).assessLinearity
                             AssessLinearity(oo(oi));
                         end
-                        rect=RectOfMatrix(img); % 0 0 1386 924; stimulusRect 0 0 692 462
+                        rect=RectOfMatrix(img); 
                         rect=CenterRect(rect,[oo(oi).targetXYPix oo(oi).targetXYPix]);
                         rect=round(rect); % rect that will receive the stimulus (target and noises) % -556 -231 830 693
                         location(1).rect=rect;
                         movieTexture(iMovieFrame)=Screen('MakeTexture',oo(1).window,img,0,0,1); % SAVE MOVIE FRAME
-                        srcRect=RectOfMatrix(img); % 0 0 1386 924
-                        dstRect=rect; % -556 -231 830 693; stimulusRect 0 0 692 462
-                        offset=dstRect(1:2)-srcRect(1:2); % -556  -231
-                        dstRect=ClipRect(dstRect,oo(oi).stimulusRect); % 0 0 692 462
-                        srcRect=OffsetRect(dstRect,-offset(1),-offset(2)); % 556 231 1248 693
-                        eraseRect=dstRect;% 0 0 692 462
+                        srcRect=RectOfMatrix(img); 
+                        dstRect=rect; 
+                        offset=dstRect(1:2)-srcRect(1:2); 
+                        dstRect=ClipRect(dstRect,oo(oi).stimulusRect); 
+                        srcRect=OffsetRect(dstRect,-offset(1),-offset(2)); 
+                        eraseRect=dstRect;
                         rect=CenterRect([0 0 oo(oi).targetHeightPix oo(oi).targetWidthPix],rect);
-                        rect=round(rect); % target rect 74 168 200 294
+                        rect=round(rect); 
 
                     case '4afc'
                         rect=[0 0 oo(oi).targetHeightPix oo(oi).targetWidthPix];
