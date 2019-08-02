@@ -3,7 +3,6 @@ function mm=MeasurePupil()
 %
 %% GLOBALS, FILES
 global  cal
-addpath(fullfile(fileparts(mfilename('fullpath')),'AutoBrightness')); % folder in same directory as this M file
 addpath(fullfile(fileparts(mfilename('fullpath')),'lib')); % folder in same directory as this M file
 if ismac && ~ScriptingOkShowPermission
    error(['Please give MATLAB permission to control the computer. ',...
