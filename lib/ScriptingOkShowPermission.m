@@ -1,4 +1,4 @@
-function ok=ScriptingOkShowPermission
+function [ok,status]=ScriptingOkShowPermission
 %ScriptingOkShowPermission returns true (1) or false (0), indicating
 % whether this application has permission to control the computer through
 % scripting.
