@@ -3,7 +3,10 @@ function ok=IsFontAvailable(font,warn)
 % "font" is a string or a cell array of strings. Each string is a font
 % name. Returns a logical array, one element per font, indicating true if
 % the font is available. If the optional argument "warn" is the string
-% 'warn' then a warning is printed for each missing font. There is some
+% 'warn' then a warning is printed for each missing font. If there is a 
+% /fonts/ folder where we expect it, then we suggest the user look there 
+% for the missing font to be installed. 
+% There is some
 % overhead in opening and closing a window, so it's best to call this once
 % with a list of fonts, rather than multiple times, once for each font.
 % Denis Pelli, July 6, 2019
