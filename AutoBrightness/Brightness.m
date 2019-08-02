@@ -1,6 +1,9 @@
 function [oldLevel,status] = Brightness(screenNumber,newLevel)
 % [oldLevel,status] = Brightness([screenNumber][,newLevel])
 %
+% August 2019. Always use Screen instead of applescript, if Psychotoolbox
+% version 3.0.16 or later is available.
+%
 % BRIGHTNESS. Get and set the "brightness" slider in the macOS: System
 % Preferences: Displays panel. The function argument "newLevel" (0.0
 % to 1.0) indicates the desired brightness. If you call without an argument
@@ -57,7 +60,7 @@ function [oldLevel,status] = Brightness(screenNumber,newLevel)
 % already has a SCREEN call to get and set the brightness, but its setting
 % ability seems to be unreliable in macOS Sierra, so I'm providing this
 % Applescript alternative. The Psychtoolbox call is:
-% [oldBrightness]=Screen('ConfigureDisplay','Brightness', screenId [,outputId][,brightness]); 
+% [oldBrightness]=Screen('ConfigureDisplay','Brightness', screenId [,outputId][,brightness]);
 % Normally the SCREEN call is preferable because it's fast and requires no
 % permissions. The solid new symptom under macOS Sierra is that the slider
 % doesn't move when you change the brightness. Associated with that I find
@@ -108,6 +111,20 @@ if ~IsOSX
     oldLevel = NaN;
     status = 1; % Signal failure on this unsupported OS:
     return;
+end
+[~,ver]=PsychtoolboxVersion;
+v=ver.major*1000+ver.minor*100+ver.point;
+useScreen3016= v<3016 && exist('Screen3016','file');
+useScreenBrightness= v>=3016 || useScreen3016;
+if useScreenBrightness
+    if useScreen3016
+        Screen3016('ConfigureDisplay','Brightness',screenNumber,0,newLevel);
+        oldLevel=Screen3016('ConfigureDisplay','Brightness',screenNumber,0);
+    else
+        Screen('ConfigureDisplay','Brightness',screenNumber,0,newLevel);
+        oldLevel=Screen('ConfigureDisplay','Brightness',screenNumber,0);
+    end
+    return
 end
 try
     scriptPath = which('Brightness.applescript');
