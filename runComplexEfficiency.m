@@ -2,10 +2,9 @@
 % MATLAB script to run NoiseDiscrimination.m
 % Copyright 2019 Denis G. Pelli, denis.pelli@nyu.edu
 %
-% June 26, 2019 runComplexEfficiency now uses the new routine
-% IsFontAvailable to make sure all needed system fonts are in place before
-% we run the experiment. runCrowdingSurvey uses both IsFontAvailable and
-% IsFontAvailableOnDisk.
+% August 2, 2019 runComplexEfficiency now uses the new routine
+% CheckExperimentFonts to make sure all needed fonts are in place before we
+% run the experiment.
 %
 % June 4, 2019. Added "Fixation check" condition that is meant to be
 % interleaved with all peripheral conditions. It presents an unvarying easy
