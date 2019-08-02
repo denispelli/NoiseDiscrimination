@@ -120,6 +120,24 @@ end
 o.symmetricLuminanceRange=true; % False for maximum brightness.
 o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
 if 1
+    % Sloan with uncertainty
+    o.conditionName='Sloan';
+    o.uncertainParameter={'eccentricityXYDeg'};
+    o.uncertainValues={{[-10 0] [10 0]}};
+    o.targetFont='Sloan';
+    o.minimumTargetHeightChecks=8;
+    o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
+    o.targetKind='letter';
+    o.borderLetter='X';
+    o.alphabetPlacement='right'; % 'top' or 'right';
+    o.labelAnswers=false;
+    o.getAlphabetFromDisk=true;
+    o.contrast=-1;
+    o.alternatives=length(o.alphabet);
+    ooo{end+1}=o;
+    o.uncertainParameter={};
+end
+if 1
     % Sloan
     o.conditionName='Sloan';
     o.targetFont='Sloan';
@@ -272,13 +290,13 @@ if 1
             oo(oi).setNearPointEccentricityTo='fixation';
             oo(oi).nearPointXYInUnitSquare=[0.5 0.5];
             oo(oi).noiseSD=0;
+            oo(oi).noiseSD=maxNoiseSD; % DGP
         end
         ooNoise=oo;
         [ooNoise.noiseSD]=deal(maxNoiseSD);
         ooo{block}=[oo ooNoise];
     end
 end
-
 if true
     % Measure threshold size at +/-10 deg. No noise.
     % Randomly interleave testing left and right.
@@ -322,7 +340,6 @@ if true
         ooo{end+1}=oo;
     end
 end
-
 if true
     % Retest contrast thresholds with ideal observer.
     for block=1:length(ooo)
@@ -337,16 +354,16 @@ if true
         ooo{end+1}=oo;
     end
 end
-%% ESTIMATED TIME OF ARRIVAL (ETA)
-etaMin=0;
+%% ESTIMATED TIME TO COMPLETION
+willTakeMin=0;
 for block=1:length(ooo)
     oo=ooo{block};
     for oi=1:length(oo)
         if ~ismember(oo(oi).observer,{'ideal'})
-            etaMin=etaMin+[oo(oi).trialsDesired]/10;
+            willTakeMin=willTakeMin+[oo(oi).trialsDesired]/10;
         end
     end
-    [ooo{block}(:).etaMin]=deal(etaMin);
+    [ooo{block}(:).willTakeMin]=deal(willTakeMin);
 end
 %% COMPUTE MAX VIEWING DISTANCE IN REMAINING BLOCKS
 maxCm=0;
@@ -413,7 +430,8 @@ for block=1:length(ooo)
 end
 t=struct2table(oo,'AsArray',true);
 disp(t(:,{'block' 'experiment' 'targetKind' 'thresholdParameter'...
-    'contrast' 'conditionName' 'observer' 'etaMin' 'noiseSD' ...
+    'uncertainParameter'...
+    'contrast' 'conditionName' 'observer' 'willTakeMin' 'noiseSD' ...
     'targetHeightDeg' 'eccentricityXYDeg' 'labelAnswers'})); % Print the conditions in the Command Window.
 % return
 
