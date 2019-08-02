@@ -9,7 +9,7 @@ function [letterStruct,alphabetBounds]=CreateLetterTextures(condition,o,window)
 % DrawText to create a texture for each desired letter. The font's TextSize
 % is computed to yield the desired o.targetPix size in the direction
 % specified by o.targetSizeIsHeight (true means height, false means width).
-% However, if o.targetFontHeightOverNominalPtSize==nan then the TextSize is
+% However, if o.targetFontHeightOverNominal==nan then the TextSize is
 % set equal to o.targetPix.
 %
 % If o.getAlphabetFromDisk==true then we look for a folder inside
@@ -20,10 +20,12 @@ function [letterStruct,alphabetBounds]=CreateLetterTextures(condition,o,window)
 %
 % RETURNED VALUES:
 %
-% letterStruct(i).letter % char
-% letterStruct(i).image % image
-% letterStruct(i).rect % rect of that image
-% letterStruct(i).texture % Screen texture containing the image
+% letterStruct(i).letter
+% letterStruct(i).texture
+% letterStruct(i).rect
+% letterStruct(i).bounds
+% letterStruct(i).width
+% letterStruct(i).dx
 %
 % alphabetBounds % union of bounds for all letters.
 %
@@ -41,7 +43,7 @@ function [letterStruct,alphabetBounds]=CreateLetterTextures(condition,o,window)
 % o.targetSizeIsHeight
 % o.targetPix
 % o.targetHeightOverWidth
-% o.targetFontHeightOverNominalPtSize
+% o.targetFontHeightOverNominal
 % o.alphabet
 % o.borderLetter
 % o.getAlphabetFromDisk
@@ -80,8 +82,9 @@ if o.getAlphabetFromDisk
         error('Folder missing: "%s"',alphabetsFolder);
     end
     folder=fullfile(alphabetsFolder,EncodeFilename(o.targetFont));
-    if ~exist(folder,'dir')
-        error('Folder missing: "%s". Target font "%s" has not been saved.',folder,o.targetFont);
+    if exist(folder,'dir')~=7
+        error('Missing font folder "%s". Please use SaveAlphabetToDisk to save font "%s".',...
+        folder,o.targetFont);
     end
     d=dir(folder);
     ok=~[d.isdir];
@@ -106,7 +109,7 @@ if o.getAlphabetFromDisk
             savedAlphabet.images{i}=imread(filename);
         catch me
             sca;
-            warning('Cannot read image file "%s".',filename);
+            error('Cannot read image file "%s".',filename);
             rethrow(me);
         end
         if isempty(savedAlphabet.images{i})
@@ -181,9 +184,9 @@ else % if o.getAlphabetFromDisk
         assert(streq(font,o.targetFont));
     end
     if o.targetSizeIsHeight
-        sizePix=round(o.targetPix/o.targetFontHeightOverNominalPtSize);
+        sizePix=round(o.targetPix/o.targetFontHeightOverNominal);
     else
-        sizePix=round(o.targetPix*o.targetHeightOverWidth/o.targetFontHeightOverNominalPtSize);
+        sizePix=round(o.targetPix*o.targetHeightOverWidth/o.targetFontHeightOverNominal);
     end
     if ~isfinite(sizePix)
         sizePix=o.targetPix;
