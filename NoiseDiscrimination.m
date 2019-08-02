@@ -180,7 +180,9 @@ function oo=NoiseDiscrimination(ooIn)
 % o.fixationCrossDeg=3; % Typically 3 or inf. Make this at least 4 deg for scotopic testing, since the fovea is blind scotopically.
 % o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
 % o.fixationCrossBlankedNearTarget=true;
-% o.fixationCrossBlankedUntilSecsAfterTarget=0.6; % Pause after stimulus before display of fixation. Skipped when fixationCrossBlankedNearTarget. Not needed when eccentricity is bigger than the target.
+% o.fixationCrossBlankedUntilSecsAfterTarget=0.6; % Pause after stimulus before display of fixation. 
+%                                       % Skipped when fixationCrossBlankedNearTarget. 
+%                                       % Not needed when eccentricity is bigger than the target.
 % o.fixationCrossDrawnOnStimulus=false;
 % o.blankingRadiusReTargetHeight= nan;
 % o.blankingRadiusReEccentricity= 0.5;
@@ -651,6 +653,18 @@ o=[];
 
 o.minimumTargetPix=8;
 
+% Uncertainty
+% Typically there will be zero or one parameter, each specified by
+% a field name, but we support an unlimited number. For each
+% parameter there must be a non-empty list of values in
+% o.uncertainValues, which is a list of lists. Because we use cell
+% lists, the values can be of any kind, whatever is appropriate to
+% that field, e.g. a 1x2 array for 'eccentricityXYDeg'.
+o.uncertainParameter={}; % List of uncertain parameters, each a field of the o struct.
+% o.uncertainParameter={'eccentrictyXYDeg'};
+o.uncertainValues={}; % List of lists, one list for each uncertain parameter.
+% o.uncertainValues={{[-10 0] [10 0]}};
+
 % Geometry
 o.nearPointXYInUnitSquare=[0.5 0.5]; % location of target center on screen. [0 0]  lower right, [1 1] upper right.
 o.setNearPointEccentricityTo='target'; % 'target' or 'fixation' or 'value'
@@ -669,7 +683,9 @@ o.fixationIsOffscreen=false;
 o.fixationCrossDeg=3; % Typically 3 or inf. Make this at least 4 deg for scotopic testing, since the fovea is blind scotopically.
 o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
 o.fixationCrossBlankedNearTarget=true;
-o.fixationCrossBlankedUntilSecsAfterTarget=0.6; % Pause after stimulus before display of fixation. Skipped when fixationCrossBlankedNearTarget. Not needed when eccentricity is bigger than the target.
+o.fixationCrossBlankedUntilSecsAfterTarget=0.6; % Pause after stimulus before display of fixation. 
+                                        % Skipped when fixationCrossBlankedNearTarget. 
+                                        % Not needed when eccentricity is bigger than the target.
 o.fixationCrossDrawnOnStimulus=false;
 o.blankingRadiusReTargetHeight= nan;
 o.blankingRadiusReEccentricity= 0.5;
@@ -769,7 +785,7 @@ o.skipTrial=0;
 o.trialsSkipped=0;
 o.fixationCheck=false; % True designates the condition as a fixation check.
 o.fixationCheckMakeupTrials=2; % After a mistake, how many right answers to require.
-o.etaMin=0; % Estimated time till completion, in minutes.
+o.willTakeMin=0; % Estimated time till completion, in minutes.
 o.askExperimenterToSetDistance=true;
 
 % Target
@@ -1012,7 +1028,7 @@ knownOutputFields={'labelAnswers' 'beginningTime' ...
     'block'...
     'A' 'LAT' 'NPhoton' 'logFilename' 'screenrect' 'screenRect'...
     'useCentralNoiseEnvelope' 'useCentralNoiseMask' 'centralNoiseMask' 'annularNoiseMask'...
-    'fixationLineWeightDeg' 'isFirstBlock' ... 
+    'fixationLineWeightDeg' 'isFirstBlock' ...
     'isLastBlock'  'minimumTargetPix' ...
     'practicePresentations' 'repeatedTargets' 'okToShiftCoordinates' ...
     'skipThisBlock' ...
@@ -1427,7 +1443,7 @@ try
     end % for oi=1:conditions
     
     %% ASK EXPERIMENTER NAME
-%     [oo.textMarginPix]=deal(round(0.08*min(RectWidth(oo(1).screenRect),RectHeight(oo(1).screenRect))));
+    %     [oo.textMarginPix]=deal(round(0.08*min(RectWidth(oo(1).screenRect),RectHeight(oo(1).screenRect))));
     [oo.textMarginPix]=deal(2*oo(1).textSize);
     [oo.textFont]=deal('Verdana');
     black=0; % The CLUT color code for black.
@@ -1777,9 +1793,13 @@ try
                 maxStimulusHeight/oo(oi).pixPerDeg,oo(oi).viewingDistanceCm);
         end
         if oo(oi).noiseRadiusDeg > maxStimulusHeight/oo(oi).pixPerDeg
-            ffprintf(ff,'%d: Reducing requested o.noiseRadiusDeg %.1f deg to %.1f deg, the max possible.\n',...
-                oi,oo(oi).noiseRadiusDeg,maxStimulusHeight/oo(oi).pixPerDeg);
-            oo(oi).noiseRadiusDeg=maxStimulusHeight/oo(oi).pixPerDeg;
+            % This restriction is obsolete. The noise is precomputed before
+            % the first trial. In order to deal with positional uncertainty
+            % we use a canvasRect larger than stimulusRect and we must fill
+            % it with noise to consistently fill the screen with noise.
+            % ffprintf(ff,'%d: Reducing requested o.noiseRadiusDeg %.1f deg to %.1f deg, the max possible.\n',...
+            %     oi,oo(oi).noiseRadiusDeg,maxStimulusHeight/oo(oi).pixPerDeg);
+            % oo(oi).noiseRadiusDeg=maxStimulusHeight/oo(oi).pixPerDeg;
         end
         if oo(oi).useFlankers
             flankerSpacingPix=round(oo(oi).flankerSpacingDeg*oo(oi).pixPerDeg);
@@ -2073,7 +2093,7 @@ try
         [oo.psychtoolboxKernelDriverLoaded]=deal(oo(1).psychtoolboxKernelDriverLoaded);
         if ~oo(1).psychtoolboxKernelDriverLoaded
             error('IMPORTANT: You must install the Psychtoolbox Kernel Driver, as explained by "*Install NoiseDiscrimination.docx" step B.13.');
-%             warning('IMPORTANT: Best to install the Psychtoolbox Kernel Driver, as explained by "*Install NoiseDiscrimination.docx" step B.13.');
+            %             warning('IMPORTANT: Best to install the Psychtoolbox Kernel Driver, as explained by "*Install NoiseDiscrimination.docx" step B.13.');
         end
         
         % Compare hardware CLUT with identity.
@@ -2343,9 +2363,9 @@ try
                 end
                 fprintf('*Asking observer which eye(s).\n');
                 response=GetKeypress([KbName('L') KbName('R') escapeKeyCode graveAccentKeyCode],oo(1).deviceIndex);
-                 if ismember(response,[escapeChar,graveAccentChar])
+                if ismember(response,[escapeChar,graveAccentChar])
                     [oo(1).quitExperiment,oo(1).quitBlock,oo(1).skipTrial]=...
-                    OfferEscapeOptions(oo(1).window,oo,oo(1).textMarginPix);
+                        OfferEscapeOptions(oo(1).window,oo,oo(1).textMarginPix);
                     if oo(1).quitBlock
                         if oo(1).speakInstructions
                             Speak('Quitting.');
@@ -2385,13 +2405,27 @@ try
     % and the stimulus all have size o.canvasSize. canvasRect is just [0 0
     % canvasSize(2) canvasSize(1)]. o.canvasSize is clipped (if necessary)
     % to fit in o.stimulusRect. Each pixel represents a targetCheck (each
-    % with size [o.targetCheckPix o.targetCheckPix]).  The target is
-    % centered in the canvasRect-sized array. I think (not sure) the
-    % canvasRect-sized array is centered in o.stimulusRect. If true, that
-    % seems an obsolete strategy, now that we designate an arbitrary point
-    % on the screen as the near point. It seems more appropiate to center
-    % the canvasRect on the target position, o.eccentricityXYDeg.
-    % denis.pelli@nyu.edu April 4, 2018.
+    % with size [o.targetCheckPix o.targetCheckPix]). canvasRect is
+    % initially centered on the target position, o.eccentricityXYDeg,
+    % before clipping by stimulusRect. This is tricky when we have
+    % positional uncertainty because we don't want the canvasRect (revealed
+    % by edges of full-canvas noise) to give away the trial-by-trial target
+    % position o.eccentricityXYDeg. 
+    % FIRST THOUGHT: I think we could prevent that reveal by defining the
+    % canvasRect once, before the trials begin, relative to the initial
+    % o.eccentricityXYDeg, and then not shift it when o.eccentricityXYDeg
+    % changes. Thus, when we have uncertainParameter 'eccentricityXYDeg' or
+    % interleaved conditions with different eccentricityXYDeg, the canvas
+    % position should be set only once, before the first trial.
+    % ACTUAL: Actually, though I prefer the above, I discover that the code
+    % to generate each movie frame centers the signal in the canvasRect.
+    % Rather than rewrite that now, I'm just going to double the cavasRect
+    % horizontally and vertically, to twice the stimulusRect each way, to
+    % guarantee that it will include all of stimulusRect, regardless of
+    % where it's centered within stimulusRect. This now works, once I
+    % eliminated a spurious restriction of the noiseRadius, which prevented
+    % the noise from filling the canavas when it's twice as big as
+    % stimulusRect. denis.pelli@nyu.edu August 2019.
     
     fprintf('*Waiting for observer to set viewing distance.\n');
     oo(1).nearPointXYPix=[]; % Add field to struct.
@@ -2406,8 +2440,8 @@ try
     [oo.okToShiftCoordinates]=deal(oo(1).okToShiftCoordinates);
     oo(1)=SetUpNearPoint(oo(1));
     % Force all conditions to use the same near point. The physics of the
-    % situation guarantee this provided the position of the display and
-    % center of the viewing eye do not move from trial to trial.
+    % situation guarantee this, provided the position of the display
+    % and center of the viewing eye do not move from trial to trial.
     [oo.nearPointXYPix]=deal(oo(1).nearPointXYPix);
     [oo.nearPointXYInUnitSquare]=deal(oo(1).nearPointXYInUnitSquare);
     if oo(1).quitExperiment || (oo(1).quitBlock && isLastBlock)
@@ -2432,7 +2466,7 @@ try
         oo(oi).targetXYPix=XYPixOfXYDeg(oo(oi),oo(oi).eccentricityXYDeg);
     end
     if oo(1).quitExperiment
-        isLastBlock=true; % global DGP
+        isLastBlock=true;
         CloseWindowsAndCleanup(oo)
         return
     end
@@ -2455,10 +2489,10 @@ try
     % nearPointXYDeg specifies where in visual space, i.e. eccentricity.
     % Here's what NoiseDiscrimination does:
     % 1. Set o.nearPointXYPix according to o.nearPointXYInUnitSquare.
-    % 2. If o.setNearPointEccentricityTo
-    % =='target', then set nearPointXYDeg=eccentricityXYDeg
-    % =='fixation', then set nearPointXYDeg=[0 0].
-    % =='value', then assume nearPointXYDeg is already set.
+    % 2. If script sets o.setNearPointEccentricityTo
+    % =='target', then we set nearPointXYDeg=eccentricityXYDeg
+    % =='fixation', then we set nearPointXYDeg=[0 0].
+    % =='value', then we assume nearPointXYDeg is already set.
     % 3. Ask viewer to adjust display so desired near point is
     % at desired viewing distance and orthogonal to line of sight from eye.
     % 4. If using off-screen fixation, put fixation at the same distance
@@ -2539,7 +2573,7 @@ try
             x=2*oo(1).textSize;
             y=2.5*oo(1).textSize;
             Screen('TextSize',window,oo(oi).textSize);
-%             Screen('TextBackgroundColor',window,white); % Set background.
+            %             Screen('TextBackgroundColor',window,white); % Set background.
             % 'IMPORTANT: ... hit RETURN.
             Screen('TextStyle',window,1); % Bold
             DrawFormattedText(window,string,...
@@ -2721,19 +2755,18 @@ try
         % than dynamically set canvas size within the trial loop, I'm
         % simply making the canvas as big as possible, all of
         % o.stimulusRect.
-        if oo(oi).complementNoiseEnvelope || streq(oo(oi).thresholdParameter,'size')
+        % July 2019, to cope with uncertainty in eccentricityXYDeg, we now
+        % increase the canvas to 2*o.stimulusRect.
+        if oo(oi).complementNoiseEnvelope ...
+                || streq(oo(oi).thresholdParameter,'size')...
+                || ismember('eccentricityXYDeg',oo(oi).uncertainParameter)
             oo(oi).canvasSize=[inf inf];
         end
         switch oo(oi).task
             case {'identify' 'identifyAll' 'rate'}
                 % Clip o.canvasSize to fit inside o.stimulusRect (after
-                % converting targetChecks to pixels). The target will be
-                % centered in the canvas, so the code below to constrain
-                % the canvas size ought to assume it's centered on the
-                % target, but instead it seems to assume that the canvas is
-                % centered in o.stimulusRect. This is not currently causing
-                % problems, so I'm letting this sleeping dog lie.
-                oo(oi).canvasSize=min(oo(oi).canvasSize,floor([RectHeight(oo(oi).stimulusRect) RectWidth(oo(oi).stimulusRect)]/oo(oi).targetCheckPix));
+                % converting targetChecks to pixels). 
+                oo(oi).canvasSize=min(oo(oi).canvasSize,floor(2*[RectHeight(oo(oi).stimulusRect) RectWidth(oo(oi).stimulusRect)]/oo(oi).targetCheckPix));
                 oo(oi).canvasSize=2*ceil(oo(oi).canvasSize/2); % Even number of checks, so we can center it on target.
             case '4afc'
                 oo(oi).canvasSize=min(oo(oi).canvasSize,floor([maxStimulusHeight maxStimulusWidth]/oo(oi).targetCheckPix));
@@ -2747,6 +2780,10 @@ try
                 oi,oo(oi).flankerArrangement,flankerSpacingPix,flankerSpacingPix/oo(oi).pixPerDeg,flankerSpacingPix/oo(oi).targetHeightPix,oo(oi).flankerContrast);
         end
         if oo(oi).useFixation
+            % We allow various kinds of uncertainty, and interleaved
+            % conditions, but we assume that the point of fixation is fixed
+            % throughout the whole block, so we can compute the fixation
+            % mark now.
             fix.markTargetLocation=oo(oi).markTargetLocation;
             fixationXYPix=round(XYPixOfXYDeg(oo(oi),[0 0])); % location of fixation
             fix.xy=fixationXYPix;            %  location of fixation on screen.
@@ -2764,8 +2801,8 @@ try
         end
         clear tSample
         
-        ffprintf(ff,'%d: "%s" o.canvasSize %.0f %.0f\n',...
-            oi,oo(oi).conditionName,oo(oi).canvasSize);
+        ffprintf(ff,'%d: condition "%s" o.canvasSize %.0f %.0f, o.stimulusRect/o.targetCheckPix [%.0f %.0f %.0f %.0f].\n',...
+            oi,oo(oi).conditionName,oo(oi).canvasSize,oo(oi).stimulusRect/oo(oi).targetCheckPix);
         
         % Compute noiseList
         switch oo(oi).noiseType % Fill noiseList with desired kind of noise.
@@ -2856,7 +2893,7 @@ try
     %% OPTIONALLY READ IN FONT FROM DISK
     % AS A SHORTCUT, I'M ASSUMING THAT THE VARIOUS CONDITIONS WITHIN A
     % BLOCK USE AT MOST ONE ON-DISK FONT. THERE IS NO LIMIT ON THE NUMBER
-    % OF SYSTEM FONTS USED, E.G. ONE PER CONDITION.
+    % OF SYSTEM FONTS USED.
     % letterStruct(i).letter % char
     % letterStruct(i).image % image
     % letterStruct(i).rect % rect of that image
@@ -3134,7 +3171,8 @@ try
                                     % DrawText draws from left, so shift
                                     % left by half letter width, to center
                                     % letter at desired draw position.
-                                    % String must be cast as double to support unicode.
+                                    % String must be cast as double to
+                                    % support unicode.
                                     bounds=Screen('TextBounds',scratchWindow,double(oo(oi).signal(i).letter),x,y,1);
                                     if oo(oi).printTargetBounds
                                         fprintf('%s bounds [%4.0f %4.0f %4.0f %4.0f]\n',oo(oi).signal(i).letter,bounds);
@@ -3146,40 +3184,18 @@ try
                                     fprintf('%s %4.0f, %4.0f\n',oo(oi).signal(i).letter,x,y);
                                 end
                                 Screen('DrawText',scratchWindow,double(oo(oi).signal(i).letter),x,y,black0,white1,1);
-                                Screen('DrawingFinished',scratchWindow,[],1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
-                                %                   WaitSecs(0.1); % Might make GetImage more reliable. Suggested by Mario Kleiner.
+                                Screen('DrawingFinished',scratchWindow,[],1); % This delay makes GetImage more reliable. Suggested by Mario Kleiner.
                                 letter=Screen('GetImage',scratchWindow,targetRect,'drawBuffer');
                                 
                                 % In 2015-7 we occasionally got scrambled
                                 % letters, which I tracked down to
                                 % malfunction of 'GetImage', above. Mario
                                 % Kleiner suggested various things to try.
-                                % Using 'DrawingFinished' seemed to solve
-                                % it; simply adding a delay did not. I
-                                % don't know if the issue still persists
-                                % today in 2018 (Mojave). -- denis pelli
-                                %
-                                % Mario: The scrambling sounds like something is going wrong in detiling of read
-                                % back renderbuffer memory, maybe a race condition in the driver. Maybe
-                                % something else, in any case not really fixable by us, although the "wait
-                                % a bit and hope for the best" approach would the the most likely of all
-                                % awful approaches to work around it. Maybe add a Screen('DrawingFinished',
-                                % o.window, [], 1); before the 'getimage' and/or before the random wait.
-                                %
-                                % You could test a different machine, in case only one type of graphics
-                                % card or vendor has the driver bug.
-                                %
-                                % Or you could completely switch to the software renderer via
-                                % Screen('preference','Conservevram', 64). That would shutdown all hardware
-                                % acceleration and render very slowly on the cpu in main memory. However,
-                                % that renderer can't handle fullscreen windows afaik, and timing will also
-                                % be screwed. And there might be various other limitations or bugs,
-                                % including failure to work at all. If you! can live with that, worth a
-                                % try. If you run into trouble don't bother even reporting it. I'm
-                                % absolutely not interested.
-                                %
-                                % -mario (psychtoolbox forum december 13, 2015)
-                                
+                                % Using the 'DrawingFinished' delay seemed
+                                % to solve it. I don't know if the issue
+                                % still persists today in 2018 (Mojave). 
+                                % --denis pelli
+                                    
                                 Screen('FillRect',scratchWindow);
                                 letter=letter(:,:,1);
                                 oo(oi).signal(i).image=letter < (white1+black0)/2;
@@ -3431,8 +3447,9 @@ try
     end % for oi=1:conditions
     
     if ~isempty(temporaryWindow) && false
-        % Perhaps we should keep the temporary window open across blocks.
-        % This might speed up the opening of our main window by 2.5 s.
+        % Disabled because we now keep the temporary window open across
+        % blocks. This may speed up the opening of our main window by 2.5
+        % s.
         ffprintf(ff,'Closing temporaryWindow. ... ');
         s=GetSecs;
         Screen('Close',temporaryWindow);
@@ -3526,11 +3543,11 @@ try
     end % for oi=1:conditions
     
     %% SET UP conditionList
-    % For all conditions we include the specified number of trials,
-    % o.trialsDesired, for that condition. For most conditions we simply
-    % shuffle the list of conditions. The exception is that we always
-    % begin with one trial of each condition for which oo(oi).fixationCheck
-    % is true.
+    % The conditionList lists the condition for each trial. It includes the
+    % specified number of trials, oo(oi).trialsDesired, for each condition.
+    % Then we shuffle the list of conditions, to interleave testing.
+    % However, we always begin with one trial of each condition for which
+    % oo(oi).fixationCheck is true.
     condList=[];
     for oi=1:conditions
         if ~oo(oi).fixationCheck
@@ -3663,7 +3680,55 @@ try
             oo(oi).trials=oo(oi).trials-1;
             continue
         end
-        oo=SortFields(oo);
+        % This is cosmetic, we alphabetize the fields, so they are saved
+        % alphabetized, so they will appear alphabetized in any futute time
+        % display the fields or a table of the fields.
+        oo=SortFields(oo); 
+        
+        % IMPLEMENT UNCERTAINTY
+        % Typically there will be zero or one parameter, each specified by
+        % a field name, but we support an unlimited number. For each
+        % parameter there must be a non-empty list of values in
+        % o.uncertainValues, which is a list of lists. Because we use cell
+        % lists, the values can be of any kind, whatever is appropriate to
+        % that field, e.g. a 1x2 array for 'eccentricityXYDeg'.
+        for i=1:length(oo(oi).uncertainParameter)
+            assert(iscell(oo(oi).uncertainParameter) && iscell(oo(oi).uncertainValues),...
+                'o.uncertainParameter and o.uncertainValues must be cell arrays of the same size.');
+            assert(length(oo(oi).uncertainParameter)==length(oo(oi).uncertainValues),...
+                'Inconsistent: %d o.uncertainParameter''s but %d o.uncertainValues.',...
+                length(oo(oi).uncertainParameter),length(oo(oi).uncertainValues));
+            assert(~isempty(oo(oi).uncertainValues{i}),...
+                'Oops. No o.uncertainValues{%d} for o.uncertainParameter "%s".',...
+                i,oo(oi).uncertainParameter{i});
+            assert(isfield(oo(oi),oo(oi).uncertainParameter{i}),...
+                'o.uncertainParameter{%d} ''%s'' must be a field of the o struct.',...
+                i,oo(oi).uncertainParameter{i});
+            assert(isa(oo(oi).uncertainValues{i}{1},class(oo(oi).(oo(oi).uncertainParameter{i}))),...
+                'o.uncertainValues{%d}{1} class %s disagrees with class %s of o.%s',...
+                i,class(oo(oi).uncertainValues{i}{1}),...
+                class(oo(oi).(oo(oi).uncertainParameter{i})),...
+                oo(oi).uncertainParameter{i});
+            assert(all(size(oo(oi).uncertainValues{i}{1})==size(oo(oi).(oo(oi).uncertainParameter{i}))),...
+                'o.uncertainValues{%d}{1} size [%s] disagrees with size [%s] of o.%s',...
+                i,num2str(size(oo(oi).uncertainValues{i}{1})),...
+                num2str(size(oo(oi).(oo(oi).uncertainParameter{i}))),...
+                oo(oi).uncertainParameter{i});
+            j=Randi(length(oo(oi).uncertainValues{i}));
+            oo(oi).(oo(oi).uncertainParameter{i})=oo(oi).uncertainValues{i}{j};
+            switch oo(oi).uncertainParameter{i}
+                case 'eccentricityXYDeg'
+                    fmt='[%.0f %.0f] deg';
+                otherwise
+                    error('Unknown o.uncertainParameter ''%s''.',...
+                        oo(oi).uncertainParameter{i});
+            end
+            ffprintf(ff,['%d: trial %d, uncertain o.%s=' fmt '\n'],...
+                oo(oi).condition,trial,oo(oi).uncertainParameter{i},...
+                oo(oi).(oo(oi).uncertainParameter{i}));
+            % Recompute dependent variables.
+            oo(oi).targetXYPix=XYPixOfXYDeg(oo(oi),oo(oi).eccentricityXYDeg);
+        end
         
         %% SET TARGET LOG CONTRAST: tTest
         if oo(oi).questPlusEnable
@@ -3984,7 +4049,7 @@ try
                     end
                     % signalImageIndex is true for every number in
                     % canvasRect that is in the centered signal rect.
-                    signalImageIndex=logical(FillRectInMatrix(true,sRect,zeros(oo(oi).canvasSize))); % TAKES 0.5 ms
+                    signalImageIndex=logical(FillRectInMatrix(true,sRect,false(oo(oi).canvasSize))); % TAKES 0.5 ms
                     if size(oSignal.signal(whichSignal).image,3)==3
                         signalImageIndex=repmat(signalImageIndex,1,1,3); % Support color.
                     end
@@ -4024,6 +4089,8 @@ try
                                 location(1).image(oo(oi).centralNoiseMask)=1+(oo(oi).noiseSD/oo(oi).noiseListSd)*noise(oo(oi).centralNoiseMask); % TAKES 1 ms.
                             else
                                 location(1).image=1+(oo(oi).noiseSD/oo(oi).noiseListSd)*noise; % TAKES ? ms.
+%                                 imshow(noise);
+%                                 imshow(location(1).image);
                             end
                             location(1).image(oo(oi).annularNoiseMask)=1+(oo(oi).annularNoiseSD/oo(oi).noiseListSd)*noise(oo(oi).annularNoiseMask);
                             location(1).image=repmat(location(1).image,1,1,length(white)); % Support color.
@@ -4035,7 +4102,7 @@ try
                             location(1).image=ones(oo(oi).canvasSize);
                             location(1).image(oo(oi).centralNoiseMask)=1+(oo(oi).noiseSD/oo(oi).noiseListSd)*noise(oo(oi).centralNoiseMask);
                             location(1).image(oo(oi).annularNoiseMask)=1+(oo(oi).annularNoiseSD/oo(oi).noiseListSd)*noise(oo(oi).annularNoiseMask);
-                            %                             figure(1);subplot(1,3,3);imshow(location(1).image);
+                            % figure(1);subplot(1,3,3);imshow(location(1).image);
                         case 'entropy'
                             noise(~oo(oi).centralNoiseMask)=0;
                             noise(signalMask)=(0.5+floor(noise(signalMask)*0.499999*signalEntropyLevels))/(0.5*signalEntropyLevels);
@@ -4249,19 +4316,20 @@ try
                         if oo(oi).assessLinearity
                             AssessLinearity(oo(oi));
                         end
-                        rect=RectOfMatrix(img);
+                        rect=RectOfMatrix(img); % 0 0 1386 924; stimulusRect 0 0 692 462
                         rect=CenterRect(rect,[oo(oi).targetXYPix oo(oi).targetXYPix]);
-                        rect=round(rect); % rect that will receive the stimulus (target and noises)
+                        rect=round(rect); % rect that will receive the stimulus (target and noises) % -556 -231 830 693
                         location(1).rect=rect;
                         movieTexture(iMovieFrame)=Screen('MakeTexture',oo(1).window,img,0,0,1); % SAVE MOVIE FRAME
-                        srcRect=RectOfMatrix(img);
-                        dstRect=rect;
-                        offset=dstRect(1:2)-srcRect(1:2);
-                        dstRect=ClipRect(dstRect,oo(oi).stimulusRect);
-                        srcRect=OffsetRect(dstRect,-offset(1),-offset(2));
-                        eraseRect=dstRect;
+                        srcRect=RectOfMatrix(img); % 0 0 1386 924
+                        dstRect=rect; % -556 -231 830 693; stimulusRect 0 0 692 462
+                        offset=dstRect(1:2)-srcRect(1:2); % -556  -231
+                        dstRect=ClipRect(dstRect,oo(oi).stimulusRect); % 0 0 692 462
+                        srcRect=OffsetRect(dstRect,-offset(1),-offset(2)); % 556 231 1248 693
+                        eraseRect=dstRect;% 0 0 692 462
                         rect=CenterRect([0 0 oo(oi).targetHeightPix oo(oi).targetWidthPix],rect);
-                        rect=round(rect); % target rect
+                        rect=round(rect); % target rect 74 168 200 294
+
                     case '4afc'
                         rect=[0 0 oo(oi).targetHeightPix oo(oi).targetWidthPix];
                         location(1).rect=AlignRect(rect,boundsRect,'left','top');
@@ -4496,7 +4564,7 @@ try
                 
                 %% DRAW RESPONSE SCREEN
                 % Print instructions for response, according to
-                % o.instructionPlacement, o.alphabetPlacement, 
+                % o.instructionPlacement, o.alphabetPlacement,
                 % o.counterPlacement, and o.labelAnswers.
                 %
                 % Erasing is complicated when diverse conditions are
@@ -4530,7 +4598,7 @@ try
                 % When testing faces, gray1 matches the face background,
                 % and gray is about half that. I think it's safe to always
                 % use gray1. DGP June 4, 2019
-%                 Screen('FillRect',window,o.gray,oo(oi).stimulusRect); % DGP Jun 4, 2019
+                %                 Screen('FillRect',window,o.gray,oo(oi).stimulusRect); % DGP Jun 4, 2019
                 %                 Screen('FillRect',oo(1).window,oo(oi).gray1,topCaptionRect);
                 if ~isempty(oo(oi).window) && ~isempty(fixationLines)
                     Screen('DrawLines',oo(oi).window,fixationLines,fixationCrossWeightPix,black); % fixation
@@ -4691,7 +4759,7 @@ try
                         % the response area, while trying to leave other
                         % annotations untouched, without distracting
                         % flicker.
-%                         Screen('FillRect',window,o.gray1,blankRect);
+                        %                         Screen('FillRect',window,o.gray1,blankRect);
                         rect=round(rect);
                         switch oo(oi).alphabetPlacement
                             case {'left' 'right'}
@@ -4799,19 +4867,19 @@ try
                                         case 'top'
                                             textRect=AlignRect([0 0 labelSize labelSize],rect,'center','bottom');
                                             textRect=OffsetRect(textRect,0,labelSize); % Avoid overlap.
-%                                             oo(oi).stimulusRect(2)=oo(oi).stimulusRect(2)+labelSize;
+                                            %                                             oo(oi).stimulusRect(2)=oo(oi).stimulusRect(2)+labelSize;
                                         case 'bottom'
                                             textRect=AlignRect([0 0 labelSize labelSize],rect,'center','top');
                                             textRect=OffsetRect(textRect,0,-1.5*labelSize); % Avoid overlap. Needs the 1.5.
-%                                             oo(oi).stimulusRect(4)=oo(oi).stimulusRect(4)-labelSize;
+                                            %                                             oo(oi).stimulusRect(4)=oo(oi).stimulusRect(4)-labelSize;
                                         case 'right'
                                             textRect=AlignRect([0 0 labelSize labelSize],rect,'center','left');
                                             textRect=OffsetRect(textRect,-labelSize,0); % Avoid overlap.
-%                                             oo(oi).stimulusRect(3)=oo(oi).stimulusRect(3)-labelSize;
+                                            %                                             oo(oi).stimulusRect(3)=oo(oi).stimulusRect(3)-labelSize;
                                         case 'left'
                                             textRect=AlignRect([0 0 labelSize labelSize],rect,'center','right');
                                             textRect=OffsetRect(textRect,labelSize,0); % Avoid overlap.
-%                                             oo(oi).stimulusRect(1)=oo(oi).stimulusRect(1)-labelSize;
+                                            %                                             oo(oi).stimulusRect(1)=oo(oi).stimulusRect(1)-labelSize;
                                     end
                                     Screen('DrawText',oo(1).window,oo(oi).responseLabels(i),textRect(1),textRect(4),black,oo(oi).gray1,1);
                                 end
@@ -5409,6 +5477,11 @@ try
         msg=sprintf(['Condition %d of %d "%s" %d trials, %.0f%% right, noiseSD %.2f, '...
             'Threshold log c %.2f',plusMinusChar,'%.2f,'],...
             oi,length(oo),oo(oi).conditionName,oo(oi).trials,100*oo(oi).trialsRight/oo(oi).trials,oo(oi).noiseSD,t,sd);
+        for i=1:length(oo(oi).uncertainParameter)
+            msg=sprintf('%s uncertain %d*%s,',...
+                msg,length(oo(oi).uncertainValues{i}),...
+                oo(oi).uncertainParameter{i});
+        end
         switch oo(oi).targetModulates
             case 'luminance'
                 ffprintf(ff,'<strong>%s contrast %.4f, log E/N %.2f, efficiency %.5f</strong>\n',...
@@ -5476,10 +5549,10 @@ try
         
         %% WARN IF IN DEBUG MODE
         if oo(1).useFractionOfScreenToDebug
-            ffprintf(ff,'WARNING: Using o.useFractionOfScreenToDebug. This may invalidate all results.\n');
+            ffprintf(ff,'WARNING: Using o.useFractionOfScreenToDebug. It''s useful in debugging, but may invalidate all results.\n');
         end
         if skipScreenCalibration
-            ffprintf(ff,'WARNING: Using o.skipScreenCalibration. This may invalidate all results.\n');
+            ffprintf(ff,'WARNING: Using o.skipScreenCalibration. It saves time while debugging, but may invalidate all results.\n');
         end
         
         %% SAVE EACH THRESHOLD IN ITS OWN FILE, WITH A SUFFIX DESIGNATING THE CONDITION NUMBER.
@@ -5519,7 +5592,7 @@ try
             warning(e.message);
         end % save to .json file
         ffprintf(ff,'%d: done saving json data at %.0f s\n',oi,GetSecs-savingToDiskSecs);
-
+        
         try % save transcript to .json file
             if isempty(oo(oi).transcript.intensity)
                 if oo(oi).trials>1
@@ -6269,8 +6342,8 @@ returnChar=char(13);
 spaceChar=' ';
 escapeKeyCode=KbName('escape');
 graveAccentKeyCode=KbName('`~');
-spaceKeyCode=KbName('space');
 returnKeyCode=KbName('return');
+spaceKeyCode=KbName('space');
 set=false;
 while ~set
     if ~all(isfinite(o.eccentricityXYDeg))
