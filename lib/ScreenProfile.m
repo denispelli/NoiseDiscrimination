@@ -56,7 +56,7 @@ if ~IsOSX
 end
 script='ScreenProfile.applescript';
 scriptPath=which(script);
-if length(scriptPath)==0
+if isempty(scriptPath)
     error('Cannot find %s within the MATLAB path.',script);
 end
 command=sprintf('osascript "%s"',scriptPath);
