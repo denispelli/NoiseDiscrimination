@@ -1205,31 +1205,44 @@ o=oo(1);
 skipScreenCalibration=o.skipScreenCalibration; % Set global flag.
 isLastBlock=o.isLastBlock; % Set global flag read by CloseWindowsAndCleanup.
 if ~isScreenCalibrated && ~skipScreenCalibration && ~ismember(o.observer,o.algorithmicObservers)
-    useBrightnessFunction=true;
+    % 2019 update: Psychtoolbox offers Brightness control through a
+    % Screen call. This worked well until macOS introduced Night Shift
+    % (in summer 2017?). Since then my applescript-based Brightness.m
+    % has been more reliable, but slow. However, in July 2019 Nicholas
+    % Riley showed us an undocumented call in Apple's new Core Display
+    % API that works. Mario Kleiner folded it into Screen in
+    % Psychtoolbox 3.0.16. So my Brightness.m function is now obsolete.
+    % Control of Brightness has been flakey since summer 2017, so this
+    % code sets and reads back the Brightness setting to make sure it
+    % worked, and tries three times before giving up. As of
+    % Pyschtoolbox 3.0.16, I'm hoping brightness is now reliable, so we
+    % can streamline this.
+    [~,ver]=PsychtoolboxVersion;
+    % fprintf('PsychtoolboxVersion %d.%d.%d',ver.major,ver.minor,ver.point);
+    v=ver.major*1000+ver.minor*100+ver.point;
+    useScreen3016= v<3016 && exist('Screen3016','file');
+    useScreenBrightness= v>=3016 || useScreen3016;
     try
-        % Currently, in December 2018, my (applescript-based) brightness
-        % function writes reliably but seems to always fail when reading,
-        % returning -1. So we use my function to write (since Screen is
-        % unreliable there) and use (macOS-based) Screen to read (since my
-        % Brightness is failing to read). By the way, for both reading and
-        % writing, the macOS-based Screen function is quick while my
-        % applescript-based function is very slow (20 s).
         if isfinite(oo(oi).brightnessSetting)
             cal.brightnessSetting=oo(oi).brightnessSetting;
         else
             cal.brightnessSetting=0.87; % default value
         end
-        
         ffprintf(ff,'Setting Brightness. ... ');
         s=GetSecs;
         for i=1:3
-            if useBrightnessFunction
-                % Brightness.m formerly insisted that no window be open.
-                Brightness(cal.screen,cal.brightnessSetting); % Set brightness.
-                %                 cal.brightnessReading=Brightness(cal.screen); % Read brightness.
-                cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
+            if useScreenBrightness
+                if useScreen3016
+                    Screen3016('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
+                else
+                    Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
+                end
             else
-                Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
+                Brightness(cal.screen,cal.brightnessSetting); % Set brightness.
+            end
+            if useScreen3016
+                cal.brightnessReading=Screen3016('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
+            else
                 cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
             end
             if abs(cal.brightnessSetting-cal.brightnessReading)<0.01
@@ -1245,7 +1258,7 @@ if ~isScreenCalibrated && ~skipScreenCalibration && ~ismember(o.observer,o.algor
     catch e
         % Caution: Screen ConfigureDisplay Brightness gives a fatal error
         % if not supported, and is unsupported on many devices, including a
-        % video projector under macOS. We use try-catch to recover. NOTE:
+        % video projector under macOS. We use try-catch to cope. NOTE:
         % It is my impression since summer 2017 that the Brightness
         % function (which uses AppleScript to control the System
         % Preferences Display panel) is currently more reliable than the
