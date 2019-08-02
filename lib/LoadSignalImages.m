@@ -12,7 +12,7 @@ function [signalStruct,signalBounds]=LoadSignalImages(o)
 %
 % The font's TextSize is computed to yield the desired o.targetPix size in
 % the direction specified by o.targetSizeIsHeight (true for height, false
-% for width). However, if o.targetFontHeightOverNominalPtSize==nan then the
+% for width). However, if o.targetFontHeightOverNominal==nan then the
 % TextSize is set equal to o.targetPix.
 %
 % We look for a folder o.signalImagesFolder inside
