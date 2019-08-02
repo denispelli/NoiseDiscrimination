@@ -590,7 +590,6 @@ global fixationLines fixationCrossWeightPix labelBounds ...
 
 %% FILES
 mainFolder=fileparts(mfilename('fullpath')); % Takes 0.1 s.
-addpath(fullfile(mainFolder,'AutoBrightness')); % Folder in same directory as this M file. .
 addpath(fullfile(mainFolder,'lib')); % Folder in same directory as this M file.
 % echo_executing_commands(2, 'local');
 % diary ./diary.log
@@ -2925,7 +2924,7 @@ try
             oo(oi).targetSizeIsHeight=true;
             oo(oi).targetPix=oo(oi).targetHeightPix/oo(oi).targetCheckPix;
             oo(oi).targetHeightOverWidth=1;
-            oo(oi).targetFontHeightOverNominalPtSize=1;
+            oo(oi).targetFontHeightOverNominal=1;
             % o.alphabet is already defined.
             oo(oi).borderLetter='';
             oo(oi).showLineOfLetters=true;
