@@ -42,7 +42,7 @@ clear o oo ooo
 ooo={};
 % o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
 % o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
-o.askForPartingComments=true; % New feature.
+o.askForPartingComments=true;
 o.recordGaze=false;
 o.experiment='ComplexEfficiency';
 o.eccentricityXYDeg=[0 0];
