@@ -69,11 +69,13 @@ if computer.windows
    cal.processUserLongName=getenv('USERNAME');
    cal.localHostName=getenv('USERDOMAIN');
    cal.macModelName=[];
+   cal.machineName=''; % DGP August 4, 2019
 elseif computer.linux
    cal.processUserLongName=getenv('USER');
    cal.localHostName=strrep(computer.localHostName,'鈄1�7',''''); % work around bug in Screen('Computer')
    cal.osversion=computer.kern.version;
    cal.macModelName=[];
+   cal.machineName=''; % DGP August 4, 2019
 elseif computer.osx || computer.macintosh
    cal.processUserLongName=computer.processUserLongName;
    cal.localHostName=strrep(computer.localHostName,'鈄1�7',''''); % work around bug in Screen('Computer')
