@@ -26,13 +26,27 @@ vars={'condition' 'conditionName' 'experiment' 'dataFilename' ...
     'contrast' 'E' 'E1' 'N' 'LBackground' 'luminanceAtEye' 'luminanceFactor'...
     'filterTransmission' 'useFilter' 'retinalIlluminanceTd' 'pupilDiameterMm'...
     'pixPerCm'  'nearPointXYPix' 'NUnits' 'beginningTime' 'thresholdParameter'...
-    'questMean'};
+    'questMean' 'partingComments'};
 % experiment='runComplexEfficiency';
 % oo1=ReadExperimentData(experiment,vars); % Adds date and missingFields.
 % fprintf('%s %d thresholds.\n',experiment,length(oo1));
 experiment='ComplexEfficiency';
 oo=ReadExperimentData(experiment,vars); % Adds date and missingFields.
 fprintf('%s %d thresholds.\n',experiment,length(oo));
+
+%% PRINT COMMENTS
+comments={oo.partingComments};
+ok=true(size(comments));
+for i=1:length(comments)
+    if isempty(comments{i}) || isempty(comments{i}{1})
+        ok(i)=false;
+    end
+end
+comments=comments(ok);
+for i=1:length(comments)
+    fprintf('%s\n',comments{i}{1});
+end
+
 % oo=[oo1 oo2];
 % COMPUTE EFFICIENCY
 % Select thresholdParameter='contrast', for each conditionName, 
