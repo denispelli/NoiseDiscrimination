@@ -20,9 +20,10 @@ function [letterStruct,alphabetBounds]=CreateLetterTextures(condition,o,window)
 %
 % RETURNED VALUES:
 %
-% letterStruct(i).letter
-% letterStruct(i).texture
-% letterStruct(i).rect
+% letterStruct(i).letter % char
+% letterStruct(i).image % image
+% letterStruct(i).texture % Screen texture containing the image
+% letterStruct(i).rect % rect of that image
 % letterStruct(i).bounds
 % letterStruct(i).width
 % letterStruct(i).dx
