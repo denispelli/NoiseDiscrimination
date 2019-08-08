@@ -42,7 +42,9 @@ function oo=NoiseDiscrimination(ooIn)
 % renamed annularNoiseMask to oo(oi).annularNoiseMask. They should always
 % have the same size as oo(oi).canvasRect. This was being broken by
 % interleaving very different conditions (faces vs letters), but the fix
-% seems to have solved the problem.
+% seems to have solved the problem. August 8, 2019. Those masks can be 20
+% MB each, so we now remove those fields at the end of the block, before we
+% save or return the oo struct;
 %
 % June 26, 2019 Cleaned up the code to allow arbitrary
 % instructionPlacement and alphabetPlacement, optionally with addLabel.
@@ -1026,12 +1028,13 @@ knownOutputFields={'labelAnswers' 'beginningTime' ...
     'idealT64' 'q' 'rWarningCount' 'trialsRight' 'window'...
     'block'...
     'A' 'LAT' 'NPhoton' 'logFilename' 'screenrect' 'screenRect'...
-    'useCentralNoiseEnvelope' 'useCentralNoiseMask' 'centralNoiseMask' 'annularNoiseMask'...
+    'useCentralNoiseEnvelope' 'useCentralNoiseMask' ...
     'fixationLineWeightDeg' 'isFirstBlock' ...
     'isLastBlock'  'minimumTargetPix' ...
     'practicePresentations' 'repeatedTargets' 'okToShiftCoordinates' ...
     'skipThisBlock' ...
     };
+%     'centralNoiseMask' 'annularNoiseMask'...    % 20 MB each, so we now delete them at end of block.
 unknownFields={};
 for oi=1:conditions
     inputFields=fieldnames(ooIn(oi));
@@ -4348,8 +4351,7 @@ try
                         srcRect=OffsetRect(dstRect,-offset(1),-offset(2)); 
                         eraseRect=dstRect;
                         rect=CenterRect([0 0 oo(oi).targetHeightPix oo(oi).targetWidthPix],rect);
-                        rect=round(rect); 
-
+                        rect=round(rect); % target rect
                     case '4afc'
                         rect=[0 0 oo(oi).targetHeightPix oo(oi).targetWidthPix];
                         location(1).rect=AlignRect(rect,boundsRect,'left','top');
@@ -5335,9 +5337,10 @@ try
             waitMessage=['Oops. Wrong response. '...
                 'Perhaps you didn''t have your eye on the center '...
                 'of the cross. ' ...
-                'Please always place your eye '...
-                'at the center of the cross '...
-                'before initiating the next trial.\n    '];
+                'It''s very important that you always place your eye '...
+                'correctly '...
+                'before initiating the next trial. '...
+                'Remember, if you do this, you''ll be done sooner! '];
             assert(oo(oi).fixationCheckMakeupTrials>=0,...
                 'o.fixationCheckMakeupTrials must be a nonnegative integer.');
             fixationTestTrialsOwed=oo(oi).fixationCheckMakeupTrials;
@@ -5576,26 +5579,34 @@ try
         end
         
         %% SAVE EACH THRESHOLD IN ITS OWN FILE, WITH A SUFFIX DESIGNATING THE CONDITION NUMBER.
+        if isfield(oo,'annularNoiseMask')
+            % Too big to save. 20 MB.
+            oo=rmfield(oo,'annularNoiseMask');
+        end
+        if isfield(oo,'centralNoiseMask')
+            % Too big to save. 20 MB.
+            oo=rmfield(oo,'centralNoiseMask');
+        end
         ffprintf(ff,'%d: begin saving mat file at %.0f s\n',oi,GetSecs-savingToDiskSecs);
         oo=SortFields(oo);
         oo(1).newCal=cal;
         save(fullfile(oo(1).dataFolder,[oo(1).dataFilename '.mat']),'oo','cal');
         ffprintf(ff,'%d: done saving mat file at %.0f s\n',oi,GetSecs-savingToDiskSecs);
         try % save to .json file
-            if isfield(oo,'signal')
-                x={oo.signal};
-                s=whos('x');
-                clear x
-                bytes=s.bytes;
-            else
-                bytes=0;
+            % I used /utility/printFieldBytes to select the biggest fields
+            % for deletion. Including annularNoiseMask and
+            % centralNoiseMask, this reduced o from 46 MB to 0.2 MB.
+            if isfield(oo1,'signal')
+                % Too big to save. 5 MB.
+                oo1=rmfield(oo1,'signal');
             end
-            if bytes>1e5
-                % json encoding of large images "oo.signal" is very slow
-                % and takes up a lot of disk space, so we omit oo.signal.
-                oo1=rmfield(oo,'signal');
-            else
-                oo1=oo;
+            if isfield(oo1,'q')
+                % Too big to save. 0.2 MB.
+                oo1=rmfield(oo1,'q');
+            end
+            if isfield(oo1,'newCal')
+                % Too big to save. 0.1 MB.
+                oo1=rmfield(oo1,'newCal');
             end
             if exist('jsonencode','builtin')
                 json=jsonencode(oo1);
@@ -5612,8 +5623,9 @@ try
             warning(e.message);
         end % save to .json file
         ffprintf(ff,'%d: done saving json data at %.0f s\n',oi,GetSecs-savingToDiskSecs);
-        
-        try % save transcript to .json file
+
+        %% SAVE TRANSCRIPT TO .JSON FILE
+        try 
             if isempty(oo(oi).transcript.intensity)
                 if oo(oi).trials>1
                     warning('oo(%d).transcript.intensity is empty.',oi);
@@ -6395,8 +6407,8 @@ while ~set
     if isempty(o.window) || ismember(o.observer,o.algorithmicObservers)
         return
     end
-    isNewDisance= o.viewingDistanceCm ~= oldViewingDistanceCm;
-    if isNewDisance
+    isNewDistance= o.viewingDistanceCm ~= oldViewingDistanceCm;
+    if isNewDistance
         if o.askExperimenterToSetDistance
             string=sprintf(['NEW DISTANCE! Please ask the experimenter to adjust the viewing distance. The ' ...
                 'X below should be %.1f cm (%.1f inches) from the observer''s eye. '], ...
@@ -6412,7 +6424,9 @@ while ~set
             o.viewingDistanceCm,o.viewingDistanceCm/2.54);
     end
     string=[string 'Tilt and swivel the display so the X is orthogonal to the observer''s line of sight. '];
-    if isNewDisance && o.askExperimenterToSetDistance
+    isNewDistance
+    o.askExperimenterToSetDistance
+    if isNewDistance && o.askExperimenterToSetDistance
         string=[string 'Then the Experimenter will type his or her signature key to continue.\n'];
     else
         string=[string 'Then hit RETURN to continue.\n'];
@@ -6438,7 +6452,7 @@ while ~set
         string=strrep(string,'\n','');
         Speak(string);
     end
-    if isNewDisance && o.askExperimenterToSetDistance
+    if isNewDistance && o.askExperimenterToSetDistance
         allowedCode=KbName(o.experimenter(1));
     else
         allowedCode=returnKeyCode;
