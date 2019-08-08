@@ -452,7 +452,8 @@ if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && streq(cal.machin
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
    cal.old.L=[ 1.054 1.088 1.283 1.85 3.417 5.244 7.556 10.18 13.82 17.95 22.64 28.14 34.3 41.6 49.56 57.47 66.82 75.91 86.85 99 111.6 125.7 139.5 154.3 169.8 188.1 206 223.7 243.7 264.9 286.6 310.1 328.1]; % cd/m^2
 end
-if streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==599 && cal.screenHeightMm==340 && streq(cal.machineName,'pelliamdimac')
+if streq(cal.macModelName,'iMac15,1') && cal.screen==0 && ...
+        cal.screenWidthMm==599 && cal.screenHeightMm==340 && streq(cal.machineName,'pelliamdimac')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='iMac';
    cal.ScreenConfigureDisplayBrightnessWorks=true;
@@ -484,7 +485,8 @@ if streq(cal.macModelName,'MacBookAir4,2') && cal.screen==0 && streq(cal.machine
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
    cal.old.L=[ 0.787 0.97 1.115 1.469 2.162 3.278 4.727 6.758 9.371 12.52 15.78 20.35 25.18 30.33 36.81 43.8 51.34 59.55 70.46 80.43 91.12 102.4 116.9 130.9 144.7 162.1 178.3 197.6 216.4 235.3 258.9 282.6 324.5]; % cd/m^2
 end
-if streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && cal.screenWidthMm==331 && cal.screenHeightMm==206 && streq(cal.machineName,'Denis''s MacBook Pro 5K')
+if streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && ...
+        cal.screenWidthMm==331 && cal.screenHeightMm==206 && streq(cal.machineName,'Denis''s MacBook Pro 5K')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='Color LCD';
    cal.ScreenConfigureDisplayBrightnessWorks=true;
@@ -500,7 +502,8 @@ if streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && cal.screenWidthM
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
    cal.old.L=[ 1.071 1.14 1.472 2.504 3.761 6.023 8.715 11.57 15.2 19.59 24.7 30.54 37.1 44.48 52.54 61.46 70.72 80.14 91.5 103.8 117 130.8 145.3 159.7 175.6 193.3 211.6 231.7 252.8 274.9 298.5 320.9 348.9]; % cd/m^2
 end
-if streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==602 && cal.screenHeightMm==341 && streq(cal.machineName,'pelliamdimac')
+if streq(cal.macModelName,'iMac15,1') && cal.screen==0 && ...
+        cal.screenWidthMm==602 && cal.screenHeightMm==341 && streq(cal.machineName,'pelliamdimac')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='iMac';
    cal.ScreenConfigureDisplayBrightnessWorks=true;
@@ -517,7 +520,8 @@ if streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==602
    cal.old.L=[ 1.24 1.242 1.613 2.506 4.349 7.091 10.01 13.89 19.21 24.71 30.47 36.86 45.06 55.14 63.33 74.51 88.68 97.94 110.9 123.4 146.8 157.7 182.6 192.8 211.7 242.2 249.2 292 315.7 346.1 374.2 387.6 426.1]; % cd/m^2
 end
 
-if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthMm==285 && cal.screenHeightMm==179 && streq(cal.machineName,'UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME.')
+if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && ...
+        cal.screenWidthMm==285 && cal.screenHeightMm==179 && streq(cal.machineName,'UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME.')
    cal.screenOutput=[]; % used only under Linux
    %cal.profile='';
    cal.ScreenConfigureDisplayBrightnessWorks=true;
@@ -534,7 +538,8 @@ if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthM
    cal.old.L=[ 1.1 1.2 1.21 1.22 1.3 1.7 2.4 3.7 5.3 7.1 9.6 12.1 15.8 19.5 24.0 29.1 35.8 40.8 48.3 57.1 66.7 77.1 88.0 100.8 114.3 129.5 144.7 162.2 181.0 200.8 223.8 248.5 284.7]; % cd/m^2
 end
 
-if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthMm==286 && cal.screenHeightMm==179 && streq(cal.machineName,'UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME.')
+if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && ...
+        cal.screenWidthMm==286 && cal.screenHeightMm==179 && streq(cal.machineName,'UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME.')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='/Users/Oana/Downloads/Archive/AutoBrightness/ScreenProfile.applescript:3700:3704: execution error: System Events got an error: Can��t get window 1 of process "System Preferences". Invalid index. (-1719)';
    cal.ScreenConfigureDisplayBrightnessWorks=true;
@@ -551,7 +556,8 @@ if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthM
    cal.old.L=[ 1.3 1.449 1.584 2.362 3.446 5.096 7.153 9.688 12.77 16.54 20.8 25.77 25.75 37.64 41.51 51.28 59.53 67.29 76.88 87.17 98.6 110 122.4 134.7 147.8 163.9 178.7 195 211.9 230.5 248.8 266.4 283.3]; % cd/m^2
 end
 
-if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthMm==285 && cal.screenHeightMm==179 && streq(cal.machineName,'UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME.')
+if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && ...
+        cal.screenWidthMm==285 && cal.screenHeightMm==179 && streq(cal.machineName,'UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME.')
    cal.screenOutput=[]; % used only under Linux
    %cal.profile='';
    cal.ScreenConfigureDisplayBrightnessWorks=true;
@@ -568,7 +574,8 @@ if streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthM
    cal.old.L=[ 1.1 1.2 1.21 1.22 1.3 1.7 2.4 3.7 5.3 7.1 9.6 12.1 15.8 19.5 24.0 29.1 35.8 40.8 48.3 57.1 66.7 77.1 88.0 100.8 114.3 129.5 144.7 162.2 181.0 200.8 223.8 248.5 284.7]; % cd/m^2
 end
 
-if IsOSX && streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.screenWidthMm==286 && cal.screenHeightMm==179 && streq(cal.machineName,'Kant')
+if IsOSX && streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && ...
+        cal.screenWidthMm==286 && cal.screenHeightMm==179 && streq(cal.machineName,'Kant')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='CIE RGB';
    cal.ScreenConfigureDisplayBrightnessWorks=true;
@@ -585,7 +592,8 @@ if IsOSX && streq(cal.macModelName,'MacBookPro12,1') && cal.screen==0 && cal.scr
    cal.old.L=[ 1.154 1.225 1.507 2.279 3.414 5.276 7.461 10.18 13.47 17.46 22.01 27.3 33.04 40.03 46.85 54.35 63.1 71.46 81.58 92.77 104.7 117.2 130.1 142.9 157.2 173.9 190.5 208 226.4 247 265.9 285 308.2]; % cd/m^2
 end
 
-if IsOSX && streq(cal.macModelName,'MacBookAir5,1') && cal.screen==0 && cal.screenWidthMm==260 && cal.screenHeightMm==140 && streq(cal.machineName,'Kant')
+if IsOSX && streq(cal.macModelName,'MacBookAir5,1') && cal.screen==0 && ...
+        cal.screenWidthMm==260 && cal.screenHeightMm==140 && streq(cal.machineName,'Kant')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='Color LCD';
    cal.ScreenConfigureDisplayBrightnessWorks=true;
@@ -602,7 +610,8 @@ if IsOSX && streq(cal.macModelName,'MacBookAir5,1') && cal.screen==0 && cal.scre
    cal.old.L=[ 1.991 2.045 2.167 2.557 3.281 4.469 6.667 9.642 12.81 16.58 20.59 25.03 30.38 36.29 43.17 50.17 57.96 65.19 75.67 85.81 97.61 109.2 123.1 137.7 152.1 168.8 185.4 203.4 223.6 246.9 269.5 293.5 332.7]; % cd/m^2
 end
 
-if IsWin && cal.screen==0 && cal.screenWidthMm==677 && cal.screenHeightMm==381
+if IsWin && cal.screen==0 && ...
+        cal.screenWidthMm==677 && cal.screenHeightMm==381
    cal.screenOutput=[]; % used only under Linux
    cal.ScreenConfigureDisplayBrightnessWorks=false;
    cal.brightnessSetting=1.00;
@@ -635,7 +644,8 @@ if cal.screen==0 && strcmpi(cal.machineName, 'ThPad')
    cal.old.L=[ 1.62 2.53 3.74 5.59 7.73 9.96 12.95 15.77 18.66 22.1 25.65 29.25 33.4 36.06 39.08 44.32 53.4 57.17 63.19 68.05 76.3 84.29 91.73 99.04 106.9 116.5 125.5 134.6 142.4 150.5 157.9 162.5 163.5]; % cd/m^2
 end
 
-if IsOSX && streq(cal.macModelName,'MacBookPro11,3') && cal.screen==0 && cal.screenWidthMm==331 && cal.screenHeightMm==206 && streq(cal.machineName,'Ivy')
+if IsOSX && streq(cal.macModelName,'MacBookPro11,3') && cal.screen==0 && ...
+        cal.screenWidthMm==331 && cal.screenHeightMm==206 && streq(cal.machineName,'Ivy')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='Color LCD';
    cal.ScreenConfigureDisplayBrightnessWorks=true;
@@ -681,7 +691,8 @@ if IsLinux && cal.screen==1 && cal.screenWidthMm==361 && cal.screenHeightMm==203
    cal.old.n=[ 0 4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120 124 128 131 135 139 143 147 151 155 159 163 167 171 175 179 183 187 191 195 199 203 207 211 215 219 223 227 231 235 239 243 247 251 255];
    cal.old.L=[ 3.623 3.675 3.683 3.688 3.71 3.783 3.903 4.07 4.288 4.555 4.868 5.228 5.645 6.09 6.605 7.158 7.773 8.44 9.165 9.935 10.77 11.63 12.56 13.5 14.54 15.58 16.72 17.85 19.06 20.38 21.73 23.16 24.65 25.93 27.79 29.7 31.74 33.9 36.14 38.54 41.07 43.73 46.49 49.38 52.44 55.69 59.09 62.74 66.48 70.92 75.71 80.69 85.77 91.18 96.43 101.8 107.3 113 118.9 125.1 131.9 139 145.4 150.5 151.1]; % cd/m^2
 end
-if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==541 && cal.screenHeightMm==338 && streq(cal.machineName,'pelliamdimac')
+if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && ...
+        cal.screenWidthMm==541 && cal.screenHeightMm==338 && streq(cal.machineName,'pelliamdimac')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='iMac';
    cal.ScreenConfigureDisplayBrightnessWorks=true;
@@ -697,7 +708,8 @@ if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWid
    cal.old.n=[ 0 128 256 384 512 640 768 896 1024 1152 1280 1408 1536 1664 1792 1920 2048 2175 2303 2431 2559 2687 2815 2943 3071 3199 3327 3455 3583 3711 3839 3967 4095];
    cal.old.L=[ 1.732 1.83 2.169 3.018 4.714 7.309 10.25 13.89 18.58 24.04 29.92 36.64 44.47 53.14 62.73 73.03 83.8 93.85 107 122.1 137.4 153.5 169.7 186.3 204.6 223.6 247 271.2 297.7 324.6 353.7 382 406.5]; % cd/m^2
 end
-if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==541 && cal.screenHeightMm==338 && streq(cal.machineName,'pelliamdimac')
+if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && ...
+        cal.screenWidthMm==541 && cal.screenHeightMm==338 && streq(cal.machineName,'pelliamdimac')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='iMac';
    cal.ScreenConfigureDisplayBrightnessWorks=true;
@@ -714,7 +726,8 @@ if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWid
    cal.old.L=[ 1.763 1.83 2.16 3.82 4.72 7.33 10.28 13.93 18.64 24.13 30 36.73 44.61 53.23 62.76 73.04 83.8 93.8 106.9 121.9 137.3 153.2 169.4 185.9 204.4 223.3 246.7 271 297.5 324.3 353.5 381.6 406.2]; % cd/m^2
    cal.old.n=[ 0 8 16 24 32 40 48 56 64 72 80 88 96 104 112 120 128 135 143 151 159 167 175 183 191 199 207 215 223 231 239 247 255];
 end
-if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==602 && cal.screenHeightMm==341 && streq(cal.machineName,'pelliamdimac')
+if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && ...
+        cal.screenWidthMm==602 && cal.screenHeightMm==341 && streq(cal.machineName,'pelliamdimac')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='iMac';
    cal.ScreenConfigureDisplayBrightnessWorks=true;
@@ -797,7 +810,8 @@ if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWid
       0.9882 0.9882 0.9882;0.9922 0.9922 0.9922;0.9961 0.9961 0.9961;1.0000 1.0000 1.0000;...
       ];
 end
-if IsOSX && streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && cal.screenWidthMm==331 && cal.screenHeightMm==206 && streq(cal.machineName,'Denis''s MacBook Pro 5K')
+if IsOSX && streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && ...
+        cal.screenWidthMm==331 && cal.screenHeightMm==206 && streq(cal.machineName,'Denis''s MacBook Pro 5K')
    cal.screenOutput=[]; % used only under Linux
    cal.profile='Color LCD';
    cal.ScreenConfigureDisplayBrightnessWorks=true;
@@ -1072,7 +1086,9 @@ if IsOSX && streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && cal.scr
       0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;...
       ];
 end
-if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==602 && cal.screenHeightMm==341 && streq(cal.machineName,'iMac5k-PelliLab')
+if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && ...
+        cal.screenWidthMm==602 && cal.screenHeightMm==341 && ...
+        streq(cal.machineName,'iMac5k-PelliLab')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='iMac';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -1149,7 +1165,9 @@ if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWid
 0.9804 0.9804 0.9804;0.9843 0.9843 0.9843;0.9882 0.9882 0.9882;0.9922 0.9922 0.9922;0.9961 0.9961 0.9961;...
 1.0000 1.0000 1.0000;];
 end
-if IsOSX && streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && cal.screenWidthMm==331 && cal.screenHeightMm==206 && streq(cal.machineName,'Denis''s MacBook Pro 5K')
+if IsOSX && streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && ...
+        cal.screenWidthMm==331 && cal.screenHeightMm==206 && ...
+        streq(cal.machineName,'Denis''s MacBook Pro 5K')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='CIE RGB';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -1380,7 +1398,8 @@ if IsOSX && streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && cal.scr
 0.9922 0.9922 0.9922;0.9932 0.9932 0.9932;0.9941 0.9941 0.9941;0.9951 0.9951 0.9951;0.9961 0.9961 0.9961;...
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
-if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.machineName,'UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME.')
+if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+        cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.machineName,'UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME.')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD Calibrated';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -1611,7 +1630,8 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 0.9923 0.9923 0.9923;0.9933 0.9933 0.9933;0.9942 0.9942 0.9942;0.9952 0.9952 0.9952;0.9962 0.9962 0.9962;...
 0.9971 0.9971 0.9971;0.9981 0.9981 0.9981;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
-if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.machineName,'UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME.')
+if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+        cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.machineName,'UNKNOWN! QUERY FAILED DUE TO EMPTY OR PROBLEMATIC NAME.')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD Calibrated';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -1842,7 +1862,8 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 0.9923 0.9923 0.9923;0.9933 0.9933 0.9933;0.9942 0.9942 0.9942;0.9952 0.9952 0.9952;0.9962 0.9962 0.9962;...
 0.9971 0.9971 0.9971;0.9981 0.9981 0.9981;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
-if IsOSX && streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && cal.screenWidthMm==331 && cal.screenHeightMm==206 && streq(cal.localHostName,'Deniss-MacBook-Pro-5K')
+if IsOSX && streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && ...
+        cal.screenWidthMm==331 && cal.screenHeightMm==206 && streq(cal.localHostName,'Deniss-MacBook-Pro-5K')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='CIE RGB';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -2073,7 +2094,8 @@ if IsOSX && streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && cal.scr
 0.9922 0.9922 0.9922;0.9932 0.9932 0.9932;0.9941 0.9941 0.9941;0.9951 0.9951 0.9951;0.9961 0.9961 0.9961;...
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
-if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pellis-MacBook-Pro-Shenghao')
+if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+        cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pellis-MacBook-Pro-Shenghao')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD Calibrated';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -2304,7 +2326,8 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 0.9923 0.9923 0.9923;0.9933 0.9933 0.9933;0.9942 0.9942 0.9942;0.9952 0.9952 0.9952;0.9962 0.9962 0.9962;...
 0.9971 0.9971 0.9971;0.9981 0.9981 0.9981;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
-if IsOSX && streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && cal.screenWidthMm==331 && cal.screenHeightMm==206 && streq(cal.localHostName,'Everglades')
+if IsOSX && streq(cal.macModelName,'MacBookPro11,5') && cal.screen==0 && ...
+        cal.screenWidthMm==331 && cal.screenHeightMm==206 && streq(cal.localHostName,'Everglades')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -2767,7 +2790,8 @@ if IsOSX && streq(cal.macModelName,'MacBookAir6,2') && cal.screen==0 && streq(ca
 0.9922 0.9922 0.9922;0.9932 0.9932 0.9932;0.9941 0.9941 0.9941;0.9951 0.9951 0.9951;0.9961 0.9961 0.9961;...
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
-if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pellis-MacBook-Pro-Yichen')
+if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+        cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pellis-MacBook-Pro-Yichen')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -2998,7 +3022,8 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 0.9922 0.9922 0.9922;0.9932 0.9932 0.9932;0.9941 0.9941 0.9941;0.9951 0.9951 0.9951;0.9961 0.9961 0.9961;...
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
-if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==207 && streq(cal.localHostName,'Pellis-MacBook-Pro-Wagner')
+if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+        cal.screenWidthMm==330 && cal.screenHeightMm==207 && streq(cal.localHostName,'Pellis-MacBook-Pro-Wagner')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -3229,7 +3254,8 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 0.9922 0.9922 0.9922;0.9932 0.9932 0.9932;0.9941 0.9941 0.9941;0.9951 0.9951 0.9951;0.9961 0.9961 0.9961;...
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
-if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pellis-MacBook-Pro-Flavia')
+if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+        cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pellis-MacBook-Pro-Flavia')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -3460,7 +3486,8 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 0.9922 0.9922 0.9922;0.9932 0.9932 0.9932;0.9941 0.9941 0.9941;0.9951 0.9951 0.9951;0.9961 0.9961 0.9961;...
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
-if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Denis-Mac-Katerina')
+if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+        cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Denis-Mac-Katerina')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -3691,7 +3718,9 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 0.9922 0.9922 0.9922;0.9932 0.9932 0.9932;0.9941 0.9941 0.9941;0.9951 0.9951 0.9951;0.9961 0.9961 0.9961;...
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
-if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==602 && cal.screenHeightMm==341 && streq(cal.localHostName,'iMac5k-PelliLab')
+if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && ...
+        cal.screenWidthMm==602 && cal.screenHeightMm==341 && ...
+        streq(cal.localHostName,'iMac5k-PelliLab')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='iMac';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -3769,7 +3798,8 @@ if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWid
 0.9804 0.9804 0.9804;0.9843 0.9843 0.9843;0.9882 0.9882 0.9882;0.9922 0.9922 0.9922;0.9961 0.9961 0.9961;...
 1.0000 1.0000 1.0000;];
 end
-if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Denis-Mac-Katerina')
+if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+        cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Denis-Mac-Katerina')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -4000,7 +4030,9 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 0.9922 0.9922 0.9922;0.9932 0.9932 0.9932;0.9941 0.9941 0.9941;0.9951 0.9951 0.9951;0.9961 0.9961 0.9961;...
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
-if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWidthMm==601 && cal.screenHeightMm==340 && streq(cal.localHostName,'iMac5k-PelliLab')
+if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && ...
+        cal.screenWidthMm==601 && cal.screenHeightMm==340 && ...
+        streq(cal.localHostName,'iMac5k-PelliLab')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='iMac';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -4079,7 +4111,8 @@ if IsOSX && streq(cal.macModelName,'iMac15,1') && cal.screen==0 && cal.screenWid
 0.9804 0.9804 0.9804;0.9843 0.9843 0.9843;0.9882 0.9882 0.9882;0.9922 0.9922 0.9922;0.9961 0.9961 0.9961;...
 1.0000 1.0000 1.0000;];
 end
-if IsOSX && streq(cal.macModelName,'MacBookPro13,2') && cal.screen==0 && cal.screenWidthMm==285 && cal.screenHeightMm==179 && streq(cal.localHostName,'GKA-MacBook')
+if IsOSX && streq(cal.macModelName,'MacBookPro13,2') && cal.screen==0 && ...
+        cal.screenWidthMm==285 && cal.screenHeightMm==179 && streq(cal.localHostName,'GKA-MacBook')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -4311,7 +4344,8 @@ if IsOSX && streq(cal.macModelName,'MacBookPro13,2') && cal.screen==0 && cal.scr
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
 
-if IsOSX && streq(cal.macModelName,'MacBookPro13,2') && cal.screen==0 && cal.screenWidthMm==285 && cal.screenHeightMm==179 && streq(cal.localHostName,'GKA-MacBook')
+if IsOSX && streq(cal.macModelName,'MacBookPro13,2') && cal.screen==0 && ...
+        cal.screenWidthMm==285 && cal.screenHeightMm==179 && streq(cal.localHostName,'GKA-MacBook')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -4542,7 +4576,8 @@ if IsOSX && streq(cal.macModelName,'MacBookPro13,2') && cal.screen==0 && cal.scr
 0.9922 0.9922 0.9922;0.9932 0.9932 0.9932;0.9941 0.9941 0.9941;0.9951 0.9951 0.9951;0.9961 0.9961 0.9961;...
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
-if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Veenas-MacBook-Pro')
+if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+        cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Veenas-MacBook-Pro')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -4774,7 +4809,8 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
 %
-if IsOSX && streq(cal.macModelName,'MacBook10,1') && cal.screen==0 && cal.screenWidthMm==259 && cal.screenHeightMm==161 && streq(cal.localHostName,'Denis-MacBook')
+if IsOSX && streq(cal.macModelName,'MacBook10,1') && cal.screen==0 && ...
+        cal.screenWidthMm==259 && cal.screenHeightMm==161 && streq(cal.localHostName,'Denis-MacBook')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -5006,7 +5042,8 @@ if IsOSX && streq(cal.macModelName,'MacBook10,1') && cal.screen==0 && cal.screen
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
 
-if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-MacBook-Pro-Erin')
+if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+        cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-MacBook-Pro-Erin')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -5237,7 +5274,8 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
 
-if IsOSX && streq(cal.macModelName,'MacBook10,1') && cal.screen==0 && cal.screenWidthMm==259 && cal.screenHeightMm==161 && streq(cal.localHostName,'Denis-MacBook')
+if IsOSX && streq(cal.macModelName,'MacBook10,1') && cal.screen==0 && ...
+        cal.screenWidthMm==259 && cal.screenHeightMm==161 && streq(cal.localHostName,'Denis-MacBook')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -5467,7 +5505,8 @@ if IsOSX && streq(cal.macModelName,'MacBook10,1') && cal.screen==0 && cal.screen
 0.9922 0.9922 0.9922;0.9932 0.9932 0.9932;0.9941 0.9941 0.9941;0.9951 0.9951 0.9951;0.9961 0.9961 0.9961;...
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
-if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-1')
+if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+        cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-1')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -5698,7 +5737,8 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
 
-if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-6')
+if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+        cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-6')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -5928,7 +5968,8 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 0.9922 0.9922 0.9922;0.9932 0.9932 0.9932;0.9941 0.9941 0.9941;0.9951 0.9951 0.9951;0.9961 0.9961 0.9961;...
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
-if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-4')
+if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+        cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-4')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -6158,7 +6199,8 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 0.9922 0.9922 0.9922;0.9932 0.9932 0.9932;0.9941 0.9941 0.9941;0.9951 0.9951 0.9951;0.9961 0.9961 0.9961;...
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
-if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==207 && streq(cal.localHostName,'Pelli-Mac-2')
+if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+        cal.screenWidthMm==330 && cal.screenHeightMm==207 && streq(cal.localHostName,'Pelli-Mac-2')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -6388,7 +6430,8 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 0.9922 0.9922 0.9922;0.9932 0.9932 0.9932;0.9941 0.9941 0.9941;0.9951 0.9951 0.9951;0.9961 0.9961 0.9961;...
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
-if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-1')
+if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+        cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-1')
 	cal.screenOutput=[]; % used only under Linux
 	cal.profile='Color LCD';
 	cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -6619,7 +6662,8 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.scr
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
 if streq(cal.MACAddress,'ac:de:48:00:11:22')
-	% if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-3')
+	% if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+    % cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-3')
 	cal.OSName=OSName; % 'OSX';
 	% cal.macModelName='MacBookPro14,3';
 	% cal.localHostName='Pelli-Mac-3';
@@ -6857,7 +6901,8 @@ if streq(cal.MACAddress,'ac:de:48:00:11:22')
 end
 
 if streq(MACAddress,'8c:85:90:c5:2d:4e')
-	% if IsOSX && streq(cal.macModelName,'MacBook10,1') && cal.screen==0 && cal.screenWidthMm==259 && cal.screenHeightMm==161 && streq(cal.localHostName,'Denis-MacBook')
+	% if IsOSX && streq(cal.macModelName,'MacBook10,1') && cal.screen==0 && ...
+    % cal.screenWidthMm==259 && cal.screenHeightMm==161 && streq(cal.localHostName,'Denis-MacBook')
 	cal.OSName=OSName; % 'OSX';
 	% cal.macModelName='MacBook10,1';
 	% cal.localHostName='Denis-MacBook';
@@ -7094,7 +7139,8 @@ if streq(MACAddress,'8c:85:90:c5:2d:4e')
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
 if streq(MACAddress,'8c:85:90:ad:83:56')
-	% if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-3')
+	% if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+    % cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-3')
 	cal.OSName=OSName; % 'OSX';
 	% cal.macModelName='MacBookPro14,3';
 	% cal.localHostName='Pelli-Mac-3';
@@ -7331,7 +7377,8 @@ if streq(MACAddress,'8c:85:90:ad:83:56')
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
 if streq(MACAddress,'8c:85:90:54:07:7e')
-	% if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-6')
+	% if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+    % cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-6')
 	cal.OSName=OSName; % 'OSX';
 	% cal.macModelName='MacBookPro14,3';
 	% cal.localHostName='Pelli-Mac-6';
@@ -7569,7 +7616,8 @@ if streq(MACAddress,'8c:85:90:54:07:7e')
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
 if streq(MACAddress,'8c:85:90:54:07:7e')
-	% if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-6')
+	% if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+    % cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-6')
 	cal.OSName=OSName; % 'OSX';
 	% cal.macModelName='MacBookPro14,3';
 	% cal.localHostName='Pelli-Mac-6';
@@ -7806,7 +7854,8 @@ if streq(MACAddress,'8c:85:90:54:07:7e')
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
 if streq(MACAddress,'8c:85:90:57:aa:63')
-	% if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'darshans-MacBook-Pro')
+	% if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+    % cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'darshans-MacBook-Pro')
 	cal.OSName=OSName; % 'OSX';
 	% cal.macModelName='MacBookPro14,3';
 	% cal.localHostName='darshans-MacBook-Pro';
@@ -8043,7 +8092,8 @@ if streq(MACAddress,'8c:85:90:57:aa:63')
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
 if streq(MACAddress,'8c:85:90:54:07:7e')
-	% if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-6')
+	% if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+    % cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-6')
 	cal.OSName=OSName; % 'OSX';
 	% cal.macModelName='MacBookPro14,3';
 	% cal.localHostName='Pelli-Mac-6';
@@ -8280,7 +8330,8 @@ if streq(MACAddress,'8c:85:90:54:07:7e')
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
 if streq(MACAddress,'8c:85:90:23:87:95')
-	% if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-5')
+	% if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+    % cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-5')
 	cal.OSName=OSName; % 'OSX';
 	% cal.macModelName='MacBookPro14,3';
 	% cal.localHostName='Pelli-Mac-5';
@@ -8517,7 +8568,8 @@ if streq(MACAddress,'8c:85:90:23:87:95')
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
 if streq(MACAddress,'3a:f9:d3:af:8c:8a')
-	% if IsOSX && streq(cal.macModelName,'MacBookPro15,1') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-June')
+	% if IsOSX && streq(cal.macModelName,'MacBookPro15,1') && cal.screen==0 && ...
+    % cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-June')
 	cal.OSName=OSName; % 'OSX';
 	% cal.macModelName='MacBookPro15,1';
 	% cal.localHostName='Pelli-Mac-June';
@@ -8754,7 +8806,8 @@ if streq(MACAddress,'3a:f9:d3:af:8c:8a')
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
 if streq(MACAddress,'7c:d1:c3:f6:15:7f')
-	% if IsOSX && streq(cal.macModelName,'MacBookAir5,1') && cal.screen==0 && cal.screenWidthMm==255 && cal.screenHeightMm==144 && streq(cal.localHostName,'Deniss-MacBook-Air-1184')
+	% if IsOSX && streq(cal.macModelName,'MacBookAir5,1') && cal.screen==0 && ...
+    % cal.screenWidthMm==255 && cal.screenHeightMm==144 && streq(cal.localHostName,'Deniss-MacBook-Air-1184')
 	cal.OSName=OSName; % 'OSX';
 	% cal.macModelName='MacBookAir5,1';
 	% cal.localHostName='Deniss-MacBook-Air-1184';
@@ -8991,7 +9044,8 @@ if streq(MACAddress,'7c:d1:c3:f6:15:7f')
 0.9931 0.9963 0.9857;0.9954 0.9976 0.9905;0.9977 0.9988 0.9952;1.0000 1.0000 1.0000;];
 end
 if streq(MACAddress,'88:e9:fe:76:57:1d')
-	% if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-3')
+	% if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+    % cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-3')
 	cal.OSName=OSName; % 'OSX';
 	% cal.macModelName='MacBookPro14,3';
 	% cal.localHostName='Pelli-Mac-3';
@@ -9228,7 +9282,8 @@ if streq(MACAddress,'88:e9:fe:76:57:1d')
 0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
 if streq(MACAddress,'8c:85:90:0f:d5:30')
-	% if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'MacBook-Pro')
+	% if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
+    % cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'MacBook-Pro')
 	cal.OSName=OSName; % 'OSX';
 	% cal.macModelName='MacBookPro14,3';
 	% cal.localHostName='MacBook-Pro';
