@@ -269,7 +269,7 @@ try
     end
     fprintf([msg '\n']);
     if useSpeech
-        Speak(msg);
+        SpeakWithoutLinefeeds(msg);
     end
     if useConnectedPhotometer
         cal.photometer='Cambridge Research Systems Colorimeter';
@@ -484,7 +484,8 @@ try
     else
         cal.macModelName='Not-a-mac';
     end
-    fprintf('Computer %s, %s, screenWidthCm %.1f, screenHeightCm %.1f\n',prep(cal.localHostName),prep(cal.macModelName),cal.screenWidthMm/10,cal.screenHeightMm/10);
+    fprintf('Computer %s, %s, screenWidthCm %.1f, screenHeightCm %.1f\n',...
+        prep(cal.localHostName),prep(cal.macModelName),cal.screenWidthMm/10,cal.screenHeightMm/10);
     fprintf('We will measure %d luminances.\n',luminances);
     if useSpeech
         Speak(sprintf('We will measure %d luminances.',luminances));
@@ -493,7 +494,8 @@ try
         fprintf(['\nINSTRUCTIONS: Use a photometer or light meter to measure the screen luminance in ' luminanceUnit '.  Then type your reading followed by RETURN.\n']);
         fprintf('If you make a mistake, you can go back by typing -1, followed by RETURN. You can always quit by hitting ESCAPE.\n');
         if useSpeech
-            Speak(['Use a photometer or light meter to measure the screen luminance in ' luminanceUnitWords '.  Then type your reading followed by return.']);
+            Speak(['Use a photometer or light meter to measure the screen luminance in ' ...
+                luminanceUnitWords '.  Then type your reading followed by return.']);
             %          Speak('If you make a mistake, you can go back by typing -1, followed by return. You can always quit by hitting ESCAPE.');
         else
             %          input('\nHit RETURN once you''ve read the above instructions, and you''re ready to proceed:','s');
@@ -566,6 +568,7 @@ try
                         Speak('Hit RETURN when ready to begin.');
                     end
                     Screen('Flip',window,0,1); % Show instructions.
+                    commandwindow; % Try to shift focus to command window, so we receive the keyboard input.
                     input('Hit RETURN when ready to begin','s');
                     Screen('DrawText',window,'Now measuring ...',10,screenRect(4)-100*screenScalar);
                     Screen('Flip',window,0,1);
@@ -708,7 +711,7 @@ try
     end
     fprintf('\n\n\n');
     if useSpeech
-        Speak('Thank you. Please wait for the Command Window to reappear, then please type notes, followed by return.');
+        Speak('Thank you. Please wait for the Command Window to reappear, then please type notes, followed by RETURN.');
     end
     fprintf('\n'); % Not sure, but this FPRINTF may be needed under Windows to make INPUT work right.
     cal.notes=input('Please type one line about conditions of this calibration, \nincluding your name, the room, and the room illumination.\nYour notes:','s');
@@ -740,12 +743,20 @@ try
         if ismac
             fprintf(f,'streq(cal.macModelName,''%s'') && ',prep(cal.macModelName));
         end
-        fprintf(f,'cal.screen==%d',cal.screen);
-        fprintf(f,' && cal.screenWidthMm==%g && cal.screenHeightMm==%g',cal.screenWidthMm,cal.screenHeightMm);
-        if ismac
-            fprintf(f,' && streq(cal.localHostName,''%s'')',prep(cal.localHostName));
+        fprintf(f,'cal.screen==%d ...\n',cal.screen);
+        if ~isempty(cal.MACAddress)
+            fprintf(f,'\t%% ');
         end
-        fprintf(f,'\n');
+        fprintf(f,'&& cal.screenWidthMm==%g && cal.screenHeightMm==%g',cal.screenWidthMm,cal.screenHeightMm);
+        if ismac
+            fprintf(f,' ...\n');
+            if ~isempty(cal.MACAddress)
+                fprintf(f,'\t%% ');
+            end
+            fprintf(f,'&& streq(cal.localHostName,''%s'')\n',prep(cal.localHostName));
+        else
+            fprintf(f,'\n');
+        end
         if ~isempty(cal.MACAddress)
             fprintf(f,'\tcal.OSName=OSName; %% ''%s'';\n',OSName);
             if ismac
@@ -870,4 +881,12 @@ if isempty(s)
 end
 XYZ = CORRMAT(4:6,:) * [s.x s.y s.z]';
 L=XYZ(2);
+end
+
+function msg=StripLinefeeds(msg)
+msg=strrep(msg,'\n',' ');
+end
+
+function SpeakWithoutLinefeeds(msg)
+Speak(StripLinefeeds(msg));
 end
