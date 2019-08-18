@@ -94,7 +94,7 @@ disp(aa(:,{'conditionName','efficiency','observer'}));
 dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
 writetable(aa,fullfile(dataFolder,'efficiency.xls'));
 
-% Size data.
+% Size threshold.
 for oi=length(oo):-1:1
     if ismember(oo(oi).thresholdParameter,{'size'})
         oo(oi).targetHeightDeg=10^oo(oi).questMean;
@@ -107,11 +107,14 @@ for conditionName=conditionNames
         match=match & ismember({oo.conditionName},conditionName);
         match=match & ismember({oo.observer},observer);
         if sum(match)>0
+            assert(1==length(unique([oo(match).eccentricityXYDeg(1)])));
             bb(end+1).targetHeightDeg=mean([oo(match).targetHeightDeg]);
             bb(end).observer=observer{1};
             bb(end).conditionName=conditionName{1};
             bb(end).thresholdParameter='size';
-            bb(end).complexity=bb(end).targetHeightDeg.^2/(6*6);
+            ecc=oo(find(match,1)).eccentricityXYDeg;
+            area=2*NominalCrowdingDistanceDeg(ecc)^2; % was 6*6. DGP
+            bb(end).complexity=bb(end).targetHeightDeg.^2/area;
         end
     end
 end
