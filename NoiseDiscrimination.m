@@ -882,10 +882,10 @@ o.snapshotCaptionTextSize=[];
 o.showCropMarks=false; % mark the bounding box of the target
 o.showResponseNumbers=true;
 o.responseNumbersInCorners=false;
-o.alphabetPlacement='top'; % 'top' 'bottom' 'right' or 'left' while awaiting response.
 o.textSizeDeg=0.9;
 o.textMarginPix=0; % Currently always set to 2*o.textSize; used solely in call to OfferEscapeOptions.
 o.counterPlacement='bottomRight';
+o.alphabetPlacement='top'; % 'top' 'bottom' 'right' or 'left' while awaiting response.
 o.instructionPlacement='topLeft'; % 'topLeft' 'bottomLeft'
 
 % Response screen
@@ -1418,7 +1418,7 @@ try
         % Allow room for counter.
         bounds=DrawCounter(oo(oi));
         switch oo(oi).counterPlacement
-            case {'bottomRight' 'bottomLeft' 'bottomCenter'}
+            case {'bottomLeft' 'bottomCenter' 'bottomRight'}
                 oo(oi).stimulusRect(4)=oo(oi).screenRect(4)-1.5*RectHeight(bounds);
             otherwise
                 error('Unknown o.counterPlacement ''%s''.',o.counterPlacement);
