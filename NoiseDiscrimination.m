@@ -691,6 +691,7 @@ o.fixationCrossDrawnOnStimulus=false;
 o.blankingRadiusReTargetHeight= nan;
 o.blankingRadiusReEccentricity= 0.5;
 o.recordGaze=false;
+% web(fullfile(docroot, 'vision/ref/videolabeler-app.html'))
 
 % QUEST
 o.questPlusEnable=false;
