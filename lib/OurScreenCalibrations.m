@@ -9545,6 +9545,9 @@ if streq(MACAddress,'5E-EA-1D-8C-72-89')
 	% if IsWin && cal.screen==0 ...
 	% && cal.screenWidthMm==293 && cal.screenHeightMm==165
 	cal.OSName=OSName; % 'Windows';
+    cal.ScreenConfigureDisplayBrightnessWorks=false;
+    cal.BrightnessWorks=false; 	cal.brightnessSetting=1.00;
+    cal.brightnessRmsError=0.0000;
 	% cal.screen=0;
 	% cal.screenWidthMm=293;
 	% cal.screenHeightMm=165;
