@@ -229,11 +229,11 @@ if ~verLessThan('matlab','8.1')
     if ok
         test(end).value='true';
         test(end).ok=true;
-%         fprintf('Good! PsychJava appears in javaclasspath.txt.\n');
+        %         fprintf('Good! PsychJava appears in javaclasspath.txt.\n');
     else
         test(end).value='false';
         test(end).ok=false;
-%         warning('Boo! PsychJava does not appear in javaclasspath.txt. Please read "help PsychJavaTrouble".');
+        %         warning('Boo! PsychJava does not appear in javaclasspath.txt. Please read "help PsychJavaTrouble".');
     end
     test(end).help='help PsychJavaTrouble';
 end
@@ -241,13 +241,13 @@ end
 try
     test(end+1).name='Speak';
     test(end).min='true';
-    Speak('Two beeps');
+    Speak('Hello. Two beeps');
     test(end).value='true';
     test(end).ok=true;
-catch me
+catch e
     test(end).value='false';
     test(end).ok=false;
-    warning(me.message)
+    warning(e.message)
 end
 
 %% TEST SOUND
@@ -269,7 +269,7 @@ if IsOSX
     try
         test(end+1).name='PsychPortAudio';
         d=PsychPortAudio('GetDevices');
-%         fprintf('PsychPortAudio driver loaded. \n');
+        %         fprintf('PsychPortAudio driver loaded. \n');
         test(end).value='true';
         test(end).ok=true;
     catch em
@@ -320,7 +320,7 @@ try
     Screen('Preference','SkipSyncTests',1);
     Screen('Preference','TextAntiAliasing',1);
     if o.useFractionOfScreenToDebug
-%         fprintf('Using tiny window for debugging.\n');
+        %         fprintf('Using tiny window for debugging.\n');
     end
     if isempty(window)
         fprintf('Opening the window. ...\n'); % Newline for Screen warnings.
@@ -373,9 +373,9 @@ try
         test(end).min=true;
         test(end).ok=test(end).value;
         Screen('DrawText',window,' ',0,0,0,1,1);
-%         fprintf('Loaded DrawText Plugin %s. Needed for accurate text rendering.\n',mat2str(value));
+        %         fprintf('Loaded DrawText Plugin %s. Needed for accurate text rendering.\n',mat2str(value));
         if ~value
-%             warning('The DrawText plugin failed to load. We need it. See warning above. Read "Install NoiseDiscrimination.docx" B.7 to learn how to install it.');
+            %             warning('The DrawText plugin failed to load. We need it. See warning above. Read "Install NoiseDiscrimination.docx" B.7 to learn how to install it.');
         end
         test(end).help='help DrawTextPlugin';
         
@@ -394,7 +394,7 @@ try
         windowInfo=Screen('GetWindowInfo',window);
         test(end+1).name='Beam position queries available';
         test(end).value=windowInfo.Beamposition ~= -1 && windowInfo.VBLEndline ~= -1;
-%         fprintf('Beam position queries %s, and should be true for best timing.\n',mat2str(test(end).value));
+        %         fprintf('Beam position queries %s, and should be true for best timing.\n',mat2str(test(end).value));
         test(end).min='';
         test(end).ok=true;
         test(end).help='Screen GetWindowInfo?';
@@ -472,8 +472,9 @@ try
             open(vidWriter);
             fprintf('Recording snapshot in file: %s\n',photoFile);
             test(end).value=true;
-        catch
-            % fprintf('Cannot take photo. Please install software.\n');
+        catch e
+            fprintf(2,'Failed to connect to your camera.\n');
+            warning(e.message);
             test(end).value=false;
             o.recordGaze=false;
         end
@@ -482,10 +483,10 @@ try
         try
             img=snapshot(cam);
         catch e
-            warning(e)
+            warning(e.message)
         end
-        % FUTURE: Write trial number and condition number in corner of
-        % recorded movie image.
+        % FUTURE: Write trial number and condition number in
+        % corner of recorded movie image.
         writeVideo(vidWriter,img); % Write frame to video.
     end
     if exist('vidWriter','var')
@@ -494,25 +495,33 @@ try
     end
     test(end).min=true;
     test(end).ok=test(end).value;
-    test(end).help='web https://www.mathworks.com/hardware-support/matlab-webcam.html';
-    test(end).help=sprintf(['MATLAB Support Package for USB Webcams has not been installed. \n'...
-        'Open Add-Ons Explorer to install the Webcam Support Package.\n'...
-        'web https://www.mathworks.com/matlabcentral/fileexchange/45182-matlab-support-package-for-usb-webcams\n'...
-        'In the MATLAB Command Window type "webcam(1)" to get the best installation link.']);
-    test(end+1).name='Screen calibrated';
-    test(end).value='false';
-    test(end).ok=false;
-    test(end).min='true';
-    test(end).help='help CalibrateScreenLuminance; % In NoiseDiscrimination/utilities/';
-    if exist('OurScreenCalibrations','file')
-        cal=OurScreenCalibrations(0);
-        if isfield(cal,'old') && isfield(cal.old,'L') && isfield(cal,'datestr')
-            if ~streq(cal.datestr,'none') && ~isempty(cal.datestr)
-                test(end).value='true';
-                test(end).ok=true;
+    test(end).help='web https://www.mathworks.com/help/supportpkg/usbwebcams/';
+    % Weirdly this web page says the support package is NOT needed:
+    % https://www.mathworks.com/help/supportpkg/usbwebcams/ug/installing-the-webcams-support-package.html
+    % test(end).help='web https://www.mathworks.com/hardware-support/matlab-webcam.html';
+    % test(end).help=sprintf(['MATLAB Support Package for USB Webcams has not been installed. \n'...
+    %     'Open Add-Ons Explorer to install the Webcam Support Package.\n'...
+    %     'web https://www.mathworks.com/matlabcentral/fileexchange/45182-matlab-support-package-for-usb-webcams\n'...
+    %     'In the MATLAB Command Window type "webcam(1)" to get the best installation link.']);
+    
+    % Is screen calibrated?
+    if contains(mainFolder,'NoiseDiscrimination')
+        test(end+1).name='Screen calibrated';
+        test(end).value='false';
+        test(end).ok=false;
+        test(end).min='true';
+        test(end).help='help CalibrateScreenLuminance; % In NoiseDiscrimination/utilities/';
+        if exist('OurScreenCalibrations','file')
+            cal=OurScreenCalibrations(0);
+            if isfield(cal,'old') && isfield(cal.old,'L') && isfield(cal,'datestr')
+                if ~streq(cal.datestr,'none') && ~isempty(cal.datestr)
+                    test(end).value='true';
+                    test(end).ok=true;
+                end
             end
         end
     end
+    
     %% Goodbye
     o.speakInstructions=false;
     if o.speakInstructions && o.congratulateWhenDone
