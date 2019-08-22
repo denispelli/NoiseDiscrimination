@@ -404,6 +404,10 @@ try
                 input('Hit return when ready to proceed:\n','s');
             end
         end
+    else
+        cal.BrightnessWorks=false;
+        cal.ScreenConfigureDisplayBrightnessWorks=false;
+        cal.brightnessRmsError=nan;
     end % if IsOSX
     
     % Get the gamma table.
@@ -694,11 +698,11 @@ try
                 fprintf('i %3d, n %3d, v %.2f, L %5.1f cd/m^2\n',i,cal.old.n(i),v,cal.old.L(i));
             end
         end
-    catch
+    catch e
         Screen('CloseAll');
         ShowCursor;
         ListenChar;
-        psychrethrow(psychlasterror);
+        rethrow(e);
         return
     end
     Screen('CloseAll');
@@ -758,7 +762,7 @@ try
             fprintf(f,'\n');
         end
         if ~isempty(cal.MACAddress)
-            fprintf(f,'\tcal.OSName=OSName; %% ''%s'';\n',OSName);
+            fprintf(f,'\tcal.OSName=''%s'';\n',OSName);
             if ismac
                 fprintf(f,'\t%% cal.macModelName=''%s'';\n',prep(cal.macModelName));
                 fprintf(f,'\t%% cal.localHostName=''%s'';\n',prep(cal.localHostName));
