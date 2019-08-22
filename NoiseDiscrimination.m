@@ -1207,7 +1207,7 @@ end
 o=oo(1);
 skipScreenCalibration=o.skipScreenCalibration; % Set global flag.
 isLastBlock=o.isLastBlock; % Set global flag read by CloseWindowsAndCleanup.
-if ~isScreenCalibrated && ~skipScreenCalibration && ~ismember(o.observer,o.algorithmicObservers)
+if IsOSX && ~isScreenCalibrated && ~skipScreenCalibration && ~ismember(o.observer,o.algorithmicObservers)
     % 2019 update: Psychtoolbox offers Brightness control through a
     % Screen call. This worked well until macOS introduced Night Shift
     % (in summer 2017?). Since then my applescript-based Brightness.m
@@ -1223,8 +1223,7 @@ if ~isScreenCalibrated && ~skipScreenCalibration && ~ismember(o.observer,o.algor
     [~,ver]=PsychtoolboxVersion;
     % fprintf('PsychtoolboxVersion %d.%d.%d',ver.major,ver.minor,ver.point);
     v=ver.major*1000+ver.minor*100+ver.point;
-    useScreen3016= v<3016 && exist('Screen3016','file');
-    useScreenBrightness= v>=3016 || useScreen3016;
+    useScreenBrightness= v>=3016 && IsOSX;
     try
         if isfinite(oo(oi).brightnessSetting)
             cal.brightnessSetting=oo(oi).brightnessSetting;
@@ -1235,19 +1234,12 @@ if ~isScreenCalibrated && ~skipScreenCalibration && ~ismember(o.observer,o.algor
         s=GetSecs;
         for i=1:3
             if useScreenBrightness
-                if useScreen3016
-                    Screen3016('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
-                else
-                    Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
-                end
+                Screen('ConfigureDisplay','Brightness',...
+                    cal.screen,cal.screenOutput,cal.brightnessSetting);
             else
                 Brightness(cal.screen,cal.brightnessSetting); % Set brightness.
             end
-            if useScreen3016
-                cal.brightnessReading=Screen3016('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
-            else
-                cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
-            end
+            cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
             if abs(cal.brightnessSetting-cal.brightnessReading)<0.01
                 break;
             elseif i==3
@@ -1276,7 +1268,8 @@ if ~isScreenCalibrated && ~skipScreenCalibration && ~ismember(o.observer,o.algor
         cal.brightnessReading=NaN;
     end % try
     if abs(cal.brightnessSetting-cal.brightnessReading)>0.01
-        error('Set brightness to %.2f, but read back %.2f',cal.brightnessSetting,cal.brightnessReading);
+        error('Set brightness to %.2f, but read back %.2f',...
+            cal.brightnessSetting,cal.brightnessReading);
     end
     ffprintf(ff,'Brightness set to %.2f.\n',cal.brightnessSetting);
     if ismac
