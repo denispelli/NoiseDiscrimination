@@ -23,6 +23,12 @@ o.textSize=40;
 
 %% FILES
 mainFolder=fileparts(fileparts(mfilename('fullpath')));
+if ~exist('TextSizeToFit','file') && ...
+        ~exist([mainFolder filesep 'lib' filesep 'TextSizeToFit.m'],'file')
+    error(['Please run me from the "utility" folder in '...
+    'NoiseDiscrimination or CriticalSpacing.  That allows me to find other '...
+    'routines in the corresponding "lib" folder.']);
+end
 addpath(fullfile(mainFolder,'lib')); % "lib" folder in same directory as this file
 addpath(fullfile(mainFolder,'utilities')); % "lib" folder in same directory as this file
 
@@ -504,11 +510,16 @@ try
     %     'web https://www.mathworks.com/matlabcentral/fileexchange/45182-matlab-support-package-for-usb-webcams\n'...
     %     'In the MATLAB Command Window type "webcam(1)" to get the best installation link.']);
     
-    % Is screen calibrated?
+    %% Is screen calibrated?
     if contains(mainFolder,'NoiseDiscrimination')
-        test(end+1).name='Screen calibrated';
-        test(end).value='false';
-        test(end).ok=false;
+        test(end+1).name='Screen is calibrated';
+        if streq(cal.datestr,'none') || isempty(cal.datestr);
+            test(end).value='false';
+            test(end).ok=false;
+        else
+            test(end).value='true';
+            test(end).ok=true;
+        end
         test(end).min='true';
         test(end).help='help CalibrateScreenLuminance; % In NoiseDiscrimination/utilities/';
         if exist('OurScreenCalibrations','file')
