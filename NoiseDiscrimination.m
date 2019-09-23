@@ -2100,7 +2100,7 @@ try
             oo(1).psychtoolboxKernelDriverLoaded=false;
         end
         [oo.psychtoolboxKernelDriverLoaded]=deal(oo(1).psychtoolboxKernelDriverLoaded);
-        if ~oo(1).psychtoolboxKernelDriverLoaded
+        if ismac && ~oo(1).psychtoolboxKernelDriverLoaded
             error('IMPORTANT: You must install the Psychtoolbox Kernel Driver, as explained by "*Install NoiseDiscrimination.docx" step B.13.');
             %             warning('IMPORTANT: Best to install the Psychtoolbox Kernel Driver, as explained by "*Install NoiseDiscrimination.docx" step B.13.');
         end
@@ -5586,37 +5586,42 @@ try
         oo(1).newCal=cal;
         save(fullfile(oo(1).dataFolder,[oo(1).dataFilename '.mat']),'oo','cal');
         ffprintf(ff,'%d: done saving mat file at %.0f s\n',oi,GetSecs-savingToDiskSecs);
-        try % save to .json file
-            % I used /utility/printFieldBytes to select the biggest fields
-            % for deletion. Including annularNoiseMask and
-            % centralNoiseMask, this reduced o from 46 MB to 0.2 MB.
-            if isfield(oo1,'signal')
-                % Too big to save. 5 MB.
-                oo1=rmfield(oo1,'signal');
-            end
-            if isfield(oo1,'q')
-                % Too big to save. 0.2 MB.
-                oo1=rmfield(oo1,'q');
-            end
-            if isfield(oo1,'newCal')
-                % Too big to save. 0.1 MB.
-                oo1=rmfield(oo1,'newCal');
-            end
-            if exist('jsonencode','builtin')
-                json=jsonencode(oo1);
-            else
-                addpath(fullfile(mainFolder,'lib/jsonlab'));
-                json=savejson('',oo1);
-            end
-            clear oo1
-            fid=fopen(fullfile(oo(1).dataFolder,[oo(1).dataFilename '.json']),'w');
-            fprintf(fid,'%s',json);
-            fclose(fid);
-        catch e
-            warning('Failed to save .json file.');
-            warning(e.message);
-        end % save to .json file
-        ffprintf(ff,'%d: done saving json data at %.0f s\n',oi,GetSecs-savingToDiskSecs);
+        if exist('oo1','var')
+            try % save to .json file
+                % I used /utility/printFieldBytes to select the biggest fields
+                % for deletion. Including annularNoiseMask and
+                % centralNoiseMask, this reduced o from 46 MB to 0.2 MB.
+                if isfield(oo1,'signal')
+                    % Too big to save. 5 MB.
+                    oo1=rmfield(oo1,'signal');
+                end
+                if isfield(oo1,'q')
+                    % Too big to save. 0.2 MB.
+                    oo1=rmfield(oo1,'q');
+                end
+                if isfield(oo1,'newCal')
+                    % Too big to save. 0.1 MB.
+                    oo1=rmfield(oo1,'newCal');
+                end
+                if exist('jsonencode','builtin')
+                    json=jsonencode(oo1);
+                else
+                    addpath(fullfile(mainFolder,'lib/jsonlab'));
+                    json=savejson('',oo1);
+                end
+                clear oo1
+                fid=fopen(fullfile(oo(1).dataFolder,[oo(1).dataFilename '.json']),'w');
+                fprintf(fid,'%s',json);
+                fclose(fid);
+            catch e
+                warning('Failed to save .json file.');
+                warning(e.message);
+                e.stack
+            end % save to .json file
+            ffprintf(ff,'%d: done saving json data at %.0f s.\n',oi,GetSecs-savingToDiskSecs);
+        else
+            ffprintf(ff,'%d: Nothing to save in json file.\n',oi);
+        end
 
         %% SAVE TRANSCRIPT TO .JSON FILE
         try 
