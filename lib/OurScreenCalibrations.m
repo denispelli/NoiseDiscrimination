@@ -9557,7 +9557,7 @@ if streq(MACAddress,'5E-EA-1D-8C-72-89')
 	cal.datestr='21-Aug-2019 19:03:43';
 	cal.photometer='Minolta Spotmeter';
 	cal.notes='Sangita Chakraborty 306 ceiling lights on';
-	cal.calibratedBy='';
+	cal.calibratedBy='Sangita Chakraborty';
 	cal.psychImagingOption='';
 	cal.displayCoreId='Intel';
 	cal.bitsPerColorComponent='';
