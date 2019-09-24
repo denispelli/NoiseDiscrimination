@@ -40,6 +40,9 @@ addpath(fullfile(mainFolder,'lib')); % Folder in same directory as this M file.
 clear KbWait
 clear o oo ooo
 ooo={};
+if IsWin
+    o.useNative11Bit=false;
+end
 % o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
 % o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 o.askForPartingComments=true;
