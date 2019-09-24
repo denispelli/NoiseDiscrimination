@@ -75,6 +75,9 @@ function oo=NoiseDiscrimination(ooIn)
 % o.thresholdParameter can now be 'size' or 'contrast'. ('spacing' isn't
 % yet fully implemented.) March 20, 2019
 %
+% Now seems to work on Windows. This required not using the nonmonotonic
+% oo(1).gray1, and using oo(1).gray instead. September 23, 2019
+%
 % OFF THE NYU CAMPUS: If you have an NYU netid and you're using the NYU
 % MATLAB license server then you can work from off campus if you install
 % NYU's free VPN software on your computer:
@@ -1457,7 +1460,7 @@ try
     [oo.textFont]=deal('Verdana');
     black=0; % The CLUT color code for black.
     white=1; % Retrieves the CLUT color code for white.
-    [oo.gray1]=deal(1); % Temporary background (for questions) until we LinearizeClut.
+    [oo.gray1]=deal(white); % Temporary background (for questions) until we LinearizeClut.
     [oo.speakEachLetter]=deal(false);
     [oo.useSpeech]=deal(false);
     preface='Hello. ';
@@ -1998,7 +2001,7 @@ try
             % Tell observer what's happening.
             Screen('LoadNormalizedGammaTable',oo(1).window,cal.old.gamma,loadOnNextFlip);
             Screen('FillRect',oo(1).window);
-            Screen('TextBackgroundColor',window,1); % Set background.
+            Screen('TextBackgroundColor',window,white); % Set background.
             Screen('TextSize',oo(1).window,oo(oi).textSize);
             string=sprintf('Setting screen color profile. ... ');
             DrawFormattedText(oo(1).window,string,...
@@ -2121,13 +2124,13 @@ try
             % o.LBackground=o.LBackground*(1+(rand-0.5)/32); % Tiny jitter, ±1.5%
             % First entry is black.
             cal.gamma(1,1:3)=0; % Black.
-            % Second entry (CLUT entry 1) is o.gray1. We have two clut
-            % entries that produce the same gray. One (o.gray) is in the
-            % middle of the CLUT (only roughly in the middle unless
-            % symmetricLuminanceRange=true) and the other is at a low
-            % entry, near black. The benefit of having small o.gray1 is
-            % that we get better blending of letters written (as black=0)
-            % on that background by Screen DrawText.
+            % If not Windows, then second entry (CLUT entry 1) is o.gray1.
+            % We have two clut entries that produce the same gray. One
+            % (o.gray) is in the middle of the CLUT (only roughly in the
+            % middle unless symmetricLuminanceRange=true) and the other is
+            % at a low entry, near black. The benefit of having small
+            % o.gray1 is that we get better blending of letters written (as
+            % black=0) on that background by Screen DrawText.
             oo(1).gray1=1/oo(1).maxEntry;
             [oo.gray1]=deal(oo(1).gray1);
             assert(oo(1).gray1*oo(1).maxEntry <= oo(1).firstGrayClutEntry-1);
@@ -2193,14 +2196,21 @@ try
                     disp(interp1(cal.old.G,cal.old.L,g,'pchip'));
                 end
             end
-            %             oo(1).gray=oo(1).gray1; % DGP. Immune to update of asymmetric CLUT.
-            % While it's true that the gray1 index produces a mid gray unaffected by
-            % the CLUT updates, we later call LuminanceOfIndex, which  forces all
-            % pixels to be within the specified dynamic range of the CLUT, so "gray1"
-            % will generate a warning and be replaced with the darkest value in the
-            % CLUT range. That's bad. So it's better to just tolerate the screen
+            % oo(1).gray=oo(1).gray1; % DGP. Immune to update of asymmetric
+            % CLUT. While it's true that the gray1 index produces a mid
+            % gray unaffected by the CLUT updates, we later call
+            % LuminanceOfIndex, which  forces all pixels to be within the
+            % specified dynamic range of the CLUT, so "gray1" will generate
+            % a warning and be replaced with the darkest value in the CLUT
+            % range. That's bad. So it's better to just tolerate the screen
             % flicker that occurs when we update the CLUT.
             [oo.gray]=deal(oo(1).gray);
+            if IsWin
+                % We set gray1=gray as soon as we know gray.
+                for ii=1:length(oo)
+                    oo(ii).gray1=oo(ii).gray;
+                end
+            end
             Screen('LoadNormalizedGammaTable',oo(1).window,cal.gamma,loadOnNextFlip);
             if oo(1).assessLoadGamma
                 ffprintf(ff,'Line %d: o.contrast %.3f, LoadNormalizedGammaTable 0.5*range/mean=%.3f\n', ...
@@ -5675,7 +5685,7 @@ try
             % Tell observer what's happening.
             Screen('LoadNormalizedGammaTable',oo(1).window,cal.old.gamma,loadOnNextFlip);
             Screen('FillRect',oo(1).window);
-            Screen('TextBackgroundColor',oo(1).window,1); % Set background.
+            Screen('TextBackgroundColor',oo(1).window,white); % Set background.
             string=sprintf('Closing windows. Goodbye. ');
             DrawFormattedText(oo(1).window,string,...
                 2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
