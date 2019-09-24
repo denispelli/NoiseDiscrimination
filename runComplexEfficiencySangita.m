@@ -43,8 +43,8 @@ ooo={};
 if IsWin
     o.useNative11Bit=false;
 end
-o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
-o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+% o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
+% o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 o.askForPartingComments=true;
 o.recordGaze=false;
 o.experiment='ComplexEfficiency';
