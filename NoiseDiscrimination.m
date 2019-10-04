@@ -6819,26 +6819,21 @@ DrawFormattedText(o.window,footnote,...
     floor(o.textLineLength/factor),[],[],1.3);
 
 % Modification starts here %
-% October 2, 2019. Omkar, polished by Denis. Not yet tested. Show observer
-% locations where target can appear.
+% October 2, 2019. Ziyi Zhang, polished by Denis Pelli. Not yet tested.
+% Show observer all locations where target can appear.
 for iUnc=1:length(o.uncertainParameter)
     switch o.uncertainParameter{iUnc}
         case 'eccentricityXYDeg'
             % o.uncertainDisplayColor=[0., 0.5, 1.]; % MOVED TO TOP.
             % o.uncertainDisplayDotDeg=0.1; % MOVED TO TOP.
             dotSizePix=o.uncertainDisplayDotDeg*o.pixPerDeg;
-            for i=1:length(o.uncertainValues{iUnc})
-                % This does one iteration per location. It would be nice to
-                % do all locations at once, since both routines accept a
-                % list of points, alas with different array shapes. I think
-                % that a transpose might do the trick. XYPixOfXYDeg assumes
-                % one row per point. DrawDots assumes one column per point.
-                % Denis
-                xyDeg=o.uncertainValues{iUnc}{i};
-                xy=XYPixOfXYDeg(o,xyDeg);
-                Screen('DrawDots',o.window,[xy(1);xy(2)],...
-                    dotSizePix,o.uncertainDisplayColor,[],2);
-            end
+            xyDeg=[o.uncertainValues{iUnc}{:}];
+            xyDeg=reshape(xyDeg,2,length(xyDeg)/2)';
+            % XYPixOfXYDeg assumes one row per point.
+            xy=XYPixOfXYDeg(o,xyDeg);
+            % DrawDots assumes one column per point.
+            Screen('DrawDots',o.window,xy',...
+                dotSizePix,o.uncertainDisplayColor,[],2);
     end
 end
 % Modification ends here %
