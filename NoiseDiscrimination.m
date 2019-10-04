@@ -112,7 +112,7 @@ function oo=NoiseDiscrimination(ooIn)
 % NPhoton = phi^-1 q^-1 L^-1, where phi is the transduction efficiency of
 % (fraction of light required to account for) the photon noise, qL is
 % luminance expressed as a quantal flux of 555-nm photon deg-2 s-1,
-% q = 1.26e6 deg^-2 s^-1 td^-1 is the conversion factor, and L is retinal
+% q = 1.26e6 deg^-2 s^-1 td^-1 is the conversion factor, and L is retinal
 % illuminance in td.
 % q=1.26e6;
 % NPhoton=1/(phi*q*td);
@@ -668,6 +668,8 @@ o.uncertainParameter={}; % List of uncertain parameters, each a field of the o s
 % o.uncertainParameter={'eccentrictyXYDeg'};
 o.uncertainValues={}; % List of lists, one list for each uncertain parameter.
 % o.uncertainValues={{[-10 0] [10 0]}};
+o.uncertainDisplayDotDeg=0.1;
+o.uncertainDisplayColor=[0., 0.5, 1.];
 
 % Geometry
 o.nearPointXYInUnitSquare=[0.5 0.5]; % location of target center on screen. [0 0]  lower right, [1 1] upper right.
@@ -3229,7 +3231,7 @@ try
                                 % pixels. The target size is given by
                                 % oo(oi).targetRectChecks. If
                                 % o.allowAnyFont=false then this a square
-                                % [0 0 1 1]*o.targetHeightPix/o.targetCheckPix.
+                                % [0 0 1 1]*o.targetHeightPix/o.targetCheckPix.
                                 % In general, it need not be square. Any
                                 % code that needs a bounding rect for the
                                 % target should use o.targetRectChecks, not
@@ -3705,9 +3707,9 @@ try
             oo(oi).trials=oo(oi).trials-1;
             continue
         end
-        % This is cosmetic, we alphabetize the fields, so they are saved
-        % alphabetized, so they will appear alphabetized in any futute time
-        % display the fields or a table of the fields.
+        % This is cosmetic. We alphabetize the fields so that they are
+        % saved alphabetized, and will appear alphabetized in any future
+        % display.
         oo=SortFields(oo); 
         
         % IMPLEMENT UNCERTAINTY
@@ -6815,6 +6817,32 @@ factor=sz/o.textSize;
 DrawFormattedText(o.window,footnote,...
     x,y,black,...
     floor(o.textLineLength/factor),[],[],1.3);
+
+% Modification starts here %
+% October 2, 2019. Omkar, polished by Denis. Not yet tested. Show observer
+% locations where target can appear.
+for iUnc=1:length(o.uncertainParameter)
+    switch o.uncertainParameter{iUnc}
+        case 'eccentricityXYDeg'
+            % o.uncertainDisplayColor=[0., 0.5, 1.]; % MOVED TO TOP.
+            % o.uncertainDisplayDotDeg=0.1; % MOVED TO TOP.
+            dotSizePix=o.uncertainDisplayDotDeg*o.pixPerDeg;
+            for i=1:length(o.uncertainValues{iUnc})
+                % This does one iteration per location. It would be nice to
+                % do all locations at once, since both routines accept a
+                % list of points, alas with different array shapes. I think
+                % that a transpose might do the trick. XYPixOfXYDeg assumes
+                % one row per point. DrawDots assumes one column per point.
+                % Denis
+                xyDeg=o.uncertainValues{iUnc}{i};
+                xy=XYPixOfXYDeg(o,xyDeg);
+                Screen('DrawDots',o.window,[xy(1);xy(2)],...
+                    dotSizePix,o.uncertainDisplayColor,[],2);
+            end
+    end
+end
+% Modification ends here %
+
 DrawCounter(o);
 Screen('Flip',o.window,0,1); % Proceeding to the trial.
 if o.speakInstructions
