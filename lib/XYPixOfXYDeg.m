@@ -4,22 +4,37 @@ function xyPix=XYPixOfXYDeg(o,xyDeg)
 % coordinates which increase down and right. In terms of geometry, the
 % perspective transformation is relative to location of near point, which
 % is orthogonal to line of sight. "location" refers to the near point. We
-% typically put the target there, but that is not assumed in this routine.
+% often put the target there, but that is not assumed in this routine.
 % In spatial-uncertainty experiments, we typically put fixation at the near
 % point.
+% xyDeg must have two columns, for x and y, and may have any number of
+% rows, including none.
+% October 4, 2019. Enhanced to accept more than one point.
+xyPix=zeros(size(xyDeg));
+if isempty(xyDeg)
+    return
+end
+assert(size(xyDeg,2)==2),'Require that xyDeg has two columns, unless empty.');
 assert(isfield(o,'nearPointXYDeg'));
 assert(length(o.nearPointXYDeg)==2,'Require that length(o.nearPointXYDeg)==2');
-assert(isfield(o,'nearPointXYPix'));
-assert(length(o.nearPointXYPix)==2,'Require that length(o.nearPointXYPix)==2');
-assert(length(xyDeg)==2);
-xyDeg=xyDeg-o.nearPointXYDeg;
-rDeg=norm(xyDeg);
-rPix=o.pixPerCm*o.viewingDistanceCm*tand(rDeg);
-if rDeg>0
-    xyPix=xyDeg*rPix/rDeg;
-    xyPix(2)=-xyPix(2); % Apple y goes down.
-else
-    xyPix=[0 0];
+if isempty(o.nearPointXYPix)
+    error('You must set o.nearPointXYPix before calling XYPixOfXYDeg.');
 end
-xyPix=xyPix+o.nearPointXYPix;
+if isempty(o.pixPerCm) || isempty(o.viewingDistanceCm)
+    error('You must set o.pixPerCm and o.viewingDistanceCm before calling XYPixOfXYDeg.');
+end
+for i=1:size(xyDeg,1)
+    % Each row is an x,y point.
+    xyDeg1(1:2)=xyDeg(i,1:2);
+    xyDeg1=xyDeg1-o.nearPointXYDeg;
+    rDeg=norm(xyDeg1);
+    rPix=o.pixPerCm*o.viewingDistanceCm*tand(rDeg);
+    if rDeg>0
+        xyPix1=xyDeg1*rPix/rDeg;
+        xyPix1(2)=-xyPix1(2); % Apple y goes down.
+    else
+        xyPix1=[0 0];
+    end
+    xyPix1=xyPix1+o.nearPointXYPix;
+    xyPix(i,1:2)=xyPix1;
 end
