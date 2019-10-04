@@ -661,7 +661,7 @@ o.minimumTargetPix=8;
 % Typically there will be zero or one parameter, each specified by
 % a field name, but we support an unlimited number. For each
 % parameter there must be a non-empty list of values in
-% o.uncertainValues, which is a list of lists. Because we use cell
+% o.uncertainValues, which is a list of lists because we use cell
 % lists, the values can be of any kind, whatever is appropriate to
 % that field, e.g. a 1x2 array for 'eccentricityXYDeg'.
 o.uncertainParameter={}; % List of uncertain parameters, each a field of the o struct.
