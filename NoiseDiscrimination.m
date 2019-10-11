@@ -969,8 +969,8 @@ o.deviceIndex=-3; % -3 for all keyboard/keypad devices.
 o.deviceIndex=GetKeyboardIndices; % Enumerate all the keyboards.
 % October 10, 2019. Using [] doesn't work with wireless keyboards, e.g. my
 % new Apple Magic Keyboard on my lab iMac. My new solution is to enumerate
-% all the keyboards and set o.deviceIndex to that list. I'm note sure why
-% my iMac lists both a Logitech that's not connected and the Apple Magic
+% all the keyboards and set o.deviceIndex to that list. I'm not sure why my
+% iMac lists both a Logitech that's not connected and the Apple Magic
 % Keyboard that is connected, but I hope that using the complete
 % enumeration will be a reliable way to use the active keyboard on all my
 % computers.
