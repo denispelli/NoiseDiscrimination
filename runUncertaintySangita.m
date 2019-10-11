@@ -102,6 +102,7 @@ for iM=1:length(MM)
     a0=AA(iM);
     % Sloan with uncertainty
     o.conditionName='Sloan';
+    o.showUncertainty=true;
     o.uncertainParameter={'eccentricityXYDeg'};
     % Uncertainty is M equally spaced positions along a ring with radiusDeg.
     o.uncertainDisplayDotDeg=0.5; 
@@ -129,6 +130,7 @@ for iM=1:length(MM)
     o.fixationCrossDrawnOnStimulus=false;
     o.uncertainParameter={};
     o.uncertainValues={};
+    o.showUncertainty=false;
 end
 
 % if false
