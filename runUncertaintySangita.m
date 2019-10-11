@@ -1,42 +1,16 @@
-% runComplexEfficiency.m
+% runUncertaintySangita.m
 % MATLAB script to run NoiseDiscrimination.m
 % Copyright 2019 Denis G. Pelli, denis.pelli@nyu.edu
-%
-% August 2, 2019 runComplexEfficiency now uses the new routine
-% CheckExperimentFonts to make sure all needed fonts are in place before we
-% run the experiment.
-%
-% June 4, 2019. Added "Fixation check" condition that is meant to be
-% interleaved with all peripheral conditions. It presents an unvarying easy
-% foveal identification task (a target letter between two flankers), which
-% will be crowded beyond recognition if the observer's eye is more than 2
-% deg from fixation. If the observer gets it wrong the program encourages
-% better fixation, and runs two more foveal trials. Thus an observer who
-% frequently fixates away from fixation will generate many errors and many
-% extra trials. I hope this will help the observer learn to fixate
-% reliably.
-%
-% On the first block the program asks for the experimenter's and observer's
-% names. It remembers the names on subsequent blocks. It insists that the
-% experiment's name be at least 3 characters and that the observer's name
-% include first and last names (i.e. at least one character followed by a
-% space followed by at least one character).
-%
-% Please use binocular viewing, using both eyes at all times.
-%
-% The script specifies the viewing distance. Please use a meter stick or
-% tape measure to measure the viewing distance and ensure that the
-% observer's eye is actually at the distance that the program thinks it is.
-% Please encourage the observer to maintain the same viewing distance for
-% the whole experiment.
 %
 % denis.pelli@nyu.edu June 4, 2019
 % 646-258-7524
 
-% Crowding distance at ±10 deg ecc x 2 orientation.
-% Acuity at ±10 deg ecc.
-mainFolder=fileparts(mfilename('fullpath')); % Takes 0.1 s.
-addpath(fullfile(mainFolder,'lib')); % Folder in same directory as this M file.
+% Efficiency with uncertainty of 2 and 16.
+% We test uncertainty 2 at several orientations, so we can average out
+% the variation with meridian. Estimated time 24 minutes.
+% Also runs the ideal on the same conditions.
+mainFolder=fileparts(mfilename('fullpath')); % Folder this m file is in.
+addpath(fullfile(mainFolder,'lib')); % lib folder in that folder.
 clear KbWait
 clear o oo ooo
 ooo={};
@@ -89,7 +63,7 @@ o.counterPlacement='bottomRight';
 o.instructionPlacement='bottomLeft'; % 'topLeft' 'bottomLeft'
 o.brightnessSetting=0.87;
 o.askExperimenterToSetDistance=true;
-if 0
+if false
     % Target face
     o.conditionName='face';
     o.signalImagesFolder='faces';
@@ -121,17 +95,21 @@ if 0
 end
 o.symmetricLuminanceRange=true; % False for maximum brightness.
 o.desiredLuminanceFactor=1; % 1.8 to maximize brightness.
-if 1
+MM=[2 2 2 2 16 16];
+AA=[0 45 90 135 0 0];
+for iM=1:length(MM)
+    M=MM(iM);
+    a0=AA(iM);
     % Sloan with uncertainty
     o.conditionName='Sloan';
     o.uncertainParameter={'eccentricityXYDeg'};
-    % Uncertainty is M equally spaced positions along a ring with radius r.
-    r=10;
-    M=100;
-    list={};
+    % Uncertainty is M equally spaced positions along a ring with radiusDeg.
+    o.uncertainDisplayDotDeg=0.5; 
+    radiusDeg=10;
+    list=cell(1,M);
     for i=1:M
-        a=360*i/M; 
-        list{i}=r*[cosd(a) sind(a)];
+        a=a0+360*i/M; 
+        list{i}=radiusDeg*[cosd(a) sind(a)];
     end
     o.uncertainValues={list};
     o.targetFont='Sloan';
@@ -149,23 +127,11 @@ if 1
     ooo{end+1}=o;
     o.uncertainParameter={};
     o.fixationCrossDrawnOnStimulus=false;
+    o.uncertainParameter={};
+    o.uncertainValues={};
 end
-if 1
-    % Sloan
-    o.conditionName='Sloan';
-    o.targetFont='Sloan';
-    o.minimumTargetHeightChecks=8;
-    o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
-    o.targetKind='letter';
-    o.borderLetter='X';
-    o.alphabetPlacement='right'; % 'top' or 'right';
-    o.labelAnswers=false;
-    o.getAlphabetFromDisk=true;
-    o.contrast=-1;
-    o.alternatives=length(o.alphabet);
-    ooo{end+1}=o;
-end
-% if 0
+
+% if false
 %     % Checkers alphabet
 %     o.conditionName='Checkers';
 %     o.targetFont='Checkers';
@@ -177,7 +143,7 @@ end
 %     o.alternatives=length(o.alphabet);
 %     ooo{end+1}=o;
 % end
-if 0
+if false
     % Animals alphabet
     o.conditionName='Animals';
     o.targetFont='Animals';
@@ -191,7 +157,7 @@ if 0
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-if 0
+if false
     % Sans Forgetica
     o.targetFont='Sans Forgetica';
     o.conditionName=o.targetFont;
@@ -203,7 +169,7 @@ if 0
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-if 0
+if false
     % Kuenstler
     o.targetFont='Kuenstler Script LT';
     o.conditionName=o.targetFont;
@@ -215,7 +181,7 @@ if 0
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-if 0
+if false
     % Sabbath Black
 %     o.targetFont='SabbathBlackRegular';
     o.targetFont='SabbathBlack OT'; % Now open type, but same design.
@@ -228,7 +194,7 @@ if 0
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-if 0
+if false
     % Chinese from Qihan
     o.targetFont='Songti TC'; % style Regular
     o.conditionName=o.targetFont;
@@ -243,7 +209,7 @@ if 0
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-if 0
+if false
     % Chinese selected by Amy Lin, July 10, 2019
     o.targetFont='Songti TC'; % style Regular
     o.conditionName='simpleChinese'; % Selected by Amy Lin, July 10, 2019
@@ -259,7 +225,7 @@ if 0
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-if 0
+if false
     % Japanese: Katakana, Hiragani, and Kanji
     % from Ayaka
     o.targetFont='Hiragino Mincho ProN'; % style W3
@@ -290,7 +256,7 @@ if 0
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-if 1
+if true
     % Test with zero and high noise, interleaved.
     for block=1:length(ooo)
         oo=ooo{block};
@@ -302,20 +268,22 @@ if 1
             oo(oi).noiseCheckDeg=oo(oi).targetHeightDeg/40;
             oo(oi).setNearPointEccentricityTo='fixation';
             oo(oi).nearPointXYInUnitSquare=[0.5 0.5];
-            oo(oi).noiseSD=0;
-            oo(oi).noiseSD=maxNoiseSD; % DGP
+            oo(oi).noiseSD=maxNoiseSD; 
         end
-        ooNoise=oo;
-        [ooNoise.noiseSD]=deal(maxNoiseSD);
-        ooo{block}=[oo ooNoise];
+        ooNoNoise=oo;
+        [ooNoNoise.noiseSD]=deal(0);
+        ooo{block}=[oo ooNoNoise];
     end
 end
-if true
+if false
     % Measure threshold size at +/-10 deg. No noise.
     % Randomly interleave testing left and right.
     % Add fixation check.
     for block=1:length(ooo)
         o=ooo{block}(1);
+        o.noiseSD=0;
+        o.uncertainParameter={};
+        o.uncertainValues={};
         o.fullResolutionTarget=true;
         o.targetHeightDeg=10;
         o.brightnessSetting=0.87;
@@ -443,7 +411,7 @@ for block=1:length(ooo)
 end
 t=struct2table(oo,'AsArray',true);
 disp(t(:,{'block' 'experiment' 'targetKind' 'thresholdParameter'...
-    'uncertainParameter'...
+    'uncertainParameter' ...
     'contrast' 'conditionName' 'observer' 'willTakeMin' 'noiseSD' ...
     'targetHeightDeg' 'eccentricityXYDeg' 'labelAnswers'})); % Print the conditions in the Command Window.
 % return
