@@ -5,10 +5,10 @@ function xyDeg=XYDegOfXYPix(o,xyPix)
 % transformation is relative to location of near point, which is orthogonal
 % to line of sight. We typically put the target at the near point, but that
 % is not assumed in this routine.
+% NOT YET ENHANCED TO ACCEPT MORE THAN ONE POINT.
+% SEE XYPixOfXYDeg.m
 assert(isfield(o,'nearPointXYDeg'));
 assert(length(o.nearPointXYDeg)==2);
-assert(isfield(o,'nearPointXYPix'));
-assert(length(o.nearPointXYPix)==2);
 assert(length(xyPix)==2);
 if isempty(o.nearPointXYPix)
     error('You must set o.nearPointXYPix before calling XYDegOfXYPix.');
