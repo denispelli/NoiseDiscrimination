@@ -14,7 +14,7 @@ xyPix=zeros(size(xyDeg));
 if isempty(xyDeg)
     return
 end
-assert(size(xyDeg,2)==2),'Require that xyDeg has two columns, unless empty.');
+assert(size(xyDeg,2)==2,'xyDeg must have two columns, unless empty.');
 assert(isfield(o,'nearPointXYDeg'));
 assert(length(o.nearPointXYDeg)==2,'Require that length(o.nearPointXYDeg)==2');
 if isempty(o.nearPointXYPix)
