@@ -661,15 +661,16 @@ o.minimumTargetPix=8;
 % Typically there will be zero or one parameter, each specified by
 % a field name, but we support an unlimited number. For each
 % parameter there must be a non-empty list of values in
-% o.uncertainValues, which is a list of lists because we use cell
+% o.uncertainValues, which is a list of lists. Because we use cell
 % lists, the values can be of any kind, whatever is appropriate to
 % that field, e.g. a 1x2 array for 'eccentricityXYDeg'.
 o.uncertainParameter={}; % List of uncertain parameters, each a field of the o struct.
 % o.uncertainParameter={'eccentrictyXYDeg'};
 o.uncertainValues={}; % List of lists, one list for each uncertain parameter.
 % o.uncertainValues={{[-10 0] [10 0]}};
-o.uncertainDisplayDotDeg=0.1;
-o.uncertainDisplayColor=[0., 0.5, 1.];
+o.uncertainDisplayDotDeg=0.2;
+o.uncertainDisplayColor=[0. 0.5 1.];
+o.showUncertainty=false;
 
 % Geometry
 o.nearPointXYInUnitSquare=[0.5 0.5]; % location of target center on screen. [0 0]  lower right, [1 1] upper right.
@@ -964,7 +965,16 @@ o.deviceIndex=-1; % -1 for all keyboards.
 o.deviceIndex=-3; % -3 for all keyboard/keypad devices.
 % o.deviceIndex=3; % my built-in keyboard, according to PsychHIDTest
 % o.deviceIndex=6; % my bluetooth wireless keyboard, according to PsychHIDTest
-o.deviceIndex=[]; % Default. This runs MUCH more reliably. Not sure why.
+% o.deviceIndex=[]; % [] worked more reliably than specifed index. Not sure why.
+o.deviceIndex=GetKeyboardIndices; % Enumerate all the keyboards.
+% October 10, 2019. Using [] doesn't work with wireless keyboards, e.g. my
+% new Apple Magic Keyboard on my lab iMac. My new solution is to enumerate
+% all the keyboards and set o.deviceIndex to that list. I'm note sure why
+% my iMac lists both a Logitech that's not connected and the Apple Magic
+% Keyboard that is connected, but I hope that using the complete
+% enumeration will be a reliable way to use the active keyboard on all my
+% computers.
+%
 % April, 2018. KbCheck([]) succeeds, but I'm experiencing a fatal error
 % when I call KbCheck(deviceIndex) with deviceIndex -1 or -3 or the
 % positive device index (2) of my built-in keyboard. The suprising error
@@ -987,7 +997,9 @@ o.deviceIndex=[]; % Default. This runs MUCH more reliably. Not sure why.
 % relying on the merged modes, I always interrogate the full device
 % structure at runtime to determine exactly which keyboard to use, based
 % upon the usageName, transport, and product info for each available
-% device." microfish@fishmonkey.com.au to [PSYCHTOOLBOX] Mar 29, 2018
+% device." 
+% microfish@fishmonkey.com.au to [PSYCHTOOLBOX] Mar 29, 2018
+% He provides his code to enumerate the keyboards:
 % d=PsychHID('Devices');
 % iKeyboards=ismember([d(:).usageValue],[6]); % Keyboard
 % dk=d(iKeyboards);
@@ -4787,7 +4799,7 @@ try
                         % the response area, while trying to leave other
                         % annotations untouched, without distracting
                         % flicker.
-                        %                         Screen('FillRect',window,o.gray1,blankRect);
+                        % Screen('FillRect',window,o.gray1,blankRect);
                         rect=round(rect);
                         switch oo(oi).alphabetPlacement
                             case {'left' 'right'}
@@ -4926,7 +4938,9 @@ try
                         MFileLineNr,oo(oi).gray*oo(oi).maxEntry,LuminanceOfIndex(cal,oo(oi).gray*oo(oi).maxEntry),pp(1));
                 end
                 if trial==1 % && oo(1).block==1
-                    WaitSecs(0.5); % First time is slow. Mario suggested a work around, explained at beginning of this file.
+                    WaitSecs(0.5); % First time is slow. Mario suggested a 
+                                   % work around, explained at beginning of 
+                                   % this file.
                 end
                 if isfinite(oo(oi).targetDurationSecs)
                     % If signal is over, then set CLUT to allow maximum
@@ -4936,6 +4950,9 @@ try
                     Screen('LoadNormalizedGammaTable',oo(1).window,cal.gamma,loadOnNextFlip);
                 end
                 DrawCounter(oo(oi));
+                if any(oo.showUncertainty)
+                    DrawUncertainty(oo);
+                end
                 Screen('Flip',oo(1).window,0,1); % Display instructions.
             end % if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
             
@@ -6418,7 +6435,7 @@ while ~set
     if isempty(o.window) || ismember(o.observer,o.algorithmicObservers)
         return
     end
-    isNewDistance= o.viewingDistanceCm ~= oldViewingDistanceCm;
+    isNewDistance = o.viewingDistanceCm ~= oldViewingDistanceCm;
     if isNewDistance
         if o.askExperimenterToSetDistance
             string=sprintf(['NEW DISTANCE! Please ask the experimenter to adjust the viewing distance. The ' ...
@@ -6435,20 +6452,22 @@ while ~set
             o.viewingDistanceCm,o.viewingDistanceCm/2.54);
     end
     string=[string 'Tilt and swivel the display so the X is orthogonal to the observer''s line of sight. '];
-    isNewDistance
-    o.askExperimenterToSetDistance
     if isNewDistance && o.askExperimenterToSetDistance
         string=[string 'Then the Experimenter will type his or her signature key to continue.\n'];
     else
         string=[string 'Then hit RETURN to continue.\n'];
     end
-    Screen('TextSize',o.window,o.textSize);
+    % If necessary, shrink message to at most 4 lines.
+    a=length(string)/(4*o.textLineLength);
+    a=max(a,1);
+    a=o.textSize/round(o.textSize/a);
+    Screen('TextSize',o.window,round(o.textSize/a));
     Screen('TextFont',o.window,'Verdana');
     Screen('FillRect',o.window,o.gray1);
     Screen('TextBackgroundColor',o.window,o.gray1); % Set background.
     DrawFormattedText(o.window,string,...
-        2*o.textSize,2.5*o.textSize,black,...
-        o.textLineLength,[],[],1.3);
+        2*o.textSize/a,2.5*o.textSize/a,black,...
+        o.textLineLength*a,[],[],1.3);
     x=o.nearPointXYPix(1);
     y=o.nearPointXYPix(2);
     a=0.05*RectHeight(o.stimulusRect);
@@ -6774,6 +6793,9 @@ readyString='';
 if o.markTargetLocation
     readyString=[readyString 'The X indicates target center. '];
 end
+if o.showUncertainty
+    readyString=[readyString 'Each yellow dot is a possible target location. '];
+end
 if streq(o.eyes,'both')
     eyeOrEyes='eyes';
 else
@@ -6807,37 +6829,23 @@ end
 msg=[message readyString '\n'];
 black=0;
 Screen('TextBackgroundColor',o.window,o.gray1); % Set background.
-Screen(o.window,'TextSize',o.textSize);
+% If necessary, shrink message to at most 4 lines.
+a=length(msg)/(4*o.textLineLength);
+a=max(a,1);
+a=o.textSize/round(o.textSize/a);
+Screen(o.window,'TextSize',round(o.textSize/a));
 [x,y]=DrawFormattedText(o.window,msg,...
-    2*o.textSize,2.5*o.textSize,black,...
-    o.textLineLength,[],[],1.3); % DGPxxx
-sz=round(0.8*o.textSize);
+    o.textSize/a,1.25*o.textSize/a,black,...
+    o.textLineLength*a,[],[],1.3); 
+sz=round(0.8*o.textSize/a);
 Screen(o.window,'TextSize',sz);
 factor=sz/o.textSize;
 DrawFormattedText(o.window,footnote,...
     x,y,black,...
     floor(o.textLineLength/factor),[],[],1.3);
-
-% Modification starts here %
-% October 2, 2019. Ziyi Zhang, polished by Denis Pelli. Not yet tested.
-% Show observer all locations where target can appear.
-for iUnc=1:length(o.uncertainParameter)
-    switch o.uncertainParameter{iUnc}
-        case 'eccentricityXYDeg'
-            % o.uncertainDisplayColor=[0., 0.5, 1.]; % MOVED TO TOP.
-            % o.uncertainDisplayDotDeg=0.1; % MOVED TO TOP.
-            dotSizePix=o.uncertainDisplayDotDeg*o.pixPerDeg;
-            xyDeg=[o.uncertainValues{iUnc}{:}];
-            xyDeg=reshape(xyDeg,2,length(xyDeg)/2)';
-            % XYPixOfXYDeg assumes one row per point.
-            xy=XYPixOfXYDeg(o,xyDeg);
-            % DrawDots assumes one column per point.
-            Screen('DrawDots',o.window,xy',...
-                dotSizePix,o.uncertainDisplayColor,[],2);
-    end
+if any(oo.showUncertainty)
+    DrawUncertainty(oo);
 end
-% Modification ends here %
-
 DrawCounter(o);
 Screen('Flip',o.window,0,1); % Proceeding to the trial.
 if o.speakInstructions
