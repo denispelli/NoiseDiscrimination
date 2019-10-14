@@ -103,6 +103,7 @@ function machine=IdentifyComputer(windowOrScreen)
 %                  Renamed the openGL fields to more closely correspond to
 %                  the names in windowInfo.
 % September 24, 2019. DGP added "size" specifying the screen resolution.
+% October 14, 2019. Omkar added linux code for model identification
 if nargin<1
     windowOrScreen=0;
 end
