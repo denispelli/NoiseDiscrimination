@@ -967,6 +967,7 @@ o.deviceIndex=-3; % -3 for all keyboard/keypad devices.
 % o.deviceIndex=6; % my bluetooth wireless keyboard, according to PsychHIDTest
 % o.deviceIndex=[]; % [] worked more reliably than specifed index. Not sure why.
 o.deviceIndex=GetKeyboardIndices; % Enumerate all the keyboards.
+% o.deviceIndex=[];
 % October 10, 2019. Using [] doesn't work with wireless keyboards, e.g. my
 % new Apple Magic Keyboard on my lab iMac. My new solution is to enumerate
 % all the keyboards and set o.deviceIndex to that list. I'm not sure why my
@@ -4950,7 +4951,7 @@ try
                     Screen('LoadNormalizedGammaTable',oo(1).window,cal.gamma,loadOnNextFlip);
                 end
                 DrawCounter(oo(oi));
-                if any(oo.showUncertainty)
+                if any([oo.showUncertainty])
                     DrawUncertainty(oo);
                 end
                 Screen('Flip',oo(1).window,0,1); % Display instructions.
@@ -6843,7 +6844,7 @@ factor=sz/o.textSize;
 DrawFormattedText(o.window,footnote,...
     x,y,black,...
     floor(o.textLineLength/factor),[],[],1.3);
-if any(oo.showUncertainty)
+if any([oo.showUncertainty])
     DrawUncertainty(oo);
 end
 DrawCounter(o);
