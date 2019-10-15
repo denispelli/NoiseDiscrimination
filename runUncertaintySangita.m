@@ -17,11 +17,11 @@ ooo={};
 if IsWin
     o.useNative11Bit=false;
 end
-% o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
+% o.useFractionOfScreenToDebug=0.4; % USE ONLY FOR DEBUGGING.
 % o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 o.askForPartingComments=true;
 o.recordGaze=false;
-o.experiment='ComplexEfficiency';
+o.experiment='uncertaintySangita';
 o.eccentricityXYDeg=[0 0];
 o.targetHeightDeg=6;
 o.contrast=-1;
@@ -31,7 +31,7 @@ o.nearPointXYInUnitSquare=[0.5 0.5];
 o.blankingRadiusReTargetHeight=0;
 o.blankingRadiusReEccentricity=0;
 o.targetKind='letter';
-o.targetHeightDeg=6;
+o.targetHeightDeg=4;
 o.thresholdParameter='contrast';
 o.flankerSpacingDeg=0.2; % Used only for fixation check.
 o.observer='';
@@ -63,200 +63,118 @@ o.counterPlacement='bottomRight';
 o.instructionPlacement='bottomLeft'; % 'topLeft' 'bottomLeft'
 o.brightnessSetting=0.87;
 o.askExperimenterToSetDistance=true;
-if false
-    % Target face
-    o.conditionName='face';
-    o.signalImagesFolder='faces';
-    o.signalImagesAreGammaCorrected=true;
-    o.convertSignalImageToGray=true;
-    o.alphabetPlacement='top'; % 'top' or 'right';
-    o.targetKind='image';
-    o.alphabet='abcdefghijklmnopq';
-    o.brightnessSetting=0.87;
-    o.labelAnswers=true;
-    o.symmetricLuminanceRange=false; % False for maximum brightness.
-    o.desiredLuminanceFactor=1.1; % 1.8 for maximize brightness.
-    o.targetMargin=0;
-    o.viewingDistanceCm=40;
-    o.contrast=1; % Select contrast polarity.
-    o.task='identify';
-    o.eccentricityXYDeg=[0 0];
-    o.targetHeightDeg=10;
-    o.targetDurationSecs=0.15;
-    o.trialsDesired=40;
-    o.lapse=nan;
-    o.steepness=nan;
-    o.guess=nan;
-    o.observer='';
-    o.noiseSD=0;
-    o.thresholdParameter='contrast';
-    o.alternatives=length(o.alphabet);
-    ooo{end+1}=o;
-end
 o.symmetricLuminanceRange=true; % False for maximum brightness.
 o.desiredLuminanceFactor=1; % 1.8 to maximize brightness.
-MM=[2 2 2 2 16 16];
-AA=[0 45 90 135 0 0];
-for iM=1:length(MM)
-    M=MM(iM);
-    a0=AA(iM);
-    % Sloan with uncertainty
-    o.conditionName='Sloan';
-    o.showUncertainty=true;
-    o.uncertainParameter={'eccentricityXYDeg'};
-    % Uncertainty is M equally spaced positions along a ring with radiusDeg.
-    o.uncertainDisplayDotDeg=0.5; 
-    radiusDeg=10;
-    list=cell(1,M);
-    for i=1:M
-        a=a0+360*i/M; 
-        list{i}=radiusDeg*[cosd(a) sind(a)];
+
+if true
+    % Put target at a grid of locations in rectangular area centered on fixation.
+    for targetKindCell={'gabor' 'letter'}
+        targetKind=targetKindCell{1};
+        MM=[100 1];
+        for iM=1:length(MM)
+            M=MM(iM);
+            o.showUncertainty=true;
+            o.uncertainParameter={'eccentricityXYDeg'};
+            % Uncertainty is M equally spaced positions in grid filling square.
+            o.uncertainDisplayDotDeg=0.5;
+            radiusDeg=10;
+            r=Screen('Rect',0);
+            % Create rectangle of dot locations with same aspect ratio as
+            % screen.
+            ratio=RectWidth(r)/RectHeight(r);
+            n=round(sqrt(ratio*M));
+            m=round(M/n);
+            s=o.targetHeightDeg;
+            x=(1:n)*s;
+            x=x-mean(x);
+            y=(1:m)*s;
+            y=y-mean(y);
+            list={};
+            for i=1:n
+                for j=1:m
+                    list{end+1}=[x(i) y(j)];
+                end
+            end
+            o.uncertainValues={list};
+            M=length(o.uncertainValues{1});
+            o.conditionName=sprintf('%s;M=%d',targetKind,M);
+            o.targetFont='Sloan';
+            o.minimumTargetHeightChecks=8;
+            o.targetKind=targetKind;
+            switch o.targetKind
+                case 'gabor'
+                    o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
+                    o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
+                    o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
+                    o.targetCyclesPerDeg=nan;
+                    o.targetGaborOrientationsDeg=[0 90]; % Orientations relative to vertical.
+                    o.responseLabels='VH'; % One for each targetGaborOrientationsDeg.
+                    o.alphabet='VH';
+%                     o.labelAnswers=true;
+                    o.pThreshold=0.75;
+                case 'letter'
+                    o.borderLetter='X';
+                    o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
+%                     o.alphabet='CDHKNORSVZ'; % As in Pelli et al. (2006)
+%                     o.getAlphabetFromDisk=false; % No "C" on disk.
+%                     o.pThreshold=0.64; % As in Pelli et al. (2006).
+                    o.pThreshold=0.75;
+                    o.labelAnswers=false;
+            end
+            o.alternatives=length(o.alphabet);
+            o.alphabetPlacement='right'; % 'top' or 'right';
+            o.labelAnswers=false;
+            o.contrast=-1;
+            o.viewingDistanceCm=25;
+            ooo{end+1}=o;
+            o.fixationCrossDrawnOnStimulus=false;
+            o.fixationCrossBlankedUntilSecsAfterTarget=0.6;
+            o.uncertainParameter={};
+            o.uncertainValues={};
+            o.showUncertainty=false;
+        end
     end
-    o.uncertainValues={list};
-    o.targetFont='Sloan';
-    o.minimumTargetHeightChecks=8;
-    o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
-    o.targetKind='letter';
-    o.borderLetter='X';
-    o.alphabetPlacement='right'; % 'top' or 'right';
-    o.labelAnswers=false;
-    o.getAlphabetFromDisk=true;
-    o.contrast=-1;
-    o.alternatives=length(o.alphabet);
-    o.viewingDistanceCm=30;
-    o.fixationCrossDrawnOnStimulus=true;
-    ooo{end+1}=o;
-    o.uncertainParameter={};
-    o.fixationCrossDrawnOnStimulus=false;
-    o.uncertainParameter={};
-    o.uncertainValues={};
-    o.showUncertainty=false;
 end
 
-% if false
-%     % Checkers alphabet
-%     o.conditionName='Checkers';
-%     o.targetFont='Checkers';
-%     o.minimumTargetHeightChecks=16;
-%     o.alphabet='abcdefghijklmnopqrstuvwxyz';
-%     o.borderLetter='';
-%     o.labelAnswers=true;
-%     o.getAlphabetFromDisk=true;
-%     o.alternatives=length(o.alphabet);
-%     ooo{end+1}=o;
-% end
 if false
-    % Animals alphabet
-    o.conditionName='Animals';
-    o.targetFont='Animals';
-    o.minimumTargetHeightChecks=16;
-    o.alphabetPlacement='top';
-    o.instructionPlacement='bottomLeft';
-    o.alphabet='abcdefghijklmnopqrstuvwxyz';
-    o.borderLetter='';
-    o.labelAnswers=true;
-    o.getAlphabetFromDisk=false;
-    o.alternatives=length(o.alphabet);
-    ooo{end+1}=o;
-end
-if false
-    % Sans Forgetica
-    o.targetFont='Sans Forgetica';
-    o.conditionName=o.targetFont;
-    o.minimumTargetHeightChecks=8;
-    o.alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    o.borderLetter='$';
-    o.labelAnswers=false;
-    o.getAlphabetFromDisk=true;
-    o.alternatives=length(o.alphabet);
-    ooo{end+1}=o;
-end
-if false
-    % Kuenstler
-    o.targetFont='Kuenstler Script LT';
-    o.conditionName=o.targetFont;
-    o.minimumTargetHeightChecks=12;
-    o.alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    o.borderLetter='$';
-    o.labelAnswers=true;
-    o.getAlphabetFromDisk=false;
-    o.alternatives=length(o.alphabet);
-    ooo{end+1}=o;
-end
-if false
-    % Sabbath Black
-%     o.targetFont='SabbathBlackRegular';
-    o.targetFont='SabbathBlack OT'; % Now open type, but same design.
-    o.conditionName=o.targetFont;
-    o.minimumTargetHeightChecks=10;
-    o.alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    o.borderLetter='$';
-    o.labelAnswers=true;
-    o.getAlphabetFromDisk=true;
-    o.alternatives=length(o.alphabet);
-    ooo{end+1}=o;
-end
-if false
-    % Chinese from Qihan
-    o.targetFont='Songti TC'; % style Regular
-    o.conditionName=o.targetFont;
-    o.minimumTargetHeightChecks=16;
-    o.alphabet=[20687 30524 38590 33310 28982 23627 29245 27169 32032 21338 26222 ...
-        31661 28246 36891 24808 38065 22251 23500 39119 40517];
-    o.alphabet=char(o.alphabet);
-    o.alphabetPlacement='top';
-    o.borderLetter='';
-    o.labelAnswers=true;
-    o.getAlphabetFromDisk=true;
-    o.alternatives=length(o.alphabet);
-    ooo{end+1}=o;
-end
-if false
-    % Chinese selected by Amy Lin, July 10, 2019
-    o.targetFont='Songti TC'; % style Regular
-    o.conditionName='simpleChinese'; % Selected by Amy Lin, July 10, 2019
-    o.alphabet=[32769 38263 40479 36523 38585 36208 36784 29916 27668 30690 ...
-        34915 33267 40060 35960 38271 36789 31992 27597 32819 39135 30382 ...
-        33394 24038 21507 24343 40614];
-    o.minimumTargetHeightChecks=16;
-    o.alphabet=char(o.alphabet);
-    o.alphabetPlacement='top';
-    o.borderLetter='';
-    o.labelAnswers=true;
-    o.getAlphabetFromDisk=false;
-    o.alternatives=length(o.alphabet);
-    ooo{end+1}=o;
-end
-if false
-    % Japanese: Katakana, Hiragani, and Kanji
-    % from Ayaka
-    o.targetFont='Hiragino Mincho ProN'; % style W3
-    japaneseScript='Kanji';
-    o.conditionName=japaneseScript;
-    o.alphabetPlacement='top';
-    switch japaneseScript
-        case 'Katakana'
-            o.alphabet=[12450 12452 12454 12456 12458 12459 12461 12463 12465 12467 12469 ... % Katakana from Ayaka
-                12471 12473 12475 12477 12479 12481 12484 12486 12488 12490 12491 ... % Katakana from Ayaka
-                12492 12493 12494 12495 12498 12501 12408 12507 12510 12511 12512 ... % Katakana from Ayaka
-                12513 12514 12516 12518 12520 12521 12522 12523 12524 12525 12527 ... % Katakana from Ayaka
-                12530 12531];                                                      % Katakana from Ayaka
-            o.minimumTargetHeightChecks=16;
-        case 'Hiragana'
-            o.alphabet=[12354 12362 12363 12365 12379 12383 12394 12395 12396 12397 12399 ... % Hiragana from Ayako
-                12405 12411 12414 12415 12416 12417 12420 12422 12434];            % Hiragana from Ayako
-            o.minimumTargetHeightChecks=16;
-        case 'Kanji'
-            o.alphabet=[25010 35009 33016 23041 22654 24149 36605 32302 21213 21127 35069 ... % Kanji from Ayaka
-                37806 32190 26286 37707 38525 34276 38360 38627 28187];               % Kanji from Ayaka
-            o.minimumTargetHeightChecks=16;
+    % Put target at various locations on circle.
+    MM=[2 2 2 2 16 16];
+    AA=[0 45 90 135 0 0];
+    for iM=1:length(MM)
+        M=MM(iM);
+        a0=AA(iM);
+        % Sloan with uncertainty
+        o.conditionName='Sloan';
+        o.showUncertainty=true;
+        o.uncertainParameter={'eccentricityXYDeg'};
+        % Uncertainty is M equally spaced positions along a ring with radiusDeg.
+        o.uncertainDisplayDotDeg=0.5;
+        radiusDeg=10;
+        list=cell(1,M);
+        for i=1:M
+            a=a0+360*i/M;
+            list{i}=radiusDeg*[cosd(a) sind(a)];
+        end
+        o.uncertainValues={list};
+        o.targetFont='Sloan';
+        o.minimumTargetHeightChecks=8;
+        o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
+        o.targetKind='letter';
+        o.borderLetter='X';
+        o.alphabetPlacement='right'; % 'top' or 'right';
+        o.labelAnswers=false;
+        o.getAlphabetFromDisk=true;
+        o.contrast=-1;
+        o.alternatives=length(o.alphabet);
+        o.viewingDistanceCm=30;
+        o.fixationCrossDrawnOnStimulus=true;
+        ooo{end+1}=o;
+        o.uncertainParameter={};
+        o.fixationCrossDrawnOnStimulus=false;
+        o.uncertainParameter={};
+        o.uncertainValues={};
+        o.showUncertainty=false;
     end
-    o.alphabet=char(o.alphabet);
-    o.borderLetter='';
-    o.labelAnswers=true;
-    o.getAlphabetFromDisk=true;
-    o.alternatives=length(o.alphabet);
-    ooo{end+1}=o;
 end
 if true
     % Test with zero and high noise, interleaved.
@@ -270,7 +188,7 @@ if true
             oo(oi).noiseCheckDeg=oo(oi).targetHeightDeg/40;
             oo(oi).setNearPointEccentricityTo='fixation';
             oo(oi).nearPointXYInUnitSquare=[0.5 0.5];
-            oo(oi).noiseSD=maxNoiseSD; 
+            oo(oi).noiseSD=maxNoiseSD;
         end
         ooNoNoise=oo;
         [ooNoNoise.noiseSD]=deal(0);
