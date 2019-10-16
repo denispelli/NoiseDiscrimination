@@ -76,7 +76,7 @@ if plotGraphs
                     E=[oo(which).E];
                     N=[oo(which).N];
 %                     fprintf('%s %s\n',observer{1},conditionName{1});
-                    [E0,Neq]=EstimateNeq(E,N);
+                    [Neq,E0]=EstimateNeq(E,N);
                     E1=oo(which).E1;
                     E1=mean(E1);
                     list(end).logC0=0.5*log10(E0/E1);
@@ -138,7 +138,7 @@ oo=oo(ii);
 %% Compute derived quantities: Neq, E0, and c/deg
 E=[oo.E];
 N=[oo.N];
-[E0,Neq]=EstimateNeq(E,N);
+[Neq,E0]=EstimateNeq(E,N);
 for i=1:length(oo)
     oo(i).E0=E0;
     oo(i).Neq=Neq;

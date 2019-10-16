@@ -128,7 +128,7 @@ for expt={'csfLettersStatic' 'csfGaborsStatic'}
                 E=[oo(ii).E];
                 N=[oo(ii).N];
                 ok=abs([oo(ii).contrast])<1.1;
-                [E0,Neq]=EstimateNeq(E,N,ok);
+                [Neq,E0]=EstimateNeq(E,N,ok);
                 efficiency=idealEOverN.(oo(1).targetKind)/(E0/Neq);
             else
                 E0=[];
