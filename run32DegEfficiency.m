@@ -43,8 +43,8 @@ ooo={};
 if IsWin
     o.useNative11Bit=false;
 end
-o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
-o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+% o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
+% o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 o.askForPartingComments=true;
 o.recordGaze=false;
 o.experiment='ComplexEfficiency';
@@ -100,6 +100,11 @@ if 1
     o.targetFont='Sloan';
     o.targetHeightDeg=32;
     o.eccentricityXYDeg=[32 0];
+    r=Screen('Rect',0);
+    % Shift right to equate right hand margin with
+    % top and bottom margins.
+    aspectRatio=RectWidth(r)/RectHeight(r);
+    o.nearPointXYInUnitSquare=[1-0.5/aspectRatio 0.5];
     o.minimumTargetHeightChecks=8;
     o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
     o.targetKind='letter';
@@ -124,8 +129,6 @@ if 1
                 maxNoiseSD=0.8*maxNoiseSD;
             end
             oo(oi).noiseCheckDeg=oo(oi).targetHeightDeg/40;
-%             oo(oi).setNearPointEccentricityTo='fixation';
-            oo(oi).nearPointXYInUnitSquare=[0.5 0.5];
             oo(oi).noiseSD=0;
             oo(oi).noiseSD=maxNoiseSD; % DGP
         end
@@ -144,7 +147,7 @@ if 0
         o.targetHeightDeg=10;
         o.brightnessSetting=0.87;
         o.thresholdParameter='size';
-        % o.setNearPointEccentricityTo='fixation';
+        o.setNearPointEccentricityTo='fixation';
         o.nearPointXYInUnitSquare=[0.5 0.5];
         o.viewingDistanceCm=30;
         o.eccentricityXYDeg=[10 0];
