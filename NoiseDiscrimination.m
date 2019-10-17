@@ -2621,8 +2621,9 @@ try
             x=2*oo(1).textSize;
             y=2.5*oo(1).textSize;
             Screen('TextSize',window,oo(oi).textSize);
-            Screen('TextBackgroundColor',window,white); % Set background.
+            Screen('TextBackgroundColor',window,oo(oi).gray1); % Set background.
             Screen('TextStyle',window,1); % Bold
+            Screen('FillRect',window,oo(oi).gray1);
             DrawFormattedText(window,string,...
                 x,y,[0 0 0],...
                 0.9*oo(oi).textLineLength,[],[],1.5);
