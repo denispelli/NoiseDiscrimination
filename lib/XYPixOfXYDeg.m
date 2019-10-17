@@ -1,14 +1,20 @@
 function xyPix=XYPixOfXYDeg(o,xyDeg)
 % Convert position from deg (relative to fixation) to (x,y) coordinate in
 % o.stimulusRect. Deg increase right and up. Pix are in Apple screen
-% coordinates which increase down and right. In terms of geometry, the
-% perspective transformation is relative to location of near point, which
-% is orthogonal to line of sight. "location" refers to the near point. We
-% often put the target there, but that is not assumed in this routine.
-% In spatial-uncertainty experiments, we typically put fixation at the near
+% coordinates which increase right and down. The geometric perspective
+% transformation is relative to location of near point, which is orthogonal
+% to line of sight. "location" refers to the near point. We often put the
+% target there, but that is not assumed in this routine. In
+% spatial-uncertainty experiments, we typically put fixation at the near
 % point.
 % xyDeg must have two columns, for x and y, and may have any number of
 % rows, including none.
+% The parameters of the coordinate transformation are specified by
+% o.nearPointXYDeg = assigned position in visual field, in deg relative to
+%                    fixation.
+% o.nearPointXYPix = assigned position on screen, in pixels relative to 
+%                    upper left corner.
+% o.pixPerCm*o.viewingDistanceCm
 % October 4, 2019. Enhanced to accept more than one point.
 xyPix=zeros(size(xyDeg));
 if isempty(xyDeg)
