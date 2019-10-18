@@ -114,7 +114,7 @@ if 1
     o.getAlphabetFromDisk=true;
     o.contrast=-1;
     o.alternatives=length(o.alphabet);
-    o.viewingDistanceCm=40;
+    o.viewingDistanceCm=25;
     o.setNearPointEccentricityTo='target';
     ooo{end+1}=o;
 end
