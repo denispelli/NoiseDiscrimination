@@ -1490,6 +1490,7 @@ try
         text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
         fprintf('*Waiting for experimenter name.\n');
         [reply,o]=AskQuestion(oo,text);
+        reply=strip(reply); % Remove leading and trailing whitespace.
         oo(1).quitBlock=o.quitBlock;
         oo(1).quitExperiment=o.quitExperiment;
         if oo(1).quitBlock
@@ -1523,6 +1524,7 @@ try
         Screen('TextBackgroundColor',window,oo(1).gray1); % Set background.
         Screen('Flip',window);
         [name,o]=AskQuestion(oo,text);
+        name=strip(name); % Remove leading and trailing whitespace.
         oo(1).quitBlock=o.quitBlock;
         oo(1).quitExperiment=o.quitExperiment;
         if oo(1).quitBlock
