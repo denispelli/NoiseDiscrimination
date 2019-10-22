@@ -14,6 +14,8 @@ if IsWin
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Some observer will see gabors, others will see letters. The experiment
+% has two parts. We want to test each person on both parts 1 and 2.
 partOfExperiment=1; % 1 or 2.
 % o.targetKind='gabor'; 
 o.targetKind='letter'; 
@@ -176,63 +178,7 @@ if 1
         ooo{block}=[oo ooNoise];
     end
 end
-if 0
-    % Measure threshold size at +/-10 deg. No noise.
-    % Randomly interleave testing left and right.
-    % Add fixation check.
-    for block=1:length(ooo)
-        o=ooo{block}(1);
-        o.fullResolutionTarget=true;
-        o.targetHeightDeg=10;
-        o.brightnessSetting=0.87;
-        o.thresholdParameter='size';
-        o.setNearPointEccentricityTo='fixation';
-        o.nearPointXYInUnitSquare=[0.5 0.5];
-        o.viewingDistanceCm=30;
-        o.eccentricityXYDeg=[10 0];
-        o.fixationCrossBlankedNearTarget=false;
-        o.fixationCrossBlankedUntilSecsAfterTarget=0.5;
-        o.fixationCrossDrawnOnStimulus=false;
-        oo=o;
-        o.eccentricityXYDeg=-o.eccentricityXYDeg;
-        oo(2)=o;
-        % FIXATION TEST
-        o.conditionName='Fixation check';
-        o.targetKind='letter';
-        o.fixationCheck=true;
-        o.eccentricityXYDeg=[0 0];
-        o.thresholdParameter='spacing';
-        o.useFlankers=true;
-        o.targetHeightDeg=0.4;
-        o.flankerSpacingDeg=1.4*o.targetHeightDeg;
-        o.flankerContrast=-1;
-        o.contrast=-1;
-        o.targetFont='Sloan';
-        o.minimumTargetHeightChecks=8;
-        o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
-        o.targetKind='letter';
-        o.alphabetPlacement='right'; % 'top' or 'right';
-        o.labelAnswers=false;
-        o.getAlphabetFromDisk=false;
-        o.alternatives=length(o.alphabet);
-        oo(3)=o;
-        ooo{end+1}=oo;
-    end
-end
-if true
-    % Retest contrast thresholds with ideal observer.
-    for block=1:length(ooo)
-        oo=ooo{block};
-        if ~ismember(oo(1).thresholdParameter,{'contrast'})
-            continue
-        end
-        for oi=1:length(oo)
-            oo(oi).observer='ideal';
-            oo(oi).trialsDesired=200;
-        end
-        ooo{end+1}=oo;
-    end
-end
+
 %% ESTIMATED TIME TO COMPLETION
 willTakeMin=0;
 for block=1:length(ooo)
