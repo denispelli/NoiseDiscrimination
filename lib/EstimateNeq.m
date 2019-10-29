@@ -112,10 +112,10 @@ end
 % Neq has only a lower bound, to be much greater than the highest noise
 % tested, Neq>>max(N). And deltaEOverN=E0/Neq. Since there is no useful
 % point estimate, we set both to NaN.
-multipleN=length(unique(N))>1;
-multipleE=~all(diff(E)<=0);
-if ~multipleE || ~multipleN
-    if multipleN || all(ismember(N,0))
+hasMultipleN=length(unique(N))>1;
+hasMultipleE=~all(diff(E)<=0);
+if ~hasMultipleE || ~hasMultipleN
+    if hasMultipleN || all(N==0)
         E0=10^mean(log10(E));
     else
         E0=nan;
