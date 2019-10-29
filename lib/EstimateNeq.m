@@ -1,18 +1,28 @@
 function [Neq,E0,deltaEOverN]=EstimateNeq(E,N,ok)
 % [Neq,E0,deltaEOverN]=EstimateNeq(E,N,ok);
-% Given same-length vectors E and N estimate the best linear fit of
-%    E = deltaEOverN*(N+Neq)
+% Given equal-length vectors E and N, estimate the best linear fit of
+%    E = deltaEOverN*(N+Neq),
 % where deltaEOverN and Neq are fitted constants, contrained to be
 % nonnegative. Our fit takes into account the conservation of sd of log E
-% (across values of E and N). The minimization begins with a quick guess,
-% a linear regression, that doesn't take that conservation into account
-% (i.e. assuming conservation of sd of E, not log E). We use the regression
-% fit as a starting point for the minimization. We constrain the solution
-% to nonnegative values of E0 and Neq. We use the optional logical array
-% "ok", to ignore bad thresholds. We also return E0=deltaEOverN*Neq, which
-% is the estimated threshold E in zero noise. Note that Neq and E0 are zero
-% for the ideal observer, though this algorithm won't explicitly know when
-% you give it data from the ideal observer.
+% across values of E and N. The minimization begins with a quick guess, a
+% linear regression, that doesn't take that conservation into account (i.e.
+% assuming conservation of sd of E, not log E). We use the regression fit
+% as a starting point for the minimization. We constrain the solution to
+% nonnegative values of E0 and Neq. We use the optional logical array "ok",
+% to ignore bad thresholds. We also return E0=deltaEOverN*Neq, which is the
+% estimated threshold E in zero noise. Note that Neq and E0 are zero for
+% the ideal observer, though this algorithm won't explicitly know when you
+% give it data from the ideal observer.
+%
+% In fact, the above equation is a two-parameter fit,
+% and sometimes we receive only one measurement. A
+% better approach is to instead fit the equation
+%    E = E0+deltaEOverN*N,
+% After fitting, we also return Neq=E0/deltaEOverN. The
+% advantage of this formula is that it copes with
+% only having data E at N=0. In that case we can't
+% estimate deltaEOverN or Neq, which we set to NaN,
+% but we can estimate E0.
 %
 % The mincon function using the default algorithm often gave wrong answers.
 % Using the option to select the 'sqp' algorithm helped a lot. We now try
@@ -63,6 +73,7 @@ switch sum(ok(:))
         Neq=nan;
         deltaEOverN=E(ok)/N(ok);
         return
+    otherwise
 end
 assert(all(size(N)==size(E)),'E and N must have same size.');
 assert(all(size(ok)==size(E)),'E and "ok" must have same size.');
@@ -80,6 +91,39 @@ end
 E=E(ok);
 N=N(ok);
 assert(all(isfinite(N)),'Some values in vector N are not finite.');
+
+%% Sort, so N is increasing.
+[~,ii]=sort(N);
+N=N(ii);
+E=E(ii);
+
+%% NO DATA
+if isempty(N)
+    E0=nan;
+    Neq=nan;
+    deltaEOverN=nan;
+    return
+end
+
+%% THE SPECIAL CASE OF THRESHOLD E THAT DOES NOT INCREASE WITH N.
+% A fairly common special case, in noisy data with few noise levels, is
+% that the threshold E is a not-increasing function of N. In that case the
+% best fit is a horizontal line E=E0, where E0 is the geometric mean of E.
+% Neq has only a lower bound, to be much greater than the highest noise
+% tested, Neq>>max(N). And deltaEOverN=E0/Neq. Since there is no useful
+% point estimate, we set both to NaN.
+multipleN=length(unique(N))>1;
+multipleE=~all(diff(E)<=0);
+if ~multipleE || ~multipleN
+    if multipleN || all(ismember(N,0))
+        E0=10^mean(log10(E));
+    else
+        E0=nan;
+    end
+    Neq=nan;
+    deltaEOverN=nan;
+    return
+end
 
 %% 1. USE REGRESSION
 % E=b(1)+b(2)*N; % Regression equation.
