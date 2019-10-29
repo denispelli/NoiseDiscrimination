@@ -14,15 +14,15 @@ function [Neq,E0,deltaEOverN]=EstimateNeq(E,N,ok)
 % the ideal observer, though this algorithm won't explicitly know when you
 % give it data from the ideal observer.
 %
-% In fact, the above equation is a two-parameter fit,
-% and sometimes we receive only one measurement. A
-% better approach is to instead fit the equation
+% In fact, the above equation is a two-parameter fit, but sometimes we
+% receive only one measurement, leaving the fit unconstrained. A better
+% approach is to instead fit the equation
 %    E = E0+deltaEOverN*N,
-% After fitting, we also return Neq=E0/deltaEOverN. The
-% advantage of this formula is that it copes with
-% only having data E at N=0. In that case we can't
-% estimate deltaEOverN or Neq, which we set to NaN,
-% but we can estimate E0.
+% We also return Neq=E0/deltaEOverN. For most cases the two equations are
+% equivalent, but the latter has the advantage of coping when we only know
+% E at N=0, or when E is monotonically decreasing as N increases. In those
+% cases we can't estimate deltaEOverN or Neq, which we set to NaN, but we
+% still can estimate E0.
 %
 % The mincon function using the default algorithm often gave wrong answers.
 % Using the option to select the 'sqp' algorithm helped a lot. We now try
