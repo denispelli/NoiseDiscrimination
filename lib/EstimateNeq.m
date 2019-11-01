@@ -97,7 +97,7 @@ assert(all(isfinite(N)),'Some values in vector N are not finite.');
 N=N(ii);
 E=E(ii);
 
-%% NO DATA
+%% RETURN IF NO DATA
 if isempty(N)
     E0=nan;
     Neq=nan;
@@ -108,16 +108,20 @@ end
 %% THE SPECIAL CASE OF THRESHOLD E THAT DOES NOT INCREASE WITH N.
 % A fairly common special case, in noisy data with few noise levels, is
 % that the threshold E is a not-increasing function of N. In that case the
-% best fit is a horizontal line E=E0, where E0 is the geometric mean of E.
-% Neq has only a lower bound, to be much greater than the highest noise
-% tested, Neq>>max(N). And deltaEOverN=E0/Neq. Since there is no useful
-% point estimate, we set both to NaN.
+% best fit is a horizontal line E=E0, where E0 is the geometric mean of the
+% measured thresholds E. Neq has only a lower bound, to be much greater
+% than the highest noise tested, Neq>>max(N). And
+% deltaEOverN=E0/Neq<<E0/max(N). Since they lack useful point estimates, we
+% set both to NaN.
 hasMultipleN=length(unique(N))>1;
 hasMultipleE=~all(diff(E)<=0);
 if ~hasMultipleE || ~hasMultipleN
+    % The data determine at most E0.
     if hasMultipleN || all(N==0)
+        % The data determine just E0.
         E0=10^mean(log10(E));
     else
+        % The data determine none of our parameters.
         E0=nan;
     end
     Neq=nan;
