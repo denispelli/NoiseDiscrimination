@@ -658,12 +658,11 @@ o=[];
 o.minimumTargetPix=8;
 
 % Uncertainty
-% Typically there will be zero or one parameter, each specified by
-% a field name, but we support an unlimited number. For each
-% parameter there must be a non-empty list of values in
-% o.uncertainValues, which is a list of lists. Because we use cell
-% lists, the values can be of any kind, whatever is appropriate to
-% that field, e.g. a 1x2 array for 'eccentricityXYDeg'.
+% Typically there will be zero or one parameter, each specified by a field
+% name, but we support an unlimited number. For each parameter there must
+% be a non-empty list of values in o.uncertainValues, which is a list of
+% lists. Because we use cell lists, the values can be of any kind, whatever
+% is appropriate to that field, e.g. a 1x2 array for 'eccentricityXYDeg'.
 o.uncertainParameter={}; % List of uncertain parameters, each a field of the o struct.
 % o.uncertainParameter={'eccentrictyXYDeg'};
 o.uncertainValues={}; % List of lists, one list for each uncertain parameter.
@@ -6191,11 +6190,10 @@ switch o.observer
                         % The signal is always static. The noise may be
                         % static or dynamic. Averaging over time is optimal
                         % because the signal is static.
-                        % When thresholdParameter='size', the signal.image
+                        % When thresholdParameter=='size', the signal.image
                         % was resized for display, so we need to take that
                         % into account.
                         sRectChecks=RectOfMatrix(signal(1).image); % units of targetChecks
-                        % xxx
                         if ismember(o.thresholdParameter,'size')
                             factor=o.desiredTargetHeightPix/o.targetCheckPix/RectHeight(sRectChecks);
                         else
@@ -6207,7 +6205,7 @@ switch o.observer
                         im=zeros(sz);
                         imSum=im;
                         if false
-                            % Print outs to debug the template size.
+                            % Print to debug the template size.
                             bounds=ImageBounds(signalImageIndex,0);
                             fprintf(['%d: ''%s'', signalImageIndex size %d %d, sum %d, ' ...
                                 'bounds [%d %d %d %d] = [%d %d %d %d], target size (checks) %d %d.\n'],...
