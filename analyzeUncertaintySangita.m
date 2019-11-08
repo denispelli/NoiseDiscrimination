@@ -27,7 +27,8 @@ vars={'condition' 'conditionName' 'experiment' 'dataFilename' ...
     'filterTransmission' 'useFilter' 'retinalIlluminanceTd' 'pupilDiameterMm'...
     'pixPerCm'  'nearPointXYPix' 'NUnits' 'beginningTime' 'thresholdParameter'...
     'questMean' 'partingComments'...
-    'uncertainParameter' 'uncertainValues'};
+    'uncertainParameter' 'uncertainValues'...
+    'pThreshold' 'steepness' 'lapse' 'guess'};
 oo=ReadExperimentData(experiment,vars); % Adds date and missingFields.
 fprintf('%s %d thresholds.\n',experiment,length(oo));
 
@@ -48,9 +49,43 @@ fprintf('%s %d thresholds.\n',experiment,length(oo));
 for oi=1:length(oo)
     if ismember(oo(oi).conditionName,{'Sloan'})
         M=length(oo(oi).uncertainValues{1});
-        % polar=atan2d(oo(oi).uncertainValues{1}{1}(2),oo(oi).uncertainValues{1}{1}(1));
-        % oo(oi).conditionName=sprintf('M=%d;Polar=%d',M,round(polar));
-        oo(oi).conditionName=sprintf('M=%d',M);
+        oo(oi).conditionName=sprintf('M=%.0f',M);
+    end
+    M=length(oo(oi).uncertainValues{1});
+    str=sprintf(';M=%.0f',M);
+    if ismember(oo(oi).conditionName(end-3:end),{str(end-3:end)})
+        if ismember(oo(oi).observer,{'ideal'}) && oo(oi).N>0
+            psych.trialsDesired=100;
+            psych.reps=100;
+            psych.tGuess=0;
+            psych.tGuessSd=3;
+            psych.pThreshold=oo(oi).pThreshold;
+            psych.beta=oo(oi).steepness;
+            psych.delta=oo(oi).lapse;
+            psych.gamma=oo(oi).guess;
+            switch oo(oi).conditionName
+                case 'gabor;M=1'
+                    if ~exist('EOverNG1','var')
+                        EOverNG1=UncertainEOverN(M,psych);
+                    end
+                    oo(oi).E=EOverNG1*oo(oi).N;
+                case 'gabor;M=104'
+                    if ~exist('EOverNG104','var')
+                        EOverNG104=UncertainEOverN(M,psych);
+                    end
+                    oo(oi).E=EOverNG104*oo(oi).N;
+                case 'letter;M=1'
+                    % It's ok.
+                case 'letter;M=104'
+                    % Increase threshold by same factor as
+                    % we measured for Gabor.
+                    oo(oi).E=oo(oi).E*EOverNG104/EOverNG1;
+                case ''
+                    % Skip this.
+                otherwise
+                    error('Unknown condition ''%s'' oi=%d.',oo(oi).conditionName,oi);
+            end
+        end
     end
 end
 
@@ -78,11 +113,11 @@ for conditionName=conditionNames
             end
             aa(end+1).conditionName=conditionName{1};
             aa(end).observer=observer{1};
-            aa(end).E=E;
-            aa(end).N=N;
-            aa(end).E0=E0;
-            aa(end).Neq=Neq;
-            aa(end).deltaEOverN=deltaEOverN;
+            aa(end).E=E; % array
+            aa(end).N=N; % array
+            aa(end).E0=E0; % scalar
+            aa(end).Neq=Neq; % scalar
+            aa(end).deltaEOverN=deltaEOverN; % scalar
             oi=find(match,1);
             aa(end).thresholdParameter=oo(oi).thresholdParameter;
         end
@@ -96,7 +131,7 @@ for conditionName=conditionNames
         match = match & ismember({aa.observer},observer);
         if sum(match)>0 && sum(idealMatch)>0
             assert(sum(match)==1 & sum(idealMatch)==1);
-            aa(match).efficiency=aa(idealMatch).deltaEOverN/aa(match).deltaEOverN;
+            aa(match).efficiency=aa(idealMatch).deltaEOverN ./ aa(match).deltaEOverN;
         end
     end
 end
