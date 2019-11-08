@@ -12,13 +12,12 @@ ooo={};
 if IsWin
     o.useNative11Bit=false;
 end
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Some observer will see gabors, others will see letters. The experiment
 % has two parts. We want to test each person on both parts 1 and 2.
 partOfExperiment=1; % 1 or 2.
-% o.targetKind='gabor'; 
-o.targetKind='letter'; 
+o.targetKind='gabor'; 
+% o.targetKind='letter'; 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 o.trialsDesired=40;
 % o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
@@ -258,7 +257,7 @@ t=struct2table(oo,'AsArray',true);
 disp(t(:,{'block' 'experiment' 'conditionName' 'observer' 'targetKind' 'thresholdParameter'...
     'contrast'  'willTakeMin' 'noiseSD' ...
     'targetHeightDeg' 'eccentricityXYDeg' 'viewingDistanceCm'})); % Print the conditions in the Command Window.
-return
+%return
 
 %% Measure threshold, one block per iteration.
 ooo=RunExperiment(ooo);
