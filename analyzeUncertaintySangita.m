@@ -91,8 +91,8 @@ end
 
 % oo=[oo1 oo2];
 % COMPUTE EFFICIENCY
-% Select thresholdParameter='contrast', for each conditionName, 
-% For each observer, including ideal, use all (E,N) data to estimate deltaNOverE and Neq. 
+% Select thresholdParameter='contrast', for each conditionName,
+% For each observer, including ideal, use all (E,N) data to estimate deltaNOverE and Neq.
 % Compute efficiency by comparing deltaNOverE of each to that of the ideal.
 conditionNames=unique({oo.conditionName});
 observers=unique({oo.observer});
@@ -175,14 +175,14 @@ if plotGraphs
                 isNoiseType=ismember({oo.noiseType},noiseType);
                 which=isObserver & isConditionName & isNoiseType;
                 if sum(which)>0
-%                     fprintf('%s-%s-%s: %d thresholds. ',observer{1},conditionName{1},noiseType{1},sum(which));
+                    %                     fprintf('%s-%s-%s: %d thresholds. ',observer{1},conditionName{1},noiseType{1},sum(which));
                     list(end+1).observer=observer{1};
                     list(end).conditionName=conditionName{1};
                     list(end).noiseType=noiseType{1};
                     list(end).thresholds=sum(which);
                     E=[oo(which).E];
                     N=[oo(which).N];
-%                     fprintf('%s %s\n',observer{1},conditionName{1});
+                    %                     fprintf('%s %s\n',observer{1},conditionName{1});
                     [Neq,E0]=EstimateNeq(E,N);
                     E1=oo(which).E1;
                     E1=mean(E1);
@@ -270,6 +270,7 @@ if false
     fprintf('All selected fields have been saved in spreadsheet: /data/%s\n',dataFilename);
 end
 
+return
 %% Plot
 if Neq>=min(N) && Neq<2*max(N)
     % Trust reasonable Neq.
