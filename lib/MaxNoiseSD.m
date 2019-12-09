@@ -1,11 +1,17 @@
 function maxNoiseSD=MaxNoiseSD(noiseType)
-%% MAX SD OF EACH NOISE TYPE
-% With the same bound on range, we can reach 3.3 times higher noiseSD using
-% binary instead of gaussian noise. In the code below, we use steps of
-% 2^0.5=1.4, so I increase max noiseSD by a factor of 2^1.5=2.8 when using
-% binary noise.
+% maxNoiseSD=MaxNoiseSD(noiseType);
+% This returns the value of SD for the given kind of noise that will just
+% barely respect the bounds [-maxBound maxBound]. With the same bound on
+% range, we can reach 3.3 times higher noiseSD using binary instead of
+% gaussian noise.
+% "Gaussian" noise has PDF given by a zero-mean true Gaussian clipped at
+% +/-2 SD of true Gaussian. The returned SD is the SD of the clipped
+% distribution. Uniform has equal probability density over the range
+% [-maxBound maxBound]. Binary has 0.5 probabity at each of [-maxBound
+% maxBound]. Ternary has 1/3 probability at each of [-maxBound 0 maxBound].
 persistent maxSD
 if isempty(maxSD)
+    % sDOverBound is ratio of distribution's SD over its +/- bound.
     sDOverBound.gaussian=0.43;
     sDOverBound.uniform=0.58;
     sDOverBound.binary=std([-1 1]);
