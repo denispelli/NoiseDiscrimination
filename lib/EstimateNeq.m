@@ -114,9 +114,10 @@ E=E(ii);
 % not-increasing function of N. In that case the best fit is a horizontal
 % line E=E0, where E0 is the geometric mean of the measured thresholds E.
 % Neq has only a lower bound, to be much greater than the highest noise
-% tested, Neq>>max(N). And deltaEOverN has only an upper bound,
-% deltaEOverN=E0/Neq<<E0/max(N). Unable to make point estimates, we set
-% both to NaN.
+% tested, Neq >> max(N). And deltaEOverN has only an upper bound,
+% deltaEOverN=E0/Neq<<E0/max(N). Those are interval estimates, which
+% we have no way to return. Since we cannot make the requested point
+% estimates, we set both to NaN.
 hasMultipleN=length(unique(N))>1;
 hasIncreasingE=~all(diff(E)<=0);
 if ~hasIncreasingE || ~hasMultipleN
@@ -148,25 +149,24 @@ if printFit
         deltaEOverN,E0,rms,Cost(E,N,E0,deltaEOverN));
 end
 
-%% 2. USE fminsearch WITH POSITIVITY ENFORCED IN OUR COST FUNCTION
-E0=max(E0,eps); % Impose positivity on the guess, so mincon won't fail.
-deltaEOverN=abs(deltaEOverN); % Impose positivity on the guess, so mincon won't fail.
+%% 2. USE fminsearch WITH POSITIVITY ENFORCED IN OUR COST FUNCTION.
+E0=max(E0,eps); % Make guess positive, to avoid infinite cost.
+deltaEOverN=max(deltaEOverN,0); % Make guess positive, to avoid infinite cost.
 fun=@(b) Cost(E,N,b(1),b(2));
 options=optimset('fminsearch');
 options=optimset(options,'TypicalX',[0.1 1e-6],'MaxFunEvals',1e6);
 b=fminsearch(fun,[E0 deltaEOverN],options);
 E0=b(1);
 deltaEOverN=b(2);
+cost=Cost(E,N,E0,deltaEOverN);
 if printFit
     modelE=E0+deltaEOverN*N;
     rms=sqrt(mean((E-modelE).^2));
     fprintf(['fminsearch fit,'...
         'deltaEOverN %.2g, E0 %.2g, rms error of E %.2g, '...
         'rms error of log E %.2g\n'],...
-        deltaEOverN,E0,rms,...
-        Cost(E,N,E0,deltaEOverN));
+        deltaEOverN,E0,rms,cost);
 end
-cost=Cost(E,N,E0,deltaEOverN);
 if cost>0.5
     warning(['EstimateNeq: The rms error in fitting log E is %.2f, '...
         'which is terribly large. E0 %.2g, deltaEOverN %.2g'],...
@@ -178,7 +178,6 @@ if cost>0.5
     x.modelE=E0+deltaEOverN*N;
     struct2table(x)
 end
-deltaEOverN=b(2);
 end
 
 function cost=Cost(E,N,E0,deltaEOverN)
