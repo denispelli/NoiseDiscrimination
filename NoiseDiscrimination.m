@@ -1374,7 +1374,7 @@ try
         %     ffprintf(ff,'You can use Switch Res X (http://www.madrau.com/) to select a pure resolution, not HiDPI.\n');
         % end
     end % if isempty(o.window) && ~ismember(o.observer,o.algorithmicObservers)
-    if isempty(scratchWindow) || Screen('WindowKind',scratchWindow)~=-1
+    if ~ismember(o.observer,o.algorithmicObservers) && (isempty(scratchWindow) || Screen('WindowKind',scratchWindow)~=-1)
         ffprintf(ff,'Opening scratchWindow. ... '); s=GetSecs; % Takes less than 0.1 s.
         [scratchWindow,scratchRect]=Screen('OpenOffscreenWindow',window,[],oo(1).screenRect,8);
         ffprintf(ff,'Done (%.1f s).\n',GetSecs-s); % Opening scratchWindow
@@ -1407,7 +1407,12 @@ try
     clear o
     
     %% STIMULUS PARAMETERS
-    [oo(1).textSize,oo(1).textLineLength]=TextSizeToFit(window);
+    if ~isempty(window)
+        [oo(1).textSize,oo(1).textLineLength]=TextSizeToFit(window);
+    else
+        oo(1).textSize=12;
+        oo(1).textLineLength=80;
+    end
     [oo.textSize]=deal(oo(1).textSize);
     [oo.textLineLength]=deal(oo(1).textLineLength);
     for oi=1:conditions
@@ -1427,19 +1432,21 @@ try
                 error('Unknown o.instructionPlacement ''%s''.',o.instructionPlacement);
         end
         oo(oi).stimulusRect=round(oo(oi).stimulusRect);
-        % Allow room for counter.
-        bounds=DrawCounter(oo(oi));
-        switch oo(oi).counterPlacement
-            case {'bottomLeft' 'bottomCenter' 'bottomRight'}
-                oo(oi).stimulusRect(4)=oo(oi).screenRect(4)-1.5*RectHeight(bounds);
-            otherwise
-                error('Unknown o.counterPlacement ''%s''.',o.counterPlacement);
+        if ~isempty(window)
+            % Allow room for counter.
+            bounds=DrawCounter(oo(oi));
+            switch oo(oi).counterPlacement
+                case {'bottomLeft' 'bottomCenter' 'bottomRight'}
+                    oo(oi).stimulusRect(4)=oo(oi).screenRect(4)-1.5*RectHeight(bounds);
+                otherwise
+                    error('Unknown o.counterPlacement ''%s''.',o.counterPlacement);
+            end
+            if streq(oo(oi).task,'identifyAll')
+                % Allow extra room at bottom for this 2-line caption.
+                oo(oi).stimulusRect(4)=oo(oi).stimulusRect(4)-oo(oi).lineSpacing*0.8*oo(oi).textSize;
+            end
+            oo(oi).stimulusRect=round(oo(oi).stimulusRect);
         end
-        if streq(oo(oi).task,'identifyAll')
-            % Allow extra room at bottom for this 2-line caption.
-            oo(oi).stimulusRect(4)=oo(oi).stimulusRect(4)-oo(oi).lineSpacing*0.8*oo(oi).textSize;
-        end
-        oo(oi).stimulusRect=round(oo(oi).stimulusRect);
         oo(oi).noiseCheckPix=round(oo(oi).noiseCheckDeg*oo(oi).pixPerDeg);
         switch oo(oi).task
             case {'identify' 'identifyAll' 'rate'}
@@ -1470,37 +1477,39 @@ try
     end % for oi=1:conditions
     
     %% ASK EXPERIMENTER NAME
-    %     [oo.textMarginPix]=deal(round(0.08*min(RectWidth(oo(1).screenRect),RectHeight(oo(1).screenRect))));
     [oo.textMarginPix]=deal(2*oo(1).textSize);
     [oo.textFont]=deal('Verdana');
     black=0; % The CLUT color code for black.
-    white=1; % Retrieves the CLUT color code for white.
+    white=1; % The CLUT color code for white.
     [oo.gray1]=deal(white); % Temporary background (for questions) until we LinearizeClut.
     [oo.speakEachLetter]=deal(false);
     [oo.useSpeech]=deal(false);
-    preface='Hello. ';
-    while length(oo(1).experimenter)<3
-        text.big=[preface 'Please slowly type the experimenter''s name followed by RETURN.'];
-        text.small=['In the following blocks, I''ll remember your answers and skip these questions. ' ...
-            'If the keyboard seems dead, please hit Control-C twice to quit this program, ' ...
-            'then quit and restart MATLAB, and run your MATLAB script again.'];
-        text.fine=['NoiseDiscrimination Test, Copyright ' char(169) ' 2016, 2017, 2018, 2019 Denis Pelli. All rights reserved.'];
-        text.question='Experimenter name:';
-        text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
-        fprintf('*Waiting for experimenter name.\n');
-        [reply,o]=AskQuestion(oo,text);
-        reply=strip(reply); % Remove leading and trailing whitespace.
-        oo(1).quitBlock=o.quitBlock;
-        oo(1).quitExperiment=o.quitExperiment;
-        if oo(1).quitBlock
-            CloseWindowsAndCleanup(oo);
-            return
+    if ~isempty(window) && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
+        %     [oo.textMarginPix]=deal(round(0.08*min(RectWidth(oo(1).screenRect),RectHeight(oo(1).screenRect))));
+        preface='Hello. ';
+        while length(oo(1).experimenter)<3
+            text.big=[preface 'Please slowly type the experimenter''s name followed by RETURN.'];
+            text.small=['In the following blocks, I''ll remember your answers and skip these questions. ' ...
+                'If the keyboard seems dead, please hit Control-C twice to quit this program, ' ...
+                'then quit and restart MATLAB, and run your MATLAB script again.'];
+            text.fine=['NoiseDiscrimination Test, Copyright ' char(169) ' 2016, 2017, 2018, 2019 Denis Pelli. All rights reserved.'];
+            text.question='Experimenter name:';
+            text.setTextSizeToMakeThisLineFit='Standard line of text xx xxxxx xxxxxxxx xx XXXXXX. xxxx.....xx';
+            fprintf('*Waiting for experimenter name.\n');
+            [reply,o]=AskQuestion(oo,text);
+            reply=strip(reply); % Remove leading and trailing whitespace.
+            oo(1).quitBlock=o.quitBlock;
+            oo(1).quitExperiment=o.quitExperiment;
+            if oo(1).quitBlock
+                CloseWindowsAndCleanup(oo);
+                return
+            end
+            if length(reply)>=3
+                [oo.experimenter]=deal(reply);
+                break
+            end
+            preface=['Sorry. ''' reply ''' is not enough. This name must have at least 3 characters. '];
         end
-        if length(reply)>=3
-            [oo.experimenter]=deal(reply);
-            break
-        end
-        preface=['Sorry. ''' reply ''' is not enough. This name must have at least 3 characters. '];
     end
     clear o
     
@@ -2557,16 +2566,14 @@ try
     oo(1).fixationXYPix=[]; % Add fields to struct.
     oo(1).fixationIsOffscreen=[];
     oo(1).targetXYPix=[];
-    fprintf(['%d: o.nearPointXYDeg [%.0f %.0f], ' ...
-        'o.fixationXYPix [%.0f %.0f], o.fixationIsOffscreen %d\n'],...
-        MFileLineNr,oo(1).nearPointXYDeg,...
-        oo(1).fixationXYPix,oo(1).fixationIsOffscreen);
+    fprintf(['%d: o.nearPointXYDeg [%.0f %.0f]\n'],...
+        MFileLineNr,oo(1).nearPointXYDeg);
     oo(1)=SetUpFixation(oo(1),ff);
     fprintf(['%d: o.nearPointXYDeg [%.0f %.0f], ' ...
         'o.fixationXYPix [%.0f %.0f], o.fixationIsOffscreen %d\n'],...
         MFileLineNr,oo(1).nearPointXYDeg,...
         oo(1).fixationXYPix,oo(1).fixationIsOffscreen);
-    % Arbitrarily assume that all conditions have same fixation.
+    % Assume that all conditions have same fixation.
     [oo.fixationIsOffscreen]=deal(oo(1).fixationIsOffscreen);
     [oo.fixationXYPix]=deal(oo(1).fixationXYPix);
     % Conditions may have different target eccentricities.
@@ -2946,9 +2953,9 @@ try
     Snd('Open');
     
     %% OPTIONALLY READ IN FONT FROM DISK
-    % AS A SHORTCUT, I'M ASSUMING THAT THE VARIOUS CONDITIONS WITHIN A
-    % BLOCK USE AT MOST ONE ON-DISK FONT. THERE IS NO LIMIT ON THE NUMBER
-    % OF SYSTEM FONTS USED.
+    % AS A SHORTCUT, WE ASSUME THAT THE VARIOUS CONDITIONS WITHIN A BLOCK
+    % USE AT MOST ONE ON-DISK FONT. THERE IS NO LIMIT ON THE NUMBER OF
+    % SYSTEM FONTS USED.
     % letterStruct(i).letter % char
     % letterStruct(i).image % image
     % letterStruct(i).rect % rect of that image
@@ -3110,6 +3117,7 @@ try
         white1=1;
         black0=0;
         Screen('Preference','TextAntiAliasing',0);
+        white=1; % Overrriden below in case 'image'. Used later in line 4139.
         switch oo(oi).task % Compute masks and envelopes
             case '4afc'
                 % boundsRect contains all 4 positions.
@@ -3127,8 +3135,8 @@ try
                     case {'letter' 'word'}
                         if ~oo(oi).getAlphabetFromDisk
                             if isempty(oo(1).window) && isempty(temporaryWindow)
-                                % Some window must already be open before we call
-                                % OpenOffscreenWindow.
+                                % Some window must already be open before
+                                % we call OpenOffscreenWindow.
                                 ffprintf(ff,'%d: Opening temporaryWindow. ... ',MFileLineNr);
                                 s=GetSecs;
                                 n1=length(Screen('Windows'));
@@ -3333,9 +3341,9 @@ try
                                 else
                                     m=0.2989*signalStruct(i).image(:,:,1)+0.5870*signalStruct(i).image(:,:,2)+0.1140*signalStruct(i).image(:,:,3);
                                 end
-                                %                         imshow(uint8(m));
+                                % imshow(uint8(m));
                                 oo(oi).signal(i).image=double(m)./whiteImage-1;
-                                %                         imshow((oo(oi).signal(i).image+1));
+                                % imshow((oo(oi).signal(i).image+1));
                             end
                         end % if oo(oi).useCache
                         assert(~isempty(oo(oi).targetRectChecks));
@@ -4128,7 +4136,7 @@ try
                         signalMask=signalMask & signalImage;
                     else
                         % signalMask is true where the signal is present, i.e. not white.
-                        for i=1:length(white) % support color
+                        for i=1:length(white) % Support color.
                             signalMask=signalMask & signalImage(:,:,i)~=white(i); % TAKES 0.3 ms
                         end
                     end
@@ -5530,8 +5538,12 @@ try
                 ffprintf(ff,'%.0f ms/trial, across all conditions.\n',secs*1000);
             end
             ffprintf(ff,'\n');
+            oo(oi).blockSecs=GetSecs-blockStartSecs;
+            oo(oi).blockSecsPerTrial=secs;
         end
-        
+        oo(oi).blockSecs=oo(1).blockSecs;
+        oo(oi).blockSecsPerTrial=oo(1).blockSecsPerTrial;
+
         ffprintf(ff,'<strong>Block %d of %d.</strong>\n',oo(1).block,oo(1).blocksDesired);
         
         %% PRINT BOLD SUMMARY OF CONDITION oi
@@ -5633,8 +5645,8 @@ try
         ffprintf(ff,'%d: done saving mat file at %.0f s\n',oi,GetSecs-savingToDiskSecs);
         if exist('oo1','var')
             try % save to .json file
-                % I used /utility/printFieldBytes to select the biggest fields
-                % for deletion. Including annularNoiseMask and
+                % I used /utility/printFieldBytes to select the biggest
+                % fields for deletion. Including annularNoiseMask and
                 % centralNoiseMask, this reduced o from 46 MB to 0.2 MB.
                 if isfield(oo1,'signal')
                     % Too big to save. 5 MB.
@@ -6185,6 +6197,7 @@ switch o.observer
                 switch o.targetModulates
                     case 'luminance'
                         % THIS WORKS.
+                        oo(1).signalSize=size(signal(1).image);
                         im=zeros(size(signal(1).image));
                         imSum=im;
                         % The signal is always static. The noise may be
