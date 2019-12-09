@@ -4,6 +4,7 @@
 % denis.pelli@nyu.edu 
 % October 18, 2019
 % 646-258-7524
+% December 1, 2019. DGP. Reduced short viewing distance from 30 to 25 cm.
 mainFolder=fileparts(mfilename('fullpath')); % Takes 0.1 s.
 addpath(fullfile(mainFolder,'lib')); % Folder in same directory as this M file.
 clear KbWait
@@ -15,7 +16,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Some observer will see gabors, others will see letters. The experiment
 % has two parts. We want to test each person on both parts 1 and 2.
-partOfExperiment=1; % 1 or 2.
+partOfExperiment=2; % 1 or 2.
 o.targetKind='gabor'; 
 % o.targetKind='letter'; 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -37,7 +38,7 @@ o.thresholdParameter='contrast';
 o.flankerSpacingDeg=0.2; % Used only for fixation check.
 o.observer='';
 o.brightnessSetting=0.87;
-o.fixationCheck=false;
+o.fixationCheck=false; % True designates the condition as a fixation check.
 o.fixationCrossBlankedNearTarget=true;
 o.fixationCrossBlankedUntilSecsAfterTarget=0.6;
 o.fixationCrossDrawnOnStimulus=false;
@@ -56,6 +57,7 @@ o.brightnessSetting=0.87;
 o.askExperimenterToSetDistance=true;
 o.symmetricLuminanceRange=true; % False for maximum brightness.
 o.desiredLuminanceFactor=1; % 1.8 to maximize brightness.
+o.fullResolutionTarget=true; % NEW December 6, 2019. denis.pelli@nyu.edu
 switch o.targetKind
     case 'gabor'
         o.conditionName='gabor';
@@ -91,7 +93,7 @@ for ecc=[0 2 8 32]
             continue
         end
         if o.targetHeightDeg>16 || ecc>16
-            o.viewingDistanceCm=30;
+            o.viewingDistanceCm=25;
         else
             o.viewingDistanceCm=50;
         end
@@ -139,7 +141,7 @@ for ecc=32
         o.targetHeightDeg=deg;
         degMin=NominalAcuityDeg(o.eccentricityXYDeg);
         if o.targetHeightDeg>16 || ecc>16
-            o.viewingDistanceCm=30;
+            o.viewingDistanceCm=25;
         else
             o.viewingDistanceCm=50;
         end
@@ -257,7 +259,7 @@ t=struct2table(oo,'AsArray',true);
 disp(t(:,{'block' 'experiment' 'conditionName' 'observer' 'targetKind' 'thresholdParameter'...
     'contrast'  'willTakeMin' 'noiseSD' ...
     'targetHeightDeg' 'eccentricityXYDeg' 'viewingDistanceCm'})); % Print the conditions in the Command Window.
-%return
+% return
 
 %% Measure threshold, one block per iteration.
 ooo=RunExperiment(ooo);
