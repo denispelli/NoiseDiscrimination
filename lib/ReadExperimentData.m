@@ -14,15 +14,17 @@ function [oo,tt]=ReadExperimentData(experiment,vars)
 
 myPath=fileparts(mfilename('fullpath')); % Takes 0.1 s.
 addpath(myPath); % We are in the "lib" folder.
-dataFolder=fullfile(fileparts(fileparts(mfilename('fullpath'))),'data'); % lib and data folders are in the same folder.
+% The lib and data folders are in the same folder.
+dataFolder=fullfile(fileparts(fileparts(mfilename('fullpath'))),'data');
+% matFiles=dir(fullfile(dataFolder,['run' experiment '*.mat']));
 matFiles=dir(fullfile(dataFolder,[experiment '*.mat']));
 
-% Each threshold has a unique identifier: o.dataFilename. It is created
+% Each block has a unique identifier: o.dataFilename. It is created
 % just before we start running trials. I think that we could read all the
-% data files, accumulating both individual threshold files, a "o" struct,
+% data files, accumulating both block files, with an "oo" struct,
 % and summary files which contain a whole experiment "ooo", consisting of
-% multiple blocks "oo" each of which contains several thresholds "o".  if
-% we first discard instances with zero trials then we can safely discard
+% multiple blocks "oo", each of which contains several thresholds "o".  
+% If we first discard instances with zero trials then we can safely discard
 % duplicates with the same identifier and neither lose data, nor retain any
 % duplcate data.
 
@@ -31,7 +33,7 @@ matFiles=dir(fullfile(dataFolder,[experiment '*.mat']));
 % "conditionName" "observer" and "experiment" fields that encode the most
 % important aspects of the grouping.
 
-%% READ ALL DATA INTO A LIST OF THRESHOLDS "oo".
+%% READ ALL DATA INTO A LIST OF CONDITIONS IN STRUCT ARRAY "oo".
 if nargin<1
     error('You must include the first argument, a string, but it can be an empty string.');
 end
@@ -48,34 +50,46 @@ if nargin<2
         'pixPerCm'  'nearPointXYPix' 'NUnits' 'beginningTime'};
 end
 oo=struct([]);
+filenameList={}; % Avoid duplicate data.
 for iFile=1:length(matFiles) % One file per iteration.
-    % Each threshold file includes just one "o" threshold struct. Each
+    % Accumulate all conditions into one long oo struct array. First we
+    % read each file into a temporary ooo{} cell array, each of whose
+    % elements represents a block. There are two kinds of file: block and
+    % summary. Each block file includes an oo() array struct, with one
+    % element per condition, all tested during one block, interleaved. Each
     % summary file includes a whole experiment ooo{}, each of whose
-    % elements is a block oo(), each of whose elements is a threshold
-    % struct o. For each threshold, we extract the desired fields into one
-    % element of the "oo" array.
+    % elements represents a block by an oo() array struct, with one element
+    % per condition.
     d=load(matFiles(iFile).name);
     if isfield(d,'ooo')
-        % Grab experiment ooo struct from summary file.
+        % Get ooo struct (a cell array) from summary file.
         ooo=d.ooo;
     elseif isfield(d,'oo')
-        % Grab "oo" struct array from threshold file.
+        % Get "oo" struct array from threshold file.
         ooo={d.oo};
     elseif isfield(d,'o')
-        % Grab "o" struct from threshold file.
+        % Get "o" struct from threshold file.
         ooo={d.o};
     else
         continue % Skip unknown file type.
     end
-    for k=1:length(ooo) % Iterate through blocks.
-        if ~isfield(ooo{k},'dataFilename')
+    for block=1:length(ooo) % Iterate through blocks.
+        if ~isfield(ooo{block},'dataFilename')
+            % Skip any block lacking a dataFilename (undefined).
             continue
         end
-        for j=1:length(ooo{k}) % Iterate through conditions within a block.
-            if isempty(ooo{k}(j).dataFilename)
+        if ismember(ooo{block}(1).dataFilename,filenameList)
+            % Skip if we already have this block of data.
+            continue
+        else
+            filenameList{end+1}=ooo{block}(1).dataFilename;
+        end
+        for oi=1:length(ooo{block}) % Iterate through conditions within a block.
+            ooo{block}(oi).localHostName=ooo{block}(oi).cal.localHostName; % Expose computer name, to help identify observer.
+            if isempty(ooo{block}(oi).dataFilename)
                 continue
             end
-            o=ooo{k}(j); % "o" is a threshold struct.
+            o=ooo{block}(oi); % "o" holds one condition.
             oo(end+1).missingFields={}; % Create new element.
             usesSecsPlural=isfield(o,'targetDurationSecs');
             for i=1:length(vars)
@@ -84,6 +98,12 @@ for iFile=1:length(matFiles) % One file per iteration.
                     oldField=field;
                 else
                     oldField=strrep(field,'Secs','Sec');
+                end
+                switch oldField
+                    case 'trialsDesired'
+                        if isfield(o,'trials')
+                            oldField='trials';
+                        end
                 end
                 if isfield(o,oldField)
                     oo(end).(field)=o.(oldField);
@@ -94,18 +114,21 @@ for iFile=1:length(matFiles) % One file per iteration.
         end
     end
 end
-fprintf('Read %d thresholds from %d files. Now discarding empties and duplicates.\n',length(oo),length(matFiles));
+fprintf('ReadExperimentData read %d thresholds from %d files. Now discarding empties and duplicates.\n',length(oo),length(matFiles));
+
+%% CLEAN UP THE LIST, DISCARDING WHAT WE DON'T WANT.
 % We've now gotten all the thresholds into oo. 
 if ~isfield(oo,'trials')
     error('No data');
 end
-oo=oo([oo.trials]>0); % Discard empties.
+oo=oo([oo.trials]>0); % Discard conditions with no data.
 if isempty(oo)
     return;
 end
 [~,ii]=unique({oo.dataFilename}); % Discard duplicates.
 oo=oo(ii);
-missingFields=unique(cat(1,oo.missingFields));
+% missingFields=unique(cat(1,oo.missingFields));
+missingFields=unique(cat(2,oo.missingFields));
 if ~isempty(missingFields)
     warning OFF BACKTRACE
     s='Missing fields:';
@@ -121,9 +144,10 @@ for oi=length(oo):-1:1
 end
 for oi=1:length(oo)
     [y,m,d,h,mi,s] = datevec(oo(oi).beginningTime) ;
-    oo(oi).date=sprintf('%02d.%02d.%d, %02d:%02d:%02.0f',d,m,y,h,mi,s);
+    oo(oi).date=sprintf('%04d.%02d.%02d, %02d:%02d:%02.0f',y,m,d,h,mi,s);
 end
-tt=struct2table(oo);
+tt=struct2table(oo,'AsArray',true);
+% WARN AND DELETE DATA WITH TOO FEW TRIALS.
 if sum(tt.trials<40)>0
     warning('Discarding %d threshold(s) with fewer than 40 trials:\n',sum(tt.trials<40));
     disp(tt(tt.trials<40,{'date' 'observer' 'experiment'  'conditionName' 'trials'}))
