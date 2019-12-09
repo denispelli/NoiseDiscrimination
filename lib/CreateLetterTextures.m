@@ -51,7 +51,7 @@ function [letterStruct,alphabetBounds]=CreateLetterTextures(condition,o,window)
 % o.showLineOfLetters
 % o.contrast % Typically 1. Positive for black letters.
 %
-% window used as scratch space by DrawText.
+% "window" is used as scratch space by DrawText.
 %
 % Enhanced checking of image size now gives detailed report if an error is
 % detected, for instance:
