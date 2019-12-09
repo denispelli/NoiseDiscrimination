@@ -26,7 +26,8 @@ vars={'condition' 'conditionName' 'experiment' 'dataFilename' ...
     'contrast' 'E' 'E1' 'N' 'LBackground' 'luminanceAtEye' 'luminanceFactor'...
     'filterTransmission' 'useFilter' 'retinalIlluminanceTd' 'pupilDiameterMm'...
     'pixPerCm'  'nearPointXYPix' 'NUnits' 'beginningTime' 'thresholdParameter'...
-    'questMean' 'partingComments'};
+    'questMean' 'partingComments' 'blockSecs' 'blockSecsPerTrial'
+    'fullResolutionTarget'};
 experiment='EfficiencyConservation';
 oo=ReadExperimentData(experiment,vars); % Adds date and missingFields.
 fprintf('%s %d thresholds.\n',experiment,length(oo));
@@ -44,53 +45,95 @@ for i=1:length(comments)
     fprintf('%s\n',comments{i}{1});
 end
 
-% oo=[oo1 oo2];
 % COMPUTE EFFICIENCY
 % Select thresholdParameter='contrast', for each conditionName, 
 % For each observer, including ideal, use all (E,N) data to estimate deltaNOverE and Neq. 
 % Compute efficiency by comparing deltaNOverE of each to that of the ideal.
 conditionNames=unique({oo.conditionName});
 observers=unique({oo.observer});
+
+% Round each target size to a power of 2.
+for oi=1:numel(oo)
+oo(oi).targetHeightDeg = 2.^round(log2([oo(oi).targetHeightDeg]));
+end
+
+% We average all thresholds that match in:
+% conditionName, observer, targetHeight, and eccentricityXY.
+targetHeightDegs=unique([oo.targetHeightDeg]);
+eccXsfull=arrayfun(@(x) x.eccentricityXYDeg(1),oo);
+eccXs=unique(eccXsfull);
 aa=[];
 for conditionName=conditionNames
     for observer=observers
-        match=ismember({oo.conditionName},conditionName) & ismember({oo.observer},observer);
-        match=match & ismember({oo.thresholdParameter},{'contrast'});
-        if sum(match)>0
-            E=[oo(match).E];
-            N=[oo(match).N];
-            [Neq,E0,deltaEOverN]=EstimateNeq(E,N);
-            aa(end+1).conditionName=conditionName{1};
-            aa(end).observer=observer{1};
-            aa(end).E=E;
-            aa(end).N=N;
-            aa(end).E0=E0;
-            aa(end).Neq=Neq;
-            aa(end).deltaEOverN=deltaEOverN;
-            oi=find(match,1);
-            aa(end).thresholdParameter=oo(oi).thresholdParameter;
+        for targetHeightDeg=targetHeightDegs
+            for eccX=eccXs
+                match=ismember({oo.conditionName},conditionName) ...
+                    & ismember({oo.observer},observer) ...
+                    & ismember([oo.targetHeightDeg],targetHeightDeg) ...
+                    & ismember(eccXsfull,eccX);
+                match=match & ismember({oo.thresholdParameter},{'contrast'});
+                if sum(match)>0
+                    E=[oo(match).E];
+                    N=[oo(match).N];
+                    [Neq,E0,deltaEOverN]=EstimateNeq(E,N);
+                    aa(end+1).conditionName=conditionName{1};
+                    aa(end).observer=observer{1};
+                    aa(end).E=E;
+                    aa(end).N=N;
+                    aa(end).E0=E0;
+                    aa(end).Neq=Neq;
+                    aa(end).deltaEOverN=deltaEOverN;
+                    oi=find(match,1);
+                    aa(end).thresholdParameter=oo(oi).thresholdParameter;
+                    aa(end).eccentricityDeg=eccX;
+                    aa(end).targetHeightDeg=targetHeightDeg;
+                    aa(end).contrast=[oo(match).contrast];
+                    aa(end).noiseSD=[oo(match).noiseSD];
+                end
+            end
         end
     end
 end
+
+% idealEOverN.letter = 13;
+% idealEOverN.small  =  3; % small means gabor ...
+
 for conditionName=conditionNames
-    for observer=observers
-        match=ismember({aa.thresholdParameter},{'contrast'});
-        match=match & ismember({aa.conditionName},conditionName);
+  for observer=observers
+    for targetHeightDeg=targetHeightDegs
+      for eccX=eccXs
+        match=ismember({aa.thresholdParameter},{'contrast'})...
+        	& ismember({aa.conditionName},conditionName)...
+        	& ismember([aa.targetHeightDeg],targetHeightDeg)...
+        	& ismember([aa.eccentricityDeg], eccX);
+        if targetHeightDeg>32
+          keyboard
+        end
         idealMatch=match & ismember({aa.observer},{'ideal'});
         match = match & ismember({aa.observer},observer);
         if sum(match)>0 && sum(idealMatch)>0
-            assert(sum(match)==1 & sum(idealMatch)==1);
-            aa(match).efficiency=aa(idealMatch).deltaEOverN/aa(match).deltaEOverN;
+          assert(sum(match)==1 & sum(idealMatch)==1);
+            aa(match).efficiency=idealEOverN.(conditionName{1})/aa(match).deltaEOverN;
+%           aa(match).efficiency=aa(idealMatch).deltaEOverN/aa(match).deltaEOverN;
         end
+      end
     end
+  end
 end
-human=~ismember({aa.observer},'ideal');
-aa=struct2table(aa(human));
+% human=~ismember({aa.observer},'ideal');
+aa=struct2table(aa);
 aa=sortrows(aa,'conditionName');
 disp(aa(:,{'conditionName','efficiency','observer'}));
 dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
+aa.conditionName=strrep(aa.conditionName, 'small', 'gabor');
+% for iefficiency=1:length(aa.efficiency)
+%   if isempty(aa.efficiency{iefficiency})
+%     aa.efficiency{iefficiency}=NaN;
+%   end
+% end
 writetable(aa,fullfile(dataFolder,'efficiency.xls'));
-
+jsonwrite(fullfile(dataFolder,'EfficiencyConservation.json'), aa);
+return
 % SELECT CONDITION(S)
 % for oi=length(oo):-1:1
 %     if ~ismember(oo(oi).conditionName,{'face' 'Sloan'}) || oo(oi).trials<30
