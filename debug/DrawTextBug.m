@@ -15,7 +15,7 @@ screen=0;
 black=0;
 white=1;
 gray1=1/2;
-Screen('Preference', 'SkipSyncTests', 1);
+% Screen('Preference', 'SkipSyncTests', 1);
 PsychImaging('PrepareConfiguration');
 % PsychImaging('AddTask','General','UseRetinaResolution');
 % PsychImaging('AddTask','General','EnableNative11BitFramebuffer');
