@@ -505,7 +505,7 @@ try
             %          input('\nHit RETURN once you''ve read the above instructions, and you''re ready to proceed:','s');
         end
     end
-    Screen('Preference','SkipSyncTests',1);
+    % Screen('Preference','SkipSyncTests',1);
     cal.useRetinaResolution=false;
     
     screenBufferRect = Screen('Rect',cal.screen);
