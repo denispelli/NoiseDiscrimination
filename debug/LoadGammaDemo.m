@@ -22,7 +22,7 @@
 % which "success" is useful.
 sca
 deferLoading=2; % Must be 1 or 2. REQUIRED.
-Screen('Preference', 'SkipSyncTests', 1);
+% Screen('Preference', 'SkipSyncTests', 1);
 if 1
    PsychImaging('PrepareConfiguration'); % REQUIRED
    PsychImaging('AddTask','AllViews','EnableCLUTMapping',256,1); % REQUIRED
