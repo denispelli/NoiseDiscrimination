@@ -18,7 +18,7 @@
 
 clear all
 deferLoading=2; 
-Screen('Preference','SkipSyncTests',1);
+% Screen('Preference','SkipSyncTests',1);
 PsychImaging('PrepareConfiguration'); 
 PsychImaging('AddTask','AllViews','EnableCLUTMapping',256,1); 
 PsychImaging('AddTask','General','NormalizedHighresColorRange',1);
