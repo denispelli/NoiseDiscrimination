@@ -327,10 +327,10 @@ if true % Set this false outside of Denis Pelli's lab.
    o.enablePseudoGrayOutput=true;
 end
 BackupCluts;
-Screen('Preference','SkipSyncTests',2);
+% Screen('Preference','SkipSyncTests',2);
 if false
    % Print full report for Mario
-   Screen('Preference','SkipSyncTests',1);
+   % Screen('Preference','SkipSyncTests',1);
    Screen('Preference','Verbosity',10);
 end
 try
