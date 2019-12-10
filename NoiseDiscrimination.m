@@ -824,7 +824,7 @@ o.targetHeightDeg=2; % Target size, range 0 to inf. If you ask for too
 % o.targetHeightDeg=30*o.noiseCheckDeg; % standard for counting neurons
 % project
 o.minimumTargetHeightChecks=8; % Minimum target resolution, in units of the check size.
-o.fullResolutionTarget=false; % True to render signal at full resolution (targetCheckPix=1). False to use noise resolution (targetCheckPix=noiseCheckPix).
+o.fullResolutionTarget=true; % True to render signal at full resolution (targetCheckPix=1). False to use noise resolution (targetCheckPix=noiseCheckPix).
 o.targetMargin=0.25; % Minimum gap from edge of target to edge of o.stimulusRect, as fraction of o.targetHeightDeg.
 o.targetDurationSecs=0.15; % Typically 0.2 or inf (wait indefinitely for response).
 o.contrast=1; % Default is positive contrast.
@@ -2053,7 +2053,7 @@ try
         % This is the only place where we set it to true.
         isScreenCalibrated=true;
     end % if ~isScreenCalibrated
-    Screen('Preference','SkipSyncTests',1);
+    % Screen('Preference','SkipSyncTests',1); % No longer needed. Dec.2019.
     oldVisualDebugLevel=Screen('Preference','VisualDebugLevel',0);
     oldSupressAllWarnings=Screen('Preference','SuppressAllWarnings',1);
     for oi=1:conditions
@@ -6628,7 +6628,7 @@ else
         string=[string sprintf(['\n\nEXPERT NOTE: You might be able to bring fixation back on-screen '...
             'by quitting now and then '...
             'pushing the target location (o.nearPointXYInUnitSquare [%.2f %.2f]) away from fixation, '...
-            'or reducing o.viewingDistanceCm (%.1f cm), or reducing the target''s o.eccentricityXYDeg [%.1f %.1f]).'],...
+            'or reducing o.viewingDistanceCm (%.1f), or reducing the target''s o.eccentricityXYDeg [%.1f %.1f]).'],...
             o.nearPointXYInUnitSquare,o.viewingDistanceCm,o.eccentricityXYDeg)];
         Screen('TextSize',o.window,o.textSize);
         Screen('TextFont',o.window,'Verdana');
