@@ -44,7 +44,7 @@ downEntry=1;
 o.screen = 0;
 try
    o.maxEntry=o.CLUTMapLength-1;
-   Screen('Preference','SkipSyncTests',1);
+   % Screen('Preference','SkipSyncTests',1);
    PsychImaging('PrepareConfiguration');
    if 1
       % On my MacBook Pro, the bug is less severe when I enable this.
