@@ -19,7 +19,7 @@ gamma=[0:255; 0:255; 0:255]';
 gamma=gamma/255;
 useFractionOfScreen=0;
 BackupCluts;
-Screen('Preference','SkipSyncTests',2);
+% Screen('Preference','SkipSyncTests',2);
 try
    %% OPEN WINDOW
    screen = 0;
