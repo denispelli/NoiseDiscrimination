@@ -66,7 +66,7 @@ clear all
 MAX_BLACK_ENTRIES=85; % 85 on MacBook Pro. 
 useFractionOfScreen=0;
 BackupCluts;
-Screen('Preference','SkipSyncTests',2);
+% Screen('Preference','SkipSyncTests',2);
 Screen('Preference','TextAntiAliasing',0);
 normalizeColor=1;
 enableCLUTMapping=0;
