@@ -14,7 +14,7 @@ usePhotometer=1; % Use ColorCAL II XYZ, or simulate 8-bit rendering.
 % Each range takes about a minute to measure.
 useFractionOfScreen=.3; % Restrict our window size, for access to Command Window.
 BackupCluts;
-Screen('Preference','SkipSyncTests',2);
+% Screen('Preference','SkipSyncTests',2);
 try
    %% OPEN WINDOW
    screen = 0;
