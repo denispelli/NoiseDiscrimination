@@ -11,7 +11,7 @@
 % Denis Pelli March 25, 2017
 useFractionOfScreen=0;
 BackupCluts;
-Screen('Preference','SkipSyncTests',1);
+% Screen('Preference','SkipSyncTests',1);
 oldSetting = Screen('Preference', 'TextAntiAliasing', 0);
 screen = 0;
 dither=61696; % Appropriate for graphics chip AMD Radeon R9 M370X 2048 MB
