@@ -228,7 +228,7 @@ CLUTMapSize=4096; % Size of software CLUT. Limits resolution to log2(CLUTMapSize
 
 %% BEGIN
 BackupCluts;
-Screen('Preference','SkipSyncTests',2);
+% Screen('Preference','SkipSyncTests',2); % May no longer be needed.
 % Screen('Preference','SkipSyncTests',1); %  For Mario.
 % Screen('Preference','Verbosity',10); % For Mario.
 try
