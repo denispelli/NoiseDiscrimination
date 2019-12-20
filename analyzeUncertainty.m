@@ -1,7 +1,7 @@
 %% Analyze the data collected by runUncertaintyNew and runUncertaintySangita
-
-experiment='uncertaintyNew';
-experiment='uncertaintySangita';
+experiment='uncertaintyNew'; % November/December 2019
+experiment='uncertaintySangita'; % November/December 2019
+experiment='uncertainty';
 global printConditions makePlotLinear showLegendBox
 showLegendBox=true;
 printConditions=false;
