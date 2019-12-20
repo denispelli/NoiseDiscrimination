@@ -16,7 +16,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Some observer will see gabors, others will see letters. The experiment
 % has two parts. We want to test each person on both parts 1 and 2.
-partOfExperiment=1; % 1 or 2.
+partOfExperiment=2; % 1 or 2.
 o.targetKind='gabor'; 
 % o.targetKind='letter'; 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
