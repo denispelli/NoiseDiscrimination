@@ -63,7 +63,7 @@ o.brightnessSetting=0.87;
 o.askExperimenterToSetDistance=true;
 o.symmetricLuminanceRange=true; % False for maximum brightness.
 o.desiredLuminanceFactor=1; % 1.8 to maximize brightness.
-
+o.saveSnapshot=false;
 if true
     % Put target at a grid of locations in rectangular area centered on fixation.
     for targetKindCell={'gabor' 'letter'}
@@ -113,6 +113,7 @@ if true
                 case 'letter'
                     o.borderLetter='X';
                     o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
+%                     o.saveSnapshot=true;
 %                     o.alphabet='CDHKNORSVZ'; % As in Pelli et al. (2006)
 %                     o.getAlphabetFromDisk=false; % No "C" on disk.
 %                     o.pThreshold=0.64; % As in Pelli et al. (2006).
