@@ -28,6 +28,7 @@ function fixationLines=ComputeFixationLines(fix)
 %                                       % which are greatly diminished
 %                                       % there, I recommend a value of
 %                                       % 0.5.
+% fix.targetHeightOverWidth=1;          % 1 for Sloan. 5 for Pelli font.
 % fix.targetHeightPix=targetHeightPix;  % Blanking radius is proportional
 %                                       % to specified target height.
 % fix.markTargetLocation=true;          % Draw vertical line indicating
@@ -73,7 +74,7 @@ fix.eccentricityPix = sqrt(sum((fix.targetXYPix-[fix.x fix.y]).^2));
 % at (0,0).
 r=OffsetRect(fix.clipRect,-fix.x,-fix.y);
 
-% Horizontal line
+% Horizontal line indicating fixation 
 lineStart=-fix.fixationCrossPix/2;
 lineEnd=fix.fixationCrossPix/2;
 lineStart=max(lineStart,r(1)); % clip to fix.clipRect
