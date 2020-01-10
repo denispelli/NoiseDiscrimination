@@ -5830,6 +5830,9 @@ o.approxRequiredNumber=64/10^((tTest-o.idealT64)/0.55);
 rect=Screen('TextBounds',snapshotTexture,'approxRequiredNumber 0000');
 % r=o.screenRect;
 r=Screen('Rect',snapshotTexture);
+if isempty(leftEdgeOfResponse)
+    leftEdgeOfResponse=o.screenRect(3); % DGP Tying to make it run.
+end
 r(3)=leftEdgeOfResponse;
 r=InsetRect(r,o.textSize/2,o.textSize/2);
 rect=AlignRect(rect,r,RectRight,RectBottom);
@@ -5954,6 +5957,7 @@ if saveSnapshotFid ~= -1
 end
 filename=[filename '.png'];
 imwrite(img,fullfile(mainFolder,filename),'png');
+ffprintf(ff,'In folder: %s\n',[mainFolder filesep]);
 ffprintf(ff,'Saving image to file "%s" ',filename);
 switch o.targetModulates
     case 'luminance'
@@ -5969,6 +5973,7 @@ o.isLastBlock=true;
 ffprintf(ff,'SUCCESS: o.saveSnapshot is done. Image saved, now returning.\n');
 fclose(logFid);
 logFid=-1;
+sca;
 CloseWindowsAndCleanup;
 return
 end % function SaveSnapshot
