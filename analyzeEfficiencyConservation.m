@@ -112,9 +112,9 @@ for conditionName=conditionNames
         idealMatch=match & ismember({aa.observer},{'ideal'});
         match = match & ismember({aa.observer},observer);
         if sum(match)>0 && sum(idealMatch)>0
-          assert(sum(match)==1 & sum(idealMatch)==1);
+            assert(sum(match)==1 & sum(idealMatch)==1);
             aa(match).efficiency=idealEOverN.(conditionName{1})/aa(match).deltaEOverN;
-%           aa(match).efficiency=aa(idealMatch).deltaEOverN/aa(match).deltaEOverN;
+			% aa(match).efficiency=aa(idealMatch).deltaEOverN/aa(match).deltaEOverN;
         end
       end
     end
