@@ -156,7 +156,7 @@ try
         Speak('Welcome to Calibrate Screen Luminance.');
     end
     %     onCleanupInstance=onCleanup(@()sca); % clears screen when function is terminated.
-    
+
     if nargin>1
         cal.screenOutput=screenOutput; % used only under Linux
     else
@@ -214,7 +214,7 @@ try
     KbName('UnifyKeyNames'); % Needed to work on Windows computer.
     [cal.screenWidthMm,cal.screenHeightMm]=Screen('DisplaySize',cal.screen);
     cal.pixelMax=255; % ????
-    
+
     %% Is a CRS colorimeter connected?
     % This test works on macOS, but may fail on Linux or Windows.
     try
@@ -408,14 +408,15 @@ try
         cal.BrightnessWorks=false;
         cal.ScreenConfigureDisplayBrightnessWorks=false;
         cal.brightnessRmsError=nan;
+        cal.brightnessSetting = nan;
     end % if IsOSX
-    
+
     % Get the gamma table.
     % In April 2018 Mario Kleiner said that "dacBits" cannot be trusted and may be removed. So I stopped saving it.
     %    [cal.old.gamma,cal.dacBits]=Screen('ReadNormalizedGammaTable',cal.screen,cal.screenOutput);
     cal.old.gamma=Screen('ReadNormalizedGammaTable',cal.screen,cal.screenOutput);
     cal.old.gammaIndexMax=length(cal.old.gamma)-1; % Index into gamma table is 0..gammaIndexMax.
-    
+
     % Make sure it's a good gamma table.
     cal.old.gammaHistogramStd=std(histcounts(cal.old.gamma(:,2),10,'Normalization','probability'));
     macStd=[0.0005  0.0082  0.0085  0.0111  0.0123  0.0683 0.0082];
@@ -440,7 +441,7 @@ try
         error('YOur gamma table seems custom-made. Please use an official color profile.\n');
     end
     fprintf('Successfully read your gamma table ("color profile").\n');
-    
+
     if allowEV
         response='x';
         fprintf('Photometers usually report luminance in cd/m^2. Photographic light meters report it in EV units. \n');
@@ -455,7 +456,7 @@ try
     else
         useEV=false;
     end
-    
+
     if useEV
         luminanceUnitWords='exposure value EV';
         luminanceUnit='EV';
@@ -476,7 +477,11 @@ try
     if isfield(computer,'processUserLongName')
         cal.processUserLongName=computer.processUserLongName;
     else
+      try
+        cal.processUserLongName = getenv('USERNAME');
+      catch
         cal.processUserLongName='';
+      end
     end
     if ~isfield(computer,'localHostName')
         cal.localHostName='';
@@ -507,7 +512,7 @@ try
     end
     % Screen('Preference','SkipSyncTests',1);
     cal.useRetinaResolution=false;
-    
+
     screenBufferRect = Screen('Rect',cal.screen);
     PsychImaging('PrepareConfiguration');
     if using11bpc
@@ -573,7 +578,14 @@ try
                     end
                     Screen('Flip',window,0,1); % Show instructions.
                     commandwindow; % Try to shift focus to command window, so we receive the keyboard input.
-                    input('Hit RETURN when ready to begin','s');
+                    if false
+                    	% Hangs on Linux.
+                    	input('Hit RETURN when ready to begin','s');
+                    else
+                    	% Works in Linux. Hopefully workds on all OSes. 
+                        fprintf('Hit RETURN when ready to begin.\n');
+                    	KbWait;
+                    endd
                     Screen('DrawText',window,'Now measuring ...',10,screenRect(4)-100*screenScalar);
                     Screen('Flip',window,0,1);
                     if useSpeech
@@ -780,6 +792,7 @@ try
             if ismac
                 fprintf(f,'\tcal.profile=''%s'';\n',cal.profile);
             end
+            keyboard; % Added by Hormet for Linux?? DGP
             fprintf(f,'\tcal.ScreenConfigureDisplayBrightnessWorks=%s;\n',mat2str(cal.ScreenConfigureDisplayBrightnessWorks));
             fprintf(f,'\tcal.BrightnessWorks=%s; % Capitalized reference to Brightness.m and applescript.\n',mat2str(cal.BrightnessWorks));
             fprintf(f,'\tcal.brightnessSetting=%.2f;\n',cal.brightnessSetting);
