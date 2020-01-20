@@ -323,7 +323,7 @@ for block=2:length(ooo)
     end
 end
 if ~ok
-    error('Please fix the script so all blocks have the same set of fields.');
+    error('Please fix this script %s so all blocks have the same set of fields.',mfilename);
 end
 for block=1:length(ooo)
     oo=[oo ooo{block}];
