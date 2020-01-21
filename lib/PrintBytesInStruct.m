@@ -1,3 +1,7 @@
+function PrintBytesInStruct(o)
+% PrintBytesInStruct(o)
+% Denis Pelli, 2019
+% I think I copied this from somewhere, but I don't remember where.
 ff=fieldnames(o);
 for i=1:length(ff)
     a=o.(ff{i});
