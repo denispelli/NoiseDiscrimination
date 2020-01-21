@@ -19,14 +19,14 @@ function [EOverN,psych]=UncertainEOverN(MM,psych)
 % E/N = 16.1859 20.0291 for 9 Sloan letters with M=1 104.
 %
 % INPUT ARGUMENTS:
-% "MM" is an array of one or more degree of uncertainty M, each a positive
+% "MM" is an array of one or more degrees of uncertainty M, each a positive
 % integer.
-% "psych" is a struct specifying the psychophysical parameters, including
-% the threshold criterion pThreshold, for Quest. See QuestDemo.m in the
+% "psych" is a struct specifying Quest's psychophysical parameters,
+% including the threshold criterion pThreshold. See QuestDemo.m in the
 % Psychtoolbox.
 %
-% OUTPUT ARGUMENT:
-% EOverN is the threshold energy E divided by the noise level N.
+% OUTPUT ARGUMENT: EOverN is the threshold energy E divided by the noise
+% power spectral density N.
 %
 % denis.pelli@nyu.edu, December, 2019.
 %
@@ -53,20 +53,18 @@ function [EOverN,psych]=UncertainEOverN(MM,psych)
 % 4646-4674
 % https://psych.nyu.edu/pelli/pubs/pelli2006letters.pdf
 
-plusMinus=char(177);
-micro=char(181);
+plusMinus=char(177); % 16-bit unicode.
+micro=char(181); % 16-bit unicode.
 wrongRight={'wrong','right'};
 timeZero=GetSecs;
 if nargin<1
-    MM=[104 1];
+    MM=[100 1];
 end
 EOverN=zeros(size(MM));
 if nargin<2
     % The rest of the code assumes that the "psych" struct exists so, if
-    % necessary, we create it here with a "dummy" field that we immediately
-    % discard.
-    psych.dummy=[];
-    psych=rmfield(psych,'dummy');
+    % necessary, we create it here.
+    psych=struct([]);
 end
 if ~isfield(psych,'trialsDesired')
     psych.trialsDesired=100;
@@ -165,9 +163,9 @@ switch psych.targetKind
         r=round(o.targetHeightPix/o.targetCheckPix)/RectHeight(sRect);
         o.targetRectChecks=round(r*sRect);
         if r~=1
-            % We use the 'bilinear' method to make sure that all new
-            % pixel values are within the old range. That's important
-            % because we set up the CLUT with that range.
+            % We use the 'bilinear' method to make sure that all new pixel
+            % values are within the old range. That's important because we
+            % set up the CLUT with that range.
             for i=1:length(o.signal)
                 %% Scale to desired size.
                 sz=[RectHeight(o.targetRectChecks) RectWidth(o.targetRectChecks)];
@@ -180,10 +178,12 @@ switch psych.targetKind
         o.targetRectChecks=sRect;
         o.targetHeightOverWidth=RectHeight(sRect)/RectWidth(sRect);
         o.targetHeightPix=RectHeight(sRect)*o.targetCheckPix;
-        % Flip contrast.
-        %         for i=1:length(o.signal)
-        %             o.signal(i).image=1-o.signal(i).image;
-        %         end
+        if false
+            % Flip contrast.
+            for i=1:length(o.signal)
+                o.signal(i).image=1-o.signal(i).image;
+            end
+        end
         % Compute o.E1
         E=zeros(size(o.alphabet));
         for i=1:length(o.alphabet)
@@ -267,12 +267,13 @@ for m=1:length(MM)
                     n=length(o.alphabet);
                     whichObject=randi(n);
                     whichSpot=randi(M);
-                    % Three dimensional matrix: rows x columns x M. Fill
+                    % Three dimensional matrix: rows * columns * M. Fill
                     % with Gaussian noise with zero mean and o.noiseSD.
                     img=o.noiseSD*randn([size(o.signal(1).image) M]);
                     % Add object whichObject with contrast c to spot whichSpot.
                     c=10^tTest;
                     img(:,:,whichSpot)=img(:,:,whichSpot)+c*o.signal(whichObject).image;
+                    spotEnergy=zeros([1 M]);
                     for spot=1:M
                         spotEnergy(spot)=sum(sum(img(:,:,spot).^2));
                     end
@@ -285,18 +286,18 @@ for m=1:length(MM)
                         end
                     end
                     % Compute likelihood of each letter. For each letter,
-                    % there are M hypotheses for which spot it occupies,
-                    % with the rest of the spots being blank. We computes
-                    % the rms error of each hypothesis (ie M*n combinations
-                    % of position and object). The likelihood of an object
-                    % is the sum of the likelihood of the object at each of
-                    % the M positions. The probability density we're
-                    % computing corresponds to M*pix pixels, where pix is
-                    % the number of pixels in each "spot". The standard
-                    % deviation for each pixel is noiseSD. The noise at all
-                    % pixels is independent, so the variances add. The
-                    % total variance is M*pix*noiseSD. p=product (for
-                    % i=1:M*pix) sqrt(2*pi*sd^2)*exp(-sqEr(i)/(2*sd^2))
+                    % there are M hypotheses for which is the spot that it
+                    % occupies, with the remaining M-1 spots being blank.
+                    % We computes the rms error of each hypothesis (ie M*n
+                    % combinations of position and object). The likelihood
+                    % of an object is the sum of the likelihood of the
+                    % object at each of the M positions. The probability
+                    % density we're computing corresponds to M*pix pixels,
+                    % where pix is the number of pixels in each "spot". The
+                    % standard deviation for each pixel is noiseSD. The
+                    % noise at all pixels is independent, so the variances
+                    % add. The total variance is M*pix*noiseSD.
+                    % p=product(for i=1:M*pix) sqrt(2*pi*sd^2)*exp(-sqEr(i)/(2*sd^2))
                     % =sqrt(2*pi*sd^2)^(M*pix)*exp(-sum(sqEr)/(2*sd^2))
                     pix=length(o.signal(1).image(:)); % Pixels in image.
                     % We use pdf of normal distribution to convert the
@@ -331,7 +332,8 @@ for m=1:length(MM)
                         end
                     end
                     [~,choice]=max(pObject);
-                    response = whichObject==choice; % Correct if we choose the signal.
+                    % Correct if we choose the signal.
+                    response = whichObject==choice; 
                     if false
                         % Show true signal, noise stimulus, and ideal
                         % choice.
@@ -358,7 +360,7 @@ for m=1:length(MM)
             end
         end
         t(rep)=QuestMean(q);
-        %         fprintf('run %d, %5.2f\n',rep,t(rep));
+        % fprintf('run %d, %5.2f\n',rep,t(rep));
     end
     logC=mean(t);
     E=o.E1*10^(2*logC); % signal energy
