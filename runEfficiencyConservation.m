@@ -16,39 +16,33 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Some observer will see gabors, others will see letters. The experiment
 % has two parts. We want to test each person on both parts 1 and 2.
-partOfExperiment=2; % 1 or 2.
+partOfExperiment=1; % 1 or 2.
 o.targetKind='gabor'; 
 % o.targetKind='letter'; 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 o.trialsDesired=40;
 % o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
 % o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
-o.askForPartingComments=true;
+o.askForPartingComments=false; % Disable until it's fixed.
 o.recordGaze=false;
 o.experiment='EfficiencyConservation';
 o.eccentricityXYDeg=[0 0];
 % o.targetHeightDeg=32;
 o.contrast=-1;
-o.noiseType='gaussian';
+% o.noiseType='gaussian';
+o.noiseType='binary'; % Maximum noise power.
 o.setNearPointEccentricityTo='target';
 o.nearPointXYInUnitSquare=[0.5 0.5];
-o.blankingRadiusReTargetHeight=0;
-o.blankingRadiusReEccentricity=0;
 o.thresholdParameter='contrast';
 o.flankerSpacingDeg=0.2; % Used only for fixation check.
-o.observer='';
-o.brightnessSetting=0.87;
 o.fixationCheck=false; % True designates the condition as a fixation check.
+o.blankingRadiusReTargetHeight=0.833; % One third letter width blank margin.
+o.blankingRadiusReEccentricity=0.5;
 o.fixationCrossBlankedNearTarget=true;
 o.fixationCrossBlankedUntilSecsAfterTarget=0.6;
 o.fixationCrossDrawnOnStimulus=false;
-o.fullResolutionTarget=false;
 o.useFlankers=false;
 o.flankerContrast=-1;
-% o.printGrayLuminance=false;
-% o.assessGray=true;
-% o.assessLoadGamma=true;
-% o.printContrastBounds=true;
 o.symmetricLuminanceRange=true; % False for maximum brightness.
 o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
 o.counterPlacement='bottomRight';
@@ -62,27 +56,33 @@ switch o.targetKind
     case 'gabor'
         o.conditionName='gabor';
         o.targetGaborOrientationsDeg=[0 45 90 135]; % Orientations relative to vertical.
+    	o.labelAnswers=true;
         o.responseLabels='1234';
         o.alternatives=length(o.targetGaborOrientationsDeg);
-        o.targetKind='gabor'; % one cycle within targetSize
         o.targetCyclesPerDeg=nan;
         o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
-        o.targetHeightDeg=6;
-        o.targetGaborSpaceConstantCycles=0.75*3; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
-        o.targetGaborCycles=3*3; % cycles of the sinewave in targetHeight
-        o.conditionName='small';
-        o.targetHeightDeg=2;
+%             o.targetGaborSpaceConstantCycles=0.75*3; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
+%             o.targetGaborCycles=3*3; % cycles of the sinewave in targetHeight
+%             o.conditionName='small';
         o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
         o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
+    	o.minimumTargetHeightChecks=[];
     case 'letter'
         o.conditionName='letter';
         o.minimumTargetHeightChecks=8;
-        o.targetKind='letter';
         o.targetFont='Sloan';
         o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
         o.borderLetter='X';
         o.labelAnswers=false;
         o.getAlphabetFromDisk=true;
+		o.targetGaborOrientationsDeg=[];
+		o.alternatives=[];
+		o.targetCyclesPerDeg=nan;
+		o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
+		o.targetGaborSpaceConstantCycles=[]; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
+		o.targetGaborCycles=[]; % cycles of the sinewave in targetHeight
+		o.labelAnswers=false;
+		o.responseLabels={};
 end
 for ecc=[0 2 8 32]
     for deg=[0.5 2 8 32]
@@ -97,16 +97,18 @@ for ecc=[0 2 8 32]
         else
             o.viewingDistanceCm=50;
         end
+        % o.viewingDistanceCm=200; % FOR DEMO
+        % o.fixationIsOffscreen=true; % FOR DEMO WITH ECCENTRIC TARGET.
         if norm(o.eccentricityXYDeg)<3 && o.targetHeightDeg<2
+            % Use blanking only when target is small and near fixation.
             o.blankingRadiusReTargetHeight=2;
         else
             o.blankingRadiusReTargetHeight=0;
         end
-        % Sloan
-        o.fixationIsOffscreen=true;
-        r=Screen('Rect',0);
+        % EQUATE MARGINS
         % Shift right to equate right hand margin with
         % top and bottom margins.
+        r=Screen('Rect',0);
         aspectRatio=RectWidth(r)/RectHeight(r);
         o.nearPointXYInUnitSquare=[1-0.5/aspectRatio 0.5];
         o.alphabetPlacement='right'; % 'top' or 'right';
@@ -116,8 +118,7 @@ for ecc=[0 2 8 32]
     end
 end
 
-
-%% BREAK UP INTO HALVES. SHUFFLE. SORT BY DISTANCE.
+%% DISCARD OTHER HALF.
 n=length(ooo);
 n2=round(n/2);
 switch partOfExperiment
@@ -125,14 +126,19 @@ switch partOfExperiment
         ooo=ooo(1:n2);
     case 2
         ooo=ooo(n2+1:end);
+	otherwise
+        error('Illegal value for "partOfExperiment".');
 end
+
+%% SHUFFLE. SORT BY DISTANCE.
 ii=Shuffle(1:length(ooo));
 ooo=ooo(ii);
 d=cellfun(@(x) x.viewingDistanceCm,ooo);
 [~,ii]=sort(d);
 ooo=ooo(ii);
 
-% ADD PRACTICE CONDITION
+if true
+%% ADD PRACTICE CONDITION
 for ecc=32
     for deg=8
         o.conditionName='practice';
@@ -161,9 +167,10 @@ for ecc=32
     end
 end
 ooo=[{o} ooo];
+end
 
-if 1
-    % Test with zero and high noise, interleaved.
+if true
+    %% TEST WITH ZERO AND HIGH NOISE, INTERLEAVED.
     for block=1:length(ooo)
         oo=ooo{block};
         for oi=1:length(oo)
@@ -185,12 +192,18 @@ willTakeMin=0;
 for block=1:length(ooo)
     oo=ooo{block};
     for oi=1:length(oo)
-        if ~ismember(oo(oi).observer,{'ideal'})
-            willTakeMin=willTakeMin+[oo(oi).trialsDesired]/10;
+        switch oo(oi).observer
+            case 'ideal'
+                % Ideal takes 0.8 s/trial.
+                willTakeMin=willTakeMin+[oo(oi).trialsDesired]*0.8/60;
+            otherwise
+                % Human typically takes 6 s/trial.
+                willTakeMin=willTakeMin+[oo(oi).trialsDesired]*6/60;
         end
     end
-    [ooo{block}(:).willTakeMin]=deal(willTakeMin);
+    [ooo{block}(:).willTakeMin]=deal(round(willTakeMin));
 end
+
 %% COMPUTE MAX VIEWING DISTANCE IN REMAINING BLOCKS
 maxCm=0;
 for block=length(ooo):-1:1
@@ -259,7 +272,7 @@ t=struct2table(oo,'AsArray',true);
 disp(t(:,{'block' 'experiment' 'conditionName' 'observer' 'targetKind' 'thresholdParameter'...
     'contrast'  'willTakeMin' 'noiseSD' ...
     'targetHeightDeg' 'eccentricityXYDeg' 'viewingDistanceCm'})); % Print the conditions in the Command Window.
-% return
+return
 
 %% Measure threshold, one block per iteration.
 ooo=RunExperiment(ooo);
