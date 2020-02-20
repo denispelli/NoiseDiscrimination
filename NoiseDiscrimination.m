@@ -186,8 +186,8 @@ function oo=NoiseDiscrimination(ooIn)
 % o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
 % o.fixationCrossBlankedNearTarget=true;
 % o.fixationCrossBlankedUntilSecsAfterTarget=0.6; % Pause after stimulus before display of fixation. 
-%                                       % Skipped when fixationCrossBlankedNearTarget. 
-%                                       % Not needed when eccentricity is bigger than the target.
+%               % Skipped when fixationCrossBlankedNearTarget. 
+%               % Not needed when eccentricity is bigger than the target.
 % o.fixationCrossDrawnOnStimulus=false;
 % o.blankingRadiusReTargetHeight= nan;
 % o.blankingRadiusReEccentricity= 0.5;
@@ -2856,6 +2856,7 @@ try
             fix.blankingRadiusReEccentricity=oo(oi).blankingRadiusReEccentricity;
             fix.blankingRadiusReTargetHeight=oo(oi).blankingRadiusReTargetHeight;
             fix.targetHeightPix=oo(oi).targetHeightPix;
+            fix.fixationCrossBlankedNearTarget=oo(oi).fixationCrossBlankedNearTarget;
             [fixationLines,oo(oi).markTargetLocation]=ComputeFixationLines2(fix);
         end
         if ~isempty(oo(oi).window) && ~isempty(fixationLines)
@@ -3426,10 +3427,10 @@ try
             error('Sorry. Please set o.noiseEnvelopeSpaceConstantDeg=inf or set o.noiseRaisedCosineEdgeThicknessDeg=0.');
         end
         if isfinite(oo(oi).noiseEnvelopeSpaceConstantDeg)
-            % Compute Gaussian noise envelope, which will be central or annular,
-            % depending on whether o.annularNoiseEnvelopeRadiusDeg is zero or
-            % greater than zero. Regardless, it has a space constant given
-            % by o.noiseEnvelopeSpaceConstantDeg.
+            % Compute Gaussian noise envelope, which will be central or
+            % annular, depending on whether o.annularNoiseEnvelopeRadiusDeg
+            % is zero or greater than zero. Regardless, it has a space
+            % constant given by o.noiseEnvelopeSpaceConstantDeg.
             [x,y]=meshgrid(1:oo(oi).canvasSize(2),1:oo(oi).canvasSize(1));
             x=x-mean(x(:));
             y=y-mean(y(:));
@@ -4682,8 +4683,16 @@ try
                             else
                                 object='letter';
                             end
+                            if oo(oi).labelAnswers
+                                answers=oo(oi).responseLabels(1:oo(oi).alternatives);
+                            else
+                                answers=oo(oi).alphabet(1:oo(oi).alternatives);
+                            end
                             message=sprintf('While fixating the cross, type the %s: %s. Or ESC to cancel a trial or quit.',...
-                                object,oo(oi).alphabet(1:oo(oi).alternatives));
+                                object,answers);
+                            if oo(oi).labelAnswers
+                                message=strrep(message,'the letter','your choice');
+                            end
                         end
                     case 'identifyAll'
                         maxFactor=1/1.3;
@@ -5637,6 +5646,18 @@ try
         if isfield(oo,'centralNoiseMask')
             % Too big to save. 20 MB.
             oo=rmfield(oo,'centralNoiseMask');
+        end
+        if isfield(oo,'signal')
+            % Typically too big to save.
+            bytes=0;
+            for j=1:length(oo)
+                x=oo(j).signal;
+                s=whos('x');
+                bytes=bytes+s.bytes;
+            end
+            if bytes>1000
+                oo=rmfield(oo,'signal');
+            end
         end
         ffprintf(ff,'%d: begin saving mat file at %.0f s\n',oi,GetSecs-savingToDiskSecs);
         oo=SortFields(oo);
@@ -6708,7 +6729,9 @@ end %  ~o.useFixation || isempty(o.window) || ismember(o.observer,o.algorithmicO
 if o.fixationCrossBlankedNearTarget
     ffprintf(ff,'Fixation cross is blanked near target. No delay in showing fixation after target.\n');
 else
-    ffprintf(ff,'Fixation cross is blanked during and until %.2f s after target. No selective blanking near target. \n',o.fixationCrossBlankedUntilSecsAfterTarget);
+    ffprintf(ff,['Fixation cross is blanked during and until %.2f s after target. '...
+        'No selective blanking near target. \n'],...
+        o.fixationCrossBlankedUntilSecsAfterTarget);
 end
 end % function SetUpFixation
 
