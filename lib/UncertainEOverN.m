@@ -25,7 +25,8 @@ function [EOverN,psych]=UncertainEOverN(MM,psych)
 % including the threshold criterion pThreshold. See QuestDemo.m in the
 % Psychtoolbox.
 %
-% OUTPUT ARGUMENT: EOverN is the threshold energy E divided by the noise
+% OUTPUT ARGUMENT: 
+% EOverN is the threshold energy E divided by the noise
 % power spectral density N.
 %
 % denis.pelli@nyu.edu, December, 2019.
