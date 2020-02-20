@@ -12,6 +12,7 @@ function [fixationLines,markTargetLocation]=ComputeFixationLines2(fix)
 % fix.targetMarkPix=targetMarkPix;      % Diameter of target mark X
 %
 % COMPUTE blankingRadiusPix FROM:
+% fix.fixationCrossBlankedNearTarget=true;
 % fix.blankingRadiusReEccentricity=0.5;
 % fix.blankingRadiusReTargetHeight=1;
 % fix.targetHeightPix=o.targetHeightPix;
@@ -19,8 +20,8 @@ function [fixationLines,markTargetLocation]=ComputeFixationLines2(fix)
 % fixationLines=ComputeFixationLines2(fix);
 % Screen('DrawLines',window,fixationLines,fixationLineWeightPix,black);
 %
-% The many calls to round() don't affect the display. They are just to make
-% the values easier to print, while debugging. 
+% The many calls to round() don't noticeably affect the display. They are
+% just to make the values easier to print, while debugging.
 %
 % History:
 % October, 2015. Denis Pelli wrote it.
@@ -31,6 +32,11 @@ function [fixationLines,markTargetLocation]=ComputeFixationLines2(fix)
 % June 28, 2017. The new code is general, and works correctly for any
 % locations of fixation and target. The target mark is now an X, to
 % distinguish it from the fixation cross.
+% February 18, 2020. Now support the flag 
+% fix.fixationCrossBlankedNearTarget.
+if ~isfield(fix,'fixationCrossBlankedNearTarget')
+    fix.fixationCrossBlankedNearTarget=true;
+end
 if ~isfield(fix,'fixationCrossPix')
    fix.fixationCrossPix=100; 
 end
@@ -52,6 +58,11 @@ if ~isfield(fix,'blankingRadiusPix')
    eccentricityPix=sqrt(sum(fix.eccentricityXYPix.^2));
    fix.blankingRadiusPix=fix.blankingRadiusReEccentricity*eccentricityPix; % 0 for no blanking.
    fix.blankingRadiusPix=max(fix.blankingRadiusPix,fix.blankingRadiusReTargetHeight*fix.targetHeightPix);
+end
+if ~fix.fixationCrossBlankedNearTarget
+    fix.blankingRadiusReTargetHeight=0;
+    fix.blankingRadiusReEccentricity=0;
+    fix.blankingRadiusPix=0;
 end
 if 2*fix.blankingRadiusPix>=fix.targetMarkPix % 2* converts radius to diameter.
    fix.markTargetLocation=0;
