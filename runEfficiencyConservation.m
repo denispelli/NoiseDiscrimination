@@ -272,7 +272,7 @@ t=struct2table(oo,'AsArray',true);
 disp(t(:,{'block' 'experiment' 'conditionName' 'observer' 'targetKind' 'thresholdParameter'...
     'contrast'  'willTakeMin' 'noiseSD' ...
     'targetHeightDeg' 'eccentricityXYDeg' 'viewingDistanceCm'})); % Print the conditions in the Command Window.
-return
+% return
 
 %% Measure threshold, one block per iteration.
 ooo=RunExperiment(ooo);
