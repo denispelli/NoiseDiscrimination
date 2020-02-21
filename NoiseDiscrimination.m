@@ -1,18 +1,18 @@
 function oo=NoiseDiscrimination(ooIn)
 % oo=NoiseDiscrimination(oo);
-% You can now pass a struct array, one element per condition, and
-% NoiseDiscrimination will run them all, randomly interleaved.
 %
 % Pass all your parameters in the "oo" struct, which will be returned with
-% all the results as additional fields. NoiseDiscrimination may adjust some
-% of your parameters to satisfy physical constraints. Constraints include
-% the screen size, resolution, and maximum possible contrast.
+% all the results as additional fields. "oo" is a struct array, one element
+% per condition. NoiseDiscrimination will run all the conditions, randomly
+% interleaved. NoiseDiscrimination may adjust some of your parameters to
+% satisfy physical constraints. Constraints include the screen size,
+% resolution, and maximum possible contrast.
 %
 % You should write a short script that loads all your parameters into an
 % "oo" struct array and calls oo=NoiseDiscrimination(oo). Within your
 % script, it may be convenient to load up a temporary struct "o" with a
 % single condition, and later assign it to an element of the array struct,
-% e.g. oo(oi)=o; it's fine to keep reusing o and oo. However, at the
+% e.g. oo(oi)=o;. It's fine to keep reusing o and oo. However, at the
 % beginning of your script, I recommend calling "clear o oo" to make sure
 % that you don't carry over any values from a prior iteration or
 % experiment.
@@ -1025,7 +1025,7 @@ knownOutputFields={'labelAnswers' 'beginningTime' ...
     'contrast' 'targetWidthPix' 'checkSecs' 'moviePreFrames'...
     'movieSignalFrames' 'moviePostFrames' 'movieFrames' 'noiseSize'...
     'annularNoiseSmallSize' 'annularNoiseBigSize' 'canvasSize'...
-    'noiseListMin' 'noiseListMax' 'noiseIsFiltered' 'noiseListSd' 'N' 'NUnits' ...
+    'noiseListMin' 'noiseListMax' 'noiseIsFiltered' 'noiseListSD' 'N' 'NUnits' ...
     'targetRectChecks' 'xHeightPix' 'xHeightDeg' 'HHeightPix' ...
     'HHeightDeg' 'alphabetHeightDeg' 'annularNoiseEnvelopeRadiusDeg' ...
     'centralNoiseEnvelopeE1DegDeg' 'E1' 'data' 'psych' 'questMean'...
@@ -2870,6 +2870,9 @@ try
         % Compute noiseList
         switch oo(oi).noiseType % Fill noiseList with desired kind of noise.
             case 'gaussian'
+                % Get samples from normal distribution with zero mean and
+                % sd 1. Discard samples that exceed +/-2. The remaining
+                % clipped distribution has an sd slightly less than 1.
                 oo(oi).noiseListMin=-2;
                 oo(oi).noiseListMax=2;
                 temp=randn([1 20000]);
@@ -2913,7 +2916,9 @@ try
             mtf=0;
         end
         
-        oo(oi).noiseListSd=std(noiseList);
+        % Measure SD of one million samples. Takes only 30 ms;
+        oo(oi).noiseListSD=std(PsychRandSample(noiseList,[1000000 1]));
+
         % This safety check should be updated to check more rigorously. As
         % set above, o.LBackground=o.luminanceFactor*mean([LMin LMax]).
         % This (old) bit of code, which is just a safety check of the noise
@@ -2928,8 +2933,10 @@ try
         % double-checked, that ComputeClut is more rigorous, and merely
         % assumes that the background does not exceed the max possible,
         % LBackground<=LMax.
-        a=0.9*oo(oi).noiseListSd/oo(oi).noiseListMax; % Max possible noiseSD, leaving a bit of range for signal.
-        if oo(oi).noiseSD > a
+        
+        % Max possible noiseSD uses 90% of range, leaving 10% for signal.
+        a=0.9*oo(oi).noiseListSD/oo(oi).noiseListMax; 
+        if oo(oi).noiseSD>a
             ffprintf(ff,'WARNING: %d: Requested o.noiseSD %.2f too high. Reduced to %.2f\n',oi,oo(oi).noiseSD,a);
             oo(oi).noiseSD=a;
         end
@@ -3897,7 +3904,7 @@ try
                     oo(oi).flankerContrast=-oo(oi).snapshotContrast;
                 end
         end
-        a=(1-LMin/oo(oi).LBackground)*oo(oi).noiseListSd/oo(oi).noiseListMax;
+        a=(1-LMin/oo(oi).LBackground)*oo(oi).noiseListSD/oo(oi).noiseListMax;
         if oo(oi).noiseSD > a
             ffprintf(ff,'WARNING: Reducing o.noiseSD of %s noise to %.2f to avoid overflow.\n',oo(oi).noiseType,a);
             oo(oi).noiseSD=a;
@@ -3910,7 +3917,7 @@ try
         %% RESTRICT tTest TO PHYSICALLY POSSIBLE RANGE
         switch oo(oi).targetModulates
             case 'noise'
-                a=(1-LMin/oo(oi).LBackground)/(oo(oi).noiseListMax*oo(oi).noiseSD/oo(oi).noiseListSd);
+                a=(1-LMin/oo(oi).LBackground)/(oo(oi).noiseListMax*oo(oi).noiseSD/oo(oi).noiseListSD);
                 if oo(oi).r > a
                     if ~isfield(oo(oi),'rWarningCount') || oo(oi).rWarningCount==0
                         ffprintf(ff,['WARNING: Reducing o.r ratio of %s noises '...
@@ -4035,9 +4042,9 @@ try
                         if loc == signalLocation
                             switch oo(oi).targetModulates
                                 case 'noise'
-                                    location(loc).image=1+oo(oi).r*(oo(oi).noiseSD/oo(oi).noiseListSd)*noise;
+                                    location(loc).image=1+oo(oi).r*(oo(oi).noiseSD/oo(oi).noiseListSD)*noise;
                                 case 'luminance'
-                                    location(loc).image=1+(oo(oi).noiseSD/oo(oi).noiseListSd)*noise+oo(oi).contrast;
+                                    location(loc).image=1+(oo(oi).noiseSD/oo(oi).noiseListSD)*noise+oo(oi).contrast;
                                 case 'entropy'
                                     oo(oi).q.noiseList=(0.5+floor(noiseList*0.499999*signalEntropyLevels))/(0.5*signalEntropyLevels);
                                     oo(oi).q.sd=std(oo(oi).q.noiseList);
@@ -4046,7 +4053,7 @@ try
                         else
                             switch oo(oi).targetModulates
                                 case {'noise' 'luminance'}
-                                    location(loc).image=1+(oo(oi).noiseSD/oo(oi).noiseListSd)*noise;
+                                    location(loc).image=1+(oo(oi).noiseSD/oo(oi).noiseListSD)*noise;
                                 case 'entropy'
                                     oo(oi).q.noiseList=(0.5+floor(noiseList*0.499999*oo(oi).backgroundEntropyLevels))/(0.5*oo(oi).backgroundEntropyLevels);
                                     oo(oi).q.sd=std(oo(oi).q.noiseList);
@@ -4152,13 +4159,13 @@ try
                             if oo(oi).useCentralNoiseMask
                                 % fprintf('%d: %d: %s o.canvasSize %d %d, size(oo(oi).centralNoiseMask) %d %d, size(noise) %d %d, size(location(1).image) %d %d\n',...
                                 % MFileLineNr,oi,oo(oi).conditionName,oo(oi).canvasSize,size(oo(oi).centralNoiseMask),size(noise),size(location(1).image));
-                                location(1).image(oo(oi).centralNoiseMask)=1+(oo(oi).noiseSD/oo(oi).noiseListSd)*noise(oo(oi).centralNoiseMask); % TAKES 1 ms.
+                                location(1).image(oo(oi).centralNoiseMask)=1+(oo(oi).noiseSD/oo(oi).noiseListSD)*noise(oo(oi).centralNoiseMask); % TAKES 1 ms.
                             else
-                                location(1).image=1+(oo(oi).noiseSD/oo(oi).noiseListSd)*noise; % TAKES ? ms.
+                                location(1).image=1+(oo(oi).noiseSD/oo(oi).noiseListSD)*noise; % TAKES ? ms.
 %                                 imshow(noise);
 %                                 imshow(location(1).image);
                             end
-                            location(1).image(oo(oi).annularNoiseMask)=1+(oo(oi).annularNoiseSD/oo(oi).noiseListSd)*noise(oo(oi).annularNoiseMask);
+                            location(1).image(oo(oi).annularNoiseMask)=1+(oo(oi).annularNoiseSD/oo(oi).noiseListSD)*noise(oo(oi).annularNoiseMask);
                             location(1).image=repmat(location(1).image,1,1,length(white)); % Support color.
                             location(1).image=location(1).image+oo(oi).contrast*signalImage; % Add signal to noise.
                             PrintImageStatistics(MFileLineNr,oo(oi),i,'signalImage',signalImage);
@@ -4166,14 +4173,14 @@ try
                         case 'noise'
                             noise(signalMask)=oo(oi).r*noise(signalMask); % Signal modulates noise.
                             location(1).image=ones(oo(oi).canvasSize);
-                            location(1).image(oo(oi).centralNoiseMask)=1+(oo(oi).noiseSD/oo(oi).noiseListSd)*noise(oo(oi).centralNoiseMask);
-                            location(1).image(oo(oi).annularNoiseMask)=1+(oo(oi).annularNoiseSD/oo(oi).noiseListSd)*noise(oo(oi).annularNoiseMask);
+                            location(1).image(oo(oi).centralNoiseMask)=1+(oo(oi).noiseSD/oo(oi).noiseListSD)*noise(oo(oi).centralNoiseMask);
+                            location(1).image(oo(oi).annularNoiseMask)=1+(oo(oi).annularNoiseSD/oo(oi).noiseListSD)*noise(oo(oi).annularNoiseMask);
                             % figure(1);subplot(1,3,3);imshow(location(1).image);
                         case 'entropy'
                             noise(~oo(oi).centralNoiseMask)=0;
                             noise(signalMask)=(0.5+floor(noise(signalMask)*0.499999*signalEntropyLevels))/(0.5*signalEntropyLevels);
                             noise(~signalMask)=(0.5+floor(noise(~signalMask)*0.499999*oo(oi).backgroundEntropyLevels))/(0.5*oo(oi).backgroundEntropyLevels);
-                            location(1).image=1+(oo(oi).noiseSD/oo(oi).noiseListSd)*noise;
+                            location(1).image=1+(oo(oi).noiseSD/oo(oi).noiseListSD)*noise;
                     end
                     PrintImageStatistics(MFileLineNr,oo(oi),i,'noise',noise);
                     
@@ -6117,7 +6124,7 @@ switch o.targetModulates
     otherwise
         noise=PsychRandSample(noiseList,o.canvasSize*o.targetCheckPix/o.noiseCheckPix);
         noise=Expand(noise,o.noiseCheckPix/o.targetCheckPix);
-        img=1+noise*o.noiseSD/o.noiseListSd;
+        img=1+noise*o.noiseSD/o.noiseListSD;
 end
 index=IndexOfLuminance(cal,img*LBackground);
 imgEstimate=EstimateLuminance(cal,index)/LBackground;
@@ -6130,11 +6137,11 @@ switch o.targetModulates
         L=EstimateLuminance(cal,img);
         ffprintf(ff,'Assess contrast: Desired o.contrast of %.3f will be rendered as %.3f (estimated).\n',o.contrast,diff(L)/L(1));
     otherwise
-        noiseSDEstimate=std(imgEstimate(:))*o.noiseListSd/std(noise(:));
-        img=1+o.r*(o.noiseSD/o.noiseListSd)*noise;
+        noiseSDEstimate=std(imgEstimate(:))*o.noiseListSD/std(noise(:));
+        img=1+o.r*(o.noiseSD/o.noiseListSD)*noise;
         img=IndexOfLuminance(cal,img*LBackground);
         imgEstimate=EstimateLuminance(cal,img)/LBackground;
-        rEstimate=std(imgEstimate(:))*o.noiseListSd/std(noise(:))/noiseSDEstimate;
+        rEstimate=std(imgEstimate(:))*o.noiseListSD/std(noise(:))/noiseSDEstimate;
         ffprintf(ff,'noiseSDEstimate %.3f (nom. %.3f), rEstimate %.3f (nom. %.3f)\n',noiseSDEstimate,o.noiseSD,rEstimate,o.r);
         if abs(log10([noiseSDEstimate/o.noiseSD rEstimate/o.r])) > 0.5*log10(2)
             ffprintf(ff,'WARNING: PLEASE TELL DENIS: noiseSDEstimate %.3f (nom. %.3f), rEstimate %.3f (nom. %.3f)\n',noiseSDEstimate,o.noiseSD,rEstimate,o.r);
@@ -6750,15 +6757,15 @@ function [cal,o]=ComputeClut(cal,o)
 % o.noiseListMax>=0
 % o.r>=1 % Ratio of noiseSD in target and backgrounds.
 % o.noiseSD>=0
-% o.noiseListSd>0;
+% o.noiseListSD>0;
 % o.LBackground>0; % Can be anywhere in range LMin to LMax.
 % LFirst and LLast are the min and max of the luminance range that the CLUT
 % will support. We make this range just big enough to include all the
 % luminances our signal in noise may need, using the known min and max of
 % the signal and noise.
 global ff
-cal.LFirst=o.LBackground*(1+o.noiseListMin*o.r*o.noiseSD/o.noiseListSd);
-cal.LLast=o.LBackground*(1+o.noiseListMax*o.r*o.noiseSD/o.noiseListSd);
+cal.LFirst=o.LBackground*(1+o.noiseListMin*o.r*o.noiseSD/o.noiseListSD);
+cal.LLast=o.LBackground*(1+o.noiseListMax*o.r*o.noiseSD/o.noiseListSD);
 if ~o.useFlankers
     o.flankerContrast=0;
 end
@@ -6783,8 +6790,8 @@ if cal.LFirst<min(cal.old.L-0.1) || cal.LLast>max(cal.old.L+0.1)
         cal.LFirst,cal.LLast,min(cal.old.L),max(cal.old.L));
 end
 if o.annularNoiseBigRadiusDeg > o.annularNoiseSmallRadiusDeg
-    cal.LFirst=min(cal.LFirst,o.LBackground*(1-o.noiseListMax*o.r*o.annularNoiseSD/o.noiseListSd));
-    cal.LLast=max(cal.LLast,o.LBackground*(1+o.noiseListMax*o.r*o.annularNoiseSD/o.noiseListSd));
+    cal.LFirst=min(cal.LFirst,o.LBackground*(1-o.noiseListMax*o.r*o.annularNoiseSD/o.noiseListSD));
+    cal.LLast=max(cal.LLast,o.LBackground*(1+o.noiseListMax*o.r*o.annularNoiseSD/o.noiseListSD));
 end
 if o.symmetricLuminanceRange
     % Use smallest range centered on o.LBackground that includes LFirst and
