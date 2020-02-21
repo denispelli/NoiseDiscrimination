@@ -23,7 +23,9 @@ function [EOverN,psych]=UncertainEOverN(MM,psych)
 % integer.
 % "psych" is a struct specifying Quest's psychophysical parameters,
 % including the threshold criterion pThreshold. See QuestDemo.m in the
-% Psychtoolbox.
+% Psychtoolbox. psych.noiseType allows you to specify the shape of the
+% noise distribution: 'gaussian','uniform','binary','ternary'. All are zero
+% mean and symmetric about zero.
 %
 % OUTPUT ARGUMENT: 
 % EOverN is the threshold energy E divided by the noise
@@ -58,20 +60,22 @@ plusMinus=char(177); % 16-bit unicode.
 micro=char(181); % 16-bit unicode.
 wrongRight={'wrong','right'};
 timeZero=GetSecs;
+window=[];
 if nargin<1
-    MM=[100 1];
+    MM=[10 1];
 end
 EOverN=zeros(size(MM));
 if nargin<2
     % The rest of the code assumes that the "psych" struct exists so, if
     % necessary, we create it here.
-    psych=struct([]);
+    psych.targetKind='gabor';
+    psych.noiseSD=1;
 end
 if ~isfield(psych,'trialsDesired')
     psych.trialsDesired=100;
 end
 if ~isfield(psych,'reps')
-    psych.reps=10;
+    psych.reps=100;
 end
 if ~isfield(psych,'tGuess')
     psych.tGuess=0;
@@ -91,9 +95,47 @@ end
 if ~isfield(psych,'gamma')
     psych.gamma=0.5;
 end
+if ~isfield(psych,'noiseType')
+    psych.noiseType='gaussian';
+end
 if ~isfield(psych,'targetKind')
     error('You must specify psych.targetKind: ''gabor'' or ''letter''.');
 end
+% Compute noiseList
+switch psych.noiseType % Fill noiseList with desired kind of noise.
+    % After normalizing by its SD below, noiseList is zero mean, unit
+    % variance, and symmetric about zero.
+    case 'gaussian'
+        % Get samples from normal distribution with zero mean and
+        % sd 1. Discard samples that exceed +/-2. The remaining
+        % clipped distribution has an sd slightly less than 1.
+        psych.noiseListMin=-2;
+        psych.noiseListMax=2;
+        temp=randn([1 20000]);
+        ok=psych.noiseListMin<=temp & temp<=psych.noiseListMax;
+        noiseList=temp(ok);
+        clear temp;
+    case 'uniform'
+        psych.noiseListMin=-1;
+        psych.noiseListMax=1;
+        noiseList=-1:1/1024:1;
+    case 'binary'
+        psych.noiseListMin=-1;
+        psych.noiseListMax=1;
+        noiseList=[-1 1];
+    case 'ternary'
+        psych.noiseListMin=-1;
+        psych.noiseListMax=1;
+        noiseList=[-1 0 1];
+    otherwise
+        error('Unknown noiseType "%s"',psych.noiseType);
+end
+% Computing SD of one million samples takes only 28 ms.
+s=std(PsychRandSample(noiseList,[1000000 1]));
+noiseList=noiseList/s;
+psych.noiseListMin=psych.noiseListMin/s;
+psych.noiseListMax=psych.noiseListMax/s;
+
 psych.targetFont='Sloan';
 psych.screen=0;
 o=psych;
@@ -213,7 +255,12 @@ for m=1:length(MM)
                     % maximum likelihood choice for a signal in Gaussian
                     % white noise.
                     n=2;
-                    x=randn([M n]); % nIFC, with M locations.
+                    % nIFC, with M locations.
+                    if false
+                        x=randn([M n]); 
+                    else
+                        x=PsychRandSample(noiseList,[M n]);
+                    end
                     % Assuming all objects orthogonal.
                     whichObject=randi(n);
                     whichSpot=randi(M);
@@ -270,8 +317,14 @@ for m=1:length(MM)
                     whichSpot=randi(M);
                     % Three dimensional matrix: rows * columns * M. Fill
                     % with Gaussian noise with zero mean and o.noiseSD.
-                    img=o.noiseSD*randn([size(o.signal(1).image) M]);
-                    % Add object whichObject with contrast c to spot whichSpot.
+                    if false
+                        x=randn([size(o.signal(1).image) M]); 
+                    else
+                        x=PsychRandSample(noiseList,[size(o.signal(1).image) M]);
+                    end
+                    img=o.noiseSD*x;
+                    % Add object whichObject with contrast c to spot
+                    % whichSpot.
                     c=10^tTest;
                     img(:,:,whichSpot)=img(:,:,whichSpot)+c*o.signal(whichObject).image;
                     spotEnergy=zeros([1 M]);
