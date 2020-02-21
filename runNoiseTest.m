@@ -13,7 +13,7 @@ ooo={};
 % Compare target thresholds in several noise distributions all with same
 % noiseSD, which is highest possible. 
 o.observer='';
-% o.observer='ideal'; % Use this to test ideal observer.
+o.observer='ideal'; % Use this to test ideal observer.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ismember(o.observer,{'ideal'})
     o.trialsDesired=200;
