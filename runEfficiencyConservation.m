@@ -29,8 +29,7 @@ o.experiment='EfficiencyConservation';
 o.eccentricityXYDeg=[0 0];
 % o.targetHeightDeg=32;
 o.contrast=-1;
-% o.noiseType='gaussian';
-o.noiseType='binary'; % Maximum noise power.
+o.noiseType='gaussian';
 o.setNearPointEccentricityTo='target';
 o.nearPointXYInUnitSquare=[0.5 0.5];
 o.thresholdParameter='contrast';
@@ -118,7 +117,7 @@ for ecc=[0 2 8 32]
     end
 end
 
-%% DISCARD OTHER HALF.
+%% BREAK UP INTO HALVES. SHUFFLE. SORT BY DISTANCE.
 n=length(ooo);
 n2=round(n/2);
 switch partOfExperiment
@@ -129,8 +128,6 @@ switch partOfExperiment
 	otherwise
         error('Illegal value for "partOfExperiment".');
 end
-
-%% SHUFFLE. SORT BY DISTANCE.
 ii=Shuffle(1:length(ooo));
 ooo=ooo(ii);
 d=cellfun(@(x) x.viewingDistanceCm,ooo);
