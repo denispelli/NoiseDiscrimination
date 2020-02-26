@@ -48,13 +48,23 @@ if isfield(oo,'partingComments')
     end
 end
 
-% Round each target size to a power of 2.
-for oi=1:numel(oo)
-    oo(oi).targetHeightDeg = 2.^round(log2([oo(oi).targetHeightDeg]));
+% Round each target size greater than 2 to an integer, less than 2 to one decimal.
+for oi=1:length(oo)
+    if oo(oi).targetHeightDeg>2
+        oo(oi).targetHeightDeg=round(oo(oi).targetHeightDeg);
+    else
+        oo(oi).targetHeightDeg=round(10*oo(oi).targetHeightDeg)/10;
+    end
 end
 
-% Average all thresholds that match in:
+% COMPUTE EFFICIENCY
+% Select thresholdParameter='contrast', for each conditionName, 
+% For each observer, including ideal, use all (E,N) data to estimate deltaNOverE and Neq. 
+% Compute efficiency by comparing deltaNOverE of each to that of the ideal.
+
+% Each element of aa is the average all thresholds in oo that match in:
 % noiseType, conditionName, observer, targetHeight, and eccentricityXY.
+% But ignore noiseType of thresholds for which noiseSD==0.
 conditionNames=unique({oo.conditionName});
 observers=unique({oo.observer});
 targetHeightDegs=unique([oo.targetHeightDeg]);
@@ -71,19 +81,39 @@ for conditionName=conditionNames
                         & ismember({oo.observer},observer) ...
                         & ismember([oo.targetHeightDeg],targetHeightDeg) ...
                         & ismember(eccXsfull,eccX) ...
-                        & ismember({oo.noiseType},noiseType);
-                    match=match & ismember({oo.thresholdParameter},{'contrast'});
-                    if sum(match)>0
+                        & (ismember({oo.noiseType},noiseType) | ismember([oo.noiseSD],0)) ...
+                    	& ismember({oo.thresholdParameter},{'contrast'});
+                    % We included zero noise conditions without regard to
+                    % noiseType. But we keep the set of conditions only if
+                    % at least one has the right noiseType.
+                    if sum(match)>0 && any(ismember({oo(match).noiseType},noiseType)) 
                         E=[oo(match).E];
                         N=[oo(match).N];
                         [Neq,E0,deltaEOverN]=EstimateNeq(E,N);
+                        m=ismember(N,max(N));
+                        if max(N)>0
+                            c=[oo(match).contrast];
+                            c=mean(c(m));
+                        end
+                        EOverN=mean(E(m))/max(N);
+                        m=ismember(N,0);
+                        if sum(m)>0
+                            c0=[oo(match).contrast];
+                            c0=mean(c0(m));
+                        else
+                            c0=nan;
+                        end
                         aa(end+1).conditionName=conditionName{1};
                         aa(end).observer=observer{1};
-                        aa(end).E=E;
-                        aa(end).N=N;
-                        aa(end).E0=E0;
-                        aa(end).Neq=Neq;
-                        aa(end).deltaEOverN=deltaEOverN;
+                        aa(end).c=c; % Scalar
+                        aa(end).c0=c0; % Scalar
+                        aa(end).EOverN=EOverN; % Scalar
+                        aa(end).maxNoiseSD=max([oo(match).noiseSD]); % Scalar
+                        aa(end).E=E; % Array
+                        aa(end).N=N; % Array
+                        aa(end).E0=E0; % Scalar
+                        aa(end).Neq=Neq; % Scalar
+                        aa(end).deltaEOverN=deltaEOverN; % Scalar
                         oi=find(match,1);
                         aa(end).thresholdParameter=oo(oi).thresholdParameter;
                         aa(end).eccentricityDeg=eccX;
@@ -98,6 +128,7 @@ for conditionName=conditionNames
     end
 end
 
+% Now analyze aa, matching each human record with the correponding ideal observer record.
 for conditionName=conditionNames
     for observer=observers
         for targetHeightDeg=targetHeightDegs
@@ -125,52 +156,52 @@ for i=1:length(aa)
 end
 % human=~ismember({aa.observer},'ideal');
 
-% Normalize the measured threshold contrast by the actual (not reported)
-% noiseSD.
-% switch noiseType % Fill noiseList with desired kind of noise.
-%     case 'gaussian'
-%         temp=randn([1 20000]);
-%         ok=-2<=temp & temp<=2;
-%         noiseList=temp(ok);
-%         clear temp;
-%     case 'uniform'
-%         noiseList=-1:1/1024:1;
-%     case 'binary'
-%         noiseList=[-1 1];
-%     case 'ternary'
-%         noiseList=[-1 0 1];
-%     otherwise
-%         error('%d: Unknown noiseType "%s"',oi,oo(oi).noiseType);
-% end
-% oldSD=std(noiseList);
-% noiseListSD=std(PsychRandSample(noiseList,[1000000 1]));
-% for iNoise=1:length(noiseTypes)
-%     stdReported
-
+%% SAVE TABLE TO DISK
 t=struct2table(aa);
 t=sortrows(t,'conditionName');
 t=sortrows(t,'observer');
-disp(t(:,{'conditionName' 'targetHeightDeg' 'contrast' 'observer' 'noiseType' 'noiseIndex' 'noiseSD'}));
+disp(t(:,{'conditionName' 'targetHeightDeg' 'efficiency' 'c' 'contrast' 'observer' 'noiseType' 'noiseIndex' 'maxNoiseSD'}));
 dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
-writetable(t,fullfile(dataFolder,[experiment '.xls']));
+% On Feb, 20, 2020 I discovered that writetable may screw up xls tables,
+% but xlsx seems to be ok.
+writetable(t,fullfile(dataFolder,[experiment '.xlsx']));
 jsonwrite(fullfile(dataFolder,[experiment '.json']), t);
+fprintf('Wrote files %s and %s to disk.\n',[experiment '.xlsx'],[experiment '.json']);
 
+%% PLOT CONTRAST FOR EACH OBSERVER
+% Convert table t to struct a
 a=table2struct(t);
 % figure(1);
-figureHandle=figure('Name',experiment,'NumberTitle','off','pos',[10 10 500 800]);
 % orient 'landscape'; % For printing.
-degStyle={'r' 'g' 'b'};
-assert(length(degStyle)>=length(targetHeightDegs));
-observerStyle={'-*' '--o'};
-assert(length(observerStyle)>=length(observers));
+cyan        = [0.2 0.8 0.8];
+brown       = [0.2 0 0];
+orange      = [1 0.5 0];
+blue        = [0 0.5 1];
+green       = [0 0.6 0.3];
+red         = [1 0.2 0.2];
+colors={green red brown blue cyan orange };
+assert(length(colors)>=length(targetHeightDegs));
+observerStyle={':x' '-o' '--s' '-.d'};
+if length(observerStyle)<length(observers)
+    error('Please define more "observerStyle" for %d observers.',length(observers));
+end
+% Put ideal observer first.
+observers=sort(observers);
+iIdeal=ismember(observers,{'ideal'});
+observers=[observers(iIdeal) observers(~iIdeal)];
 
+% PLOT c VERSUS noiseType
+% figure(1);
+iFigure=1;
+figureHandle(iFigure)=figure('Name',[experiment ' Contrast'],'NumberTitle','off','pos',[10 10 500 900]);
 for conditionName=conditionNames
     switch conditionName{1}
         case 'letter'
-            subplot(2,1,1);
+            iCondition=1;
         case 'gabor'
-            subplot(2,1,2);
+            iCondition=2;
     end
+    subplot(2,1,iCondition);
     for iObserver=1:length(observers)
         for iDeg=1:length(targetHeightDegs)
             for eccX=eccXs
@@ -180,31 +211,58 @@ for conditionName=conditionNames
                     & ismember([a.eccentricityDeg],eccX);
                 %         idealMatch=match & ismember({a.observer},{'ideal'});
                 match = match & ismember({a.observer},observers(iObserver));
-                semilogy([a(match).noiseIndex],-[a(match).contrast],...
-                    [degStyle{iDeg} observerStyle{iObserver}],...
-                    'DisplayName',sprintf('%2.0f deg %s',...
-                    targetHeightDegs(iDeg),observers{iObserver}));
-%                 conditionName, {a(match).conditionName}, observers{iObserver}, {a(match).observer}
-%                 targetHeightDegs(iDeg), [a(match). targetHeightDeg]
-%                 -[a(match).contrast]
-                hold on
+                for isZeroNoise=[false true]
+                    if isZeroNoise && ismember(observers(iObserver),{'ideal'})
+                        continue
+                    end
+                    x=[a(match).noiseIndex];
+                    if isZeroNoise
+                        y=-[a(match).c0];
+                    else
+                        y=-[a(match).c];
+                    end
+                    ok=isfinite(x) & isfinite(y);
+                    if ~isempty(ok)
+                        if isZeroNoise
+                            faceColor=[1 1 1];
+                            sd=0;
+                        else
+                            faceColor=colors{iDeg};
+                            sd=max([a(match).noiseSD]);
+                        end
+                        legendText=sprintf('%4.1f, %4.2f, %s',...
+                            targetHeightDegs(iDeg),...
+                            sd,...
+                            observers{iObserver});
+                        semilogy(x(ok),y(ok),...
+                            observerStyle{iObserver},...
+                            'MarkerSize',6,...
+                            'MarkerEdgeColor',colors{iDeg},...
+                            'MarkerFaceColor',faceColor,...
+                            'Color',colors{iDeg},...
+                            'LineWidth',1.5,...
+                            'DisplayName',legendText);
+                        hold on
+                    end
+                end
             end
         end
     end
-    xlim([-1.5 4.5]);
+    xlim([-4 4.5]);
     ax=gca;
+    ax.TickLength=[0.01 0.025]*2;
     ax.XTick=1:4;
     ax.XTickLabels={'Binary' 'Gaussian' 'Ternary' 'Uniform'};
-    lgd=legend('Location','northwest','Box','off');
-    title(lgd,'Size and Observer');
-    lgd.FontName='Monaco';
+    lgd(iFigure,iCondition)=legend('Location','northwest','Box','off');
+    title(lgd(iFigure,iCondition),'deg, noiseSD, observer');
+    lgd(iFigure,iCondition).FontName='Monaco';
     name=conditionName{1};
     title([upper(name(1)) name(2:end)],'fontsize',18)
     xlabel('Noise type','fontsize',18);
     ylabel('Contrast threshold','fontsize',18);
-    set(findall(gcf,'-property','FontSize'),'FontSize',12)
-    % lgd.FontSize=10;
-    if true
+%     set(findall(gcf,'-property','FontSize'),'FontSize',12)
+    lgd(iFigure,iCondition).FontSize=10;
+    if false
         % Scale log unit to be 12 cm vertically.
         ax=gca;
         %ax.YLim=[0.005 0.16];
@@ -216,5 +274,157 @@ for conditionName=conditionNames
 end
 
 % Save plot to disk
-graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[experiment '.eps']);
+graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[experiment '-C.eps']);
+saveas(gcf,graphFile,'epsc');
+
+%% PLOT EOverN FOR EACH OBSERVER
+% figure(2);
+iFigure=2;
+figureHandle(iFigure)=figure('Name',[experiment ' E/N'],'NumberTitle','off','pos',[10 10 500 900]);
+for conditionName=conditionNames
+    switch conditionName{1}
+        case 'letter'
+            iCondition=1;
+        case 'gabor'
+            iCondition=2;
+    end
+    subplot(2,1,iCondition);
+    for iObserver=1:length(observers)
+        for iDeg=1:length(targetHeightDegs)
+            for eccX=eccXs
+                match=ismember({a.thresholdParameter},{'contrast'})...
+                    & ismember({a.conditionName},conditionName)...
+                    & ismember([a.targetHeightDeg],targetHeightDegs(iDeg))...
+                    & ismember([a.eccentricityDeg],eccX);
+                %         idealMatch=match & ismember({a.observer},{'ideal'});
+                match = match & ismember({a.observer},observers(iObserver));
+                x=[a(match).noiseIndex];
+                y=[a(match).EOverN];
+                ok=isfinite(x) & isfinite(y);
+                if ~isempty(ok)
+                    if ismember(observers(iObserver),{'ideal'})
+                        faceColor=[1 1 1];
+                    else
+                        faceColor=colors{iDeg};
+                    end
+                    semilogy(x(ok),y(ok),...
+                        observerStyle{iObserver},...
+                        'MarkerSize',9,...
+                        'MarkerEdgeColor',colors{iDeg},...
+                        'MarkerFaceColor',faceColor,...
+                        'Color',colors{iDeg},...
+                        'LineWidth',1.5,...
+                        'DisplayName',sprintf('%4.1f, %4.2f, %s',...
+                        targetHeightDegs(iDeg),max([a(match).noiseSD]),observers{iObserver}));
+                    hold on
+                end
+            end
+        end
+    end
+    xlim([-4 4.5]);
+    ax=gca;
+    ax.TickLength=[0.01 0.025]*2;
+    ax.XTick=1:4;
+    ax.XTickLabels={'Binary' 'Gaussian' 'Ternary' 'Uniform'};
+    lgd(iFigure,iCondition)=legend('Location','northwest','Box','off');
+    title(lgd(iFigure,iCondition),'deg, noiseSD, observer');
+    lgd(iFigure,iCondition).FontName='Monaco';
+    name=conditionName{1};
+    title([upper(name(1)) name(2:end)],'fontsize',18)
+    xlabel('Noise type','fontsize',18);
+    ylabel('E/N threshold','fontsize',18);
+%     ax.YLim=[10 1000];
+    if true
+        % Scale log unit to be 12 cm vertically.
+        ax=gca;
+        %ax.YLim=[0.005 0.16];
+        ax.Units='centimeters';
+        drawnow; % Needed for valid Position reading.
+        ax.Position(4)=4*diff(log10(ax.YLim));
+    end
+    hold off
+end
+
+% Save plot to disk
+graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[experiment '-EOverN.eps']);
+saveas(gcf,graphFile,'epsc');
+
+%% PLOT EFICIENCY FOR EACH OBSERVER
+% figure(3);
+iFigure=3;
+figureHandle(iFigure)=figure('Name',[experiment ' Efficiency'],'NumberTitle','off','pos',[10 10 500 900]);
+for conditionName=conditionNames
+    switch conditionName{1}
+        case 'letter'
+            iCondition=1;
+        case 'gabor'
+            iCondition=2;
+    end
+    subplot(2,1,iCondition);
+    for iObserver=1:length(observers)
+        for iDeg=1:length(targetHeightDegs)
+            for eccX=eccXs
+                match=ismember({a.thresholdParameter},{'contrast'})...
+                    & ismember({a.conditionName},conditionName)...
+                    & ismember([a.targetHeightDeg],targetHeightDegs(iDeg))...
+                    & ismember([a.eccentricityDeg],eccX);
+                %         idealMatch=match & ismember({a.observer},{'ideal'});
+                match = match & ismember({a.observer},observers(iObserver));
+                x=[a(match).noiseIndex];
+                y=[a(match).efficiency];
+                ok=isfinite(x) & isfinite(y);
+                if ~isempty(ok)
+                    if ismember(observers(iObserver),{'ideal'})
+                        faceColor=[1 1 1];
+                    else
+                        faceColor=colors{iDeg};
+                    end
+                    semilogy(x(ok),y(ok),...
+                        observerStyle{iObserver},...
+                        'MarkerSize',9,...
+                        'MarkerEdgeColor',colors{iDeg},...
+                        'MarkerFaceColor',faceColor,...
+                        'Color',colors{iDeg},...
+                        'LineWidth',1.5,...
+                        'DisplayName',sprintf('%4.1f, %4.2f, %s',...
+                        targetHeightDegs(iDeg),max([a(match).noiseSD]),observers{iObserver}));
+                    hold on
+                end
+            end
+        end
+    end
+    xlim([-4 4.5]);
+    ax=gca;
+    ax.XTick=1:4;
+    ax.XTickLabels={'Binary' 'Gaussian' 'Ternary' 'Uniform'};
+    ax.TickLength=[0.01 0.025]*2;
+    lgd(iFigure,iCondition)=legend('Location','northwest','Box','off');
+    title(lgd(iFigure,iCondition),'deg, noiseSD, observer');
+    lgd(iFigure,iCondition).FontName='Monaco';
+    name=conditionName{1};
+    title([upper(name(1)) name(2:end)],'fontsize',18)
+    xlabel('Noise type','fontsize',18);
+    ylabel('Efficiency','fontsize',18);
+    if true
+        % Scale log unit to be 12 cm vertically.
+        ax=gca;
+        %ax.YLim=[0.005 0.16];
+        ax.Units='centimeters';
+        drawnow; % Needed for valid Position reading.
+        ax.Position(4)=4*diff(log10(ax.YLim));
+    end
+    hold off
+end
+
+% Set FontSize.
+for iFigure=1:3
+    figure(figureHandle(iFigure));
+    set(findall(gcf,'-property','FontSize'),'FontSize',12);
+    for iCondition=1:2
+        lgd(iFigure,iCondition).FontSize=8;
+    end
+end
+
+% Save plot to disk
+graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[experiment '-Efficiency.eps']);
 saveas(gcf,graphFile,'epsc');
