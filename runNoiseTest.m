@@ -11,9 +11,9 @@ clear o oo ooo
 ooo={};
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Compare target thresholds in several noise distributions all with same
-% noiseSD, which is highest possible. 
+% noiseSD, which is highest possible.
 o.observer='';
-o.observer='ideal'; % Use this to test ideal observer.
+% o.observer='ideal'; % Use this to test ideal observer.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ismember(o.observer,{'ideal'})
     o.trialsDesired=200;
@@ -65,9 +65,9 @@ for targetKind={'letter' 'gabor'}
             o.alternatives=length(o.targetGaborOrientationsDeg);
             o.targetCyclesPerDeg=nan;
             o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
-%             o.targetGaborSpaceConstantCycles=0.75*3; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
-%             o.targetGaborCycles=3*3; % cycles of the sinewave in targetHeight
-%             o.conditionName='small';
+            % o.targetGaborSpaceConstantCycles=0.75*3; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
+            % o.targetGaborCycles=3*3; % cycles of the sinewave in targetHeight
+            % o.conditionName='small';
             o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
             o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
         case 'letter'
@@ -89,7 +89,8 @@ for targetKind={'letter' 'gabor'}
     end
     % for ecc=[0 2 8 32]
     for ecc=[0]
-        for deg=[2 8 32] % Omit 0.5 because it needs stronger noise.
+%         for deg=[0.5 2 8 32] 
+        for deg=[32] 
             % if restrictNoise
             % 	o.noiseEnvelopeSpaceConstantDeg=deg;
             % else
@@ -99,8 +100,10 @@ for targetKind={'letter' 'gabor'}
                     || 1>ecc-o.blankingRadiusReTargetHeight*deg
                 % Make sure that fixation mark has at least 1 deg radius.
                 o.fixationCrossDeg=inf;
+                o.fixationCrossDrawnOnStimulus=true;
             else
                 o.fixationCrossDeg=2;
+                o.fixationCrossDrawnOnStimulus=false;
             end
             if deg>20
                 % When target overlaps fixation point and fills screen,
@@ -116,6 +119,8 @@ for targetKind={'letter' 'gabor'}
             o.targetHeightDeg=deg;
             degMin=NominalAcuityDeg(o.eccentricityXYDeg);
             if deg<2*degMin
+                % We only test targets that are at least twice the acuity
+                % size.
                 continue
             end
             if o.targetHeightDeg>16 || ecc>16
@@ -184,12 +189,12 @@ if false
 end
 
 if true
-    %% RUN EACH CONDITION WITH FOUR KINDS OF NOISE, INTERLEAVED.
+    %% RUN EACH CONDITION WITH FOUR KINDS OF NOISE AND NO NOISE, INTERLEAVED.
     noiseTypeList={'gaussian' 'uniform' 'ternary' 'binary'};
     maxNoiseSD=min([MaxNoiseSD('gaussian') MaxNoiseSD('uniform') MaxNoiseSD('ternary') MaxNoiseSD('binary') ]);
     for block=1:length(ooo)
         oo=ooo{block};
-        for oi=1:length(oo)
+        for oi=length(oo):-1:1
             switch oo(oi).targetKind
                 case 'image'
                     noiseSD=0.8*maxNoiseSD;
@@ -202,13 +207,23 @@ if true
             end
             oo(oi).noiseSD=noiseSD;
             oo(oi).noiseCheckDeg=oo(oi).targetHeightDeg/40;
+            if oo(oi).targetHeightDeg<1
+                oo(oi).noiseSD=min([MaxNoiseSD('ternary') MaxNoiseSD('binary') ]);
+            end
         end
         [oo.noiseType]=deal(noiseTypeList{1});
         ooNoise=oo;
-        for noiseType=noiseTypeList(2:end)
+        oo=oo([]);
+        for noiseType=noiseTypeList
+            if ooNoise(1).targetHeightDeg<1 && ~ismember(noiseType,{'ternary' 'binary'})
+                continue
+            end
             [ooNoise.noiseType]=deal(noiseType{1});
             oo=[oo ooNoise];
         end
+        [ooNoise.noiseType]=deal('ternary');
+        ooNoise.noiseSD=0;
+        oo=[oo ooNoise];
         ooo{block}=oo;
     end
 end
@@ -315,8 +330,8 @@ t=struct2table(oo,'AsArray',true);
 %     'uncertainParameter'...
 disp(t(:,{'block' 'experiment' 'conditionName' 'observer'  'willTakeMin' 'trialsDesired'  'targetKind' 'noiseType' 'thresholdParameter'...
     'contrast'  'noiseSD' ...
-    'targetHeightDeg'  'eccentricityXYDeg' 'viewingDistanceCm'})); % Print the conditions in the Command Window.
-return
+    'targetHeightDeg'  'eccentricityXYDeg' 'viewingDistanceCm' 'fixationCrossBlankedNearTarget'})); % Print the conditions in the Command Window.
+% return
 
 %% Measure threshold, one block per iteration.
 ooo=RunExperiment(ooo);
