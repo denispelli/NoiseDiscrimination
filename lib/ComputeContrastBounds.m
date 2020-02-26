@@ -19,8 +19,8 @@ switch o.targetKind
 end
 % nMin and nMax are the min and max of the zero-mean noise on a contrast
 % scale.
-nMin=o.noiseListMin*o.noiseSD/o.noiseListSD;
-nMax=o.noiseListMax*o.noiseSD/o.noiseListSD;
+nMin=o.noiseListMin*o.noiseSD;
+nMax=o.noiseListMax*o.noiseSD;
 
 % Given o.noiseSD and o.LBackground, tMin and tMax are the lowest and
 % highest (positive or negative) possible values for the target on a
