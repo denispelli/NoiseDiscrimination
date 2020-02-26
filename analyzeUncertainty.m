@@ -149,7 +149,7 @@ aa=struct2table(aa);
 aa=sortrows(aa,'conditionName');
 disp(aa(:,{'conditionName','efficiency','observer','deltaEOverN'}));
 dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
-writetable(aa,fullfile(dataFolder,'efficiency.xls'));
+writetable(aa,fullfile(dataFolder,'efficiency.xlsx'));
 
 % return
 
