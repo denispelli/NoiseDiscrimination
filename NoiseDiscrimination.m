@@ -1025,7 +1025,7 @@ knownOutputFields={'labelAnswers' 'beginningTime' ...
     'contrast' 'targetWidthPix' 'checkSecs' 'moviePreFrames'...
     'movieSignalFrames' 'moviePostFrames' 'movieFrames' 'noiseSize'...
     'annularNoiseSmallSize' 'annularNoiseBigSize' 'canvasSize'...
-    'noiseListMin' 'noiseListMax' 'noiseIsFiltered' 'noiseListSD' 'N' 'NUnits' ...
+    'noiseListMin' 'noiseListMax' 'noiseIsFiltered' 'N' 'NUnits' ...
     'targetRectChecks' 'xHeightPix' 'xHeightDeg' 'HHeightPix' ...
     'HHeightDeg' 'alphabetHeightDeg' 'annularNoiseEnvelopeRadiusDeg' ...
     'centralNoiseEnvelopeE1DegDeg' 'E1' 'data' 'psych' 'questMean'...
@@ -2867,34 +2867,6 @@ try
         ffprintf(ff,'%d: condition "%s" o.canvasSize %.0f %.0f, o.stimulusRect/o.targetCheckPix [%.0f %.0f %.0f %.0f].\n',...
             oi,oo(oi).conditionName,oo(oi).canvasSize,oo(oi).stimulusRect/oo(oi).targetCheckPix);
         
-        % Compute noiseList
-        switch oo(oi).noiseType % Fill noiseList with desired kind of noise.
-            case 'gaussian'
-                % Get samples from normal distribution with zero mean and
-                % sd 1. Discard samples that exceed +/-2. The remaining
-                % clipped distribution has an sd slightly less than 1.
-                oo(oi).noiseListMin=-2;
-                oo(oi).noiseListMax=2;
-                temp=randn([1 20000]);
-                ok=oo(oi).noiseListMin<=temp & temp<=oo(oi).noiseListMax;
-                noiseList=temp(ok);
-                clear temp;
-            case 'uniform'
-                oo(oi).noiseListMin=-1;
-                oo(oi).noiseListMax=1;
-                noiseList=-1:1/1024:1;
-            case 'binary'
-                oo(oi).noiseListMin=-1;
-                oo(oi).noiseListMax=1;
-                noiseList=[-1 1];
-            case 'ternary'
-                oo(oi).noiseListMin=-1;
-                oo(oi).noiseListMax=1;
-                noiseList=[-1 0 1];
-            otherwise
-                error('%d: Unknown noiseType "%s"',oi,oo(oi).noiseType);
-        end
-        
         % Compute MTF to filter the noise.
         fNyquist=0.5/oo(oi).noiseCheckDeg;
         fLow=0;
@@ -2915,10 +2887,7 @@ try
         if oo(oi).noiseSD == 0
             mtf=0;
         end
-        
-        % Measure SD of one million samples. Takes only 30 ms;
-        oo(oi).noiseListSD=std(PsychRandSample(noiseList,[1000000 1]));
-
+ 
         % This safety check should be updated to check more rigorously. As
         % set above, o.LBackground=o.luminanceFactor*mean([LMin LMax]).
         % This (old) bit of code, which is just a safety check of the noise
@@ -2934,8 +2903,19 @@ try
         % assumes that the background does not exceed the max possible,
         % LBackground<=LMax.
         
+        % CAUTION: We now allow each condition to have a different
+        % o.noiseType, so we must update o.noiseListMin and o.noiseLineMax
+        % for each trial, since two conditions with different o.noiseType
+        % could be randomly interleaved. Right here we are outside the
+        % trial loop, so these values need to be recomputed inside the
+        % loop. Very little of the code uses o.noiseListMin and
+        % o.noiseListMax.
+        [~,range]=MakeNoise(oo(oi).noiseType,[1 1]);
+        oo(oi).noiseListMin=range(1);
+        oo(oi).noiseListMax=range(2);
+        
         % Max possible noiseSD uses 90% of range, leaving 10% for signal.
-        a=0.9*oo(oi).noiseListSD/oo(oi).noiseListMax; 
+        a=0.9/oo(oi).noiseListMax; 
         if oo(oi).noiseSD>a
             ffprintf(ff,'WARNING: %d: Requested o.noiseSD %.2f too high. Reduced to %.2f\n',oi,oo(oi).noiseSD,a);
             oo(oi).noiseSD=a;
@@ -3904,7 +3884,7 @@ try
                     oo(oi).flankerContrast=-oo(oi).snapshotContrast;
                 end
         end
-        a=(1-LMin/oo(oi).LBackground)*oo(oi).noiseListSD/oo(oi).noiseListMax;
+        a=(1-LMin/oo(oi).LBackground)/oo(oi).noiseListMax;
         if oo(oi).noiseSD > a
             ffprintf(ff,'WARNING: Reducing o.noiseSD of %s noise to %.2f to avoid overflow.\n',oo(oi).noiseType,a);
             oo(oi).noiseSD=a;
@@ -3917,7 +3897,7 @@ try
         %% RESTRICT tTest TO PHYSICALLY POSSIBLE RANGE
         switch oo(oi).targetModulates
             case 'noise'
-                a=(1-LMin/oo(oi).LBackground)/(oo(oi).noiseListMax*oo(oi).noiseSD/oo(oi).noiseListSD);
+                a=(1-LMin/oo(oi).LBackground)/(oo(oi).noiseListMax*oo(oi).noiseSD);
                 if oo(oi).r > a
                     if ~isfield(oo(oi),'rWarningCount') || oo(oi).rWarningCount==0
                         ffprintf(ff,['WARNING: Reducing o.r ratio of %s noises '...
@@ -3998,6 +3978,12 @@ try
         %             MFileLineNr,oi,size(oo(oi).signal(1).image));
         % ffprintf(ff,'%d: %d: %s o.canvasSize %d %d, size(oo(oi).centralNoiseMask) %d %d, \n',...
         %    MFileLineNr,oi,oo(oi).conditionName,oo(oi).canvasSize,size(oo(oi).centralNoiseMask));
+        
+        % Note: o.noiseType can be different in inteleaved conditions.
+        % noiseList is used only if o.targetModulates='entropy'.
+        [noiseList,range]=MakeNoise(oo(oi).noiseType,[10000 1]); % 1 ms.
+        oo(oi).noiseListMin=range(1);
+        oo(oi).noiseListMax=range(2);
         for iMovieFrame=1:oo(oi).movieFrames
             % On each new frame, retain the (static) signal and regenerate the (dynamic) noise.
             switch oo(oi).task % add noise to signal
@@ -4025,7 +4011,7 @@ try
                             end
                             rng(oo(oi).noiseListSeed);
                         end
-                        noise=PsychRandSample(noiseList,oo(oi).canvasSize*oo(oi).targetCheckPix/oo(oi).noiseCheckPix); % One number per noiseCheck.
+                        noise=MakeNoise(oo(oi).noiseType,oo(oi).canvasSize*oo(oi).targetCheckPix/oo(oi).noiseCheckPix); % One number per noiseCheck.
                         noise=Expand(noise,oo(oi).noiseCheckPix/oo(oi).targetCheckPix); % One number per targetCheck.
                         if oo(oi).noiseIsFiltered
                             if any(mtf(:) ~= 1)
@@ -4042,21 +4028,26 @@ try
                         if loc == signalLocation
                             switch oo(oi).targetModulates
                                 case 'noise'
-                                    location(loc).image=1+oo(oi).r*(oo(oi).noiseSD/oo(oi).noiseListSD)*noise;
+                                    location(loc).image=1+oo(oi).r*(oo(oi).noiseSD)*noise;
                                 case 'luminance'
-                                    location(loc).image=1+(oo(oi).noiseSD/oo(oi).noiseListSD)*noise+oo(oi).contrast;
+                                    location(loc).image=1+(oo(oi).noiseSD)*noise+oo(oi).contrast;
                                 case 'entropy'
                                     oo(oi).q.noiseList=(0.5+floor(noiseList*0.499999*signalEntropyLevels))/(0.5*signalEntropyLevels);
-                                    oo(oi).q.sd=std(oo(oi).q.noiseList);
+                                    % Call to "std" by DGP 2/21/20 to
+                                    % correctly assume we have ALL samples.
+                                    % This makes a big difference for very
+                                    % short noise lists, e.g. root 2 for
+                                    % binary.
+                                    oo(oi).q.sd=std(oo(oi).q.noiseList,1);
                                     location(loc).image=1+(oo(oi).noiseSD/oo(oi).q.sd)*(0.5+floor(noise*0.499999*signalEntropyLevels))/(0.5*signalEntropyLevels);
                             end
                         else
                             switch oo(oi).targetModulates
                                 case {'noise' 'luminance'}
-                                    location(loc).image=1+(oo(oi).noiseSD/oo(oi).noiseListSD)*noise;
+                                    location(loc).image=1+(oo(oi).noiseSD)*noise;
                                 case 'entropy'
                                     oo(oi).q.noiseList=(0.5+floor(noiseList*0.499999*oo(oi).backgroundEntropyLevels))/(0.5*oo(oi).backgroundEntropyLevels);
-                                    oo(oi).q.sd=std(oo(oi).q.noiseList);
+                                    oo(oi).q.sd=std(oo(oi).q.noiseList,1); % DGP 2/21/20
                                     location(loc).image=1+(oo(oi).noiseSD/oo(oi).q.sd)*(0.5+floor(noise*0.499999*oo(oi).backgroundEntropyLevels))/(0.5*oo(oi).backgroundEntropyLevels);
                             end
                         end
@@ -4105,7 +4096,7 @@ try
                     if oo(oi).noiseFrozenInBlock
                         rng(oo(oi).noiseListSeed);
                     end
-                    noise=PsychRandSample(noiseList,oo(oi).canvasSize*oo(oi).targetCheckPix/oo(oi).noiseCheckPix); % TAKES 3 ms. One number per noiseCheck.
+                    noise=MakeNoise(oo(oi).noiseType,oo(oi).canvasSize*oo(oi).targetCheckPix/oo(oi).noiseCheckPix); % TAKES 3 ms. One number per noiseCheck.
                     noise=Expand(noise,oo(oi).noiseCheckPix/oo(oi).targetCheckPix); % One number per targetCheck.
                     % Each pixel in "noise" now represents a targetCheck.
                     noise(~oo(oi).centralNoiseMask & ~oo(oi).annularNoiseMask)=0;
@@ -4159,13 +4150,13 @@ try
                             if oo(oi).useCentralNoiseMask
                                 % fprintf('%d: %d: %s o.canvasSize %d %d, size(oo(oi).centralNoiseMask) %d %d, size(noise) %d %d, size(location(1).image) %d %d\n',...
                                 % MFileLineNr,oi,oo(oi).conditionName,oo(oi).canvasSize,size(oo(oi).centralNoiseMask),size(noise),size(location(1).image));
-                                location(1).image(oo(oi).centralNoiseMask)=1+(oo(oi).noiseSD/oo(oi).noiseListSD)*noise(oo(oi).centralNoiseMask); % TAKES 1 ms.
+                                location(1).image(oo(oi).centralNoiseMask)=1+(oo(oi).noiseSD)*noise(oo(oi).centralNoiseMask); % TAKES 1 ms.
                             else
-                                location(1).image=1+(oo(oi).noiseSD/oo(oi).noiseListSD)*noise; % TAKES ? ms.
+                                location(1).image=1+(oo(oi).noiseSD)*noise; % TAKES ? ms.
 %                                 imshow(noise);
 %                                 imshow(location(1).image);
                             end
-                            location(1).image(oo(oi).annularNoiseMask)=1+(oo(oi).annularNoiseSD/oo(oi).noiseListSD)*noise(oo(oi).annularNoiseMask);
+                            location(1).image(oo(oi).annularNoiseMask)=1+(oo(oi).annularNoiseSD)*noise(oo(oi).annularNoiseMask);
                             location(1).image=repmat(location(1).image,1,1,length(white)); % Support color.
                             location(1).image=location(1).image+oo(oi).contrast*signalImage; % Add signal to noise.
                             PrintImageStatistics(MFileLineNr,oo(oi),i,'signalImage',signalImage);
@@ -4173,14 +4164,14 @@ try
                         case 'noise'
                             noise(signalMask)=oo(oi).r*noise(signalMask); % Signal modulates noise.
                             location(1).image=ones(oo(oi).canvasSize);
-                            location(1).image(oo(oi).centralNoiseMask)=1+(oo(oi).noiseSD/oo(oi).noiseListSD)*noise(oo(oi).centralNoiseMask);
-                            location(1).image(oo(oi).annularNoiseMask)=1+(oo(oi).annularNoiseSD/oo(oi).noiseListSD)*noise(oo(oi).annularNoiseMask);
+                            location(1).image(oo(oi).centralNoiseMask)=1+(oo(oi).noiseSD)*noise(oo(oi).centralNoiseMask);
+                            location(1).image(oo(oi).annularNoiseMask)=1+(oo(oi).annularNoiseSD)*noise(oo(oi).annularNoiseMask);
                             % figure(1);subplot(1,3,3);imshow(location(1).image);
                         case 'entropy'
                             noise(~oo(oi).centralNoiseMask)=0;
                             noise(signalMask)=(0.5+floor(noise(signalMask)*0.499999*signalEntropyLevels))/(0.5*signalEntropyLevels);
                             noise(~signalMask)=(0.5+floor(noise(~signalMask)*0.499999*oo(oi).backgroundEntropyLevels))/(0.5*oo(oi).backgroundEntropyLevels);
-                            location(1).image=1+(oo(oi).noiseSD/oo(oi).noiseListSD)*noise;
+                            location(1).image=1+(oo(oi).noiseSD)*noise;
                     end
                     PrintImageStatistics(MFileLineNr,oo(oi),i,'noise',noise);
                     
@@ -5666,11 +5657,11 @@ try
                 oo=rmfield(oo,'signal');
             end
         end
-        ffprintf(ff,'%d: begin saving mat file at %.0f s\n',oi,GetSecs-savingToDiskSecs);
+        ffprintf(ff,'%d: Begin saving mat file at %.0f s.\n',oi,GetSecs-savingToDiskSecs);
         oo=SortFields(oo);
         oo(1).newCal=cal;
         save(fullfile(oo(1).dataFolder,[oo(1).dataFilename '.mat']),'oo','cal');
-        ffprintf(ff,'%d: done saving mat file at %.0f s\n',oi,GetSecs-savingToDiskSecs);
+        ffprintf(ff,'%d: Done saving mat file at %.0f s.\n',oi,GetSecs-savingToDiskSecs);
         if exist('oo1','var')
             try % save to .json file
                 % I used /utility/printFieldBytes to select the biggest
@@ -5703,7 +5694,7 @@ try
                 warning(e.message);
                 e.stack
             end % save to .json file
-            ffprintf(ff,'%d: done saving json data at %.0f s.\n',oi,GetSecs-savingToDiskSecs);
+            ffprintf(ff,'%d: Done saving json data at %.0f s.\n',oi,GetSecs-savingToDiskSecs);
         else
             ffprintf(ff,'%d: Nothing to save in json file.\n',oi);
         end
@@ -5729,7 +5720,7 @@ try
             warning('Failed to save .transcript.json file.');
             warning(e.message);
         end % save transcript to .json file
-        ffprintf(ff,'%d: done saving json transcript at %.0f s\n',oi,GetSecs-savingToDiskSecs);
+        ffprintf(ff,'%d: Done saving json transcript at %.0f s.\n',oi,GetSecs-savingToDiskSecs);
         ffprintf(ff,'Results saved as %s with extensions .txt, .mat, and .json \n',oo(oi).dataFilename);
         if oo(oi).recordGaze
             ffprintf(ff,'Gaze recorded with extension %s\n',videoExtension);
@@ -6122,9 +6113,9 @@ switch o.targetModulates
     case 'luminance'
         img=[1 1+o.contrast];
     otherwise
-        noise=PsychRandSample(noiseList,o.canvasSize*o.targetCheckPix/o.noiseCheckPix);
+        noise=MakeNoise(o.noiseType,o.canvasSize*o.targetCheckPix/o.noiseCheckPix);
         noise=Expand(noise,o.noiseCheckPix/o.targetCheckPix);
-        img=1+noise*o.noiseSD/o.noiseListSD;
+        img=1+noise*o.noiseSD;
 end
 index=IndexOfLuminance(cal,img*LBackground);
 imgEstimate=EstimateLuminance(cal,index)/LBackground;
@@ -6137,11 +6128,11 @@ switch o.targetModulates
         L=EstimateLuminance(cal,img);
         ffprintf(ff,'Assess contrast: Desired o.contrast of %.3f will be rendered as %.3f (estimated).\n',o.contrast,diff(L)/L(1));
     otherwise
-        noiseSDEstimate=std(imgEstimate(:))*o.noiseListSD/std(noise(:));
-        img=1+o.r*(o.noiseSD/o.noiseListSD)*noise;
+        noiseSDEstimate=std(imgEstimate(:))/std(noise(:));
+        img=1+o.r*(o.noiseSD)*noise;
         img=IndexOfLuminance(cal,img*LBackground);
         imgEstimate=EstimateLuminance(cal,img)/LBackground;
-        rEstimate=std(imgEstimate(:))*o.noiseListSD/std(noise(:))/noiseSDEstimate;
+        rEstimate=std(imgEstimate(:))/std(noise(:))/noiseSDEstimate;
         ffprintf(ff,'noiseSDEstimate %.3f (nom. %.3f), rEstimate %.3f (nom. %.3f)\n',noiseSDEstimate,o.noiseSD,rEstimate,o.r);
         if abs(log10([noiseSDEstimate/o.noiseSD rEstimate/o.r])) > 0.5*log10(2)
             ffprintf(ff,'WARNING: PLEASE TELL DENIS: noiseSDEstimate %.3f (nom. %.3f), rEstimate %.3f (nom. %.3f)\n',noiseSDEstimate,o.noiseSD,rEstimate,o.r);
@@ -6187,7 +6178,7 @@ global signalImageIndex signalMask
 % matches theoretical benchmarks. But the thresholds seem reasonable, and
 % Quest succesfully homes in on 75%. Instead of globals, we could put
 % the currently global variables into a new struct called "model".
-% NOTE: the movie's pre and post frames have already been removed.
+% NOTE: The movie's pre and post frames have already been removed.
 location=movieImage{1};
 switch o.observer
     case 'ideal'
@@ -6234,8 +6225,9 @@ switch o.observer
                         im=zeros(size(signal(1).image));
                         imSum=im;
                         % The signal is always static. The noise may be
-                        % static or dynamic. Averaging over time is optimal
-                        % because the signal is static.
+                        % static or dynamic. Assuming white gaussian noise,
+                        % averaging over time is optimal because the signal
+                        % is static.
                         % When thresholdParameter=='size', the signal.image
                         % was resized for display, so we need to take that
                         % into account.
@@ -6757,15 +6749,17 @@ function [cal,o]=ComputeClut(cal,o)
 % o.noiseListMax>=0
 % o.r>=1 % Ratio of noiseSD in target and backgrounds.
 % o.noiseSD>=0
-% o.noiseListSD>0;
 % o.LBackground>0; % Can be anywhere in range LMin to LMax.
 % LFirst and LLast are the min and max of the luminance range that the CLUT
 % will support. We make this range just big enough to include all the
 % luminances our signal in noise may need, using the known min and max of
 % the signal and noise.
 global ff
-cal.LFirst=o.LBackground*(1+o.noiseListMin*o.r*o.noiseSD/o.noiseListSD);
-cal.LLast=o.LBackground*(1+o.noiseListMax*o.r*o.noiseSD/o.noiseListSD);
+[~,range]=MakeNoise(o.noiseType,[1 1]);
+o.noiseListMin=range(1);
+o.noiseListMax=range(2);
+cal.LFirst=o.LBackground*(1+o.noiseListMin*o.r*o.noiseSD);
+cal.LLast=o.LBackground*(1+o.noiseListMax*o.r*o.noiseSD);
 if ~o.useFlankers
     o.flankerContrast=0;
 end
@@ -6790,8 +6784,8 @@ if cal.LFirst<min(cal.old.L-0.1) || cal.LLast>max(cal.old.L+0.1)
         cal.LFirst,cal.LLast,min(cal.old.L),max(cal.old.L));
 end
 if o.annularNoiseBigRadiusDeg > o.annularNoiseSmallRadiusDeg
-    cal.LFirst=min(cal.LFirst,o.LBackground*(1-o.noiseListMax*o.r*o.annularNoiseSD/o.noiseListSD));
-    cal.LLast=max(cal.LLast,o.LBackground*(1+o.noiseListMax*o.r*o.annularNoiseSD/o.noiseListSD));
+    cal.LFirst=min(cal.LFirst,o.LBackground*(1-o.noiseListMax*o.r*o.annularNoiseSD));
+    cal.LLast=max(cal.LLast,o.LBackground*(1+o.noiseListMax*o.r*o.annularNoiseSD));
 end
 if o.symmetricLuminanceRange
     % Use smallest range centered on o.LBackground that includes LFirst and
