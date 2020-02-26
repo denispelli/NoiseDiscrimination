@@ -54,6 +54,8 @@ for oi=1:length(oo)
             case 'gabor'
                 oo(oi).targetCyclesPerDeg=oo(oi).targetGaborCycles/oo(oi).targetHeightDeg;
                 oo(oi).A=oo(oi).targetCyclesPerDeg^-2;
+            otherwise
+                error('Unknown o.targetKind ''%s''.',oo(oi).targetKind);
         end
     end
     if ~isfield(oo(oi),'LAT') || isempty(oo(oi).LAT)
