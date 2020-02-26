@@ -92,7 +92,7 @@ aa=struct2table(aa(human));
 aa=sortrows(aa,'conditionName');
 disp(aa(:,{'conditionName','efficiency','observer'}));
 dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
-writetable(aa,fullfile(dataFolder,'efficiency.xls'));
+writetable(aa,fullfile(dataFolder,'efficiency.xlsx'));
 
 % Size threshold.
 for oi=length(oo):-1:1
@@ -120,7 +120,7 @@ for conditionName=conditionNames
 end
 t=struct2table(bb);
 disp(t(:,{'conditionName' 'observer' 'targetHeightDeg' 'complexity'}));
-writetable(t,fullfile(dataFolder,'complexity.xls'));
+writetable(t,fullfile(dataFolder,'complexity.xlsx'));
 return
 
 % SELECT CONDITION(S)
