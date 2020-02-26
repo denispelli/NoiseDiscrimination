@@ -1,4 +1,6 @@
 %% Analyze the data collected by runEfficiencyConservation.
+% denis.pelli@nyu.edu
+% February 20, 2020
 
 experiment='EfficiencyConservation';
 % global printConditions makePlotLinear showLegendBox
@@ -28,67 +30,78 @@ vars={'condition' 'conditionName' 'experiment' 'dataFilename' ...
     'pixPerCm'  'nearPointXYPix' 'NUnits' 'beginningTime' 'thresholdParameter'...
     'questMean' 'partingComments' 'blockSecs' 'blockSecsPerTrial'...
     'fullResolutionTarget'};
-experiment='EfficiencyConservation';
 oo=ReadExperimentData(experiment,vars); % Adds date and missingFields.
 fprintf('%s %d thresholds.\n',experiment,length(oo));
 
 %% PRINT COMMENTS
-comments={oo.partingComments};
-ok=true(size(comments));
-for i=1:length(comments)
-    if isempty(comments{i}) || isempty(comments{i}{1})
-        ok(i)=false;
+if isfield(oo,'partingComments')
+    comments={oo.partingComments};
+    ok=true(size(comments));
+    for i=1:length(comments)
+        if isempty(comments{i}) || isempty(comments{i}{1})
+            ok(i)=false;
+        end
+    end
+    comments=comments(ok);
+    for i=1:length(comments)
+        fprintf('%s\n',comments{i}{1});
     end
 end
-comments=comments(ok);
-for i=1:length(comments)
-    fprintf('%s\n',comments{i}{1});
+
+% Round each target size greater than 1 to an integer, less than 1 to one decimal.
+for oi=1:length(oo)
+    if oo(oi).targetHeightDeg>1
+        oo(oi).targetHeightDeg=round(oo(oi).targetHeightDeg);
+    else
+        oo(oi).targetHeightDeg=round(10*oo(oi).targetHeightDeg)/10;
+    end
 end
 
 % COMPUTE EFFICIENCY
 % Select thresholdParameter='contrast', for each conditionName, 
 % For each observer, including ideal, use all (E,N) data to estimate deltaNOverE and Neq. 
 % Compute efficiency by comparing deltaNOverE of each to that of the ideal.
+
+% Each element of aa is the average all thresholds in oo that match in:
+% noiseType, conditionName, observer, targetHeight, and eccentricityXY.
+% But ignore noiseType of thresholds for which noiseSD==0.
 conditionNames=unique({oo.conditionName});
 observers=unique({oo.observer});
-
-% Round each target size to a power of 2.
-for oi=1:numel(oo)
-oo(oi).targetHeightDeg = 2.^round(log2([oo(oi).targetHeightDeg]));
-end
-
-% We average all thresholds that match in:
-% conditionName, observer, targetHeight, and eccentricityXY.
 targetHeightDegs=unique([oo.targetHeightDeg]);
 eccXsfull=arrayfun(@(x) x.eccentricityXYDeg(1),oo);
 eccXs=unique(eccXsfull);
+noiseTypes=unique({oo.noiseType});
 aa=[];
 for conditionName=conditionNames
     for observer=observers
         for targetHeightDeg=targetHeightDegs
             for eccX=eccXs
-                match=ismember({oo.conditionName},conditionName) ...
-                    & ismember({oo.observer},observer) ...
-                    & ismember([oo.targetHeightDeg],targetHeightDeg) ...
-                    & ismember(eccXsfull,eccX);
-                match=match & ismember({oo.thresholdParameter},{'contrast'});
-                if sum(match)>0
-                    E=[oo(match).E];
-                    N=[oo(match).N];
-                    [Neq,E0,deltaEOverN]=EstimateNeq(E,N);
-                    aa(end+1).conditionName=conditionName{1};
-                    aa(end).observer=observer{1};
-                    aa(end).E=E;
-                    aa(end).N=N;
-                    aa(end).E0=E0;
-                    aa(end).Neq=Neq;
-                    aa(end).deltaEOverN=deltaEOverN;
-                    oi=find(match,1);
-                    aa(end).thresholdParameter=oo(oi).thresholdParameter;
-                    aa(end).eccentricityDeg=eccX;
-                    aa(end).targetHeightDeg=targetHeightDeg;
-                    aa(end).contrast=[oo(match).contrast];
-                    aa(end).noiseSD=[oo(match).noiseSD];
+                for noiseType=noiseTypes
+                    match=ismember({oo.conditionName},conditionName) ...
+                        & ismember({oo.observer},observer) ...
+                        & ismember([oo.targetHeightDeg],targetHeightDeg) ...
+                        & ismember(eccXsfull,eccX) ...
+                        & (ismember({oo.noiseType},noiseType) | ismember([oo.noiseSD],0)) ...
+                    	& ismember({oo.thresholdParameter},{'contrast'});
+                    if sum(match)>0
+                        E=[oo(match).E];
+                        N=[oo(match).N];
+                        [Neq,E0,deltaEOverN]=EstimateNeq(E,N);
+                        aa(end+1).conditionName=conditionName{1};
+                        aa(end).observer=observer{1};
+                        aa(end).E=E;
+                        aa(end).N=N;
+                        aa(end).E0=E0;
+                        aa(end).Neq=Neq;
+                        aa(end).deltaEOverN=deltaEOverN;
+                        oi=find(match,1);
+                        aa(end).thresholdParameter=oo(oi).thresholdParameter;
+                        aa(end).eccentricityDeg=eccX;
+                        aa(end).targetHeightDeg=targetHeightDeg;
+                        aa(end).contrast=[oo(match).contrast];
+                        aa(end).noiseSD=[oo(match).noiseSD];
+                        aa(end).noiseType=noiseType{1};
+                    end
                 end
             end
         end
@@ -98,48 +111,47 @@ end
 % idealEOverN.letter = 13;
 % idealEOverN.small  =  3; % small means gabor ...
 
+% Now analyze aa, matching each human record with the correponding ideal observer record.
 for conditionName=conditionNames
-  for observer=observers
-    for targetHeightDeg=targetHeightDegs
-      for eccX=eccXs
-        match=ismember({aa.thresholdParameter},{'contrast'})...
-        	& ismember({aa.conditionName},conditionName)...
-        	& ismember([aa.targetHeightDeg],targetHeightDeg)...
-        	& ismember([aa.eccentricityDeg], eccX);
-        if targetHeightDeg>32
-          keyboard
+    for observer=observers
+        for targetHeightDeg=targetHeightDegs
+            for eccX=eccXs
+                for noiseType=noiseTypes
+                    match=ismember({aa.thresholdParameter},{'contrast'})...
+                        & ismember({aa.conditionName},conditionName)...
+                        & ismember([aa.targetHeightDeg],targetHeightDeg)...
+                        & ismember([aa.eccentricityDeg], eccX) ...
+                        & ismember({aa.noiseType},noiseType);
+                    idealMatch=match & ismember({aa.observer},{'ideal'});
+                    match = match & ismember({aa.observer},observer);
+                    if sum(match)>0 && sum(idealMatch)>0
+                        assert(sum(match)==1 & sum(idealMatch)==1);
+                        aa(match).efficiency=(aa(idealMatch).E/aa(idealMatch).N)/aa(match).deltaEOverN;
+                    end
+                end
+            end
         end
-        idealMatch=match & ismember({aa.observer},{'ideal'});
-        match = match & ismember({aa.observer},observer);
-        if sum(match)>0 && sum(idealMatch)>0
-            assert(sum(match)==1 & sum(idealMatch)==1);
-            aa(match).efficiency=idealEOverN.(conditionName{1})/aa(match).deltaEOverN;
-			% aa(match).efficiency=aa(idealMatch).deltaEOverN/aa(match).deltaEOverN;
-        end
-      end
     end
-  end
+end
+for i=1:length(aa)
+    % Convert noiseType (a name) to noiseIndex (an integer).
+    aa(i).noiseIndex=find(ismember(noiseTypes,aa(i).noiseType));
 end
 % human=~ismember({aa.observer},'ideal');
-aa=struct2table(aa);
-aa=sortrows(aa,'conditionName');
-disp(aa(:,{'conditionName','efficiency','observer'}));
+
+%% SAVE TABLE TO DISK
+t=struct2table(aa);
+t=sortrows(t,'conditionName');
+t=sortrows(t,'observer');
+disp(t(:,{'conditionName','targetHeightDeg' 'noiseType' 'efficiency','observer'}));
 dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
 aa.conditionName=strrep(aa.conditionName, 'small', 'gabor');
-% for iefficiency=1:length(aa.efficiency)
-%   if isempty(aa.efficiency{iefficiency})
-%     aa.efficiency{iefficiency}=NaN;
-%   end
-% end
-writetable(aa,fullfile(dataFolder,'efficiency.xls'));
-jsonwrite(fullfile(dataFolder,'EfficiencyConservation.json'), aa);
+% On Feb, 20, 2020 I discovered that writetable may screw up xls tables,
+% but xlsx seems to be ok.
+writetable(t,fullfile(dataFolder,[experiment '.xlsx']));
+jsonwrite(fullfile(dataFolder,[experiment '.json']), t);
+fprintf('Wrote files %s and %s to disk.\n',[experiment '.xlsx'],[experiment '.json']);
 return
-% SELECT CONDITION(S)
-% for oi=length(oo):-1:1
-%     if ~ismember(oo(oi).conditionName,{'face' 'Sloan'}) || oo(oi).trials<30
-%         oo(oi)=[];
-%     end
-% end
 
 if isempty(oo)
     error('No conditions selected.');
