@@ -2,21 +2,28 @@ function [EOverN,psych]=UncertainEOverN(MM,psych)
 % [EOverN,psych]=UncertainEOverN(M,psych);
 % Measures threshold E/N for ideal detection or identification of a signal
 % in white noise at one of M locations. This extends the results of Pelli
-% (1985). We handle two cases:
+% (1985). We handle three cases, specified by psych.targetKind:
 %
-%% Gabor. Identification of one of two possible signals that are orthogonal
-% and equal energy (e.g. two gabors, one vertical and the other
-% horizontal). This is equivalent to a 2-interval forced choice where the
-% signal appears at one of M locations, randomly on one of two intervals,
-% and the observer must report which interval. The E/N result is general to
-% two equal-energy orthogonal signals, not specific to gabors.
-% E/N = 1.3156 8.3335 for two orthogonal gabors with M=1 104.
+%% 'gabor'
+% Identification of one of two possible signals that are orthogonal and
+% equal energy (e.g. two gabors, one vertical and the other horizontal).
+% This is equivalent to a 2-interval forced choice where the signal appears
+% at one of M locations, randomly on one of two intervals, and the observer
+% must report which interval. The E/N result is general to two equal-energy
+% orthogonal signals, not specific to gabors. E/N = 1.3156 8.3335 for two
+% orthogonal gabors with M=1 104.
 %
-%% Letter. Here we assume the signal is a letter from a known alphabet.
-% The letters are typically of unequal energy and not orthogonal. This E/N
-% result is specific to the particular font and alphabet tested. For M=1 we
-% should compare with the answer given at the back of Pelli et al. (2006).
-% E/N = 16.1859 20.0291 for 9 Sloan letters with M=1 104.
+%% 'letter'
+% Here we assume the signal is a letter from a known alphabet. The letters
+% are typically of unequal energy and not orthogonal. This E/N result is
+% specific to the particular font and alphabet tested. For M=1 we should
+% compare with the answer given at the back of Pelli et al. (2006). E/N =
+% 16.1859 20.0291 for 9 Sloan letters with M=1 104.
+%
+%% 'orthogonalLetter'
+% Provides orthonormal signals to the letter code to confirm that it
+% performs identically with the Gabor code. Currently the threshold
+% contrasts are with 0.01 log unit.
 %
 % INPUT ARGUMENTS:
 % "MM" is an array of one or more degrees of uncertainty M, each a positive
@@ -62,14 +69,29 @@ wrongRight={'wrong','right'};
 timeZero=GetSecs;
 window=[];
 if nargin<1
-    MM=[10 1];
+    MM=[100 1];
 end
 EOverN=zeros(size(MM));
 if nargin<2
     % The rest of the code assumes that the "psych" struct exists so, if
     % necessary, we create it here.
-    psych.targetKind='gabor';
+    psych.targetKind='gabor'; % Orthonormal signals. n=length(alphabet)
+%     psych.targetKind='letter'; % Non-orthonormal letters.
+%     psych.targetKind='orthogonalLetter'; % Orthonormal letters.
     psych.noiseSD=1;
+end
+if ~isfield(psych,'alphabet')
+    switch psych.targetKind
+        case 'gabor'
+            psych.alphabet='ab';
+        case 'letter'
+            psych.alphabet='DKHNORSVZ';
+        case 'orthogonalLetter'
+            psych.alphabet='ab';
+    end
+end
+if ~isfield(psych,'noiseSD')
+    psych.noiseSD=0.2;
 end
 if ~isfield(psych,'trialsDesired')
     psych.trialsDesired=100;
@@ -93,13 +115,13 @@ if ~isfield(psych,'delta')
     psych.delta=0.01;
 end
 if ~isfield(psych,'gamma')
-    psych.gamma=0.5;
+    psych.gamma=1/length(psych.alphabet);
 end
 if ~isfield(psych,'noiseType')
     psych.noiseType='gaussian';
 end
 if ~isfield(psych,'targetKind')
-    error('You must specify psych.targetKind: ''gabor'' or ''letter''.');
+    error('You must specify psych.targetKind: ''gabor'', ''letter'', or ''orthogonalLetter''.');
 end
 % Compute noiseList
 switch psych.noiseType % Fill noiseList with desired kind of noise.
@@ -109,40 +131,40 @@ switch psych.noiseType % Fill noiseList with desired kind of noise.
         % Get samples from normal distribution with zero mean and
         % sd 1. Discard samples that exceed +/-2. The remaining
         % clipped distribution has an sd slightly less than 1.
-        psych.noiseListMin=-2;
-        psych.noiseListMax=2;
-        temp=randn([1 20000]);
-        ok=psych.noiseListMin<=temp & temp<=psych.noiseListMax;
+        temp=randn([1 1e6]);
+        ok=-2<=temp & temp<=2;
         noiseList=temp(ok);
         clear temp;
     case 'uniform'
-        psych.noiseListMin=-1;
-        psych.noiseListMax=1;
         noiseList=-1:1/1024:1;
     case 'binary'
-        psych.noiseListMin=-1;
-        psych.noiseListMax=1;
         noiseList=[-1 1];
     case 'ternary'
-        psych.noiseListMin=-1;
-        psych.noiseListMax=1;
         noiseList=[-1 0 1];
     otherwise
         error('Unknown noiseType "%s"',psych.noiseType);
 end
-% Computing SD of one million samples takes only 28 ms.
-s=std(PsychRandSample(noiseList,[1000000 1]));
+s=std(PsychRandSample(noiseList,[1e6 1])); % Takes 28 ms.
 noiseList=noiseList/s;
-psych.noiseListMin=psych.noiseListMin/s;
-psych.noiseListMax=psych.noiseListMax/s;
 
 psych.targetFont='Sloan';
 psych.screen=0;
 o=psych;
 switch psych.targetKind
+    case 'orthogonalLetter'
+        o.signal=struct([]);
+        for i=1:length(o.alphabet)
+            o.signal(i).image=zeros([1 length(o.alphabet)]);
+            o.signal(i).image(i)=1;
+        end
+        % Compute o.E1 with units of checkArea.
+        E=zeros(size(o.alphabet));
+        for i=1:length(o.alphabet)
+            E(i)=sum(sum(o.signal(i).image.^2));
+        end
+        o.E1=mean(E);
     case 'letter'
         % Compute signal images, one per letter.
-        screen=0;
         window=[];
         if isempty(window)
             % getAlphabetFromDisk needs a scratch window in order to create
@@ -161,7 +183,6 @@ switch psych.targetKind
                 [window,o.screenRect]=Screen('OpenWindow',o.screen,1.0,r);
             end
         end
-        o.alphabet='DKHNORSVZ';
         o.noiseSD=0.5;
         o.N=o.noiseSD^2;
         o.targetFont='Sloan';
@@ -173,14 +194,14 @@ switch psych.targetKind
         o.targetCheckPix=1;
         o.targetHeightOverWidth=1;
         o.targetFontHeightOverNominal=1;
-        o.guess=1/length(o.alphabet);
         o.borderLetter='';
         o.getAlphabetFromDisk=true;
         o.showLineOfLetters=true;
         o.printSizeAndSpacing=true;
         o.contrast=1; % Typically 1 or -1. Negative for black letters.
         [letterStruct,alphabetBounds]=CreateLetterTextures(1,o,window);
-        % Normalize intensity to be 0 to 1.
+        % Each image has range 0 to 255, which we normalize to 0 to 1, and
+        % contrast reverse, so paper is 0 and ink is 1.
         for i=1:length(letterStruct)
             letterStruct(i).image=1-double(letterStruct(i).image)/255;
         end
@@ -214,7 +235,8 @@ switch psych.targetKind
                 sz=[RectHeight(o.targetRectChecks) RectWidth(o.targetRectChecks)];
                 o.signal(i).image=imresize(o.signal(i).image,...
                     sz,'bilinear');
-                o.signal(i).bounds=ImageBounds(o.signal(i).image,1);
+                % Bounds for all the ink pixels. Paper is 0.
+                o.signal(i).bounds=ImageBounds(o.signal(i).image,0);
             end
             sRect=RectOfMatrix(o.signal(1).image); % units of targetChecks
         end
@@ -227,7 +249,7 @@ switch psych.targetKind
                 o.signal(i).image=1-o.signal(i).image;
             end
         end
-        % Compute o.E1
+        % Compute o.E1 with units of checkArea.
         E=zeros(size(o.alphabet));
         for i=1:length(o.alphabet)
             E(i)=sum(sum(o.signal(i).image.^2));
@@ -254,12 +276,13 @@ for m=1:length(MM)
                     % chooses whichever column has greater max. That's a
                     % maximum likelihood choice for a signal in Gaussian
                     % white noise.
-                    n=2;
+                    n=length(o.alphabet);
                     % nIFC, with M locations.
-                    if false
-                        x=randn([M n]); 
+                    dims=[M n];
+                    if true
+                        x=randn(dims);
                     else
-                        x=PsychRandSample(noiseList,[M n]);
+                        x=PsychRandSample(noiseList,dims);
                     end
                     % Assuming all objects orthogonal.
                     whichObject=randi(n);
@@ -279,7 +302,8 @@ for m=1:length(MM)
                             pObject=x;
                         end
                     else
-                        % Ideal
+                        % Implement ideal (max likelihood classifier) for
+                        % one of n known signals in gaussian noise.
                         sd=psych.noiseSD;
                         energySpotObject=(x(:,1:n)-c).^2  ...
                             +sum(sum(x(:,1:n).^2)) - x(:,1:n).^2;
@@ -295,7 +319,7 @@ for m=1:length(MM)
                     response = choice==whichObject; % Correct if we choose the signal.
                     % fprintf('Trial %3d at %5.2f is %s\n',k,tTest,char(wrongRight(response+1)));
                     q=QuestUpdate(q,tTest,response); % Add the new datum (actual test intensity and observer response) to the database.
-                case 'letter'
+                case {'letter' 'orthogonalLetter'}
                     % The alteratives are usually not orthogonal.
                     tTest=QuestQuantile(q);
                     % The signal is a letter, randomly drawn from
@@ -317,10 +341,11 @@ for m=1:length(MM)
                     whichSpot=randi(M);
                     % Three dimensional matrix: rows * columns * M. Fill
                     % with Gaussian noise with zero mean and o.noiseSD.
-                    if false
-                        x=randn([size(o.signal(1).image) M]); 
+                    dims=[size(o.signal(1).image) M];
+                    if true
+                        x=randn(dims); 
                     else
-                        x=PsychRandSample(noiseList,[size(o.signal(1).image) M]);
+                        x=PsychRandSample(noiseList,dims);
                     end
                     img=o.noiseSD*x;
                     % Add object whichObject with contrast c to spot
@@ -332,54 +357,79 @@ for m=1:length(MM)
                         spotEnergy(spot)=sum(sum(img(:,:,spot).^2));
                     end
                     energy=sum(spotEnergy);
+                    energySpotObject=zeros([M n]);
                     for spot=1:M
                         for object=1:n
+                            % "energySpotObject" is the total squared error
+                            % of the hypothesis that we showed the given
+                            % "object" at the given "spot". Each row
+                            % corresponds to a spot, and each column
+                            % corresponds to an object. If the noise is
+                            % Gaussian, then the likelihood is
+                            % monotonically related to the square error of
+                            % the hypothesis. "energySpotObject" is the
+                            % total squared error of the hypothesis of the
+                            % given "object" at "spot". The sum evaluates
+                            % the error at "spot", and the term
+                            % "energy-spotEnergy(spot)" computes the total
+                            % squared error at the rest of the spots, which
+                            % are hypothesized to be blank.
                             energySpotObject(spot,object)=...
                                 sum(sum((img(:,:,spot)-c*o.signal(object).image).^2))...
                                 +energy-spotEnergy(spot);
                         end
                     end
                     % Compute likelihood of each letter. For each letter,
-                    % there are M hypotheses for which is the spot that it
-                    % occupies, with the remaining M-1 spots being blank.
-                    % We computes the rms error of each hypothesis (ie M*n
-                    % combinations of position and object). The likelihood
-                    % of an object is the sum of the likelihood of the
-                    % object at each of the M positions. The probability
-                    % density we're computing corresponds to M*pix pixels,
-                    % where pix is the number of pixels in each "spot". The
-                    % standard deviation for each pixel is noiseSD. The
-                    % noise at all pixels is independent, so the variances
-                    % add. The total variance is M*pix*noiseSD.
+                    % there are M hypotheses for which spot it occupies,
+                    % with the remaining M-1 spots being blank. We compute
+                    % the rms error of each hypothesis (ie M*n combinations
+                    % of position and object). The likelihood of an object
+                    % is the sum of the likelihood of the object at each of
+                    % the M positions. The probability density we're
+                    % computing corresponds to M*pix pixels, where pix is
+                    % the number of pixels in each "spot". The standard
+                    % deviation for each pixel is noiseSD. The noise at all
+                    % pixels is independent, so the variances add. The
+                    % total variance is M*pix*noiseSD.
                     % p=product(for i=1:M*pix) sqrt(2*pi*sd^2)*exp(-sqEr(i)/(2*sd^2))
                     % =sqrt(2*pi*sd^2)^(M*pix)*exp(-sum(sqEr)/(2*sd^2))
                     pix=length(o.signal(1).image(:)); % Pixels in image.
-                    % We use pdf of normal distribution to convert the
-                    % summed squared error (from pix*n pixels) into a
+                    % We use the pdf of the normal distribution to convert
+                    % the summed squared error (from pix*n pixels) into a
                     % probability density. Then we sum the probability
-                    % densities across spots, since they are exclusive
-                    % possibilities.
+                    % densities across possible spots for the object, since
+                    % they are exclusive possibilities.
                     sd=psych.noiseSD;
-                    if M>1
-                        % We choose the offset carefully to avoid producing
-                        % inf values in the call to exp().
-                        energySpotObject=energySpotObject -(10+min(energySpotObject(:)));
-                        pSpotObject=exp(-energySpotObject/(2*sd^2));
-                    else
-                        pSpotObject=-energySpotObject;
-                    end
                     if true
-                        % Ideal: sum probability across locations.
+                        % Ideal: Sum probability across locations.
                         if M>1
+                            % "pSpotObject" is the probability of the
+                            % hypothesis that "object" was shown at "spot".
+                            % "pObject" is the probability that "object"
+                            % was shown, anywhere. We choose an offset
+                            % carefully to avoid producing inf values in
+                            % the call to exp(). Adding the same offset to
+                            % all the energies is equivalent to multiplying
+                            % all the pSpotObject values by the positive
+                            % constant exp(-offset/(2*sd^2)). Multiplying
+                            % all the pSpotObject values by the same
+                            % positive constant is equivalent to
+                            % multiplying the pObject values by the same
+                            % constant, and thus will not affect which is
+                            % biggest.
+                            offset=-(10+min(energySpotObject(:)));
+                            pSpotObject=exp(-(energySpotObject+offset)/(2*sd^2));
                             pObject=sum(pSpotObject);
                         else
+                            pSpotObject=-energySpotObject;
                             pObject=pSpotObject;
                         end
                     else
-                        % Shortcut: use max across locations.
+                        % Shortcut: Use max across locations.
                         if M>1
-                            % Shortcut: estimate likelihood of object by
-                            % the spot at which its likelihood is highest.
+                            % Shortcut: estimate likelihood of each object
+                            % by its likelihood at the spot at which its
+                            % likelihood is highest. 
                             pObject=max(-energySpotObject);
                         else
                             pObject=-energySpotObject;
@@ -387,23 +437,23 @@ for m=1:length(MM)
                     end
                     [~,choice]=max(pObject);
                     % Correct if we choose the signal.
-                    response = whichObject==choice; 
+                    response = whichObject==choice;
                     if false
-                        % Show true signal, noise stimulus, and ideal
+                        % Show true signal, noisy stimulus, and ideal
                         % choice.
                         figure(1)
                         subplot(1,3,1)
-                        imshow((1+o.signal(whichObject).image)/2,'InitialMagnification','fit','Border','tight');
+                        imshow((1+o.signal(whichObject).image)/2,[0 1],'InitialMagnification','fit','Border','tight');
                         xlabel('signal');
-                        text(13,45,sprintf('%.0f',pObject(whichObject)));
+                        title(sprintf('%.0f',pObject(whichObject)));
                         subplot(1,3,2)
                         theImage=img(:,:,whichSpot);
-                        imshow((1+theImage)/2,'InitialMagnification','fit','Border','tight');
+                        imshow((1+theImage)/2,[0 1],'InitialMagnification','fit','Border','tight');
                         xlabel('signal+noise');
                         subplot(1,3,3)
-                        imshow((1+o.signal(choice).image)/2,'InitialMagnification','fit','Border','tight');
+                        imshow((1+o.signal(choice).image)/2,[0 1],'InitialMagnification','fit','Border','tight');
                         xlabel('choice');
-                        text(13,45,sprintf('%.0f',pObject(choice)));
+                        title(sprintf('%.0f',pObject(choice)));
                         figure(1);
                     end
                     % fprintf('Trial %3d at %5.2f is %s, which %s, choice %s\n',...
@@ -418,11 +468,12 @@ for m=1:length(MM)
     end
     logC=mean(t);
     E=o.E1*10^(2*logC); % signal energy
-    N=o.noiseSD^2; % noise power spectral density
+    N=o.noiseSD^2;      % noise power spectral density
     EOverN(m)=E/N;
     if true
-        fprintf(['M %7.0f. E/N %6.3f, c %6.3f, log c %5.3f ' plusMinus ' %.3f\n'],...
-            M,EOverN(m),10^logC,logC,std(t)/sqrt(length(t)));
+        psych=o;
+        fprintf(['%-17s signals %d, M %7.0f, E/N %6.3f, c %6.3f, log c %5.3f ' plusMinus ' %.3f\n'],...
+           [psych.targetKind ','],length(psych.alphabet),M,EOverN(m),10^logC,logC,std(t)/sqrt(length(t)));
     end
 end
 % fprintf('%.0f ms/trial\n',1000*(GetSecs-timeZero)/(psych.reps*4*psych.trialsDesired));
