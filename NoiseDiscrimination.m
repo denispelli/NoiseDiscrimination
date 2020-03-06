@@ -191,6 +191,7 @@ function oo=NoiseDiscrimination(ooIn)
 % o.fixationCrossDrawnOnStimulus=false;
 % o.blankingRadiusReTargetHeight= nan;
 % o.blankingRadiusReEccentricity= 0.5;
+% o.clipToStimulusRect=true;
 %
 % ANNULAR GAUSSIAN NOISE ENVELOPE. Use these three parameters to specify an
 % annular gaussian envelope. The amplitude is a Gaussian of R-Ra where R is
@@ -681,6 +682,10 @@ o.eyes='both'; % 'left', 'right', 'both', or 'one', which asks user to specify a
 o.gapFraction4afc=0.03; % Typically 0, 0.03, or 0.2. Gap, as a fraction of o.targetHeightDeg, between the four squares in 4afc task, ignored in identify task.;
 o.minScreenWidthDeg=nan;
 o.maxViewingDistanceCm=nan;
+o.minNotBlankedMarginReHeight=0.1;
+o.minScreenDeg=[]; % Minimum of height and width.
+o.maxViewingDistanceCm=[];
+o.isFullScreenStimulus=true;
 
 % Fixation and target mark
 o.targetMarkDeg=1;
@@ -695,6 +700,7 @@ o.fixationCrossBlankedUntilSecsAfterTarget=0.6; % Pause after stimulus before di
 o.fixationCrossDrawnOnStimulus=false;
 o.blankingRadiusReTargetHeight= nan;
 o.blankingRadiusReEccentricity= 0.5;
+o.clipToStimulusRect=true;
 o.recordGaze=false;
 % web(fullfile(docroot, 'vision/ref/videolabeler-app.html'))
 
@@ -966,7 +972,7 @@ o.deviceIndex=-3; % -3 for all keyboard/keypad devices.
 % o.deviceIndex=6; % my bluetooth wireless keyboard, according to PsychHIDTest
 % o.deviceIndex=[]; % [] worked more reliably than specifed index. Not sure why.
 o.deviceIndex=GetKeyboardIndices; % Enumerate all the keyboards.
-o.deviceIndex=-1;
+o.deviceIndex=-3;
 % o.deviceIndex=[];
 % October 10, 2019. Using [] doesn't work with wireless keyboards, e.g. my
 % new Apple Magic Keyboard on my lab iMac. My new solution is to enumerate
@@ -1129,6 +1135,14 @@ clear o
 %     degPerCm=o.pixPerCm/o.pixPerDeg;
 %     o.viewingDistanceCm=57/degPerCm;
 % end
+
+%% ENABLE WIRELESS KEYBOARDS
+% Calling HasWirelessKeyboard (copied from CriticalSpacing) enumerates the
+% keyboards, and enables use of a wireless keyboard. Using macOS System
+% Preferencws:Bluetooth to connect a Logitech keyboard allows its use in
+% the macOS and MATLAB, but it remain invisible to Psychtoolbox calls until
+% we also do the enumeration performed by HasWirelessKeyboard.
+hasWirelessKeyboard=HasWirelessKeyboard; 
 
 %% SET UP MISCELLANEOUS
 for oi=1:conditions
@@ -1747,14 +1761,15 @@ try
     if any([oo.recordGaze])
         videoExtension='.avi'; % '.avi', '.mp4' or '.mj2'
         clear cam
-        if exist('matlab.webcam.internal.Utility.isMATLABOnline','class')
-            cam=webcam;
+%         if exist('matlab.webcam.internal.Utility.isMATLABOnline','class')
+          try  
+              cam=webcam;
             gazeFile=fullfile(oo(1).dataFolder,[oo(1).dataFilename videoExtension]);
             vidWriter=VideoWriter(gazeFile);
             vidWriter.FrameRate=1; % frame/s.
             open(vidWriter);
             ffprintf(ff,'Recording gaze (of conditions %s) in %s file:\n',num2str(find([oo.recordGaze])),videoExtension);
-        else
+          catch
             ffprintf(ff,'WARNING: Cannot record gaze. Lack webcam link. Set o.recordGaze=false.\n');
             return
         end
@@ -1842,10 +1857,10 @@ try
         if oo(oi).useFlankers
             flankerSpacingPix=round(oo(oi).flankerSpacingDeg*oo(oi).pixPerDeg);
         end
-        % The actual clipping is done using o.stimulusRect. This
-        % restriction of noiseRadius and annularNoiseBigRadius is merely to
-        % save time (and excessive texture size) by not computing pixels
-        % that won't be seen.
+        % The actual clipping is done using o.stimulusRect (which may be
+        % set to o.screenRect). This restriction of noiseRadius and
+        % annularNoiseBigRadius is merely to save time (and excessive
+        % texture size) by not computing pixels that won't be seen.
         oo(oi).noiseRadiusDeg=max(oo(oi).noiseRadiusDeg,0);
         oo(oi).noiseRadiusDeg=min(oo(oi).noiseRadiusDeg,RectWidth(oo(1).screenRect)/oo(oi).pixPerDeg);
         oo(oi).noiseRaisedCosineEdgeThicknessDeg=max(0,oo(oi).noiseRaisedCosineEdgeThicknessDeg);
@@ -2820,15 +2835,15 @@ try
         end
         switch oo(oi).task
             case {'identify' 'identifyAll' 'rate'}
-                % Clip o.canvasSize to fit inside 2*o.stimulusRect (after
+                % Clip o.canvasSize to fit inside 2*o.screenRect (after
                 % converting targetChecks to pixels). A canvasRect of
-                % 2*o.stimulusRect is just big enough to cover the whole
-                % stimulusRect when centered on any point in it. The
+                % 2*o.screenRect is just big enough to cover the whole
+                % screen when centered on any point in it. The
                 % canvasRect is always centered on target position,
                 % eccentricityXYDeg, which may be uncertain, from trial to
                 % trial.
                 oo(oi).canvasSize=min(oo(oi).canvasSize,...
-                    round(2*[RectHeight(oo(oi).stimulusRect) RectWidth(oo(oi).stimulusRect)]/oo(oi).targetCheckPix));
+                    round(2*[RectHeight(oo(oi).screenRect) RectWidth(oo(oi).screenRect)]/oo(oi).targetCheckPix));
                 oo(oi).canvasSize=2*ceil(oo(oi).canvasSize/2); % Even number of checks, so we can exactly center it on target.
             case '4afc'
                 oo(oi).canvasSize=min(oo(oi).canvasSize,floor([maxStimulusHeight maxStimulusWidth]/oo(oi).targetCheckPix));
@@ -2850,7 +2865,11 @@ try
             fixationXYPix=round(XYPixOfXYDeg(oo(oi),[0 0])); % location of fixation
             fix.xy=fixationXYPix;            %  location of fixation on screen.
             fix.eccentricityXYPix=oo(oi).targetXYPix-fixationXYPix;  % xy offset of target from fixation.
-            fix.clipRect=oo(oi).stimulusRect;
+            if oo(oi).clipToStimulusRect
+                fix.clipRect=oo(oi).stimulusRect;
+            else
+                fix.clipRect=oo(oi).screenRect;
+            end
             fix.fixationCrossPix=fixationCrossPix;% Width & height of fixation cross.
             fix.targetMarkPix=oo(oi).targetMarkDeg*oo(oi).pixPerDeg;
             fix.blankingRadiusReEccentricity=oo(oi).blankingRadiusReEccentricity;
@@ -4277,6 +4296,10 @@ try
             fprintf('\n');
         end
         
+        if oo(oi).isFullScreenStimulus
+            oo(oi).stimulusRect=oo(oi).screenRect;
+        end
+
         %% COMPUTE CLUT
         if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
             if trial==1
