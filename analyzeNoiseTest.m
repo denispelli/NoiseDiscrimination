@@ -58,8 +58,8 @@ for oi=1:length(oo)
 end
 
 % COMPUTE EFFICIENCY
-% Select thresholdParameter='contrast', for each conditionName, 
-% For each observer, including ideal, use all (E,N) data to estimate deltaNOverE and Neq. 
+% Select thresholdParameter='contrast', for each conditionName,
+% For each observer, including ideal, use all (E,N) data to estimate deltaNOverE and Neq.
 % Compute efficiency by comparing deltaNOverE of each to that of the ideal.
 
 % Each element of aa is the average all thresholds in oo that match in:
@@ -82,7 +82,7 @@ for conditionName=conditionNames
                         & ismember([oo.targetHeightDeg],targetHeightDeg) ...
                         & ismember(eccXsfull,eccX) ...
                         & (ismember({oo.noiseType},noiseType) | ismember([oo.noiseSD],0)) ...
-                    	& ismember({oo.thresholdParameter},{'contrast'});
+                        & ismember({oo.thresholdParameter},{'contrast'});
                     % We included zero noise conditions without regard to
                     % noiseType. But we keep the set of conditions only if
                     % at least one has the right noiseType.
@@ -195,12 +195,7 @@ observers=[observers(iIdeal) observers(~iIdeal)];
 iFigure=1;
 figureHandle(iFigure)=figure('Name',[experiment ' Contrast'],'NumberTitle','off','pos',[10 10 500 900]);
 for conditionName=conditionNames
-    switch conditionName{1}
-        case 'letter'
-            iCondition=1;
-        case 'gabor'
-            iCondition=2;
-    end
+    iCondition=find(ismember(conditionName,conditionNames));
     subplot(2,1,iCondition);
     for iObserver=1:length(observers)
         for iDeg=1:length(targetHeightDegs)
@@ -260,7 +255,7 @@ for conditionName=conditionNames
     title([upper(name(1)) name(2:end)],'fontsize',18)
     xlabel('Noise type','fontsize',18);
     ylabel('Contrast threshold','fontsize',18);
-%     set(findall(gcf,'-property','FontSize'),'FontSize',12)
+    % set(findall(gcf,'-property','FontSize'),'FontSize',12)
     lgd(iFigure,iCondition).FontSize=10;
     if false
         % Scale log unit to be 12 cm vertically.
@@ -273,8 +268,14 @@ for conditionName=conditionNames
     hold off
 end
 
+% Set FontSize.
+set(findall(gcf,'-property','FontSize'),'FontSize',12);
+for iCondition=1:2
+    lgd(iFigure,iCondition).FontSize=8;
+end
+
 % Save plot to disk
-graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[experiment '-C.eps']);
+graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[experiment '-ContrastVsNoiseType.eps']);
 saveas(gcf,graphFile,'epsc');
 
 %% PLOT EOverN FOR EACH OBSERVER
@@ -282,12 +283,7 @@ saveas(gcf,graphFile,'epsc');
 iFigure=2;
 figureHandle(iFigure)=figure('Name',[experiment ' E/N'],'NumberTitle','off','pos',[10 10 500 900]);
 for conditionName=conditionNames
-    switch conditionName{1}
-        case 'letter'
-            iCondition=1;
-        case 'gabor'
-            iCondition=2;
-    end
+    iCondition=find(ismember(conditionName,conditionNames));
     subplot(2,1,iCondition);
     for iObserver=1:length(observers)
         for iDeg=1:length(targetHeightDegs)
@@ -333,7 +329,7 @@ for conditionName=conditionNames
     title([upper(name(1)) name(2:end)],'fontsize',18)
     xlabel('Noise type','fontsize',18);
     ylabel('E/N threshold','fontsize',18);
-%     ax.YLim=[10 1000];
+    % ax.YLim=[10 1000];
     if true
         % Scale log unit to be 12 cm vertically.
         ax=gca;
@@ -345,8 +341,15 @@ for conditionName=conditionNames
     hold off
 end
 
+% Set FontSize.
+figure(figureHandle(iFigure));
+set(findall(gcf,'-property','FontSize'),'FontSize',12);
+for iCondition=1:2
+    lgd(iFigure,iCondition).FontSize=8;
+end
+
 % Save plot to disk
-graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[experiment '-EOverN.eps']);
+graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[experiment '-EOverNVsNoiseType.eps']);
 saveas(gcf,graphFile,'epsc');
 
 %% PLOT EFICIENCY FOR EACH OBSERVER
@@ -354,12 +357,7 @@ saveas(gcf,graphFile,'epsc');
 iFigure=3;
 figureHandle(iFigure)=figure('Name',[experiment ' Efficiency'],'NumberTitle','off','pos',[10 10 500 900]);
 for conditionName=conditionNames
-    switch conditionName{1}
-        case 'letter'
-            iCondition=1;
-        case 'gabor'
-            iCondition=2;
-    end
+    iCondition=find(ismember(conditionName,conditionNames));
     subplot(2,1,iCondition);
     for iObserver=1:length(observers)
         for iDeg=1:length(targetHeightDegs)
@@ -417,14 +415,84 @@ for conditionName=conditionNames
 end
 
 % Set FontSize.
-for iFigure=1:3
-    figure(figureHandle(iFigure));
-    set(findall(gcf,'-property','FontSize'),'FontSize',12);
-    for iCondition=1:2
-        lgd(iFigure,iCondition).FontSize=8;
-    end
+figure(figureHandle(iFigure));
+set(findall(gcf,'-property','FontSize'),'FontSize',12);
+for iCondition=1:2
+    lgd(iFigure,iCondition).FontSize=8;
 end
 
 % Save plot to disk
-graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[experiment '-Efficiency.eps']);
+graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[experiment '-EfficiencyVsNoiseType.eps']);
+saveas(gcf,graphFile,'epsc');
+
+%% FOR EACH OBSERVER: PLOT EFFICIENCY VS SIZE
+% figure(4);
+iFigure=4;
+figureHandle(iFigure)=figure('Name',[experiment ' Efficiency vs Size'],'NumberTitle','off','pos',[10 10 500 900]);
+for conditionName=conditionNames
+    switch conditionName{1}
+        case 'letter'
+            iCondition=1;
+        case 'gabor'
+            iCondition=2;
+    end
+    subplot(2,1,iCondition);
+    for iObserver=1:length(observers)
+        for eccX=eccXs
+            match=ismember({a.thresholdParameter},{'contrast'})...
+                & ismember({a.conditionName},conditionName)...
+                & ismember([a.eccentricityDeg],eccX)...
+                & ismember({a.noiseType},{'ternary'})...
+                & ismember({a.observer},observers(iObserver));
+            x=[a(match).targetHeightDeg];
+            y=[a(match).efficiency];
+            ok=isfinite(x) & isfinite(y);
+            if ~isempty(ok)
+                if ismember(observers(iObserver),{'ideal'})
+                    faceColor=[1 1 1];
+                else
+                    faceColor=colors{iDeg};
+                end
+                loglog(x(ok),y(ok),...
+                    observerStyle{iObserver},...
+                    'MarkerSize',9,...
+                    'MarkerEdgeColor',colors{iDeg},...
+                    'MarkerFaceColor',faceColor,...
+                    'Color',colors{iDeg},...
+                    'LineWidth',1.5,...
+                    'DisplayName',sprintf('%4.2f, %s',...
+                    max([a(match).noiseSD]),observers{iObserver}));
+                hold on
+            end
+        end
+    end
+    ax=gca;
+    ax.TickLength=[0.01 0.025]*2;
+    lgd(iFigure,iCondition)=legend('Location','northwest','Box','off');
+    title(lgd(iFigure,iCondition),'deg, noiseSD, observer');
+    lgd(iFigure,iCondition).FontName='Monaco';
+    name=conditionName{1};
+    title([upper(name(1)) name(2:end)],'fontsize',18)
+    xlabel('Size (deg)','fontsize',18);
+    ylabel('Efficiency','fontsize',18);
+    ax.YLim=[0.001 1];
+    if true
+        % Scale log unit to be 12 cm vertically.
+        ax=gca;
+        %ax.YLim=[0.005 0.16];
+        ax.Units='centimeters';
+        drawnow; % Needed for valid Position reading.
+        ax.Position(4)=4*diff(log10(ax.YLim));
+    end
+    hold off
+end
+
+% Set FontSize.
+set(findall(gcf,'-property','FontSize'),'FontSize',12);
+for iCondition=1:2
+	lgd(iFigure,iCondition).FontSize=8;
+end
+
+% Save plot to disk
+graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[experiment '-EfficiencyVsSize.eps']);
 saveas(gcf,graphFile,'epsc');
