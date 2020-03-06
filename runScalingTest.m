@@ -6,9 +6,11 @@
 % 646-258-7524
 mainFolder=fileparts(mfilename('fullpath')); % Takes 0.1 s.
 addpath(fullfile(mainFolder,'lib')); % Folder in same directory as this M file.
+addpath(fullfile(mainFolder,'utilities')); % Folder in same directory as this M file.
 clear KbWait
 clear o oo ooo
 ooo={};
+HasWirelessKeyboard;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Compare target thresholds in several noise distributions all with same
 % noiseSD, which is highest possible.
@@ -114,7 +116,7 @@ for targetKind={'letter' 'gabor'}
             end
             % Scale viewing distance with screen height in mm.
             heightMm=machine.mm{1}(2);
-            nominalDistanceCm=25*heightMm/206;
+%             nominalDistanceCm=25*heightMm/206;
             o.viewingDistanceCm=25/(o.targetHeightDeg/16);
             % o.viewingDistanceCm=200; % FOR DEMO
             % o.fixationIsOffscreen=true; % FOR DEMO
@@ -221,7 +223,8 @@ if true
     for block=1:length(ooo)
         oo=ooo{block};
         for oi=1:length(oo)
-            noiseSD=MaxNoiseSD('gaussian');
+            oo(oi).noiseCheckDeg=oo(oi).targetHeightDeg/40;
+            noiseSD=MaxNoiseSD(oo(oi).noiseType);
             if oo(oi).targetHeightDeg>20
                 % Avoid raising threshold for 32 deg gabor too high.
                 noiseSD=MaxNoiseSD('gaussian')/2;
@@ -229,17 +232,15 @@ if true
             if oo(oi).targetHeightDeg<1
                 noiseSD=MaxNoiseSD('ternary');
             end
-            oo(oi).noiseSD=noiseSD;
-            oo(oi).noiseCheckDeg=oo(oi).targetHeightDeg/40;
             oo(oi).noiseSD=0;
         end
         ooNoise=oo;
-        [ooNoise.noiseSD]=deal(maxNoiseSD);
+        [ooNoise.noiseSD]=deal(noiseSD);
         ooo{block}=[oo ooNoise];
     end
 end
 
-%% ESTIMATED TIME TO COMPLETION
+%% ESTIMATE TIME TO COMPLETION
 willTakeMin=0;
 for block=1:length(ooo)
     oo=ooo{block};
