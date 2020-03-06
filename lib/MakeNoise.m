@@ -1,7 +1,8 @@
 function [noise,range]=MakeNoise(noiseType,dims)
-% [noise,range,noiseList]=MakeNoise(noiseType,dims)
-% Quickly produce independent random samples of specified type and array
-% shape. All samples have zero mean and unit variance.
+% [noise,range]=MakeNoise(noiseType,dims)
+% Quickly produce independent random samples of specified noise type (i.e.
+% distribution shape) and array shape. All samples have zero mean and unit
+% variance.
 
 % Hormet Yiltiz contributed to the gaussian code.
 % denis.pelli@nyu.edu, February 2020.
@@ -26,18 +27,19 @@ switch noiseType
     case 'gaussian'
         n=prod(dims);
         noise=[];
-        while numel(noise)<n
-            % We discard the 10% that are out of range, so we ask for more
-            % samples than we need, so that we usually get enough in the
-            % first request.
-            m=10+round(1.5*(n-numel(noise)));
+        range=[-2 2];
+        while length(noise)<n
+            % We must discard the 10% that are out of range, so we ask for
+            % more samples than we need, so that we usually get enough in
+            % the first request.
+            m=10+round(1.5*(n-length(noise)));
             new=randn([1 m]);
-            select = -2<new & new<2;
-            noise=[noise new(select)];
+            isInRange = range(1)<new & new<range(2);
+            noise=[noise new(isInRange)];
         end
-        % Use only what we need.
+        % Use only what we need for the desired array shape.
         noise=reshape(noise(1:n),dims);
         sd=0.8796; % accurate to 4 decimal places.
         noise=noise/sd;
-        range=[-2 2]/sd;
+        range=range/sd;
 end
