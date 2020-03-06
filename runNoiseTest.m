@@ -26,6 +26,7 @@ end
 % o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
 % o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 o.askForPartingComments=false; % Disable until it's fixed.
+machine=IdentifyComputer;
 o.recordGaze=false;
 o.experiment='NoiseTest';
 o.eccentricityXYDeg=[0 0];
@@ -105,7 +106,7 @@ for targetKind={'letter' 'gabor'}
                 o.fixationCrossDeg=2;
                 o.fixationCrossDrawnOnStimulus=false;
             end
-            if deg>20
+            if false && deg>20
                 % When target overlaps fixation point and fills screen,
                 % there's no room for fixation lines at margins, so we
                 % present a small fixation cross, which may overlap
@@ -142,6 +143,26 @@ for targetKind={'letter' 'gabor'}
     end
 end
 
+% COMPUTE MAX VIEWING DISTANCE TO RETAIN SPECIFIED UNBLANKED MARGIN FOR
+% FIXATION MARK. IMPOSE CONSISTENCY WITHIN EACH BLOCK.
+ for i=1:length(ooo)
+     oo=ooo{i};
+     oo(1).minNotBlankedMarginReHeight=0.1;
+     oo(1).minScreenDeg=[];
+     oo(1).maxViewingDistanceCm=[];
+    for oi=1:length(oo)
+        o=oo(oi);
+        o.minNotBlankedMarginReHeight=0.1;
+        screenCm=min(machine.mm{1})/10; % Min of width and height.
+        blankingDiameterDeg=2*o.blankingRadiusReTargetHeight*o.targetHeightDeg;
+        o.minScreenDeg=blankingDiameterDeg/(1-2*o.minNotBlankedMarginReHeight);
+        o.maxViewingDistanceCm=screenCm/2/tand(o.minScreenDeg/2);
+        oo(oi)=o;
+    end
+    oo.viewingDistanceCm=deal(min(oo.maxViewingDistanceCm));
+    ooo{i}=oo;
+end
+            
 %% SHUFFLE. SORT BY DISTANCE.
 ii=Shuffle(1:length(ooo));
 ooo=ooo(ii);
