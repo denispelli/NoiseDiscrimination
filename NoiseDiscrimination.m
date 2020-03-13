@@ -753,7 +753,8 @@ o.ignoreTrial=false;
 
 % Miscellaneous
 o.replicatePelli2006=false;
-o.screen=0;
+% By default, if there is an external monitor, use it. But your script can
+% specify any monitor. 0 for built=in screen.
 o.screen=max(Screen('Screens'));
 o.isWin=IsWin; % You might override this to partially simulate the Windows OS on a Mac.
 o.askForPartingComments=true;
@@ -1200,7 +1201,7 @@ cal=OurScreenCalibrations(cal.screen);
 if isfield(cal,'gamma')
     cal=rmfield(cal,'gamma');
 end
-if cal.screen > 0
+if cal.screen>0
     fprintf('Using external monitor.\n');
 end
 if streq(cal.datestr,'none')
@@ -1784,7 +1785,6 @@ try
     end
     ffprintf(ff,'\n');
     
-    %xxxxx
     BackupCluts(oo(1).screen);
     
     %% SET SIZES OF SCREEN ELEMENTS: text, stimulusRect, etc.
