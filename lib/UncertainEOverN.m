@@ -23,7 +23,7 @@ function [EOverN,psych]=UncertainEOverN(MM,psych)
 %% 'orthogonalLetter'
 % Provides orthonormal signals to the letter code to confirm that it
 % performs identically with the Gabor code. Currently the threshold
-% contrasts are with 0.01 log unit.
+% contrast thresholds agree to within 0.01 log unit.
 %
 % INPUT ARGUMENTS:
 % "MM" is an array of one or more degrees of uncertainty M, each a positive
@@ -34,7 +34,7 @@ function [EOverN,psych]=UncertainEOverN(MM,psych)
 % noise distribution: 'gaussian','uniform','binary','ternary'. All are zero
 % mean and symmetric about zero.
 %
-% OUTPUT ARGUMENT: 
+% OUTPUT ARGUMENT:
 % EOverN is the threshold energy E divided by the noise
 % power spectral density N.
 %
@@ -76,8 +76,8 @@ if nargin<2
     % The rest of the code assumes that the "psych" struct exists so, if
     % necessary, we create it here.
     psych.targetKind='gabor'; % Orthonormal signals. n=length(alphabet)
-%     psych.targetKind='letter'; % Non-orthonormal letters.
-%     psych.targetKind='orthogonalLetter'; % Orthonormal letters.
+    %     psych.targetKind='letter'; % Non-orthonormal letters.
+    %     psych.targetKind='orthogonalLetter'; % Orthonormal letters.
     psych.noiseSD=1;
 end
 if ~isfield(psych,'alphabet')
@@ -123,6 +123,10 @@ end
 if ~isfield(psych,'targetKind')
     error('You must specify psych.targetKind: ''gabor'', ''letter'', or ''orthogonalLetter''.');
 end
+if ~isfield(psych,'targetFont')
+    psych.targetFont='Sloan';
+end
+
 % Compute noiseList
 switch psych.noiseType % Fill noiseList with desired kind of noise.
     % After normalizing by its SD below, noiseList is zero mean, unit
@@ -147,7 +151,6 @@ end
 s=std(PsychRandSample(noiseList,[1e6 1])); % Takes 28 ms.
 noiseList=noiseList/s;
 
-psych.targetFont='Sloan';
 psych.screen=0;
 o=psych;
 switch psych.targetKind
@@ -185,18 +188,23 @@ switch psych.targetKind
         end
         o.noiseSD=0.5;
         o.N=o.noiseSD^2;
-        o.targetFont='Sloan';
+        if ~ismember({psych.targetFont},{'Sloan'})
+            warning('UncertainEOverN: Currently, when using a letter, psych.targetFont must be ''Sloan'', not ''%s''.',psych.targetFont);
+            EOverN=nan;
+            return
+        end
+        o.targetHeightOverWidth=1;
+        o.targetFontHeightOverNominal=1;
+        o.targetFont=psych.targetFont;
         o.targetFontNumber=[];
         o.targetSizeIsHeight=true;
         o.targetPix=64;
         o.targetHeightPix=o.targetPix;
         o.minimumTargetHeightChecks=8;
         o.targetCheckPix=1;
-        o.targetHeightOverWidth=1;
-        o.targetFontHeightOverNominal=1;
         o.borderLetter='';
         o.getAlphabetFromDisk=true;
-        o.showLineOfLetters=true;
+        o.showLineOfLetters=false;
         o.printSizeAndSpacing=true;
         o.contrast=1; % Typically 1 or -1. Negative for black letters.
         [letterStruct,alphabetBounds]=CreateLetterTextures(1,o,window);
@@ -291,7 +299,7 @@ for m=1:length(MM)
                     o.E1=1;
                     c=10^tTest;
                     % Add whichObject at contrast c to whichSpot.
-                    x(whichSpot,whichObject)=x(whichSpot,whichObject)+c; 
+                    x(whichSpot,whichObject)=x(whichSpot,whichObject)+c;
                     if false
                         % Shortcut using max.
                         if M>1
@@ -343,7 +351,7 @@ for m=1:length(MM)
                     % with Gaussian noise with zero mean and o.noiseSD.
                     dims=[size(o.signal(1).image) M];
                     if true
-                        x=randn(dims); 
+                        x=randn(dims);
                     else
                         x=PsychRandSample(noiseList,dims);
                     end
@@ -429,7 +437,7 @@ for m=1:length(MM)
                         if M>1
                             % Shortcut: estimate likelihood of each object
                             % by its likelihood at the spot at which its
-                            % likelihood is highest. 
+                            % likelihood is highest.
                             pObject=max(-energySpotObject);
                         else
                             pObject=-energySpotObject;
@@ -472,8 +480,8 @@ for m=1:length(MM)
     EOverN(m)=E/N;
     if true
         psych=o;
-        fprintf(['%-17s signals %d, M %7.0f, E/N %6.3f, c %6.3f, log c %5.3f ' plusMinus ' %.3f\n'],...
-           [psych.targetKind ','],length(psych.alphabet),M,EOverN(m),10^logC,logC,std(t)/sqrt(length(t)));
+        fprintf(['%-29s signals %d, M %7.0f, E/N %6.3f, c %6.3f, log c %5.3f ' plusMinus ' %.3f\n'],...
+            [psych.conditionName ', ' psych.targetKind ', ' psych.targetFont ','],length(psych.alphabet),M,EOverN(m),10^logC,logC,std(t)/sqrt(length(t)));
     end
 end
 % fprintf('%.0f ms/trial\n',1000*(GetSecs-timeZero)/(psych.reps*4*psych.trialsDesired));
