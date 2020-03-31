@@ -1,11 +1,19 @@
 function [mac, st] = MACAddress(allMac)
 % [mac, st] = MACAddress()
+% MAC stands for Media Access Control. It's a unique address that is often
+% used much like a serial number to uniquely identify a computer. All
+% computers have MAC addresses, including macOS, Window, and Linux.
+%
+% The output argument "mac" is a cell array with one or more strings, each
+% representing a MAC address. By default only one MAC address is returned.
+% If the optional input is provided and true, then "mac" receives all the
+% MAC addresses. No internet connection is required for this to work.
 % 
 % The default is to return one MAC address, likely for ethernet adaptor. If the
 % optional input is provided and true, all MAC address are returned in cellstr.
 % No internet connection is required for this to work.
-% 
-% The optional 2nd output, if requested, is a struct with following fields:
+%
+% The optional second output, "st", is a struct with the following fields:
 %  st.FriendlyName (meaningful for Windows only)
 %  st.Description  (OS dependent description)
 %  st.MAC_address  (the same order as the 1st output)
@@ -14,9 +22,10 @@ function [mac, st] = MACAddress(allMac)
 % 
 % Examples:
 %  mac = MACAddress(); % return 1st MAC in string
-% The format is like F0-4D-A2-DB-00-37 for Windows, f0:4d:a2:db:00:37 otherwise.
+% The format is like F0-4D-A2-DB-00-37 for Windows, f0:4d:a2:db:00:37
+% otherwise.
 % 
-%  macs = MACAddress(1); % return all MAC on the computer
+%  macs = MACAddress(1); % return all MAC addresses of this computer.
 % The output is cell even if only one MAC found.
 % 
 %  [macs, st] = MACAddress(1); % also return more info in st
@@ -102,8 +111,8 @@ if nargout>1 && ~isempty(mac)
     end
 end
 
-% java method is OS-independent, more reliable than regexp, but often slower and
-% miss eth1 seen at least 1 Ubuntu machine
+% java method is OS-independent, more reliable than regexp, but often
+% slower and miss eth1 seen at least 1 Ubuntu machine
 if isempty(mac)
 try %#ok
     if nargout>1, st = []; end
