@@ -72,7 +72,7 @@ o.labelAnswers=false;
 o.getAlphabetFromDisk=false;
 o.fixationCheck=false;
 o.fixationCrossBlankedNearTarget=true;
-o.fixationCrossBlankedUntilSecsAfterTarget=0.6;
+o.fixationOnsetAfterNoiseOffsetSecs=0.6;
 o.fixationCrossDrawnOnStimulus=false;
 o.fullResolutionTarget=false;
 o.useFlankers=false;
@@ -325,7 +325,7 @@ if true
         o.viewingDistanceCm=30;
         o.eccentricityXYDeg=[10 0];
         o.fixationCrossBlankedNearTarget=false;
-        o.fixationCrossBlankedUntilSecsAfterTarget=0.5;
+        o.fixationOnsetAfterNoiseOffsetSecs=0.5;
         o.fixationCrossDrawnOnStimulus=false;
         oo=o;
         o.eccentricityXYDeg=-o.eccentricityXYDeg;
