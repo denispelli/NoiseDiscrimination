@@ -1,15 +1,15 @@
 % function o = studyEffectsOfNoise(isIdealPlus)
 %#### Adjust values within this block #####################
 clear o
+delete session_*.mat
 useBackupSessions=1;
 % o.observer='junk';
 % o.observer='ideal';
-o.observer='Chen'; % use your name
-o.weightIdealWithNoise=0;
-o.distanceCm=60; % viewing distance
-o.durationSec=0.2;
-o.trialsDesired=80;
-
+o.observer='hyiltiz-test'; % use your name
+o.viewingDistanceCm = 60;
+o.targetDurationSecs=0.2;
+o.trialsDesired=4;
+% TODO: minimize ITI
 
 %For noise with Gaussian envelope (soft)
 %o.noiseRadiusDeg=inf;
@@ -20,6 +20,7 @@ o.trialsDesired=80;
 %noiseEnvelopeSpaceConstantDeg: Inf
 
 % ############# we test target size x ecc w/o noise #######
+o.experiment='studyEffectsOfNoise';
 % o.targetHeightDeg=6; % OLD: letter or gabor size [2 3.5 6];
 o.targetHeightDeg=16; % letter/gabor size [2 4 8].
 o.eccentricityXYDeg=[8 0]; % [0 8 16 32]
@@ -56,15 +57,31 @@ o.targetKind='letter';
 % noiseEnvelopeSpaceConstantDeg: 1
 
 o.noiseEnvelopeSpaceConstantDeg=128; % always Inf for hard edge top-hat noise
+o.noiseEnvelopeSpaceConstantDeg=inf; % TODO: check if 128 or inf; always Inf for hard edge top-hat noise
 % o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
 o.noiseRadiusDeg=inf;
-
 o.noiseType='gaussian'; % ALWAYS use gaussian
 o.noiseSpectrum='white'; % pink or white
-o.targetCross=1;
-o.fixationCrossWeightDeg = 0.05; % target line thickness
-% o.fixationCrossBlankedNearTarget=0; % always present fixation
 
+% TODO: add cross for fixation and target
+
+
+%{
+o.useFixation=true;
+o.fixationCrossDeg=3;
+o.fixationCrossWeightDeg=5;
+o.fixationCrossBlankedNearTarget=true;
+o.fixationOnsetAfterNoiseOffsetSecs=0.6; % Pause after stimulus before display of fixation. 
+%               % Skipped when fixationCrossBlankedNearTarget. 
+%               % Not needed when eccentricity is bigger than the target.
+o.fixationCrossDrawnOnStimulus=true;
+o.recordGaze=true;
+%}
+
+o.fixationCrossBlankedNearTarget=true;
+o.fixationOnsetAfterNoiseOffsetSecs=0.6;
+o.fixationCrossDrawnOnStimulus=false;
+o.markTargetLocation=true;
 o.alphabetPlacement='top'; % show possible answers on 'top' or 'right' for letters and gabors.
 
 
@@ -95,15 +112,15 @@ o.alphabetPlacement='top'; % show possible answers on 'top' or 'right' for lette
 % o.durationSec=inf; % Typically 0.2 or inf (wait indefinitely for response).
 % o.tGuess=log10(0.2); % Optionally tell Quest the initial log contrast on first trial.
 o.saveSnapshot=0; % 0 or 1.  If true (1), take snapshot for public presentation.
-o.snapshotLetterContrast=0.2; % nan to request program default. If set, this determines o.tSnapshot.
+o.snapshotContrast=0.2; % nan to request program default. If set, this determines o.tSnapshot.
 o.cropSnapshot=1; % If true (1), show only the target and noise, without unnecessary gray background.
 o.snapshotCaptionTextSizeDeg=0.5;
 o.snapshotShowsFixationBefore=1;
 o.snapshotShowsFixationAfter=0;
 % o.fixationCrossWeightDeg=0.05; % target line thickness
 o.speakInstructions=0;
-o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar, for Linux compatibility.
 % o.useFractionOfScreenToDebug=0.3; % 0: normal, 0.5: small for debugging.
+o.askForPartingComments=false; % Disable until it's fixed.
 
 
 if useBackupSessions % auto-generate full sequence of experiments for "Winter" data collection
@@ -111,9 +128,9 @@ if useBackupSessions % auto-generate full sequence of experiments for "Winter" d
     % ecc    targetSize
     tableCell = ...
         {0 ,   [0.5, 1, 2, 4, 8, 16];
-        8 ,   [1,   2, 4, 8, 16   ];
-        16,   [1,   2, 4, 8, 16   ];
-        32,   [2,   4, 8, 16      ];}
+         8 ,   [     1, 2, 4, 8, 16];}
+%          16,   [     1, 2, 4, 8, 16];
+%          32,   [        2, 4, 8, 16];}
     
     NoiseDecayRaiusOverLetterRadius = [0.33, 0.58, 1.00, 1.75, 3.00, 32];
     
@@ -135,6 +152,8 @@ if useBackupSessions % auto-generate full sequence of experiments for "Winter" d
                     
                 else
                     % high noise; noise decay radius (noiseSD is already specified above as 0.16)
+                    % TODO: we vary envelope (soft noise) not hard!? CHECK
+                    % xiuyun's .mat file
                     oo(iCounter).noiseEnvelopeSpaceConstantDeg = ...
                         NoiseDecayRaiusOverLetterRadius(iRatio).*oo(iCounter).targetHeightDeg/2;
                     oo(iCounter).noiseCheckDeg=oo(iCounter).targetHeightDeg/20;
@@ -177,7 +196,7 @@ if useBackupSessions % auto-generate full sequence of experiments for "Winter" d
 %         if ~oo(iProgressTrialNO).noiseSD==0; 
         ooWithData{iProgressTrialNO}=NoiseDiscrimination(oo(iProgressTrialNO))%;end
         sca;
-        if ooWithData{iProgressTrialNO}.runAborted
+        if ooWithData{iProgressTrialNO}.quitExperiment
             break;
             fprintf('Your previous run was not successful! \nNot saving the results into session. \nRun this file again when ready for future data collection.\n\n');
         else
