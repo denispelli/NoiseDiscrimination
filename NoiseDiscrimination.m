@@ -179,13 +179,15 @@ function oo=NoiseDiscrimination(ooIn)
 % (with no fixation line) around the target that is at least a target width
 % (to avoid overlap masking) and at least half the eccentricity (to avoid
 % crowding). Otherwise the fixation cross is blanked during target
-% presentation and until o.fixationCrossBlankedUntilSecsAfterTarget. There
-% are many options:
+% presentation and before and after, by fixationOffsetBeforeNoiseOnsetSecs
+% and o.fixationOnsetAfterNoiseOffsetSecs, respectively. There are many
+% options:
 % o.useFixation=true;
 % o.fixationCrossDeg=3; % Typically 3 or inf. Make this at least 4 deg for scotopic testing, since the fovea is blind scotopically.
 % o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
 % o.fixationCrossBlankedNearTarget=true;
-% o.fixationCrossBlankedUntilSecsAfterTarget=0.6; % Pause after stimulus before display of fixation. 
+% o.fixationOffsetBeforeNoiseOnsetSecs=0.6;
+% o.fixationOnsetAfterNoiseOffsetSecs=0.6; % Pause after stimulus before display of fixation. 
 %               % Skipped when fixationCrossBlankedNearTarget. 
 %               % Not needed when eccentricity is bigger than the target.
 % o.fixationCrossDrawnOnStimulus=false;
@@ -583,7 +585,8 @@ global window % Retain pointer to open window when this function exits and is ca
 global scratchWindow scratchRect % Opened below. Closed by CloseWindowsAndCleanup.
 global blockTrial blockTrials % For DrawCounter.
 persistent oOld % Saved from previous block to skip prompts that were already answered in the previous block.
-global fixationLines fixationCrossWeightPix labelBounds ...
+global fixationLines fixationGrid fixationDots ...
+    fixationCrossWeightPix fixationDotsWeightPix labelBounds ...
     tTest leftEdgeOfResponse cal ...
     ff whichSignal logFid ...
     signalImageIndex signalMask % for function ModelObserver
@@ -691,10 +694,15 @@ o.isFullScreenStimulus=true;
 o.targetMarkDeg=1;
 o.useFixation=true;
 o.fixationIsOffscreen=false;
+o.useFixationGrid=false;
+o.useFixationDots=false;
+o.fixationDotsColor=0;
 o.fixationCrossDeg=3; % Typically 3 or inf. Make this at least 4 deg for scotopic testing, since the fovea is blind scotopically.
 o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
+o.fixationDotsWeightDeg=0.05;
 o.fixationCrossBlankedNearTarget=true;
-o.fixationCrossBlankedUntilSecsAfterTarget=0.6; % Pause after stimulus before display of fixation. 
+o.fixationOffsetBeforeNoiseOnsetSecs=0.2;
+o.fixationOnsetAfterNoiseOffsetSecs=0.2; % Pause after stimulus before display of fixation. 
                                         % Skipped when fixationCrossBlankedNearTarget. 
                                         % Not needed when eccentricity is bigger than the target.
 o.fixationCrossDrawnOnStimulus=false;
@@ -709,7 +717,7 @@ o.questPlusEnable=false;
 o.questPlusSteepnesses=1:0.1:5;
 o.questPlusGuessingRates=nan; % 1/alternatives
 o.questPlusLapseRates=[0:0.01:0.05];
-o.questPlusLogContrasts=-3:0.05:0.5;
+o.questPlusLogIntensities=-3:0.05:0.5;
 o.questPlusPrint=true;
 o.questPlusPlot=true;
 o.guess=nan;
@@ -868,10 +876,9 @@ o.noiseFrozenInBlock=false; % 0 or 1.  If true (1), use same noise on every tria
 o.noiseFrozenInBlockSeed=0; % 0 or positive integer. If o.noiseFrozenInBlock, then any nonzero positive integer will be used as the seed for the block.
 o.markTargetLocation=false; % Display a mark designating target position?
 o.backgroundEntropyLevels=2; % Value used only if o.targetModulates is 'entropy'
-o.movieFrameFlipSecs=[]; % flip times (useful to calculate frame drops)
+o.movieFrameFlipSecs=[]; % Flip times (useful to calculate frame drops).
 o.useDynamicNoiseMovie=false; % false for static noise
-o.moviePreSecs=0;
-o.moviePostSecs=0;
+o.moviePreAndPostSecs=[0 0]; % Noise onset before target onset, and target offset before noise offset.
 o.seed=[];
 
 % Annulus (hardly ever used)
@@ -1013,6 +1020,17 @@ o.deviceIndex=-3;
 % dk=d(iKeyboards);
 % [dk.index] % Vector of indices of the keyboards.
 
+% OUTPUT FIELDS FOR TIMING
+% o.trial0Secs(trial) is absolute time
+% o.trial1BeginComputeMovieSecs(trial) is relative to o.trial0Secs
+% o.trial2BeginComputeCLUTSecs(trial) "
+% o.trial3BeginComputeTextureSecs(trial) "
+% o.trial4BeginMovieSecs(trial) "
+% o.trial5EndMovieSecs(trial) "
+% o.trial6BeginFixationSecs(trial) "
+% o.trial7ShowInstructionsSecs(trial) "
+% o.trial8GotResponseSecs(trial) "
+
 %% READ USER-SUPPLIED oo PARAMETERS
 conditions=length(ooIn);
 for oi=1:conditions
@@ -1029,8 +1047,8 @@ knownOutputFields={'labelAnswers' 'beginningTime' ...
     'functionNames' 'cal' 'pixPerDeg' ...
     'lineSpacing' 'stimulusRect' 'noiseCheckPix' ...
     'minLRange' 'targetHeightPix' ...
-    'contrast' 'targetWidthPix' 'checkSecs' 'moviePreFrames'...
-    'movieSignalFrames' 'moviePostFrames' 'movieFrames' 'noiseSize'...
+    'contrast' 'targetWidthPix' 'checkSecs' 'moviePreAndPostFrames'...
+    'movieSignalFrames'  'movieFrames' 'noiseSize'...
     'annularNoiseSmallSize' 'annularNoiseBigSize' 'canvasSize'...
     'noiseListMin' 'noiseListMax' 'noiseIsFiltered' 'N' 'NUnits' ...
     'targetRectChecks' 'xHeightPix' 'xHeightDeg' 'HHeightPix' ...
@@ -1058,7 +1076,11 @@ knownOutputFields={'labelAnswers' 'beginningTime' ...
     'fixationLineWeightDeg' 'isFirstBlock' ...
     'isLastBlock'  'minimumTargetPix' ...
     'practicePresentations' 'repeatedTargets' 'okToShiftCoordinates' ...
-    'skipThisBlock' ...
+    'skipThisBlock'  ...
+    'trial0Secs' 'trial1BeginComputeMovieSecs' ...
+    'trial2BeginComputeCLUTSecs' 'trial3BeginComputeTextureSecs' ...
+    'trial4BeginMovieSecs' 'trial5EndMovieSecs' 'trial6BeginFixationSecs'...
+    'trial7ShowInstructionsSecs' 'trial8GotResponseSecs' ...
     };
 %     'centralNoiseMask' 'annularNoiseMask'...    % 20 MB each, so we now delete them at end of block.
 unknownFields={};
@@ -1191,6 +1213,10 @@ for oi=1:conditions
             otherwise
                 error('Unknown o.targetKind "%s".',oo(oi).targetKind);
         end
+    end
+    if oo(oi).measureContrast
+        oo(oi).nominalContrast=[];
+        oo(oi).actualContrast=[];
     end
 end % for oi=1:conditions
 
@@ -1902,8 +1928,13 @@ try
             [~,~,lineWidthMinMaxPix(1),lineWidthMinMaxPix(2)]=Screen('DrawLines',oo(1).window);
             fixationCrossWeightPix=round(max([min([fixationCrossWeightPix lineWidthMinMaxPix(2)]) lineWidthMinMaxPix(1)]));
             oo(oi).fixationCrossWeightDeg=fixationCrossWeightPix/oo(oi).pixPerDeg;
+            fixationDotsWeightPix=round(oo(oi).fixationDotsWeightDeg*oo(oi).pixPerDeg);
+            [~,~,dotPixMinMaxPix(1),dotPixMinMaxPix(2)]=Screen('DrawDots',oo(1).window);
+            fixationDotsWeightPix=round(max([min([fixationDotsWeightPix dotPixMinMaxPix(2)]) dotPixMinMaxPix(1)]));
+            oo(oi).fixationDotsWeightDeg=fixationDotsWeightPix/oo(oi).pixPerDeg;
         else
             oo(oi).useFixation=false;
+            oo(oi).useFixationDots=false;
         end
         % BEWARE: The caption rects may differ between conditions and ought
         % to be stored in the condition, e.g. oo(oi).topCaptionRect. The
@@ -2233,8 +2264,8 @@ try
                     disp('cal.gamma(1+[o.gray1 o.gray]*o.maxEntry,:)');
                     disp(cal.gamma(1+[oo(1).gray1 oo(1).gray]*oo(1).maxEntry,:));
                     disp('Luminance');
-                    g=cal.gamma(1+[oo(1).gray1 oo(1).gray]*oo(1).maxEntry,:);
-                    disp(interp1(cal.old.G,cal.old.L,g,'pchip'));
+                    gridDeg=cal.gamma(1+[oo(1).gray1 oo(1).gray]*oo(1).maxEntry,:);
+                    disp(interp1(cal.old.G,cal.old.L,gridDeg,'pchip'));
                 end
             end
             % oo(1).gray=oo(1).gray1; % DGP. Immune to update of asymmetric
@@ -2725,25 +2756,21 @@ try
         oo(oi).targetDurationSecs=max(1,round(oo(oi).targetDurationSecs*movieFrameRate))/movieFrameRate;
         oo(oi).targetDurationListSecs=max(1,round(oo(oi).targetDurationListSecs*movieFrameRate))/movieFrameRate;
         if ~oo(oi).useDynamicNoiseMovie
-            oo(oi).moviePreFrames=0;
+            oo(oi).moviePreAndPostFrames=[0 0];
             oo(oi).movieSignalFrames=1;
-            oo(oi).moviePostFrames=0;
         else
-            oo(oi).moviePreFrames=round(oo(oi).moviePreSecs*movieFrameRate);
+            oo(oi).moviePreAndPostFrames=round(oo(oi).moviePreAndPostSecs*movieFrameRate);
             oo(oi).movieSignalFrames=round(oo(oi).targetDurationSecs*movieFrameRate);
-            if oo(oi).movieSignalFrames < 1
-                oo(oi).movieSignalFrames=1;
-            end
-            oo(oi).moviePostFrames=round(oo(oi).moviePostSecs*movieFrameRate);
-            if oo(oi).moviePreFrames+oo(oi).moviePostFrames>=MAX_FRAMES
-                error('o.moviePreSecs+o.moviePostSecs=%.1f s too long for movie with MAX_FRAMES %d.\n',...
-                    oo(oi).moviePreSecs+oo(oi).moviePostSecs,MAX_FRAMES);
+            oo(oi).movieSignalFrames=max(1,oo(oi).movieSignalFrames);
+            if sum(oo(oi).moviePreAndPostFrames)>=MAX_FRAMES
+                error('sum(o.moviePreAndPostSecs)=%.1f s too long for movie with MAX_FRAMES %d.\n',...
+                    sum(oo(oi).moviePreAndPostSecs),MAX_FRAMES);
             end
         end
-        oo(oi).movieFrames=oo(oi).moviePreFrames+oo(oi).movieSignalFrames+oo(oi).moviePostFrames;
+        oo(oi).movieFrames=sum(oo(oi).moviePreAndPostFrames)+oo(oi).movieSignalFrames;
         if oo(oi).movieFrames>MAX_FRAMES
             oo(oi).movieFrames=MAX_FRAMES;
-            oo(oi).movieSignalFrames=oo(oi).movieFrames-oo(oi).moviePreFrames-oo(oi).moviePostFrames;
+            oo(oi).movieSignalFrames=oo(oi).movieFrames-sum(oo(oi).moviePreAndPostFrames);
             oo(oi).targetDurationSecs=oo(oi).movieSignalFrames/movieFrameRate;
             ffprintf(ff,'%d: Constrained by MAX_FRAMES %d, reducing duration to %.3f s\n',oi,MAX_FRAMES,oo(oi).targetDurationSecs);
         end
@@ -2877,9 +2904,46 @@ try
             fix.targetHeightPix=oo(oi).targetHeightPix;
             fix.fixationCrossBlankedNearTarget=oo(oi).fixationCrossBlankedNearTarget;
             [fixationLines,oo(oi).markTargetLocation]=ComputeFixationLines2(fix);
+        else
+            fixationLines=[];
+        end
+        if oo(oi).useFixationDots
+            xy=rand([2 100]);
+            r=[XYPixOfXYDeg(oo(oi),[-2 -2]) XYPixOfXYDeg(oo(oi),[2 2])];
+            xy=xy.*[RectWidth(r);RectHeight(r)];
+            xy=xy+r([1 2])';
+            fixationDots=round(xy);
+        else
+            fixationDots=[];
+        end
+        if oo(oi).useFixationGrid
+            xyDegMin=XYDegOfXYPix(oo(oi),oo(oi).screenRect([1 4]));
+            xyDegMax=XYDegOfXYPix(oo(oi),oo(oi).screenRect([3 2]));
+            xyDegMin=flx(xyDegMin);
+            xyDegMax=fix(xyDegMax);
+            gridDeg=[];
+            for xDeg=xyDegMin(1):xyDegMax(1)
+                gridDeg=[gridDeg [xDeg;xyDegMin(2)] [xDeg;0] [xDeg;0]  [xDeg;xyDegMax(2)]];
+            end
+            for yDeg=xyDegMin(2):xyDegMax(2)
+                gridDeg=[gridDeg [xyDegMin(1);yDeg] [0;yDeg] [0;yDeg] [xyDegMax(1);yDeg]];
+            end
+            fixationGrid=zeros(size(gridDeg));
+            for i=1:size(gridDeg,2)
+                fixationGrid(1:2,i)=XYPixOfXYDeg(oo(oi),gridDeg(1:2,i)')';
+            end
+            clear gridDeg
+        else
+            fixationGrid=[];
         end
         if ~isempty(oo(oi).window) && ~isempty(fixationLines)
             Screen('DrawLines',oo(oi).window,fixationLines,fixationCrossWeightPix,black); % fixation
+            if ~isempty(fixationGrid)
+                Screen('DrawLines',oo(oi).window,fixationGrid,fixationCrossWeightPix,0.3); % grid
+            end
+            if ~isempty(fixationDots)
+                Screen('DrawDots',oo(oi).window,fixationDots,fixationDotsWeightPix,oo(oi).fixationDotsColor); % dots
+            end
         end
         clear tSample
         
@@ -3600,14 +3664,17 @@ try
             steepnesses=oo(oi).questPlusSteepnesses;
             guessingRates=oo(oi).questPlusGuessingRates;
             lapseRates=oo(oi).questPlusLapseRates;
-            contrastDB=20*oo(oi).questPlusLogContrasts;
-            if streq(oo(oi).thresholdParameter,'flankerContrast')
-                psychometricFunction=@qpPFCrowding;
-            else
-                psychometricFunction=@qpPFWeibull;
+            contrastDB=20*oo(oi).questPlusLogIntensities;
+            switch oo(oi).thresholdParameter
+                case 'flankerContrast'
+                    psychometricFunction=@qpPFCrowding;
+                otherwise
+                    psychometricFunction=@qpPFWeibull;
             end
-            oo(oi).questPlusData=qpParams('stimParamsDomainList', {contrastDB},...,
-                'psiParamsDomainList',{contrastDB, steepnesses, guessingRates, lapseRates},'qpPF',psychometricFunction);
+            oo(oi).questPlusData=qpParams('stimParamsDomainList', ...
+                {contrastDB},'psiParamsDomainList',...
+                {contrastDB, steepnesses, guessingRates, lapseRates},...
+                'qpPF',psychometricFunction);
             oo(oi).questPlusData=qpInitialize(oo(oi).questPlusData);
         end
     end % for oi=1:conditions
@@ -3750,6 +3817,7 @@ try
             oo(oi).trials=oo(oi).trials-1;
             continue
         end
+        oo(oi).trial0Secs(trial)=GetSecs;
         % This is cosmetic. We alphabetize the fields so that they are
         % saved alphabetized, and will appear alphabetized in any future
         % display.
@@ -3787,13 +3855,19 @@ try
             j=Randi(length(oo(oi).uncertainValues{i}));
             oo(oi).(oo(oi).uncertainParameter{i})=oo(oi).uncertainValues{i}{j};
             switch oo(oi).uncertainParameter{i}
-                case 'eccentricityXYDeg'
-                    fmt='[%.0f %.0f] deg';
+                case {'eccentricityXYDeg' 'moviePreAndPostSecs'}
                 otherwise
                     error('Unknown o.uncertainParameter ''%s''.',...
                         oo(oi).uncertainParameter{i});
             end
             if false
+                % Print the uncertainty.
+                switch oo(oi).uncertainParameter{i}
+                    case {'eccentricityXYDeg' 'moviePreAndPostSecs'}
+                        fmt='[%.0f %.0f] s';
+                    otherwise
+                        fmt='%.0f s';
+                end
                 ffprintf(ff,['%d: trial %d, uncertain o.%s=' fmt '\n'],...
                     oo(oi).condition,trial,oo(oi).uncertainParameter{i},...
                     oo(oi).(oo(oi).uncertainParameter{i}));
@@ -3979,17 +4053,22 @@ try
         end % if oo(oi).noiseFrozenInBlock
         
         %% RESTRICT tTest TO LEGAL VALUE IN QUESTPLUS
-        % Hmm. This will be slightly inconsistent with oo(oi).contrast. We
-        % should recompute oo(oi).contrast. Oops. Actually, this value of
-        % tTest is overwritten below when tTest is recomputed from
-        % spacingDeg and targetSizeDeg. Probably I need a loop to do both
-        % twice.
         if oo(oi).questPlusEnable
+            % Select the nearest available contrast on the fixed contrastDB
+            % list used by QuestPlus. This will be slightly inconsistent
+            % with whatever stimulus parameter we're controlling. We should
+            % recompute our stimulus parameter before using it. In fact,
+            % this value of tTest is overwritten below when tTest is
+            % recomputed from the actual spacingDeg or targetSizeDeg.
+            % Probably I need a loop to do both twice to incorporate the
+            % range limits on my stimulus parameters and the discrete grid
+            % used by QuestPlus.
             i=knnsearch(contrastDB'/20,tTest);
             tTest=contrastDB(i)/20;
         end
         
         %% COMPUTE MOVIE IMAGES
+        oo(oi).trial1BeginComputeMovieSecs(trial)=GetSecs-oo(oi).trial0Secs(trial);
         movieImage={};
         movieSaveWhich=[];
         movieFrameComputeStartSecs=GetSecs;
@@ -4140,8 +4219,8 @@ try
                     % signalImage embeds the signal in a background of
                     % zeros with size canvasRect.
                     signalImage=zeros(size(signalImageIndex)); % Support color.
-                    if (iMovieFrame > oo(oi).moviePreFrames ...
-                            && iMovieFrame <= oo(oi).moviePreFrames+oo(oi).movieSignalFrames)
+                    if (iMovieFrame > oo(oi).moviePreAndPostFrames(1) ...
+                            && iMovieFrame <= oo(oi).moviePreAndPostFrames(1)+oo(oi).movieSignalFrames)
                         % Add in signal only during the signal interval.
                         % oSignal.signal(whichSignal).image has been
                         % resized to o.desiredTargetPix.
@@ -4273,8 +4352,8 @@ try
                             end
                             flankerImage=zeros(oo(oi).canvasSize);
                             flankerImageIndex=logical(FillRectInMatrix(true,rect,flankerImage));
-                            if (iMovieFrame > oo(oi).moviePreFrames ...
-                                    && iMovieFrame <= oo(oi).moviePreFrames+oo(oi).movieSignalFrames)
+                            if (iMovieFrame > oo(oi).moviePreAndPostFrames(1) ...
+                                    && iMovieFrame <= oo(oi).moviePreAndPostFrames(1)+oo(oi).movieSignalFrames)
                                 % Add in flanker only during the signal interval.
                                 flankerImage(flankerImageIndex)=oo(oi).signal(oo(oi).whichFlanker(j)).image(:);
                             end
@@ -4289,7 +4368,6 @@ try
             end % switch oo(oi).task
             movieImage{iMovieFrame}=location;
         end % for iMovieFrame=1:oo(oi).movieFrames
-        
         if oo(oi).measureContrast
             fprintf('%d: unique(signalImage(:)) ',MFileLineNr);
             fprintf('%g ',unique(signalImage(:)));
@@ -4301,6 +4379,7 @@ try
         end
 
         %% COMPUTE CLUT
+        oo(oi).trial2BeginComputeCLUTSecs(trial)=GetSecs-oo(oi).trial0Secs(trial);
         if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
             if trial==1
                 % Clear screen only before first trial. After the first
@@ -4310,6 +4389,13 @@ try
             end
             if ~isempty(fixationLines)
                 Screen('DrawLines',oo(1).window,fixationLines,fixationCrossWeightPix,0); % fixation
+                if ~isempty(fixationGrid)
+                    Screen('DrawLines',oo(oi).window,fixationGrid,fixationCrossWeightPix,0.3); % grid
+                end
+                if ~isempty(fixationDots)
+                    fixationDots(1,:)=Shuffle(fixationDots(1,:));
+                    Screen('DrawDots',oo(oi).window,fixationDots,fixationDotsWeightPix,oo(oi).fixationDotsColor); % dots
+                end
             end
             rect=[0 0 1 1]*2*oo(oi).annularNoiseBigRadiusDeg*oo(oi).pixPerDeg/oo(oi).noiseCheckPix;
             if oo(oi).newClutForEachImage % Usually enabled.
@@ -4341,6 +4427,12 @@ try
             end
             if oo(oi).saveSnapshot && oo(oi).snapshotShowsFixationBefore && ~isempty(fixationLines)
                 Screen('DrawLines',oo(1).window,fixationLines,fixationCrossWeightPix,0); % fixation
+                if ~isempty(fixationGrid)
+                    Screen('DrawLines',oo(oi).window,fixationGrid,fixationCrossWeightPix,0.3); % grid
+                end
+                if ~isempty(fixationDots)
+                    Screen('DrawDots',oo(oi).window,fixationDots,fixationDotsWeightPix,oo(oi).fixationDotsColor); % dots
+                end
             end
         end % if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
         
@@ -4385,6 +4477,7 @@ try
         end % if oo(oi).measureContrast
         
         %% CONVERT IMAGE MOVIE TO TEXTURE MOVIE
+        oo(oi).trial3BeginComputeTextureSecs(trial)=GetSecs-oo(oi).trial0Secs(trial);
         if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
             for iMovieFrame=1:oo(oi).movieFrames
                 location=movieImage{iMovieFrame};
@@ -4510,6 +4603,7 @@ try
         end
         
         %% PLAY MOVIE
+        oo(oi).trial4BeginMovieSecs(trial)=GetSecs-oo(oi).trial0Secs(trial);
         if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
             DrawCounter(oo(oi));
             Screen('LoadNormalizedGammaTable',oo(1).window,cal.gamma,loadOnNextFlip);
@@ -4524,6 +4618,11 @@ try
                     % corner of recorded movie image.
                     writeVideo(vidWriter,img); % Write frame to video
                 end
+                if(oo(oi).fixationOffsetBeforeNoiseOnsetSecs>0)
+                    Screen('FillRect',oo(1).window,oo(oi).gray,oo(oi).stimulusRect);
+                    Screen('Flip',oo(1).window,0,1);
+                end
+                timeZero=GetSecs;
                 Snd('Play',purr); % Pre-announce that image is up, awaiting response.
                 assert(oo(oi).trials>0,'oo(oi).trials must be >0');
                 oo(oi).movieFrameFlipSecs(1:oo(oi).movieFrames+1,oo(oi).trials)=nan;
@@ -4531,6 +4630,12 @@ try
                     Screen('DrawTexture',oo(1).window,movieTexture(iMovieFrame),srcRect,dstRect);
                     if oo(oi).fixationCrossDrawnOnStimulus && ~isempty(fixationLines)
                         Screen('DrawLines',oo(1).window,fixationLines,fixationCrossWeightPix,black); % fixation
+                        if ~isempty(fixationGrid)
+                            Screen('DrawLines',oo(oi).window,fixationGrid,fixationCrossWeightPix,0.3); % grid
+                        end
+                        if ~isempty(fixationDots)
+                            Screen('DrawDots',oo(oi).window,fixationDots,fixationDotsWeightPix,oo(oi).fixationDotsColor); % dots
+                        end
                     end
                     if oo(oi).showBlackAnnulus
                         radius=round(oo(oi).blackAnnulusSmallRadiusDeg*oo(oi).pixPerDeg);
@@ -4549,7 +4654,7 @@ try
                         end
                         Screen('FrameRect',oo(1).window,color,annulusRect,thickness);
                     end % if oo(oi).showBlackAnnulus
-                    if oo(oi).saveStimulus && iMovieFrame == oo(oi).moviePreFrames+1
+                    if oo(oi).saveStimulus && iMovieFrame == oo(oi).moviePreAndPostFrames(1)+1
                         oo(oi).savedStimulus=Screen('GetImage',oo(1).window,oo(oi).stimulusRect,'drawBuffer');
                         ffprintf(ff,'oo(oi).savedStimulus at contrast %.3f, flankerContrast %.3f\n',oo(oi).contrast,oo(oi).flankerContrast);
                         figure
@@ -4558,16 +4663,18 @@ try
                         imwrite(img,fullfile(oo(1).dataFolder,filename),'png');
                         ffprintf(ff,'Saved image to file "%s" ',filename);
                     end
-                    if oo(oi).saveSnapshot && iMovieFrame==oo(oi).moviePreFrames+1
+                    if oo(oi).saveSnapshot && iMovieFrame==oo(oi).moviePreAndPostFrames(1)+1
                         snapshotTexture=Screen('OpenOffscreenWindow',movieTexture(iMovieFrame));
                         Screen('CopyWindow',movieTexture(iMovieFrame),snapshotTexture);
                     end
+                    WaitSecs('UntilTime',timeZero+oo(oi).fixationOffsetBeforeNoiseOnsetSecs);
                     for displayFrame=1:oo(oi).noiseCheckFrames
-                        Screen('Flip',oo(1).window,0,1); % Display this frame of the movie. Don't clear back buffer.
+                         % Display this frame of the movie. Don't clear back buffer.
+                         Screen('Flip',oo(1).window,0,1);
                     end
                     oo(oi).movieFrameFlipSecs(iMovieFrame,oo(oi).trials)=GetSecs;
                 end % for iMovieFrame=1:oo(oi).movieFrames
-                oo(oi).transcript.stimulusOnsetSecs(oo(oi).trials)=oo(oi).movieFrameFlipSecs(oo(oi).moviePreFrames+1,oo(oi).trials);
+                oo(oi).transcript.stimulusOnsetSecs(oo(oi).trials)=oo(oi).movieFrameFlipSecs(oo(oi).moviePreAndPostFrames(1)+1,oo(oi).trials);
                 if oo(oi).saveSnapshot
                     o=SaveSnapshot(oo(oi),snapshotTexture); % Closes oo(1).window when done.
                     oo(oi)=o;
@@ -4610,6 +4717,12 @@ try
                     Screen('FillRect',oo(1).window,oo(oi).gray,dstRect); % Erase only the movie, sparing the rest of the screen.
                     if oo(oi).fixationCrossDrawnOnStimulus && ~isempty(fixationLines)
                         Screen('DrawLines',oo(1).window,fixationLines,fixationCrossWeightPix,black); % fixation
+                        if ~isempty(fixationGrid)
+                            Screen('DrawLines',oo(oi).window,fixationGrid,fixationCrossWeightPix,0.3); % grid
+                        end
+                        if ~isempty(fixationDots)
+                            Screen('DrawDots',oo(oi).window,fixationDots,fixationDotsWeightPix,oo(oi).fixationDotsColor); % dots
+                        end
                     end
                     if oo(oi).useDynamicNoiseMovie
                         Screen('Flip',oo(1).window,0,1); % Clear stimulus at next display frame.
@@ -4617,17 +4730,25 @@ try
                         % Clear stimulus at next display frame after specified duration.
                         Screen('Flip',oo(1).window,oo(oi).movieFrameFlipSecs(1,oo(oi).trials)+oo(oi).targetDurationSecs-0.5/displayFrameRate,1);
                     end
+                    oo(oi).trial5EndMovieSecs(trial)=GetSecs-oo(oi).trial0Secs(trial);
                     oo(oi).movieFrameFlipSecs(iMovieFrame+1,oo(oi).trials)=GetSecs;
                     if ~oo(oi).fixationCrossBlankedNearTarget
-                        WaitSecs(oo(oi).fixationCrossBlankedUntilSecsAfterTarget);
+                        WaitSecs(oo(oi).fixationOnsetAfterNoiseOffsetSecs);
                     end
                     if ~isempty(fixationLines)
                         Screen('DrawLines',oo(1).window,fixationLines,fixationCrossWeightPix,black); % fixation
+                        if ~isempty(fixationGrid)
+                            Screen('DrawLines',oo(oi).window,fixationGrid,fixationCrossWeightPix,0.3); % grid
+                        end
+                        if ~isempty(fixationDots)
+                            Screen('DrawDots',oo(oi).window,fixationDots,fixationDotsWeightPix,oo(oi).fixationDotsColor); % dots
+                        end
                     end
-                    % After o.fixationCrossBlankedUntilSecsAfterTarget, display new fixation.
+                    % After o.fixationOnsetAfterNoiseOffsetSecs, display new fixation.
                     DrawCounter(oo(oi));
                     Screen('Flip',oo(1).window,oo(oi).movieFrameFlipSecs(iMovieFrame+1,oo(oi).trials)+0.3,1);
-                end % if isfinite(oo(oi).targetDurationSecs)
+                    oo(oi).trial6BeginFixationSecs(trial)=GetSecs-oo(oi).trial0Secs(trial);
+               end % if isfinite(oo(oi).targetDurationSecs)
                 for iMovieFrame=1:oo(oi).movieFrames
                     Screen('Close',movieTexture(iMovieFrame));
                 end
@@ -4679,7 +4800,6 @@ try
                 % condition is coming. The code to compute the fixation
                 % mark should cycle through all the conditions, and all the
                 % conditions should use the same fixation mark.
-                % xxx
                 Screen('FillRect',window,o.gray1); % DGP Jun 4, 2019
                 % When testing faces, gray1 matches the face background,
                 % and gray is about half that. I think it's safe to always
@@ -4688,6 +4808,12 @@ try
                 %                 Screen('FillRect',oo(1).window,oo(oi).gray1,topCaptionRect);
                 if ~isempty(oo(oi).window) && ~isempty(fixationLines)
                     Screen('DrawLines',oo(oi).window,fixationLines,fixationCrossWeightPix,black); % fixation
+                    if ~isempty(fixationGrid)
+                        Screen('DrawLines',oo(oi).window,fixationGrid,fixationCrossWeightPix,0.3); % grid
+                    end
+                    if ~isempty(fixationDots)
+                        Screen('DrawDots',oo(oi).window,fixationDots,fixationDotsWeightPix,oo(oi).fixationDotsColor); % dots
+                    end
                 end
                 counterBounds=DrawCounter(oo(oi));
                 maxFactor=1;
@@ -5008,6 +5134,7 @@ try
                     DrawUncertainty(oo);
                 end
                 Screen('Flip',oo(1).window,0,1); % Display instructions.
+                oo(oi).trial7ShowInstructionsSecs(trial)=GetSecs-oo(oi).trial0Secs(trial);
             end % if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
             
             %% SAVE STIMULUS TO DISK
@@ -5020,7 +5147,6 @@ try
                 % It would be nice to save these to disk.
                 warning(w);
             end
-            
             
             %% COLLECT RESPONSE
             switch oo(oi).task
@@ -5285,8 +5411,8 @@ try
                 end
                 % CHECK DURATION
                 if oo(oi).useDynamicNoiseMovie
-                    movieFirstSignalFrame=oo(oi).moviePreFrames+1;
-                    movieLastSignalFrame=oo(oi).movieFrames-oo(oi).moviePostFrames;
+                    movieFirstSignalFrame=oo(oi).moviePreAndPostFrames(1)+1;
+                    movieLastSignalFrame=oo(oi).movieFrames-oo(oi).moviePreAndPostFrames(2);
                 else
                     movieFirstSignalFrame=1;
                     movieLastSignalFrame=1;
@@ -5312,11 +5438,12 @@ try
                 end
             end
         else
-            response=ModelObserver(oo(oi),oo(oi).signal,movieImage(oo(oi).moviePreFrames+1:end-oo(oi).moviePostFrames));
+            response=ModelObserver(oo(oi),oo(oi).signal,movieImage(oo(oi).moviePreAndPostFrames(1)+1:end-oo(oi).moviePreAndPostFrames(2)));
         end % if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
         if o.quitBlock
             break;
         end
+        oo(oi).trial8GotResponseSecs(trial)=GetSecs-oo(oi).trial0Secs(trial);
         switch oo(oi).task % score as right or wrong
             case '4afc'
                 isRight=response == signalLocation;
@@ -5485,69 +5612,8 @@ try
         
         %% QUESTPlus: Estimate steepness and threshold contrast.
         if oo(oi).questPlusEnable && isfield(oo(oi).questPlusData,'trialData')
-            psiParamsIndex=qpListMaxArg(oo(oi).questPlusData.posterior);
-            psiParamsBayesian=oo(oi).questPlusData.psiParamsDomain(psiParamsIndex,:);
-            if oo(oi).questPlusPrint
-                ffprintf(ff,'Quest: Max posterior est. of threshold: log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
-                    oo(oi).questMean,oo(oi).steepness,oo(oi).guess,oo(oi).lapse);
-                %          ffprintf(ff,'QuestPlus: Max posterior estimate:      log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
-                %             psiParamsBayesian(1)/20,psiParamsBayesian(2),psiParamsBayesian(3),psiParamsBayesian(4));
-            end
-            psiParamsFit=qpFit(oo(oi).questPlusData.trialData,oo(oi).questPlusData.qpPF,psiParamsBayesian,oo(oi).questPlusData.nOutcomes,...,
-                'lowerBounds', [min(contrastDB) min(steepnesses) min(guessingRates) min(lapseRates)],...
-                'upperBounds',[max(contrastDB) max(steepnesses) max(guessingRates) max(lapseRates)]);
-            if oo(oi).questPlusPrint
-                ffprintf(ff,'QuestPlus: Max likelihood estimate:     log c %0.2f, steepness %0.1f, guessing %0.2f, lapse %0.2f\n', ...
-                    psiParamsFit(1)/20,psiParamsFit(2),psiParamsFit(3),psiParamsFit(4));
-            end
-            oo(oi).qpContrast=oo(oi).contrastPolarity*10^(psiParamsFit(1)/20);	% threshold contrast
-            switch oo(oi).thresholdParameter
-                case 'contrast'
-                    oo(oi).contrast=oo(oi).qpContrast;
-                case 'flankerContrast'
-                    oo(oi).flankerContrast=oo(oi).qpContrast;
-            end
-            oo(oi).qpSteepness=psiParamsFit(2);          % steepness
-            oo(oi).qpGuessing=psiParamsFit(3);
-            oo(oi).qpLapse=psiParamsFit(4);
-            %% Plot trial data with maximum likelihood fit
-            if oo(oi).questPlusPlot
-                figure('Name',[oo(oi).experiment ':' oo(oi).conditionName],'NumberTitle','off');
-                title(oo(oi).conditionName,'FontSize',14);
-                hold on
-                stimCounts=qpCounts(qpData(oo(oi).questPlusData.trialData),oo(oi).questPlusData.nOutcomes);
-                stim=[stimCounts.stim];
-                stimFine=linspace(-40,0,100)';
-                plotProportionsFit=qpPFWeibull(stimFine,psiParamsFit);
-                for cc=1:length(stimCounts)
-                    nTrials(cc)=sum(stimCounts(cc).outcomeCounts);
-                    pCorrect(cc)=stimCounts(cc).outcomeCounts(2)/nTrials(cc);
-                end
-                legendString=sprintf('%.2f %s',oo(oi).noiseSD,oo(oi).observer);
-                semilogx(10.^(stimFine/20),plotProportionsFit(:,2),'-','Color',[0 0 0],'LineWidth',3,'DisplayName',legendString);
-                scatter(10.^(stim/20),pCorrect,100,'o','MarkerEdgeColor',[0 0 0],'MarkerFaceColor',...
-                    [0 0 0],'MarkerEdgeAlpha',.1,'MarkerFaceAlpha',.1,'DisplayName',legendString);
-                set(gca,'xscale','log');
-                set(gca,'XTickLabel',{'0.01' '0.1' '1'});
-                xlabel('Contrast');
-                ylabel('Proportion correct');
-                xlim([0.01 1]); ylim([0 1]);
-                set(gca,'FontSize',12);
-                oo(oi).targetCyclesPerDeg=oo(oi).targetGaborCycles/oo(oi).targetHeightDeg;
-                noteString{1}=sprintf('%s: %s %.1f c/deg, ecc %.0f deg, %.1f s\n%.0f cd/m^2, eyes %s, trials %d',...
-                    oo(oi).conditionName,oo(oi).targetKind,oo(oi).targetCyclesPerDeg,oo(oi).eccentricityXYDeg(1),oo(oi).targetDurationSecs,oo(oi).LBackground,oo(oi).eyes,oo(oi).trials);
-                noteString{2}=sprintf('%8s %7s %5s %9s %8s %5s','observer','noiseSD','log c','steepness','guessing','lapse');
-                noteString{end+1}=sprintf('%-8s %7.2f %5.2f %9.1f %8.2f %5.2f', ...
-                    oo(oi).observer,oo(oi).noiseSD,log10(oo(oi).qpContrast),oo(oi).qpSteepness,oo(oi).qpGuessing,oo(oi).qpLapse);
-                text(0.4,0.4,'noiseSD observer');
-                legend('show','Location','southeast');
-                legend('boxoff');
-                annotation('textbox',[0.14 0.11 .5 .2],'String',noteString,...
-                    'FitBoxToText','on','LineStyle','none',...
-                    'FontName','Monospaced','FontSize',9);
-                drawnow;
-            end % if oo(oi).questPlusPlot
-        end % if oo(oi).questPlusEnable
+            oo=EstimateThresholdAndSteepness(oo);
+        end
         
         %% LUMINANCE
         if oi==1
@@ -6124,6 +6190,13 @@ global cal ff
 LBackground=(cal.LFirst+cal.LLast)/2;
 img=IndexOfLuminance(cal,LBackground);
 img=img:o.maxEntry;
+cal.dacBits=8;
+if o.useNative10Bit
+    cal.dacBits=10;
+end
+if o.useNative11Bit
+    cal.dacBits=11;
+end
 L=EstimateLuminance(cal,img);
 dL=diff(L);
 i=find(dL,1); % index of first non-zero element in dL
@@ -6167,7 +6240,7 @@ end % function AssessContrast
 function AssessLinearity(o)
 % Hasn't been tested since it became a subroutine. It may need more of its
 % variables to be declared "global". A more elegant solution, more
-% transparent that "global" would be to put all the currently global
+% transparent than "global" would be to put all the currently global
 % variables into a new struct called "my". It would be received as an
 % argument and might need to be returned as an output. Note that if "o" is
 % modified here, it too may need to be returned as an output argument, or
@@ -6753,7 +6826,7 @@ if o.fixationCrossBlankedNearTarget
 else
     ffprintf(ff,['Fixation cross is blanked during and until %.2f s after target. '...
         'No selective blanking near target. \n'],...
-        o.fixationCrossBlankedUntilSecsAfterTarget);
+        o.fixationOnsetAfterNoiseOffsetSecs);
 end
 end % function SetUpFixation
 
@@ -6877,7 +6950,8 @@ end % function ComputeClut
 
 %% WaitUntilObserverIsReady
 function o=WaitUntilObserverIsReady(o,oo,message)
-global fixationLines fixationCrossWeightPix ff
+global fixationLines fixationGrid fixationDots ...
+    fixationCrossWeightPix fixationDotsWeightPix ff
 escapeChar=char(27);
 graveAccentChar='`';
 escapeKeyCode=KbName('escape');
@@ -6891,6 +6965,12 @@ if o.showCropMarks
 end
 if ~isempty(fixationLines)
     Screen('DrawLines',o.window,fixationLines,fixationCrossWeightPix,0); % fixation
+    if ~isempty(fixationGrid)
+        Screen('DrawLines',o.window,fixationGrid,fixationCrossWeightPix,0.3); % grid
+    end
+    if ~isempty(fixationDots)
+        Screen('DrawDots',o.window,fixationDots,fixationDotsWeightPix,o.fixationDotsColor); % dots
+    end
 end
 Screen('Flip',o.window,0,1); % Show gray screen at o.LBackground with fixation and crop marks. Don't clear buffer.
 readyString='';
