@@ -17,7 +17,19 @@ addpath(myPath); % We are in the "lib" folder.
 % The lib and data folders are in the same folder.
 dataFolder=fullfile(fileparts(fileparts(mfilename('fullpath'))),'data');
 % matFiles=dir(fullfile(dataFolder,['run' experiment '*.mat']));
-matFiles=dir(fullfile(dataFolder,[experiment '*.mat']));
+% matFiles=dir(fullfile(dataFolder,[experiment '*.mat']));
+if iscell(experiment)
+    for i=1:length(experiment)
+        m=dir(fullfile(dataFolder,['run' experiment{i} '*.mat']));
+        if i==1
+            matFiles=m;
+        else
+            matFiles=[matFiles m];
+        end
+    end
+else
+    matFiles=dir(fullfile(dataFolder,['run' experiment '*.mat']));
+end
 
 % Each block has a unique identifier: o.dataFilename. It is created
 % just before we start running trials. I think that we could read all the
