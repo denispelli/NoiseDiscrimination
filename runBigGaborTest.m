@@ -13,7 +13,7 @@ ooo={};
 % Compare target thresholds in several noise distributions all with same
 % noiseSD, which is highest possible.
 o.observer='';
-% o.observer='ideal'; % Use this to test ideal observer.
+o.observer='ideal'; % Use this to test ideal observer.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ismember(o.observer,{'ideal'})
     o.trialsDesired=200;
@@ -41,7 +41,7 @@ o.fixationCheck=false; % True designates the condition as a fixation check.
 o.blankingRadiusReTargetHeight=0.833; % One third letter width blank margin.
 o.blankingRadiusReEccentricity=0.5;
 o.fixationCrossBlankedNearTarget=true;
-o.fixationCrossBlankedUntilSecsAfterTarget=0.6;
+o.fixationOnsetAfterNoiseOffsetSecs=0.6;
 o.fixationCrossDrawnOnStimulus=false;
 o.useFlankers=false;
 o.flankerContrast=-1;
