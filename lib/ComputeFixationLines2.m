@@ -1,7 +1,10 @@
 function [fixationLines,markTargetLocation]=ComputeFixationLines2(fix)
+% [fixationLines,markTargetLocation]=ComputeFixationLines2(fix);
 % ComputeFixationLines2 returns an array suitable for Screen('Drawlines')
 % to draw a fixation cross and target cross specified by the parameters in
 % the struct argument "fix".
+% "fixationLines" has two rows, x and y. Each column is a point. Each pair
+% of columns specifies a line.
 % xy=XYPixOfXYDeg(o,[0 0]); % location of fixation
 % fix.xy=xy;            %  location of fixation on screen.
 % fix.eccentricityXYPix=eccentricityXYPix;  % xy offset of target from fixation.
