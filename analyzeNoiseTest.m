@@ -195,7 +195,7 @@ observers=[observers(iIdeal) observers(~iIdeal)];
 iFigure=1;
 figureHandle(iFigure)=figure('Name',[experiment ' Contrast'],'NumberTitle','off','pos',[10 10 500 900]);
 for conditionName=conditionNames
-    iCondition=find(ismember(conditionName,conditionNames));
+    iCondition=find(ismember(conditionNames,conditionName));
     subplot(2,1,iCondition);
     for iObserver=1:length(observers)
         for iDeg=1:length(targetHeightDegs)
@@ -283,7 +283,7 @@ saveas(gcf,graphFile,'epsc');
 iFigure=2;
 figureHandle(iFigure)=figure('Name',[experiment ' E/N'],'NumberTitle','off','pos',[10 10 500 900]);
 for conditionName=conditionNames
-    iCondition=find(ismember(conditionName,conditionNames));
+    iCondition=find(ismember(conditionNames,conditionName));
     subplot(2,1,iCondition);
     for iObserver=1:length(observers)
         for iDeg=1:length(targetHeightDegs)
@@ -357,7 +357,7 @@ saveas(gcf,graphFile,'epsc');
 iFigure=3;
 figureHandle(iFigure)=figure('Name',[experiment ' Efficiency'],'NumberTitle','off','pos',[10 10 500 900]);
 for conditionName=conditionNames
-    iCondition=find(ismember(conditionName,conditionNames));
+    iCondition=find(ismember(conditionNames,conditionName));
     subplot(2,1,iCondition);
     for iObserver=1:length(observers)
         for iDeg=1:length(targetHeightDegs)
