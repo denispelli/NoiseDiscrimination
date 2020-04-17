@@ -166,7 +166,7 @@ if ~skipDataCollection && 0
          o.questPlusSteepnesses=1:0.1:5;
          o.questPlusGuessingRates=1/o.alternatives;
          o.questPlusLapseRates=0:0.01:0.05;
-         o.questPlusLogContrasts=-2.5:0.05:0.5;
+         o.questPlusLogIntensities=-2.5:0.05:0.5;
          o.questPlusPrint=true;
          o.questPlusPlot=true;
       end
