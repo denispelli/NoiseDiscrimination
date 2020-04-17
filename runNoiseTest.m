@@ -33,7 +33,7 @@ o.eccentricityXYDeg=[0 0];
 o.contrast=-1;
 % o.noiseType='gaussian';
 o.noiseType='ternary'; % More noise power than 'gaussian'.
-o.setNearPointEccentricityTo='target';
+o.setNearPointEccentricityTo='fixation';
 o.nearPointXYInUnitSquare=[0.5 0.5];
 o.thresholdParameter='contrast';
 o.flankerSpacingDeg=0.2; % Used only for fixation check.
@@ -137,7 +137,7 @@ for targetKind={'letter' 'gabor'}
             o.nearPointXYInUnitSquare=[1-0.5/aspectRatio 0.5];
             o.alphabetPlacement='right'; % 'top' or 'right';
             o.contrast=-1;
-            o.setNearPointEccentricityTo='target';
+            o.setNearPointEccentricityTo='fixation';
             ooo{end+1}=o;
         end
     end
@@ -203,7 +203,7 @@ if false
             o.nearPointXYInUnitSquare=[1-0.5/aspectRatio 0.5];
             o.alphabetPlacement='right'; % 'top' or 'right';
             o.contrast=-1;
-            o.setNearPointEccentricityTo='target';
+            o.setNearPointEccentricityTo='fixation';
         end
     end
     ooo=[{o} ooo];
@@ -268,20 +268,20 @@ if false
 end
 
 %% ESTIMATED TIME TO COMPLETION
-willTakeMin=0;
+endsAtMin=0;
 for block=1:length(ooo)
     oo=ooo{block};
     for oi=1:length(oo)
         switch oo(oi).observer
             case 'ideal'
                 % Ideal takes 0.8 s/trial.
-                willTakeMin=willTakeMin+[oo(oi).trialsDesired]*0.8/60;
+                endsAtMin=endsAtMin+[oo(oi).trialsDesired]*0.8/60;
             otherwise
                 % Human typically takes 6 s/trial.
-                willTakeMin=willTakeMin+[oo(oi).trialsDesired]*6/60;
+                endsAtMin=endsAtMin+[oo(oi).trialsDesired]*6/60;
         end
     end
-    [ooo{block}(:).willTakeMin]=deal(round(willTakeMin));
+    [ooo{block}(:).endsAtMin]=deal(round(endsAtMin));
 end
 
 %% COMPUTE MAX VIEWING DISTANCE IN REMAINING BLOCKS
@@ -349,7 +349,7 @@ for block=1:length(ooo)
 end
 t=struct2table(oo,'AsArray',true);
 %     'uncertainParameter'...
-disp(t(:,{'block' 'experiment' 'conditionName' 'observer'  'willTakeMin' 'trialsDesired'  'targetKind' 'noiseType' 'thresholdParameter'...
+disp(t(:,{'block' 'experiment' 'conditionName' 'observer'  'endsAtMin' 'trialsDesired'  'targetKind' 'noiseType' 'thresholdParameter'...
     'contrast'  'noiseSD' ...
     'targetHeightDeg'  'eccentricityXYDeg' 'viewingDistanceCm' 'fixationCrossBlankedNearTarget'})); % Print the conditions in the Command Window.
 % return
