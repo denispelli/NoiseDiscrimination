@@ -1,63 +1,60 @@
-%% Analyze the data collected by runUncertaintyNew and runUncertaintySangita
-experiment='uncertaintyNew'; % November/December 2019
-experiment='uncertaintySangita'; % November/December 2019
-experiment='uncertainty';
-global printConditions makePlotLinear showLegendBox
-showLegendBox=true;
-printConditions=false;
-printFilenames=true;
-plotGraphs=true;
-makePlotLinear=false;
-myPath=fileparts(mfilename('fullpath')); % Takes 0.1 s.
-addpath(fullfile(myPath,'lib')); % Folder in same directory as this M file.
-dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
-cd(dataFolder);
-close all
-clear Plot % Clear the persistent variables in the subroutine below.
-
-%% READ ALL DATA OF EXPERIMENT FILES INTO A LIST OF THRESHOLDS "oo".
-vars={'condition' 'conditionName' 'experiment' 'dataFilename' ...
-    'experimenter' 'observer' 'trials' ...
-    'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' ...
-    'targetHeightDeg' 'targetDurationSecs' 'targetDurationSecsMean' 'targetDurationSecsSD'...
-    'targetCheckDeg' 'fullResolutionTarget' ...
-    'targetFont' ...
-    'noiseType' 'noiseSD'  'noiseCheckDeg' ...
-    'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
-    'contrast' 'E' 'E1' 'N' 'LBackground' 'luminanceAtEye' 'luminanceFactor'...
-    'filterTransmission' 'useFilter' 'retinalIlluminanceTd' 'pupilDiameterMm'...
-    'pixPerCm'  'nearPointXYPix' 'NUnits' 'beginningTime' 'thresholdParameter'...
-    'questMean' 'partingComments'...
-    'uncertainParameter' 'uncertainValues'...
-    'pThreshold' 'steepness' 'lapse' 'guess'};
-oo=ReadExperimentData(experiment,vars); % Adds date and missingFields.
-fprintf('%s %d thresholds.\n',experiment,length(oo));
-
-%% PRINT COMMENTS
-% comments={oo.partingComments};
-% ok=true(size(comments));
-% for i=1:length(comments)
-%     if isempty(comments{i}) || isempty(comments{i}{1})
-%         ok(i)=false;
-%     end
-% end
-% comments=comments(ok);
-% for i=1:length(comments)
-%     fprintf('%s\n',comments{i}{1});
-% end
-
-% DESCRIBE UNCERTAINTY IN CONDITION NAME.
-for oi=1:length(oo)
-    if isempty(oo(oi).uncertainParameter)
+if false
+    %% Analyze the data collected by runUncertaintyNew and runUncertaintySangita
+    experiment='uncertaintyNew'; % November/December 2019
+    experiment='uncertaintySangita'; % November/December 2019
+    experiment='uncertainty';
+    global printConditions makePlotLinear showLegendBox
+    showLegendBox=true;
+    printConditions=false;
+    printFilekeys=true;
+    plotGraphs=true;
+    makePlotLinear=false;
+    myPath=fileparts(mfilename('fullpath')); % Takes 0.1 s.
+    addpath(fullfile(myPath,'lib')); % Folder in same directory as this M file.
+    dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
+    cd(dataFolder);
+    close all
+    clear Plot % Clear the persistent variables in the subroutine below.
+    
+    %% READ ALL DATA FROM EXPERIMENT FILES INTO A LIST OF THRESHOLDS "oo".
+    vars={'experiment' 'condition' 'conditionName' 'dataFilename' ...
+        'experimenter' 'observer' 'trials' ...
+        'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' ...
+        'targetHeightDeg' 'targetDurationSecs' 'targetDurationSecsMean' 'targetDurationSecsSD'...
+        'targetCheckDeg' 'fullResolutionTarget' ...
+        'targetFont' 'alphabet' ...
+        'noiseType' 'noiseSD'  'noiseCheckDeg' ...
+        'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
+        'contrast' 'E' 'E1' 'N' 'LBackground' 'luminanceAtEye' 'luminanceFactor'...
+        'filterTransmission' 'useFilter' 'retinalIlluminanceTd' 'pupilDiameterMm'...
+        'pixPerCm'  'nearPointXYPix' 'NUnits' 'beginningTime' 'thresholdParameter'...
+        'questMean' 'partingComments'...
+        'uncertainParameter' 'uncertainValues'...
+        'pThreshold' 'steepness' 'lapse' 'guess'};
+    oo=ReadExperimentData(experiment,vars); % Adds date and missingFields.
+    fprintf('%s %d thresholds.\n',experiment,length(oo));
+    
+    %% PRINT COMMENTS
+    % comments={oo.partingComments};
+    % ok=true(size(comments));
+    % for i=1:length(comments)
+    %     if isempty(comments{i}) || isempty(comments{i}{1})
+    %         ok(i)=false;
+    %     end
+    % end
+    % comments=comments(ok);
+    % for i=1:length(comments)
+    %     fprintf('%s\n',comments{i}{1});
+    % end
+    
+    % USE UncertainEOverN TO IMPLEMENT WHITE-NOISE IDEAL.
+    keys={};
+    values=[];
+    for oi=1:length(oo)
         M=1;
-    else
-        M=length(oo(oi).uncertainValues{1});
-    end
-    if ismember(oo(oi).conditionName,{'Sloan'})
-        oo(oi).conditionName=sprintf('M=%.0f',M);
-    end
-    str=sprintf(';M=%.0f',M);
-    if ismember(oo(oi).conditionName(end-3:end),{str(end-3:end)})
+        for i=1:length(oo(oi).uncertainParameter)
+            M=M*length(oo(oi).uncertainValues{i});
+        end
         if ismember(oo(oi).observer,{'ideal'}) && oo(oi).N>0
             psych.trialsDesired=100;
             psych.reps=100;
@@ -67,148 +64,132 @@ for oi=1:length(oo)
             psych.beta=oo(oi).steepness;
             psych.delta=oo(oi).lapse;
             psych.gamma=oo(oi).guess;
-            switch oo(oi).conditionName
-                case 'gabor;M=1'
-                    if ~exist('EOverNG1','var')
-                        psych.targetKind='gabor';
-                        EOverNG1=UncertainEOverN(M,psych);
-                    end
-                    oo(oi).E=EOverNG1*oo(oi).N;
-                case 'gabor;M=104'
-                    psych.targetKind='gabor';
-                    if ~exist('EOverNG104','var')
-                        EOverNG104=UncertainEOverN(M,psych);
-                    end
-                    oo(oi).E=EOverNG104*oo(oi).N;
-                case 'letter;M=1'
-                    psych.targetKind='letter';
-                    % It's ok.
-                case 'letter;M=104'
-                    psych.targetKind='letter';
-                    % Increase threshold by same factor as
-                    % we measured for Gabor.
-                    oo(oi).E=oo(oi).E*EOverNG104/EOverNG1;
-                case ''
-                    % Skip this.
-                otherwise
-                    error('Unknown condition ''%s'' oi=%d.',oo(oi).conditionName,oi);
+            psych.targetKind=oo(oi).targetKind;
+            psych.targetFont=oo(oi).targetFont;
+            psych.alphabet=oo(oi).alphabet;
+            if ~ismember(oo(oi).conditionName,keys)
+                % Each condition, with non-zero noise, is computed only once,
+                % and cached.
+                keys{end+1}=oo(oi).conditionName;
+                values(end+1)=UncertainEOverN(M,psych);
+            end
+            i=find(ismember(keys,oo(oi).conditionName));
+            oo(oi).E=values(i)*oo(oi).N;
+        end
+    end
+    
+    % COMPUTE EFFICIENCY
+    % Select thresholdParameter='contrast', for each conditionName, For each
+    % observer, including ideal, use all (E,N) data to estimate deltaNOverE and
+    % Neq. Compute efficiency by comparing deltaNOverE of each to that of the
+    % ideal.
+    conditionkeys=unique({oo.conditionName});
+    observers=unique({oo.observer});
+    aa=[];
+    for conditionName=conditionkeys
+        for observer=observers
+            match=ismember({oo.conditionName},conditionName) & ismember({oo.observer},observer);
+            match=match & ismember({oo.thresholdParameter},{'contrast'});
+            if sum(match)>0
+                E=[oo(match).E];
+                N=[oo(match).N];
+                [Neq,E0,deltaEOverN]=EstimateNeq(E,N);
+                if deltaEOverN<0.1
+                    warning('observer "%s", conditionName "%s", deltaEOverN<0.1, deltaEOverN %.2g',...
+                        observer{1},conditionName{1},deltaEOverN);
+                    fprintf('E=['); fprintf('%.2g ',E); fprintf('];\n');
+                    fprintf('N=['); fprintf('%.2g ',N); fprintf('];\n');
+                end
+                aa(end+1).conditionName=conditionName{1};
+                aa(end).observer=observer{1};
+                aa(end).E=E; % array
+                aa(end).N=N; % array
+                aa(end).E0=E0; % scalar
+                aa(end).Neq=Neq; % scalar
+                aa(end).deltaEOverN=deltaEOverN; % scalar
+                oi=find(match,1);
+                aa(end).thresholdParameter=oo(oi).thresholdParameter;
             end
         end
     end
-end
-
-% oo=[oo1 oo2];
-% COMPUTE EFFICIENCY
-% Select thresholdParameter='contrast', for each conditionName,
-% For each observer, including ideal, use all (E,N) data to estimate deltaNOverE and Neq.
-% Compute efficiency by comparing deltaNOverE of each to that of the ideal.
-conditionNames=unique({oo.conditionName});
-observers=unique({oo.observer});
-aa=[];
-for conditionName=conditionNames
-    for observer=observers
-        match=ismember({oo.conditionName},conditionName) & ismember({oo.observer},observer);
-        match=match & ismember({oo.thresholdParameter},{'contrast'});
-        if sum(match)>0
-            E=[oo(match).E];
-            N=[oo(match).N];
-            [Neq,E0,deltaEOverN]=EstimateNeq(E,N);
-            if deltaEOverN<0.1
-                warning('observer "%s", conditionName "%s", deltaEOverN<0.1, deltaEOverN %.2g',...
-                    observer{1},conditionName{1},deltaEOverN);
-                fprintf('E=['); fprintf('%.2g ',E); fprintf('];\n');
-                fprintf('N=['); fprintf('%.2g ',N); fprintf('];\n');
+    for conditionName=conditionkeys
+        for observer=observers
+            match=ismember({aa.thresholdParameter},{'contrast'});
+            match=match & ismember({aa.conditionName},conditionName);
+            idealMatch=match & ismember({aa.observer},{'ideal'});
+            match = match & ismember({aa.observer},observer);
+            if sum(match)>0 && sum(idealMatch)>0
+                assert(sum(match)==1 & sum(idealMatch)==1);
+                aa(match).efficiency=aa(idealMatch).deltaEOverN ./ aa(match).deltaEOverN;
             end
-            aa(end+1).conditionName=conditionName{1};
-            aa(end).observer=observer{1};
-            aa(end).E=E; % array
-            aa(end).N=N; % array
-            aa(end).E0=E0; % scalar
-            aa(end).Neq=Neq; % scalar
-            aa(end).deltaEOverN=deltaEOverN; % scalar
-            oi=find(match,1);
-            aa(end).thresholdParameter=oo(oi).thresholdParameter;
         end
     end
-end
-for conditionName=conditionNames
-    for observer=observers
-        match=ismember({aa.thresholdParameter},{'contrast'});
-        match=match & ismember({aa.conditionName},conditionName);
-        idealMatch=match & ismember({aa.observer},{'ideal'});
-        match = match & ismember({aa.observer},observer);
-        if sum(match)>0 && sum(idealMatch)>0
-            assert(sum(match)==1 & sum(idealMatch)==1);
-            aa(match).efficiency=aa(idealMatch).deltaEOverN ./ aa(match).deltaEOverN;
-        end
+    % human=~ismember({aa.observer},'ideal');
+    % aa=struct2table(aa(human));
+    aa=struct2table(aa);
+    aa=sortrows(aa,'conditionName');
+    disp(aa(:,{'conditionName','efficiency','observer','deltaEOverN'}));
+    dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
+    writetable(aa,fullfile(dataFolder,'efficiency.xlsx'));
+    
+    % return
+    
+    % oo=ComputeNPhoton(oo);
+    % Compute efficiency
+    
+    % Report the luminance fields of each file.
+    t=struct2table(oo);
+    fprintf('Ready to analyze %d thresholds:\n',length(oo));
+    if printFilekeys
+        %     t=sortrows(t,{'targetFont','N','observer'});
+        %     disp(t(:,{'targetFont','N','E','observer','noiseSD'}));
+        %     tt=t(:,{'targetFont','N','E','observer','noiseSD'});
+        %     t=sortrows(t,{'conditionName' 'thresholdParameter' 'N' 'observer'});
+        disp(t(:,{'observer' 'conditionName' 'thresholdParameter' 'N' 'E' 'targetHeightDeg'  'noiseSD' 'contrast'}));
     end
+    tt=t(:,{'experiment' 'conditionName' 'thresholdParameter' 'N' 'E' 'targetHeightDeg' 'observer' 'noiseSD' 'contrast'});
+    writetable(tt,'ComplexEfficiency.xlsx');
+    return
 end
-% human=~ismember({aa.observer},'ideal');
-% aa=struct2table(aa(human));
-aa=struct2table(aa);
-aa=sortrows(aa,'conditionName');
-disp(aa(:,{'conditionName','efficiency','observer','deltaEOverN'}));
-dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
-writetable(aa,fullfile(dataFolder,'efficiency.xlsx'));
 
-% return
-
-% oo=ComputeNPhoton(oo);
-% Compute efficiency
-
-% Report the luminance fields of each file.
-t=struct2table(oo);
-fprintf('Ready to analyze %d thresholds:\n',length(oo));
-if printFilenames
-    %     t=sortrows(t,{'targetFont','N','observer'});
-    %     disp(t(:,{'targetFont','N','E','observer','noiseSD'}));
-    %     tt=t(:,{'targetFont','N','E','observer','noiseSD'});
-    %     t=sortrows(t,{'conditionName' 'thresholdParameter' 'N' 'observer'});
-    disp(t(:,{'observer' 'conditionName' 'thresholdParameter' 'N' 'E' 'targetHeightDeg'  'noiseSD' 'contrast'}));
-end
-tt=t(:,{'conditionName' 'thresholdParameter' 'N' 'E' 'targetHeightDeg' 'observer' 'noiseSD' 'contrast'});
-writetable(tt,'ComplexEfficiency.xlsx');
-% return
-
-
-
+close all
+clear Plot % Clear the persistent variables in the subroutine below.
 list=struct([]);
 if plotGraphs
+    %     conditionNames=unique({oo.conditionName});
+    conditionNames={'gabor;M=1' 'gabor;M=104' 'letter;M=1' 'letter;M=104'};
     fprintf('Plotting %d thresholds.\n',length(oo));
     for observer=unique({oo.observer})
         isObserver=ismember({oo.observer},observer);
-        for conditionName=unique({oo.conditionName})
+        for conditionName=conditionNames
             isConditionName=ismember({oo.conditionName},conditionName);
-            for noiseType=unique({oo.noiseType})
-                isNoiseType=ismember({oo.noiseType},noiseType);
-                which=isObserver & isConditionName & isNoiseType;
-                if sum(which)>0
-                    % fprintf('%s-%s-%s: %d thresholds. ',observer{1},conditionName{1},noiseType{1},sum(which));
-                    list(end+1).observer=observer{1};
-                    list(end).conditionName=conditionName{1};
-                    list(end).noiseType=noiseType{1};
-                    list(end).thresholds=sum(which);
-                    E=[oo(which).E];
-                    N=[oo(which).N];
-                    % fprintf('%s %s\n',observer{1},conditionName{1});
-                    [Neq,E0]=EstimateNeq(E,N);
-                    E1=oo(which).E1;
-                    E1=mean(E1);
-                    list(end).logC0=0.5*log10(E0/E1);
-                    list(end).logNeq=log10(Neq);
-                    list(end).logE0OverNeq=log10(E0/Neq);
-                    subplots=[1 length(unique({oo.conditionName}))];
-                    [~,subplotIndex]=ismember(conditionName,unique({oo.conditionName}));
-                    Plot(oo(which),subplots,subplotIndex);
-                end
+            which=isObserver & isConditionName;
+            if sum(which)>0
+                % fprintf('%s-%s-%s: %d thresholds. ',observer{1},conditionName{1},noiseType{1},sum(which));
+                list(end+1).observer=observer{1};
+                list(end).conditionName=conditionName{1};
+                list(end).thresholds=sum(which);
+                E=[oo(which).E];
+                N=[oo(which).N];
+                % fprintf('%s %s\n',observer{1},conditionName{1});
+                [Neq,E0]=EstimateNeq(E,N);
+                E1=oo(which).E1;
+                E1=mean(E1);
+                list(end).logC0=0.5*log10(E0/E1);
+                list(end).logNeq=log10(Neq);
+                list(end).logE0OverNeq=log10(E0/Neq);
+                subplots=[1 length(conditionNames)];
+                [~,subplotIndex]=ismember(conditionName,conditionNames);
+                Plot(oo(which),subplots,subplotIndex);
             end
         end
     end
 end
 t=struct2table(list);
 disp(t);
-% return
+return
 
+%% PLOT FUNCTION
 function Plot(oo,subplots,subplotIndex)
 global printConditions makePlotLinear showLegendBox
 persistent previousObserver figureHandle overPlots figureTitle axisHandle
@@ -278,7 +259,7 @@ if false
     fprintf('All selected fields have been saved in spreadsheet: /data/%s\n',dataFilename);
 end
 
-return
+% return
 %% Plot
 if Neq>=min(N) && Neq<2*max(N)
     % Trust reasonable Neq.
