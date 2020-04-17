@@ -578,6 +578,7 @@ if isempty(isScreenCalibrated)
 end
 global skipScreenCalibration % Saves time by skipping the setting of profile, brightness, and autobrightness.
 global isLastBlock % Skip screen restore and leave window open unless isLastBlock is true.
+global oldDisplaySettings % Produced and used by MacDisplaySettings.
 global temporaryWindow % Initialized to empty.
 global window % Retain pointer to open window when this function exits and is called again.
 % "window" must persist from block to block. It's important to clear it
@@ -677,7 +678,10 @@ o.showUncertainty=false;
 
 % Geometry
 o.nearPointXYInUnitSquare=[0.5 0.5]; % location of target center on screen. [0 0]  lower right, [1 1] upper right.
-o.setNearPointEccentricityTo='target'; % 'target' or 'fixation' or 'value'
+o.setNearPointEccentricityTo='fixation'; % 'target' or 'fixation' or 'value'
+% Note that all conditions must have same near point. So if your conditions
+% have targets at different eccentricities, you should not select 'target'.
+% Select either 'fixation' or 'value'.
 o.nearPointXYDeg=[0 0]; % Overwritten unless o.setNearPointEccentricityTo=='value'.
 o.viewingDistanceCm=50; % viewing distance
 o.flipScreenHorizontally=false; % Use this when viewing the display in a mirror.
@@ -710,6 +714,7 @@ o.blankingRadiusReTargetHeight= nan;
 o.blankingRadiusReEccentricity= 0.5;
 o.clipToStimulusRect=true;
 o.recordGaze=false;
+o.blankAllTargets=true; % New April, 2020.
 % web(fullfile(docroot, 'vision/ref/videolabeler-app.html'))
 
 % QUEST
@@ -807,7 +812,7 @@ o.skipTrial=0;
 o.trialsSkipped=0;
 o.fixationCheck=false; % True designates the condition as a fixation check.
 o.fixationCheckMakeupTrials=2; % After a mistake, how many right answers to require.
-o.willTakeMin=0; % Estimated time till completion, in minutes.
+o.endsAtMin=0; % Estimated time till completion, in minutes.
 o.askExperimenterToSetDistance=true;
 
 % Target
@@ -1129,6 +1134,45 @@ o.stimulusRect=o.screenRect; % Initialize to full screen. Restrict later.
 [oo.screenRect]=deal(o.screenRect);
 [oo.stimulusRect]=deal(o.stimulusRect);
 clear o
+%% Are we using the screen at its maximum native resolution?
+% First, we take the highest resolution in the device's list as an estimate
+% of the native resolution. Alas, Mario warns that this rule of thumb is
+% not reliable, and I confirm that, finding that among the resolutions
+% offered by Screen('Resolutions') for my 15" MacBook Pro is a resolution
+% that is larger than the native resolution. Thus I consulted at the apple
+% documents and made an exhaustive table for my 15" MacBook Pros with
+% retina display and 27" iMac. We overrule the rule of thumb when we have
+% exact knowledge.
+%% FIND MAX RES, AS ESTIMATE OF NATIVE RES.
+res=Screen('Resolutions',oo(1).screen);
+[oo.nativeWidth]=deal(0);
+[oo.nativeHeight]=deal(0);
+for i=1:length(res)
+    if res(i).width>oo(1).nativeWidth
+        [oo.nativeWidth]=deal(res(i).width);
+        [oo.nativeHeight]=deal(res(i).height);
+    end
+end
+%% LOOK UP NATIVE RES, IF TABULATED.
+switch MacModelName
+    case {'iMac15,1' 'iMac17,1' 'iMac18,3' 'iMac19,1'}
+        % iMac (Retina 5K, 27-inch, Mid 2015)
+        % iMac (Retina 5K, 27-inch, Late 2015)
+        % iMac (Retina 5K, 27-inch, 2017)
+        % iMac (Retina 5K, 27-inch, 2019)
+        [oo.nativeWidth]=deal(5120);
+        [oo.nativeHeight]=deal(2880);
+    case {'MacBookPro10,1' 'MacBookPro11,2' 'MacBookPro11,3' ...
+            'MacBookPro11,4' 'MacBookPro11,5' 'MacBookPro13,3' ...
+            'MacBookPro14,3' 'MacBookPro15,1' 'MacBookPro15,3'}
+        % 15" MacBook Pro
+        [oo.nativeWidth]=deal(2880);
+        [oo.nativeHeight]=deal(1800);
+    case 'MacBookPro16,1'
+        % 16" MacBook Pro
+        [oo.nativeWidth]=deal(3072);
+        [oo.nativeHeight]=deal(1920);
+end
 
 %% OLD FEATURE: REPLICATE PELLI 2006
 % 3/23/17 moved this block of code to after reading o parameters. Untested in new location.
@@ -1267,75 +1311,88 @@ o=oo(1);
 skipScreenCalibration=o.skipScreenCalibration; % Set global flag.
 isLastBlock=o.isLastBlock; % Set global flag read by CloseWindowsAndCleanup.
 if IsOSX && ~isScreenCalibrated && ~skipScreenCalibration && ~ismember(o.observer,o.algorithmicObservers)
-    % 2019 update: Psychtoolbox offers Brightness control through a
-    % Screen call. This worked well until macOS introduced Night Shift
-    % (in summer 2017?). Since then my applescript-based Brightness.m
-    % has been more reliable, but slow. However, in July 2019 Nicholas
-    % Riley showed us an undocumented call in Apple's new Core Display
-    % API that works. Mario Kleiner folded it into Screen in
-    % Psychtoolbox 3.0.16. So my Brightness.m function is now obsolete.
-    % Control of Brightness has been flakey since summer 2017, so this
-    % code sets and reads back the Brightness setting to make sure it
-    % worked, and tries three times before giving up. As of
-    % Pyschtoolbox 3.0.16, I'm hoping brightness is now reliable, so we
-    % can streamline this.
-    [~,ver]=PsychtoolboxVersion;
-    % fprintf('PsychtoolboxVersion %d.%d.%d',ver.major,ver.minor,ver.point);
-    v=ver.major*1000+ver.minor*100+ver.point;
-    useScreenBrightness= v>=3016 && IsOSX;
-    try
-        if isfinite(oo(oi).brightnessSetting)
-            cal.brightnessSetting=oo(oi).brightnessSetting;
-        else
-            cal.brightnessSetting=0.87; % default value
-        end
-        ffprintf(ff,'Setting Brightness. ... ');
+    if true
+    % April 2020. We use the new MacDisplaySettings.
+        newDisplaySettings.brightness=oo(1).brightnessSetting;
+        newDisplaySettings.automatically=false;
+        newDisplaySettings.trueTone=false;
+        newDisplaySettings.nightShiftSchedule='Off';
+        newDisplaySettings.newShiftManual=false;
+        ffprintf(ff,'Setting MacDisplaySettings. ... ');
         s=GetSecs;
-        for i=1:3
-            if useScreenBrightness
-                Screen('ConfigureDisplay','Brightness',...
-                    cal.screen,cal.screenOutput,cal.brightnessSetting);
+        oldDisplaySettings=MacDisplaySettings(oo(1).screen,newDisplaySettings);
+        ffprintf(ff,'Done (%.1f s).\n',GetSecs-s); % Setting MacDisplaySettings.
+   else
+        % 2019 update: Psychtoolbox offers Brightness control through a
+        % Screen call. This worked well until macOS introduced Night Shift
+        % (in summer 2017?). Since then my applescript-based Brightness.m
+        % has been more reliable, but slow. However, in July 2019 Nicholas
+        % Riley showed us an undocumented call in Apple's new Core Display
+        % API that works. Mario Kleiner folded it into Screen in
+        % Psychtoolbox 3.0.16. So my Brightness.m function is now obsolete.
+        % Control of Brightness has been flakey since summer 2017, so this
+        % code sets and reads back the Brightness setting to make sure it
+        % worked, and tries three times before giving up. As of
+        % Pyschtoolbox 3.0.16, I'm hoping brightness is now reliable, so we
+        % can streamline this.
+        [~,ver]=PsychtoolboxVersion;
+        % fprintf('PsychtoolboxVersion %d.%d.%d',ver.major,ver.minor,ver.point);
+        v=ver.major*1000+ver.minor*100+ver.point;
+        useScreenBrightness= v>=3016 && IsOSX;
+        try
+            if isfinite(oo(oi).brightnessSetting)
+                cal.brightnessSetting=oo(oi).brightnessSetting;
             else
-                Brightness(cal.screen,cal.brightnessSetting); % Set brightness.
+                cal.brightnessSetting=0.87; % default value
             end
-            cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
-            if abs(cal.brightnessSetting-cal.brightnessReading)<0.01
-                break;
-            elseif i==3
-                error('Tried three times to set brightness to %.2f, but read back %.2f',...
-                    cal.brightnessSetting,cal.brightnessReading);
+            ffprintf(ff,'Setting Brightness. ... ');
+            s=GetSecs;
+            for i=1:3
+                if useScreenBrightness
+                    Screen('ConfigureDisplay','Brightness',...
+                        cal.screen,cal.screenOutput,cal.brightnessSetting);
+                else
+                    Brightness(cal.screen,cal.brightnessSetting); % Set brightness.
+                end
+                cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
+                if abs(cal.brightnessSetting-cal.brightnessReading)<0.01
+                    break;
+                elseif i==3
+                    error('Tried three times to set brightness to %.2f, but read back %.2f',...
+                        cal.brightnessSetting,cal.brightnessReading);
+                end
+                % If it failed, try again two more times. The first call to
+                % Brightness sometimes fails. Not sure why. Maybe it times out.
             end
-            % If it failed, try again two more times. The first call to
-            % Brightness sometimes fails. Not sure why. Maybe it times out.
+            ffprintf(ff,'Done (%.1f s).\n',GetSecs-s); % Setting Brightness.
+        catch e
+            % Caution: Screen ConfigureDisplay Brightness gives a fatal error
+            % if not supported, and is unsupported on many devices, including a
+            % video projector under macOS. We use try-catch to cope. NOTE:
+            % It is my impression since summer 2017 that the Brightness
+            % function (which uses AppleScript to control the System
+            % Preferences Display panel) is currently more reliable than the
+            % Screen ConfigureDisplay Brightness feature (which uses a macOS
+            % call). The Screen call adjusts the brightness, but not the slider
+            % in the Preferences Display panel, and macOS later unpredictably
+            % resets the brightness to the level of the slider, not what we
+            % asked for. This is a macOS bug in the Apple call used by Screen.
+            ffprintf(ff,'\nWARNING: This computer does not support control of brightness of this screen.\n');
+            msg=getReport(e);
+            ffprintf(ff,msg);
+            cal.brightnessReading=NaN;
+        end % try
+        if abs(cal.brightnessSetting-cal.brightnessReading)>0.01
+            error('Set brightness to %.2f, but read back %.2f',...
+                cal.brightnessSetting,cal.brightnessReading);
         end
-        ffprintf(ff,'Done (%.1f s).\n',GetSecs-s); % Setting Brightness.
-    catch e
-        % Caution: Screen ConfigureDisplay Brightness gives a fatal error
-        % if not supported, and is unsupported on many devices, including a
-        % video projector under macOS. We use try-catch to cope. NOTE:
-        % It is my impression since summer 2017 that the Brightness
-        % function (which uses AppleScript to control the System
-        % Preferences Display panel) is currently more reliable than the
-        % Screen ConfigureDisplay Brightness feature (which uses a macOS
-        % call). The Screen call adjusts the brightness, but not the slider
-        % in the Preferences Display panel, and macOS later unpredictably
-        % resets the brightness to the level of the slider, not what we
-        % asked for. This is a macOS bug in the Apple call used by Screen.
-        ffprintf(ff,'\nWARNING: This computer does not support control of brightness of this screen.\n');
-        msg=getReport(e);
-        ffprintf(ff,msg);
-        cal.brightnessReading=NaN;
-    end % try
-    if abs(cal.brightnessSetting-cal.brightnessReading)>0.01
-        error('Set brightness to %.2f, but read back %.2f',...
-            cal.brightnessSetting,cal.brightnessReading);
-    end
-    ffprintf(ff,'Brightness set to %.2f.\n',cal.brightnessSetting);
-    if ismac
-        ffprintf(ff,'Turning AutoBrightness off. ... ');
-        s=GetSecs;
-        AutoBrightness(cal.screen,0);
-        ffprintf(ff,'Done (%.1f s)\n',GetSecs-s); % AutoBrightness
+        ffprintf(ff,'Brightness set to %.2f.\n',cal.brightnessSetting);
+        if ismac
+            ffprintf(ff,'Turning AutoBrightness off. ... ');
+            s=GetSecs;
+            AutoBrightness(cal.screen,0);
+            ffprintf(ff,'Done (%.1f s)\n',GetSecs-s); % AutoBrightness
+        end
     end
 end % if ~isScreenCalibrated && ~skipScreenCalibration && ~ismember(o.observer,o.algorithmicObservers)
 clear o
@@ -2545,6 +2602,15 @@ try
                 error('oo(%d).setNearPointEccentricityTo has illegal value ''%s''.',...
                     oi,oo(oi).setNearPointEccentricityTo);
         end
+        % MAKE SURE ALL CONDITIONS HAVE SAME NEAR POINT.
+        if any(oo(oi).nearPointXYDeg~=oo(1).nearPointXYDeg)
+            if any(ismember({oo.setNearPointEccentricityTo},{'target'}))
+                if any(oo(oi).eccentricityXYDeg~=oo(1).eccentricityXYDeg)
+                    warning('We advise against setting o.setNearPointEccentricityTo=''target'' when your conditions have multiple eccentricities.');
+                end
+            end
+            error('All conditions must have the same o.nearPointXYDeg.');
+        end
         if false
             % If we anticipate that the target will fall off the screen and
             % it's o.okToShiftCoordinates then adjust the near-point
@@ -2884,26 +2950,63 @@ try
                 oi,oo(oi).flankerArrangement,flankerSpacingPix,flankerSpacingPix/oo(oi).pixPerDeg,flankerSpacingPix/oo(oi).targetHeightPix,oo(oi).flankerContrast);
         end
         if oo(oi).useFixation
-            % We allow various kinds of uncertainty, and interleaved
-            % conditions, but we assume that the point of fixation is fixed
-            % throughout the whole block, so we can compute the fixation
-            % mark now.
-            fix.markTargetLocation=oo(oi).markTargetLocation;
-            fixationXYPix=round(XYPixOfXYDeg(oo(oi),[0 0])); % location of fixation
-            fix.xy=fixationXYPix;            %  location of fixation on screen.
-            fix.eccentricityXYPix=oo(oi).targetXYPix-fixationXYPix;  % xy offset of target from fixation.
-            if oo(oi).clipToStimulusRect
-                fix.clipRect=oo(oi).stimulusRect;
+            if oo(oi).blankAllTargets
+				% New April 2020.
+                % Consider all possible targets, across all the conditions
+                % being interleaved. To support randomly interleaved
+                % conditions, the fixation marks should not reveal which
+                % condition this trial wll show. So we make the fixation
+                % marks independent of which condition this trial will
+                % show. We could enforce this by replacing oi by 1 in this
+                % block of code.
+                % xy location of fixation on screen.
+                fixationXYPix=round(XYPixOfXYDeg(oo(oi),[0 0]));
+                fix.eccentricityXYPix=zeros(length(oo),2);
+                fix.targetHeightPix=zeros(length(oo),1);
+                for oii=1:length(oo)
+                    % List all the targets, one per condition.
+                    % eccentricityXYPix is xy offset of target from fixation.
+                    fix.eccentricityXYPix(oii,1:2)=oo(oii).targetXYPix-fixationXYPix;
+                    fix.targetHeightPix(oii)=oo(oii).targetHeightPix;
+                end
+                % These two can be one for all targets, or one row per target.
+                fix.markTargetLocation=oo(oi).markTargetLocation;
+                fix.targetMarkPix=oo(oi).targetMarkDeg*oo(oi).pixPerDeg;
+                % The rest are one for all targets.
+                fix.xy=fixationXYPix;
+                fix.fixationCrossPix=fixationCrossPix;% Width & height of fixation cross.
+                fix.blankingRadiusReEccentricity=oo(oi).blankingRadiusReEccentricity;
+                fix.blankingRadiusReTargetHeight=oo(oi).blankingRadiusReTargetHeight;
+                fix.fixationCrossBlankedNearTarget=oo(oi).fixationCrossBlankedNearTarget;
+                if oo(oi).clipToStimulusRect
+                    fix.clipRect=oo(oi).stimulusRect;
+                else
+                    fix.clipRect=oo(oi).screenRect;
+                end
+                [fixationLines,oo(oi).markTargetLocation]=ComputeFixationLines3(fix);
             else
-                fix.clipRect=oo(oi).screenRect;
+                % Consider only the target of this condition.
+                % We allow various kinds of uncertainty, and interleaved
+                % conditions, but we assume that the point of fixation is fixed
+                % throughout the whole block, so we can compute the fixation
+                % mark now.
+                fix.markTargetLocation=oo(oi).markTargetLocation;
+                fixationXYPix=round(XYPixOfXYDeg(oo(oi),[0 0])); % location of fixation
+                fix.xy=fixationXYPix;            %  location of fixation on screen.
+                fix.eccentricityXYPix=oo(oi).targetXYPix-fixationXYPix;  % xy offset of target from fixation.
+                if oo(oi).clipToStimulusRect
+                    fix.clipRect=oo(oi).stimulusRect;
+                else
+                    fix.clipRect=oo(oi).screenRect;
+                end
+                fix.fixationCrossPix=fixationCrossPix;% Width & height of fixation cross.
+                fix.targetMarkPix=oo(oi).targetMarkDeg*oo(oi).pixPerDeg;
+                fix.blankingRadiusReEccentricity=oo(oi).blankingRadiusReEccentricity;
+                fix.blankingRadiusReTargetHeight=oo(oi).blankingRadiusReTargetHeight;
+                fix.targetHeightPix=oo(oi).targetHeightPix;
+                fix.fixationCrossBlankedNearTarget=oo(oi).fixationCrossBlankedNearTarget;
+                [fixationLines,oo(oi).markTargetLocation]=ComputeFixationLines2(fix);
             end
-            fix.fixationCrossPix=fixationCrossPix;% Width & height of fixation cross.
-            fix.targetMarkPix=oo(oi).targetMarkDeg*oo(oi).pixPerDeg;
-            fix.blankingRadiusReEccentricity=oo(oi).blankingRadiusReEccentricity;
-            fix.blankingRadiusReTargetHeight=oo(oi).blankingRadiusReTargetHeight;
-            fix.targetHeightPix=oo(oi).targetHeightPix;
-            fix.fixationCrossBlankedNearTarget=oo(oi).fixationCrossBlankedNearTarget;
-            [fixationLines,oo(oi).markTargetLocation]=ComputeFixationLines2(fix);
         else
             fixationLines=[];
         end
@@ -6974,8 +7077,13 @@ if ~isempty(fixationLines)
 end
 Screen('Flip',o.window,0,1); % Show gray screen at o.LBackground with fixation and crop marks. Don't clear buffer.
 readyString='';
-if o.markTargetLocation
-    readyString=[readyString 'The X indicates target center. '];
+switch sum(o.markTargetLocation)
+    case 0
+        % Nothing to say.
+    case 1
+    readyString=[readyString 'The X indicates target location. '];
+    otherwise
+    readyString=[readyString 'Each X indicates a possible target location. '];
 end
 if o.showUncertainty
     readyString=[readyString 'Each yellow dot is a possible target location. '];
@@ -7082,8 +7190,8 @@ function CloseWindowsAndCleanup(oo)
 % skipScreenCalibration. "RestoreCluts" is quick, but loading a color
 % preference is slow (30 s), so we leave that alone, until we're cleaning
 % up after the last block.
-global skipScreenCalibration isLastBlock isScreenCalibrated
-global window temporaryWindow
+global skipScreenCalibration isLastBlock isScreenCalibrated 
+global window temporaryWindow oldDisplaySettings
 if nargin==1
     %     fprintf('CloseWindowsAndCleanup(oo): isLastBlock=%d, global isLastBlock=%d isScreenCalibrated=%d.\n',...
     %         oo(1).isLastBlock,isLastBlock,isScreenCalibrated);
@@ -7110,10 +7218,17 @@ if ~isempty(Screen('Windows')) && isLastBlock
     fprintf('Done (%.1f s).\n',GetSecs-s); % Closing all windows.
 end
 if isScreenCalibrated && ~skipScreenCalibration && isLastBlock && ismac
-    fprintf('Restoring AutoBrightness. ... ');
-    s=GetSecs;
-    AutoBrightness(0,1);
-    fprintf('Done (%.1f s).\n',GetSecs-s); % Restoring AutoBrightness.
+    if true
+		% New April 2020.
+        fprintf('Restoring MacDisplaySettings. ... ');
+        s=GetSecs;
+        MacDisplaySettings(oldDisplaySettings);
+    else
+        fprintf('Restoring AutoBrightness. ... ');
+        s=GetSecs;
+        AutoBrightness(0,1);
+    end
+    fprintf('Done (%.1f s).\n',GetSecs-s); % Restoring.
     RestoreCluts;
     % This is the only place we set it false.
     % MATLAB initializes it false.
