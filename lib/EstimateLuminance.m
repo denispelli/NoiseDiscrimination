@@ -10,6 +10,8 @@ function imageLuminance=EstimateLuminance(cal,image)
 % cal.old.L is the luminance measured at pixel value cal.old.n
 % cal.old.n is a monotonic list of pixel values that were calibrated.
 % cal.gamma is the new gamma table ready for loading into the CLUT.
+% cal.dacBits is the number of bits used in the digital to analog
+%      converter.
 imageG=ones(size(image));
 image=round(image);
 bad=~isfinite(image)| round(image)>size(cal.gamma,1)-1 |  round(image)<0;

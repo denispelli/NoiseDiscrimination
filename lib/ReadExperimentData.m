@@ -1,13 +1,14 @@
 function [oo,tt]=ReadExperimentData(experiment,vars)
 % [oo,tt]=ReadExperimentData(experiment,vars);
-% Returns all the thresholds contains in all the MAT files in the data
-% folder whose names begin with the string specified in the "experiment"
-% argument. The MAT file may contain a whole experiment ooo{}, or a block
-% oo(), or a trial o. ooo{} is a cell array of oo. oo is an array of o.
-% Each o is a threshold. The thresholds are extracted from all the MAT
-% files in the data folder whose names begin with the string in
-% "experiment". We add two new fields to each threshold record. "date" is a
-% readable string indicating the date and time of measurement.
+% Returns all the thresholds (or conditions) contained in all the MAT files
+% in the data folder whose names begin with the string specified in the
+% "experiment" argument. The MAT file may contain a whole experiment ooo{},
+% or a block oo(), or a condition o (a threshold). ooo{} is a cell array of
+% oo. oo is an array of o. Each o is a threshold for a condition. The
+% thresholds are extracted from all the MAT files in the data folder whose
+% names begin with the string in "experiment". We add two new fields to
+% each threshold record. "date" is a readable string indicating the date
+% and time of measurement (beginning of experiment or block??).
 % "missingField" is a cell list of strings of all the fields that were
 % requested in vars, but not available in the threshold record.
 % denis.pelli@nyu.edu July 2018
@@ -97,6 +98,7 @@ for iFile=1:length(matFiles) % One file per iteration.
             filenameList{end+1}=ooo{block}(1).dataFilename;
         end
         for oi=1:length(ooo{block}) % Iterate through conditions within a block.
+            ooo{block}(oi).condition=oi; % RECOVER THE CONDITION NUMBER. DGP.
             ooo{block}(oi).localHostName=ooo{block}(oi).cal.localHostName; % Expose computer name, to help identify observer.
             if isempty(ooo{block}(oi).dataFilename)
                 continue
