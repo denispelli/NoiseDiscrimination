@@ -15,6 +15,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Some observer will see gabors, others will see letters. The experiment
 % has two parts. We want to test each person on both parts 1 and 2.
+% CAUTION: Only o.setNearPointEccentricityTo='target' if all conditions have same eccentricity.
 partOfExperiment=2; % 1 or 2.
 % o.targetKind='gabor'; 
 o.targetKind='letter'; 
@@ -39,7 +40,7 @@ o.observer='';
 o.brightnessSetting=0.87;
 o.fixationCheck=false;
 o.fixationCrossBlankedNearTarget=true;
-o.fixationCrossBlankedUntilSecsAfterTarget=0.6;
+o.fixationOnsetAfterNoiseOffsetSecs=0.6;
 o.fixationCrossDrawnOnStimulus=false;
 o.fullResolutionTarget=false;
 o.useFlankers=false;
@@ -183,15 +184,15 @@ end
 
 
 %% ESTIMATED TIME TO COMPLETION
-willTakeMin=0;
+endsAtMin=0;
 for block=1:length(ooo)
     oo=ooo{block};
     for oi=1:length(oo)
         if ~ismember(oo(oi).observer,{'ideal'})
-            willTakeMin=willTakeMin+[oo(oi).trialsDesired]/10;
+            endsAtMin=endsAtMin+[oo(oi).trialsDesired]/10;
         end
     end
-    [ooo{block}(:).willTakeMin]=deal(willTakeMin);
+    [ooo{block}(:).endsAtMin]=deal(endsAtMin);
 end
 %% COMPUTE MAX VIEWING DISTANCE IN REMAINING BLOCKS
 maxCm=0;
@@ -259,7 +260,7 @@ end
 t=struct2table(oo,'AsArray',true);
 %     'uncertainParameter'...
 disp(t(:,{'block' 'experiment' 'conditionName' 'observer' 'targetKind' 'thresholdParameter'...
-    'contrast'  'willTakeMin' 'noiseSD' ...
+    'contrast'  'endsAtMin' 'noiseSD' ...
     'targetHeightDeg' 'eccentricityXYDeg' 'viewingDistanceCm'})); % Print the conditions in the Command Window.
 %return
 
