@@ -13,11 +13,12 @@ ooo={};
 if IsWin
     o.useNative11Bit=false;
 end
+o.observer='';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Some observer will see gabors, others will see letters. The experiment
 % has two parts. We want to test each person on both parts 1 and 2.
 partOfExperiment=1; % 1 or 2.
-o.targetKind='gabor'; 
+o.targetKind='letter'; 
 % o.targetKind='letter'; 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 o.trialsDesired=40;
@@ -30,7 +31,7 @@ o.eccentricityXYDeg=[0 0];
 % o.targetHeightDeg=32;
 o.contrast=-1;
 o.noiseType='gaussian';
-o.setNearPointEccentricityTo='target';
+o.setNearPointEccentricityTo='fixation';
 o.nearPointXYInUnitSquare=[0.5 0.5];
 o.thresholdParameter='contrast';
 o.flankerSpacingDeg=0.2; % Used only for fixation check.
@@ -38,7 +39,7 @@ o.fixationCheck=false; % True designates the condition as a fixation check.
 o.blankingRadiusReTargetHeight=0.833; % One third letter width blank margin.
 o.blankingRadiusReEccentricity=0.5;
 o.fixationCrossBlankedNearTarget=true;
-o.fixationCrossBlankedUntilSecsAfterTarget=0.6;
+o.fixationOnsetAfterNoiseOffsetSecs=0.6;
 o.fixationCrossDrawnOnStimulus=false;
 o.useFlankers=false;
 o.flankerContrast=-1;
@@ -112,7 +113,7 @@ for ecc=[0 2 8 32]
         o.nearPointXYInUnitSquare=[1-0.5/aspectRatio 0.5];
         o.alphabetPlacement='right'; % 'top' or 'right';
         o.contrast=-1;
-        o.setNearPointEccentricityTo='target';
+        o.setNearPointEccentricityTo='fixation';
         ooo{end+1}=o;
     end
 end
@@ -160,7 +161,7 @@ for ecc=32
         o.nearPointXYInUnitSquare=[1-0.5/aspectRatio 0.5];
         o.alphabetPlacement='right'; % 'top' or 'right';
         o.contrast=-1;
-        o.setNearPointEccentricityTo='target';
+        o.setNearPointEccentricityTo='fixation';
     end
 end
 ooo=[{o} ooo];
@@ -185,20 +186,20 @@ if true
 end
 
 %% ESTIMATED TIME TO COMPLETION
-willTakeMin=0;
+endsAtMin=0;
 for block=1:length(ooo)
     oo=ooo{block};
     for oi=1:length(oo)
         switch oo(oi).observer
             case 'ideal'
                 % Ideal takes 0.8 s/trial.
-                willTakeMin=willTakeMin+[oo(oi).trialsDesired]*0.8/60;
+                endsAtMin=endsAtMin+[oo(oi).trialsDesired]*0.8/60;
             otherwise
                 % Human typically takes 6 s/trial.
-                willTakeMin=willTakeMin+[oo(oi).trialsDesired]*6/60;
+                endsAtMin=endsAtMin+[oo(oi).trialsDesired]*6/60;
         end
     end
-    [ooo{block}(:).willTakeMin]=deal(round(willTakeMin));
+    [ooo{block}(:).endsAtMin]=deal(round(endsAtMin));
 end
 
 %% COMPUTE MAX VIEWING DISTANCE IN REMAINING BLOCKS
@@ -267,7 +268,7 @@ end
 t=struct2table(oo,'AsArray',true);
 %     'uncertainParameter'...
 disp(t(:,{'block' 'experiment' 'conditionName' 'observer' 'targetKind' 'thresholdParameter'...
-    'contrast'  'willTakeMin' 'noiseSD' ...
+    'contrast'  'endsAtMin' 'noiseSD' ...
     'targetHeightDeg' 'eccentricityXYDeg' 'viewingDistanceCm'})); % Print the conditions in the Command Window.
 % return
 
