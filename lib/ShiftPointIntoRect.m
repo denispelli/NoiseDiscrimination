@@ -4,8 +4,9 @@ function o=ShiftPointIntoRect(o,ff,name,xy,radiusDeg,r)
 % eccentricity o.nearPointXYDeg to fit an object (e.g. the target) with
 % specified eccentricity (corresponding to xy) fits on the screen.
 %
-% This routine came from NoiseDiscrimination. For compatibility, it
-% now accepts targetHeightDeg or targetDeg, whichever is available.
+% This routine was written for NoiseDiscrimination. For compatibility with
+% CriticalSpacing, it now also accepts targetHeightDeg or targetDeg, whichever
+% is available.
 % DGP, December 2019.
 radius=round(o.pixPerDeg*radiusDeg);
 r=InsetRect(r,radius,radius);
