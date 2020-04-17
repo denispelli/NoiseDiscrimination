@@ -1,5 +1,4 @@
 %% Analyze the data collected by runUncertaintySangita.
-
 experiment='uncertaintySangita';
 % global printConditions makePlotLinear showLegendBox
 % showLegendBox=true;
@@ -14,7 +13,7 @@ cd(dataFolder);
 close all
 % clear Plot % Clear the persistent variables in the subroutine below.
 
-%% READ ALL DATA OF EXPERIMENT FILES INTO A LIST OF THRESHOLDS "oo".
+%% READ ALL DATA FROM EXPERIMENT FILES INTO A LIST OF THRESHOLDS "oo".
 vars={'condition' 'conditionName' 'experiment' 'dataFilename' ...
     'experimenter' 'observer' 'trials' ...
     'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' ...
@@ -45,13 +44,15 @@ fprintf('%s %d thresholds.\n',experiment,length(oo));
 %     fprintf('%s\n',comments{i}{1});
 % end
 
-% DESCRIBE UNCERTAINTY IN CONDITION NAME.
+% CONDITION NAME DESCRIBES THE UNCERTAINTY.
 for oi=1:length(oo)
+    M=1;
+    for i=1:length(oo(oi).uncertainParameter)
+        M=M*length(oo(oi).uncertainValues{i});
+    end
     if ismember(oo(oi).conditionName,{'Sloan'})
-        M=length(oo(oi).uncertainValues{1});
         oo(oi).conditionName=sprintf('M=%.0f',M);
     end
-    M=length(oo(oi).uncertainValues{1});
     str=sprintf(';M=%.0f',M);
     if ismember(oo(oi).conditionName(end-3:end),{str(end-3:end)})
         if ismember(oo(oi).observer,{'ideal'}) && oo(oi).N>0
@@ -66,20 +67,25 @@ for oi=1:length(oo)
             switch oo(oi).conditionName
                 case 'gabor;M=1'
                     if ~exist('EOverNG1','var')
+                        psych.targetKind='gabor';
                         EOverNG1=UncertainEOverN(M,psych);
                     end
                     oo(oi).E=EOverNG1*oo(oi).N;
                 case 'gabor;M=104'
+                    psych.targetKind='gabor';
                     if ~exist('EOverNG104','var')
                         EOverNG104=UncertainEOverN(M,psych);
                     end
                     oo(oi).E=EOverNG104*oo(oi).N;
                 case 'letter;M=1'
+                    psych.targetKind='letter';
                     % It's ok.
                 case 'letter;M=104'
-                    % Increase threshold by same factor as
-                    % we measured for Gabor.
-                    oo(oi).E=oo(oi).E*EOverNG104/EOverNG1;
+                    psych.targetKind='letter';
+                    if ~exist('EOverNL104','var')
+                        EOverNL104=UncertainEOverN(M,psych);
+                    end
+                    oo(oi).E=EOverNL104*oo(oi).N;
                 case ''
                     % Skip this.
                 otherwise
@@ -90,6 +96,7 @@ for oi=1:length(oo)
 end
 
 % oo=[oo1 oo2];
+
 % COMPUTE EFFICIENCY
 % Select thresholdParameter='contrast', for each conditionName,
 % For each observer, including ideal, use all (E,N) data to estimate deltaNOverE and Neq.
@@ -143,7 +150,7 @@ disp(aa(:,{'conditionName','efficiency','observer','deltaEOverN'}));
 dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
 writetable(aa,fullfile(dataFolder,'efficiency.xlsx'));
 
-return
+% return
 
 % oo=ComputeNPhoton(oo);
 % Compute efficiency
@@ -162,8 +169,6 @@ tt=t(:,{'conditionName' 'thresholdParameter' 'N' 'E' 'targetHeightDeg' 'observer
 writetable(tt,'ComplexEfficiency.xlsx');
 return
 
-
-
 list=struct([]);
 if plotGraphs
     fprintf('Plotting %d thresholds.\n',length(oo));
@@ -175,14 +180,14 @@ if plotGraphs
                 isNoiseType=ismember({oo.noiseType},noiseType);
                 which=isObserver & isConditionName & isNoiseType;
                 if sum(which)>0
-                    %                     fprintf('%s-%s-%s: %d thresholds. ',observer{1},conditionName{1},noiseType{1},sum(which));
+                    % fprintf('%s-%s-%s: %d thresholds. ',observer{1},conditionName{1},noiseType{1},sum(which));
                     list(end+1).observer=observer{1};
                     list(end).conditionName=conditionName{1};
                     list(end).noiseType=noiseType{1};
                     list(end).thresholds=sum(which);
                     E=[oo(which).E];
                     N=[oo(which).N];
-                    %                     fprintf('%s %s\n',observer{1},conditionName{1});
+                    % fprintf('%s %s\n',observer{1},conditionName{1});
                     [Neq,E0]=EstimateNeq(E,N);
                     E1=oo(which).E1;
                     E1=mean(E1);
@@ -201,6 +206,7 @@ t=struct2table(list);
 disp(t);
 return
 
+%% PLOT FUNCTION
 function Plot(oo,subplots,subplotIndex)
 global printConditions makePlotLinear showLegendBox
 persistent previousObserver figureHandle overPlots figureTitle axisHandle
@@ -279,6 +285,9 @@ if Neq>=min(N) && Neq<2*max(N)
 else
     % Igore crazy Neq.
     NLow=min(N(N>0)); % Smallest nonzero noise.
+    if isempty(NLow)
+        NLow=eps;
+    end
     NHigh=max(N);
 end
 overPlots(subplotIndex)=overPlots(subplotIndex)+1;
@@ -301,7 +310,13 @@ switch overPlots(subplotIndex)
         hold on;
 end
 legendText=sprintf('%s %s',oo(1).conditionName,oo(1).noiseType);
-loglog(max(N,NLow),E,style1,'DisplayName',legendText);
+try
+    loglog(max(N,NLow),E,style1,'DisplayName',legendText);
+catch ME
+    N
+    NLow
+    rethrow(ME)
+end
 hold on;
 ax=gca;
 NLine=logspace(log10(NLow),log10(NHigh));

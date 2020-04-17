@@ -1,7 +1,6 @@
 % runEfficiencyConservation.m
 % MATLAB script to run NoiseDiscrimination.m
 % Copyright 2019, 2020, Denis G. Pelli, denis.pelli@nyu.edu
-% denis.pelli@nyu.edu
 % February 20, 2020
 % 646-258-7524
 % December 1, 2019. DGP. Reduced short viewing distance from 30 to 25 cm.
@@ -11,7 +10,7 @@ clear KbWait
 clear o oo ooo
 ooo={};
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% The session is about 1 hour, including letter and gabor targets. Best to
+% The session is about 1 hour, including letter and gabor targets. Ideal to
 % run this twice, to assess repeatability.
 restrictNoise=true;
 o.observer='';
@@ -34,7 +33,7 @@ o.eccentricityXYDeg=[0 0];
 % o.targetHeightDeg=32;
 o.contrast=-1;
 o.noiseType='gaussian';
-o.setNearPointEccentricityTo='target';
+o.setNearPointEccentricityTo='fixation';
 o.nearPointXYInUnitSquare=[0.5 0.5];
 o.thresholdParameter='contrast';
 o.flankerSpacingDeg=0.2; % Used only for fixation check.
@@ -42,7 +41,7 @@ o.fixationCheck=false; % True designates the condition as a fixation check.
 o.blankingRadiusReTargetHeight=0.833; % One third letter width blank margin.
 o.blankingRadiusReEccentricity=0.5;
 o.fixationCrossBlankedNearTarget=true;
-o.fixationCrossBlankedUntilSecsAfterTarget=0.6;
+o.fixationOnsetAfterNoiseOffsetSecs=0.6;
 o.fixationCrossDrawnOnStimulus=false;
 o.useFlankers=false;
 o.flankerContrast=-1;
@@ -72,6 +71,8 @@ for targetKind={'letter' 'gabor'}
             o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
             o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
             o.minimumTargetHeightChecks=[];
+            % Use Majaj et al. (2002) to estimate channel frequency of
+            % letter.
         case 'letter'
             o.conditionName='letter';
             o.minimumTargetHeightChecks=8;
@@ -91,7 +92,10 @@ for targetKind={'letter' 'gabor'}
      end
     % for ecc=[0 2 8 32]
     for ecc=[0]
-        for deg=[0.5 2 8 32]
+        for deg=[0.25 0.5 2 8 32]
+            o.targetGaborCycles=3;
+            strokePerLetter=1.6; % Sloan.
+            [o.cyclePerDeg,gaborDeg]=ChannelCyclePerDeg(deg,strokePerLetter,o.targetGaborCycles);
             if restrictNoise
                 o.noiseEnvelopeSpaceConstantDeg=deg;
             else
@@ -115,17 +119,19 @@ for targetKind={'letter' 'gabor'}
             else
                 o.fixationCrossBlankedNearTarget=true;
             end
-            if deg<4
-                % We need more noise power for 2 deg targets.
-                o.noiseType='ternary'; 
-            else
-                o.noiseType='gaussian'; 
-            end
+            o.noiseType='ternary';
             o.eccentricityXYDeg=[ecc 0];
-            o.targetHeightDeg=deg;
             degMin=NominalAcuityDeg(o.eccentricityXYDeg);
             if deg<2*degMin
                 continue
+            end
+            switch o.targetKind
+                case 'letter'
+                    o.targetHeightDeg=deg;
+                case 'gabor'
+                    o.targetHeightDeg=gaborDeg;
+                otherwise
+                    error('Unknown targetKind ''%s''.',o.targetKind);
             end
             if o.targetHeightDeg>16 || ecc>16
                 o.viewingDistanceCm=25;
@@ -143,7 +149,7 @@ for targetKind={'letter' 'gabor'}
             o.nearPointXYInUnitSquare=[1-0.5/aspectRatio 0.5];
             o.alphabetPlacement='right'; % 'top' or 'right';
             o.contrast=-1;
-            o.setNearPointEccentricityTo='target';
+            o.setNearPointEccentricityTo='fixation';
             ooo{end+1}=o;
         end
     end
@@ -203,7 +209,7 @@ if true
             o.nearPointXYInUnitSquare=[1-0.5/aspectRatio 0.5];
             o.alphabetPlacement='right'; % 'top' or 'right';
             o.contrast=-1;
-            o.setNearPointEccentricityTo='target';
+            o.setNearPointEccentricityTo='fixation';
         end
     end
     ooo=[{o} ooo];
@@ -233,20 +239,20 @@ if true
 end
 
 %% ESTIMATED TIME TO COMPLETION
-willTakeMin=0;
+endsAtMin=0;
 for block=1:length(ooo)
     oo=ooo{block};
     for oi=1:length(oo)
         switch oo(oi).observer
             case 'ideal'
                 % Ideal takes 0.8 s/trial.
-                willTakeMin=willTakeMin+[oo(oi).trialsDesired]*0.8/60;
+                endsAtMin=endsAtMin+[oo(oi).trialsDesired]*0.8/60;
             otherwise
                 % Human typically takes 6 s/trial.
-                willTakeMin=willTakeMin+[oo(oi).trialsDesired]*6/60;
+                endsAtMin=endsAtMin+[oo(oi).trialsDesired]*6/60;
         end
     end
-    [ooo{block}(:).willTakeMin]=deal(round(willTakeMin));
+    [ooo{block}(:).endsAtMin]=deal(round(endsAtMin));
 end
 
 %% COMPUTE MAX VIEWING DISTANCE IN REMAINING BLOCKS
@@ -315,11 +321,11 @@ end
 t=struct2table(oo,'AsArray',true);
 %     'uncertainParameter'...
 % Print the conditions in the Command Window. return
-disp(t(:,{'block' 'experiment' 'conditionName' 'observer'  'willTakeMin' ...
+disp(t(:,{'block' 'experiment' 'conditionName' 'observer'  'endsAtMin' ...
     'trialsDesired'  'targetKind' 'thresholdParameter'...
     'contrast'  'noiseSD' ...
     'targetHeightDeg' 'noiseEnvelopeSpaceConstantDeg' 'eccentricityXYDeg'...
-    'viewingDistanceCm' 'blankingRadiusReTargetHeight' 'fixationCrossBlankedNearTarget'})); 
+    'viewingDistanceCm' 'cyclePerDeg' 'blankingRadiusReTargetHeight' 'fixationCrossBlankedNearTarget'})); 
 return
 
 %% Measure threshold, one block per iteration.

@@ -51,7 +51,7 @@ o.experiment='ComplexEfficiency';
 o.eccentricityXYDeg=[0 0];
 o.contrast=-1;
 o.noiseType='gaussian';
-o.setNearPointEccentricityTo='target';
+o.setNearPointEccentricityTo='fixation';
 o.nearPointXYInUnitSquare=[0.5 0.5];
 o.blankingRadiusReTargetHeight=0;
 o.blankingRadiusReEccentricity=0;
@@ -113,11 +113,11 @@ if 1
     o.contrast=-1;
     o.alternatives=length(o.alphabet);
     o.viewingDistanceCm=25;
-    o.setNearPointEccentricityTo='target';
+    o.setNearPointEccentricityTo='fixation';
     ooo{end+1}=o;
 end
 
-if 1
+if true
     % Test with zero and high noise, interleaved.
     for block=1:length(ooo)
         oo=ooo{block};
@@ -135,7 +135,7 @@ if 1
         ooo{block}=[oo ooNoise];
     end
 end
-if 0
+if false
     % Measure threshold size at +/-10 deg. No noise.
     % Randomly interleave testing left and right.
     % Add fixation check.
@@ -193,15 +193,15 @@ if true
     end
 end
 %% ESTIMATED TIME TO COMPLETION
-willTakeMin=0;
+endsAtMin=0;
 for block=1:length(ooo)
     oo=ooo{block};
     for oi=1:length(oo)
         if ~ismember(oo(oi).observer,{'ideal'})
-            willTakeMin=willTakeMin+[oo(oi).trialsDesired]/10;
+            endsAtMin=endsAtMin+[oo(oi).trialsDesired]/10;
         end
     end
-    [ooo{block}(:).willTakeMin]=deal(willTakeMin);
+    [ooo{block}(:).endsAtMin]=deal(endsAtMin);
 end
 %% COMPUTE MAX VIEWING DISTANCE IN REMAINING BLOCKS
 maxCm=0;
@@ -269,7 +269,7 @@ end
 t=struct2table(oo,'AsArray',true);
 %     'uncertainParameter'...
 disp(t(:,{'block' 'experiment' 'targetKind' 'thresholdParameter'...
-    'contrast' 'conditionName' 'observer' 'willTakeMin' 'noiseSD' ...
+    'contrast' 'conditionName' 'observer' 'endsAtMin' 'noiseSD' ...
     'targetHeightDeg' 'eccentricityXYDeg' 'labelAnswers'})); % Print the conditions in the Command Window.
 % return
 
