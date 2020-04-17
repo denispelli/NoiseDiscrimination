@@ -12,6 +12,7 @@ ooo={};
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Compare target thresholds in several noise distributions all with same
 % noiseSD, which is highest possible.
+% CAUTION: Only o.setNearPointEccentricityTo='target' if all conditions have same eccentricity.
 o.observer='';
 o.observer='ideal'; % Use this to test ideal observer.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -285,20 +286,20 @@ if true
 end
 
 %% ESTIMATED TIME TO COMPLETION
-willTakeMin=0;
+endsAtMin=0;
 for block=1:length(ooo)
     oo=ooo{block};
     for oi=1:length(oo)
         switch oo(oi).observer
             case 'ideal'
                 % Ideal takes 0.8 s/trial.
-                willTakeMin=willTakeMin+[oo(oi).trialsDesired]*0.8/60;
+                endsAtMin=endsAtMin+[oo(oi).trialsDesired]*0.8/60;
             otherwise
                 % Human typically takes 6 s/trial.
-                willTakeMin=willTakeMin+[oo(oi).trialsDesired]*6/60;
+                endsAtMin=endsAtMin+[oo(oi).trialsDesired]*6/60;
         end
     end
-    [ooo{block}(:).willTakeMin]=deal(round(willTakeMin));
+    [ooo{block}(:).endsAtMin]=deal(round(endsAtMin));
 end
 
 %% COMPUTE MAX VIEWING DISTANCE IN REMAINING BLOCKS
@@ -366,7 +367,7 @@ for block=1:length(ooo)
 end
 t=struct2table(oo,'AsArray',true);
 %     'uncertainParameter'...
-disp(t(:,{'block' 'experiment' 'conditionName' 'observer'  'willTakeMin' 'trialsDesired'  'targetKind' 'noiseType' 'thresholdParameter'...
+disp(t(:,{'block' 'experiment' 'conditionName' 'observer'  'endsAtMin' 'trialsDesired'  'targetKind' 'noiseType' 'thresholdParameter'...
     'contrast'  'noiseSD' ...
     'targetHeightDeg'  'eccentricityXYDeg' 'viewingDistanceCm' 'fixationCrossBlankedNearTarget'})); % Print the conditions in the Command Window.
 % return
