@@ -368,15 +368,15 @@ if true
     end
 end
 %% ESTIMATED TIME TO COMPLETION
-willTakeMin=0;
+endsAtMin=0;
 for block=1:length(ooo)
     oo=ooo{block};
     for oi=1:length(oo)
         if ~ismember(oo(oi).observer,{'ideal'})
-            willTakeMin=willTakeMin+[oo(oi).trialsDesired]/10;
+            endsAtMin=endsAtMin+[oo(oi).trialsDesired]/10;
         end
     end
-    [ooo{block}(:).willTakeMin]=deal(willTakeMin);
+    [ooo{block}(:).endsAtMin]=deal(endsAtMin);
 end
 %% COMPUTE MAX VIEWING DISTANCE IN REMAINING BLOCKS
 maxCm=0;
@@ -444,7 +444,7 @@ end
 t=struct2table(oo,'AsArray',true);
 disp(t(:,{'block' 'experiment' 'targetKind' 'thresholdParameter'...
     'uncertainParameter'...
-    'contrast' 'conditionName' 'observer' 'willTakeMin' 'noiseSD' ...
+    'contrast' 'conditionName' 'observer' 'endsAtMin' 'noiseSD' ...
     'targetHeightDeg' 'eccentricityXYDeg' 'labelAnswers'})); % Print the conditions in the Command Window.
 % return
 
