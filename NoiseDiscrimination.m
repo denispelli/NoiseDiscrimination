@@ -679,7 +679,7 @@ o.showUncertainty=false;
 % Geometry
 o.nearPointXYInUnitSquare=[0.5 0.5]; % location of target center on screen. [0 0]  lower right, [1 1] upper right.
 o.setNearPointEccentricityTo='fixation'; % 'target' or 'fixation' or 'value'
-% Note that all conditions must have same near point. So if your conditions
+% Note that all conditions must have the same near point. So if your conditions
 % have targets at different eccentricities, you should not select 'target'.
 % Select either 'fixation' or 'value'.
 o.nearPointXYDeg=[0 0]; % Overwritten unless o.setNearPointEccentricityTo=='value'.
