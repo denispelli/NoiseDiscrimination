@@ -16,9 +16,13 @@ function [EOverN,psych]=UncertainEOverN(MM,psych)
 %% 'letter'
 % Here we assume the signal is a letter from a known alphabet. The letters
 % are typically of unequal energy and not orthogonal. This E/N result is
-% specific to the particular font and alphabet tested. For M=1 we should
-% compare with the answer given at the back of Pelli et al. (2006). E/N =
-% 16.1859 20.0291 for 9 Sloan letters with M=1 104.
+% specific to the particular font and alphabet tested. 
+% E/N = 16.1859 20.0291 for 9 Sloan letters with M=1 104.
+% Threshold criterion P=75% correct.
+% E/N = 9.85 for 10 Sloan letter, M=1, P=64%.
+% REFERENCE. For M=1, Pelli et al. (2006) report an ideal threshold of log
+% E=-2.59 at log N=-3.60, i.e. E/N=10^0.91=8.12 for the 10-letter Sloan
+% alphabet, 64% correct identification.
 %
 %% 'orthogonalLetter'
 % Provides orthonormal signals to the letter code to confirm that it
@@ -76,7 +80,7 @@ if nargin<2
     % The rest of the code assumes that the "psych" struct exists so, if
     % necessary, we create it here.
     psych.targetKind='gabor'; % Orthonormal signals. n=length(alphabet)
-    %     psych.targetKind='letter'; % Non-orthonormal letters.
+    %     psych.targetKind='letter';           % Non-orthonormal letters.
     %     psych.targetKind='orthogonalLetter'; % Orthonormal letters.
     psych.noiseSD=1;
 end
@@ -91,7 +95,7 @@ if ~isfield(psych,'alphabet')
     end
 end
 if ~isfield(psych,'noiseSD')
-    psych.noiseSD=0.2;
+    psych.noiseSD=0.17;
 end
 if ~isfield(psych,'trialsDesired')
     psych.trialsDesired=100;
@@ -127,35 +131,12 @@ if ~isfield(psych,'targetFont')
     psych.targetFont='Sloan';
 end
 
-% Compute noiseList
-switch psych.noiseType % Fill noiseList with desired kind of noise.
-    % After normalizing by its SD below, noiseList is zero mean, unit
-    % variance, and symmetric about zero.
-    case 'gaussian'
-        % Get samples from normal distribution with zero mean and
-        % sd 1. Discard samples that exceed +/-2. The remaining
-        % clipped distribution has an sd slightly less than 1.
-        temp=randn([1 1e6]);
-        ok=-2<=temp & temp<=2;
-        noiseList=temp(ok);
-        clear temp;
-    case 'uniform'
-        noiseList=-1:1/1024:1;
-    case 'binary'
-        noiseList=[-1 1];
-    case 'ternary'
-        noiseList=[-1 0 1];
-    otherwise
-        error('Unknown noiseType "%s"',psych.noiseType);
-end
-s=std(PsychRandSample(noiseList,[1e6 1])); % Takes 28 ms.
-noiseList=noiseList/s;
-
 psych.screen=0;
 o=psych;
 switch psych.targetKind
     case 'orthogonalLetter'
         o.signal=struct([]);
+        % Create orthonormal signals, one per letter in alphabet. 
         for i=1:length(o.alphabet)
             o.signal(i).image=zeros([1 length(o.alphabet)]);
             o.signal(i).image(i)=1;
@@ -189,7 +170,10 @@ switch psych.targetKind
         o.noiseSD=0.5;
         o.N=o.noiseSD^2;
         if ~ismember({psych.targetFont},{'Sloan'})
-            warning('UncertainEOverN: Currently, when using a letter, psych.targetFont must be ''Sloan'', not ''%s''.',psych.targetFont);
+            error(...
+                ['UncertainEOverN: Currently, when psych.targetKind=''letter'', '...
+                'psych.targetFont must be ''Sloan'', not ''%s''.'],...
+                psych.targetFont);
             EOverN=nan;
             return
         end
@@ -203,9 +187,11 @@ switch psych.targetKind
         o.minimumTargetHeightChecks=8;
         o.targetCheckPix=1;
         o.borderLetter='';
-        o.getAlphabetFromDisk=true;
+        if ~isfield(o,'getAlphabetFromDisk')
+            o.getAlphabetFromDisk=true;
+        end
         o.showLineOfLetters=false;
-        o.printSizeAndSpacing=true;
+        o.printSizeAndSpacing=false;
         o.contrast=1; % Typically 1 or -1. Negative for black letters.
         [letterStruct,alphabetBounds]=CreateLetterTextures(1,o,window);
         % Each image has range 0 to 255, which we normalize to 0 to 1, and
@@ -221,7 +207,17 @@ switch psych.targetKind
                 error('%2: letter ''%c'' not in ''%s'' alphabet ''%s''.\n',...
                     o.alphabet(i),o.targetFont,[letterStruct.letter]);
             end
-            o.signal(i).image=letterStruct(j).image;
+            if true
+                % "true" ought to make things faster. Haven't checked.
+                % I expected no effect on E/N, but in fact I get E/N=7.16
+                % when false, and 7.41 when true.
+                ratio=o.targetPix/size(letterStruct(j).image,2);
+                if ratio<1
+                    o.signal(i).image=imresize(letterStruct(j).image,ratio,'bilinear');
+                else
+                    o.signal(i).image=letterStruct(j).image;
+                end
+            end
         end
         DestroyLetterTextures(letterStruct);
         clear letterStruct
@@ -287,11 +283,7 @@ for m=1:length(MM)
                     n=length(o.alphabet);
                     % nIFC, with M locations.
                     dims=[M n];
-                    if true
-                        x=randn(dims);
-                    else
-                        x=PsychRandSample(noiseList,dims);
-                    end
+                    x=MakeNoise(psych.noiseType,dims);
                     % Assuming all objects orthogonal.
                     whichObject=randi(n);
                     whichSpot=randi(M);
@@ -350,11 +342,7 @@ for m=1:length(MM)
                     % Three dimensional matrix: rows * columns * M. Fill
                     % with Gaussian noise with zero mean and o.noiseSD.
                     dims=[size(o.signal(1).image) M];
-                    if true
-                        x=randn(dims);
-                    else
-                        x=PsychRandSample(noiseList,dims);
-                    end
+                    x=MakeNoise(psych.noiseType,dims);
                     img=o.noiseSD*x;
                     % Add object whichObject with contrast c to spot
                     % whichSpot.
@@ -478,10 +466,20 @@ for m=1:length(MM)
     E=o.E1*10^(2*logC); % signal energy
     N=o.noiseSD^2;      % noise power spectral density
     EOverN(m)=E/N;
+    if ~isfield(o,'conditionName')
+        o.conditionName='';
+    end
     if true
         psych=o;
-        fprintf(['%-29s signals %d, M %7.0f, E/N %6.3f, c %6.3f, log c %5.3f ' plusMinus ' %.3f\n'],...
-            [psych.conditionName ', ' psych.targetKind ', ' psych.targetFont ','],length(psych.alphabet),M,EOverN(m),10^logC,logC,std(t)/sqrt(length(t)));
+        % Print targetFont only when it's used.
+        switch psych.targetKind
+            case 'letter'
+                targetFont=psych.targetFont;
+            otherwise
+                targetFont='';
+        end
+        fprintf(['%-29s signals %d, %s, pThreshold %.2f, M %7.0f, E/N %6.3f, c %6.3f, log c %5.3f ' plusMinus ' %.3f\n'],...
+            [psych.conditionName ', ' psych.targetKind ', ' targetFont ','],length(psych.alphabet),psych.noiseType,psych.pThreshold,M,EOverN(m),10^logC,logC,std(t)/sqrt(length(t)));
     end
 end
 % fprintf('%.0f ms/trial\n',1000*(GetSecs-timeZero)/(psych.reps*4*psych.trialsDesired));
