@@ -221,6 +221,10 @@ else
     r=InsetRect(r,2,2);
     ok=IsRectInRect(bounds,r);
     if ~ok
+        font=Screen(window,'TextFont');
+        fontSize=Screen(window,'TextSize');
+        fprintf('font ''%s'', fontSize %.1f, text ''%s'', yPositionIsBaseline %d, centerTheText %d\n',...
+            font,fontSize,text,yPositionIsBaseline,centerTheText);
         wRect=Screen('Rect',window);
         boundsAbs=OffsetRect(bounds,x0,y0);
         warning(['bounds [%.0f %.0f %.0f %.0f], '...
@@ -232,7 +236,6 @@ else
             RectWidth(wRect),RectHeight(wRect));
     end
 end
-
 return
 
 function inside = IsRectInRect(smallRect,bigRect)
