@@ -2,7 +2,9 @@ function [noise,range]=MakeNoise(noiseType,dims)
 % [noise,range]=MakeNoise(noiseType,dims)
 % Quickly produce independent random samples of specified noise type (i.e.
 % distribution shape) and array shape. All samples have zero mean and unit
-% variance.
+% variance. "noiseType" can be: 'binary' 'ternary' 'uniform' 'gaussian'
+% 'gaussianUnbounded'
+% 'gaussian' is clipped at +/- 2 sd. 'gaussianUnbounded' is not clipped.
 
 % Hormet Yiltiz contributed to the gaussian code.
 % denis.pelli@nyu.edu, February 2020.
@@ -42,4 +44,7 @@ switch noiseType
         sd=0.8796; % accurate to 4 decimal places.
         noise=noise/sd;
         range=range/sd;
+    case 'gaussianUnbounded'
+        range=[-inf inf];
+        noise=randn(dims);
 end
