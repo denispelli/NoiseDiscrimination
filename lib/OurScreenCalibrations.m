@@ -5528,7 +5528,7 @@ if IsOSX && streq(cal.macModelName,'MacBook10,1') && cal.screen==0 && ...
         0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
 if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
-        cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-1')
+        streq(cal.MACAddress,'48:65:ee:11:49:b9') && streq(cal.localHostName,'Pelli-Mac-1')
     cal.screenOutput=[]; % used only under Linux
     cal.profile='Color LCD';
     cal.ScreenConfigureDisplayBrightnessWorks=false;
@@ -6453,7 +6453,7 @@ if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
         0.9971 0.9971 0.9971;0.9980 0.9980 0.9980;0.9990 0.9990 0.9990;1.0000 1.0000 1.0000;];
 end
 if IsOSX && streq(cal.macModelName,'MacBookPro14,3') && cal.screen==0 && ...
-        cal.screenWidthMm==330 && cal.screenHeightMm==206 && streq(cal.localHostName,'Pelli-Mac-1')
+                streq(cal.MACAddress,'48:65:ee:11:49:b9') && streq(cal.localHostName,'Pelli-Mac-1')
     cal.screenOutput=[]; % used only under Linux
     cal.profile='Color LCD';
     cal.ScreenConfigureDisplayBrightnessWorks=false;
