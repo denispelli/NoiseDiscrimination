@@ -1,5 +1,9 @@
 function [xClipped,yClipped]=ClipLineSegment(x,y,r)
 %[x,y]=ClipLineSegment(x,y,r);
+% April, 2020. New flag is meant to allow retention of zero length lines,
+% because I use zero-length lines to plot dots. However, it seems to
+% produce an infinite loop. So I left the flag off.
+% 
 % Clips one (or more) line segment(s) by a rect, and returns (for each line
 % received) a new line segment of non-zero length or nothing. x and y may
 % contain many lines on input and output. The first line segment is
@@ -7,6 +11,7 @@ function [xClipped,yClipped]=ClipLineSegment(x,y,r)
 % (x(4),y(4)). And so on. Direction (e.g. from point 1 to point 2) is
 % preserved. Returns NANs if you provide an ambiguous line segment.
 % 2016 denis.pelli@nyu.edu
+keepZeroLengthLines=false;
 assert(length(x)>=2 && length(x)/2==round(length(x)/2));
 assert(length(y)==length(x));
 assert(length(r)==4);
@@ -21,9 +26,9 @@ if length(x)>2
       yClipped=[yClipped yTemp];
    end
    return
-end
+end 
 % Discard zero-length line.
-if diff(x)^2+diff(y)^2==0
+if ~keepZeroLengthLines && diff(x)^2+diff(y)^2==0
    xClipped=[];
    yClipped=[];
    return;
