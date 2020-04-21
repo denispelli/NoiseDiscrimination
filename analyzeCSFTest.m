@@ -230,7 +230,7 @@ clear lgd figureHandle
 figureHandle(iFigure)=figure('Name',[experiment ' Contrast'],'NumberTitle','off','pos',[10 10 500 900]);
 for conditionName=conditionNames
     iCondition=find(ismember(conditionNames,conditionName));
-    subplot(2,1,iCondition);
+    subplot(length(conditionNames),1,iCondition);
     for iObserver=1:length(observers)
         for eccX=eccXs
             match=ismember({a.thresholdParameter},{'contrast'})...
@@ -317,7 +317,7 @@ clear lgd
 figureHandle(iFigure)=figure('Name',[experiment ' E/N'],'NumberTitle','off','pos',[10 10 500 900]);
 for conditionName=conditionNames
     iCondition=find(ismember(conditionNames,conditionName));
-    subplot(2,1,iCondition);
+    subplot(length(conditionNames),1,iCondition);
     for iObserver=1:length(observers)
         for eccX=eccXs
             match=ismember({a.thresholdParameter},{'contrast'})...
@@ -395,7 +395,7 @@ clear lgd
 figureHandle(iFigure)=figure('Name',[experiment ' Efficiency'],'NumberTitle','off','pos',[10 10 500 900]);
 for conditionName=conditionNames
     iCondition=find(ismember(conditionNames,conditionName));
-    subplot(2,1,iCondition);
+    subplot(length(conditionNames),1,iCondition);
     for iObserver=1:length(observers)
         for eccX=eccXs
             match=ismember({a.thresholdParameter},{'contrast'})...
@@ -471,7 +471,7 @@ clear lgd
 figureHandle(iFigure)=figure('Name',[experiment ' Efficiency vs Size'],'NumberTitle','off','pos',[10 10 500 900]);
 for conditionName=conditionNames
     iCondition=find(ismember(conditionNames,conditionName));
-    subplot(2,1,iCondition);
+    subplot(length(conditionNames),1,iCondition);
     for iObserver=1:length(observers)
         for eccX=eccXs
             match=ismember({a.thresholdParameter},{'contrast'})...
