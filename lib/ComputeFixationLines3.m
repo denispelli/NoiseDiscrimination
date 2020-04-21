@@ -1,4 +1,4 @@
-function [fixationLines,markTargetLocation]=ComputeFixationLines3(fix)
+function [fixationLines,fixationDots,markTargetLocation]=ComputeFixationLines3(fix)
 % [fixationLines,markTargetLocation]=ComputeFixationLines3(fix);
 %
 % Now enhanced to support many targets at once. Thus eccentricityXYPix and
@@ -28,9 +28,12 @@ function [fixationLines,markTargetLocation]=ComputeFixationLines3(fix)
 % April, 2020. Added random dots (to aid accomodation) which receive the
 % same blanking as the lines.
 %% ONE FIXATION CROSS
-% fix.xy=XYPixOfXYDeg(oo(1),[0 0]);         % screen location of fixation
+% fix.xy=XYPixOfXYDeg(oo(1),[0 0]);     % screen location of fixation
 % fix.clipRect=screenRect;              % Restrict lines to this rect.
 % fix.fixationCrossPix=fixationCrossPix;% Diameter of fixation mark. 0 for none.
+% fix.useFixationDots=oo(oi).useFixationDots;
+% fix.fixationDotsNumber=oo(oi).fixationDotsNumber;
+% fix.fixationDotsWithinRadius=oo(oi).fixationDotsWithinRadiusDeg*oo(oi).pixPerDeg;
 %% ONE X AND BLANKING PER TARGET. EACH ARRAY HAS ONE ROW PER TARGET.
 % for oi=1:length(oo)
 %     fix.eccentricityXYPix(oi,1:2)=oo(oi).eccentricityXYPix;  % xy offset of target from fixation.
@@ -155,22 +158,31 @@ end
 if size(fix.blankingRadiusPix,1)~=n
     error('fix.blankingRadiusPix should have %d rows, but has %d.',n,size(fix.blankingRadiusPix,1));
 end
+fix.xy=round(fix.xy); % Printout is more readable for integers.
+%% FIXATION
+x0=fix.xy(1);
+y0=fix.xy(2);
 
-% SCATTER RANDOM DOTS TO HELP OBSERVER FOCUS ON SCREEN.
-% EACH DOT IS A ZERO-LENGTH LINE.
-fix.dots=300;
-fix.dotPerimeterRadius=fix.fixationCrossPix/2;
-if oo(oi).useFixationDots
-    % Random samples from uniform distribution with range [-1 1].
-    xy=2*rand([2 oo(oi).fixationDots])-1;
-    xy=xy*fix.dotPerimeterRadius+fix.xy;
-    xy=round(xy);
-    % Repeat each xy coordinate to make a zero-length line.
-    dotsXY=zeros([2 2*size(xy,2)]);
-    dotsXY(1:2,1:2:end-1)=xy(1:2,:);
-    dotsXY(1:2,2:2:end)=xy(1:2,:);
+%% SCATTER RANDOM DOTS TO HELP OBSERVER FOCUS ON SCREEN.
+if fix.useFixationDots
+    if fix.fixationDotsNumber~=round(fix.fixationDotsNumber) || fix.fixationDotsNumber<0
+        error('fix.fixationDots must be a positive integer.');
+    end
+    % Rect r is the requested dot region, which might extend far beyond
+    % screen.
+    r=fix.fixationDotsWithinRadius*[-1 -1 1 1];
+    r=OffsetRect(r,x0,y0); % Center on fixation.
+    % Clip to allowed area (typically full screen).
+    r=ClipRect(r,fix.clipRect);
+    % Size of dot region rect.
+    [rSizeXY(1),rSizeXY(2)]=RectSize(r);
+    % Uniform samples, range 0 to 1.
+    fixationDots=rand([2 fix.fixationDotsNumber]);
+    % Scale and shift, so dots are uniformly scattered over rect.
+    fixationDots=fixationDots .* rSizeXY'+r(1:2)';
+    fixationDots=round(fixationDots); % Easier to view integers when debugging.
 else
-    dotsXY=[];
+    fixationDots=[];
 end
 
 % Compute a list of 2+2*n lines to draw a cross at fixation and an X at
@@ -178,9 +190,6 @@ end
 % then define a blanking rect around each target and use it to
 % ErasePartOfLineSegment for all the lines in the list. This may increase
 % or decrease the list length.
-fix.xy=round(fix.xy); % Printout is more readable for integers.
-x0=fix.xy(1); % fixation
-y0=fix.xy(2);
 % Two lines create a cross at fixation.
 x=[x0-fix.fixationCrossPix/2 x0+fix.fixationCrossPix/2 x0 x0];
 y=[y0 y0 y0-fix.fixationCrossPix/2 y0+fix.fixationCrossPix/2];
@@ -204,10 +213,6 @@ for i=1:n
         y=[y tY-r tY+r tY+r tY-r];
     end
 end
-if ~isempty(dotsXY)
-    x=[x dotsXY(1,:)];
-    y=[y dotsXY(2,:)];
-end
 %    'Fixation, and marks (at fixation and target), before clipping'
 %    x0,y0
 %    x
@@ -218,7 +223,7 @@ x=round(x);
 y=round(y);
 for i=1:n
     % Blank each target location.
-    if ~isempty(x) && fix.blankingRadiusPix(i)>0
+    if fix.blankingRadiusPix(i)>0
         % Blank near target.
         tXY=fix.xy+fix.eccentricityXYPix(i,1:2);
         tX=tXY(1);
@@ -232,13 +237,23 @@ for i=1:n
         %    x0,y0
         %    x
         %    y
-        [x,y]=ErasePartOfLineSegment(x,y,blankingRect);
+        if ~isempty(x)
+            [x,y]=ErasePartOfLineSegment(x,y,blankingRect);
+        end
         %    'Marks, after blanking'
         %    x
         %    y
         %    blankingRect
+        %% BLANK THE DOTS
+        for iDot=size(fixationDots,2):-1:1
+            if IsInRect(fixationDots(1,iDot),fixationDots(2,iDot),blankingRect)
+                % Delete this point because it's in blankingRect.
+                fixationDots(:,iDot)=[];
+            end
+        end
     end
 end
 fixationLines=[x;y];
+% fixationDots; 
 markTargetLocation=fix.markTargetLocation;
 return
