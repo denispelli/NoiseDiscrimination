@@ -4,7 +4,8 @@
 % denis.pelli@nyu.edu
 % March 14, 2020
 % 646-258-7524
-% CAUTION: Only o.setNearPointEccentricityTo='target' if all conditions have same eccentricity.
+% CAUTION: Only o.setNearPointEccentricityTo='target' if all conditions
+% have same eccentricity.
 mainFolder=fileparts(mfilename('fullpath')); % Takes 0.1 s.
 addpath(fullfile(mainFolder,'lib')); % Folder in same directory as this M file.
 addpath(fullfile(mainFolder,'utilities')); % Folder in same directory as this M file.
@@ -27,21 +28,24 @@ end
 if IsWin
     o.useNative11Bit=false;
 end
+o.blankAllTargets=true;
 % o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
 % o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+o.markTargetLocation=false;
 o.useFixationGrid=false;
 o.useFixationDots=true;
 o.fixationDotsWeightDeg=0.05;
-o.fixationDotsColor=0;
+o.fixationDotsNumber=100;
+o.fixationDotsWithinRadiusDeg=4;
 o.targetDurationSecs=0.15;
-o.askForPartingComments=false; % Disable until it's fixed.
+o.askForPartingComments=false; % Disabled until it's fixed.
 o.recordGaze=false;
 o.experiment='CSFTest';
 o.eccentricityXYDeg=[0 0];
 o.contrast=-1;
 % o.noiseType='gaussian';
 o.noiseType='ternary'; % More noise power than 'gaussian'.
-o.setNearPointEccentricityTo='target';
+o.setNearPointEccentricityTo='fixation';
 o.nearPointXYInUnitSquare=[0.5 0.5];
 o.thresholdParameter='contrast';
 o.flankerSpacingDeg=0.2; % Used only for fixation check.
@@ -50,7 +54,7 @@ o.flankerContrast=-1;
 o.symmetricLuminanceRange=true; % False for maximum brightness.
 o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
 o.counterPlacement='bottomRight';
-o.instructionPlacement='bottomLeft'; % 'topLeft' 'bottomLeft'
+o.instructionPlacement='bottomRight'; % 'topLeft' 'bottomLeft' 'bottomRight'
 o.brightnessSetting=0.87;
 o.askExperimenterToSetDistance=true;
 o.symmetricLuminanceRange=true; % False for maximum brightness.
@@ -63,27 +67,31 @@ o.viewingDistanceCm=[];
 o.minScreenDeg=[];
 machine=IdentifyComputer;
 
-%% ONE FIXATION MARK FOR EVERY TARGET.
+%% FIXATION
 o.fixationCheck=false; % True designates the condition as a fixation check.
-o.blankingRadiusReTargetHeight=0.833; % One third letter width blank margin.
-o.blankingRadiusReEccentricity=0.5;
-o.fixationCrossBlankedNearTarget=true;
-% o.fixationOffsetBeforeNoiseOnsetSecs=0.6;
-% o.fixationOnsetAfterNoiseOffsetSecs=0.6;
-% o.fixationCrossDrawnOnStimulus=false;
-o.blankAllTargets=true; % New feature of NoiseDiscrimination.
-o.fixationOffsetBeforeNoiseOnsetSecs=0;
-o.fixationOnsetAfterNoiseOffsetSecs=0;
-o.fixationCrossDeg=inf;
-o.fixationCrossDrawnOnStimulus=true;
-o.fixationCrossBlankedNearTarget=true;
-o.alphabetPlacement='bottom';
+o.clipToStimulusRect=false;
+if false
+    % SEPARATE FIXATION IN TIME
+    o.fixationCrossBlankedNearTarget=true;
+    o.fixationOffsetBeforeNoiseOnsetSecs=0.6;
+    o.fixationOnsetAfterNoiseOffsetSecs=0.6;
+    o.fixationCrossDrawnOnStimulus=false;
+else
+    % SEPARATE FIXATION IN SPACE
+    o.fixationOffsetBeforeNoiseOnsetSecs=0;
+    o.fixationOnsetAfterNoiseOffsetSecs=0;
+    o.fixationCrossDrawnOnStimulus=true;
+    o.blankingRadiusReTargetHeight=0.833; % One third letter width blank margin.
+    o.blankingRadiusReEccentricity=0.5;
+    o.fixationCrossDeg=inf;
+    o.fixationCrossBlankedNearTarget=true;
+    o.alphabetPlacement='bottom';
+end
 
-for targetKind={ 'gabor'} % 'letter'
+for targetKind={'gabor'} % 'letter' 'gabor'
     o.targetKind=targetKind{1};
     switch o.targetKind
         case 'gabor'
-            o.conditionName='gaborX';
             o.minimumTargetHeightChecks=[];
             o.targetGaborOrientationsDeg=[0 45 90 135]; % Orientations relative to vertical.
             o.labelAnswers=true;
@@ -91,21 +99,19 @@ for targetKind={ 'gabor'} % 'letter'
             o.alternatives=length(o.targetGaborOrientationsDeg);
             o.targetCyclesPerDeg=nan;
             o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
-            o.targetGaborSpaceConstantCycles=0.75*3; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
-            o.targetGaborCycles=3*3; % cycles of the sinewave in targetHeight
-            % o.conditionName='small';
-            % o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
-            % o.targetGaborCycles=3; % Cycles of the sinewave in targetHeight.
+            if true
+                o.conditionName='gabor3';
+                o.targetGaborSpaceConstantCycles=0.75*3; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
+                o.targetGaborCycles=3*3; % cycles of the sinewave in targetHeight
+            else
+                o.conditionName='gabor1';
+                o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
+                o.targetGaborCycles=3; % Cycles of the sinewave in targetHeight.
+            end
             o.blankingRadiusReTargetHeight=2*o.targetGaborSpaceConstantCycles/o.targetGaborCycles; % Two space constants.
         case 'letter'
             o.conditionName='letterX';
             o.minimumTargetHeightChecks=8;
-            o.targetFont='Sloan';
-            o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
-            o.borderLetter='X';
-            o.labelAnswers=false;
-            o.getAlphabetFromDisk=true;
-            o.blankingRadiusReTargetHeight=0.833; % One third letter width blank margin.
             o.targetGaborOrientationsDeg=[];
             o.alternatives=[];
             o.targetCyclesPerDeg=nan;
@@ -114,73 +120,69 @@ for targetKind={ 'gabor'} % 'letter'
             o.targetGaborCycles=[]; % cycles of the sinewave in targetHeight
             o.labelAnswers=false;
             o.responseLabels={};
-       otherwise
+            o.targetFont='Sloan';
+            o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
+            o.borderLetter='X';
+            o.labelAnswers=false;
+            o.getAlphabetFromDisk=true;
+            o.blankingRadiusReTargetHeight=0.833; % One third letter width blank margin.
+        otherwise
             error('Unknown o.targetKind ''%s''.',o.targetKind);
     end
+    
     % for ecc=[0 2 8 32]
     for ecc=0
         for targetCyclesPerDeg=[1 3 9]
             % for deg=[0.5 2 8 32]
             o.targetCyclesPerDeg=targetCyclesPerDeg;
             deg=o.targetGaborCycles/o.targetCyclesPerDeg;
-            for isFixationLocal=true
-                % if restrictNoise
-                % 	o.noiseEnvelopeSpaceConstantDeg=deg;
-                % else
-                % 	o.noiseEnvelopeSpaceConstantDeg=inf;
-                % end
-                %             if 1>ecc*(1-o.blankingRadiusReEccentricity) ...
-                %                     || 1>ecc-o.blankingRadiusReTargetHeight*deg
-                % Make sure that fixation mark has at least 1 deg radius.
-                o.eccentricityXYDeg=[ecc 0];
-                o.targetHeightDeg=deg;
-                heightCm=machine.mm{1}(2)/10;
-                if false
-             % OBSOLETE. We use o.blankAllTargets
-               if ~isFixationLocal
-                    o.fixationCrossDeg=inf;
-                    o.clipToStimulusRect=false;
-                    o.fixationCrossDrawnOnStimulus=true;
-                    o.fixationCrossBlankedNearTarget=true;
-                    % Maximize viewingDistanceCm while showing 1 deg of
-                    % fixation.
-                    minScreenDeg=2*(1+o.blankingRadiusReTargetHeight*o.targetHeightDeg);
-                    maxViewingDistanceCm=floor(heightCm/2/tand(minScreenDeg/2));
-                    o.viewingDistanceCm=maxViewingDistanceCm;
-                    % o.conditionName='local';
-                else
-                % When target overlaps fixation point and fills screen,
-                % there's no room for fixation lines at margins, so we
-                % present a small fixation cross, which may overlap target.
-                    o.fixationCrossDeg=2;
-                    o.clipToStimulusRect=true;
-                    o.fixationCrossDrawnOnStimulus=false;
-                    o.fixationCrossBlankedNearTarget=false;
-                    o.viewingDistanceCm=round(25*heightCm/20.6);
-                    % o.conditionName='gabor-RemoteFixation';
-                end
-                end
-                % WE NEED o.minScreenDeg
-                o.minScreenDeg=2*(1+o.blankingRadiusReTargetHeight*o.targetHeightDeg);
-                degMin=NominalAcuityDeg(o.eccentricityXYDeg);
-                if deg<2*degMin
-                    continue
-                end
-                % o.viewingDistanceCm=200; % FOR DEMO
-                % o.fixationIsOffscreen=true; % FOR DEMO
-
-                % EQUATE MARGINS
-			% Shift right to equate right hand margin with top and bottom
-			% margins.
-                r=Screen('Rect',0);
-                aspectRatio=RectWidth(r)/RectHeight(r);
-                o.nearPointXYInUnitSquare=[1-0.5/aspectRatio 0.5];
-                o.alphabetPlacement='right'; % 'top' or 'right';
-                o.contrast=-1;
-                o.setNearPointEccentricityTo='target';
-                ooo{end+1}=o;
+            o.eccentricityXYDeg=[ecc 0];
+            o.targetHeightDeg=deg;
+            % if restrictNoise
+            % 	o.noiseEnvelopeSpaceConstantDeg=deg;
+            % else
+            % 	o.noiseEnvelopeSpaceConstantDeg=inf;
+            % end
+            if 1>ecc*(1-o.blankingRadiusReEccentricity) ...
+                    || 1>ecc-o.blankingRadiusReTargetHeight*deg
+                % Make sure at least 1 deg of fixation mark can be seen.
             end
+            % MAX viewingDistanceCm while showing 1 deg of
+            % screen (and maybe) fixation beyond what is blanked for target.
+            heightCm=machine.mm{1}(2)/10;
+            minScreenDeg=2*(1+o.blankingRadiusReTargetHeight*o.targetHeightDeg);
+            maxViewingDistanceCm=floor(heightCm/2/tand(minScreenDeg/2));
+            o.viewingDistanceCm=maxViewingDistanceCm;
+            % WE NEED o.minScreenDeg
+            o.minScreenDeg=2*(1+o.blankingRadiusReTargetHeight*o.targetHeightDeg);
+            degMin=NominalAcuityDeg(o.eccentricityXYDeg);
+            if deg<2*degMin
+                continue
+            end
+            % o.viewingDistanceCm=200; % FOR DEMO
+            % o.fixationIsOffscreen=true; % FOR DEMO
+            
+            % EQUATE MARGINS
+            % Shift right to equate right hand margin with top and bottom
+            % margins.
+            % r=Screen('Rect',0);
+            % aspectRatio=RectWidth(r)/RectHeight(r);
+            % o.nearPointXYInUnitSquare=[1-0.5/aspectRatio 0.5];
+            o.alphabetPlacement='left'; % 'left' 'right' 'top' or 'bottom';
+            o.contrast=-1;
+            o.setNearPointEccentricityTo='fixation';
+            ooo{end+1}=o;
         end
+    end
+end
+
+% EXPAND EACH CONDITION INTO TWO, ADDING NEGATIVE ECCENTRICITY.
+if true
+    for block=1:length(ooo)
+        oo=ooo{block};
+        oo(2)=oo(1);
+        oo(2).eccentricityXYDeg=-oo(1).eccentricityXYDeg;
+        ooo{block}=oo;
     end
 end
 
@@ -200,7 +202,7 @@ for i=1:length(ooo)
         o.maxViewingDistanceCm=floor(screenCm/2/tand(o.minScreenDeg/2));
         oo(oi)=o;
     end
-    oo.viewingDistanceCm=deal(min(200,min(oo.maxViewingDistanceCm)));
+    [oo.viewingDistanceCm]=deal(min(200,min([oo.maxViewingDistanceCm])));
     ooo{i}=oo;
 end
 
@@ -216,6 +218,7 @@ if false
     for ecc=32
         for deg=8
             o.conditionName='practice';
+            o.fixationCrossBlankedNearTarget=true;
             o.trialsDesired=5; % For each condition, with and without noise.
             o.eccentricityXYDeg=[ecc 0];
             o.targetHeightDeg=deg;
@@ -240,11 +243,11 @@ if false
             r=Screen('Rect',0);
             
             %% EQUATE MARGINS
-            aspectRatio=RectWidth(r)/RectHeight(r);
-            o.nearPointXYInUnitSquare=[1-0.5/aspectRatio 0.5];
-            o.alphabetPlacement='right'; % 'top' or 'right';
+            % aspectRatio=RectWidth(r)/RectHeight(r);
+            % o.nearPointXYInUnitSquare=[1-0.5/aspectRatio 0.5];
+            o.alphabetPlacement='left'; % 'top' or 'right';
             o.contrast=-1;
-            o.setNearPointEccentricityTo='target';
+            o.setNearPointEccentricityTo='fixation';
         end
     end
     ooo=[{o} ooo];
@@ -290,8 +293,8 @@ if false
     end
 end
 
+%% TEST WITH ZERO (AND HIGH) NOISE, INTERLEAVED.
 if true
-    % TEST WITH ZERO AND HIGH NOISE, INTERLEAVED.
     for block=1:length(ooo)
         oo=ooo{block};
         for oi=1:length(oo)
@@ -310,9 +313,13 @@ if true
             end
             oo(oi).noiseSD=0;
         end
-        ooNoise=oo;
-        [ooNoise.noiseSD]=deal(maxNoiseSD);
-        ooo{block}=[oo ooNoise];
+        if true
+            ooNoise=oo;
+            [ooNoise.noiseSD]=deal(maxNoiseSD);
+            ooo{block}=[oo ooNoise];
+        else
+            ooo{block}=oo;
+        end
     end
 end
 
@@ -329,8 +336,11 @@ for block=1:length(ooo)
                 % Human typically takes 6 s/trial.
                 endsAtMin=endsAtMin+[oo(oi).trialsDesired]*6/60;
         end
+        oo(oi).condition=oi;
     end
-    [ooo{block}(:).endsAtMin]=deal(round(endsAtMin));
+    ooo{block}=oo;
+    [ooo{block}.endsAtMin]=deal(round(endsAtMin));
+    [ooo{block}.block]=deal(block);
 end
 
 %% OOPS, NO WIRELESS KEYBOARD, SO LIMIT VIEWING DISTANCE to 60 CM, MAX.
@@ -407,9 +417,11 @@ for block=1:length(ooo)
 end
 t=struct2table(oo,'AsArray',true);
 % 'uncertainParameter'...
-disp(t(:,{'block' 'experiment' 'conditionName' 'observer'  'endsAtMin' 'trialsDesired' 'targetCyclesPerDeg' 'noiseCheckDeg' 'targetKind' 'noiseType' 'thresholdParameter'...
+disp(t(:,{'block' 'experiment' 'conditionName' 'observer'  'endsAtMin' 'trialsDesired' 'targetCyclesPerDeg' ...
+    'noiseCheckDeg' 'targetKind' 'noiseType' 'thresholdParameter'...
     'contrast'  'noiseSD' ...
-    'targetHeightDeg' 'viewingDistanceCm' 'eccentricityXYDeg' 'viewingDistanceCm' 'fixationCrossBlankedNearTarget'})); % Print the conditions in the Command Window.
+    'targetHeightDeg' 'viewingDistanceCm' 'eccentricityXYDeg' 'viewingDistanceCm' ...
+    'fixationCrossBlankedNearTarget'})); % Print the conditions in the Command Window.
 % return
 
 %% Measure threshold, one block per iteration.
