@@ -572,11 +572,11 @@ end
 % variable: o.centralNoiseEnvelopeE1DegDeg
 
 %% GLOBAL AND PERSISTENT
-global isScreenCalibrated % True once we've set profile, brightness, and autobrightness.
+global isScreenCalibrated % True once we've set profile and MacDisplaySettings.
 if isempty(isScreenCalibrated)
     isScreenCalibrated=false; % Make it a logical value.
 end
-global skipScreenCalibration % Saves time by skipping the setting of profile, brightness, and autobrightness.
+global skipScreenCalibration % Saves time by skipping the setting of profile and MacDisplaySettings.
 global isLastBlock % Skip screen restore and leave window open unless isLastBlock is true.
 global oldDisplaySettings % Produced and used by MacDisplaySettings.
 global temporaryWindow % Initialized to empty.
@@ -586,7 +586,7 @@ global window % Retain pointer to open window when this function exits and is ca
 global scratchWindow scratchRect % Opened below. Closed by CloseWindowsAndCleanup.
 global blockTrial blockTrials % For DrawCounter.
 persistent oOld % Saved from previous block to skip prompts that were already answered in the previous block.
-global fixationLines fixationGrid fixationDots ...
+global fixationLines fixationDots fixationGrid ...
     fixationCrossWeightPix fixationDotsWeightPix labelBounds ...
     tTest leftEdgeOfResponse cal ...
     ff whichSignal logFid ...
@@ -679,7 +679,7 @@ o.showUncertainty=false;
 % Geometry
 o.nearPointXYInUnitSquare=[0.5 0.5]; % location of target center on screen. [0 0]  lower right, [1 1] upper right.
 o.setNearPointEccentricityTo='fixation'; % 'target' or 'fixation' or 'value'
-% Note that all conditions must have the same near point. So if your conditions
+% Note that all conditions must have same near point. So if your conditions
 % have targets at different eccentricities, you should not select 'target'.
 % Select either 'fixation' or 'value'.
 o.nearPointXYDeg=[0 0]; % Overwritten unless o.setNearPointEccentricityTo=='value'.
@@ -699,11 +699,13 @@ o.targetMarkDeg=1;
 o.useFixation=true;
 o.fixationIsOffscreen=false;
 o.useFixationGrid=false;
-o.useFixationDots=false;
+o.useFixationDots=true;
+o.fixationDotsNumber=100;
+o.fixationDotsWithinRadiusDeg=2;
 o.fixationDotsColor=0;
+o.fixationDotsWeightDeg=0.05;
 o.fixationCrossDeg=3; % Typically 3 or inf. Make this at least 4 deg for scotopic testing, since the fovea is blind scotopically.
 o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
-o.fixationDotsWeightDeg=0.05;
 o.fixationCrossBlankedNearTarget=true;
 o.fixationOffsetBeforeNoiseOnsetSecs=0.2;
 o.fixationOnsetAfterNoiseOffsetSecs=0.2; % Pause after stimulus before display of fixation. 
@@ -742,8 +744,11 @@ o.enableClutMapping=true; % Required. Using software CLUT.
 o.assessBitDepth=false;
 
 % Debugging
-o.useFractionOfScreenToDebug=false; % 0 and 1 give normal screen. Just for debugging. Keeps cursor visible.
-o.skipScreenCalibration=false; % Speed up debugging by skipping noncritical slow operations: autobrightness, brightness, and screen color profile.
+o.useFractionOfScreenToDebug=false; % 0 and 1 give normal screen. Just for 
+                                    % debugging. Keeps cursor visible.
+o.skipScreenCalibration=false; % Speed up debugging by skipping noncritical 
+                               % slow operations: MacDisplaySettings and
+                               % screen color profile.
 o.printTargetBounds=false;
 o.printCrossCorrelation=false;
 o.printLikelihood=false;
@@ -911,7 +916,7 @@ o.textSizeDeg=0.9;
 o.textMarginPix=0; % Currently always set to 2*o.textSize; used solely in call to OfferEscapeOptions.
 o.counterPlacement='bottomRight';
 o.alphabetPlacement='top'; % 'top' 'bottom' 'right' or 'left' while awaiting response.
-o.instructionPlacement='topLeft'; % 'topLeft' 'bottomLeft'
+o.instructionPlacement='topLeft'; % 'topLeft' 'bottomLeft' 'bottomRight'
 
 % Response screen
 o.responseScreenAbsoluteContrast=0.99; % Set to [] to maximize possible contrast using CLUT for o.contrast.
@@ -940,7 +945,8 @@ o.luminanceAtEye=[]; % Set by ComputeNPhoton(), line 2073.
 o.retinalIlluminanceTd=[];
 o.pupilDiameterMm=[];
 o.pupilKnown=false;
-o.brightnessSetting=0.87; % Default. Roughly half luminance. Some observers find 1.0 painfully bright.
+o.brightnessSetting=0.87; % Default. Roughly half luminance. Some observers 
+                          % find 1.0 painfully bright.
 
 % Images
 o.printSignalImages=false;
@@ -1304,97 +1310,52 @@ if ~isfield(oo(1),'isFirstBlock') || oo(1).isFirstBlock
     blockTrials=sum([oo.trialsDesired]);
 end
 
-%% Brightness
-% Keeping this brightness code here is no longer necessary. New version of
-% AutoBrightness, in CriticalSpacing, can be called while windows are open.
-o=oo(1);
-skipScreenCalibration=o.skipScreenCalibration; % Set global flag.
-isLastBlock=o.isLastBlock; % Set global flag read by CloseWindowsAndCleanup.
-if IsOSX && ~isScreenCalibrated && ~skipScreenCalibration && ~ismember(o.observer,o.algorithmicObservers)
-    if true
+%% MacDisplaySettings ESTABLISH CONSISTENT DISPLAY SETTINGS
+% This might be more useful later, but still before any user interactio.
+u=unique([oo.brightnessSetting]);
+if length(u)>1
+    error('Not all conditions have the same o.brightnessSetting: %.1f ~= %.1f.',u(1),u(2));
+end
+u=unique({oo.observer});
+if length(u)>1
+    error('Not all conditions have the same o.observer: %s ~= %s.',u{1},u{2});
+end
+u=unique([oo.viewingDistanceCm]);
+if length(u)>1
+    error('Not all conditions have the same o.viewingDistanceCm: %.1f ~= %.1f.',u(1),u(2));
+end
+
+%% MacDisplaySettings
+% Keeping this code here is no longer necessary. It can be called while
+% windows are open.
+skipScreenCalibration=oo(1).skipScreenCalibration; % Set global flag.
+isLastBlock=oo(1).isLastBlock; % Set global flag read by CloseWindowsAndCleanup.
+if ~isfinite(oo(1).brightnessSetting)
+    [oo.brightnessSetting]=deal(0.87); % Default brightness.
+end
+cal.brightnessSetting=oo(1).brightnessSetting;
+if IsOSX && ~isScreenCalibrated && ~skipScreenCalibration && ...
+        ~ismember(oo(1).observer,oo(1).algorithmicObservers)
     % April 2020. We use the new MacDisplaySettings.
-        newDisplaySettings.brightness=oo(1).brightnessSetting;
-        newDisplaySettings.automatically=false;
-        newDisplaySettings.trueTone=false;
-        newDisplaySettings.nightShiftSchedule='Off';
-        newDisplaySettings.newShiftManual=false;
-        ffprintf(ff,'Setting MacDisplaySettings. ... ');
-        s=GetSecs;
-        oldDisplaySettings=MacDisplaySettings(oo(1).screen,newDisplaySettings);
-        ffprintf(ff,'Done (%.1f s).\n',GetSecs-s); % Setting MacDisplaySettings.
-   else
-        % 2019 update: Psychtoolbox offers Brightness control through a
-        % Screen call. This worked well until macOS introduced Night Shift
-        % (in summer 2017?). Since then my applescript-based Brightness.m
-        % has been more reliable, but slow. However, in July 2019 Nicholas
-        % Riley showed us an undocumented call in Apple's new Core Display
-        % API that works. Mario Kleiner folded it into Screen in
-        % Psychtoolbox 3.0.16. So my Brightness.m function is now obsolete.
-        % Control of Brightness has been flakey since summer 2017, so this
-        % code sets and reads back the Brightness setting to make sure it
-        % worked, and tries three times before giving up. As of
-        % Pyschtoolbox 3.0.16, I'm hoping brightness is now reliable, so we
-        % can streamline this.
-        [~,ver]=PsychtoolboxVersion;
-        % fprintf('PsychtoolboxVersion %d.%d.%d',ver.major,ver.minor,ver.point);
-        v=ver.major*1000+ver.minor*100+ver.point;
-        useScreenBrightness= v>=3016 && IsOSX;
-        try
-            if isfinite(oo(oi).brightnessSetting)
-                cal.brightnessSetting=oo(oi).brightnessSetting;
-            else
-                cal.brightnessSetting=0.87; % default value
-            end
-            ffprintf(ff,'Setting Brightness. ... ');
-            s=GetSecs;
-            for i=1:3
-                if useScreenBrightness
-                    Screen('ConfigureDisplay','Brightness',...
-                        cal.screen,cal.screenOutput,cal.brightnessSetting);
-                else
-                    Brightness(cal.screen,cal.brightnessSetting); % Set brightness.
-                end
-                cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
-                if abs(cal.brightnessSetting-cal.brightnessReading)<0.01
-                    break;
-                elseif i==3
-                    error('Tried three times to set brightness to %.2f, but read back %.2f',...
-                        cal.brightnessSetting,cal.brightnessReading);
-                end
-                % If it failed, try again two more times. The first call to
-                % Brightness sometimes fails. Not sure why. Maybe it times out.
-            end
-            ffprintf(ff,'Done (%.1f s).\n',GetSecs-s); % Setting Brightness.
-        catch e
-            % Caution: Screen ConfigureDisplay Brightness gives a fatal error
-            % if not supported, and is unsupported on many devices, including a
-            % video projector under macOS. We use try-catch to cope. NOTE:
-            % It is my impression since summer 2017 that the Brightness
-            % function (which uses AppleScript to control the System
-            % Preferences Display panel) is currently more reliable than the
-            % Screen ConfigureDisplay Brightness feature (which uses a macOS
-            % call). The Screen call adjusts the brightness, but not the slider
-            % in the Preferences Display panel, and macOS later unpredictably
-            % resets the brightness to the level of the slider, not what we
-            % asked for. This is a macOS bug in the Apple call used by Screen.
-            ffprintf(ff,'\nWARNING: This computer does not support control of brightness of this screen.\n');
-            msg=getReport(e);
-            ffprintf(ff,msg);
-            cal.brightnessReading=NaN;
-        end % try
-        if abs(cal.brightnessSetting-cal.brightnessReading)>0.01
-            error('Set brightness to %.2f, but read back %.2f',...
-                cal.brightnessSetting,cal.brightnessReading);
-        end
-        ffprintf(ff,'Brightness set to %.2f.\n',cal.brightnessSetting);
-        if ismac
-            ffprintf(ff,'Turning AutoBrightness off. ... ');
-            s=GetSecs;
-            AutoBrightness(cal.screen,0);
-            ffprintf(ff,'Done (%.1f s)\n',GetSecs-s); % AutoBrightness
-        end
+    newDisplaySettings.brightness=oo(1).brightnessSetting;
+    newDisplaySettings.automatically=false;
+    newDisplaySettings.trueTone=false;
+    newDisplaySettings.nightShiftSchedule='Off';
+    newDisplaySettings.nightShiftManual=false;
+    ffprintf(ff,'Setting MacDisplaySettings. ... ');
+    s=GetSecs;
+    oldDisplaySettings=MacDisplaySettings(oo(1).screen,newDisplaySettings);
+    ffprintf(ff,'Done (%.1f s).\n',GetSecs-s); % Setting MacDisplaySettings.
+    cal.brightnessSetting=oo(1).brightnessSetting;
+    settings=MacDisplaySettings(oo(1).screen);
+    cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
+    if abs(cal.brightnessSetting-cal.brightnessReading)>0.01
+        ffprintf(ff,'WARNING: Set brightness to %.2f (MacScreenSettings), but read back %.2f (Screen) and %.2f (MacScreenSettings).',...
+            cal.brightnessSetting,cal.brightnessReading,settings.brightness);
     end
-end % if ~isScreenCalibrated && ~skipScreenCalibration && ~ismember(o.observer,o.algorithmicObservers)
+    ffprintf(ff,'Brightness set to %.2f.\n',cal.brightnessSetting);
+    oo(1).brightnessReading=[cal.brightnessReading settings.brightness];
+end
 clear o
 oo=SortFields(oo);
 
@@ -1523,10 +1484,10 @@ try
             case 'topLeft'
                 % Allow room for instruction at top of screen.
                 oo(oi).stimulusRect(2)=oo(oi).screenRect(2)+1.3*oo(oi).textSize;
-            case 'bottomLeft'
+            case {'bottomLeft' 'bottomRight'}
                 % Allow room for instruction at bottom of screen.
                 oo(oi).stimulusRect(4)=oo(oi).screenRect(4)-1.3*oo(oi).textSize;
-            otherwise
+           otherwise
                 error('Unknown o.instructionPlacement ''%s''.',o.instructionPlacement);
         end
         oo(oi).stimulusRect=round(oo(oi).stimulusRect);
@@ -2115,15 +2076,13 @@ try
     ffprintf(ff,'%s %s calibrated by %s on %s.\n',...
         cal.localHostName,cal.macModelName,cal.calibratedBy,cal.datestr);
     ffprintf(ff,'%s\n',cal.notes);
-    ffprintf(ff,'cal.ScreenConfigureDisplayBrightnessWorks=%.0f;\n',...
-        cal.ScreenConfigureDisplayBrightnessWorks);
     if ~isScreenCalibrated && ismac && isfield(cal,'profile') ...
             && ~all(ismember({oo.observer},oo(oi).algorithmicObservers)) ...
             && ~skipScreenCalibration
         ffprintf(ff,'cal.profile=''%s'';\n',cal.profile);
         ffprintf(ff,'Setting screen color profile. ... ');
         s=GetSecs;
-        if Screen(oo(1).window,'WindowKind') == 1
+        if Screen(oo(1).window,'WindowKind')==1
             % Set text size.
             % oo(oi).textSize=TextSizeToFit(oo(1).window)/2; % Set optimum text size.
             %             Screen('TextSize',oo(1).window,oo(oi).textSize);
@@ -2978,12 +2937,15 @@ try
                 fix.blankingRadiusReEccentricity=oo(oi).blankingRadiusReEccentricity;
                 fix.blankingRadiusReTargetHeight=oo(oi).blankingRadiusReTargetHeight;
                 fix.fixationCrossBlankedNearTarget=oo(oi).fixationCrossBlankedNearTarget;
+                fix.useFixationDots=oo(oi).useFixationDots;
+                fix.fixationDotsNumber=oo(oi).fixationDotsNumber;
+                fix.fixationDotsWithinRadius=oo(oi).fixationDotsWithinRadiusDeg*oo(oi).pixPerDeg;
                 if oo(oi).clipToStimulusRect
                     fix.clipRect=oo(oi).stimulusRect;
                 else
                     fix.clipRect=oo(oi).screenRect;
                 end
-                [fixationLines,oo(oi).markTargetLocation]=ComputeFixationLines3(fix);
+                [fixationLines,fixationDots,oo(oi).markTargetLocation]=ComputeFixationLines3(fix);
             else
                 % Consider only the target of this condition.
                 % We allow various kinds of uncertainty, and interleaved
@@ -3005,19 +2967,13 @@ try
                 fix.blankingRadiusReTargetHeight=oo(oi).blankingRadiusReTargetHeight;
                 fix.targetHeightPix=oo(oi).targetHeightPix;
                 fix.fixationCrossBlankedNearTarget=oo(oi).fixationCrossBlankedNearTarget;
-                [fixationLines,oo(oi).markTargetLocation]=ComputeFixationLines2(fix);
+                fix.useFixationDots=oo(oi).useFixationDots;
+                fix.fixationDotsNumber=oo(oi).fixationDotsNumber;
+                fix.fixationDotsWithinRadius=oo(oi).fixationDotsWithinRadiusDeg*oo(oi).pixPerDeg;
+                [fixationLines,fixationDots,oo(oi).markTargetLocation]=ComputeFixationLines3(fix);
             end
         else
             fixationLines=[];
-        end
-        if oo(oi).useFixationDots
-            xy=rand([2 100]);
-            r=[XYPixOfXYDeg(oo(oi),[-2 -2]) XYPixOfXYDeg(oo(oi),[2 2])];
-            xy=xy.*[RectWidth(r);RectHeight(r)];
-            xy=xy+r([1 2])';
-            fixationDots=round(xy);
-        else
-            fixationDots=[];
         end
         if oo(oi).useFixationGrid
             xyDegMin=XYDegOfXYPix(oo(oi),oo(oi).screenRect([1 4]));
@@ -3356,6 +3312,9 @@ try
                             oldSize=Screen('TextSize',scratchWindow,round(oo(oi).targetHeightPix/oo(oi).targetCheckPix));
                             oldStyle=Screen('TextStyle',scratchWindow,0);
                             canvasRect=[0 0 oo(oi).canvasSize(2) oo(oi).canvasSize(1)]; % o.canvasSize =[height width] in units of targetCheck;
+                            if isempty(oo(oi).alternatives) || oo(oi).alternatives==0
+                                error('Please set oo(oi).alternatives.');
+                            end
                             if oo(oi).allowAnyFont
                                 clear letters
                                 for i=1:oo(oi).alternatives
@@ -4855,7 +4814,7 @@ try
                 for iMovieFrame=1:oo(oi).movieFrames
                     Screen('Close',movieTexture(iMovieFrame));
                 end
-                eraseRect=dstRect; % Erase only the movie, sparing the rest of the screen
+                eraseRect=dstRect; % Erase only the movie, sparing the rest of the screen.
                 % Set contrast of response screen.
                 saveNoiseSD=oo(oi).noiseSD;
                 oo(oi).noiseSD=0;
@@ -4982,6 +4941,10 @@ try
                         % Put instruction at bottom of screen.
                         Screen('FillRect',window,oo(oi).gray1,bottomCaptionRect);
                         bounds=AlignRect(bounds,r,'left','bottom');
+                    case 'bottomRight'
+                        % Put instruction at bottom of screen.
+                        Screen('FillRect',window,oo(oi).gray1,bottomCaptionRect);
+                        bounds=AlignRect(bounds,r,'right','bottom');
                 end
                 % Retrict bounds of instruction to not overwrite the
                 % alphabet, which may have labels. We assume that
@@ -5608,15 +5571,15 @@ try
         oo(oi).transcript.isRight{oo(oi).trials}=isRight;
         oo(oi).transcript.condition(oo(oi).trials)=oi;
         if ~isScreenCalibrated ...
-                && cal.ScreenConfigureDisplayBrightnessWorks ...
+                && isOSX ...
                 && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers) ...
                 && ~skipScreenCalibration
-            %          Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,cal.brightnessSetting);
-            cal.brightnessReading=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
-            %          Brightness(cal.screen,cal.brightnessSetting);
-            %          cal.brightnessReading=Brightness(cal.screen);
+            cal.brightnessReading=Screen('ConfigureDisplay','Brightness',...
+                cal.screen,cal.screenOutput);
             if abs(cal.brightnessSetting-cal.brightnessReading) > 0.01
-                string=sprintf('Screen brightness was set to %.0f%%, but reads as %.0f%%.\n',100*cal.brightnessSetting,100*cal.brightnessReading);
+                string=sprintf(...
+                    'Screen brightness was set to %.2f%%, but reads as %.2f%%.\n',...
+                    cal.brightnessSetting,cal.brightnessReading);
                 ffprintf(ff,string);
                 error(string);
             end
@@ -6010,7 +5973,7 @@ end
 % o.savedStimulus, whereas SaveSnapshot adds lot's of text, and saves
 % it as a file to disk.
 function o=SaveSnapshot(o,snapshotTexture)
-global fixationLines fixationCrossWeightPix labelBounds location  ...
+global fixationLines fixationDots fixationCrossWeightPix labelBounds location  ...
     tTest leftEdgeOfResponse ff whichSignal logFid
 % Hasn't been tested since it became a subroutine. It may need more of its
 % variables to be declared "global". A more elegant solution, more
@@ -7053,7 +7016,7 @@ end % function ComputeClut
 
 %% WaitUntilObserverIsReady
 function o=WaitUntilObserverIsReady(o,oo,message)
-global fixationLines fixationGrid fixationDots ...
+global fixationLines fixationDots fixationGrid fixationDots ...
     fixationCrossWeightPix fixationDotsWeightPix ff
 escapeChar=char(27);
 graveAccentChar='`';
@@ -7185,11 +7148,9 @@ end
 %% CloseWindowsAndCleanup
 function CloseWindowsAndCleanup(oo)
 % Close any window opened by the Psychtoolbox Screen command, re-enable
-% keyboard, show cursor, and restore AutoBrightness. We save times by only
-% restoring brightness etc. if isLastBlock and we're not
-% skipScreenCalibration. "RestoreCluts" is quick, but loading a color
-% preference is slow (30 s), so we leave that alone, until we're cleaning
-% up after the last block.
+% keyboard, show cursor, and restore MacDisplaySettings. We save time by
+% only restoring MacDisplaySettings if isLastBlock and we're not
+% skipScreenCalibration.
 global skipScreenCalibration isLastBlock isScreenCalibrated 
 global window temporaryWindow oldDisplaySettings
 if nargin==1
@@ -7218,20 +7179,13 @@ if ~isempty(Screen('Windows')) && isLastBlock
     fprintf('Done (%.1f s).\n',GetSecs-s); % Closing all windows.
 end
 if isScreenCalibrated && ~skipScreenCalibration && isLastBlock && ismac
-    if true
-		% New April 2020.
-        fprintf('Restoring MacDisplaySettings. ... ');
-        s=GetSecs;
-        MacDisplaySettings(oldDisplaySettings);
-    else
-        fprintf('Restoring AutoBrightness. ... ');
-        s=GetSecs;
-        AutoBrightness(0,1);
-    end
+    % New April 2020.
+    fprintf('Restoring MacDisplaySettings. ... ');
+    s=GetSecs;
+    MacDisplaySettings(oldDisplaySettings);
     fprintf('Done (%.1f s).\n',GetSecs-s); % Restoring.
     RestoreCluts;
-    % This is the only place we set it false.
-    % MATLAB initializes it false.
+    % This is the only place we set it false. MATLAB initializes it false.
     isScreenCalibrated=false;
 end
 Screen('Preference','Verbosity',2); % Restore default level.
