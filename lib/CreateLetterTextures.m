@@ -64,7 +64,7 @@ function [letterStruct,alphabetBounds]=CreateLetterTextures(condition,o,window)
 % All letters must have the same image size!
 % Error in CreateLetterTextures (line 102)
 % error('All letters must have the same image size!');
-
+%
 % TIMING: Everything is quick except calling TextBounds, which in turn is
 % dominated by the time to call Screen 'GetImage', whose time depends
 % solely on size of the scratchWindow. On my 2017 MacBook, it takes 0.7 s
@@ -73,7 +73,15 @@ function [letterStruct,alphabetBounds]=CreateLetterTextures(condition,o,window)
 % have a tight window because you'll know immediately, before collecting
 % data, if it's too tight. This allows a much smaller scratchWindow and
 % thus greatly sped up CreateLetterTextures.
-% tic
+
+persistent isFolderAdded
+if isempty(isFolderAdded)
+    % Make sure we use our enhanced version of TextBounds, not the one in Psychtoolbox.
+    folder=fileparts(mfilename('fullpath')); % Takes 0.1 s.
+    addpath(folder); % Folder in same directory as this M file.
+    isFolderAdded=true;
+end
+
 if ~isfinite(o.targetHeightOverWidth)
     o.targetHeightOverWidth=1;
 end
@@ -209,7 +217,7 @@ else % if o.getAlphabetFromDisk
     end
     Screen('TextSize',scratchWindow,sizePix);
     for i=1:length(letters)
-        lettersInCells{i}=letters(i);
+        % lettersInCells{i}=letters(i);
         t1=tic;
         [bounds,ok]=TextBounds(scratchWindow,letters(i),1);
         if ~ok
@@ -263,16 +271,24 @@ else % if o.getAlphabetFromDisk
         Screen('TextSize',letterStruct(i).texture,sizePix);
         Screen('FillRect',letterStruct(i).texture,white);
         if o.contrast==1
-            Screen('DrawText',letterStruct(i).texture,double(letters(i)),-bounds(1)+letterStruct(i).dx,-bounds(2),black,white,1);
+            Screen('DrawText',letterStruct(i).texture,double(letters(i)),...
+                -bounds(1)+letterStruct(i).dx,-bounds(2),black,white,1);
         else
-            Screen('DrawText',letterStruct(i).texture,double(letters(i)),-bounds(1)+letterStruct(i).dx,-bounds(2),uint8(white+(double(black)-white)*o.contrast),white,1);
+            Screen('DrawText',letterStruct(i).texture,double(letters(i)),...
+                -bounds(1)+letterStruct(i).dx,-bounds(2),uint8(white+(double(black)-white)*o.contrast),white,1);
         end
+        if true
+            % I need the image when I call CreateLetterTextures from UncertainEOverN.m
+            im=Screen('GetImage',letterStruct(i).texture);
+            % Convert RGB to monochrome.
+            letterStruct(i).image=im(:,:,2);
+        end 
     end
     Screen('Preference','TextAntiAliasing',1);
 end % if o.getAlphabetFromDisk
 
 if false
-    % For peformance analysis. Report who called us, and how long we took.
+    % For performance analysis. Report who called us, and how long we took.
     stack=dbstack;
     if length(stack)>=2
         line=stack(2).line; % line number of the calling function
