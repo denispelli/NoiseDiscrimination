@@ -33,7 +33,7 @@ y_min = min(v1(2),v2(2));
 y_max = max(v1(2),v2(2));
 
 % Quick hack to trim infinite line that is horizontal or
-% vertical. Without this hack we 
+% vertical. 
 if any(~isfinite([x0 x1])) && y0==y1
    x0=min(x0,x_max);
    x0=max(x0,x_min);
