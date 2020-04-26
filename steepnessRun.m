@@ -153,11 +153,11 @@ if ~skipDataCollection && 0
          o.alphabet=o.targetGaborNames;
       end
       o.alternatives=length(o.alphabet);
-      o.useDynamicNoiseMovie=true;
+      o.isNoiseDynamic=true;
       if all(o.eccentricityXYDeg==0)
-         o.markTargetLocation=false;
+         o.isTargetLocationMarked=false;
       else
-         o.markTargetLocation=true;
+         o.isTargetLocationMarked=true;
       end
       o.blankingRadiusReTargetHeight=0;
       o.moviePreSec=0.2;

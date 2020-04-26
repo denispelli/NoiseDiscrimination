@@ -15,7 +15,7 @@ o.skipScreenCalibration=true; % Skip calibration to save time.
 % o.printImageStatistics=true;
 
 %% SPECIFY BASIC CONDITION
-o.symmetricLuminanceRange=false; % Allow maximum brightness.
+o.isLuminanceRangeSymmetric=false; % Allow maximum brightness.
 o.desiredLuminanceFactor=1.8; % Maximize brightness.
 o.responseScreenAbsoluteContrast=0.9;
 if false
@@ -36,7 +36,7 @@ o.ratingThreshold=4*ones(size(o.alphabet)); % Beauty threshold for each member o
 o.targetMargin=0;
 o.viewingDistanceCm=40;
 o.contrast=1; % Select contrast polarity.
-o.useDynamicNoiseMovie=false;
+o.isNoiseDynamic=false;
 o.experiment='faces';
 % o.task='rate';
 o.task='identify';
@@ -56,9 +56,9 @@ o.targetMarkDeg=1;
 o.fixationCrossDeg=3;
 o.alternatives=length(o.alphabet);
 if all(o.eccentricityXYDeg==0)
-    o.markTargetLocation=false;
+    o.isTargetLocationMarked=false;
 else
-    o.markTargetLocation=true;
+    o.isTargetLocationMarked=true;
 end
 if false
     % Use QuestPlus to measure steepness.

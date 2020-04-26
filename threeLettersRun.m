@@ -38,8 +38,8 @@ o.contrast=-0.16;
 o.flankerContrast=-1; % Negative for dark letters.
 o.flankerArrangement='tangential'; % 'radial' 'radialAndTangential'
 o.viewingDistanceCm=40;
-o.symmetricLuminanceRange=true;
-o.useDynamicNoiseMovie=true;
+o.isLuminanceRangeSymmetric=true;
+o.isNoiseDynamic=true;
 o.alphabetPlacement='right'; % 'top' or 'right';
 o.annularNoiseSD=0;
 o.noiseRadiusDeg=inf;
@@ -52,8 +52,7 @@ end
 o.fixationCrossWeightDeg=0.09;
 o.blankingRadiusReEccentricity=0; % No blanking.
 o.blankingRadiusReTargetHeight=0;
-o.moviePreSecs=0.2;
-o.moviePostSecs=0.2;
+o.moviePreAndPostSecs=[0.2 0.2];
 o.targetMarkDeg=2;
 o.fixationCrossDeg=3;
 if true
@@ -130,9 +129,9 @@ for oi=1:length(oo)
     o=oo{oi};
     o.alternatives=length(o.alphabet);
     if all(o.eccentricityXYDeg==0)
-        o.markTargetLocation=false;
+        o.isTargetLocationMarked=false;
     else
-        o.markTargetLocation=true;
+        o.isTargetLocationMarked=true;
     end
     oo{oi}=o;
 end

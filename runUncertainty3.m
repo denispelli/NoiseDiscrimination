@@ -16,9 +16,9 @@ if IsWin
 end
 % o.useFractionOfScreenToDebug=0.4; % USE ONLY FOR DEBUGGING.
 % o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
-o.fullResolutionTarget=true;
+o.isTargetFullResolution=true;
 o.askForPartingComments=false;
-o.recordGaze=false;
+o.isGazeRecorded=false;
 o.experiment='uncertainty';
 o.eccentricityXYDeg=[0 0];
 o.targetHeightDeg=4;
@@ -39,20 +39,20 @@ o.targetFont='Sloan';
 o.minimumTargetHeightChecks=8;
 o.alphabet='';
 o.borderLetter='';
-o.labelAnswers=false;
+o.areAnswersLabeled=false;
 o.getAlphabetFromDisk=false;
-o.fixationCheck=false;
+o.isFixationCheck=false;
 o.fixationCrossBlankedNearTarget=true;
 o.fixationOnsetAfterNoiseOffsetSecs=0.6;
 o.fixationCrossDrawnOnStimulus=false;
-o.fullResolutionTarget=false;
+o.isTargetFullResolution=false;
 o.useFlankers=false;
 o.flankerContrast=-1;
 % o.printGrayLuminance=false;
 % o.assessGray=true;
 % o.assessLoadGamma=true;
 % o.printContrastBounds=true;
-o.symmetricLuminanceRange=true; % False for maximum brightness.
+o.isLuminanceRangeSymmetric=true; % False for maximum brightness.
 o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
 o.viewingDistanceCm=40;
 o.alphabetPlacement='top'; % 'top' 'bottom' 'right' or 'left' while awaiting response.
@@ -60,7 +60,7 @@ o.counterPlacement='bottomRight';
 o.instructionPlacement='bottomLeft'; % 'topLeft' 'bottomLeft'
 o.brightnessSetting=0.87;
 o.askExperimenterToSetDistance=true;
-o.symmetricLuminanceRange=true; % False for maximum brightness.
+o.isLuminanceRangeSymmetric=true; % False for maximum brightness.
 o.desiredLuminanceFactor=1; % 1.8 to maximize brightness.
 o.saveSnapshot=false;
 if true
@@ -94,9 +94,9 @@ if true
                 end
             end
             o.MSpace=length(eccentricityXYDegList); % The exact value.
-            o.useDynamicNoiseMovie=true;
+            o.isNoiseDynamic=true;
             o.targetDurationSecs=0.1;
-            moviePreAndPostSecsList={}; % Only effective if o.useDynamicNoiseMovie.
+            moviePreAndPostSecsList={}; % Only effective if o.isNoiseDynamic.
             o.noiseCheckSecs=o.targetDurationSecs;
             totalSecs=(MTime-1)*o.targetDurationSecs;
             for i=1:MTime
@@ -117,7 +117,7 @@ if true
             o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
             o.alternatives=length(o.alphabet);
             o.alphabetPlacement='right'; % 'top' or 'right';
-            o.labelAnswers=false;
+            o.areAnswersLabeled=false;
             o.contrast=-1;
             o.viewingDistanceCm=25;
             o.fixationCrossDrawnOnStimulus=false;
@@ -151,7 +151,7 @@ for i=1:4
     o.responseLabels='VH'; % One for each targetGaborOrientationsDeg.
     o.alphabet='VH';
     o.alternatives=length(o.alphabet);
-    o.labelAnswers=true;
+    o.areAnswersLabeled=true;
     ooo{end+1}=o;
 end
 if true
@@ -182,7 +182,7 @@ if false
         o.noiseSD=0;
         o.uncertainParameter={};
         o.uncertainValues={};
-        o.fullResolutionTarget=true;
+        o.isTargetFullResolution=true;
         o.targetHeightDeg=10;
         o.brightnessSetting=0.87;
         o.thresholdParameter='size';
@@ -199,7 +199,7 @@ if false
         % FIXATION TEST
         o.conditionName='Fixation check';
         o.targetKind='letter';
-        o.fixationCheck=true;
+        o.isFixationCheck=true;
         o.eccentricityXYDeg=[0 0];
         o.thresholdParameter='spacing';
         o.useFlankers=true;
@@ -212,7 +212,7 @@ if false
         o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
         o.targetKind='letter';
         o.alphabetPlacement='right'; % 'top' or 'right';
-        o.labelAnswers=false;
+        o.areAnswersLabeled=false;
         o.getAlphabetFromDisk=false;
         o.alternatives=length(o.alphabet);
         oo(3)=o;
@@ -275,9 +275,9 @@ CheckExperimentFonts(ooo)
 %% INTERLEAVED CONDITIONS MUST HAVE CONSISTENT CLUTS
 bad={};
 for block=1:length(ooo)
-    if ~all([oo.symmetricLuminanceRange]) && any([oo.symmetricLuminanceRange])
-        warning('block %d, o.symmetricLuminanceRange must be consistent among all interleaved conditions.',block);
-        bad{end+1}='o.symmetricLuminanceRange';
+    if ~all([oo.isLuminanceRangeSymmetric]) && any([oo.isLuminanceRangeSymmetric])
+        warning('block %d, o.isLuminanceRangeSymmetric must be consistent among all interleaved conditions.',block);
+        bad{end+1}='o.isLuminanceRangeSymmetric';
     end
     if length(unique([oo.desiredLuminanceFactor]))>1
         warning('block %d, o.desiredLuminanceFactor must be consistent among all interleaved conditions.',block);

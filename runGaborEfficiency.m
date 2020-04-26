@@ -33,9 +33,9 @@ o.targetFont='Sloan';
 % o.minimumTargetHeightChecks=8;
 % o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
 % o.borderLetter='X';
-% o.labelAnswers=false;
+% o.areAnswersLabeled=false;
 % o.getAlphabetFromDisk=true;
-% o.recordGaze=false;
+% o.isGazeRecorded=false;
 
 o.experiment='GaborEfficiency';
 o.targetHeightDeg=6;

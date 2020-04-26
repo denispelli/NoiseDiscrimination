@@ -28,10 +28,10 @@ end
 if IsWin
     o.useNative11Bit=false;
 end
-o.blankAllTargets=true;
+o.areAllTargetsBlanked=true;
 % o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
 % o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
-o.markTargetLocation=true;
+o.isTargetLocationMarked=true;
 o.useFixationGrid=false;
 o.useFixationDots=true;
 o.fixationDotsWeightDeg=0.05;
@@ -39,7 +39,7 @@ o.fixationDotsNumber=100;
 o.fixationDotsWithinRadiusDeg=30;
 o.targetDurationSecs=0.15;
 o.askForPartingComments=false; % Disabled until it's fixed.
-o.recordGaze=false;
+o.isGazeRecorded=false;
 o.experiment='CSFTest';
 o.eccentricityXYDeg=[0 0];
 o.contrast=-1;
@@ -51,15 +51,15 @@ o.thresholdParameter='contrast';
 o.flankerSpacingDeg=0.2; % Used only for fixation check.
 o.useFlankers=false;
 o.flankerContrast=-1;
-o.symmetricLuminanceRange=true; % False for maximum brightness.
+o.isLuminanceRangeSymmetric=true; % False for maximum brightness.
 o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
 o.counterPlacement='bottomRight';
 o.instructionPlacement='bottomLeft'; % 'topLeft' 'bottomLeft'
 o.brightnessSetting=0.87;
 o.askExperimenterToSetDistance=true;
-o.symmetricLuminanceRange=true; % False for maximum brightness.
+o.isLuminanceRangeSymmetric=true; % False for maximum brightness.
 o.desiredLuminanceFactor=1; % 1.8 to maximize brightness.
-o.fullResolutionTarget=true; % NEW December 6, 2019. denis.pelli@nyu.edu
+o.isTargetFullResolution=true; % NEW December 6, 2019. denis.pelli@nyu.edu
 o.clipToStimulusRect=false;
 o.eccentricityXYDeg=[0 0];
 o.targetHeightDeg=[];
@@ -68,7 +68,7 @@ o.minScreenDeg=[];
 machine=IdentifyComputer;
 
 %% FIXATION
-o.fixationCheck=false; % True designates the condition as a fixation check.
+o.isFixationCheck=false; % True designates the condition as a fixation check.
 o.clipToStimulusRect=false;
 if false
     % SEPARATE FIXATION IN TIME
@@ -94,7 +94,7 @@ for targetKind={'gabor'} % 'letter' 'gabor'
         case 'gabor'
             o.minimumTargetHeightChecks=[];
             o.targetGaborOrientationsDeg=[0 45 90 135]; % Orientations relative to vertical.
-            o.labelAnswers=true;
+            o.areAnswersLabeled=true;
             o.responseLabels='1234';
             o.alternatives=length(o.targetGaborOrientationsDeg);
             o.targetCyclesPerDeg=nan;
@@ -118,12 +118,12 @@ for targetKind={'gabor'} % 'letter' 'gabor'
             o.targetGaborPhaseDeg=0; % Phase offset of sinewave in deg at center of gabor.
             o.targetGaborSpaceConstantCycles=[]; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
             o.targetGaborCycles=[]; % cycles of the sinewave in targetHeight
-            o.labelAnswers=false;
+            o.areAnswersLabeled=false;
             o.responseLabels={};
             o.targetFont='Sloan';
             o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
             o.borderLetter='X';
-            o.labelAnswers=false;
+            o.areAnswersLabeled=false;
             o.getAlphabetFromDisk=true;
             o.blankingRadiusReTargetHeight=0.833; % One third letter width blank margin.
         otherwise
@@ -356,9 +356,9 @@ CheckExperimentFonts(ooo)
 %% INTERLEAVED CONDITIONS MUST HAVE CONSISTENT CLUTS
 bad={};
 for block=1:length(ooo)
-    if ~all([oo.symmetricLuminanceRange]) && any([oo.symmetricLuminanceRange])
-        warning('block %d, o.symmetricLuminanceRange must be consistent among all interleaved conditions.',block);
-        bad{end+1}='o.symmetricLuminanceRange';
+    if ~all([oo.isLuminanceRangeSymmetric]) && any([oo.isLuminanceRangeSymmetric])
+        warning('block %d, o.isLuminanceRangeSymmetric must be consistent among all interleaved conditions.',block);
+        bad{end+1}='o.isLuminanceRangeSymmetric';
     end
     if length(unique([oo.desiredLuminanceFactor]))>1
         warning('block %d, o.desiredLuminanceFactor must be consistent among all interleaved conditions.',block);

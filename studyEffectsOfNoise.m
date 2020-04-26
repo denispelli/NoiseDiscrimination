@@ -75,13 +75,13 @@ o.fixationOnsetAfterNoiseOffsetSecs=0.6; % Pause after stimulus before display o
 %               % Skipped when fixationCrossBlankedNearTarget. 
 %               % Not needed when eccentricity is bigger than the target.
 o.fixationCrossDrawnOnStimulus=true;
-o.recordGaze=true;
+o.isGazeRecorded=true;
 %}
 
 o.fixationCrossBlankedNearTarget=true;
 o.fixationOnsetAfterNoiseOffsetSecs=0.6;
 o.fixationCrossDrawnOnStimulus=false;
-o.markTargetLocation=true;
+o.isTargetLocationMarked=true;
 o.alphabetPlacement='top'; % show possible answers on 'top' or 'right' for letters and gabors.
 
 

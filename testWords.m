@@ -36,7 +36,7 @@ o.words={'abed' 'able' 'ably' 'aces' 'ache' 'acid' 'acre' 'acts' 'adds' ...
     'zoom' }; 
 % 1817 words, after removing contractions, proper nouns, and three obscenities.
 o.experiment='Words';
-o.recordGaze=false;
+o.isGazeRecorded=false;
 o.eccentricityXYDeg=[0 0];
 o.targetHeightDeg=3;
 o.contrast=-1;
@@ -61,7 +61,7 @@ if 1
     o.minimumTargetHeightChecks=8;
     %     o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
     %     o.borderLetter='X';
-    o.labelAnswers=false;
+    o.areAnswersLabeled=false;
     o.targetKind='word';
     o.alphabet='abcdefghijklmnopqrstuvwxyz'; % alphabet for o.words
     o.alternatives=length(o.words);
