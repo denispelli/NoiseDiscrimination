@@ -11,7 +11,7 @@ o.durationSec=0.5; % signal duration. [0.05, 0.5]
 o.trialsDesired=50;
 
 % NOISE
-o.useDynamicNoiseMovie = 1; % 0 for static noise
+o.isNoiseDynamic = 1; % 0 for static noise
 o.moviePreSec = 0.1; % ignored for static noise
 o.moviePostSec = 0.2; % ignored for static noise
 o.noiseType='binary'; % 'gaussian' or 'uniform' or 'binary'
@@ -37,7 +37,7 @@ o.alternatives=length(o.alphabet); % number of letters to use from o.alphabet
 
 % FIXATION
 o.fixationCrossDeg = 1; % Typically 1 or inf. Make this at least 4 deg for scotopic testing, since the fovea is blind scotopically.
-o.markTargetLocation=1;
+o.isTargetLocationMarked=1;
 o.fixationCrossWeightDeg = 0.05; % target line thickness
 o.fixationCrossBlankedNearTarget = 0; % 0 or 1.
 o.fixationCrossBlankedUntilSecAfterTarget = 0.6; % Pause after stimulus before display of fixation.
@@ -147,8 +147,8 @@ for oi=24:length(oo)
    o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
    o.durationSec = 0.2;
    o.noiseSD=0.16;
-   o.useDynamicNoiseMovie = 1;
-   o.markTargetLocation=1;
+   o.isNoiseDynamic = 1;
+   o.isTargetLocationMarked=1;
    o.blankingRadiusDeg=0;
    o.moviePreSec = 0.3;
    o.moviePostSec = 0.3;

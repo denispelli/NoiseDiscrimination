@@ -5,7 +5,7 @@ clear o
 % o.trialsDesired=40;
 
 % NOISE
-o.useDynamicNoiseMovie = 1; % 0 for static noise
+o.isNoiseDynamic = 1; % 0 for static noise
 o.moviePreSec = 0; % ignored for static noise
 o.moviePostSec = 0; % ignored for static noise
 

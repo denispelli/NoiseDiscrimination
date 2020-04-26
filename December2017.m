@@ -133,10 +133,10 @@ if 0
          o.alphabet=o.targetGaborNames;
          o.alternatives=length(o.alphabet);
       end
-      o.useDynamicNoiseMovie = 1;
-      o.markTargetLocation=1;
+      o.isNoiseDynamic = 1;
+      o.isTargetLocationMarked=1;
       if all(o.eccentricityXYDeg==0)
-         o.markTargetLocation=0;
+         o.isTargetLocationMarked=0;
       end
       o.blankingRadiusReTargetHeight=0;
       o.moviePreSec = 0.2;

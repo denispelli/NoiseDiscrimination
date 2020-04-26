@@ -43,19 +43,18 @@ o.flankerSpacingDeg=3;
 o.targetHeightDeg=2;
 o.noiseCheckDeg=o.targetHeightDeg/20;
 o.targetDurationSecs=0.2;
-o.moviePreSecs=0.2;
-o.moviePostSecs=0.2;
+o.moviePreAndPostSecs=[0.2 0.2];
 o.eyes='both';
 o.contrast=-0.16;
 o.flankerContrast=-1; % Negative for dark letters.
 o.flankerArrangement='tangential'; % 'radial' 'radialAndTangential'
 o.viewingDistanceCm=40;
-o.symmetricLuminanceRange=true;
-o.useDynamicNoiseMovie=true;
+o.isLuminanceRangeSymmetric=true;
+o.isNoiseDynamic=true;
 o.alphabetPlacement='right'; % 'top' or 'right';
 o.annularNoiseSD=0;
 o.noiseRadiusDeg=inf;
-o.markTargetLocation=true;
+o.isTargetLocationMarked=true;
 o.fixationCrossWeightDeg=0.09;
 o.fixationCrossDeg=3;
 o.blankingRadiusReEccentricity=0; % No blanking.
@@ -127,7 +126,7 @@ if true
     oo{end+1}=o;
 end
 if true
-%     o.useDynamicNoiseMovie=false;
+%     o.isNoiseDynamic=false;
 %     o.targetDurationSecs=inf;
     o.conditionName='Threshold flanker contrast for crowding';
     o.trialsDesired=40;
@@ -157,9 +156,9 @@ for oi=1:length(oo)
         o(ii).alternatives=length(o(ii).alphabet);
     end
 %     if all(o(1).eccentricityXYDeg==0)
-%         o(1).markTargetLocation=false;
+%         o(1).isTargetLocationMarked=false;
 %     else
-%         o(1).markTargetLocation=true;
+%         o(1).isTargetLocationMarked=true;
 %     end
     oo{oi}=o;
 end

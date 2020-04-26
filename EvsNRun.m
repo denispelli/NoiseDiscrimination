@@ -31,9 +31,8 @@ o.eyes='right'; % 'left', 'right', 'both'.
 o.viewingDistanceCm=40;
 o.targetGaborCycles=3;
 o.pThreshold=0.75;
-o.useDynamicNoiseMovie=true;
-o.moviePreSec=0.2;
-o.moviePostSec=0.2;
+o.isNoiseDynamic=true;
+o.moviePreAndPostSecs=[0.2 0.2];
 o.fixationCrossDeg=3;
 o.blankingRadiusReEccentricity=0;
 o.blankingRadiusReTargetHeight=0;
@@ -48,8 +47,8 @@ else
     % Target gabor
     o.targetKind='gabor';
     o.targetGaborOrientationsDeg=[0 45 90 135];
-    o.targetGaborNames='1234';
-    o.alphabet=o.targetGaborNames;
+    o.responseLabels='1234';
+    o.alphabet=o.responseLabels;
 end
 o.alternatives=length(o.alphabet);
 if false
@@ -74,9 +73,9 @@ for domain=0:3
             o.conditionName='photon';
             o.eccentricityXYDeg=[0 0];
             o.targetCyclesPerDeg=4;
-            o.targetDurationSec=0.1;
-            o.desiredLuminance=2.5; % cd/m^2
-%             o.noiseCheckFrames=10;
+            o.targetDurationSecs=0.1;
+            o.desiredLuminanceFactor=2.5/500; % cd/m^2
+            o.noiseCheckFrames=10;
             o.useFilter=true;
             o.fixationCrossWeightDeg=0.05; % Typically 0.03. Use 0.05 for scotopic testing.
             o.blankingRadiusReTargetHeight=3;
@@ -86,9 +85,9 @@ for domain=0:3
             o.conditionName='photon';
             o.eccentricityXYDeg=[0 0];
             o.targetCyclesPerDeg=4;
-            o.targetDurationSec=0.1;
-            o.desiredLuminance=2.5; % cd/m^2
-            o.desiredLuminanceFactor=[];
+            o.targetDurationSecs=0.1;
+            o.desiredLuminance=[];
+            o.desiredLuminanceFactor=2.5/500;
             o.useFilter=true;
             o.fixationCrossWeightDeg=0.05; % Typically 0.03. Use 0.05 for scotopic testing.
             o.blankingRadiusReTargetHeight=3;
@@ -98,7 +97,7 @@ for domain=0:3
             o.conditionName='cortical';
             o.eccentricityXYDeg=[0 0];
             o.targetCyclesPerDeg=0.5;
-            o.targetDurationSec=0.4;
+            o.targetDurationSecs=0.4;
             o.desiredLuminance=[];
             o.desiredLuminanceFactor=1;
             o.useFilter=false;
@@ -119,10 +118,10 @@ for domain=0:3
     end
     o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
     if all(o.eccentricityXYDeg==0)
-        o.markTargetLocation=false;
+        o.isTargetLocationMarked=false;
         o.fixationCrossDeg=inf;
     else
-        o.markTargetLocation=true;
+        o.isTargetLocationMarked=true;
         o.blankingRadiusReTargetHeight=0;
         o.fixationCrossDeg=3;
     end
@@ -149,7 +148,7 @@ end
 % All these vars must be defined in every condition.
 vars={'condition' 'experiment' 'conditionName' ...
     'useFilter' 'eccentricityXYDeg' ...
-    'targetDurationSec' 'targetHeightDeg' ...
+    'targetDurationSecs' 'targetHeightDeg' ...
     'targetCyclesPerDeg' 'targetGaborCycles' ...
     'noiseSD' 'noiseType' 'noiseCheckFrames'};
 tt=table;
@@ -166,7 +165,7 @@ oo=RunExperiment(oo);
 % Include whatever you're intersted in. We skip rows missing any value.
 vars={'condition' 'experiment' 'conditionName' ...
     'useFilter' 'luminanceAtEye' 'eccentricityXYDeg' ...
-    'targetDurationSec' 'targetCyclesPerDeg' ...
+    'targetDurationSecs' 'targetCyclesPerDeg' ...
     'targetHeightDeg' 'targetGaborCycles'  'noiseCheckFrames'...
     'noiseSD' 'N' 'noiseType' 'E' 'contrast' 'dataFilename' 'dataFolder'};
 tt=table;

@@ -7,7 +7,7 @@ o.durationSec=0.5; % signal duration. [0.05, 0.5]
 o.trialsDesired=40;
 
 % NOISE
-o.useDynamicNoiseMovie = 1; % 0 for static noise
+o.isNoiseDynamic = 1; % 0 for static noise
 o.moviePreSec = 0.1; % ignored for static noise
 o.moviePostSec = 0.2; % ignored for static noise
 o.noiseType='binary'; % 'gaussian' or 'uniform' or 'binary'

@@ -1,5 +1,5 @@
-function [fixationLines,markTargetLocation]=ComputeFixationLines2(fix)
-% [fixationLines,markTargetLocation]=ComputeFixationLines2(fix);
+function [fixationLines,isTargetLocationMarked]=ComputeFixationLines2(fix)
+% [fixationLines,isTargetLocationMarked]=ComputeFixationLines2(fix);
 % ComputeFixationLines2 returns an array suitable for Screen('Drawlines')
 % to draw a fixation cross and target cross specified by the parameters in
 % the struct argument "fix".
@@ -11,7 +11,7 @@ function [fixationLines,markTargetLocation]=ComputeFixationLines2(fix)
 % fix.clipRect=screenRect;              % Restrict lines to this rect.
 % fix.fixationCrossPix=fixationCrossPix;% Diameter of fixation mark +
 %                                       % cross. 0 for none.
-% fix.markTargetLocation=1;             % 0 or 1.
+% fix.isTargetLocationMarked=1;             % 0 or 1.
 % fix.targetMarkPix=targetMarkPix;      % Diameter of target mark X
 %
 % COMPUTE blankingRadiusPix FROM:
@@ -43,8 +43,8 @@ end
 if ~isfield(fix,'fixationCrossPix')
    fix.fixationCrossPix=100; 
 end
-if ~isfield(fix,'markTargetLocation')
-   fix.markTargetLocation=0; % Default is no mark indicating target location.
+if ~isfield(fix,'isTargetLocationMarked')
+   fix.isTargetLocationMarked=0; % Default is no mark indicating target location.
 end
 if ~isfield(fix,'blankingRadiusPix')
    if ~isfield(fix,'blankingRadiusReEccentricity');
@@ -68,7 +68,7 @@ if ~fix.fixationCrossBlankedNearTarget
     fix.blankingRadiusPix=0;
 end
 if 2*fix.blankingRadiusPix>=fix.targetMarkPix % 2* converts radius to diameter.
-   fix.markTargetLocation=0;
+   fix.isTargetLocationMarked=0;
 end
 % Compute a list of four lines to draw a cross at fixation and an X at the
 % target location. We clip with the (screen) clipRect. We then define a
@@ -86,7 +86,7 @@ tX=tXY(1);
 tY=tXY(2);
 % Blanking radius at target
 assert(isfinite(fix.blankingRadiusPix));
-if fix.markTargetLocation
+if fix.isTargetLocationMarked
    % Add two lines to mark target location.
    r=0.5*fix.targetMarkPix/2^0.5;
    r=min(r,1e8); % Need finite value to draw tilted lines.
@@ -119,5 +119,5 @@ if ~isempty(x) && fix.blankingRadiusPix>0
 %    blankingRect
 end
 fixationLines=[x;y];
-markTargetLocation=fix.markTargetLocation;
+isTargetLocationMarked=fix.isTargetLocationMarked;
 return

@@ -16,7 +16,7 @@ if ~skipDataCollection
       for field={'condition' 'experiment' 'dataFilename' 'experimenter' 'observer' 'trials' ...
             'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' ...
             'targetHeightDeg' 'targetDurationSec' 'targetDurationSecMean'...
-            'targetCheckDeg' 'fullResolutionTarget' ...
+            'targetCheckDeg' 'isTargetFullResolution' ...
             'noiseType' 'noiseSD'  'noiseCheckDeg' ...
             'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
             'contrast' 'E' 'N' 'LBackground' 'conditionName'}
@@ -63,7 +63,7 @@ writetable(t,spreadsheet);
 t
 fprintf('All selected fields have been saved in spreadsheet: \\data\\%s.csv\n',experiment);
 
-fprintf('Please make a log-log plot of (E-E0)/N vs. noiseCheckDeg, with a line for each condition: fullResolutionTarget = 0 or 1\n');
+fprintf('Please make a log-log plot of (E-E0)/N vs. noiseCheckDeg, with a line for each condition: isTargetFullResolution = 0 or 1\n');
 
 %% Plot
 figure;
@@ -74,7 +74,7 @@ for graph=1:2
    i=ii(1);
    loglog([data(ii).noiseCheckDeg],[data(ii).EE0N],'-x'); 
    hold on;
-   legendString{graph}=sprintf('fullResolutionTarget %d',data(i).fullResolutionTarget);
+   legendString{graph}=sprintf('isTargetFullResolution %d',data(i).isTargetFullResolution);
    if isfield(data(i),'conditionName') && ~isempty(data(i).conditionName)
       legendString{graph}=[data(i).conditionName ': ' legendString{graph}];
    end

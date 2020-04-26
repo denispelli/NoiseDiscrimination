@@ -33,9 +33,8 @@ o.eyes='both'; % 'left', 'right', 'both'.
 o.viewingDistanceCm=40;
 o.targetGaborCycles=3;
 o.pThreshold=0.75;
-o.useDynamicNoiseMovie=false;
-o.moviePreSecs=0.2;
-o.moviePostSecs=0.2;
+o.isNoiseDynamic=false;
+o.moviePreAndPostSecs=[0.2 0.2];
 o.fixationCrossDeg=3;
 o.blankingRadiusReEccentricity=0;
 o.blankingRadiusReTargetHeight=0;
@@ -103,11 +102,11 @@ for ecc=[0 1 8 32]
             end
             o.noiseCheckDeg=o.targetHeightDeg/20;
             if all(o.eccentricityXYDeg==0)
-                o.markTargetLocation=false;
+                o.isTargetLocationMarked=false;
                 o.blankingRadiusReTargetHeight=0.6;
                 o.fixationCrossDeg=inf;
             else
-                o.markTargetLocation=true;
+                o.isTargetLocationMarked=true;
                 o.blankingRadiusReTargetHeight=0;
                 o.fixationCrossDeg=3;
             end
@@ -136,7 +135,7 @@ end
 vars={'block' 'experiment' 'conditionName' ...
     'eccentricityXYDeg' 'targetCyclesPerDeg' 'noiseSD' ...
     'targetDurationSecs' 'targetHeightDeg' ...
-    'targetGaborCycles' 'useDynamicNoiseMovie'};
+    'targetGaborCycles' 'isNoiseDynamic'};
 tt=table;
 for i=1:length(ooo)
     t=struct2table(ooo{i},'AsArray',true);
@@ -152,7 +151,7 @@ ooo=RunExperiment(ooo);
 vars={ 'block' 'conditionName' ...
     'eccentricityXYDeg' 'targetCyclesPerDeg' 'targetHeightDeg' 'noiseSD' 'N' 'E' 'contrast' ...
     'targetGaborCycles'  'noiseCheckFrames'...
-    'noiseType' 'useDynamicNoiseMovie' 'dataFilename'};
+    'noiseType' 'isNoiseDynamic' 'dataFilename'};
 tt=table;
 for i=1:length(ooo)
     t=struct2table(ooo{i},'AsArray',true);

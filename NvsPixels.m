@@ -35,7 +35,7 @@ o.targetDurationSec=0.2;
 o.eyes='both';
 o.contrast=-0.1;
 o.viewingDistanceCm=40;
-o.symmetricLuminanceRange=true;
+o.isLuminanceRangeSymmetric=true;
 o.alphabetPlacement='right'; % 'top' or 'right';
 o.fixationCrossWeightDeg=0.09;
 o.blankingRadiusReEccentricity=0; % No blanking.
@@ -140,9 +140,9 @@ for oi=1:length(oo)
     o.condition=oi; % Number the conditions
     o.alternatives=length(o.alphabet);
     if all(o.eccentricityXYDeg==0)
-        o.markTargetLocation=false;
+        o.isTargetLocationMarked=false;
     else
-        o.markTargetLocation=true;
+        o.isTargetLocationMarked=true;
     end
     oo{oi}=o;
 end

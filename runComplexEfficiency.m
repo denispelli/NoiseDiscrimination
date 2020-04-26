@@ -46,7 +46,7 @@ end
 % o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
 % o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 o.askForPartingComments=true;
-o.recordGaze=false;
+o.isGazeRecorded=false;
 o.experiment='ComplexEfficiency';
 o.eccentricityXYDeg=[0 0];
 o.targetHeightDeg=6;
@@ -68,20 +68,20 @@ o.targetFont='Sloan';
 o.minimumTargetHeightChecks=8;
 o.alphabet='';
 o.borderLetter='';
-o.labelAnswers=false;
+o.areAnswersLabeled=false;
 o.getAlphabetFromDisk=false;
-o.fixationCheck=false;
+o.isFixationCheck=false;
 o.fixationCrossBlankedNearTarget=true;
 o.fixationOnsetAfterNoiseOffsetSecs=0.6;
 o.fixationCrossDrawnOnStimulus=false;
-o.fullResolutionTarget=false;
+o.isTargetFullResolution=false;
 o.useFlankers=false;
 o.flankerContrast=-1;
 % o.printGrayLuminance=false;
 % o.assessGray=true;
 % o.assessLoadGamma=true;
 % o.printContrastBounds=true;
-o.symmetricLuminanceRange=true; % False for maximum brightness.
+o.isLuminanceRangeSymmetric=true; % False for maximum brightness.
 o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
 o.viewingDistanceCm=40;
 o.alphabetPlacement='top'; % 'top' 'bottom' 'right' or 'left' while awaiting response.
@@ -99,8 +99,8 @@ if 0
     o.targetKind='image';
     o.alphabet='abcdefghijklmnopq';
     o.brightnessSetting=0.87;
-    o.labelAnswers=true;
-    o.symmetricLuminanceRange=false; % False for maximum brightness.
+    o.areAnswersLabeled=true;
+    o.isLuminanceRangeSymmetric=false; % False for maximum brightness.
     o.desiredLuminanceFactor=1.1; % 1.8 for maximize brightness.
     o.targetMargin=0;
     o.viewingDistanceCm=40;
@@ -119,7 +119,7 @@ if 0
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
 end
-o.symmetricLuminanceRange=true; % False for maximum brightness.
+o.isLuminanceRangeSymmetric=true; % False for maximum brightness.
 o.desiredLuminanceFactor=1; % 1.8 to maximize brightness.
 if 1
     % Sloan with uncertainty
@@ -140,7 +140,7 @@ if 1
     o.targetKind='letter';
     o.borderLetter='X';
     o.alphabetPlacement='right'; % 'top' or 'right';
-    o.labelAnswers=false;
+    o.areAnswersLabeled=false;
     o.getAlphabetFromDisk=true;
     o.contrast=-1;
     o.alternatives=length(o.alphabet);
@@ -159,7 +159,7 @@ if 1
     o.targetKind='letter';
     o.borderLetter='X';
     o.alphabetPlacement='right'; % 'top' or 'right';
-    o.labelAnswers=false;
+    o.areAnswersLabeled=false;
     o.getAlphabetFromDisk=true;
     o.contrast=-1;
     o.alternatives=length(o.alphabet);
@@ -172,7 +172,7 @@ end
 %     o.minimumTargetHeightChecks=16;
 %     o.alphabet='abcdefghijklmnopqrstuvwxyz';
 %     o.borderLetter='';
-%     o.labelAnswers=true;
+%     o.areAnswersLabeled=true;
 %     o.getAlphabetFromDisk=true;
 %     o.alternatives=length(o.alphabet);
 %     ooo{end+1}=o;
@@ -186,7 +186,7 @@ if 0
     o.instructionPlacement='bottomLeft';
     o.alphabet='abcdefghijklmnopqrstuvwxyz';
     o.borderLetter='';
-    o.labelAnswers=true;
+    o.areAnswersLabeled=true;
     o.getAlphabetFromDisk=false;
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
@@ -198,7 +198,7 @@ if 0
     o.minimumTargetHeightChecks=8;
     o.alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     o.borderLetter='$';
-    o.labelAnswers=false;
+    o.areAnswersLabeled=false;
     o.getAlphabetFromDisk=true;
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
@@ -210,7 +210,7 @@ if 1
     o.minimumTargetHeightChecks=12;
     o.alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     o.borderLetter='$';
-    o.labelAnswers=true;
+    o.areAnswersLabeled=true;
     o.getAlphabetFromDisk=false;
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
@@ -223,7 +223,7 @@ if 0
     o.minimumTargetHeightChecks=10;
     o.alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     o.borderLetter='$';
-    o.labelAnswers=true;
+    o.areAnswersLabeled=true;
     o.getAlphabetFromDisk=true;
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
@@ -238,7 +238,7 @@ if 1
     o.alphabet=char(o.alphabet);
     o.alphabetPlacement='top';
     o.borderLetter='';
-    o.labelAnswers=true;
+    o.areAnswersLabeled=true;
     o.getAlphabetFromDisk=true;
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
@@ -254,7 +254,7 @@ if 1
     o.alphabet=char(o.alphabet);
     o.alphabetPlacement='top';
     o.borderLetter='';
-    o.labelAnswers=true;
+    o.areAnswersLabeled=true;
     o.getAlphabetFromDisk=false;
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
@@ -285,7 +285,7 @@ if 0
     end
     o.alphabet=char(o.alphabet);
     o.borderLetter='';
-    o.labelAnswers=true;
+    o.areAnswersLabeled=true;
     o.getAlphabetFromDisk=true;
     o.alternatives=length(o.alphabet);
     ooo{end+1}=o;
@@ -316,7 +316,7 @@ if true
     % Add fixation check.
     for block=1:length(ooo)
         o=ooo{block}(1);
-        o.fullResolutionTarget=true;
+        o.isTargetFullResolution=true;
         o.targetHeightDeg=10;
         o.brightnessSetting=0.87;
         o.thresholdParameter='size';
@@ -333,7 +333,7 @@ if true
         % FIXATION TEST
         o.conditionName='Fixation check';
         o.targetKind='letter';
-        o.fixationCheck=true;
+        o.isFixationCheck=true;
         o.eccentricityXYDeg=[0 0];
         o.thresholdParameter='spacing';
         o.useFlankers=true;
@@ -346,7 +346,7 @@ if true
         o.alphabet='DHKNORSVZ'; % Sloan alphabet, excluding C
         o.targetKind='letter';
         o.alphabetPlacement='right'; % 'top' or 'right';
-        o.labelAnswers=false;
+        o.areAnswersLabeled=false;
         o.getAlphabetFromDisk=false;
         o.alternatives=length(o.alphabet);
         oo(3)=o;
@@ -391,9 +391,9 @@ CheckExperimentFonts(ooo)
 %% INTERLEAVED CONDITIONS MUST HAVE CONSISTENT CLUTS
 bad={};
 for block=1:length(ooo)
-    if ~all([oo.symmetricLuminanceRange]) && any([oo.symmetricLuminanceRange])
-        warning('block %d, o.symmetricLuminanceRange must be consistent among all interleaved conditions.',block);
-        bad{end+1}='o.symmetricLuminanceRange';
+    if ~all([oo.isLuminanceRangeSymmetric]) && any([oo.isLuminanceRangeSymmetric])
+        warning('block %d, o.isLuminanceRangeSymmetric must be consistent among all interleaved conditions.',block);
+        bad{end+1}='o.isLuminanceRangeSymmetric';
     end
     if length(unique([oo.desiredLuminanceFactor]))>1
         warning('block %d, o.desiredLuminanceFactor must be consistent among all interleaved conditions.',block);
@@ -445,7 +445,7 @@ t=struct2table(oo,'AsArray',true);
 disp(t(:,{'block' 'experiment' 'targetKind' 'thresholdParameter'...
     'uncertainParameter'...
     'contrast' 'conditionName' 'observer' 'endsAtMin' 'noiseSD' ...
-    'targetHeightDeg' 'eccentricityXYDeg' 'labelAnswers'})); % Print the conditions in the Command Window.
+    'targetHeightDeg' 'eccentricityXYDeg' 'areAnswersLabeled'})); % Print the conditions in the Command Window.
 % return
 
 %% Measure threshold, one block per iteration.

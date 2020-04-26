@@ -121,13 +121,13 @@ for domain=1:3
             o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
     end
     o.alternatives=length(o.alphabet);
-    o.useDynamicNoiseMovie=true;
+    o.isNoiseDynamic=true;
     if all(o.eccentricityXYDeg==0)
-        o.markTargetLocation=false;
+        o.isTargetLocationMarked=false;
         o.blankingRadiusReTargetHeight=2;
         o.fixationCrossDeg=10;
     else
-        o.markTargetLocation=true;
+        o.isTargetLocationMarked=true;
         o.blankingRadiusReTargetHeight=0;
         o.fixationCrossDeg=3;
     end

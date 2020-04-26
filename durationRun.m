@@ -39,7 +39,7 @@ o.minScreenWidthDeg=[];
 o.maxViewingDistanceCm=[];
 o.targetGaborCycles=3;
 o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
-o.fullResolutionTarget=false;
+o.isTargetFullResolution=false;
 o.pThreshold=0.75;
 cal=OurScreenCalibrations(0);
 
@@ -149,11 +149,11 @@ if ~skipDataCollection && 0
          o.alphabet=o.targetGaborNames;
       end
       o.alternatives=length(o.alphabet);
-      o.useDynamicNoiseMovie=true;
+      o.isNoiseDynamic=true;
       if all(o.eccentricityXYDeg==0)
-         o.markTargetLocation=false;
+         o.isTargetLocationMarked=false;
       else
-         o.markTargetLocation=true;
+         o.isTargetLocationMarked=true;
       end
       o.blankingRadiusReTargetHeight=0;
       o.moviePreSec=0.2;

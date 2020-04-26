@@ -11,7 +11,7 @@ o.noiseCheckDeg=o.targetHeightDeg/20;
 o.targetKind='letter';
 o.noiseType='gaussian'; % ALWAYS use gaussian
 o.noiseSpectrum='white'; % pink or white
-o.markTargetLocation=0;
+o.isTargetLocationMarked=0;
 o.blankingRadiusReEccentricity=0;
 o.blankingRadiusReTargetHeight=0;
 

@@ -19,14 +19,14 @@ o.viewingDistanceCm=40;
 o.targetHeightDeg=1;
 o.targetGaborCycles=3;
 o.targetDurationSec = 0.2;
-o.fullResolutionTarget=0;
+o.isTargetFullResolution=0;
 o.pThreshold = 0.75;
 cal=OurScreenCalibrations(0);
 
 %% Effect of noise check size: Graph (E-E0)/N vs. checkDeg.
 % Replicating result from Manoj
 o.experiment='checkSize';
-o.fullResolutionTarget=1;
+o.isTargetFullResolution=1;
 o.eyes='both'; % 'left', 'right', 'both'.
 sizes=o.targetGaborCycles/0.5; % 0.5 c/deg
 o.targetGaborPhaseDeg=-90; % cosine phase
@@ -39,7 +39,7 @@ for size = sizes
    for duration=0.1 % [0.1 0.4]
       o.targetDurationSec =duration;
       for fine=0:1
-         o.fullResolutionTarget=fine;
+         o.isTargetFullResolution=fine;
          for noiseSD = [0.2 0]
             o.noiseSD=noiseSD;
             if noiseSD>0
@@ -118,10 +118,10 @@ else
          o.alphabet=o.targetGaborNames;
          o.alternatives=length(o.alphabet);
       end
-      o.useDynamicNoiseMovie = 1;
-      o.markTargetLocation=1;
+      o.isNoiseDynamic = 1;
+      o.isTargetLocationMarked=1;
       if all(o.eccentricityXYDeg==0)
-         o.markTargetLocation=0;
+         o.isTargetLocationMarked=0;
       end
       o.blankingRadiusReTargetHeight=0;
       o.moviePreSec = 0.2;

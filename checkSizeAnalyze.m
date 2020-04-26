@@ -10,7 +10,7 @@ for ii = 1:length(matFiles)
    for field={'condition' 'experiment' 'dataFilename' 'experimenter' 'observer' 'trials' ...
          'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' ...
          'targetHeightDeg' 'targetDurationSec' 'targetDurationSecMean'...
-         'targetCheckDeg' 'fullResolutionTarget' ...
+         'targetCheckDeg' 'isTargetFullResolution' ...
          'noiseType' 'noiseSD'  'noiseCheckDeg' ...
          'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
          'contrast' 'E' 'N' }
@@ -44,7 +44,7 @@ writetable(t,spreadsheet);
 t
 fprintf('All selected fields for thresholds with at least 40 trials have been saved in spreadsheet: \\data\\%s.csv\n',experiment);
 
-fprintf('Please make a log-log plot of (E-E0)/N vs. targetDurationSec, with a line for each condition: fullResolutionTarget = 0 or 1\n');
+fprintf('Please make a log-log plot of (E-E0)/N vs. targetDurationSec, with a line for each condition: isTargetFullResolution = 0 or 1\n');
 
 %% Plot
 figure;
@@ -52,7 +52,7 @@ for i=[1 3]
    loglog([data([i i+4]).targetDurationSec],[data([i i+4]).EE0N],'-');
    hold on
 end
-legend(sprintf('fullRes %d',data(1).fullResolutionTarget),sprintf('fullRes %d',data(3).fullResolutionTarget));
+legend(sprintf('fullRes %d',data(1).isTargetFullResolution),sprintf('fullRes %d',data(3).isTargetFullResolution));
 legend('boxoff');
 title(experiment);
 xlabel('duration (s)');

@@ -38,7 +38,7 @@ o.targetDurationSec=0.2;
 o.eyes='both';
 o.contrast=-0.1;
 o.viewingDistanceCm=40;
-o.symmetricLuminanceRange=true;
+o.isLuminanceRangeSymmetric=true;
 o.alphabetPlacement='right'; % 'top' or 'right';
 o.fixationCrossWeightDeg=0.09;
 o.blankingRadiusReEccentricity=0; % No blanking.
@@ -79,7 +79,7 @@ o.noiseCheckDeg=o.targetHeightDeg/20;
 o.noiseSD=0.2;
 o.targetDurationSec=0.2;
 o.fixationCrossDrawnOnStimulus=true;
-o.markTargetLocation=true; % Is there a mark designating target position?
+o.isTargetLocationMarked=true; % Is there a mark designating target position?
 o.targetMarkDeg=0.1;
 o.contrast=-1;
 oo={};
@@ -152,9 +152,9 @@ for oi=1:length(oo)
     o.condition=oi; % Number the conditions
     o.alternatives=length(o.alphabet);
     if all(o.eccentricityXYDeg==0)
-        o.markTargetLocation=false;
+        o.isTargetLocationMarked=false;
     else
-        o.markTargetLocation=true;
+        o.isTargetLocationMarked=true;
     end
     oo{oi}=o;
 end

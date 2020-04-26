@@ -35,7 +35,7 @@ if false && ~streq(cal.macModelName,'MacBookPro14,3')
 end
 
 %% CREATE LIST OF CONDITIONS TO BE TESTED
-o.useDynamicNoiseMovie=false;
+o.isNoiseDynamic=false;
 o.contrast=-0.2; % Fixed target contrast.
 o.flankerContrast=-1; % Negative for dark letters.
 % o.flankerContrast=nan; % Nan requests that flanker contrast always equal signal contrast.
@@ -137,9 +137,9 @@ if ~skipDataCollection && true
       end
       o.alternatives=length(o.alphabet);
       if all(o.eccentricityXYDeg==0)
-         o.markTargetLocation=false;
+         o.isTargetLocationMarked=false;
       else
-         o.markTargetLocation=true;
+         o.isTargetLocationMarked=true;
       end
       o.blankingRadiusReTargetHeight=0;
       o.moviePreSec=0.2;

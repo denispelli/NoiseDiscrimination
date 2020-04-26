@@ -27,8 +27,8 @@ cal=OurScreenCalibrations(0);
 % o.useFractionOfScreenToDebug=0.4; % 0: normal, 0.5: small for debugging.
 o.seed=[]; % Fresh.
 % o.seed=uint32(1506476580); % Copy seed value here to reproduce an old table of conditions.
-o.symmetricLuminanceRange=true;
-o.useDynamicNoiseMovie=true;
+o.isLuminanceRangeSymmetric=true;
+o.isNoiseDynamic=true;
 if true
    o.useFlankers=true;
    %    o.thresholdParameter='flankerContrast';
@@ -111,9 +111,9 @@ if ~skipDataCollection && true
       end
       o.alternatives=length(o.alphabet);
       if all(o.eccentricityXYDeg==0)
-         o.markTargetLocation=false;
+         o.isTargetLocationMarked=false;
       else
-         o.markTargetLocation=true;
+         o.isTargetLocationMarked=true;
       end
       o.blankingRadiusReTargetHeight=0;
       o.moviePreSec=0.2;

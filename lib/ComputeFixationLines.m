@@ -31,7 +31,7 @@ function fixationLines=ComputeFixationLines(fix)
 % fix.targetHeightOverWidth=1;          % 1 for Sloan. 5 for Pelli font.
 % fix.targetHeightPix=targetHeightPix;  % Blanking radius is proportional
 %                                       % to specified target height.
-% fix.markTargetLocation=true;          % Draw vertical line indicating
+% fix.isTargetLocationMarked=true;          % Draw vertical line indicating
 %                                       % target location.
 % fixationLines=ComputeFixationLines(fix);
 % Screen('DrawLines',window,fixationLines,fixationLineWeightPix,black);
@@ -52,8 +52,8 @@ function fixationLines=ComputeFixationLines(fix)
 if ~isfield(fix,'bouma') || ~isfinite(fix.bouma)
     fix.bouma=0.5;
 end
-if ~isfield(fix,'markTargetLocation')
-    fix.markTargetLocation=false; % Default is no vertical line indicating target location.
+if ~isfield(fix,'isTargetLocationMarked')
+    fix.isTargetLocationMarked=false; % Default is no vertical line indicating target location.
 end
 if ~isfield(fix,'fixationCrossBlankedNearTarget')
     fix.fixationCrossBlankedNearTarget=1; % Default is yes.
@@ -133,7 +133,7 @@ end
 
 % Vertical target line
 xy=fix.targetXYPix;
-if fix.markTargetLocation && IsInRect(xy(1),xy(2),fix.clipRect);
+if fix.isTargetLocationMarked && IsInRect(xy(1),xy(2),fix.clipRect);
     % Compute at eccentricity zero, and then offset to desired target
     % eccentricity.
     lineStart=-fix.fixationCrossPix/2;

@@ -343,7 +343,7 @@ try
         CloseWindows
         warning(['If you haven''t already, please unlock System '...
             'Preferences: Security & Privacy: Privacy and give MATLAB ' ...
-            'permission for Full Disk Access and Automation.')];
+            'permission for Full Disk Access and Automation.']);
         error('Applescript returned error: %s',oldString);
     end
     [v,count,errMsg]=sscanf(oldString,'%f, %d, %d, %d, %d',5);

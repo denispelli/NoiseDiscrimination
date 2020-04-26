@@ -1,14 +1,16 @@
-function [fixationLines,fixationDots,markTargetLocation]=ComputeFixationLines3(fix)
-% [fixationLines,markTargetLocation]=ComputeFixationLines3(fix);
+function [fixationLines,fixationDots,isTargetLocationMarked]=ComputeFixationLines3(fix)
+% [fixationLines,fixationDots,isTargetLocationMarked]=ComputeFixationLines3(fix);
 %
 % Now enhanced to support many targets at once. Thus eccentricityXYPix and
 % targetHeightPix have one row per target. All targets are blanked by the
 % same rules. For n targets:
 % Must have n rows: eccentricityXYPix targetHeightPix
-% Must have 1 or n rows: targetMarkPix markTargetLocation
+% Must have 1 or n rows: targetMarkPix isTargetLocationMarked
 % Must have 1 row: the rest.
-% The need for this arises from randomly interleaving various conditions
-% with different targets. The fixation mark should not reveal which
+% The need for coping with many targets arises from randomly interleaving
+% various conditions with different targets, and the use of
+% o.uncertaintParameter to allow multiple values of o.eccentricityXYDeg
+% within each condition. The fixation mark should not reveal which
 % condition this trial is, so any marking of target locations and blanking
 % near target locations must consider all possible target locations across
 % the conditions being interleaved, without regard to which condition this
@@ -40,7 +42,7 @@ function [fixationLines,fixationDots,markTargetLocation]=ComputeFixationLines3(f
 %     fix.targetHeightPix(oi)=oo(oi).targetHeightPix;
 % end
 %% PROVIDE JUST ONE ROW (FOR ALL TARGETS) OR ONE ROW PER TARGET. RETURNS ONE ROW PER TARGET.
-% fix.markTargetLocation=true;          % false or true.
+% fix.isTargetLocationMarked=true;          % false or true.
 % fix.targetMarkPix=targetMarkPix;      % Diameter of target mark X
 %% THE blankingRadiusPix FOR EACH TARGET DEPENDS ON THESE. EACH APPLIES TO ALL TARGETS.
 % fix.fixationCrossBlankedNearTarget=true; 
@@ -116,19 +118,19 @@ end
 if length(fix.targetHeightPix)~=n
     error('fix.targetHeightPix should have %d rows, but has %d.',n,size(fix.targetHeightPix,1));
 end
-if ~isfield(fix,'markTargetLocation')
+if ~isfield(fix,'isTargetLocationMarked')
     % Default is no mark indicating target location.
-   fix.markTargetLocation=false([n 1]); 
+   fix.isTargetLocationMarked=false([n 1]); 
 end
-switch length(fix.markTargetLocation)
+switch length(fix.isTargetLocationMarked)
     case 1
         for i=2:n
-            fix.markTargetLocation(i)=fix.markTargetLocation(1);
+            fix.isTargetLocationMarked(i)=fix.isTargetLocationMarked(1);
         end
     case n
         % Ok
     otherwise
-    error('fix.markTargetLocation should have 1 or %d rows, but has %d.',n,size(fix.markTargetLocation,1));
+    error('fix.isTargetLocationMarked should have 1 or %d rows, but has %d.',n,size(fix.isTargetLocationMarked,1));
 end
 if ~isfield(fix,'targetMarkPix')
     % Default size.
@@ -188,8 +190,8 @@ end
 % Compute a list of 2+2*n lines to draw a cross at fixation and an X at
 % each of the n target locations. We clip with the (screen) clipRect. We
 % then define a blanking rect around each target and use it to
-% ErasePartOfLineSegment for all the lines in the list. This may increase
-% or decrease the list length.
+% ErasePartOfLineSegment for all the lines in the line list (and all the
+% dots in the dot list). This may increase or decrease the list length.
 % Two lines create a cross at fixation.
 x=[x0-fix.fixationCrossPix/2 x0+fix.fixationCrossPix/2 x0 x0];
 y=[y0 y0 y0-fix.fixationCrossPix/2 y0+fix.fixationCrossPix/2];
@@ -200,11 +202,11 @@ for i=1:n
     tY=tXY(2);
     % Skip if this "X" is completely blanked.
     if 2*fix.blankingRadiusPix(i)>=fix.targetMarkPix(i) % 2* converts radius to diameter.
-        fix.markTargetLocation(i)=false;
+        fix.isTargetLocationMarked(i)=false;
         continue
     end
     assert(isfinite(fix.blankingRadiusPix(i)));
-    if fix.markTargetLocation
+    if fix.isTargetLocationMarked
         % Add two lines to mark target location.
         r=0.5*fix.targetMarkPix(i)/2^0.5;
         r=min(r,1e8); % Need finite value to draw tilted lines.
@@ -244,6 +246,7 @@ for i=1:n
         %    x
         %    y
         %    blankingRect
+        
         %% BLANK THE DOTS
         for iDot=size(fixationDots,2):-1:1
             if IsInRect(fixationDots(1,iDot),fixationDots(2,iDot),blankingRect)
@@ -255,5 +258,5 @@ for i=1:n
 end
 fixationLines=[x;y];
 % fixationDots; 
-markTargetLocation=fix.markTargetLocation;
+isTargetLocationMarked=fix.isTargetLocationMarked;
 return

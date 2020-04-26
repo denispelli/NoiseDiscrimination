@@ -31,14 +31,15 @@ o.eyes='right'; % 'left', 'right', 'both'.
 o.viewingDistanceCm=40;
 o.targetGaborCycles=3;
 o.pThreshold=0.75;
-o.useDynamicNoiseMovie=true;
-o.moviePreSecs=0.2;
-o.moviePostSecs=0.2;
+o.isNoiseDynamic=true;
+o.moviePreAndPostSecs=[0.2 0.2];
 o.fixationCrossDeg=3;
 o.blankingRadiusReEccentricity=0;
 o.blankingRadiusReTargetHeight=0;
 o.targetMarkDeg=1;
 o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary' or 'ternary'
+o.desiredRetinalIlluminanceTd=[];
+
 if 0
     % Target letter
     o.targetKind='letter';
@@ -48,8 +49,8 @@ else
     % Target gabor
     o.targetKind='gabor';
     o.targetGaborOrientationsDeg=[0 45 90 135];
-    o.targetGaborNames='1234';
-    o.alphabet=o.targetGaborNames;
+    o.responseLabels='1234';
+    o.alphabet=o.responseLabels;
     % o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
     % o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
 end
@@ -111,10 +112,10 @@ for domain=1
     end
     o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
     if all(o.eccentricityXYDeg==0)
-        o.markTargetLocation=false;
+        o.isTargetLocationMarked=false;
         o.fixationCrossDeg=inf;
     else
-        o.markTargetLocation=true;
+        o.isTargetLocationMarked=true;
         o.blankingRadiusReTargetHeight=0;
         o.fixationCrossDeg=3;
     end
@@ -136,13 +137,23 @@ end
 %     [ooo{i}.block]=deal(i); % Number the blocks
 % end
 
+for block=1:length(ooo)
+    oo=ooo{block};
+    [oo.block]=deal(block);
+    for oi=1:length(oo)
+        oo(oi).condition=oi;
+    end
+    ooo{block}=oo;
+end
+
 %% PRINT THE CONDITIONS (ONE PER ROW) AS TABLE TT.
 % All these vars must be defined in every condition.
-vars={'experiment' 'conditionName' ...
+vars={'block' 'condition' 'experiment' 'conditionName' ...
     'useFilter' 'eccentricityXYDeg' ...
     'targetDurationSecs' 'targetHeightDeg' ...
     'targetCyclesPerDeg' 'targetGaborCycles' ...
-    'noiseSD' 'noiseType' 'noiseCheckFrames'};
+    'noiseSD' 'noiseType' 'noiseCheckDeg' 'noiseCheckFrames' ...
+    'desiredLuminanceFactor' 'desiredLuminanceAtEye' 'desiredRetinalIlluminanceTd'};
 tt=table;
 for i=1:length(ooo)
     t=struct2table(ooo{i},'AsArray',true);
@@ -159,11 +170,12 @@ ooo=RunExperiment(ooo);
 
 %% PRINT SUMMARY OF RESULTS AS TABLE TT.
 % Include whatever you're intersted in. We skip rows missing any value.
-vars={ 'experiment' 'conditionName' ...
+vars={ 'experiment' 'block' 'condition' 'conditionName' ...
     'useFilter' 'luminanceAtEye' 'eccentricityXYDeg' ...
     'targetDurationSecs' 'targetCyclesPerDeg' ...
     'targetHeightDeg' 'targetGaborCycles'  'noiseCheckFrames'...
-    'noiseSD' 'N' 'noiseType' 'E' 'contrast' 'dataFilename' 'dataFolder'};
+    'noiseSD' 'N' 'noiseType' 'E' 'contrast' 'dataFilename' 'dataFolder'...
+    'desiredLuminanceFactor' 'desiredLuminanceAtEye' 'desiredRetinalIlluminanceTd'};
 tt=table;
 for i=1:length(ooo)
     t=struct2table(ooo{i},'AsArray',true);

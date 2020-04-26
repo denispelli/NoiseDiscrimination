@@ -17,7 +17,7 @@ o.viewingDistanceCm=40;
 o.targetHeightDeg=1;
 o.targetGaborCycles=3;
 o.targetDurationSec = 0.2;
-o.fullResolutionTarget=0;
+o.isTargetFullResolution=0;
 o.pThreshold = 0.75;
 cal=OurScreenCalibrations(0);
 
@@ -130,10 +130,10 @@ else
          o.alphabet=o.targetGaborNames;
          o.alternatives=length(o.alphabet);
       end
-      o.useDynamicNoiseMovie = 1;
-      o.markTargetLocation=1;
+      o.isNoiseDynamic = 1;
+      o.isTargetLocationMarked=1;
       if all(o.eccentricityXYDeg==0)
-         o.markTargetLocation=0;
+         o.isTargetLocationMarked=0;
       end
       o.blankingRadiusReTargetHeight=0;
       o.moviePreSec = 0.2;

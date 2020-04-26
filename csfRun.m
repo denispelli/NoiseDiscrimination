@@ -1,6 +1,6 @@
 % csfRun.m
-% Measure threshold for 4 spatial frequencies at four eccentricities, with and
-% without noise. 
+% Measure threshold for 4 spatial frequencies at four eccentricities, with
+% and without noise.
 % May 9, 2018
 % Denis Pelli
 
@@ -29,9 +29,8 @@ o.eyes='both'; % 'left', 'right', 'both'.
 o.viewingDistanceCm=80;
 o.targetGaborCycles=3;
 o.pThreshold=0.75;
-o.useDynamicNoiseMovie=true;
-o.moviePreSecs=0.2;
-o.moviePostSecs=0.2;
+o.isNoiseDynamic=true;
+o.moviePreAndPostSecs=[0.2 0.2];
 o.fixationCrossDeg=3;
 o.blankingRadiusReEccentricity=0;
 o.blankingRadiusReTargetHeight=0;
@@ -92,11 +91,11 @@ for ecc=[0 1 4 16 32]
         end
         o.noiseCheckDeg=o.targetHeightDeg/20;
         if all(o.eccentricityXYDeg==0)
-            o.markTargetLocation=false;
+            o.isTargetLocationMarked=false;
             o.blankingRadiusReTargetHeight=0.6;
             o.fixationCrossDeg=inf;
         else
-            o.markTargetLocation=true;
+            o.isTargetLocationMarked=true;
             o.blankingRadiusReTargetHeight=0;
             o.fixationCrossDeg=3;
         end
@@ -130,6 +129,7 @@ for i=1:length(ooo)
 end
 disp(tt) % Print list of conditions.
 
+return
 %% RUN THE CONDITIONS.
 ooo=RunExperiment(ooo);
 

@@ -51,7 +51,7 @@ for oi=1:length(oo)
                 % Perhaps we could read the actual ratio of width/height of
                 % the signal image.
                 oo(oi).A=0.5*length(oo(oi).words{1})*oo(oi).targetHeightDeg^2;
-            case 'gabor'
+            case {'gabor' 'gaborCosCos'}
                 oo(oi).targetCyclesPerDeg=oo(oi).targetGaborCycles/oo(oi).targetHeightDeg;
                 oo(oi).A=oo(oi).targetCyclesPerDeg^-2;
             otherwise

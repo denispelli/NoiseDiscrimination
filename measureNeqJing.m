@@ -6,9 +6,8 @@
 clear o
 o.experiment='measureNeqJing';
 o.trialsDesired=40;
-o.useDynamicNoiseMovie = 1; % 0 for static noise
-o.moviePreSec = 0.1; % ignored for static noise
-o.moviePostSec = 0.2; % ignored for static noise
+o.isNoiseDynamic = true; % false for static noise
+o.moviePreAndPostSecs = [0.1 0.2]; % ignored for static noise
 o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
 
 % LETTER
@@ -24,7 +23,7 @@ o.fixationCrossDeg = 1; % Typically 1 or inf. Make this at least 4 deg for scoto
 % o.fixationCrossWeightDeg = 0.05; % fixation line thickness
 % o.fixationCrossBlankedNearTarget = 0; % 0 or 1.
 % o.fixationCrossBlankedUntilSecAfterTarget = 0.6; % Pause after stimulus before display of fixation.
-o.markTargetLocation=1;
+o.isTargetLocationMarked=1;
 o.targetMarkDeg=0.5;
 o.blankingRadiusReEccentricity=0;
 o.blankingRadiusReTargetHeight=0;
@@ -49,7 +48,7 @@ o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
 % targetHeightDeg = 4 deg
 % checkHeightDeg = targetHeightDeg/20 
 % With and without noise
-o.targetDurationSec=0.5;
+o.targetDurationSecs=0.5;
 for noise = [0.16 0]
     for ecc= [5 1]
         o.targetHeightDeg= 4;
