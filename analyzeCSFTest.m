@@ -20,7 +20,7 @@ vars={'condition' 'conditionName' 'experiment' 'dataFilename' ...
     'experimenter' 'observer' 'trials' ...
     'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' 'targetCyclesPerDeg' ...
     'targetHeightDeg' 'targetDurationSecs' 'targetDurationSecsMean' 'targetDurationSecsSD'...
-    'targetCheckDeg' 'fullResolutionTarget' ...
+    'targetCheckDeg' 'isTargetFullResolution' ...
     'targetFont' ...
     'noiseType' 'noiseSD'  'noiseCheckDeg' ...
     'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
@@ -28,7 +28,7 @@ vars={'condition' 'conditionName' 'experiment' 'dataFilename' ...
     'filterTransmission' 'useFilter' 'retinalIlluminanceTd' 'pupilDiameterMm'...
     'pixPerCm'  'nearPointXYPix' 'NUnits' 'beginningTime' 'thresholdParameter'...
     'questMean' 'partingComments' 'blockSecs' 'blockSecsPerTrial'...
-    'fullResolutionTarget'...
+    'isTargetFullResolution'...
     'trial0Secs' 'trial1BeginComputeMovieSecs' ...
     'trial2BeginComputeCLUTSecs' 'trial3BeginComputeTextureSecs' ...
     'trial4BeginMovieSecs' 'trial5EndMovieSecs' 'trial6BeginFixationSecs'...
@@ -59,6 +59,13 @@ if isfield(oo,'partingComments')
     comments=comments(ok);
     for i=1:length(comments)
         fprintf('%s\n',comments{i}{1});
+    end
+end
+
+% Rename condition 'GaborX' to 'Gabor3';
+for oi=1:length(oo)
+    if ismember({oo(oi).conditionName},{'gaborX'})
+        oo(oi).conditionName='gabor3';
     end
 end
 
@@ -147,6 +154,7 @@ for conditionName=conditionNames
                         aa(end).thresholdParameter=oo(oi).thresholdParameter;
                         aa(end).eccentricityDeg=eccX;
                         aa(end).targetCyclesPerDeg=targetCyclesPerDeg;
+                        aa(end).targetGaborCycles=oo(oi).targetGaborCycles;
                         aa(end).targetHeightDeg=oo(oi).targetHeightDeg;
                         aa(end).contrast=[oo(match).contrast];
                         aa(end).noiseSD=[oo(match).noiseSD];
@@ -281,7 +289,7 @@ for conditionName=conditionNames
     ax.TickLength=[0.01 0.025]*2;
     ax.XLim=[0.5 32];
     lgd(iCondition)=legend('Location','northwest','Box','off');
-    title(lgd(iCondition),'noiseSD, observer');
+    title(lgd(iCondition),'noiseSD, targetGaborCycles, observer');
     lgd(iCondition).FontName='Monaco';
     name=conditionName{1};
     title([upper(name(1)) name(2:end)],'fontsize',18)
@@ -341,8 +349,8 @@ for conditionName=conditionNames
                     'MarkerFaceColor',faceColor,...
                     'Color',colors{iObserver},...
                     'LineWidth',1.5,...
-                    'DisplayName',sprintf('%4.2f, %s',...
-                    max([a(match).noiseSD]),observers{iObserver}));
+                    'DisplayName',sprintf(' %4.2f, %1.0f, %s',...
+                    max([a(match).noiseSD]),max([a(match).targetGaborCycles]),observers{iObserver}));
                 hold on
             end
         end
@@ -357,10 +365,10 @@ for conditionName=conditionNames
     ax.TickLength=[0.01 0.025]*2;
     ax.XLim=[0.5 32];
     lgd(iCondition)=legend('Location','northwest','Box','off');
-    title(lgd(iCondition),'noiseSD, observer');
+    title(lgd(iCondition),'noiseSD, targetGaborCycles, observer');
     lgd(iCondition).FontName='Monaco';
-    title(lgd(iCondition),'noiseSD, observer');
-    lgd(iCondition).FontName='Monaco';
+%     title(lgd(iCondition),'noiseSD, observer');
+%     lgd(iCondition).FontName='Monaco';
     name=conditionName{1};
     title([upper(name(1)) name(2:end)],'fontsize',18)
     xlabel('Spatial frequency (c/deg)','fontsize',18);
@@ -419,8 +427,8 @@ for conditionName=conditionNames
                     'MarkerFaceColor',faceColor,...
                     'Color',colors{iObserver},...
                     'LineWidth',1.5,...
-                    'DisplayName',sprintf(' %4.2f, %s',...
-                    max([a(match).noiseSD]),observers{iObserver}));
+                    'DisplayName',sprintf(' %4.2f, %1.0f, %s',...
+                    max([a(match).noiseSD]),max([a(match).targetGaborCycles]),observers{iObserver}));
                 hold on
             end
         end
@@ -434,7 +442,7 @@ for conditionName=conditionNames
     ax.TickLength=[0.01 0.025]*2;
     ax.XLim=[0.5 32];
     lgd(iCondition)=legend('Location','northwest','Box','off');
-    title(lgd(iCondition),'noiseSD, observer');
+    title(lgd(iCondition),'noiseSD, targetGaborCycles, observer');
     lgd(iCondition).FontName='Monaco';
     name=conditionName{1};
     title([upper(name(1)) name(2:end)],'fontsize',18)
@@ -495,8 +503,8 @@ for conditionName=conditionNames
                     'MarkerFaceColor',faceColor,...
                     'Color',colors{iObserver},...
                     'LineWidth',1.5,...
-                    'DisplayName',sprintf('%4.2f, %s',...
-                    max([a(match).noiseSD]),observers{iObserver}));
+                    'DisplayName',sprintf(' %4.2f, %1.0f, %s',...
+                    max([a(match).noiseSD]),max([a(match).targetGaborCycles]),observers{iObserver}));
                 hold on
             end
         end
@@ -505,7 +513,7 @@ for conditionName=conditionNames
     ax.TickLength=[0.01 0.025]*2;
     ax.XLim=[0.5 32];
     lgd(iCondition)=legend('Location','northwest','Box','off');
-    title(lgd(iCondition),'noiseSD, observer');
+    title(lgd(iCondition),'noiseSD, targetGaborCycles, observer');
     lgd(iCondition).FontName='Monaco';
     name=conditionName{1};
     title([upper(name(1)) name(2:end)],'fontsize',18)
