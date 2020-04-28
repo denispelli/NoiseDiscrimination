@@ -7,9 +7,13 @@ function testLuminanceCalibration()
 try
    Screen('Preference', 'SkipSyncTests', 1);
    screen=0;
-   AutoBrightness(screen,0);
-   Screen('ConfigureDisplay','Brightness',screen,[],1);
-   if 1
+   settings.brightness=1;
+   settings.automatically=false;
+   settings.trueTone=false;
+   settings.nightShiftSchedule='Off';
+   settings.nightShiftManual=false;
+   oldSettings=MacDisplaySettings(settings);
+   if true
       PsychImaging('PrepareConfiguration');
       PsychImaging('AddTask','General','UseRetinaResolution');
       % Mario says EnableCLUTMapping is the ONLY way to get reasonable
@@ -53,10 +57,12 @@ try
    end
    Screen('CloseAll');
    Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
-catch
+   MacDisplaySettings(oldSettings);
+catch me
    sca;
    if exist('cal','var') && isfield(cal,'old') && isfield(cal.old,'gamma')
       Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
    end
-   psychrethrow(psychlasterror);
+   MacDisplaySettings(oldSettings);
+   rethrow(me);
 end
