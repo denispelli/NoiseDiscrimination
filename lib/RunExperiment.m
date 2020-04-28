@@ -172,13 +172,15 @@ end % function RunExperiment
 %% Clean up whenever RunExperiment terminates, even by control-C.
 function CloseWindowsAndCleanup()
 % Close any window opened by the Psychtoolbox Screen command, and re-enable keyboard.
-global window
+global window oldDisplasySettings
 if ~isempty(Screen('Windows'))
     % Screen CloseAll is very slow, so we call it only if we need to.
     Screen('CloseAll');
     %     sca; % Originally equivalent to Screen('CloseAll').
     if ismac
-        AutoBrightness(0,1);
+        % We ought to specify the screen here, but I don't think it's yet a
+        % global.
+        MacDisplaySettings(oldDisplasySettings);
     end
 end
 window=[];
