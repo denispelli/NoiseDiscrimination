@@ -18,7 +18,7 @@ function [oldIsMuted,failed]=SoundMuting(newIsMuted)
 % suppose it's supported on all versions of macOS. I hope SoundMuting can
 % be extended to support Windows and Linux.
 %
-% See also: SoundVolume.m, Brightness.m
+% See also: SoundVolume.m, MacDisplaySettings.m
 
 % http://www.manpagez.com/man/1/osascript/
 % https://developer.apple.com/library/mac/documentation/AppleScript/Conceptual/AppleScriptLangGuide/reference/ASLR_cmds.html
