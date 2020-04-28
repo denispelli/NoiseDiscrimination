@@ -26,7 +26,7 @@ end
 if IsWin
     o.useNative11Bit=false;
 end
-o.areAllTargetsBlanked=true;
+o.isTargetLocationUnpredictable=true;
 % o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
 % o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 o.isTargetLocationMarked=false;
