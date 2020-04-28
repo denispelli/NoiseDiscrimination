@@ -380,12 +380,12 @@ function oo=NoiseDiscrimination(ooIn)
 % CONCERNS. I'm using the 11-bit precision to measure visual sensitivity
 % thresholds that my professional reputation depends on. Here's a link to
 % my latest poster:
-% http://psych.nyu.edu/pelli/pubs/pelli2017vss-peripheral-noise.pdf The
-% threshold contrasts in Fig. 2 with zero noise require luminance precision
-% better than 8 bits. 10 bits might be enough. 11 bits is dandy. However,
-% I'm worried that there may be systematic consequences of the dither that
-% affect the archival sensitivity functions that I'm measuring and
-% publishing (like those on the poster).
+% http://psych.nyu.edu/pelli/pubs/pelli2017vss-peripheral-noise.pdf 
+% The threshold contrasts in Fig. 2 with zero noise require luminance
+% precision better than 8 bits. 10 bits might be enough. 11 bits is dandy.
+% However, I'm worried that there may be systematic consequences of the
+% dither that affect the archival sensitivity functions that I'm measuring
+% and publishing (like those on the poster).
 %
 % Might an Apple engineer answer five questions about dithering on the
 % MacBook Pro and iMac?
@@ -633,6 +633,7 @@ spaceChar=' ';
 % KbCheck. We use these keycode lists in preparing a list of keys to
 % enable. For some characters, e.g. "1", there may be several ways to type
 % it (main keyboard or numeric keypad), and several corresponding keyCodes.
+RestrictKeysForKbCheck([]); % Initialize to no restriction.
 KbName('UnifyKeyNames');
 escapeKeyCode=KbName('escape');
 graveAccentKeyCode=KbName('`~');
@@ -725,7 +726,7 @@ o.blankingRadiusReTargetHeight= nan;
 o.blankingRadiusReEccentricity= 0.5;
 o.clipToStimulusRect=true;
 o.isGazeRecorded=false;
-o.areAllTargetsBlanked=true; % New April, 2020.
+o.isTargetLocationUnpredictable=true; % New April, 2020.
 % web(fullfile(docroot, 'vision/ref/videolabeler-app.html'))
 
 % QUEST
@@ -1096,7 +1097,7 @@ knownOutputFields={'areAnswersLabeled' 'beginningTime' ...
     'nearPointXYPix' 'pixPerCm' 'psychtoolboxKernelDriverLoaded'...
     'targetXYPix' 'textLineLength' 'textSize' 'unknownFields'...
     'speakEachLetter' 'targetCheckDeg' 'targetCheckPix'...
-    'textFont'  'LBackground' 'targetCyclesPerDeg' 'contrast' ...
+    'textFont'  'LBackground' 'targetCyclesPerDeg'  ...
     'thresholdParameterValueList' 'noInputArgument' ...
     'firstGrayClutEntry' 'lastGrayClutEntry' 'gray' 'r' 'transcript'...
     'signalIsBinary' 'targetXYInUnitSquare'...
@@ -1169,13 +1170,20 @@ if isempty(oo(1).desiredLuminanceFactor) && ...
     [oo.desiredLuminanceFactor]=deal(1);
 end
 
+%% USER REQUEST THAT ONLY TARGETS DIFFER BETWEEN CONDITIONS
+if any([oo(1).isTargetLocationUnpredictable]~=oo(1).isTargetLocationUnpredictable)
+    error('All conditions must agree regarding o.isTargetLocationUnpredictable.');
+end
+if oo(1).isTargetLocationUnpredictable
+    
+end
+  
 %% SCREEN PARAMETERS
 o=oo(1);
 Screen('Preference','Verbosity',o.screenVerbosity);
 [screenWidthMm,screenHeightMm]=Screen('DisplaySize',o.screen);
 screenBufferRect=Screen('Rect',o.screen);
 o.screenRect=Screen('Rect',o.screen,1);
-resolution=Screen('Resolution',o.screen);
 if o.useFractionOfScreenToDebug
     o.screenRect=round(o.useFractionOfScreenToDebug*o.screenRect);
 end
@@ -1183,15 +1191,16 @@ o.stimulusRect=o.screenRect; % Initialize to full screen. Restrict later.
 [oo.screenRect]=deal(o.screenRect);
 [oo.stimulusRect]=deal(o.stimulusRect);
 clear o
-%% Are we using the screen at its maximum native resolution?
+
+%% Are we using the screen at its native resolution?
 % First, we take the highest resolution in the device's list as an estimate
 % of the native resolution. Alas, Mario warns that this rule of thumb is
 % not reliable, and I confirm that, finding that among the resolutions
 % offered by Screen('Resolutions') for my 15" MacBook Pro is a resolution
-% that is larger than the native resolution. Thus I consulted at the apple
-% documents and made an exhaustive table for my 15" MacBook Pros with
-% retina display and 27" iMac. We overrule the rule of thumb when we have
-% exact knowledge.
+% that is larger than the native resolution. Thus I consulted the apple
+% documents and made an exhaustive table for 15" MacBook Pros with Retina
+% display and 27" iMac. When possible, the table overrides the rule of
+% thumb.
 %% FIND MAX RES, AS ESTIMATE OF NATIVE RES.
 res=Screen('Resolutions',oo(1).screen);
 [oo.nativeWidth]=deal(0);
@@ -1209,6 +1218,7 @@ switch MacModelName
         % iMac (Retina 5K, 27-inch, Late 2015)
         % iMac (Retina 5K, 27-inch, 2017)
         % iMac (Retina 5K, 27-inch, 2019)
+        % 27" iMac
         [oo.nativeWidth]=deal(5120);
         [oo.nativeHeight]=deal(2880);
     case {'MacBookPro10,1' 'MacBookPro11,2' 'MacBookPro11,3' ...
@@ -1941,17 +1951,17 @@ try
                 oo(oi).targetHeightDeg,maxStimulusWidth/oo(oi).pixPerDeg,...
                 maxStimulusHeight/oo(oi).pixPerDeg,oo(oi).viewingDistanceCm);
         end
-%         if oo(oi).isTargetLocationFixed && ...
-%                 oo(oi).noiseRadiusDeg > maxStimulusWidth/oo(oi).pixPerDeg
-            % THIS CODE IS OBSOLETE.
-            % When we have positional uncertainty we use a canvasRect
-            % larger than stimulusRect and we must fill it with noise to
-            % consistently fill the screen with noise.
-            %             ffprintf(ff,['%d: Reducing requested o.noiseRadiusDeg ' ...
-            %                 '%.1f deg to %.1f deg, the max possible.\n'],...
-            %                 oi,oo(oi).noiseRadiusDeg,maxStimulusWidth/oo(oi).pixPerDeg);
-            %             oo(oi).noiseRadiusDeg=maxStimulusWidth/oo(oi).pixPerDeg;
-%         end
+        % if oo(oi).isTargetLocationFixed && ...
+        % oo(oi).noiseRadiusDeg > maxStimulusWidth/oo(oi).pixPerDeg
+        % THIS CODE IS OBSOLETE.
+        % When we have positional uncertainty we use a canvasRect
+        % larger than stimulusRect and we must fill it with noise to
+        % consistently fill the screen with noise.
+        %             ffprintf(ff,['%d: Reducing requested o.noiseRadiusDeg ' ...
+        %                 '%.1f deg to %.1f deg, the max possible.\n'],...
+        %                 oi,oo(oi).noiseRadiusDeg,maxStimulusWidth/oo(oi).pixPerDeg);
+        %             oo(oi).noiseRadiusDeg=maxStimulusWidth/oo(oi).pixPerDeg;
+        % end
         if oo(oi).useFlankers
             flankerSpacingPix=round(oo(oi).flankerSpacingDeg*oo(oi).pixPerDeg);
         end
@@ -2305,7 +2315,9 @@ try
                 end
                 cal.nFirst=oo(1).firstGrayClutEntry;
                 cal.nLast=oo(1).lastGrayClutEntry;
+                fprintf('%d: cal.LFirst to cal.LLast %.1f to %.1f cd/m^2.\n',MFileLineNr,cal.LFirst,cal.LLast);
                 cal=LinearizeClut(cal);
+                fprintf('%d: cal.LFirst to cal.LLast %.1f to %.1f cd/m^2.\n',MFileLineNr,cal.LFirst,cal.LLast);
             end
             ffprintf(ff,'Size of cal.gamma %d %d\n',size(cal.gamma));
             if oo(1).isLuminanceRangeSymmetric
@@ -2659,40 +2671,59 @@ try
     % by edges of full-canvas noise) to give away the trial-by-trial target
     % position o.eccentricityXYDeg.
     %
-    % FIRST THOUGHT: I think we could prevent that reveal by defining the
-    % canvasRect once, before the trials begin, relative to the initial
-    % o.eccentricityXYDeg, and then not shift it when o.eccentricityXYDeg
-    % changes in the various conditions of subsequent trials. Thus, when we
-    % have uncertainParameter 'eccentricityXYDeg' or interleaved conditions
-    % with different eccentricityXYDeg, the canvas position should be set
-    % only once, before the first trial.
+    %% BACKGROUND: Currently the code assumes one target and centers
+    % the canvas on the target's position o.eccentricityXYDeg. However,
+    % when o.isTargetLocationUnpredictable=true we need to cope with
+    % multiple target positions that may come from other, interleaved,
+    % conditions that each may have a different target location, and every
+    % condition may have multiple possible target locations specified by
+    % o.uncertainParameter and o.uncertainValues. Thus centering on one
+    % target is obsolete.
     %
-    % ACTUAL: Actually, though I prefer the above, I discover that the code
-    % to generate each movie frame centers the signal in the canvasRect.
-    % Rather than rewrite that now, I'm just going to double the cavasRect
-    % horizontally and vertically, to twice the stimulusRect each way, to
-    % guarantee that it will include all of stimulusRect, regardless of
-    % where it's centered within stimulusRect. This now works, once I
-    % eliminated a spurious restriction of the noiseRadius, which prevented
-    % the noise from filling the canavas when it's twice as big as
-    % stimulusRect.
+    %% MAKING TARGET LOCATION UNPREDICTABLE: In the new scheme, the canvas 
+    % will be just a temporary stand-in for the screen and perhaps the
+    % canvasRect should equal the screenRect, since we often want the noise
+    % to fill the screen. We would compute and show the noise patch from
+    % each condition, as determined by that condition's o.noiseRadiusDeg
+    % and o.eccentricityXYDeg, etc. I often interleave more than one
+    % condition with the same target location, changing noiseSD or
+    % noiseRadiusDeg. Since we can't show more than one noise at a give
+    % location, we need a way to choose. For this, we add a new field
+    % o.group to each condition and we have the current condition display
+    % the noise only of conditions that belong to its group, e.g. 'A' vs
+    % 'B' or 'small' vs 'large'. This allows us, for example, to have
+    % several conditions with different noiseRadiusDeg or different noiseSD
+    % at each of several target locations. Suppose we assign a different
+    % group name to conditions with each noiseRadius or noiseSD. Thus, each
+    % condition will be shown with the similar noises of its fellow group
+    % members. We'll flag an error if two conditions within a group have
+    % nonzero noise at the same location.
     %
-    % CURRENT: That strategy was ok for static noise, but takes too long
-    % with dynamic noise. We can't afford to compute dynamic noise that
-    % falls off the screen. I think the right strategy, when coping with
-    % uncertainty of position within a condition or across conditions, is
-    % to compute a noise apprpirate for all possible target locations. That
-    % way the noise before the target won't give away which target is
-    % coming. We define a noise rect for each target, and use UnionRect to
-    % combine them. One big noiseRect to hold them all. This is closely
-    % related to o.stimulusRect. This will abolish the current convas
-    % centered on the target, since we'll consider more than one possible
-    % target. For the moment, i need to get dynamic noise working again,
-    % and I don't need uncertainty.
-    % denis.pelli@nyu.edu August 2019.
-    
+    %% UNCERTAINTY: A condition with uncertainty will contribute many noise 
+    % rects, which may overlap, and could be combined by UnionRect to get
+    % the smallest rect that includes them all. 
+    %
+    %% ACTUAL: The code to generate each movie frame centers the signal in
+    % the canvasRect. Rather than rewrite that now, I'm just going to
+    % double the cavasRect horizontally and vertically, to twice the
+    % stimulusRect each way, to guarantee that it will include all of
+    % stimulusRect, regardless of where it's centered within stimulusRect.
+    % This now works, once I eliminated a spurious restriction of the
+    % noiseRadius, which prevented the noise from filling the canavas when
+    % it's twice as big as stimulusRect.
+    %
+    %% TOO SLOW FOR DYNAMIC NOISE: That strategy was ok for static noise, 
+    % but takes too long with dynamic noise. We can't afford to compute
+    % dynamic noise that falls off the screen. I think the right strategy,
+    % when coping with uncertainty of position within a condition or across
+    % conditions, is to compute a noise appropriate for all possible
+    % targets. That way the noise before the target won't give away which
+    % target is coming. We define a noise rect for each condition, centered
+    % on its target, This will abolish the current convas centered on the
+    % target, since we'll consider more than one possible target.
+        
     fprintf('*Waiting for observer to set viewing distance.\n');
-    oo(1).nearPointXYPix=[]; % Add field to struct.
+    oo(1).nearPointXYPix=[]; % New field in condition struct.
     % Enabling okToShiftCoordinates will typical result in different
     % fixation locations for each condition. That may be ok for some
     % experiments, but is not ok when the randomization matters and we
@@ -3009,7 +3040,7 @@ try
                 oi,oo(oi).flankerArrangement,flankerSpacingPix,flankerSpacingPix/oo(oi).pixPerDeg,flankerSpacingPix/oo(oi).targetHeightPix,oo(oi).flankerContrast);
         end
         if oo(oi).useFixation
-            if oo(oi).areAllTargetsBlanked
+            if oo(oi).isTargetLocationUnpredictable
                 % RELEVANT WHEN ~o.isTargetLocationFixed
                 % New April 2020.
                 % Consider all possible targets, across all the conditions
@@ -3940,12 +3971,13 @@ try
     
     for oi=1:conditions
         if streq(oo(oi).thresholdParameter,'flankerContrast') && streq(oo(oi).thresholdResponseTo,'target')
-            % Falling psychometric function for crowding of target as a function
-            % of flanker contrast. We assume that the observer makes a random
-            % finger error on fraction delta of the trials, and gets proportion
-            % gamma of those trials right. On the rest of the trials (no finger
-            % error) he gets it wrong only if he fails to guess it (prob. gamma)
-            % and fails to detect it (prob. exp...).
+            % Falling psychometric function for crowding of target as a
+            % function of flanker contrast. We assume that the observer
+            % makes a random finger error on fraction delta of the trials,
+            % and gets proportion gamma of those trials right. On the rest
+            % of the trials (no finger error) he gets it wrong only if he
+            % fails to guess it (prob. gamma) and fails to detect it (prob.
+            % exp...).
             oo(oi).q=QuestCreate(oo(oi).tGuess,oo(oi).tGuessSd,oo(oi).pThreshold,oo(oi).steepness,0,0); % Prob of detecting flanker.
             oo(oi).q.p2=oo(oi).lapse*oo(oi).guess+(1-oo(oi).lapse)*(1-(1-oo(oi).guess)*oo(oi).q.p2); % Prob of identifying target.
             oo(oi).q.s2=fliplr([1-oo(oi).q.p2;oo(oi).q.p2]);
@@ -4161,6 +4193,7 @@ try
                             oo(oi).contrast=-oo(oi).snapshotContrast;
                         end
                         if streq(oo(oi).targetKind,'image')
+                            % Limit contrast to the range [-1 1].
                             oo(oi).contrast=min([1 oo(oi).contrast]);
                             oo(oi).contrast=max([-1 oo(oi).contrast]);
                         end
@@ -5245,8 +5278,8 @@ try
                                 % Using getAlphabetFromDisk, I get the
                                 % right polarity if I set signalIsBinary.
                                 % However, the clipping threshold is way
-                                % off so the letters are slightly distorted.
-                                % denis 2018
+                                % off so the letters are slightly
+                                % distorted. denis 2018
                                 if oo(oi).signalIsBinary
                                     if oo(oi).contrastPolarity<0
                                         if ~isempty(oo(oi).responseScreenAbsoluteContrast) && ~ismember(oo(oi).responseScreenAbsoluteContrast,[0.99 1])
@@ -5279,6 +5312,17 @@ try
                                     else
                                         c=oo(oi).responseScreenAbsoluteContrast;
                                         c=c*oo(oi).contrastPolarity;
+                                    end
+                                    if true
+                                        % Restrict response screen to
+                                        % physically realizable contrast.
+                                        % DGP April 28, 2020
+                                        oScratch=oo(oi);
+                                        oScratch.noiseSD=0;
+                                        [cMinR,cMaxR]=ComputeContrastBounds(oScratch);
+                                        clear oScratch
+                                        c=max([c cMinR]);
+                                        c=min([c cMaxR]);
                                     end
                                     im=1+c*img;
                                     if oo(oi).printImageStatistics
