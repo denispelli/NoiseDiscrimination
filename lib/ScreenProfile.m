@@ -20,7 +20,7 @@ function [oldProfileName,status]=ScreenProfile(screenNumber,newProfileName)
 % time you call AutoBrightness.
 %
 % APPLE SECURITY. The first time any application (e.g. MATLAB) asks
-% AutoBrightness.applescript to change a setting, the request will be
+% MacDisplaySettings.applescript to change a setting, the request will be
 % blocked and an error dialog window will appear saying the application is
 % "not allowed assistive access." This means that the application needs an
 % administrator's permission to control the computer. A user with admin
@@ -30,8 +30,8 @@ function [oldProfileName,status]=ScreenProfile(screenNumber,newProfileName)
 % MULTIPLE SCREENS: All my computers have only one screen, so I haven't
 % tested this on screens other than screen 0, the main screen.
 %
-% LINUX and WINDOWS. Applescript works only under Mac OS X. When running
-% under any operating system other that Mac OS X, this program ignores the
+% LINUX and WINDOWS. Applescript works only under macOS. When running
+% under any operating system other that macOS, this program ignores the
 % newSetting argument and always returns zero as the oldSetting. It is
 % conceivable that Apple's auto brightness feature is implemented on
 % Macintoshes running Linux or Windows. If that applies to you, please
@@ -41,13 +41,13 @@ function [oldProfileName,status]=ScreenProfile(screenNumber,newProfileName)
 % See also:
 % ScriptingOk.m
 % ScriptingOkShowPermission.m
-% AutoBrightness.m
+% MacDisplaySettings.m
 % http://www.manpagez.com/man/1/osascript/
 % https://developer.apple.com/library/mac/documentation/AppleScript/Conceptual/AppleScriptLangGuide/reference/ASLR_cmds.html
 % https://discussions.apple.com/thread/6418291
 %
 if ~IsOSX
-    % I believe that Applescript works only within Mac OS X. It is
+    % I believe that Applescript works only within macOS. It is
     % conceivable that Apple's auto brightness feature is implemented on
     % Macintoshes running Linux or Windows, in which case someone might
     % enhance this program to return a correct answer for those cases.
