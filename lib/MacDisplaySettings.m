@@ -206,7 +206,7 @@ if ~IsOSX
     % that Apple's display brightness control is implemented on Macintoshes
     % running Linux or Windows, in which case someone might enhance this
     % program to work for those situations.
-    failed = true; % Signal failure on this unsupported OS:
+    failed = true; % Report failure on this unsupported OS:
     return;
 end
 % The Psychtoolbox Screen function sets Brightness more quickly than
@@ -409,6 +409,7 @@ try
     end
 catch e
     CloseWindows
+    failed=true;
     rethrow(e);
 end
 end
