@@ -35,14 +35,14 @@ function [fixationLines,fixationDots,isTargetLocationMarked]=ComputeFixationLine
 % fix.fixationCrossPix=fixationCrossPix;% Diameter of fixation mark. 0 for none.
 % fix.useFixationDots=oo(oi).useFixationDots;
 % fix.fixationDotsNumber=oo(oi).fixationDotsNumber;
-% fix.fixationDotsWithinRadius=oo(oi).fixationDotsWithinRadiusDeg*oo(oi).pixPerDeg;
+% fix.fixationDotsWithinRadiusPix=oo(oi).fixationDotsWithinRadiusDeg*oo(oi).pixPerDeg;
 %% ONE X AND BLANKING PER TARGET. EACH ARRAY HAS ONE ROW PER TARGET.
 % for oi=1:length(oo)
 %     fix.eccentricityXYPix(oi,1:2)=oo(oi).eccentricityXYPix;  % xy offset of target from fixation.
 %     fix.targetHeightPix(oi)=oo(oi).targetHeightPix;
 % end
 %% PROVIDE JUST ONE ROW (FOR ALL TARGETS) OR ONE ROW PER TARGET. RETURNS ONE ROW PER TARGET.
-% fix.isTargetLocationMarked=true;          % false or true.
+% fix.isTargetLocationMarked=true;      % false or true.
 % fix.targetMarkPix=targetMarkPix;      % Diameter of target mark X
 %% THE blankingRadiusPix FOR EACH TARGET DEPENDS ON THESE. EACH APPLIES TO ALL TARGETS.
 % fix.fixationCrossBlankedNearTarget=true; 
@@ -55,7 +55,7 @@ function [fixationLines,fixationDots,isTargetLocationMarked]=ComputeFixationLine
 % Screen('Flip',window);
 %
 % The many calls to round() don't noticeably affect the display. They are
-% just to make the values easier to print, while debugging.
+% just to make the values easier to print while debugging.
 %
 % History:
 % October, 2015. Denis Pelli wrote it.
@@ -172,7 +172,7 @@ if fix.useFixationDots
     end
     % Rect r is the requested dot region, which might extend far beyond
     % screen.
-    r=fix.fixationDotsWithinRadius*[-1 -1 1 1];
+    r=fix.fixationDotsWithinRadiusPix*[-1 -1 1 1];
     r=OffsetRect(r,x0,y0); % Center on fixation.
     % Clip to allowed area (typically full screen).
     r=ClipRect(r,fix.clipRect);
