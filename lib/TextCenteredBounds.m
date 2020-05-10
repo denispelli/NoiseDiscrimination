@@ -51,4 +51,4 @@ if nargin<3
    yPositionIsBaseline=0;
 end
 centerTheText=true;
-bounds=TextBounds(w,text,yPositionIsBaseline,centerTheText);
+bounds=TextBounds2(w,text,yPositionIsBaseline,centerTheText);
