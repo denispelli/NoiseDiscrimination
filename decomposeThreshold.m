@@ -1,4 +1,4 @@
-function [obs ideal] = decomposeThreshold(obsFile, idealFile)
+function [obs, ideal] = decomposeThreshold(obsFile, idealFile)
 % the _runs_ files is simply a table created by reading in many runs (output of
 % NoiseDiscrimination) We read in the obsFile (a _runs_ file), then introduce
 % the experiment control variables as a set of condition variables for this
