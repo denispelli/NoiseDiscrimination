@@ -111,7 +111,7 @@ for ecc=[0 1 4 16 32]
                     o.conditionName=sprintf('ec-%.0f-deg-%.1f-deg',o.eccentricityXYDeg(1),o.targetHeightDeg);
             end
         oo=[]; % Interleave these conditions.
-        for sd=[0 MaxNoiseSD(o.noiseType)]
+        for sd=[0 MaxNoiseSD(o.noiseType,SignalNegPos(oo(oi)))]
             o.noiseSD=sd;
             if o.noiseSD==0 && streq(o.observer,'ideal')
 %                 continue

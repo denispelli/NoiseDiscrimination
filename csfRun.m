@@ -101,7 +101,19 @@ for ecc=[0 1 4 16 32]
         end
         o.conditionName=sprintf('%.0f-deg-%.1f-cpd',o.eccentricityXYDeg(1),o.targetCyclesPerDeg);
         oo=[]; % Interleave these conditions.
-        for sd=[0 MaxNoiseSD(o.noiseType)]
+        switch o.targetKind
+            case 'gabor'
+                signalNegPos=[-1 1];
+            case 'letter'
+                if o.contrast<0
+                    signalNegPos=[-1 0];
+                else
+                    signalNegPos=[0 1];
+                end
+            otherwise
+                error('Unknown o.targetKind ''%s''.',o.targetKind);
+        end
+        for sd=[0 MaxNoiseSD(o.noiseType,signalNegPos)]
             o.noiseSD=sd;
             if isempty(oo)
                 oo=o;

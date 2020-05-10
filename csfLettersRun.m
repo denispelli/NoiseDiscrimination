@@ -107,7 +107,7 @@ for ecc=[0 1 4 16 32]
                     o.conditionName=sprintf('ec-%.0f-deg-sz-%.1f-deg',o.eccentricityXYDeg(1),o.targetHeightDeg);
             end
         oo=[]; % Interleave these conditions.
-        for sd=[0 MaxNoiseSD(o.noiseType)]
+        for sd=[0 MaxNoiseSD(o.noiseType,SignalNegPos(o))]
             o.noiseSD=sd;
             if isempty(oo)
                 oo=o;
