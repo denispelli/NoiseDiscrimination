@@ -1,7 +1,7 @@
 %% Analyze the data collected by checkSizeRun.
 experiment='checkSize2';
-if ~exist('skipDataCollection')
-   skipDataCollection=0;
+if ~exist('skipDataCollection','var')
+   skipDataCollection=false;
 end
 if ~skipDataCollection
    dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
