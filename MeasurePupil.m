@@ -104,13 +104,21 @@ if ~useBrightnessFunction
                cal.brightnessSetting,cal.brightnessReading);
          end
       end
-   catch
+   catch ME
       cal.brightnessReading=NaN;
    end
 end
 if cal.ScreenConfigureDisplayBrightnessWorks
-   AutoBrightness(cal.screen,0);
-   ffprintf(ff,'Turning autobrightness off. Setting "brightness" to %.2f, on a scale of 0.0 to 1.0;\n',cal.brightnessSetting);
+	s=GetSecs;
+	ffprintf(ff,'Calling MacDisplaySettings. ... ');
+	newSettings.brightness=cal.brightnessSetting;
+	newSettings.automatically=false;
+	newSettings.trueTone=false;
+	newSettings.nightShiftSchedule='Off';
+	newSettings.nightShiftManual=false;
+	oldDisplaySettings=MacDisplaySettings(cal.screen,newSettings);
+	ffprintf(ff,'Done (%.1f s)\n',GetSecs-s);
+   ffprintf(ff,'Setting "brightness" to %.2f, on a scale of 0.0 to 1.0;\n',cal.brightnessSetting);
 end
 
 %% TRY-CATCH BLOCK CONTAINS ALL CODE IN WHICH WINDOW IS OPEN
@@ -187,7 +195,7 @@ try
          else
             background=o.gray1;
          end
-         [name,terminatorChar]=GetEchoString(window,'Observer name:',2*o.textSize,0.82*screenRect(4),black,background,1,o.deviceIndex);
+         [name,terminatorChar]=GetEchoString2(window,'Observer name:',2*o.textSize,0.82*screenRect(4),black,background,1,o.deviceIndex);
          if ismember(terminatorChar,[escapeChar graveAccentChar])
             o.quitBlock=true;
             o.quitExperiment=OfferEscapeOptions(window,o,textMarginPix);
@@ -372,7 +380,7 @@ try
             else
                background=o.gray1;
             end
-            [name,terminatorChar]=GetEchoString(window,'Pupil diameter (mm):',...
+            [name,terminatorChar]=GetEchoString2(window,'Pupil diameter (mm):',...
                2*o.textSize,0.82*screenRect(4),black,background,1,o.deviceIndex);
             if ~isempty(name)
                o.pupilDiameterMm=str2num(name);
@@ -475,7 +483,7 @@ try
             if exist('cal','var') && isfield(cal,'old') && isfield(cal.old,'gamma')
                Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
             end
-            AutoBrightness(cal.screen,1); % Restore autobrightness.
+           MacDisplaySettings(cal.screen,oldSettings);
             if dataFid>-1
                fclose(dataFid);
                dataFid=-1;
