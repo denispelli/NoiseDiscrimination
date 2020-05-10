@@ -120,8 +120,8 @@ for domain=1
         o.fixationCrossDeg=3;
     end
     oo=[];
-    for noiseSD=[0 2.^(-6:1.5:0)]*MaxNoiseSD(o.noiseType)
-%     for noiseSD=MaxNoiseSD(o.noiseType)
+    for noiseSD=[0 2.^(-6:1.5:0)]*MaxNoiseSD(o.noiseType,SignalNegPos(oo(oi)))
+%     for noiseSD=MaxNoiseSD(o.noiseType,SignalNegPos(o))
         o.noiseSD=noiseSD;
         o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
         o.noiseCheckDeg=o.targetHeightDeg/20;
