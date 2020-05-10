@@ -116,7 +116,7 @@ for ecc=[0 1 8 32]
                 case 'letter'
                     o.conditionName=sprintf('ec-%.0f-deg-%.1f-deg',o.eccentricityXYDeg(1),o.targetHeightDeg);
             end
-            o.noiseSD=MaxNoiseSD(o.noiseType);
+            o.noiseSD=MaxNoiseSD(o.noiseType,SignalNegPos(o));
             if isempty(oo)
                 oo=o;
             else
