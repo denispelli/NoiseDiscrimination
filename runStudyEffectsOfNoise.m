@@ -19,9 +19,9 @@ end
 if IsWin
     o.useNative11Bit=false;
 end
-o.isTargetLocationUnpredictable=true;
 % o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
 % o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+o.group='A'; % Include all conditions in a group, so they differ solely in their target.
 o.isTargetLocationMarked=false;
 o.useFixationGrid=false;
 o.useFixationDots=true;
