@@ -9,13 +9,12 @@ addpath(fullfile(mainFolder,'lib')); % Folder in same directory as this M file.
 addpath(fullfile(mainFolder,'utilities')); % Folder in same directory as this M file.
 clear KbWait o oo
 ooo={};
-% o.assessContrast=true;
-% o.measureContrast=true;
-% o.usePhotometer=true;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Replicate Banks Bennet and Geisler, w and w/o noise.
+% Replicate Banks Bennet and Geisler 1987, w and w/o noise.
 o.observer='';
 % o.observer='ideal'; % Use this to test ideal observer.
+% o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
+% o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ismember(o.observer,{'ideal'})
     o.trialsDesired=200;
@@ -25,52 +24,72 @@ end
 if IsWin
     o.useNative11Bit=false;
 end
-o.isTargetLocationUnpredictable=true;
-o.brightnessSetting=1.0; % As calibrated.
-% o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
-% o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
-% o.printContrastBounds=true;
-% o.printGrayLuminance=true;
-% o.printImageStatistics=false;
-o.isTargetLocationMarked=false;
+
+%% FLANKER
+o.flankerSpacingDeg=0.2; % Used only for fixation check.
+o.useFlankers=false;
+o.flankerContrast=-1;
+
+%% FIXATION AND TARGET MARKING
 o.useFixationGrid=false;
 o.useFixationDots=true;
 o.fixationDotsWeightDeg=0.05;
 o.fixationDotsNumber=100;
 o.fixationDotsWithinRadiusDeg=4;
-o.askForPartingComments=false; % Disabled until it's fixed.
-o.isGazeRecorded=false;
-o.experiment='dynamicCSF';
-o.eccentricityXYDeg=[0 0];
-o.contrast=-1;
-% o.noiseType='gaussian';
-o.noiseType='ternary'; % More noise power than 'gaussian'.
 o.setNearPointEccentricityTo='fixation';
 o.nearPointXYInUnitSquare=[0.5 0.5];
-o.thresholdParameter='contrast';
-o.flankerSpacingDeg=0.2; % Used only for fixation check.
-o.useFlankers=false;
-o.flankerContrast=-1;
+
+%% GEOMETRY
+o.viewingDistanceCm=[];
+o.minScreenDeg=[];
+
+%% LUMINANCE
+o.brightnessSetting=1.0; % As calibrated.
+o.isTargetLocationMarked=false;
 o.isLuminanceRangeSymmetric=true; % False for maximum brightness.
-o.counterPlacement='bottomRight';
-o.instructionPlacement='bottomRight'; % 'topLeft' 'bottomLeft' 'bottomRight'
-o.askExperimenterToSetDistance=true;
 o.isLuminanceRangeSymmetric=true; % False for maximum brightness.
 % o.desiredLuminanceFactor=[]; % 1.8 to maximize brightness.
 % o.desiredLuminanceAtEye=300;
+
+%% NOISE
+% o.noiseType='ternary'; % More noise power than 'gaussian'.
+o.noiseType='binary';
+
+%% PRINTING
+% o.printContrastBounds=true;
+% o.printGrayLuminance=true;
+% o.printImageStatistics=false;
+% o.assessContrast=true;
+% o.measureContrast=true;
+% o.usePhotometer=true;
+
+%% PROCEDURE
+%o.group='A'; % All conditions in group differ solely in target.
+o.askForPartingComments=false; % Disabled until it's fixed.
+o.isGazeRecorded=false;
+o.experiment='dynamicCSF';
+o.thresholdParameter='contrast';
+o.askExperimenterToSetDistance=true;
+machine=IdentifyComputer;
+
+%% RESPONSE
+o.counterPlacement='bottomRight';
+o.instructionPlacement='bottomRight'; % 'topLeft' 'bottomLeft' 'bottomRight'
+
+%% TARGET
+o.eccentricityXYDeg=[0 0];
+o.contrast=-1;
 o.isTargetFullResolution=true; % NEW December 6, 2019. denis.pelli@nyu.edu
 o.clipToStimulusRect=false;
 o.eccentricityXYDeg=[0 0];
 o.targetHeightDeg=[];
-o.viewingDistanceCm=[];
-o.minScreenDeg=[];
-machine=IdentifyComputer;
 
-% TO REPLICATE Banks, Bennet, and Geisler 1987.
+
+%% REPLICATE Banks, Bennet, and Geisler 1987.
 o.targetKind='gaborCosCos';
 o.isNoiseDynamic=true;
 o.moviePreAndPostSecs=[0.5 0.5];
-o.noiseType='binary'; % More noise power than 'gaussian'.
+o.noiseType='binary'; % Most noise power.
 o.noiseRadiusDeg=inf;
 o.noiseCheckFrames=2;
 o.conditionName='gaborCosCos';
@@ -174,7 +193,7 @@ for targetKind={'gaborCosCos'} % 'letter' 'gabor'
             deg=o.targetGaborCycles/o.targetCyclesPerDeg;
             o.eccentricityXYDeg=[ecc 0];
             o.targetHeightDeg=deg;
-            o.noiseRadiusDeg=4*o.targetHeightDeg;
+            o.noiseRadiusDeg=3*o.targetHeightDeg;
             % if restrictNoise
             % 	o.noiseEnvelopeSpaceConstantDeg=deg;
             % else
@@ -186,12 +205,13 @@ for targetKind={'gaborCosCos'} % 'letter' 'gabor'
             end
             % MAX viewingDistanceCm while showing 1 deg of screen (and
             % maybe) fixation beyond what is blanked for target.
-            heightCm=machine.mm{1}(2)/10;
+            screenSizeCm=machine.mm{1}/10;
             minScreenDeg=2*(1+o.blankingRadiusReTargetHeight*o.targetHeightDeg);
-            maxViewingDistanceCm=floor(heightCm/2/tand(minScreenDeg/2));
+            maxViewingDistanceCm=floor(screenSizeCm(2)/2/tand(minScreenDeg/2));
             o.viewingDistanceCm=maxViewingDistanceCm;
             % WE NEED o.minScreenDeg
             o.minScreenDeg=2*(1+o.blankingRadiusReTargetHeight*o.targetHeightDeg);
+            % Threshold size.
             degMin=NominalAcuityDeg(o.eccentricityXYDeg);
             if deg<2*degMin
                 % Skip condition if not comfortably within acuity limit.
@@ -201,6 +221,9 @@ for targetKind={'gaborCosCos'} % 'letter' 'gabor'
             end
             % o.viewingDistanceCm=200; % FOR DEMO
             % o.fixationIsOffscreen=true; % FOR DEMO
+            o.screenSizeDeg(1:2)=2*[...
+                atan2d(screenSizeCm(1)/2,o.viewingDistanceCm) ...
+                atan2d(screenSizeCm(2)/2,o.viewingDistanceCm)];
             
             % EQUATE MARGINS
             % Shift right to equate right hand margin with top and bottom
@@ -298,24 +321,24 @@ end
 if false
     %% RUN EACH CONDITION WITH FOUR KINDS OF NOISE AND NO NOISE, INTERLEAVED.
     noiseTypeList={'gaussian' 'uniform' 'ternary' 'binary'};
-    maxNoiseSD=min([MaxNoiseSD('gaussian') MaxNoiseSD('uniform') MaxNoiseSD('ternary') MaxNoiseSD('binary') ]);
+    maxNoiseSD=MaxNoiseSD('gaussian',SignalNegPos(oo(1)));
     for block=1:length(ooo)
         oo=ooo{block};
         for oi=length(oo):-1:1
             switch oo(oi).targetKind
                 case 'image'
-                    noiseSD=0.8*maxNoiseSD;
+                    noiseSD=0.8*MaxNoiseSD('gaussian',SignalNegPos(oo(oi)));
                 otherwise
-                    noiseSD=maxNoiseSD;
+                    noiseSD=MaxNoiseSD('gaussian',SignalNegPos(oo(oi)));
             end
             if oo(oi).targetHeightDeg>20
                 % Avoid raising threshold for 32 deg gabor too high.
-                noiseSD=MaxNoiseSD('gaussian')/2;
+                noiseSD=MaxNoiseSD('gaussian',SignalNegPos(oo(oi)))/2;
             end
             oo(oi).noiseSD=noiseSD;
             oo(oi).noiseCheckDeg=oo(oi).targetHeightDeg/20;
             if oo(oi).targetHeightDeg<1
-                oo(oi).noiseSD=min([MaxNoiseSD('ternary') MaxNoiseSD('binary') ]);
+                oo(oi).noiseSD=MaxNoiseSD('ternary',SignalNegPos(oo(oi)));
             end
         end
         [oo.noiseType]=deal(noiseTypeList{1});
@@ -340,7 +363,7 @@ if true
     for block=1:length(ooo)
         oo=ooo{block};
         for oi=1:length(oo)
-            maxNoiseSD=MaxNoiseSD(oo(oi).noiseType);
+            maxNoiseSD=MaxNoiseSD(oo(oi).noiseType,SignalNegPos(oo(oi)));
             if ismember(oo(oi).targetKind,{'image'})
                 maxNoiseSD=0.8*maxNoiseSD;
             end
@@ -383,6 +406,21 @@ for block=1:length(ooo)
     [ooo{end}.desiredLuminanceAtEye]=deal(30);
 end
 
+%% RECOMPUTE MAX NOISE SD, WITH LMinMeanMax 
+cal=OurScreenCalibrations(0);
+for block=1:length(ooo)
+    oo=ooo{block};
+    for oi=1:length(oo)
+        LMinMeanMax=[min(cal.old.L) oo(oi).desiredLuminanceAtEye max(cal.old.L)];
+        if oo(oi).noiseSD>0
+            old=oo(oi).noiseSD;
+            oo(oi).noiseSD=MaxNoiseSD(oo(oi).noiseType,SignalNegPos(oo(oi)),LMinMeanMax);
+            fprintf('%d:%d noiseSD old %.2f, new %.2f, LMinMeanMax [%.0f %.0f %.0f]\n',block,oi,old,oo(oi).noiseSD,LMinMeanMax);
+        end
+    end
+    ooo{block}=oo;
+end
+
 %% ESTIMATED TIME TO COMPLETION
 endsAtMin=0;
 for block=1:length(ooo)
@@ -408,12 +446,19 @@ maxViewingDistanceCm=[];
 for block=1:length(ooo)
     maxViewingDistanceCm=max([maxViewingDistanceCm ooo{block}.viewingDistanceCm]);
 end
-hasWirelessKeyboard=HasWirelessKeyboard;
-if maxViewingDistanceCm>60 && ~hasWirelessKeyboard
-    fprintf(['<strong>Ideally this experiment would use viewing distances up to %.0f cm, \n' ...
-        'but that would require a wireless keyboard.</strong>\n'],maxViewingDistanceCm);
-    hasWirelessKeyboard=RequestWirelessKeyboard;
+if ~ismember(ooo{1}(1).observer,{'ideal'})
+    hasWirelessKeyboard=HasWirelessKeyboard;
+    if maxViewingDistanceCm>60 && ~hasWirelessKeyboard
+        fprintf(['Ideally this experiment would use viewing distances up to %.0f cm, \n' ...
+            'but that would require a wireless keyboard.\n'],maxViewingDistanceCm);
+        hasWirelessKeyboard=RequestWirelessKeyboard;
+    end
+else
+    hasWirelessKeyboard=true;
 end
+
+% warning('FOR DEBUGGING: SKIPPED THE CHECK, AND ASSUMING YOU HAVE A WIRELESS KEYBOARD.');
+% hasWirelessKeyboard=true;
 
 %% IF NO WIRELESS KEYBOARD THEN LIMIT VIEWING DISTANCE to 60 CM, MAX.
 if ~hasWirelessKeyboard
@@ -500,12 +545,46 @@ for block=1:length(ooo)
 end
 t=struct2table(oo,'AsArray',true);
 % Print the conditions in the Command Window.
-disp(t(:,{'experiment' 'block' 'condition' 'conditionName' 'observer'  'endsAtMin' 'viewingDistanceCm' 'trialsDesired' 'targetCyclesPerDeg' ...
+disp(t(:,{'experiment' 'block' 'condition' 'conditionName' 'observer'  'endsAtMin' 'viewingDistanceCm' ...
+    'targetHeightDeg' 'trialsDesired' 'noiseRadiusDeg' 'screenSizeDeg' 'targetCyclesPerDeg' 'noiseSD'  ...
     'desiredLuminanceAtEye' 'noiseCheckDeg' 'targetKind' 'noiseType' 'thresholdParameter'...
-    'contrast'  'noiseSD' ...
-    'targetHeightDeg' 'eccentricityXYDeg'  ...
+    'contrast'  ...
+    'eccentricityXYDeg'  ...
     'fixationCrossBlankedNearTarget'}));
 % return
 
 %% Measure threshold, one block per iteration.
+doProfile=false;
+if doProfile
+    profile on;
+end
 ooo=RunExperiment(ooo);
+if doProfile
+    p=profile('info');
+    profile off
+    i=find(ismember({p.FunctionTable.FunctionName},'NoiseDiscrimination'),1);
+    t=p.FunctionTable(i);
+    lines=t.ExecutedLines;% [line n secs]
+    clear s tt
+    s.line=lines(:,1);
+    s.n=lines(:,2);
+    s.sTotal=lines(:,3);
+    s.ms=round(1000*lines(:,3)./lines(:,2));
+    fid=fopen(t.FileName);
+    txt=fgetl(fid);
+    text={};
+    while ischar(txt)
+        text{end+1}=txt;
+        txt=fgetl(fid);
+    end
+    for i=1:length(s.line)
+        s.text{i}=strip(text{s.line(i)});
+    end
+    s.text=s.text';
+    tt=struct2table(s);
+    tt=sortrows(tt,'sTotal','descend');
+    tt=tt(tt.n>1,:);
+    tt(1:10,{'n','sTotal','ms','line','text'})
+    totalTime=sum(sortedLines(ii,3));
+    fprintf('%.1f s total time in table (excluding lines executed fewer than 20 times).\n',totalTime);
+end
