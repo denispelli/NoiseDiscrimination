@@ -173,7 +173,7 @@ if useBackupSessions % auto-generate full sequence of experiments for "Winter" d
     
     session.matFileName=['session_' datestr(now,'yyyymmddHHMMSS') '.mat'];
     session.progressTrialNO=1;
-    if strcmp(lower(input(sprintf('\nYou will have to create new session file normally when you change to a new observer.\nCreate a new session file with the full data structure above?  (y/n)\n'), 's')),'y');
+    if strcmpi(input(sprintf('\nYou will have to create new session file normally when you change to a new observer.\nCreate a new session file with the full data structure above?  (y/n)\n'), 's'),'y');
         save(session.matFileName, 'oo', 'session');
     else
         disp('Did not create a new session file');
