@@ -1286,7 +1286,7 @@ try
                         end
                         rng(o(cond).noiseListSeed);
                     end
-                    noise=PsychRandSample(noiseList,o(cond).canvasSize);
+                    noise=PsychRandSample2(noiseList,o(cond).canvasSize);
                     if i==signalLocation
                         switch o(cond).signalKind
                             case 'noise',
@@ -1316,7 +1316,7 @@ try
                 if o(cond).noiseFrozenInRun
                     rng(o(cond).noiseListSeed);
                 end
-                noise=PsychRandSample(noiseList,o(cond).canvasSize);
+                noise=PsychRandSample2(noiseList,o(cond).canvasSize);
                 noise(~centralNoiseMask & ~annularNoiseMask)=0;
                 noise(centralNoiseMask)=centralNoiseEnvelope(centralNoiseMask).*noise(centralNoiseMask);
                 canvasRect=RectOfMatrix(noise);
@@ -1606,7 +1606,7 @@ try
                         case 'luminance',
                             img=[1 1+o(cond).contrast];
                         otherwise
-                            noise=PsychRandSample(noiseList,o(cond).canvasSize);
+                            noise=PsychRandSample2(noiseList,o(cond).canvasSize);
                             img=1+noise*o(cond).noiseSD/o(cond).noiseListSd;
                     end
                     index=IndexOfLuminance(cal,img*LMean);
