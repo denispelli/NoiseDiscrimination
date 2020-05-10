@@ -122,7 +122,7 @@ if true
     for block=1:length(ooo)
         oo=ooo{block};
         for oi=1:length(oo)
-            maxNoiseSD=MaxNoiseSD(oo(oi).noiseType);
+            maxNoiseSD=MaxNoiseSD(oo(oi).noiseType,SignalNegPos(oo(oi)));
             if ismember(oo(oi).targetKind,{'image'})
                 maxNoiseSD=0.8*maxNoiseSD;
             end
