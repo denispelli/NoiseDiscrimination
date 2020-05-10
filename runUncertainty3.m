@@ -1,5 +1,6 @@
 % runUncertainty3.m
-% MATLAB script to run NoiseDiscrimination.m
+% For Darshan Thapa's study of effects of uncertainty and complexity on
+% efficiency.
 % Copyright 2019, 2020 Denis G. Pelli, denis.pelli@nyu.edu
 % March, 2020
 % 646-258-7524
@@ -11,70 +12,92 @@ addpath(fullfile(mainFolder,'lib')); % lib folder in that folder.
 clear KbWait
 clear o oo ooo
 ooo={};
-if IsWin
-    o.useNative11Bit=false;
-end
 % o.useFractionOfScreenToDebug=0.4; % USE ONLY FOR DEBUGGING.
 % o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
-o.isTargetFullResolution=true;
-o.askForPartingComments=false;
+
+%% GEOMETRY
+o.viewingDistanceCm=40;
+o.askExperimenterToSetDistance=true;
 o.isGazeRecorded=false;
+
+%% PROCEDURE
+o.askForPartingComments=false;
 o.experiment='uncertainty';
+o.thresholdParameter='contrast';
+
+%% TASK
+o.observer='';
+o.trialsDesired=40;
+o.isFixationCheck=false;
+
+%% TARGET
+o.isTargetFullResolution=true;
 o.eccentricityXYDeg=[0 0];
 o.targetHeightDeg=4;
 o.contrast=-1;
-o.noiseType='gaussian';
-o.setNearPointEccentricityTo='fixation';
-o.nearPointXYInUnitSquare=[0.5 0.5];
-o.blankingRadiusReTargetHeight=0;
-o.blankingRadiusReEccentricity=0;
 o.targetKind='letter';
-o.thresholdParameter='contrast';
-o.flankerSpacingDeg=0.2; % Used only for fixation check.
-o.observer='';
-o.trialsDesired=40;
-o.brightnessSetting=0.87;
-% o.conditionName='Sloan';
 o.targetFont='Sloan';
 o.minimumTargetHeightChecks=8;
 o.alphabet='';
 o.borderLetter='';
-o.areAnswersLabeled=false;
 o.getAlphabetFromDisk=false;
-o.isFixationCheck=false;
-o.fixationCrossBlankedNearTarget=true;
-o.fixationOnsetAfterNoiseOffsetSecs=0.6;
-o.fixationCrossDrawnOnStimulus=false;
-o.isTargetFullResolution=false;
+
+%% FLANKER
+o.flankerSpacingDeg=0.2; % Used only for fixation check.
 o.useFlankers=false;
 o.flankerContrast=-1;
+
+%% NOISE
+o.noiseType='ternary';
+
+%% LUMINANCE
+o.isLuminanceRangeSymmetric=true; % False for maximum brightness.
+o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
+o.brightnessSetting=0.87;
+o.isLuminanceRangeSymmetric=true; % False for maximum brightness.
+o.desiredLuminanceFactor=1; % 1.8 to maximize brightness.
+if IsWin
+    o.useNative11Bit=false;
+end
+
+%% FIXATION, NEAR POINT, AND TARGET MARKING
+o.setNearPointEccentricityTo='fixation';
+o.nearPointXYInUnitSquare=[0.5 0.5];
+o.blankingRadiusReTargetHeight=0;
+o.blankingRadiusReEccentricity=0;
+o.fixationCrossBlankedNearTarget=true;
+o.fixationOffsetBeforeNoiseOnsetSecs=0;
+o.fixationOnsetAfterNoiseOffsetSecs=0;
+o.fixationCrossDrawnOnStimulus=false;% o.conditionName='Sloan';
+o.targetMarkDeg=1;
+o.isTargetLocationMarked=true; % Display a mark designating target position?
+o.fixationCrossWeightDeg=0.05; % Typically 0.03. Make it much thicker for scotopic testing.
+
+%% RESPONSE SCREEN
+o.areAnswersLabeled=false;
+o.alphabetPlacement='top'; % 'top' 'bottom' 'right' or 'left' while awaiting response.
+o.counterPlacement='bottomRight';
+o.instructionPlacement='bottomLeft'; % 'topLeft' 'bottomLeft'
+
+%% PRINT ETC.
 % o.printGrayLuminance=false;
 % o.assessGray=true;
 % o.assessLoadGamma=true;
 % o.printContrastBounds=true;
-o.isLuminanceRangeSymmetric=true; % False for maximum brightness.
-o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
-o.viewingDistanceCm=40;
-o.alphabetPlacement='top'; % 'top' 'bottom' 'right' or 'left' while awaiting response.
-o.counterPlacement='bottomRight';
-o.instructionPlacement='bottomLeft'; % 'topLeft' 'bottomLeft'
-o.brightnessSetting=0.87;
-o.askExperimenterToSetDistance=true;
-o.isLuminanceRangeSymmetric=true; % False for maximum brightness.
-o.desiredLuminanceFactor=1; % 1.8 to maximize brightness.
 o.saveSnapshot=false;
+
 if true
     % Spatial uncertainty in rectangular area centered on fixation.
     % Temporal uncertainty.
-    for MSpace=[1 100]
-        for MTime=[1 30]
+    for MSpace=[100 1]
+        for MTime=[30 1]
             o.MSpace=MSpace;
             o.MTime=MTime;
-            o.showUncertainty=true;
+            o.showUncertainty=false;
+            o.uncertainDisplayDotDeg=0.5;
             o.uncertainParameter={'eccentricityXYDeg' 'moviePreAndPostSecs'};
             % Uncertainty is MSpace equally spaced positions in a grid
             % filling a square. and MTime equally spaced positions in time.
-            o.uncertainDisplayDotDeg=0.5;
             radiusDeg=10;
             r=Screen('Rect',0);
             % Create rectangle of dot locations with same aspect ratio as
@@ -96,12 +119,14 @@ if true
             o.MSpace=length(eccentricityXYDegList); % The exact value.
             o.isNoiseDynamic=true;
             o.targetDurationSecs=0.1;
-            moviePreAndPostSecsList={}; % Only effective if o.isNoiseDynamic.
+            moviePreAndPostSecsList={}; % Only used if o.isNoiseDynamic.
             o.noiseCheckSecs=o.targetDurationSecs;
             totalSecs=(MTime-1)*o.targetDurationSecs;
             for i=1:MTime
                 preSecs=(i-1)*o.targetDurationSecs;
-                moviePreAndPostSecsList{i}=[preSecs totalSecs-preSecs];
+                % Allow 0.1 dead time before earliest target onset so we
+                % can begin beep before target.
+                moviePreAndPostSecsList{i}=[preSecs totalSecs-preSecs]+0.1;
             end
             o.uncertainValues={eccentricityXYDegList moviePreAndPostSecsList};
             o.targetFont='Sloan';
@@ -155,11 +180,11 @@ for i=1:4
     ooo{end+1}=o;
 end
 if true
-    % Test with zero and high noise, interleaved.
+    % TEST WITH ZERO AND STRONG NOISE, INTERLEAVED
     for block=1:length(ooo)
         oo=ooo{block};
         for oi=1:length(oo)
-            maxNoiseSD=MaxNoiseSD(oo(oi).noiseType);
+            maxNoiseSD=MaxNoiseSD(oo(oi).noiseType,SignalNegPos(oo(oi)));
             if ismember(oo(oi).targetKind,{'image'})
                 maxNoiseSD=0.8*maxNoiseSD;
             end
@@ -219,7 +244,8 @@ if false
         ooo{end+1}=oo;
     end
 end
-% Name the conditions
+
+%% Name each condition
 for j=1:length(ooo)
     oo=ooo{j};
     for oi=1:length(oo)
@@ -237,6 +263,7 @@ for j=1:length(ooo)
     oo=rmfield(oo,'MTime');
     ooo{j}=oo;
 end
+
 if false
     % Retest contrast thresholds with ideal observer.
     for block=1:length(ooo)
@@ -251,7 +278,8 @@ if false
         ooo{end+1}=oo;
     end
 end
-%% ESTIMATED TIME TO COMPLETION
+
+%% ESTIMATE TIME TO COMPLETION
 endsAtMin=0;
 for block=1:length(ooo)
     oo=ooo{block};
@@ -262,6 +290,7 @@ for block=1:length(ooo)
     end
     [ooo{block}(:).endsAtMin]=deal(endsAtMin);
 end
+
 %% COMPUTE MAX VIEWING DISTANCE IN REMAINING BLOCKS
 maxCm=0;
 for block=length(ooo):-1:1
@@ -294,6 +323,10 @@ oo=[];
 ok=true;
 for block=1:length(ooo)
     [ooo{block}(:).block]=deal(block);
+    for oi=1:length(ooo{block})
+        ooo{block}(oi).condition=oi;
+        ooo{block}(oi).block=block;
+    end
 end
 for block=2:length(ooo)
     % Demand perfect agreement in fields between all blocks.
@@ -330,12 +363,12 @@ for block=1:length(ooo)
     end
 end
 t=struct2table(oo,'AsArray',true);
-disp(t(:,{'block' 'experiment' '\
-    argetKind' 'thresholdParameter'...
-    'uncertainParameter' ...
-    'contrast' 'conditionName' 'observer' 'endsAtMin' 'noiseSD' ...
+disp(t(:,{'experiment' 'block' 'condition' 'endsAtMin' 'conditionName'  ...
+    'targetKind' 'noiseSD' ...
+   'uncertainValues' 'uncertainParameter' ...
+   'thresholdParameter' 'contrast' 'observer'   ...
     'targetFont' 'viewingDistanceCm' 'targetHeightDeg' 'eccentricityXYDeg' 'alternatives'})); % Print the conditions in the Command Window.
-%  return
+% return
 
 %% Measure threshold, one block per iteration.
 ooo=RunExperiment(ooo);
