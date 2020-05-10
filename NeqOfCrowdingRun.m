@@ -114,9 +114,9 @@ if true
     o.complementNoiseEnvelope=false;
     o.noiseSD=0;
 %     oo{end+1}=o;
-    o.noiseSD=MaxNoiseSD(o.noiseType)/2;
+    o.noiseSD=MaxNoiseSD(o.noiseType,SignalNegPos(o))/2;
 %     oo{end}=[oo{end} o];
-    o.noiseSD=MaxNoiseSD(o.noiseType);
+    o.noiseSD=MaxNoiseSD(o.noiseType,SignalNegPos(o));
 %     oo{end}=[oo{end} o];
     o.conditionName='Threshold contrast noise-free target';
     o.noiseRadiusDeg=o.flankerSpacingDeg/2;
@@ -143,9 +143,9 @@ if true
     o.complementNoiseEnvelope=true;
     o.noiseSD=0;
     oo{end+1}=o;
-    o.noiseSD=MaxNoiseSD(o.noiseType)/2;
+    o.noiseSD=MaxNoiseSD(o.noiseType,SignalNegPos(o))/2;
     oo{end}=[oo{end} o];
-    o.noiseSD=MaxNoiseSD(o.noiseType);
+    o.noiseSD=MaxNoiseSD(o.noiseType,SignalNegPos(o));
     oo{end}=[oo{end} o];
 end
 
