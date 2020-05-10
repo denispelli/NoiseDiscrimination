@@ -1,12 +1,13 @@
 function oo=NoiseDiscrimination(ooIn)
 % oo=NoiseDiscrimination(oo);
 %
-% Pass all your parameters in the "oo" struct, which will be returned with
-% all the results as additional fields. "oo" is a struct array, one element
-% per condition. NoiseDiscrimination will run all the conditions, randomly
-% interleaved. NoiseDiscrimination may adjust some of your parameters to
-% satisfy physical constraints. Constraints include the screen size,
-% resolution, and maximum possible contrast.
+% To run a block of trials with one or more conditions interleaved, pass
+% all your parameters in the "oo" struct argument, which will be returned
+% with all the results as additional fields. "oo" is a struct array, one
+% element per condition. NoiseDiscrimination will run all the conditions,
+% randomly interleaved. NoiseDiscrimination may adjust some of your
+% parameters to satisfy physical constraints. Constraints include the
+% screen size, resolution, and maximum possible contrast.
 %
 % You should write a short script that loads all your parameters into an
 % "oo" struct array and calls oo=NoiseDiscrimination(oo). Within your
@@ -15,6 +16,10 @@ function oo=NoiseDiscrimination(ooIn)
 % e.g. oo(oi)=o;. At the beginning of your script, I recommend calling
 % "clear o oo" to make sure that you don't carry over any values from a
 % prior iteration or experiment.
+%
+% Not included here, but strongly suggested, if your experiment has several
+% blocks, store it in a cell array "ooo", where each element holds one
+% block array oo.
 %
 % WISHES:
 %
@@ -80,7 +85,7 @@ function oo=NoiseDiscrimination(ooIn)
 % One variable, with two elements, now controls both the noise-only periods
 % before and after the target. New o.targetKind 'gaborCos' and
 % 'gaborCosCos' allow replication of the Banks Bennet and Geisler 1987 CSF.
-% Fine tuning of PsychRandSample to triple its speed.
+% Fine tuning of PsychRandSample2 to triple its speed.
 %
 %
 % OFF THE NYU CAMPUS: If you have an NYU netid and you're using the NYU
@@ -229,7 +234,7 @@ function oo=NoiseDiscrimination(ooIn)
 % 4. If using off-screen fixation, put fixation at same distance from eye
 % as the near point, and compute its position relative to near point.
 
-%% CURRENT ISSUES/BUGS
+%% WISH LIST
 % 1. I would like to add illustrations to the question screens, so you can
 % get the idea even without reading.
 % 2. It would be nice to make more use of AskQuestion, since its page is
@@ -238,9 +243,11 @@ function oo=NoiseDiscrimination(ooIn)
 % experiment, to maintain dark adaptation, or bright for readability.
 % 4. There seems to be a bug in MATLAB. When I declare "signal" global,
 % this is ignored. It is assigned a struct array in the main program, but
-% when I access it in a subroutine, it's empty or undefined (i don't
+% when I access it in a subroutine, it's empty or undefined (I don't
 % remember), even though it's declared as global in both. Several other
-% variables are also declared global and work as expected.
+% variables are also declared global and work as expected. Perhaps the name
+% "signal" is restricted because it's the name of the Mathworks Signal
+% Processing Toolbox.
 
 
 %% EXTRA DOCUMENTATION
@@ -380,7 +387,7 @@ function oo=NoiseDiscrimination(ooIn)
 % CONCERNS. I'm using the 11-bit precision to measure visual sensitivity
 % thresholds that my professional reputation depends on. Here's a link to
 % my latest poster:
-% http://psych.nyu.edu/pelli/pubs/pelli2017vss-peripheral-noise.pdf 
+% http://psych.nyu.edu/pelli/pubs/pelli2017vss-peripheral-noise.pdf
 % The threshold contrasts in Fig. 2 with zero noise require luminance
 % precision better than 8 bits. 10 bits might be enough. 11 bits is dandy.
 % However, I'm worried that there may be systematic consequences of the
@@ -683,6 +690,12 @@ o.uncertainValues={}; % List of lists, one list for each uncertain parameter.
 o.uncertainDisplayDotDeg=0.2;
 o.uncertainDisplayColor=[0. 0.5 1.];
 o.showUncertainty=false;
+o.group=''; % A "group" of conditions is defined by having the same
+% nonempty string in o.group. This designation requests that all conditions
+% in the group be presented with the same fixation and noise, which
+% considers all possible target positions. Empty o.group requests that the
+% condition be presented independently of the rest. All conditions were
+% independent in NoiseDiscrimination until May 1, 2020.
 
 % Geometry
 o.nearPointXYInUnitSquare=[0.5 0.5]; % location of target center on screen. [0 0]  lower right, [1 1] upper right.
@@ -701,6 +714,7 @@ o.minNotBlankedMarginReHeight=0.1;
 o.minScreenDeg=[]; % Minimum of height and width.
 o.maxViewingDistanceCm=[];
 o.isFullScreenStimulus=true;
+o.askWhichEyes=false;
 
 % Fixation and target mark
 o.targetMarkDeg=1;
@@ -726,7 +740,6 @@ o.blankingRadiusReTargetHeight= nan;
 o.blankingRadiusReEccentricity= 0.5;
 o.clipToStimulusRect=true;
 o.isGazeRecorded=false;
-o.isTargetLocationUnpredictable=true; % New April, 2020.
 % web(fullfile(docroot, 'vision/ref/videolabeler-app.html'))
 
 % QUEST
@@ -753,7 +766,7 @@ o.ditherClut=false; % As of June 28, 2017, there is no measurable effect of this
 o.enableClutMapping=true; % Required. Using software CLUT.
 o.assessBitDepth=false;
 
-% Debugging
+% DEBUGGING
 o.useFractionOfScreenToDebug=false; % 0 and 1 give normal screen. Just for
 %                                   % debugging. Keeps cursor visible.
 o.skipScreenCalibration=false; % Speed up debugging by skipping noncritical
@@ -911,7 +924,8 @@ o.noiseFrozenInBlockSeed=0; % 0 or positive integer. If o.noiseFrozenInBlock, th
 o.backgroundEntropyLevels=2; % Value used only if o.targetModulates is 'entropy'
 o.movieFrameFlipSecs=[]; % Flip times (useful to calculate frame drops).
 o.isNoiseDynamic=false; % false for static noise
-o.moviePreAndPostSecs=[0 0]; % Noise onset before target onset, and target offset before noise offset.
+% moviePreAndPostSecs = noise before and after target.
+o.moviePreAndPostSecs=[0 0];
 o.seed=[];
 
 % Annulus (hardly ever used)
@@ -1117,7 +1131,7 @@ knownOutputFields={'areAnswersLabeled' 'beginningTime' ...
     'trial2BeginComputeCLUTSecs' 'trial3BeginComputeTextureSecs' ...
     'trial4BeginMovieSecs' 'trial5EndMovieSecs' 'trial6BeginFixationSecs'...
     'trial7ShowInstructionsSecs' 'trial8GotResponseSecs' ...
-    'isTargetLocationFixed' ...
+    'screenSizeDeg'...
     };
 %     'centralNoiseMask' 'annularNoiseMask'...    % 20 MB each, so we now delete them at end of block.
 unknownFields={};
@@ -1170,14 +1184,8 @@ if isempty(oo(1).desiredLuminanceFactor) && ...
     [oo.desiredLuminanceFactor]=deal(1);
 end
 
-%% USER REQUEST THAT ONLY TARGETS DIFFER BETWEEN CONDITIONS
-if any([oo(1).isTargetLocationUnpredictable]~=oo(1).isTargetLocationUnpredictable)
-    error('All conditions must agree regarding o.isTargetLocationUnpredictable.');
-end
-if oo(1).isTargetLocationUnpredictable
-    
-end
-  
+%% CONDITIONS WITHIN A GROUP SHOULD DIFFER ONLY IN THEIR TARGET
+
 %% SCREEN PARAMETERS
 o=oo(1);
 Screen('Preference','Verbosity',o.screenVerbosity);
@@ -1325,8 +1333,7 @@ end % for oi=1:conditions
 
 %% GET SCREEN CALIBRATION cal
 o=oo(1);
-cal.screen=o.screen;
-cal=OurScreenCalibrations(cal.screen);
+cal=OurScreenCalibrations(oo(1).screen);
 if isfield(cal,'gamma')
     cal=rmfield(cal,'gamma');
 end
@@ -1336,7 +1343,16 @@ end
 if streq(cal.datestr,'none')
     error('Your screen is uncalibrated. Use CalibrateScreenLuminance to calibrate it.');
 end
-cal.clutMapLength=o.clutMapLength;
+cal.clutMapLength=oo(1).clutMapLength;
+% Check the persistent "window" pointer and clear it unless it's valid.
+if ~isempty(window)
+    if Screen(window,'WindowKind')~=1
+        % error('Illegal window pointer.');
+        window=[];
+        oo(1).isFirstBlock=true; % Open the window.
+        scratchWindow=[];
+    end
+end
 for oi=1:conditions
     oo(oi).maxEntry=oo(oi).clutMapLength-1; % copied here on April. 8, 2018
     oo(oi).cal=cal;
@@ -1344,27 +1360,15 @@ for oi=1:conditions
         fprintf('This screen has not yet been calibrated. Please use CalibrateScreenLuminance to calibrate it.\n');
         error('This screen has not yet been calibrated. Please use CalibrateScreenLuminance to calibrate it.\n');
     end
-    % Check the persistent "window" pointer and clear it unless it's valid.
-    if ~isempty(window)
-        if Screen(window,'WindowKind')~=1
-            % error('Illegal window pointer.');
-            window=[];
-            oo(1).isFirstBlock=true;
-            scratchWindow=[];
-        end
-    end
-    % It's valid.
     oo(oi).window=window;
 end % for oi=1:conditions
-clear o
 
 if ~isfield(oo(1),'isFirstBlock') || oo(1).isFirstBlock
     blockTrial=1;
     blockTrials=sum([oo.trialsDesired]);
 end
 
-%% MacDisplaySettings ESTABLISH CONSISTENT DISPLAY SETTINGS
-% This might be more useful later, but still before any user interactio.
+%% DEMAND CONSISTENT DISPLAY SETTINGS
 u=unique([oo.brightnessSetting]);
 if length(u)>1
     error('Not all conditions have the same o.brightnessSetting: %.1f ~= %.1f.',u(1),u(2));
@@ -1387,17 +1391,31 @@ if ~isfinite(oo(1).brightnessSetting)
     [oo.brightnessSetting]=deal(0.87); % Default brightness.
 end
 cal.brightnessSetting=oo(1).brightnessSetting;
-if IsOSX && ~isScreenCalibrated && ~skipScreenCalibration && ...
+if ismac && ~isScreenCalibrated && ~skipScreenCalibration && ...
         ~ismember(oo(1).observer,oo(1).algorithmicObservers)
-    % April 2020. We use the new MacDisplaySettings.
     newDisplaySettings.brightness=oo(1).brightnessSetting;
     newDisplaySettings.automatically=false;
     newDisplaySettings.trueTone=false;
     newDisplaySettings.nightShiftSchedule='Off';
     newDisplaySettings.nightShiftManual=false;
+    newDisplaySettings.showProfilesForThisDisplayOnly=false;
+    newDisplaySettings.profile=cal.profile;
     ffprintf(ff,'Setting MacDisplaySettings. ... ');
     s=GetSecs;
     oldDisplaySettings=MacDisplaySettings(oo(1).screen,newDisplaySettings);
+    if false
+        % Probably not needed. Takes 3 s. Just to check.
+        checkDisplaySettings=MacDisplaySettings(oo(1).screen);
+        for f=fieldnames(newDisplaySettings)
+            if ~isempty(checkDisplaySettings.(f{1}))
+                if any(newDisplaySettings.(f{1})~=checkDisplaySettings.(f{1}))
+                    newDisplaySettings
+                    checkDisplaySettings
+                    error('MacDisplaySettings peek inconsistent with our poke.');
+                end
+            end
+        end
+    end
     ffprintf(ff,'Done (%.1f s).\n',GetSecs-s); % Setting MacDisplaySettings.
     cal.brightnessSetting=oo(1).brightnessSetting;
     settings=MacDisplaySettings(oo(1).screen);
@@ -1410,6 +1428,7 @@ if IsOSX && ~isScreenCalibrated && ~skipScreenCalibration && ...
     oo(1).brightnessReading=[cal.brightnessReading settings.brightness];
 end
 clear o
+
 oo=SortFields(oo);
 
 if oo(1).useFractionOfScreenToDebug
@@ -1546,7 +1565,7 @@ try
         oo(oi).stimulusRect=round(oo(oi).stimulusRect);
         if ~isempty(window)
             % Leave space for counter.
-            bounds=DrawCounter(oo(oi));
+            bounds=DrawCounter(oo(oi)); % 70 ms**
             switch oo(oi).counterPlacement
                 case {'bottomLeft' 'bottomCenter' 'bottomRight'}
                     oo(oi).stimulusRect(4)=oo(oi).screenRect(4)-1.5*RectHeight(bounds);
@@ -1840,10 +1859,10 @@ try
         try
             %             hide=contains(oo(1).scriptName,'RunExperiment');
             hide=ismember(oo(1).scriptName,{'RunExperiment' 'RunExperiment'});
-        catch e
+        catch ME
             ffprintf(ff,'Error in ismember(''%s'',{''RunExperiment''})\n',oo(1).scriptName);
             oo(1).scriptName
-            rethrow(e)
+            rethrow(ME)
         end
         if hide
             continue
@@ -1875,8 +1894,9 @@ try
             vidWriter.FrameRate=1; % frame/s.
             open(vidWriter);
             ffprintf(ff,'Recording gaze (of conditions %s) in %s file:\n',num2str(find([oo.isGazeRecorded])),videoExtension);
-        catch
+        catch ME
             ffprintf(ff,'WARNING: Cannot record gaze. Lack webcam link. Set o.isGazeRecorded=false.\n');
+            warning(ME.message)
             return
         end
     end
@@ -1891,6 +1911,32 @@ try
     ffprintf(ff,'\n');
     
     BackupCluts(oo(1).screen);
+    
+    %% CONDITION GROUPS
+    % Consider all the conditions that have the same nonempty string in
+    % o.group as our condition does. Across all conditions within such a
+    % group, we combine all the fixation marks and noise, so the combined
+    % marks and noise are common to all conditions in the group, so the
+    % conditions differ solely in their target. We retain the old
+    % independent (not combined) behavior for conditions with a unique or
+    % empty (default) o.group field. As in the past, such conditions are
+    % generated without reference to other conditions. May 1, 2020.
+    %
+    % The group rule is active in blanking of fixation and marking of
+    % possible target locations. We have yet to combine noise across
+    % conditions.
+    %
+    % To implement the condition group, we compute a new field
+    % o.groupConditions that lists the condition numbers oi of
+    % all conditions in the group. This field always contains at least
+    % the condition itself.
+    for oi=1:length(oo)
+        if ~isempty(oo(oi).group)
+            oo(oi).groupConditions=find(ismember({oo.group},oo(oi).group));
+        else
+            oo(oi).groupConditions=oi;
+        end
+    end
     
     %% SET SIZES OF SCREEN ELEMENTS: text, stimulusRect, etc.
     for oi=1:conditions
@@ -1951,7 +1997,7 @@ try
                 oo(oi).targetHeightDeg,maxStimulusWidth/oo(oi).pixPerDeg,...
                 maxStimulusHeight/oo(oi).pixPerDeg,oo(oi).viewingDistanceCm);
         end
-        % if oo(oi).isTargetLocationFixed && ...
+        % if length(oo(oi).groupConditions)>1 && ...
         % oo(oi).noiseRadiusDeg > maxStimulusWidth/oo(oi).pixPerDeg
         % THIS CODE IS OBSOLETE.
         % When we have positional uncertainty we use a canvasRect
@@ -1979,16 +2025,16 @@ try
         oo(oi).annularNoiseSmallRadiusDeg=min(oo(oi).annularNoiseBigRadiusDeg,oo(oi).annularNoiseSmallRadiusDeg); % Big radius is at least as big as small radius.
         if isnan(oo(oi).blankingRadiusReTargetHeight)
             switch oo(oi).targetKind
-                case {'letter' 'word'}
-                    % Make blanking radius 1.5 times target height. That's
-                    % a good value for letters, which are strong right up
-                    % to the edge of the target height.
-                    oo(oi).blankingRadiusReTargetHeight=1.5;
                 case {'gabor' 'gaborCos' 'gaborCosCos'}
                     % Make blanking radius 0.5 times target height. That's
                     % good for gabors, which are greatly diminished at
                     % their edge.
                     oo(oi).blankingRadiusReTargetHeight=0.5;
+                case {'letter' 'word'}
+                    % Make blanking radius 1.5 times target height. That's
+                    % a good value for letters, which are strong right up
+                    % to the edge of the target height.
+                    oo(oi).blankingRadiusReTargetHeight=1.5;
                 case 'image'
                     % Make blanking radius 1.5 times target height. That's
                     % a good value for images, which are typically strong
@@ -2009,6 +2055,7 @@ try
             fixationDotsWeightPix=round(max([min([fixationDotsWeightPix dotPixMinMaxPix(2)]) dotPixMinMaxPix(1)]));
             oo(oi).fixationDotsWeightDeg=fixationDotsWeightPix/oo(oi).pixPerDeg;
         else
+            fixationCrossPix=100;
             oo(oi).useFixation=false;
             oo(oi).useFixationDots=false;
         end
@@ -2154,19 +2201,9 @@ try
             DrawFormattedText(oo(1).window,string,...
                 2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
                 oo(oi).textLineLength,[],[],1.3);
-            DrawCounter(oo(oi));
+            DrawCounter(oo(oi)); % 70 ms**
             Screen('Flip',oo(1).window); % Display message.
         end
-        oldProfile=ScreenProfile(cal.screen);
-        if streq(oldProfile,cal.profile)
-            if streq(cal.profile,'ColorMatch RGB')
-                ScreenProfile(cal.screen,'Apple RGB');
-            else
-                ScreenProfile(cal.screen,'ColorMatch RGB');
-            end
-        end
-        ScreenProfile(cal.screen,cal.profile);
-        ffprintf(ff,'Done (%.1f s).\n',GetSecs-s); % Open window.
     end
     if ~isScreenCalibrated ...
             && ~ismember(oo(oi).observer,oo(oi).algorithmicObservers) ...
@@ -2252,7 +2289,7 @@ try
         [oo.psychtoolboxKernelDriverLoaded]=deal(oo(1).psychtoolboxKernelDriverLoaded);
         if ismac && ~oo(1).psychtoolboxKernelDriverLoaded
             error('IMPORTANT: You must install the Psychtoolbox Kernel Driver, as explained by "*Install NoiseDiscrimination.docx" step B.13.');
-            %             warning('IMPORTANT: Best to install the Psychtoolbox Kernel Driver, as explained by "*Install NoiseDiscrimination.docx" step B.13.');
+            % warning('IMPORTANT: Best to install the Psychtoolbox Kernel Driver, as explained by "*Install NoiseDiscrimination.docx" step B.13.');
         end
         
         % Compare hardware CLUT with identity.
@@ -2367,12 +2404,15 @@ try
             end
             Screen('FillRect',oo(1).window,oo(1).gray1);
             Screen('TextBackgroundColor',window,oo(1).gray1); % Set background.
-            Screen('FillRect',oo(1).window,oo(1).gray,oo(1).stimulusRect);
+            % FOR SOME REASON THIS GRAY (OVER STIMULUS RECT) IS MUCH DARKER
+            % THAN THE GRAY REMAINING IN MARGINS. XXX
+%             Screen('FillRect',oo(1).window,oo(1).gray,oo(1).stimulusRect);
         else
             Screen('FillRect',oo(1).window);
             oo(1).gray=0.5;
         end % if exist('cal','var')
-        Screen('Flip',oo(1).window); % Load gamma table
+        % HERE BACKGROUND CHANGES FROM WHITE TO GRAY.
+        Screen('Flip',oo(1).window); % Load gamma table. XXXX
         if isempty(oo(1).window) || oo(1).window==0
             ffprintf(ff,'error\n');
             error('Screen OpenWindow failed. Please try again.');
@@ -2381,8 +2421,9 @@ try
         white=1; % CLUT color code for white.
         Screen('FillRect',oo(1).window,oo(1).gray1);
         Screen('TextBackgroundColor',window,oo(1).gray1); % Set background.
-        Screen('FillRect',oo(1).window,oo(1).gray,oo(1).stimulusRect);
-        DrawCounter(oo(oi));
+        %Screen('FillRect',oo(1).window,oo(1).gray,oo(1).stimulusRect); %
+        % xxx gray is darker than gray1.
+        DrawCounter(oo(oi)); % 70 ms**
         Screen('Flip',oo(1).window); % Screen is now all gray, at o.LBackground.
         oo(1).screenRect=Screen('Rect',oo(1).window,1);
         screenWidthPix=RectWidth(oo(1).screenRect);
@@ -2415,7 +2456,7 @@ try
                 DrawFormattedText(oo(1).window,string,...
                     2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
                     oo(1).textLineLength,[],[],1.3);
-                DrawCounter(oo(oi));
+                DrawCounter(oo(oi)); % 70 ms**
                 Screen('Flip',oo(1).window); % Display request.
                 if oo(1).speakInstructions
                     Speak(sprintf(...
@@ -2443,7 +2484,7 @@ try
         end
     end % if false
     
-    %% MONOCULAR?
+    %% ASK WHICH EYES?
     for oi=1:conditions
         if ~streq(oo(oi).eyes,oo(1).eyes)
             error('All conditions must use same o.eyes.');
@@ -2452,7 +2493,7 @@ try
     if ~ismember(oo(1).eyes,{'left','right','both'})
         error('o.eyes==''%s'' is not allowed. It must be ''left'',''right'', or ''both''.',oo(1).eyes);
     end
-    if ~isempty(oo(1).window)
+    if ~isempty(oo(1).window) && oo(1).askWhichEyes
         if ~isfield(oOld,'eyes') || GetSecs-oOld.secs>5*60 || ~streq(oOld.eyes,oo(1).eyes)
             Screen('TextSize',oo(1).window,oo(1).textSize);
             Screen('TextFont',oo(1).window,'Verdana');
@@ -2465,7 +2506,7 @@ try
                     DrawFormattedText(oo(1).window,string,...
                         2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
                         oo(1).textLineLength,[],[],1.3);
-                    DrawCounter(oo(oi));
+                    DrawCounter(oo(oi)); % 70 ms**
                     Screen('Flip',oo(1).window); % Display request.
                     if oo(1).speakInstructions
                         Speak('Please use both eyes. Hit RETURN to continue, or ESCAPE to quit.');
@@ -2493,7 +2534,7 @@ try
                     DrawFormattedText(oo(1).window,string,...
                         2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
                         oo(1).textLineLength,[],[],1.3);
-                    DrawCounter(oo(oi));
+                    DrawCounter(oo(oi)); % 70 ms**
                     Screen('Flip',oo(1).window); % Display request.
                     if oo(1).speakInstructions
                         string=sprintf('Please use just your %s eye. Cover your other eye. Hit RETURN to continue, or ESCAPE to quit.',oo(1).eyes);
@@ -2524,7 +2565,7 @@ try
                 DrawFormattedText(oo(1).window,string,...
                     2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
                     oo(1).textLineLength,[],[],1.3);
-                DrawCounter(oo(oi));
+                DrawCounter(oo(oi)); % 70 ms**
                 Screen('Flip',oo(1).window); % Display request.
                 if oo(1).speakInstructions
                     Speak(string);
@@ -2556,7 +2597,7 @@ try
                 end
             end
             Screen('FillRect',oo(1).window,oo(1).gray1);
-            DrawCounter(oo(oi));
+            DrawCounter(oo(oi)); % 70 ms**
             Screen('Flip',oo(1).window); % Blank to acknowledge response.
         end
         switch oo(1).eyes
@@ -2566,18 +2607,6 @@ try
                 ffprintf(ff,'Observer is using %s eye.\n',oo(1).eyes);
         end
     end
-    
-    %% IS TARGET POSITION FIXED?
-    oo(1).isTargetLocationFixed=true;
-    for oi=1:length(oo)
-        if any(oo(oi).eccentricityXYDeg~=oo(1).eccentricityXYDeg)
-            oo(1).isTargetLocationFixed=false;
-        end
-    end
-    if ismember({'eccentricityXYDeg'},[oo.uncertainParameter])
-        oo(1).isTargetLocationFixed=false;
-    end
-    [oo.isTargetLocationFixed]=deal(oo(1).isTargetLocationFixed);
     
     %% ASSIGN A VISUAL ECCENTRICITY TO THE NEAR POINT
     % Formerly, this came AFTER set up fixation.
@@ -2639,15 +2668,6 @@ try
                 error('oo(%d).setNearPointEccentricityTo has unknown value ''%s''.',...
                     oi,oo(oi).setNearPointEccentricityTo);
         end
-        % MAKE SURE ALL CONDITIONS HAVE SAME NEAR POINT.
-        if any(oo(oi).nearPointXYDeg~=oo(1).nearPointXYDeg)
-            if any(ismember({oo.setNearPointEccentricityTo},{'target'}))
-                if ~oo(oi).isTargetLocationFixed
-                    warning('We advise against setting o.setNearPointEccentricityTo=''target'' when your conditions have multiple eccentricities.');
-                end
-            end
-            error('All conditions must have the same o.nearPointXYDeg.');
-        end
         if false
             % If we anticipate that the target will fall off the screen and
             % it's o.okToShiftCoordinates then adjust the near-point
@@ -2659,9 +2679,28 @@ try
         end
     end % for oi
     
+    %% IS NEAR POINT CONSISTENT ACROSS CONDITIONS?
+    isNearPointConsistent=true;
+    isTargetFixed=true;
+    for oi=1:length(oo)
+        isNearPointConsistent=isNearPointConsistent && all(oo(oi).nearPointXYDeg==oo(1).nearPointXYDeg);
+        isTargetFixed=isTargetFixed && all(oo(oi).eccentricityXYDeg==oo(1).eccentricityXYDeg);
+    end
+    isNearPointSetToTarget=any(ismember({oo.setNearPointEccentricityTo},'target'));
+    if ~isNearPointConsistent
+        if isNearPointSetToTarget && ~isTargetFixed
+            warning('Setting o.setNearPointEccentricityTo=''target'' is not recommended when your conditions have different o.eccentricityXYDeg.');
+        end
+        s='';
+        for oi=1:length(oo)
+            s=sprintf('%s[%.0f %.0f] ',s,oo(oi).nearPointXYDeg);
+        end
+        error('All conditions must have the same o.nearPointXYDeg: %s.',s);
+    end
+    
     %% SET UP FIXATION AND NEAR-POINT OF DISPLAY
     % THE CANVAS: o.canvasSize & canvasRect. The arrays that hold the noise
-    % and the stimulus all have size o.canvasSize. canvasRect is just [0 0
+    % and the sztimulus all have size o.canvasSize. canvasRect is just [0 0
     % canvasSize(2) canvasSize(1)]. o.canvasSize is clipped (if necessary)
     % to fit in o.stimulusRect. Each pixel represents a targetCheck (each
     % with size [o.targetCheckPix o.targetCheckPix]). canvasRect is
@@ -2671,37 +2710,31 @@ try
     % by edges of full-canvas noise) to give away the trial-by-trial target
     % position o.eccentricityXYDeg.
     %
-    %% BACKGROUND: Currently the code assumes one target and centers
-    % the canvas on the target's position o.eccentricityXYDeg. However,
-    % when o.isTargetLocationUnpredictable=true we need to cope with
-    % multiple target positions that may come from other, interleaved,
-    % conditions that each may have a different target location, and every
-    % condition may have multiple possible target locations specified by
+    %% BACKGROUND: Currently the code that assembles the target and noise
+    % assumes one target and centers the canvas on the target's position
+    % o.eccentricityXYDeg. Assuming one target is obsolete. As of May 2020,
+    % NoiseDiscrimination now tries to provide that conditions with a group
+    % (i.e. same string in o.group) will differ only in their target. These
+    % conditions may each have a different target location, and may even
+    % have multiple possible target locations specified by
     % o.uncertainParameter and o.uncertainValues. Thus centering on one
     % target is obsolete.
     %
-    %% MAKING TARGET LOCATION UNPREDICTABLE: In the new scheme, the canvas 
+    %% MAKING TARGET LOCATION UNPREDICTABLE: In the new scheme, the canvas
     % will be just a temporary stand-in for the screen and perhaps the
     % canvasRect should equal the screenRect, since we often want the noise
     % to fill the screen. We would compute and show the noise patch from
     % each condition, as determined by that condition's o.noiseRadiusDeg
-    % and o.eccentricityXYDeg, etc. I often interleave more than one
-    % condition with the same target location, changing noiseSD or
-    % noiseRadiusDeg. Since we can't show more than one noise at a give
-    % location, we need a way to choose. For this, we add a new field
-    % o.group to each condition and we have the current condition display
-    % the noise only of conditions that belong to its group, e.g. 'A' vs
-    % 'B' or 'small' vs 'large'. This allows us, for example, to have
-    % several conditions with different noiseRadiusDeg or different noiseSD
-    % at each of several target locations. Suppose we assign a different
-    % group name to conditions with each noiseRadius or noiseSD. Thus, each
-    % condition will be shown with the similar noises of its fellow group
-    % members. We'll flag an error if two conditions within a group have
-    % nonzero noise at the same location.
+    % and o.eccentricityXYDeg, etc. We added a new field o.group to each
+    % condition and we have the current condition display the noise of all
+    % conditions that belong to its group, e.g. 'A' or 'small'. This allows
+    % us, for example, to have two groups to include the same set of
+    % locations, but with different noiseRadiusDeg or different noiseSD.
     %
-    %% UNCERTAINTY: A condition with uncertainty will contribute many noise 
-    % rects, which may overlap, and could be combined by UnionRect to get
-    % the smallest rect that includes them all. 
+    %% UNCERTAINTY: A condition with target-position uncertainty,
+    % i.e. eccentricityXYDeg, will contribute many noise rects, which may
+    % overlap, and could be combined by UnionRect to get the smallest rect
+    % that includes them all.
     %
     %% ACTUAL: The code to generate each movie frame centers the signal in
     % the canvasRect. Rather than rewrite that now, I'm just going to
@@ -2712,7 +2745,7 @@ try
     % noiseRadius, which prevented the noise from filling the canavas when
     % it's twice as big as stimulusRect.
     %
-    %% TOO SLOW FOR DYNAMIC NOISE: That strategy was ok for static noise, 
+    %% TOO SLOW FOR DYNAMIC NOISE: That strategy was ok for static noise,
     % but takes too long with dynamic noise. We can't afford to compute
     % dynamic noise that falls off the screen. I think the right strategy,
     % when coping with uncertainty of position within a condition or across
@@ -2721,7 +2754,7 @@ try
     % target is coming. We define a noise rect for each condition, centered
     % on its target, This will abolish the current convas centered on the
     % target, since we'll consider more than one possible target.
-        
+    
     fprintf('*Waiting for observer to set viewing distance.\n');
     oo(1).nearPointXYPix=[]; % New field in condition struct.
     % Enabling okToShiftCoordinates will typical result in different
@@ -2822,7 +2855,7 @@ try
                 0.9*oo(oi).textLineLength,[],[],1.5);
             Screen('TextStyle',window,0); % Plain
             string='';
-            DrawCounter(oo);
+            DrawCounter(oo); % 70 ms**
             % 'IMPORTANT: ... hit RETURN.
             Screen('Flip',window,[],1); % Don't clear buffer.
             fprintf('*Telling observer to fixate.\n');
@@ -2855,7 +2888,7 @@ try
         Screen('FillRect',oo(1).window,oo(1).gray1);
         Screen('DrawText',oo(1).window,'Preparing stimuli. ... ',...
             2*oo(oi).textSize,2.5*oo(oi).textSize,black,oo(1).gray1,1);
-        DrawCounter(oo(oi));
+        DrawCounter(oo(oi)); % 70 ms**
         Screen('Flip',oo(1).window); % Display message.
     end
     
@@ -2876,7 +2909,7 @@ try
         oo(oi).targetHeightPix=oo(oi).targetCheckPix*round(oo(oi).targetHeightPix/oo(oi).targetCheckPix);
         oo(oi).targetWidthPix=oo(oi).targetCheckPix*round(oo(oi).targetWidthPix/oo(oi).targetCheckPix);
         
-        MAX_FRAMES=100; % Better to limit than crash the GPU.
+        MAX_FRAMES=100; % Limit to avoid crashing the GPU.
         if ~isempty(oo(1).window)
             displayFrameRate=1/Screen('GetFlipInterval',oo(1).window);
         else
@@ -2894,25 +2927,6 @@ try
             oi,displayFrameRate,movieFrameRate);
         oo(oi).targetDurationSecs=max(1,round(oo(oi).targetDurationSecs*movieFrameRate))/movieFrameRate;
         oo(oi).targetDurationListSecs=max(1,round(oo(oi).targetDurationListSecs*movieFrameRate))/movieFrameRate;
-        if ~oo(oi).isNoiseDynamic
-            oo(oi).moviePreAndPostFrames=[0 0];
-            oo(oi).movieSignalFrames=1;
-        else
-            oo(oi).moviePreAndPostFrames=round(oo(oi).moviePreAndPostSecs*movieFrameRate);
-            oo(oi).movieSignalFrames=round(oo(oi).targetDurationSecs*movieFrameRate);
-            oo(oi).movieSignalFrames=max(1,oo(oi).movieSignalFrames);
-            if sum(oo(oi).moviePreAndPostFrames)>=MAX_FRAMES
-                error('sum(o.moviePreAndPostSecs)=%.1f s too long for movie with MAX_FRAMES %d.\n',...
-                    sum(oo(oi).moviePreAndPostSecs),MAX_FRAMES);
-            end
-        end
-        oo(oi).movieFrames=sum(oo(oi).moviePreAndPostFrames)+oo(oi).movieSignalFrames;
-        if oo(oi).movieFrames>MAX_FRAMES
-            oo(oi).movieFrames=MAX_FRAMES;
-            oo(oi).movieSignalFrames=oo(oi).movieFrames-sum(oo(oi).moviePreAndPostFrames);
-            oo(oi).targetDurationSecs=oo(oi).movieSignalFrames/movieFrameRate;
-            ffprintf(ff,'%d: Constrained by MAX_FRAMES %d, reducing duration to %.3f s\n',oi,MAX_FRAMES,oo(oi).targetDurationSecs);
-        end
         ffprintf(ff,'%d: o.pixPerDeg %.1f, o.viewingDistanceCm %.1f\n',oi,oo(oi).pixPerDeg,oo(oi).viewingDistanceCm);
         switch oo(oi).task
             case {'identify' 'identifyAll' 'rate'}
@@ -2978,7 +2992,7 @@ try
         % that o.canvasSize is [height width], a MATLAB convention, whereas
         % canvasRect is [0 0 width height], an Apple convention.
         oo(oi).canvasSize=[oo(oi).targetHeightPix oo(oi).targetWidthPix]/oo(oi).targetCheckPix;
-        if ~oo(oi).isTargetLocationFixed
+        if length(oo(oi).groupConditions)>1
             % Double the canvas to cope with uncertainty. This is a quck
             % hack that works for static noise, but is too slow for dynamic
             % noise.
@@ -3000,7 +3014,7 @@ try
         % o.stimulusRect.
         % July 2019, to cope with uncertainty in eccentricityXYDeg, we now
         % increase the canvas to 2*o.stimulusRect.
-        % April, 2020. Only double the canvas if ~o.isTargetLocationFixed.
+        % April, 2020. Only double the canvas if length(oo(oi).groupConditions)>1.
         if oo(oi).complementNoiseEnvelope ...
                 || streq(oo(oi).thresholdParameter,'size')...
                 || ismember('eccentricityXYDeg',oo(oi).uncertainParameter)
@@ -3015,7 +3029,7 @@ try
                 % is always centered on the target position,
                 % o.eccentricityXYDeg, which is always on the screen, but
                 % is uncertain, from trial to trial, if
-                % ~o.isTargetLocationFixed.
+                % length(oo(oi).groupConditions)>1.
                 oo(oi).canvasSize=min(oo(oi).canvasSize,...
                     round(2*[RectHeight(oo(oi).screenRect) RectWidth(oo(oi).screenRect)]/oo(oi).targetCheckPix));
                 % Even number of checks, so we can exactly center it on
@@ -3039,97 +3053,89 @@ try
             ffprintf(ff,'%d: Adding %s flankers with nominal spacing of %.0f pix=%.1f deg=%.1fx letter height. Dark contrast %.3f (nan means same as target).\n',...
                 oi,oo(oi).flankerArrangement,flankerSpacingPix,flankerSpacingPix/oo(oi).pixPerDeg,flankerSpacingPix/oo(oi).targetHeightPix,oo(oi).flankerContrast);
         end
-        if oo(oi).useFixation
-            if oo(oi).isTargetLocationUnpredictable
-                % RELEVANT WHEN ~o.isTargetLocationFixed
-                % New April 2020.
-                % Consider all possible targets, across all the conditions
-                % being interleaved. To support randomly interleaved
-                % conditions, the fixation marks should not reveal which
-                % condition this trial wll show. So we make the fixation
-                % marks independent of which condition this trial will
-                % show. We could enforce this by replacing oi by 1 in this
-                % block of code.
-                % xy location of fixation on screen.
-                fixationXYPix=round(XYPixOfXYDeg(oo(oi),[0 0]));
-                fix.eccentricityXYPix=[];
-                fix.targetHeightPix=[];
-                fix.targetMarkPix=[];
-                fix.isTargetLocationMarked=[];
-                for oii=1:length(oo)
-                    % eccentricityXYPix is xy offset of target from
-                    % fixation.
-                    if ~isempty(oo(oii).uncertainParameter)
-                        iUncertain=find(ismember(...
-                            oo(oii).uncertainParameter,{'eccentricityXYDeg'}),1);
-                    else
-                        iUncertain=[];
-                    end
-                    if ~isempty(iUncertain)
-                        % Append all the target locations specified by
-                        % this condition's uncertainty.
-                        values=oo(oii).uncertainValues{iUncertain};
-                        for j=1:length(values)
-                            targetXYPix=XYPixFromXYDeg(oo(oii),values{j});
-                            fix.eccentricityXYPix(end+1,1:2)=...
-                                targetXYPix-fixationXYPix;
-                            fix.targetHeightPix(end+1)=oo(oii).targetHeightPix;
-                            fix.isTargetLocationMarked(end+1)=oo(oii).isTargetLocationMarked;
-                            fix.targetMarkPix(end+1)=oo(oii).targetMarkDeg*oo(oii).pixPerDeg;
-                        end
-                    else
-                        % Append the single target location of this condition.
+        
+        %% FIXATION BLANKING AND TARGET MARKING
+        if true
+            % NOW SUPPORTS CONDITION GROUPS.
+            % If the current condition belongs to a group, then we combine
+            % all fixation mark blanking and target marking specified
+            % by any condition in the group.
+            
+            % fixationXYPix is xy location of fixation on screen.
+            fixationXYPix=round(XYPixOfXYDeg(oo(oi),[0 0]));
+            fix.eccentricityXYPix=[];
+            fix.targetHeightPix=[];
+            fix.targetMarkPix=[];
+            fix.isTargetLocationMarked=[];
+            for oii=oo(oi).groupConditions
+                % eccentricityXYPix is xy offset of target from
+                % fixation.
+                if ~isempty(oo(oii).uncertainParameter)
+                    iUncertain=find(ismember(...
+                        oo(oii).uncertainParameter,'eccentricityXYDeg'),1);
+                else
+                    iUncertain=[];
+                end
+                if ~isempty(iUncertain)
+                    % Append all the target locations specified by this
+                    % condition's uncertainty.
+                    values=oo(oii).uncertainValues{iUncertain};
+                    for j=1:length(values)
+                        targetXYPix=XYPixOfXYDeg(oo(oii),values{j});
                         fix.eccentricityXYPix(end+1,1:2)=...
-                            oo(oii).targetXYPix-fixationXYPix;
+                            targetXYPix-fixationXYPix;
                         fix.targetHeightPix(end+1)=oo(oii).targetHeightPix;
-                        fix.isTargetLocationMarked(end+1)=oo(oi).isTargetLocationMarked;
-                        fix.targetMarkPix(end+1)=oo(oi).targetMarkDeg*oo(oi).pixPerDeg;
+                        fix.isTargetLocationMarked(end+1)=oo(oii).isTargetLocationMarked;
+                        fix.targetMarkPix(end+1)=oo(oii).targetMarkDeg*oo(oii).pixPerDeg;
                     end
-                end
-                % The rest are one for all targets.
-                fix.xy=fixationXYPix;
-                fix.fixationCrossPix=fixationCrossPix;% Width & height of fixation cross.
-                fix.blankingRadiusReEccentricity=oo(oi).blankingRadiusReEccentricity;
-                fix.blankingRadiusReTargetHeight=oo(oi).blankingRadiusReTargetHeight;
-                fix.fixationCrossBlankedNearTarget=oo(oi).fixationCrossBlankedNearTarget;
-                fix.useFixationDots=oo(oi).useFixationDots;
-                fix.fixationDotsNumber=oo(oi).fixationDotsNumber;
-                fix.fixationDotsWithinRadius=oo(oi).fixationDotsWithinRadiusDeg*oo(oi).pixPerDeg;
-                if oo(oi).clipToStimulusRect
-                    fix.clipRect=oo(oi).stimulusRect;
                 else
-                    fix.clipRect=oo(oi).screenRect;
+                    % Append the single target location of this condition.
+                    fix.eccentricityXYPix(end+1,1:2)=...
+                        oo(oii).targetXYPix-fixationXYPix;
+                    fix.targetHeightPix(end+1)=oo(oii).targetHeightPix;
+                    fix.isTargetLocationMarked(end+1)=oo(oi).isTargetLocationMarked;
+                    fix.targetMarkPix(end+1)=oo(oi).targetMarkDeg*oo(oi).pixPerDeg;
                 end
-                [fixationLines,fixationDots,oo(oi).isTargetLocationMarked]=ComputeFixationLines3(fix);
-            else
-                % Consider only the target of this condition. We allow
-                % various kinds of uncertainty, and interleaved conditions,
-                % but we assume that the point of fixation is fixed
-                % throughout the whole block, so we can compute the
-                % fixation mark now.
-                fix.isTargetLocationMarked=oo(oi).isTargetLocationMarked;
-                fixationXYPix=round(XYPixOfXYDeg(oo(oi),[0 0])); % location of fixation
-                fix.xy=fixationXYPix;            %  location of fixation on screen.
-                fix.eccentricityXYPix=oo(oi).targetXYPix-fixationXYPix;  % xy offset of target from fixation.
-                if oo(oi).clipToStimulusRect
-                    fix.clipRect=oo(oi).stimulusRect;
-                else
-                    fix.clipRect=oo(oi).screenRect;
-                end
-                fix.fixationCrossPix=fixationCrossPix;% Width & height of fixation cross.
-                fix.targetMarkPix=oo(oi).targetMarkDeg*oo(oi).pixPerDeg;
-                fix.blankingRadiusReEccentricity=oo(oi).blankingRadiusReEccentricity;
-                fix.blankingRadiusReTargetHeight=oo(oi).blankingRadiusReTargetHeight;
-                fix.targetHeightPix=oo(oi).targetHeightPix;
-                fix.fixationCrossBlankedNearTarget=oo(oi).fixationCrossBlankedNearTarget;
-                fix.useFixationDots=oo(oi).useFixationDots;
-                fix.fixationDotsNumber=oo(oi).fixationDotsNumber;
-                fix.fixationDotsWithinRadius=oo(oi).fixationDotsWithinRadiusDeg*oo(oi).pixPerDeg;
-                [fixationLines,fixationDots,oo(oi).isTargetLocationMarked]=ComputeFixationLines3(fix);
             end
+            % The rest are one for all targets.
+            fix.xy=fixationXYPix;
+            fix.fixationCrossPix=fixationCrossPix;% Width & height of fixation cross.
+            fix.blankingRadiusReEccentricity=oo(oi).blankingRadiusReEccentricity;
+            fix.blankingRadiusReTargetHeight=oo(oi).blankingRadiusReTargetHeight;
+            fix.fixationCrossBlankedNearTarget=oo(oi).fixationCrossBlankedNearTarget;
+            fix.useFixationDots=oo(oi).useFixationDots;
+            fix.fixationDotsNumber=oo(oi).fixationDotsNumber;
+            fix.fixationDotsWithinRadiusPix=oo(oi).fixationDotsWithinRadiusDeg*oo(oi).pixPerDeg;
+            if oo(oi).clipToStimulusRect
+                fix.clipRect=oo(oi).stimulusRect;
+            else
+                fix.clipRect=oo(oi).screenRect;
+            end
+            [fixationLines,fixationDots,oo(oi).isTargetLocationMarked]=ComputeFixationLines3(fix);
         else
-            fixationLines=[];
+            % OBSOLETE. HANDLES ONLY ONE CONDITION.
+            % Consider only this condition. 
+            fix.isTargetLocationMarked=oo(oi).isTargetLocationMarked;
+            fixationXYPix=round(XYPixOfXYDeg(oo(oi),[0 0])); % location of fixation
+            fix.xy=fixationXYPix;            %  location of fixation on screen.
+            fix.eccentricityXYPix=oo(oi).targetXYPix-fixationXYPix;  % xy offset of target from fixation.
+            if oo(oi).clipToStimulusRect
+                fix.clipRect=oo(oi).stimulusRect;
+            else
+                fix.clipRect=oo(oi).screenRect;
+            end
+            fix.fixationCrossPix=fixationCrossPix;% Width & height of fixation cross.
+            fix.targetMarkPix=oo(oi).targetMarkDeg*oo(oi).pixPerDeg;
+            fix.blankingRadiusReEccentricity=oo(oi).blankingRadiusReEccentricity;
+            fix.blankingRadiusReTargetHeight=oo(oi).blankingRadiusReTargetHeight;
+            fix.targetHeightPix=oo(oi).targetHeightPix;
+            fix.fixationCrossBlankedNearTarget=oo(oi).fixationCrossBlankedNearTarget;
+            fix.useFixationDots=oo(oi).useFixationDots;
+            fix.fixationDotsNumber=oo(oi).fixationDotsNumber;
+            fix.fixationDotsWithinRadiusPix=oo(oi).fixationDotsWithinRadiusDeg*oo(oi).pixPerDeg;
+            [fixationLines,fixationDots,oo(oi).isTargetLocationMarked]=ComputeFixationLines3(fix);
         end
+        
         if oo(oi).useFixationGrid
             xyDegMin=XYDegOfXYPix(oo(oi),oo(oi).screenRect([1 4]));
             xyDegMax=XYDegOfXYPix(oo(oi),oo(oi).screenRect([3 2]));
@@ -3201,12 +3207,13 @@ try
         % LBackground<=LMax.
         
         % CAUTION: We now allow each condition to have a different
-        % o.noiseType, so we must update o.noiseListMin and o.noiseLineMax
+        % o.noiseType, so we must update o.noiseListMin and o.noiseListMax
         % for each trial, since two conditions with different o.noiseType
         % could be randomly interleaved. Right here we are outside the
         % trial loop, so these values need to be recomputed inside the
         % loop. Very little of the code uses o.noiseListMin and
         % o.noiseListMax.
+        % Not making noise, just getting the range.
         [~,range]=MakeNoise(oo(oi).noiseType,[1 1]);
         oo(oi).noiseListMin=range(1);
         oo(oi).noiseListMax=range(2);
@@ -3483,10 +3490,10 @@ try
                                 oo(oi).targetRectChecks=round([0 0 oo(oi).targetHeightPix oo(oi).targetHeightPix]/oo(oi).targetCheckPix);
                             end
                             assert(~isempty(oo(oi).targetRectChecks));
-                            r=TextBounds(scratchWindow,'x',1);
+                            r=TextBounds2(scratchWindow,'x',1);
                             oo(oi).xHeightPix=RectHeight(r)*oo(oi).targetCheckPix;
                             oo(oi).xHeightDeg=oo(oi).xHeightPix/oo(oi).pixPerDeg;
-                            r=TextBounds(scratchWindow,'H',1);
+                            r=TextBounds2(scratchWindow,'H',1);
                             oo(oi).HHeightPix=RectHeight(r)*oo(oi).targetCheckPix;
                             oo(oi).HHeightDeg=oo(oi).HHeightPix/oo(oi).pixPerDeg;
                             ffprintf(ff,'%d: o.xHeightDeg %.2f deg (traditional typographer''s x-height)\n',oi,oo(oi).xHeightDeg);
@@ -3614,7 +3621,7 @@ try
                         DrawFormattedText(oo(1).window,string,...
                             2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
                             oo(oi).textLineLength,[],[],1.3);
-                        DrawCounter(oo(oi));
+                        DrawCounter(oo(oi)); % 70 ms**
                         Screen('Flip',oo(1).window); % Display request.
                         oo(oi).targetPix=round(oo(oi).targetHeightDeg/oo(oi).noiseCheckDeg);
                         oo(oi).targetFont=oo(oi).targetFont;
@@ -3944,7 +3951,7 @@ try
             Screen('FillRect',oo(1).window,oo(1).gray1);
             Screen('DrawText',oo(1).window,'Running simulated observer. ... ',...
                 2*oo(oi).textSize,2.5*oo(oi).textSize,black,oo(1).gray1,1);
-            DrawCounter(oo(oi));
+            DrawCounter(oo(oi)); % 70 ms**
             Screen('Flip',oo(1).window); % Display message.
         end
     end
@@ -4087,28 +4094,59 @@ try
                 i,num2str(size(oo(oi).uncertainValues{i}{1})),...
                 num2str(size(oo(oi).(oo(oi).uncertainParameter{i}))),...
                 oo(oi).uncertainParameter{i});
-            j=Randi(length(oo(oi).uncertainValues{i}));
-            oo(oi).(oo(oi).uncertainParameter{i})=oo(oi).uncertainValues{i}{j};
+            j=randi(length(oo(oi).uncertainValues{i}));
             switch oo(oi).uncertainParameter{i}
                 case {'eccentricityXYDeg' 'moviePreAndPostSecs'}
                 otherwise
                     error('Unknown o.uncertainParameter ''%s''.',...
                         oo(oi).uncertainParameter{i});
             end
-            if false
-                % Print the uncertainty.
-                switch oo(oi).uncertainParameter{i}
-                    case {'eccentricityXYDeg' 'moviePreAndPostSecs'}
-                        fmt='[%.0f %.0f] s';
-                    otherwise
-                        fmt='%.0f s';
-                end
-                ffprintf(ff,['%d: trial %d, uncertain o.%s=' fmt '\n'],...
-                    oo(oi).condition,trial,oo(oi).uncertainParameter{i},...
-                    oo(oi).(oo(oi).uncertainParameter{i}));
-            end
+            oo(oi).(oo(oi).uncertainParameter{i})=oo(oi).uncertainValues{i}{j};
             % Recompute dependent variables.
             oo(oi).targetXYPix=XYPixOfXYDeg(oo(oi),oo(oi).eccentricityXYDeg);
+        end
+        if ~isempty(oo(oi).uncertainParameter)
+            ffprintf(ff,'%d:%d:%d uncertain: ',...
+                oo(oi).block,oo(oi).condition,trial);
+            for i=1:length(oo(oi).uncertainParameter)
+                % Print the uncertainty.
+                switch oo(oi).uncertainParameter{i}
+                    case 'eccentricityXYDeg'
+                        fmt='[%.0f %.0f]';
+                    case 'moviePreAndPostSecs'
+                        fmt='[%.1f %.1f]';
+                    otherwise
+                        fmt='%.0f';
+                end
+                ffprintf(ff,['o.%s=' fmt ', '],...
+                    oo(oi).uncertainParameter{i},...
+                    oo(oi).(oo(oi).uncertainParameter{i}));
+            end
+            ffprintf(ff,'\n');
+        end
+        
+        %% CALCULATE LENGTH OF MOVIE
+        if ~oo(oi).isNoiseDynamic
+            oo(oi).moviePreAndPostFrames=[0 0];
+            oo(oi).movieSignalFrames=1;
+        else
+            oo(oi).moviePreAndPostFrames=...
+                round(oo(oi).moviePreAndPostSecs*movieFrameRate);
+            oo(oi).movieSignalFrames=...
+                round(oo(oi).targetDurationSecs*movieFrameRate);
+            oo(oi).movieSignalFrames=max(1,oo(oi).movieSignalFrames);
+            if sum(oo(oi).moviePreAndPostFrames)>=MAX_FRAMES
+                error('sum(o.moviePreAndPostSecs)=%.1f s too long for movie with MAX_FRAMES %d.\n',...
+                    sum(oo(oi).moviePreAndPostSecs),MAX_FRAMES);
+            end
+        end
+        oo(oi).movieFrames=sum(oo(oi).moviePreAndPostFrames)+oo(oi).movieSignalFrames;
+        if oo(oi).movieFrames>MAX_FRAMES
+            error('%d: Movie frames %.0f exceed MAX_FRAMES %.0f.\n',oi,oo(oi).movieFrames,MAX_FRAME);
+            % oo(oi).movieFrames=MAX_FRAMES;
+            % oo(oi).movieSignalFrames=oo(oi).movieFrames-sum(oo(oi).moviePreAndPostFrames);
+            % oo(oi).targetDurationSecs=oo(oi).movieSignalFrames/movieFrameRate;
+            % ffprintf(ff,'%d: Constrained by MAX_FRAMES %d, reducing duration to %.3f s\n',oi,MAX_FRAMES,oo(oi).targetDurationSecs);
         end
         
         %% SET TARGET LOG CONTRAST: tTest
@@ -4315,12 +4353,14 @@ try
         %             MFileLineNr,oi,size(oo(oi).signal(1).image));
         % ffprintf(ff,'%d: %d: %s o.canvasSize %d %d, size(oo(oi).centralNoiseMask) %d %d, \n',...
         %    MFileLineNr,oi,oo(oi).conditionName,oo(oi).canvasSize,size(oo(oi).centralNoiseMask));
-        
-        % Note: o.noiseType can be different in inteleaved conditions.
-        % noiseList is used only if o.targetModulates='entropy'.
-        [noiseList,range]=MakeNoise(oo(oi).noiseType,[10000 1]); % 1 ms.
-        oo(oi).noiseListMin=range(1);
-        oo(oi).noiseListMax=range(2);
+        switch oo(oi).targetModulates
+            case 'entropy'
+            % Note: o.noiseType can be different in interleaved conditions.
+            % noiseList is used only if o.targetModulates='entropy'.
+            [noiseList,range]=MakeNoise(oo(oi).noiseType,[10000 1]); % 1 ms.
+            oo(oi).noiseListMin=range(1);
+            oo(oi).noiseListMax=range(2);
+        end
         for iMovieFrame=1:oo(oi).movieFrames
             % On each new frame, retain the (static) signal and regenerate the (dynamic) noise.
             switch oo(oi).task % add noise to signal
@@ -4348,8 +4388,12 @@ try
                             end
                             rng(oo(oi).noiseListSeed);
                         end
-                        noise=MakeNoise(oo(oi).noiseType,oo(oi).canvasSize*oo(oi).targetCheckPix/oo(oi).noiseCheckPix); % One number per noiseCheck.
-                        noise=Expand(noise,oo(oi).noiseCheckPix/oo(oi).targetCheckPix); % One number per targetCheck.
+                        if oo(oi).noiseSD>0
+                            noise=MakeNoise(oo(oi).noiseType,oo(oi).canvasSize*oo(oi).targetCheckPix/oo(oi).noiseCheckPix); % One number per noiseCheck.
+                            noise=Expand(noise,oo(oi).noiseCheckPix/oo(oi).targetCheckPix); % One number per targetCheck.
+                        else
+                            noise=zeros(oo(oi).canvasSize*oo(oi).targetCheckPix/oo(oi).targetCheckPix);
+                        end
                         if oo(oi).noiseIsFiltered
                             if any(mtf(:) ~= 1)
                                 if any(mtf(:) ~= 0)
@@ -4433,12 +4477,16 @@ try
                     if oo(oi).noiseFrozenInBlock
                         rng(oo(oi).noiseListSeed);
                     end
-                    noise=MakeNoise(oo(oi).noiseType,oo(oi).canvasSize*oo(oi).targetCheckPix/oo(oi).noiseCheckPix); % TAKES 3 ms. One number per noiseCheck.
-                    noise=Expand(noise,oo(oi).noiseCheckPix/oo(oi).targetCheckPix); % One number per targetCheck.
-                    % Each pixel in "noise" now represents a targetCheck.
-                    noise(~oo(oi).centralNoiseMask & ~oo(oi).annularNoiseMask)=0;
-                    if oo(oi).useCentralNoiseEnvelope
-                        noise(oo(oi).centralNoiseMask)=centralNoiseEnvelope(oo(oi).centralNoiseMask).*noise(oo(oi).centralNoiseMask); % TAKES 2 ms.
+                    if oo(oi).noiseSD>0
+                        noise=MakeNoise(oo(oi).noiseType,oo(oi).canvasSize*oo(oi).targetCheckPix/oo(oi).noiseCheckPix); % TAKES 6 ms. One number per noiseCheck.
+                        noise=Expand(noise,oo(oi).noiseCheckPix/oo(oi).targetCheckPix); % One number per targetCheck.
+                        % Each pixel in "noise" now represents a targetCheck.
+                        noise(~oo(oi).centralNoiseMask & ~oo(oi).annularNoiseMask)=0;
+                        if oo(oi).useCentralNoiseEnvelope
+                            noise(oo(oi).centralNoiseMask)=centralNoiseEnvelope(oo(oi).centralNoiseMask).*noise(oo(oi).centralNoiseMask); % TAKES 2 ms.
+                        end
+                    else
+                        noise=zeros(oo(oi).canvasSize);
                     end
                     canvasRect=RectOfMatrix(noise); % units of targetChecks
                     assert(all(canvasRect==[0 0 oo(oi).canvasSize(2) oo(oi).canvasSize(1)]));
@@ -4466,36 +4514,47 @@ try
                         signalImage(signalImageIndex)=oSignal.signal(whichSignal).image(:); % Support color.
                     end
                     % figure(2);imshow(signalImage);
-                    signalMask=true(size(signalImage(:,:,1))); % TAKES 0.3 ms
-                    if oo(oi).signalIsBinary
-                        % signalMask is true where the signal is true (e.g. the inked area of a font).
-                        signalMask=signalMask & signalImage;
-                    else
-                        % signalMask is true where the signal is present, i.e. not white.
-                        for i=1:length(white) % Support color.
-                            signalMask=signalMask & signalImage(:,:,i)~=white(i); % TAKES 0.3 ms
-                        end
+                    switch oo(oi).targetModulates
+                        case {'noise' 'entropy'}
+                            signalMask=true(size(signalImage(:,:,1))); % TAKES 10 ms**
+                            if oo(oi).signalIsBinary
+                                % signalMask is true where the signal is true (e.g. the inked area of a font).
+                                signalMask=signalMask & signalImage;
+                            else
+                                % signalMask is true where the signal is present, i.e. not white.
+                                for i=1:length(white) % Support color.
+                                    signalMask=signalMask & signalImage(:,:,i)~=white(i);  % TAKES 10 ms**
+                                end
+                            end
+                            signalMask=repmat(signalMask,1,1,length(white)); % Support color.
+                            % figure(1);subplot(1,3,1);imshow(signalImage);subplot(1,3,2);imshow(signalMask);
+                        case 'luminance'
+                            % signalMask is not used.
+                        otherwise
+                            error('Unknown o.targetModulates=''%s''.',oo(oi).targetModulates);
                     end
-                    signalMask=repmat(signalMask,1,1,length(white)); % Support color.
-                    % figure(1);subplot(1,3,1);imshow(signalImage);subplot(1,3,2);imshow(signalMask);
                     switch oo(oi).targetModulates
                         case 'luminance'
                             % location(1).image has size canvasSize. Each
                             % pixel represents one targetCheck. Target is
                             % centered in that image.
-                            location(1).image=ones(size(signalImage(:,:,1))); % TAKES 0.3 ms.
                             if oo(oi).useCentralNoiseMask
+                                location(1).image=ones(size(signalImage(:,:,1))); % TAKES 10 ms**
                                 % fprintf('%d: %d: %s o.canvasSize %d %d, size(oo(oi).centralNoiseMask) %d %d, size(noise) %d %d, size(location(1).image) %d %d\n',...
                                 % MFileLineNr,oi,oo(oi).conditionName,oo(oi).canvasSize,size(oo(oi).centralNoiseMask),size(noise),size(location(1).image));
                                 location(1).image(oo(oi).centralNoiseMask)=1+(oo(oi).noiseSD)*noise(oo(oi).centralNoiseMask); % TAKES 1 ms.
                             else
-                                location(1).image=1+(oo(oi).noiseSD)*noise; % TAKES ? ms.
+                                location(1).image=1+oo(oi).noiseSD*noise;  % TAKES 10 ms**
                                 % imshow(noise);
                                 % imshow(location(1).image);
                             end
-                            location(1).image(oo(oi).annularNoiseMask)=1+(oo(oi).annularNoiseSD)*noise(oo(oi).annularNoiseMask);
+                            if oo(oi).annularNoiseSD>0
+                                % Hoping to save time, by computing only
+                                % what's used.
+                                location(1).image(oo(oi).annularNoiseMask)=1+(oo(oi).annularNoiseSD)*noise(oo(oi).annularNoiseMask);
+                            end
                             location(1).image=repmat(location(1).image,1,1,length(white)); % Support color.
-                            location(1).image=location(1).image+oo(oi).contrast*signalImage; % Add signal to noise.
+                            location(1).image=location(1).image+oo(oi).contrast*signalImage; % Add signal to noise. % Takes 50 ms***
                             PrintImageStatistics(MFileLineNr,oo(oi),i,'signalImage',signalImage);
                             PrintImageStatistics(MFileLineNr,oo(oi),i,'location(1).image',location(1).image)
                         case 'noise'
@@ -4715,7 +4774,7 @@ try
         end % if oo(oi).measureContrast
         
         %% CONVERT IMAGE MOVIE TO TEXTURE MOVIE
-        timing.label{end+1}='Convert it to texture';
+        timing.label{end+1}='Convert to texture';
         timing.secs(end+1)=GetSecs;
         oo(oi).trial3BeginComputeTextureSecs(trial)=GetSecs-oo(oi).trial0Secs(trial);
         if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
@@ -4729,10 +4788,12 @@ try
                         % PREPARE IMAGE DATA
                         img=location(1).image;
                         PrintImageStatistics(MFileLineNr,oo(oi),i,'before IndexOfLuminance',img);
-                        img=IndexOfLuminance(cal,img*oo(oi).LBackground)/oo(oi).maxEntry;
+                        img=IndexOfLuminance(cal,img*oo(oi).LBackground)/oo(oi).maxEntry; % TAKES 20 ms**
                         % im=LuminanceOfIndex(cal,img*oo(oi).maxEntry);
                         % PrintImageStatistics(MFileLineNr,oo(oi),i,'LuminanceOfIndex(IndexOfLuminance)',im);
-                        img=Expand(img,oo(oi).targetCheckPix);
+                        if oo(oi).targetCheckPix>1
+                            img=Expand(img,oo(oi).targetCheckPix);  % TAKES 10 ms**
+                        end
                         if oo(oi).assessLinearity
                             AssessLinearity(oo(oi));
                         end
@@ -4740,7 +4801,11 @@ try
                         rect=CenterRect(rect,[oo(oi).targetXYPix oo(oi).targetXYPix]);
                         rect=round(rect); % rect that will receive the stimulus (target and noises) % -556 -231 830 693
                         location(1).rect=rect;
-                        movieTexture(iMovieFrame)=Screen('MakeTexture',oo(1).window,img,0,0,1); % SAVE MOVIE FRAME
+                        % Practically all the time in this block of code is
+                        % taken by this call to MakeTexture, which loads
+                        % our movie into the GPU, so it will later run
+                        % smoothly.
+                        movieTexture(iMovieFrame)=Screen('MakeTexture',oo(1).window,img,0,0,1); % TAKES 10 ms**
                         srcRect=RectOfMatrix(img);
                         dstRect=rect;
                         offset=dstRect(1:2)-srcRect(1:2);
@@ -4847,14 +4912,14 @@ try
         timing.secs(end+1)=GetSecs;
         oo(oi).trial4BeginMovieSecs(trial)=GetSecs-oo(oi).trial0Secs(trial);
         if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
-            DrawCounter(oo(oi));
+            DrawCounter(oo(oi)); % 70 ms**
             Screen('LoadNormalizedGammaTable',oo(1).window,cal.gamma,loadOnNextFlip);
             if ~ismember(oo(oi).observer,oo(oi).algorithmicObservers)
                 if oo(oi).isGazeRecorded
                     try
                         img=snapshot(cam);
-                    catch e
-                        warning(e)
+                    catch ME
+                        warning(ME.message)
                     end
                     % FUTURE: Write trial number and condition number in
                     % corner of recorded movie image.
@@ -4865,12 +4930,30 @@ try
                     Screen('Flip',oo(1).window,0,1);
                 end
                 timeZero=GetSecs;
-                % Center 200 ms beep duration on target duration.
-                targetMidtimeSecs=oo(oi).fixationOffsetBeforeNoiseOnsetSecs+...
-                    oo(oi).moviePreAndPostSecs(1)+...
-                    oo(oi).targetDurationSecs/2;
-                purrOnsetSecs=targetMidtimeSecs-0.5*length(purr)/Snd('DefaultRate');
-                pause=zeros([1 round(purrOnsetSecs*Snd('DefaultRate'))]);
+                purrMinDurationSecs=0.2;
+                if ~ismember('moviePreAndPostSecs',oo(oi).uncertainParameter)
+                    % No uncertainty. Center purrMinDurationSecs beep
+                    % duration on target duration.
+                    targetOnsetSecs=oo(oi).fixationOffsetBeforeNoiseOnsetSecs+...
+                        oo(oi).moviePreAndPostSecs(1);
+                    onsetOffsetSecs(1)=targetOnsetSecs+...
+                        0.5*oo(oi).targetDurationSecs-0.5*purrMinDurationSecs;
+                    onsetOffsetSecs(2)=onsetOffsetSecs(1)+purrMinDurationSecs;
+                else
+                    % Uncertain target onset time. Beep is on during whole
+                    % range of possible midtimes of target, plus half
+                    % purrMinDurationSecs before and after.
+                    i=ismember(oo(oi).uncertainParameter,'moviePreAndPostSecs');
+                    i=find(i,1);
+                    values=oo(oi).uncertainValues{i};
+                    onsetOffsetSecs(1)=values{1}(1)+oo(oi).targetDurationSecs/2-purrMinDurationSecs/2;
+                    onsetOffsetSecs(2)=values{end}(1)+oo(oi).targetDurationSecs/2+purrMinDurationSecs/2;
+                end
+                pause=zeros([1 round(onsetOffsetSecs(1)*Snd('DefaultRate'))]);
+                purr=MakeBeep(200,diff(onsetOffsetSecs));
+                %                 fprintf('onsetOffsetSecs %.1f %.1f secs, o.moviePreAndPostSecs %.1f %.1f secs.\n',...
+                %                     onsetOffsetSecs,oo(oi).moviePreAndPostSecs);
+                purr(end)=0;
                 Snd('Play',[pause purr]); % Announce that image is up, awaiting response.
                 assert(oo(oi).trials>0,'oo(oi).trials must be >0');
                 oo(oi).movieFrameFlipSecs(1:oo(oi).movieFrames+1,oo(oi).trials)=nan;
@@ -4993,7 +5076,7 @@ try
                         end
                     end
                     % After o.fixationOnsetAfterNoiseOffsetSecs, display new fixation.
-                    DrawCounter(oo(oi));
+                    DrawCounter(oo(oi)); % 70 ms**
                     Screen('Flip',oo(1).window,oo(oi).movieFrameFlipSecs(iMovieFrame+1,oo(oi).trials)+0.3,1);
                     oo(oi).trial6BeginFixationSecs(trial)=GetSecs-oo(oi).trial0Secs(trial);
                 end % if isfinite(oo(oi).targetDurationSecs)
@@ -5063,7 +5146,7 @@ try
                         Screen('DrawDots',oo(oi).window,fixationDots,fixationDotsWeightPix,oo(oi).fixationDotsColor); % dots
                     end
                 end
-                counterBounds=DrawCounter(oo(oi));
+                counterBounds=DrawCounter(oo(oi)); % 70 ms**
                 maxFactor=1;
                 switch oo(oi).task
                     case '4afc'
@@ -5223,7 +5306,7 @@ try
                             case 'bottom'
                                 rect=AlignRect(rect,o.screenRect,RectRight,RectBottom);
                                 rect=OffsetRect(rect,-alphaGapPix,-alphaGapPix); % spacing
-                                bounds=DrawCounter(oo(oi));
+                                bounds=DrawCounter(oo(oi)); % 70 ms**
                                 rect=OffsetRect(rect,0,-RectHeight(bounds)); % Avoid the counter.
                                 blankRect(2)=rect(2);
                         end
@@ -5395,7 +5478,7 @@ try
                     % CLUT as it is.
                     Screen('LoadNormalizedGammaTable',oo(1).window,cal.gamma,loadOnNextFlip);
                 end
-                DrawCounter(oo(oi));
+                DrawCounter(oo(oi)); % 70 ms**
                 if any([oo.showUncertainty])
                     DrawUncertainty(oo);
                 end
@@ -5560,9 +5643,9 @@ try
                         Screen('TextSize',oo(1).window,floor(factor*oo(oi).textSize));
                     end
                     if all(oo(oi).alphabet==upper(oo(oi).alphabet))
-                        [responseString,terminatorChar]=GetEchoStringUppercase(oo(1).window,message,textRect(1),textRect(4)-oo(oi).textSize,black,oo(oi).gray,1,oo(oi).deviceIndex);
+                        [responseString,terminatorChar]=GetEchoString2Uppercase(oo(1).window,message,textRect(1),textRect(4)-oo(oi).textSize,black,oo(oi).gray,1,oo(oi).deviceIndex);
                     else
-                        [responseString,terminatorChar]=GetEchoString(oo(1).window,message,textRect(1),textRect(4)-oo(oi).textSize,black,oo(oi).gray,1,oo(oi).deviceIndex);
+                        [responseString,terminatorChar]=GetEchoString2(oo(1).window,message,textRect(1),textRect(4)-oo(oi).textSize,black,oo(oi).gray,1,oo(oi).deviceIndex);
                     end
                     if isfield(oo(oi).transcript,'stimulusOnsetSecs')
                         oo(oi).transcript.responseTimeSecs(oo(oi).trials)=GetSecs-oo(oi).transcript.stimulusOnsetSecs(oo(oi).trials);
@@ -5824,9 +5907,9 @@ try
         % PRINT TIMING DATA
         if trial<5 || trial>length(oo(1).conditionList)-5
             dt=[0 diff(timing.secs)];
-            ffprintf(ff,'trial%5.0f, ',trial);
+            ffprintf(ff,'%.0f:%.0f:%.0f, ',oo(oi).block,oi,trial);
             for i=1:length(timing.label)
-                ffprintf(ff,'%.3f s, %s, ',dt(i),timing.label{i});
+                ffprintf(ff,'%.1f s, %s, ',dt(i),timing.label{i});
             end
             ffprintf(ff,'\n');
         end
@@ -5858,7 +5941,7 @@ try
         DrawFormattedText(oo(1).window,string,...
             2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
             oo(oi).textLineLength,[],[],1.3);
-        DrawCounter(oo(oi));
+        DrawCounter(oo(oi)); % 70 ms**
         Screen('Flip',oo(1).window); % Display message.
     end
     
@@ -6057,10 +6140,10 @@ try
                 fid=fopen(fullfile(oo(1).dataFolder,[oo(1).dataFilename '.json']),'w');
                 fprintf(fid,'%s',json);
                 fclose(fid);
-            catch e
+            catch ME
                 warning('Failed to save .json file.');
-                warning(e.message);
-                e.stack
+                warning(ME.message);
+                ME.stack
             end % save to .json file
             ffprintf(ff,'%d: Done saving json data at %.0f s.\n',oi,GetSecs-savingToDiskSecs);
         else
@@ -6085,9 +6168,9 @@ try
                 fprintf(fid,'%s',json);
                 fclose(fid);
             end
-        catch e
+        catch ME
             warning('Failed to save .transcript.json file.');
-            warning(e.message);
+            warning(ME.message);
         end % save transcript to .json file
         ffprintf(ff,'%d: Saving json transcript took %.1f s.\n',oi,GetSecs-saveJsonSecs);
         ffprintf(ff,'Results saved as %s with extensions .txt, .mat, and .json \n',oo(oi).dataFilename);
@@ -6125,7 +6208,7 @@ try
             DrawFormattedText(oo(1).window,string,...
                 2*oo(oi).textSize,2.5*oo(oi).textSize,black,...
                 oo(oi).textLineLength,[],[],1.3);
-            DrawCounter(oo(oi));
+            DrawCounter(oo(oi)); % 70 ms**
             Screen('Flip',oo(1).window); % Display message.
         end
         isLastBlock=true; % global DGP
@@ -6159,7 +6242,7 @@ try
     oOld.eyes=oo(oi).eyes;
     oOld.filterTransmission=oo(oi).filterTransmission;
     oOld.secs=GetSecs; % Date for staleness.
-catch e
+catch ME
     %% MATLAB catch
     isLastBlock=true;
     CloseWindowsAndCleanup(oo)
@@ -6170,7 +6253,7 @@ catch e
         fclose(logFid);
         logFid=-1;
     end
-    rethrow(e);
+    rethrow(ME);
 end % try
 end % function o=NoiseDiscrimination(o)
 
@@ -6918,7 +7001,7 @@ while ~set
     widthPix=max([min([a/20 lineWidthMinMaxPix(2)]) lineWidthMinMaxPix(1)]);
     Screen('DrawLine',o.window,black,x-a,y-a,x+a,y+a,widthPix);
     Screen('DrawLine',o.window,black,x+a,y-a,x-a,y+a,widthPix);
-    DrawCounter(o);
+    DrawCounter(o); % 70 ms**
     Screen('Flip',o.window); % Display request.
     if o.speakInstructions
         string=strrep(string,'.0','');
@@ -7315,7 +7398,7 @@ DrawFormattedText(o.window,footnote,...
 if any([oo.showUncertainty])
     DrawUncertainty(oo);
 end
-DrawCounter(o);
+DrawCounter(o); % 70 ms**
 Screen('Flip',o.window,0,1); % Proceeding to the trial.
 if o.speakInstructions
     if ismac
@@ -7396,6 +7479,8 @@ if isScreenCalibrated && ~skipScreenCalibration && isLastBlock && ismac
     % New April 2020.
     fprintf('Restoring MacDisplaySettings. ... ');
     s=GetSecs;
+        % We ought to specify the screen here, but I don't think it's yet a
+        % global.
     MacDisplaySettings(oldDisplaySettings);
     fprintf('Done (%.1f s).\n',GetSecs-s); % Restoring.
     RestoreCluts;
