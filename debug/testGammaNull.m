@@ -21,8 +21,12 @@ try
    spatialFrequencyCyclesPerDeg=3; % for best contrast sensitivity
    BackupCluts;
    Screen('Preference', 'SkipSyncTests', 1);
-   AutoBrightness(screen,0);
-   Screen('ConfigureDisplay','Brightness',screen,[],1);
+   newSettings.brightness=1;
+   newSettings.automatically=false;
+   newSettings.trueTone=false;
+   newSettings.nightShiftManual=false;
+   newSettings.nightSchiftSchedule='Off';
+   [oldSettings,errorMsg]=MacDisplaySettings(screen,newSettings)
    [screenWidthMm,screenHeightMm]=Screen('DisplaySize',screen);
    screenRect=Screen('Rect',screen,1);
    pixPerCm=RectWidth(screenRect)/(0.1*screenWidthMm);
@@ -81,9 +85,11 @@ try
    Speak('Click to quit');
    GetClicks;
    sca;
+   MacDisplaySettings(screen,oldSettings)
    Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
 catch
    sca
+   MacDisplaySettings(screen,oldSettings)
    if exist('cal','var') && isfield(cal,'old') && isfield(cal.old,'gamma')
       Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
    end
