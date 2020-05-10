@@ -20,7 +20,7 @@ switch noiseType
         sd=std(list,1); % Over all samples.
         list=list/sd; % Normalize so SD is 1.
         range=[list(1) list(end)]/sd;
-        noise=PsychRandSample(list,dims);
+        noise=PsychRandSample2(list,dims);
     case 'uniform'
         noise=rand(dims)-0.5; % Zero mean, uniform distribution.
         sd=0.2887; % accurate to 4 decimal places.
