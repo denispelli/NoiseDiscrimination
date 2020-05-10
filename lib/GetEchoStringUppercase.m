@@ -1,7 +1,7 @@
-function [string,terminatorChar] = GetEchoStringUppercase(windowPtr, msg, x, y, textColor, bgColor, useKbCheck, varargin)
-% [string,terminatorChar] = GetEchoString(window,msg,x,y,[textColor],[bgColor],[useKbCheck=0],[deviceIndex],[untilTime=inf],[KbCheck args...]);
+function [string,terminatorChar] = GetEchoString2Uppercase(windowPtr, msg, x, y, textColor, bgColor, useKbCheck, varargin)
+% [string,terminatorChar] = GetEchoString2(window,msg,x,y,[textColor],[bgColor],[useKbCheck=0],[deviceIndex],[untilTime=inf],[KbCheck args...]);
 % 
-% Derived from GetEchoString, but forces typed text to uppercase.
+% Derived from GetEchoString2, but forces typed text to uppercase.
 %
 % Get a string typed at the keyboard. Entry is terminated by <return> or
 % <enter>.
@@ -37,13 +37,13 @@ function [string,terminatorChar] = GetEchoStringUppercase(windowPtr, msg, x, y, 
 % 2/5/97    dhb       Accept <enter> as well as <cr>.
 %           dhb       Allow string return as well.
 % 3/3/97    dhb       Updated for new DrawText.  
-% 3/15/97   dgp       Created GetEchoString based on dhb's GetEchoNumber.
+% 3/15/97   dgp       Created GetEchoString2 based on dhb's GetEchoNumber.
 % 3/20/97   dhb       Fixed bug in erase code, it wasn't updated for new
 %                       initialization.
 % 3/31/97   dhb       More fixes for same bug.
 % 2/28/98   dgp       Use GetChar instead of obsolete GetKey. Use SWITCH and LENGTH.
 % 3/27/98   dhb       Put an abs around char in switch.
-% 12/26/08  yaosiang  Port GetEchoString from PTB-2 to PTB-3.
+% 12/26/08  yaosiang  Port GetEchoString2 from PTB-2 to PTB-3.
 % 03/20/08  tsh       Added FlushEvents at the start and made bgColor and
 %                     textcolor optional
 % 10/22/10  mk        Optionally allow to use KbGetChar for keyboard input.
@@ -106,7 +106,7 @@ while true
         terminatorChar = 0;
         break;
     end
-    char=upper(char); % THIS IS THE ONLY CHANGE FROM GetEchoString.
+    char=upper(char); % THIS IS THE ONLY CHANGE FROM GetEchoString2.
 
     graveAccentChar='`';
     macsWithTouchBars={'MacBookPro14,3'}; % 2017 MacBook Pro 15"; 
