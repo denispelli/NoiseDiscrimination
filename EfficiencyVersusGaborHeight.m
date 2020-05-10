@@ -13,5 +13,5 @@ ax=gca;
 ax.TickLength=[0.01 0.025]*2;
 ax.FontSize=12;
 % Save plot to disk
-graphFile=fullfile(fileparts(mfilename('fullpath')),'data','EfficiencyVsSize.eps']);
+graphFile=fullfile(fileparts(mfilename('fullpath')),'data','EfficiencyVsSize.eps');
 saveas(gcf,graphFile,'epsc');
