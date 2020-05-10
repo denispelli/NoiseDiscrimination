@@ -106,7 +106,7 @@ if true
     o.task='identify';
     o.noiseSD=0;
     oo{end+1}=o;
-    o.noiseSD=MaxNoiseSD(o.noiseType);
+    o.noiseSD=MaxNoiseSD(o.noiseType,SignalNegPos(o));
     oo{end+1}=o;
 end
 if true
@@ -120,7 +120,7 @@ if true
     o.noiseCheckDeg=o.targetHeightDeg/20;
     o.noiseSD=0;
     oo{end+1}=o;
-    o.noiseSD=MaxNoiseSD(o.noiseType);
+    o.noiseSD=MaxNoiseSD(o.noiseType,SignalNegPos(o));
     oo{end+1}=o;
 end
 

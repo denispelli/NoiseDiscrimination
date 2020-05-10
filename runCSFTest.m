@@ -4,66 +4,92 @@
 % denis.pelli@nyu.edu
 % March 14, 2020
 % 646-258-7524
-mainFolder=fileparts(mfilename('fullpath'));
-addpath(fullfile(mainFolder,'lib')); % Folder in same directory as this M file.
-addpath(fullfile(mainFolder,'utilities')); % Folder in same directory as this M file.
 clear KbWait o oo
 ooo={};
-% o.assessContrast=true;
-% o.measureContrast=true;
-% o.usePhotometer=true;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Compare target thresholds in several noise distributions all with same
 % noiseSD, which is highest possible.
-o.observer='';
-o.observer='ideal'; % Use this to test ideal observer.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ismember(o.observer,{'ideal'})
-    o.trialsDesired=200;
-else
-    o.trialsDesired=40;
-end
-if IsWin
-    o.useNative11Bit=false;
-end
-o.isTargetLocationUnpredictable=true;
+
+%% MEASURE CSF
+
+%% DEBUG
 % o.useFractionOfScreenToDebug=0.3; % USE ONLY FOR DEBUGGING.
 % o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+% o.assessContrast=true;
+% o.measureContrast=true;
+% o.usePhotometer=true;
+
+%% FIXATION
 o.isTargetLocationMarked=false;
 o.useFixationGrid=false;
 o.useFixationDots=true;
 o.fixationDotsWeightDeg=0.05;
 o.fixationDotsNumber=100;
 o.fixationDotsWithinRadiusDeg=4;
-o.targetDurationSecs=0.15;
-o.askForPartingComments=false; % Disabled until it's fixed.
-o.isGazeRecorded=false;
-o.experiment='CSFTest';
-o.eccentricityXYDeg=[0 0];
-o.contrast=-1;
-% o.noiseType='gaussian';
-o.noiseType='ternary'; % More noise power than 'gaussian'.
-o.setNearPointEccentricityTo='fixation';
-o.nearPointXYInUnitSquare=[0.5 0.5];
-o.thresholdParameter='contrast';
+
+%% FLANKERS
 o.flankerSpacingDeg=0.2; % Used only for fixation check.
 o.useFlankers=false;
 o.flankerContrast=-1;
-o.isLuminanceRangeSymmetric=true; % False for maximum brightness.
-o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
-o.counterPlacement='bottomRight';
-o.instructionPlacement='bottomRight'; % 'topLeft' 'bottomLeft' 'bottomRight'
-o.brightnessSetting=0.87;
-o.askExperimenterToSetDistance=true;
-o.isLuminanceRangeSymmetric=true; % False for maximum brightness.
-o.desiredLuminanceFactor=1; % 1.8 to maximize brightness.
-o.isTargetFullResolution=true; % NEW December 6, 2019. denis.pelli@nyu.edu
-o.clipToStimulusRect=false;
-o.eccentricityXYDeg=[0 0];
-o.targetHeightDeg=[];
+
+%% GEOMETRY
+o.setNearPointEccentricityTo='fixation';
+o.nearPointXYInUnitSquare=[0.5 0.5];
 o.viewingDistanceCm=[];
 o.minScreenDeg=[];
+o.clipToStimulusRect=false;
+
+%% LUMINANCE
+o.isLuminanceRangeSymmetric=true; % False for maximum brightness.
+o.desiredLuminanceFactor=1; % 1.8 for maximize brightness.
+o.brightnessSetting=1; % 0.87
+
+%% NOISE
+% o.noiseType='gaussian';
+o.noiseType='ternary'; % More noise power than 'gaussian'.
+
+%% OBSERVER AND TRIALS
+o.observer='';
+% o.observer='ideal'; % Use this to test ideal observer.
+if ismember(o.observer,{'ideal'})
+    o.trialsDesired=200;
+else
+    o.trialsDesired=40;
+end
+
+%% PATH
+mainFolder=fileparts(mfilename('fullpath'));
+addpath(fullfile(mainFolder,'lib')); % Folder in same directory as this M file.
+addpath(fullfile(mainFolder,'utilities')); % Folder in same directory as this M file.
+
+%% PRINT
+% o.assessContrast=true;
+% o.measureContrast=true;
+% o.usePhotometer=true;
+
+%% PROCEDURE
+%o.group='A'; % Include all conditions in a group, so they differ solely in their target.
+o.askForPartingComments=false; % Disabled until it's fixed.
+o.isGazeRecorded=false;
+o.experiment='CSFTest';
+o.askExperimenterToSetDistance=true;
 machine=IdentifyComputer;
+if IsWin
+    o.useNative11Bit=false;
+end
+
+%% RESPONSE SCREEN
+o.counterPlacement='bottomRight';
+o.instructionPlacement='bottomRight'; % 'topLeft' 'bottomLeft' 'bottomRight'
+
+%% TARGET
+o.targetHeightDeg=[];
+o.targetDurationSecs=0.15;
+o.eccentricityXYDeg=[0 0];
+o.contrast=-1;
+o.thresholdParameter='contrast';
+o.isTargetFullResolution=true; % NEW December 6, 2019. denis.pelli@nyu.edu
 
 %% FIXATION
 o.isFixationCheck=false; % True designates the condition as a fixation check.
@@ -254,7 +280,8 @@ end
 if false
     %% RUN EACH CONDITION WITH FOUR KINDS OF NOISE AND NO NOISE, INTERLEAVED.
     noiseTypeList={'gaussian' 'uniform' 'ternary' 'binary'};
-    maxNoiseSD=min([MaxNoiseSD('gaussian') MaxNoiseSD('uniform') MaxNoiseSD('ternary') MaxNoiseSD('binary') ]);
+    % The min value of MaxNoiseSD across our four noise types.
+    maxNoiseSD=MaxNoiseSD('gaussian',SignalNegPos(oo(1)));
     for block=1:length(ooo)
         oo=ooo{block};
         for oi=length(oo):-1:1
@@ -266,12 +293,12 @@ if false
             end
             if oo(oi).targetHeightDeg>20
                 % Avoid raising threshold for 32 deg gabor too high.
-                noiseSD=MaxNoiseSD('gaussian')/2;
+                noiseSD=MaxNoiseSD('gaussian',SignalNegPos(oo(oi)))/2;
             end
             oo(oi).noiseSD=noiseSD;
             oo(oi).noiseCheckDeg=oo(oi).targetHeightDeg/40;
             if oo(oi).targetHeightDeg<1
-                oo(oi).noiseSD=min([MaxNoiseSD('ternary') MaxNoiseSD('binary') ]);
+                oo(oi).noiseSD=min([MaxNoiseSD('ternary',SignalNegPos(oo(oi))) MaxNoiseSD('binary',SignalNegPos(oo(oi))) ]);
             end
         end
         [oo.noiseType]=deal(noiseTypeList{1});
@@ -296,7 +323,7 @@ if true
     for block=1:length(ooo)
         oo=ooo{block};
         for oi=1:length(oo)
-            maxNoiseSD=MaxNoiseSD(oo(oi).noiseType);
+            maxNoiseSD=MaxNoiseSD(oo(oi).noiseType,SignalNegPos(oo(oi)));
             if ismember(oo(oi).targetKind,{'image'})
                 maxNoiseSD=0.8*maxNoiseSD;
             end
@@ -375,6 +402,11 @@ end
 bad=unique(bad);
 if ~isempty(bad)
     error('Make %s consistent within each block. ',bad{:});
+end
+
+%% SORT THE FIELDS
+for block=1:length(ooo)
+    ooo{block}=SortFields(ooo{block});
 end
 
 %% PRINT TABLE OF CONDITIONS, ONE ROW PER THRESHOLD.

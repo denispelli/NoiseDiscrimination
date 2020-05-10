@@ -230,7 +230,7 @@ end
 if false
     %% RUN EACH CONDITION WITH FOUR KINDS OF NOISE AND NO NOISE, INTERLEAVED.
     noiseTypeList={'gaussian' 'uniform' 'ternary' 'binary'};
-    maxNoiseSD=min([MaxNoiseSD('gaussian') MaxNoiseSD('uniform') MaxNoiseSD('ternary') MaxNoiseSD('binary') ]);
+    maxNoiseSD=MaxNoiseSD('gaussian',SignalNegPos(oo(1)));
     for block=1:length(ooo)
         oo=ooo{block};
         for oi=length(oo):-1:1
@@ -242,12 +242,12 @@ if false
             end
             if oo(oi).targetHeightDeg>20
                 % Avoid raising threshold for 32 deg gabor too high.
-                noiseSD=MaxNoiseSD('gaussian')/2;
+                noiseSD=MaxNoiseSD('gaussian',SignalNegPos(oo(oi)))/2;
             end
             oo(oi).noiseSD=noiseSD;
             oo(oi).noiseCheckDeg=oo(oi).targetHeightDeg/40;
             if oo(oi).targetHeightDeg<1
-                oo(oi).noiseSD=min([MaxNoiseSD('ternary') MaxNoiseSD('binary') ]);
+                oo(oi).noiseSD=min([MaxNoiseSD('ternary',SignalNegPos(oo(oi))) MaxNoiseSD('binary',SignalNegPos(oo(oi))) ]);
             end
         end
         [oo.noiseType]=deal(noiseTypeList{1});
@@ -272,7 +272,7 @@ if true
     for block=1:length(ooo)
         oo=ooo{block};
         for oi=1:length(oo)
-            maxNoiseSD=MaxNoiseSD(oo(oi).noiseType);
+            maxNoiseSD=MaxNoiseSD(oo(oi).noiseType,SignalNegPos(oo(oi)));
             if ismember(oo(oi).targetKind,{'image'})
                 maxNoiseSD=0.8*maxNoiseSD;
             end

@@ -212,7 +212,7 @@ end
 if true
     %% RUN EACH CONDITION WITH FOUR KINDS OF NOISE AND NO NOISE, INTERLEAVED.
     noiseTypeList={'gaussian' 'uniform' 'ternary' 'binary'};
-    maxNoiseSD=min([MaxNoiseSD('gaussian') MaxNoiseSD('uniform') MaxNoiseSD('ternary') MaxNoiseSD('binary') ]);
+    maxNoiseSD=MaxNoiseSD('gaussian',SignalNegPos(oo(1)));
     for block=1:length(ooo)
         oo=ooo{block};
         for oi=length(oo):-1:1
