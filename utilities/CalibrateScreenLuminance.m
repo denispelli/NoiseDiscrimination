@@ -11,7 +11,7 @@ function CalibrateScreenLuminance(screen,screenOutput)
 % experiments. If you're using macOS, then we'll use MacDisplaySettings to
 % set it for you. If you're on another OS, you need to set that up
 % yourself, manually. The key point is that the calibration readings that
-% you take now will generally be valuable in the future only to the extend
+% you take now will generally be valuable in the future only to the extent
 % that you can restore the brightness control to its setting during
 % calibration. For that purpose, you may want to use maximum brightness
 % because it's a setting that's easy to remember and reproduce.
@@ -253,50 +253,49 @@ try
             cal.photometer=msg;
         end
     end
-    if IsOSX %|| IsLinux
+    if ismac %|| IsLinux
         if ~ScriptingOkShowPermission
             error(['Please give MATLAB permission to control the computer. ' ...
                 'You''ll need admin privileges to do this.']);
-        end
-        if ~makeItQuickForDebugging
-            fprintf('Now reloading your screen''s color profile.\n');
-            if useSpeech
-                Speak('Now reloading your screen''s color profile.');
-            end
-            cal.profile=ScreenProfile(cal.screen); % Get name of current profile.
-            % Now select some other profile.
-            ScreenProfile(cal.screen,'Apple RGB');
-            ScreenProfile(cal.screen,'CIE RGB'); % At least one of these two profiles will not be the original profile.
-            ScreenProfile(cal.screen,cal.profile); % Freshly load the original profile.
         end
         if ~makeItQuickForDebugging
             fprintf('Now checking your screen display settings.\n');
             if useSpeech
                 Speak('Will now check your screen display settings');
             end
-            newSettings.brightness=1.0;
-            newSettings.automatically=false;
-            newSettings.trueTone=false;
-            newSettings.nightShiftSchedule='Off';
-            newSettings.nightShiftManual=false;
-            % Read old settings and set new settings.
-            cal.oldSettings=MacDisplaySettings(newSettings);
-            cal.settings=newSettings;
-            if isempty(cal.settings.brightness)
-                warning('Could not read MacDisplaySettings brightness.');
+            % Peek old settings.
+            [cal.oldSettings,errorMsg]=MacDisplaySettings(cal.screen);
+            if ~isempty(errorMsg)
+                error('MacDisplaySettings gave error: %s.',errorMsg);
             end
+            cal.settings=cal.oldSettings; % Copy profile name.
+            cal.settings.brightness=1.0;
+            cal.settings.automatically=false;
+            cal.settings.trueTone=false;
+            cal.settings.nightShiftSchedule='Off';
+            cal.settings.nightShiftManual=false;
+            cal.settings.showProfilesForThisDisplayOnly=false;
+            % Poke new settings. Force reload of profile.
+            [~,errorMsg]=MacDisplaySettings(cal.screen,cal.settings);
+            if ~isempty(errorMsg)
+                error('MacDisplaySettings gave error: %s.',errorMsg);
+            end
+            cal.profile=cal.oldSettings.profile;
         else
             cal.settings.brightness=[];
             cal.settings.automatically=[];
             cal.settings.trueTone=[];
             cal.settings.nightShiftSchedule=[];
             cal.settings.nightShiftManual=[];
+            cal.settings.showProfilesForThisDisplayOnly=false;
+            cal.settings.profile='';
+            cal.settings.profileRow=[];
         end
         if ~makeItQuickForDebugging
             fprintf('When using a flat-panel display, we usually run at maximum "brightness".\n');
             if ismac
-                settings=MacDisplaySettings;
-                fprintf('Your display is currently at %.0f%% brightness.\n',100*settings.brightness);
+                fprintf('Your display is currently at %.0f%% brightness.\n',...
+                    100*cal.settings.brightness);
                 if forceMaximumBrightness
                     b=100;
                 else
@@ -310,7 +309,10 @@ try
                     end
                 end
                 cal.settings.brightness=b/100;
-                MacDisplaySettings(cal.screen,cal.settings);
+                [~,errorMsg]=MacDisplaySettings(cal.screen,cal.settings);
+                if ~isempty(errorMsg)
+                    error('MacDisplaySettings error: %s.',errorMsg);
+                end
                 readings=MacDisplaySettings;
                 if abs(cal.settings.brightness-readings.brightness)>0.01
                     fprintf('Brightness was set to %.0f%%, but now reads as %.0f%%.\n',...
@@ -318,13 +320,9 @@ try
                     sca;
                     if useSpeech
                         Speak(['Error. ' ...
-                            'The screen brightness changed during calibration. '...
-                            \'In System Preferences Displays please turn '...
-                            'off "Automatically adjust brightness".']);
+                            'The screen brightness changed during calibration.']);
                     end
-                    error(['Screen brighness changed during calibration. '...
-                        'In System Preferences:Displays, please turn off '...
-                        '"Automatically adjust brightness".']);
+                    error('Screen brighness changed during calibration.');
                 end
             else
                 cal.settings.brightness=1.0;
@@ -341,9 +339,9 @@ try
         cal.settings.brightness = nan;
     end % if IsOSX
     
-    % Get the gamma table.
-    % In April 2018 Mario Kleiner said that "dacBits" cannot be trusted and may be removed. So I stopped saving it.
-    %    [cal.old.gamma,cal.dacBits]=Screen('ReadNormalizedGammaTable',cal.screen,cal.screenOutput);
+    % Get the gamma table. 
+    % In April 2018 Mario Kleiner said that "dacBits" cannot be trusted and
+    % may be removed. So I stopped saving it.
     cal.old.gamma=Screen('ReadNormalizedGammaTable',cal.screen,cal.screenOutput);
     cal.old.gammaIndexMax=length(cal.old.gamma)-1; % Index into gamma table is 0..gammaIndexMax.
     
@@ -635,7 +633,7 @@ try
                         error('Screen brightness changed during calibration. In System Preferences:Displays, please turn off "Automatically adjust brightness".');
                     end
                 end
-                if 1
+                if true
                     % For debugging.
                     fprintf('i %3d, n %3d, v %.2f, L %5.1f cd/m^2\n',i,cal.old.n(i),v,cal.old.L(i));
                 end
@@ -652,7 +650,7 @@ try
         ListenChar; % restore
         if cal.ScreenConfigureDisplayBrightnessWorks
             cal.readings.brightness=Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput);
-            fprintf('Brightness still set to %.0f%%, now reads as %.0f%%.\n',100*cal.settings.brightness,100*cal.readings.brightness);
+            fprintf('Brightness slider should still be %.0f%%, but now reads as %.0f%%.\n',100*cal.settings.brightness,100*cal.readings.brightness);
             Screen('ConfigureDisplay','Brightness',cal.screen,cal.screenOutput,1);
         end
         fprintf('\n\n\n');
