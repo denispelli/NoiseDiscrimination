@@ -1,17 +1,60 @@
-function [oldSettings,failed] = MacDisplaySettings(arg1,arg2)
-% [oldSettings,failed] = MacDisplaySettings([screenNumber,][newSettings])
-% MacDisplaySettings allows you to temporarily override any user
-% customization of the display, to allow user testing with a known
-% calibration. Peek and poke several settings in the System Preferences:
-% Displays panel. You can provide neither, either, or both arguments: the
-% integer screenNumber and the struct newSettings. It's ok to provide just
-% "newSettings", omitting the "screenNumber" (default is 0, the main
-% screen). "newSettings" can include any number, from 0 to 5, of the
-% allowed settings: brightness (in the range 0 and 1), automatically (true
-% or false), trueTone (true or false), nightShiftSchedule ('Off','Custom',
-% or 'Sunset to Sunrise'), and nighShiftManual (true or false).
+function [oldSettings,errorMsg] = MacDisplaySettings(arg1,arg2)
+% [oldSettings,errorMsg] = MacDisplaySettings([screenNumber,][newSettings])
 %
-% Typical uses include just typing the name to learn the settings:
+%% MacDisplaySettings allows you to peek and poke seven settings in the 
+% System Preferences:Displays panel by using the corresponding fields in
+% its newSettings and oldSettings input-output arguments. This allows you
+% to temporarily override any macOS user customization of the your
+% display, to allow calibration and user testing with stable display
+% settings. (To be clear, we help you handle the macOS built-in System
+% Preferences; we do nothing about the zillion third-party apps that your
+% users might install.)  All the parameters refer only to the screen
+% selected by screenNumber. However, Apple has very limited support for
+% non-Apple displays, so you probably won't have Brightness, True Tone, or
+% Night Shift on your external display unless it's made by Apple. The Color
+% Profile options seems to always be available for all displays.
+%
+%% DISPLAY
+% brightness            the Brightness slider
+% automatically         the "Automatically adjust brightness" checkbox
+% trueTone              the "True Tone" checkbox
+%% COLOR
+% showProfilesForThisDisplayOnly	the checkbox
+% profile               name of selection in Color Profile menu
+% profileRow            row # of selection in Color Profile menu
+%% NIGHT SHIFT
+% nightShiftSchedule    the Night Shift Schedule pop up menu
+% nightShiftManual      the Night Shift Manual checkbox
+%
+%% INPUT ARGS. Both arguments are optional: the integer screenNumber
+% and the struct newSettings. You can provide either, neither, or both.
+% It's ok to provide just "newSettings", omitting the "screenNumber"
+% (default is 0, the main screen). The struct "newSettings" can include
+% any number, from none to all, of the eight allowed fields:
+%
+% "brightness" (in the range 0.0 to 1.0)
+% "automatically" (true or false)
+% "trueTone" (true or false)
+% "nightShiftSchedule" ('Off','Custom', or 'Sunset to Sunrise')
+% "nighShiftManual" (true or false)
+% "showProfilesForThisDisplayOnly" (true or false)
+% "profile" (text)
+% "profileRow" (integer)
+%
+% If newSettings.profileRow is specified then newSettings.profile is
+% ignored. True Tone is not available on Macs manufactured before 2018.
+%
+%% OUTPUT ARGS: The struct oldSettings uses the fields listed above to
+% report the prior state of all available parameters. errorMsg is a second,
+% optional, output argument. If everything worked then errorMsg is an empty
+% string. Otherwise it will describe one failure, even if there were
+% several. In peeking, the fields corresponding to a parameter that could
+% not be read will be empty [], and that is not considered an error. In
+% poking, if you got an error, you might call MacDisplaySettings again to
+% compare the new peek with what you poked.
+%
+%% EXAMPLES. Typical uses of MacDisplaySettings include just typing the 
+% function name to learn the current settings:
 %
 % MacDisplaySettings
 %
@@ -19,115 +62,143 @@ function [oldSettings,failed] = MacDisplaySettings(arg1,arg2)
 %
 %   struct with fields:
 %
-%             brightness: 0.8412
-%          automatically: 1
-%               trueTone: []
-%     nightShiftSchedule: 'Off'
-%       nightShiftManual: 0
+%                         brightness: 0.8700
+%                      automatically: 0
+%                           trueTone: []
+%                 nightShiftSchedule: 'Off'
+%                   nightShiftManual: 0
+%     showProfilesForThisDisplayOnly: 0
+%                            profile: 'Color LCD'
+%                         profileRow: 1
 %
-%
-% % Specify the new settings you want.
+% % In one call to MacDisplaySettings you can both peek the old settings
+% % and poke new settings.
 %
 % newSettings.brightness=0.87;
 % newSettings.automatically=false;
 % newSettings.trueTone=false;
 % newSettings.nightShiftSchedule='Off';
 % newSettings.nightShiftManual=false;
+% newSettings.showProfilesForThisDisplayOnly=false;
+% newSettings.profile='Display P3'; % Select Profile by name.
+% newSettings.profileRow=1; % Specify Profile row, and ignore "profile" field.
 %
-% % Read old settings and set new settings.
+% [oldSettings,errorMsg]=MacDisplaySettings(screen,newSettings)
 %
-% oldSettings=MacDisplaySettings(newSettings)
+% % Now use the display, and then restore the old settings as you found
+% % them. You can omit "screen" if you're working on the main screen (0).
 %
-% % Use the display, ...
-% % then restore the old settings as you found them.
+% MacDisplaySettings(screen,oldSettings);
 %
-% MacDisplaySettings(oldSettings);
+%% PRESERVING THE DISPLAY STATE. Apple invites Macintosh users to adjust 
+% many parameters in the System Preferences Displays panel to customize
+% their display color and brightness including the enabling of dynamic
+% adjustments of all displayed images in response to personal preference,
+% ambient lighting, and time of day. Many users enjoy this, but, unless
+% reliably overriden, those adjustments defeat our efforts to calibrate the
+% display one day and, at a later date, use our calibrations to reliably
+% present an accurately specified stimulus. MacDisplaySettings aims to
+% satisfy everyone, by allowing your calibration and test programs to use
+% the computer in a fixed state, unaffected by individual user whims,
+% ambient lighting, and time of day, while saving and later restoring
+% whatever custom states the users have selected. MacDisplaySettings
+% reports and controls seven settings. It allows you to read their current
+% state, set them to standard values for your critical work, and, when
+% you're done, restore them to their original values.
 %
-% INTRODUCTION. Apple invites Macintosh users to adjust five parameters in
-% the System Preferences Displays panel to customize their display color
-% and brightness by enabling dynamic adjustments of all displayed images in
-% response to personal preference, ambient lighting, and time of day. Many
-% users enjoy this, but, unless reliably overriden, those adjustments
-% defeat our efforts to calibrate the display one day and, at a later date,
-% use our calibrations to reliably present an accurately specified
-% stimulus. MacDisplaySettings aims to satisfy everyone, by allowing your
-% calibration and test programs to use the computer in a fixed state,
-% unaffected by user whims, ambient lighting, and time of day, while saving
-% and later restoring whatever custom states the users have customized it
-% to. MacDisplaySettings reports and controls five settings. It allows you
-% to read their current states, set them to standard values for your
-% critical work, and, when you're done, restore them to their original
-% values. MacDisplaySettings monitors only those five System Preferences.
-% Please let me know if we should add another (denis,pelli@nyu.edu).
+%% ERROR REPORTING. If everything worked the optional output argument
+% errorMsg is an empty string. Otherwise errorMsg will contain an error
+% message string, just one even if there are mutiple faults. 
 %
-% BRIGHTNESS, AUTOBRIGHTNESS, TRUE TONE, and NIGHT SHIFT. Get and set five
-% fields in the macOS: System Preferences: Displays panel: 1. the
-% "brightness" slider, 2. the "Automatically adjust brightness" checkbox,
-% 3. the "True Tone" checkbox, 4. the Night Shift "schedule" pop up menu,
-% and 5. the Night Shift "manual" checkbox. The function's newSettings
-% argument has five fields, all optional: .brightness, .automatically,
-% .trueTone, .nightShiftSchedule, and .nightShiftManual. You can set any
-% combination of parameters, from none to all. The output argument
-% oldSettings always reports the prior state of all available fields. (True
-% Tone is not available on Macs manufactured before 2018.)
+%% ERROR CHECKING. Most of the controls are straightforward, you are just
+% peeking and poking a Boolean (0 or 1) or a small integer with a known
+% range. Brightness and Profile are more subtle, so MacDisplaySettings
+% always checks by peeking immediately after poking Brightness or Profile
+% (whether by name or by row). A discrepancy will be flagged by a nonempty
+% string in errorMsg. Note that you provide a float to Brightness but
+% within the macOS it's quantized to roughly 18-bit precision. In my
+% testing on a MacBook and a MacBook Pro, poking random numbers between 0.0
+% and 1.0, the discrepancy between peek and poke is uniformly distributed
+% over the range -5e-6 to +5e-6, provided you wait at least 0.1 s after the
+% latest poke. (When you move the slider, the macOS does a slow fade to the
+% new value.) For MacDisplaySettings's built-in peek-after-poke test,
+% MacDisplaySettings accepts the peek of Brightness if it is within 0.001
+% of what we poked, otherwise it waits 0.1 s and peeks again, and if the
+% second peek is still out of range, then reports the discrepancy in
+% errorMsg.
 %
-% All the work is done by the MacDisplaySettings.applescript run handler.
-% MacDisplaySettings.m merely checks arguments for validity before passing
-% them to the applescript, and minimally processes the returned values
-% before returning them to the calling program.
+%% RELIABLE. MacDisplaySettings is fast (2 s) and reliable, unlike my
+% previous efforts (AutoBrightness.m, Brightness.m, ScreenProfile.m). The
+% improvement results from discovering, first, that the applescript
+% operations proceed MUCH more quickly while System Preferences is
+% frontmost (so we now bring it to the front), and, second, we now follow
+% the example of pros and have wait loops in the applescript to make sure
+% each object is available before accessing it. Since those enhancements,
+% it now reliably takes 2 s, instead of the long 60 s delays, and
+% occasional timeout errors, that afflicted the old routines.
 %
-% INPUT ARGUMENTS. newSettings.brightness, with range 0.0 to 1.0, indicates
-% the desired brightness; .automatically, .trueTone, and .nightShiftManual
-% are boolean; .nightShiftSchedule is a text field corresponding to any of
-% the items in the Displays pop up menu ('Off', 'Custom', 'Sunset to
-% Sunrise'). (nightShiftSchedule is compatible with international systems,
-% provided you use the English field names when calling
-% MacDisplaySettings.m.) If you omit the newSettings argument, then
-% MacDisplaySettings will only peek, without poking. Any newSettings field
-% that is omitted or set to [] is not disturbed.
+%% INPUT ARGUMENT RANGE. newSettings.brightness has range 0.0 to 1.0;
+% automatically, trueTone, nightShiftManual, and
+% showProfilesForThisDisplayOnly are boolean (true or false);
+% nightShiftSchedule is a text field corresponding to any of the items in
+% the Displays pop up menu ('Off', 'Custom', 'Sunset to Sunrise').
+% (nightShiftSchedule is compatible with international systems, provided
+% you use the English field names when calling MacDisplaySettings.m.)
+% profile (text) specifies the desired Color Profile by name, and
+% profileRow (integer) specifies it by row. The row number will work
+% internationally. I suspect the names that you read and write will be in
+% whatever your macOS takes to be the local language. Thus
+% nightShiftSchedule uses English regardless of locality, whereas profile
+% uses local names. Thus, your program can get consistent international
+% behavior by using row numbers to specify profile and English names to
+% specify nightShiftSchedule.
 %
-% OUTPUT ARGUMENTS. oldSettings always returns all available settings. Note
-% that .trueTone is only available in some Macs manufactured in 2018 or
-% later. If the applescript failed, then all fields of oldSettings are [].
+%% Your screen's display profile is a video lookup table, it 
+% affects the color and luminance of everything you display. Apple allows
+% programmers to read and write the current color profile, which is in
+% memory, and I think that there are several consumer apps that do that (in
+% much the same spirit as Apple's Night Shift and TrueTone). System
+% Preferences: Displays is unaware of such changes. Clicking on the profile
+% name that is currently in use has no effect. Clicking on any other
+% profile causes it to be loaded, fresh from the disk master. So, when you
+% ask MacDisplaySettings to activate a profile that is already current, it
+% plays safe and first clicks another profile and then clicks on the one
+% you specified, to be sure that it loads fresh from disk.
 %
-% TIMING. On a MacBook Pro, when System Preferences is closed,
-% asking MacDisplaySettings to set all the fields typically takes 3
-% s, but occasionally takes longer, e.g. 60 s. (I don't know what causes
-% the occasionally long delays.)
+%% ERROR REPORTING is strict. Out-of-range or unrecognized arguments
+% produce fatal errors if detected by MacDisplaySettings.m; when such
+% errors are detected in MacDisplaySettings.applescript they are merely
+% flagged by a message in the optional output argument errorMsg. When
+% throwing a fatal error, if Psychtoolbox is present on the MATLAB path,
+% then MacDisplaySettings first closes any open windows (by calling
+% Psychtoolbox "sca"), so the error message won't be hidden behind your
+% window.
 %
-% ERROR REPORTING is aggressive. Out-of-range or unrecognized arguments
-% produce fatal erros. When reporting an error, if you have Psychtoolbox
-% installed, then any open windows are first closed (by Psychtoolbox
-% "sca"), so the error message won't be hidden behind your window.
+%% REQUIREMENTS: macOS and MATLAB. (If it detects Psychtoolbox, then it will
+% use the "sca" command to close windows before throwing a fatal error.) In
+% its current form, MacDisplaySettings has only been tested on macOS Mojave
+% (10.14) localized for USA. Earlier versions of this code supported macOS
+% 10.9 to 10.14. It's designed to work internationally, but that hasn't
+% been tested yet. It was tested on MATLAB 2019a, and very likely works on
+% any version of MATLAB new enough to include structs. I think, but haven't
+% checked, that the MATLAB code is pure basic MATLAB (no toolboxes) with
+% one negligible exception. Before throwing an error, we check for the
+% presence of the Psychtoolbox, if present then we call the Psychtoolbox
+% routine "sca" (Screen Close All) to close any open windows, so the error
+% won't be hidden behind your window. MacDisplaySettings.applescript needs
+% only the macOS. It should work on any screen, including an external
+% monitor, but it's only been tested on the main screen.
 %
-% REQUIREMENTS: macOS and MATLAB. In its current form, MacDisplaySettings
-% has only been tested on macOS Mojave (10.14) localized for USA. Earlier
-% versions of this code supported macOS 10.9 to 10.14. It's designed to
-% work internationally, but that hasn't been tested. It was tested on
-% MATLAB 2019a, and very likely works on any version of MATLAB new enough
-% to include structs. I think, but haven't checked, that the MATLAB code is
-% pure basic MATLAB (no toolboxes) with one negligible exception. Before
-% reporint an error, we check for the presence of the Psychtoolbox, if
-% present then we call the Psychtoolbox routine "sca" (Screen Close All) to
-% close any open windows, so the error won't be hidden behind your window.
-% MacDisplaySettings.applescript needs only the macOS. It should work on
-% any screen, but it's only been tested on the main screen.
-%
-% DEVELOPERS. To write Applescript like this, I strongly recommend that you
+%% DEVELOPERS. To write Applescript like this, I strongly recommend that you
 % buy the Script Debugger app from Late Night Software.
 % https://latenightsw.com/ and the UI Browser app from UI Browser by
 % PFiddlesoft. https://pfiddlesoft.com/uibrowser/ The Script Debugger is a
-% good editor and debugger for Applescripts. The UI Browser allows you to
+% the best Applescript editor and debugger. The UI Browser allows you to
 % discover the user interface targets in System Preferences that your
-% script will read and set.
+% script will read and set. With it you can do in an hour what would
+% otherwise take days of trial and error.
 %
-% ERROR REPORTING. Before issuing a MATLAB error, if Psychtoolbox is
-% installed, then we always close any open Psychtoolbox window, by calling
-% "sca" (Screen Close All). This prevents the annoying situation of
-% wondering what's wrong because you can't see the error message hidden
-% behind your Psychtoolbox window.
-%
-% APPLE SECURITY. If the user has not yet given permission for MATLAB to
+%% APPLE SECURITY. If the user has not yet given permission for MATLAB to
 % control the computer (in System Preferences:Security &
 % Privacy:Accessibility), then we give an error alerting the user to grant
 % this permission. The error dialog window will say the application
@@ -136,86 +207,99 @@ function [oldSettings,failed] = MacDisplaySettings(arg1,arg2)
 % admin privileges should then click as requested to provide that
 % permission. This needs to be done only once for each application.
 %
-% TECHNICAL: Adjusting the "brightness" setting in an LCD, controls the
-% luminance of the fluorescent light that is behind the liquid crystal
-% display. I believe that the "brightness" slider controls only the
+%% PROFILE ROW NUMBERING. Note that when you look at the list of profiles in
+% System Preferences:Displays:Color there is a line separating the top and
+% bottom sections of the list. Apple assigns a row number to that line, but
+% trying to select that row has no effect and returns an error in errorMsg.
+%
+%% WHAT "BRIGHTNESS" CONTROLS: Adjusting the "brightness" setting in an LCD
+% controls the luminance of the fluorescent light that is behind the liquid
+% crystal display. I believe that the "brightness" slider controls only the
 % luminance of the source, and does not affect the liquid crystal itsef,
 % which is driven by the GPU output. The luminance at the viewer's eye is
 % presumably the product of the two factors: luminance of the source and
 % transmission of the liquid crystal, at each wavelength.
 %
-% INSTALLATION. Just put both the .m and .applescript files anywhere in
-% MATLAB's path.
+%% INSTALLATION. Just put both the MacDisplaySettings.m and
+% MacDisplaySettings.applescript files anywhere in MATLAB's path.
 %
-% APPLESCRIPT IS SLOW. It uses the "System Preferences: Displays" panel,
-% which takes about 1 s to open if it isn't already open. We set up the
-% Brightness applescript to always leave System Preferences open, so you
-% won't waste your observer's time waiting a second for System Preferences
-% to open every time you call Brightness. Following rules of thumb that I
-% saw in online applescript code, there are several 0.2 s delays. I imagine
-% those delays could be reduced by specifically waiting on whatever
-% reesource is needed. But the worst case runtime of 7 s on a MacBook Pro
-% is fine for my usage.
-%
-% MULTIPLE SCREENS: All my computers have only one screen, so I haven't had
-% an opportunity to test the screenNumber argument.
+%% MULTIPLE SCREENS: Seems to be working, not yet thoroughly tested. Color 
+% Profiles work for all monitors. Our code gives equal status to all
+% monitors, but Apple severely limits the Display options for external
+% monitors, and often provides them only for Apple monitors. We provide
+% access to all the controls you see in the windows of System Preferences:
+% Displays.
 %
 %% HISTORY
-% June 25, 2017. Written by denis.pelli@nyu.edu for the Psychtoolbox.
-% June 28, 2017, Fixed type of returned value, formerly a string, to now be
-% a number.
-% July 20, 2017. Enhanced to cope with spaces in the path to the
-% applescript.
-% December 1, 2018. Put try-catch block around the code, to
-% gracefully cope with error while Screen window obscures the MATLAB
-% Command Window. Eliminated the check for Screen window, which is no
-% longer an issue.
+% June 25, 2017. denis.pelli@nyu.edu wrote "Brightness" for the
+% Psychtoolbox, and later "AutoBrightness".
 % July 16,2019 Improved by looking at code here:
 % https://apple.stackexchange.com/questions/272531/dim-screen-brightness-of-mbp-using-applescript-and-while-using-a-secondary-mon/285907
-% August 2019. If Psychotoolbox version at least 3.0.16, then use Screen
-% instead of Applescript.
-% April 2020. Enhanced to read and set Brightness, Automatically, and True
-% Tone, not just Brightness slider.
-% April 14, 2020. Added loops (in the applescript) to wait for "tab group
-% 1" before accessing it. I hope this will eliminate the occasional
-% failures, in which MacDisplaySettings.m returns [] for brightness and
-% automatic, but returns correct values for night shift.
+% April 2020. Wrote MacDisplaySettings, based on Brightness, but enhanced
+% to also support Automatically, True Tone, Night Shift, and Profile.
+% April 14, 2020. Added wait loops (in the applescript) to wait for "tab
+% group 1" before accessing it. This has nearly eliminated the occasional
+% time out failures, in which MacDisplaySettings.m returns [] for
+% brightness and automatic, but returns correct values for night shift.
+% May 3, 2020. In the Applescript, I now "activate" System Preferences at
+% the beginning (and reactivate the former app when we exit), and this runs
+% much faster. Formerly, delays of 60 s were common, with occasional time
+% outs. Now it reliably takes 3 s.
+% May 7, 2020. Shortened the help text, reducing redundancy. Check for
+% unrecognized fields in newSettings. Improved error reporting.
+% May 8, 2020. Enhanced to support arbitrary screenNumber, i.e. external
+% monitors. 
+% May 9, 2020. Improved speed (from 3 to 1.6 s) by replacing fixed delays
+% in applescript with wait loops. Enhanced the built-in peek of brightness
+% afer poking. Now if the peek differs by more than 0.001,
+% MacDisplaySettings waits 100 ms and tries again, to let the value settle,
+% as the visual effect is a slow fade. Then it reports in errorMsg if the
+% new peek differs by more than 0.001. In limited testing, waiting for a
+% good answer works: the peek-poke difference rarely exceeds +/-5e-6 and
+% never exceeds 0.001. It's my impression that if we always waited 100 ms,
+% then the discrepancy would always be less than +/-5e-6.
 %
-% Thanks to Mario Kleiner for explaining how macOS "brightness" works.
-% Thanks to nick.peatfield@gmail.com for sharing his applescript code for
-% dimmer.scpt and brighter.scpt. And to Hormet Yiltiz for noting that we
-% need to control Night Shift.
+%% ACKNOWLEGEMENTS. Thanks to Mario Kleiner for explaining how macOS
+% "brightness" works. Thanks to nick.peatfield@gmail.com for sharing his
+% applescript code for dimmer.scpt and brighter.scpt. And to Hormet Yiltiz
+% for noting that we need to control Night Shift.
 %
-% See also:
-% Screen ConfigureDisplay?
+%% SEE ALSO:
+% https://support.apple.com/en-us/HT208909 % True Tone
+% https://support.apple.com/en-us/HT207513 % Night Shift
+% Screen ConfigureDisplay? % In Psychtoolbox
 % http://www.manpagez.com/man/1/osascript/
 % https://developer.apple.com/library/mac/documentation/AppleScript/Conceptual/AppleScriptLangGuide/reference/ASLR_cmds.html
 % https://discussions.apple.com/thread/6418291
-% Script Debugger app from Late Night Software. https://latenightsw.com/
-% UI Browser app from UI Browser by PFiddlesoft. https://pfiddlesoft.com/uibrowser/
+% ScriptDebugger app from Late Night Software. 
+% https://latenightsw.com/
+% UIBrowser app from PFiddlesoft. 
+% https://pfiddlesoft.com/uibrowser/
+
+% The Psychtoolbox Screen.mex function sets Brightness more quickly than
+% MacDisplaySettings does, because applescript is slow, but the macOS
+% support of Screen.mex Brightness is flakey. When I last tested it, in
+% Fall 2019, brightness changed immediately, but the brightness slider in
+% Screen Preferences: Displays did not budge, and sometimes the macOS would
+% later revert to the brightness corresponding to the stale slider
+% position.
+useScreenBrightness=false;
 
 oldSettings.brightness=[];
 oldSettings.automatically=[];
 oldSettings.trueTone=[];
 oldSettings.nightShiftSchedule=[];
 oldSettings.nightShiftManual=[];
+oldSettings.showProfilesForThisDisplayOnly=[];
+oldSettings.profile=[];
+oldSettings.profileRow=[];
 failed=false;
 
-if ~IsOSX
-    % I believe that Applescript works only within macOS. It is conceivable
-    % that Apple's display brightness control is implemented on Macintoshes
-    % running Linux or Windows, in which case someone might enhance this
-    % program to work for those situations.
+if ~ismac
+    % Applescript requires macOS.
     failed = true; % Report failure on this unsupported OS:
     return;
 end
-% The Psychtoolbox Screen function sets Brightness more quickly than
-% applescript can, but we're setting five fields, of which Psychtoolbox
-% only sets one, so there's no time savings in using Psychtoolbox. Most
-% of the time spent in applescript is in getting acess to Screen
-% Preferences. Once we're reading it, reading and writing extra fields
-% doesn't take long.
-useScreenBrightness=false;
 
 switch nargin
     case 0
@@ -240,43 +324,82 @@ switch nargin
         CloseWindows
         error('At most two arguments are allowed.');
 end
+if exist('Screen','file') && ~ismember(screenNumber,Screen('Screens'))
+    str=sprintf(' %d',Screen('Screens'));
+    error('screenNumber %d is not currently a valid screen number:%s.',screenNumber,str);
+end
 if ~isstruct(newSettings)
     CloseWindows
     error('The newSettings argument must be a struct.');
 end
+if length(newSettings)~=1
+    CloseWindows
+    error('The newSettings argument must be a struct, not an array.');
+end
+if any(~ismember(fieldnames(newSettings),fieldnames(oldSettings)))
+    CloseWindows
+    illegal=find(~ismember(fieldnames(newSettings),fieldnames(oldSettings)),1);
+    s=fieldnames(newSettings);
+    error('Input argument newSettings.%s field not recognized.',s{illegal});
+end
 if isfield(newSettings,'brightness') && ...
         ~isempty(newSettings.brightness) && ...
-        (newSettings.brightness<0 || newSettings.brightness>1)
+        (~isfloat(newSettings.brightness) || newSettings.brightness<0 || newSettings.brightness>1)
     CloseWindows
-    error('newSettings.brightness %.1f must be in the range 0.0 to 1.0, otherwise [] to ignore it.',newSettings.brightness)
+    error('newSettings.brightness %.1f must be float (not logical) in the range 0.0 to 1.0, or [] to ignore it.',...
+        newSettings.brightness)
 end
 if isfield(newSettings,'automatically') && ...
         ~isempty(newSettings.automatically) && ...
-        ~ismember(newSettings.automatically,0:1) && ...
-        ~islogical(newSettings.automatically)
+        (~islogical(newSettings.automatically) || ...
+        ~ismember(newSettings.automatically,[true false]))
     CloseWindows
-    error('newSettings.automatically %.1f must be 0 or 1, otherwise [] or omitted to ignore it.',newSettings.automatically)
+    error('newSettings.automatically %.1f must be true or false, otherwise [] or omitted to ignore it.',...
+        newSettings.automatically)
 end
 if isfield(newSettings,'trueTone') && ...
         ~isempty(newSettings.trueTone) && ...
-        ~ismember(newSettings.trueTone,0:1) && ...
-        ~islogical(newSettings.trueTone)
+        (~islogical(newSettings.trueTone) || ...
+        ~ismember(newSettings.trueTone,[true false]))
     CloseWindows
-    error('newSettings.trueTone %.1f must be 0 or 1, otherwise [] or omitted to ignore it.',newSettings.trueTone)
+    error('newSettings.trueTone %.1f must be true or false, otherwise [] or omitted to ignore it.',...
+        newSettings.trueTone)
 end
 if isfield(newSettings,'nightShiftSchedule') && ~isempty(newSettings.nightShiftSchedule) && ...
         ~ismember(newSettings.nightShiftSchedule,{'Off','Custom','Sunset to Sunrise'})
     CloseWindows
-    error('newSettings.nightShiftSchedule %.1f must be ''Off'',''Custom'', or ''Sunset to Sunrise'', otherwise [] or omitted to ignore it.',...
+    error('newSettings.nightShiftSchedule %s must be ''Off'',''Custom'', or ''Sunset to Sunrise'', otherwise [] or omitted to ignore it.',...
         newSettings.nightShiftSchedule)
 end
 if isfield(newSettings,'nightShiftManual') && ...
         ~isempty(newSettings.nightShiftManual) && ...
-        ~ismember(newSettings.nightShiftManual,0:1) && ...
-        ~islogical(newSettings.nightShiftManual)
+        (~islogical(newSettings.nightShiftManual) || ...
+        ~ismember(newSettings.nightShiftManual,[true false]))
     CloseWindows
-    error('newSettings.nightShiftManual %.1f must be 0 or 1, otherwise [] or omitted to ignore it.',...
+    error('newSettings.nightShiftManual %.1f must be true or false, otherwise [] or omitted to ignore it.',...
         newSettings.nightShiftManual)
+end
+if isfield(newSettings,'showProfilesForThisDisplayOnly') && ...
+        ~isempty(newSettings.showProfilesForThisDisplayOnly) && ...
+        (~islogical(newSettings.showProfilesForThisDisplayOnly) || ...
+        ~ismember(newSettings.showProfilesForThisDisplayOnly,[true false]))
+    CloseWindows
+    error('newSettings.showProfilesForThisDisplayOnly %.1f must be true or false, otherwise [] or omitted to ignore it.',...
+        newSettings.showProfilesForThisDisplayOnly)
+end
+if isfield(newSettings,'profile') && ...
+        ~isempty(newSettings.profile) && ...
+        ~ischar(newSettings.profile)
+    CloseWindows
+    error('newSettings.profile ''%s'' must be Profile name, otherwise [] or omitted to ignore it.',newSettings.profile)
+end
+if isfield(newSettings,'profileRow') && ...
+        ~isempty(newSettings.profileRow) && ...
+        (~isfloat(newSettings.profileRow) || ...
+        newSettings.profileRow<1 || ...
+        mod(newSettings.profileRow,1)~=0)
+    CloseWindows
+    error('newSettings.profileRow %d must be a positive integer Profile row number, otherwise [] or omitted to ignore it.',newSettings.profileRow)
 end
 fields=fieldnames(newSettings);
 ok=ismember(fields,fieldnames(oldSettings));
@@ -298,7 +421,11 @@ try
     % Call MacDisplaySettings.applescript
     scriptPath = which('MacDisplaySettings.applescript');
     command = ['osascript "' scriptPath '"']; % Double quotes cope with spaces in scriptPath.
-    command = [command ' ' num2str(screenNumber)];
+    command = [command ' ' num2str(screenNumber) ' '];
+    globalRect=Screen('GlobalRect',screenNumber);
+    command=sprintf('%s %d %d %d %d ',command,globalRect);
+    % MATLAB indicates missing value by [].
+    % In passing arguments to AppleScript we indicate missing values as -1.
     if ~isfield(newSettings,'brightness') || isempty(newSettings.brightness)
         newSettings.brightness=-1;
     end
@@ -327,17 +454,30 @@ try
             isempty(newSettings.nightShiftManual)
         newSettings.nightShiftManual=-1;
     end
+    if ~isfield(newSettings,'showProfilesForThisDisplayOnly') || isempty(newSettings.showProfilesForThisDisplayOnly)
+        newSettings.showProfilesForThisDisplayOnly=-1;
+    end
+    if ~isfield(newSettings,'profileRow') || ...
+            isempty(newSettings.profileRow)
+        newSettings.profileRow=-1;
+    end
+    if ~isfield(newSettings,'profile') || ...
+            isempty(newSettings.profile)
+        newSettings.profile='';
+    end
     command = [command ' ' num2str(newSettings.brightness) ' '...
         num2str(newSettings.automatically) ' ' ...
         num2str(newSettings.trueTone) ' '...
         num2str(newSettings.nightShiftSchedule) ' ' ...
-        num2str(newSettings.nightShiftManual)];
-    [failed,oldString]=system(command); % Takes 4 to 9 s on MacBook Pro.
-    %     fprintf('%s\n',oldString);
+        num2str(newSettings.nightShiftManual) ' '...
+        num2str(newSettings.showProfilesForThisDisplayOnly) ' '...
+        num2str(newSettings.profileRow) ' '...
+        '"' newSettings.profile '"'];
+    [failed,oldString]=system(command); % Takes 2 s on MacBook Pro.
     if failed
         CloseWindows
-        error('Applescript error: failed=%d, oldString=%s.',...
-            failed,oldString);
+        errorMsg=oldString;
+        error('failed=%d, Applescript error: %s.',failed,oldString);
     end
     if streq('-99',oldString(1:3))
         CloseWindows
@@ -346,11 +486,18 @@ try
             'permission for Full Disk Access and Automation.']);
         error('Applescript returned error: %s',oldString);
     end
-    [v,count,errMsg]=sscanf(oldString,'%f, %d, %d, %d, %d',5);
-    if count<3 || ~isempty(errMsg)
-        warning('sscanf processed %d of 5 values. sscanf error: %s',...
+    [v,count,errMsg,extra]=sscanf(oldString,'%f, %d, %d, %d, %d, %d, %d, %d',7);
+    nextIndex=1+extra-1;
+    if count<7 || ~isempty(errMsg)
+        warning('sscanf processed %d of 7 values. sscanf error: %s',...
             count,errMsg);
+        fprintf('oldString=''%s''.\n',oldString);
     end
+    oldSettings.profile=regexprep(oldString(nextIndex:end),...
+        '\|([^\|]*)\|.*','$1','once');
+    nextIndex=nextIndex+1+length(oldSettings.profile)+1-1+3; % skip ', '
+    errorMsg=regexprep(oldString(nextIndex:end),'\|([^\|]*)\|.*','$1','once');
+    nextIndex=nextIndex+1+length(errorMsg)+3;
     if count>=1
         oldSettings.brightness=v(1);
     end
@@ -366,6 +513,12 @@ try
     if count>=5
         oldSettings.nightShiftManual=v(5);
     end
+    if count>=6
+        oldSettings.showProfilesForThisDisplayOnly=v(6);
+    end
+    if count>=7
+        oldSettings.profileRow=v(7);
+    end
     if oldSettings.brightness==-1
         oldSettings.brightness=[];
     end
@@ -374,6 +527,13 @@ try
     end
     if oldSettings.trueTone==-1
         oldSettings.trueTone=[];
+    end
+    if ~isfloat(oldSettings.nightShiftSchedule) || length(oldSettings.nightShiftSchedule)~=1
+        oldSettings.nightShiftSchedule
+        error('oldSettings.nightShiftSchedule is not an integer.');
+    end
+    if oldSettings.profileRow==-1
+        oldSettings.profileRow=[];
     end
     % Convert pop up menu choice from index to text.
     switch oldSettings.nightShiftSchedule
@@ -393,9 +553,13 @@ try
     if oldSettings.nightShiftManual==-1
         oldSettings.nightShiftManual=[];
     end
+    if oldSettings.showProfilesForThisDisplayOnly==-1
+        oldSettings.showProfilesForThisDisplayOnly=[];
+    end
     oldSettings.automatically=logical(oldSettings.automatically);
     oldSettings.trueTone=logical(oldSettings.trueTone);
     oldSettings.nightShiftManual=logical(oldSettings.nightShiftManual);
+    oldSettings.showProfilesForThisDisplayOnly=logical(oldSettings.showProfilesForThisDisplayOnly);
     if failed || isempty(oldSettings.brightness)
         warning('Applescript failed. Here follows some diagnostic output.');
         failed
@@ -407,16 +571,17 @@ try
             'and that System Preferences is not tied up in a dialog. ' ...
             'Brightness applescript error: %s. '],oldString);
     end
-catch e
+catch ME
     CloseWindows
     failed=true;
-    rethrow(e);
+    rethrow(ME);
 end
 end
 
 function CloseWindows
 if exist('PsychtoolboxVersion','file') && ~isempty(Screen('Windows'))
-    % Close any user windows to make sure that error can be seen.
+    % Close any user windows to make sure that our error message can be
+    % seen.
     sca
 end
 end
