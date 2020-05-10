@@ -6,8 +6,8 @@
 % We call QUESTPlusRecalculate, written by Shenghao Lin, to do the fit.
 
 experiment='criterion2';
-if ~exist('skipDataCollection')
-   skipDataCollection=0;
+if ~exist('skipDataCollection','var')
+   skipDataCollection=false;
 end
 if ~skipDataCollection
    % Read in all MAT data files for <experiment>.
