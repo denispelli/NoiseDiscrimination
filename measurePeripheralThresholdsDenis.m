@@ -64,39 +64,39 @@ o.showCropMarks=0; % mark the bounding box of the target
 o.printDurations=0;
 
 if 1
-% NEW DATA COLLECTION, APRIL 21, 2017
-o.observer='ning';
-% o.observer='chen';
-% IMPORTANT: Use a tape measure or meter stick to measure the distance from
-% your eye to the screen. The number below must be accurate.
-o.distanceCm=70; % viewing distance
-o.targetFont='Sloan';
-o.alphabet='DHKNORSVZ';
-o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
-o.durationSec = 0.2;
-for ecc = [60 -60 30 -30 3 10 0];
-   o.nearPointXYInUnitSquare=[.5 .5];
-   if ecc>10
-      o.nearPointXYInUnitSquare=[.95 .5];
-      if ecc<-10
-         o.nearPointXYInUnitSquare=[.05 .5];
-      end
-   sizes = [2 4 8 16];
-   switch(ecc)
-      case(30),
-         sizes = [4 8 16];
-      case(6),
-         sizes= [8 16];
-   end
-   for LetterSize = sizes
-      for noiseSD = [0 0.16]
-         o.targetXYDeg=[ecc 0];
-         o.targetHeightDeg=LetterSize;
-         o.noiseCheckDeg=o.targetHeightDeg/20;
-         o.noiseSD=noise;
-         o=NoiseDiscrimination(o);
-      end
-   end
+    % NEW DATA COLLECTION, APRIL 21, 2017
+    o.observer='ning';
+    % o.observer='chen';
+    % IMPORTANT: Use a tape measure or meter stick to measure the distance from
+    % your eye to the screen. The number below must be accurate.
+    o.distanceCm=70; % viewing distance
+    o.targetFont='Sloan';
+    o.alphabet='DHKNORSVZ';
+    o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
+    o.durationSec = 0.2;
+    for ecc = [60 -60 30 -30 3 10 0]
+        o.nearPointXYInUnitSquare=[.5 .5];
+        if ecc>10
+            o.nearPointXYInUnitSquare=[.95 .5];
+            if ecc<-10
+                o.nearPointXYInUnitSquare=[.05 .5];
+            end
+            sizes = [2 4 8 16];
+            switch(ecc)
+                case(30),
+                    sizes = [4 8 16];
+                case(6),
+                    sizes= [8 16];
+            end
+            for LetterSize = sizes
+                for noiseSD = [0 0.16]
+                    o.targetXYDeg=[ecc 0];
+                    o.targetHeightDeg=LetterSize;
+                    o.noiseCheckDeg=o.targetHeightDeg/20;
+                    o.noiseSD=noise;
+                    o=NoiseDiscrimination(o);
+                end
+            end
+        end
+    end
 end
-end
-
