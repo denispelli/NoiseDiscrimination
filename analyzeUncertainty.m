@@ -1,4 +1,4 @@
-if false
+if true
     %% Analyze the data collected by runUncertaintyNew and runUncertaintySangita
     experiment='uncertaintyNew'; % November/December 2019
     experiment='uncertaintySangita'; % November/December 2019
@@ -30,8 +30,14 @@ if false
         'pixPerCm'  'nearPointXYPix' 'NUnits' 'beginningTime' 'thresholdParameter'...
         'questMean' 'partingComments'...
         'uncertainParameter' 'uncertainValues'...
+        'MSpace' 'MTime'...
         'pThreshold' 'steepness' 'lapse' 'guess'};
     oo=ReadExperimentData(experiment,vars); % Adds date and missingFields.
+    
+    % Retain only the specified experiment.
+    ok=ismember({oo.experiment},experiment);
+    oo=oo(ok);
+    
     fprintf('%s %d thresholds.\n',experiment,length(oo));
     
     %% PRINT COMMENTS
@@ -47,6 +53,22 @@ if false
     %     fprintf('%s\n',comments{i}{1});
     % end
     
+    for conditionName=conditionNames
+        for observer=observers
+            match=ismember({oo.thresholdParameter},{'contrast'});
+            match=match & ismember({oo.conditionName},conditionName);
+            idealMatch=match & ismember({oo.observer},{'ideal'});
+            match = match & ismember({oo.observer},observer);
+            if any(match) && ~any(idealMatch)
+                % We need an ideal threshold for this condition.
+            end
+         end
+    end
+    
+    % DELETE CONDITIONS WE CAN'T ANALYZE.
+    ok=ismember({oo.targetFont},{'Sloan'}) | ismember({oo.targetKind},{'gabor'});
+    oo=oo(ok);
+    
     % USE UncertainEOverN TO IMPLEMENT WHITE-NOISE IDEAL.
     keys={};
     values=[];
@@ -57,7 +79,7 @@ if false
         end
         if ismember(oo(oi).observer,{'ideal'}) && oo(oi).N>0
             psych.trialsDesired=100;
-            psych.reps=100;
+            psych.reps=1;
             psych.tGuess=0;
             psych.tGuessSd=3;
             psych.pThreshold=oo(oi).pThreshold;
@@ -68,7 +90,7 @@ if false
             psych.targetFont=oo(oi).targetFont;
             psych.alphabet=oo(oi).alphabet;
             if ~ismember(oo(oi).conditionName,keys)
-                % Each condition, with non-zero noise, is computed only once,
+                % Each condition with non-zero noise is computed only once,
                 % and cached.
                 keys{end+1}=oo(oi).conditionName;
                 values(end+1)=UncertainEOverN(M,psych);
@@ -78,19 +100,72 @@ if false
         end
     end
     
+    %% COMPUTE ANY MISSING IDEAL REFERENCE
+    conditionNames=unique({oo.conditionName});
+    observers=unique({oo.observer});
+    for conditionName=conditionNames
+        for observer=observers
+            match=ismember({oo.thresholdParameter},{'contrast'});
+            match=match & ismember({oo.conditionName},conditionName);
+            idealMatch=match & ismember({oo.observer},{'ideal'});
+            match = match & ismember({oo.observer},observer);
+            if any(match) && ~any(idealMatch)
+                % We need an ideal threshold for this condition.
+                maxN=max([oo(match).N]);
+                ii=match & ismember([oo.N],maxN);
+                oi=find(ii,1);
+                if oo(oi).N>0
+                    fprintf('Computing ideal for conditionName: %s\n',...
+                        oo(oi).conditionName);
+                    psych.trialsDesired=100;
+                    psych.reps=100;
+                    psych.tGuess=0;
+                    psych.tGuessSd=3;
+                    psych.pThreshold=oo(oi).pThreshold;
+                    psych.beta=oo(oi).steepness;
+                    psych.delta=oo(oi).lapse;
+                    psych.gamma=oo(oi).guess;
+                    psych.targetKind=oo(oi).targetKind;
+                    psych.targetFont=oo(oi).targetFont;
+                    psych.alphabet=oo(oi).alphabet;
+                    % Ideal threshold in noise.
+                    oo(end+1)=oo(oi);
+                    oo(end).observer='ideal';
+                    oo(end).trials=psych.reps*psych.trialsDesired;
+                    % oo(end).deltaEOverN=UncertainEOverN(M,psych);
+                    % oo(end).E0=0;
+                    % oo(end).Neq=0;
+                    oo(end).E=UncertainEOverN(M,psych)*oo(oi).N;
+                    oo(end).contrast=sign(oo(end).contrast)*sqrt(oo(end).E/oo(end).E1);
+                    oo(end).beginningTime=[];
+                    oo(end).questMean=[];
+                    oo(end).date=[];
+                    % Ideal threshold in zero noise.
+                    oo(end+1)=oo(end);
+                    oo(end).E=0;
+                    % oo(end).E0=0;
+                    % oo(end).Neq=0;
+                    oo(end).contrast=0;
+                    oo(end).N=0;
+                    oo(end).noiseSD=0;
+                end
+            end
+        end
+    end
+
     % COMPUTE EFFICIENCY
-    % Select thresholdParameter='contrast', for each conditionName, For each
-    % observer, including ideal, use all (E,N) data to estimate deltaNOverE and
-    % Neq. Compute efficiency by comparing deltaNOverE of each to that of the
-    % ideal.
-    conditionkeys=unique({oo.conditionName});
+    % Select thresholdParameter='contrast', for each conditionName, For
+    % each observer, including ideal, use all (E,N) data to estimate
+    % deltaEOverN and Neq. Compute efficiency by comparing deltaEOverN of
+    % each to that of the ideal.
+    conditionNames=unique({oo.conditionName});
     observers=unique({oo.observer});
     aa=[];
-    for conditionName=conditionkeys
+    for conditionName=conditionNames
         for observer=observers
             match=ismember({oo.conditionName},conditionName) & ismember({oo.observer},observer);
             match=match & ismember({oo.thresholdParameter},{'contrast'});
-            if sum(match)>0
+            if any(match)
                 E=[oo(match).E];
                 N=[oo(match).N];
                 [Neq,E0,deltaEOverN]=EstimateNeq(E,N);
@@ -107,48 +182,109 @@ if false
                 aa(end).E0=E0; % scalar
                 aa(end).Neq=Neq; % scalar
                 aa(end).deltaEOverN=deltaEOverN; % scalar
+                aa(end).experiment=unique({oo(match).experiment});
+                aa(end).targetHeightDeg=unique([oo(match).targetHeightDeg]);
                 oi=find(match,1);
                 aa(end).thresholdParameter=oo(oi).thresholdParameter;
             end
         end
     end
-    for conditionName=conditionkeys
+    for ai=1:length(aa)
+        % Recover MSpace, MTime, and M from the conditionName. This may not
+        % be necessary, as these fields may be defined in our data files.
+        MSpaceStr=regexprep(aa(ai).conditionName,'.*MSpace=(\d+).*','$1');
+        MSpace=str2num(MSpaceStr);
+        MTimeStr=regexprep(aa(ai).conditionName,'.*MTime=(\d+).*','$1');
+        MTime=str2num(MTimeStr);
+        MStr=regexprep(aa(ai).conditionName,'.*M=(\d+).*','$1');
+        M=str2num(MStr);
+        if isempty(MSpace)
+            if isempty(M)
+                MSpace=1;
+            else
+                MSpace=M;
+            end
+        end
+        if isempty(MTime)
+            MTime=1;
+        end
+        if isempty(M)
+            M=MSpace*MTime;
+        end
+        % fprintf('%s :',aa(ai).conditionName)
+        % fprintf('MSpace %d, ',MSpace);
+        % fprintf('MTime %d, ',MTime);
+        % fprintf('M %d, ',M);
+        % fprintf('\n');
+        aa(ai).M=M;
+        aa(ai).MSpace=MSpace;
+        aa(ai).MTime=MTime;
+    end
+    for conditionName=conditionNames
         for observer=observers
             match=ismember({aa.thresholdParameter},{'contrast'});
             match=match & ismember({aa.conditionName},conditionName);
             idealMatch=match & ismember({aa.observer},{'ideal'});
             match = match & ismember({aa.observer},observer);
-            if sum(match)>0 && sum(idealMatch)>0
+            if any(match) && ~any(idealMatch)
+                % We need an ideal threshold for this condition.
+                fprintf('Missing ideal for %s, %s.\n',conditionName{1},observer{1});
+            end
+            if any(match) && any(idealMatch)
                 assert(sum(match)==1 & sum(idealMatch)==1);
                 aa(match).efficiency=aa(idealMatch).deltaEOverN ./ aa(match).deltaEOverN;
             end
         end
     end
+    oo=SortFields(oo);
+    aa=SortFields(aa);
+
+    for ai=1:length(aa)
+        aa(ai).maxN=max(aa(ai).N);
+    end
     % human=~ismember({aa.observer},'ideal');
     % aa=struct2table(aa(human));
-    aa=struct2table(aa);
-    aa=sortrows(aa,'conditionName');
-    disp(aa(:,{'conditionName','efficiency','observer','deltaEOverN'}));
+    ta=struct2table(aa);
+    ta=sortrows(ta,'conditionName');
+    disp(ta(:,{'conditionName','efficiency','observer','deltaEOverN'}));
+    if ~isempty(mfilename)
     dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
-    writetable(aa,fullfile(dataFolder,'efficiency.xlsx'));
-    
+    else
+        dataFolder='~/Dropbox/MATLAB/NoiseDiscrimination/data/';
+    end
+    vars={'experiment' 'conditionName' 'thresholdParameter'  'targetHeightDeg' 'observer' 'E0' 'deltaEOverN' 'maxN' 'efficiency' 'MSpace' 'MTime' 'M'};
+
+    % WE NEED TO DELETE STALE TABLE FIRST, OTHERWISE ANY CELLS NOT
+    % OVERWITTEN REMAIN. Ugh!
+    file=fullfile(dataFolder,'efficiency.xlsx');
+    if exist(file,'file')
+        delete(file);
+    end
+    writetable(ta(:,vars),file);
+
+    fprintf('Ready to analyze %d thresholds:\n',length(oo));
     % return
-    
+    if false
     % oo=ComputeNPhoton(oo);
     % Compute efficiency
     
-    % Report the luminance fields of each file.
+    % Report selected fields for each combination of conditionName & observer.
     t=struct2table(oo);
-    fprintf('Ready to analyze %d thresholds:\n',length(oo));
     if printFilekeys
         %     t=sortrows(t,{'targetFont','N','observer'});
         %     disp(t(:,{'targetFont','N','E','observer','noiseSD'}));
         %     tt=t(:,{'targetFont','N','E','observer','noiseSD'});
         %     t=sortrows(t,{'conditionName' 'thresholdParameter' 'N' 'observer'});
-        disp(t(:,{'observer' 'conditionName' 'thresholdParameter' 'N' 'E' 'targetHeightDeg'  'noiseSD' 'contrast'}));
+        disp(t(:,{'observer' 'conditionName' 'thresholdParameter' 'N' 'E' ...
+            'targetHeightDeg'  'noiseSD' 'contrast' }));
     end
     tt=t(:,{'experiment' 'conditionName' 'thresholdParameter' 'N' 'E' 'targetHeightDeg' 'observer' 'noiseSD' 'contrast'});
-    writetable(tt,'ComplexEfficiency.xlsx');
+    file=fullfile(dataFolder,'uncertaintyThresholds.xlsx');
+    if exist(file,'file')
+        delete(file);
+    end
+    writetable(tt,file);
+    end
     return
 end
 
@@ -158,6 +294,7 @@ list=struct([]);
 if plotGraphs
     %     conditionNames=unique({oo.conditionName});
     conditionNames={'gabor;M=1' 'gabor;M=104' 'letter;M=1' 'letter;M=104'};
+    
     fprintf('Plotting %d thresholds.\n',length(oo));
     for observer=unique({oo.observer})
         isObserver=ismember({oo.observer},observer);
@@ -260,6 +397,7 @@ if false
 end
 
 % return
+
 %% Plot
 if Neq>=min(N) && Neq<2*max(N)
     % Trust reasonable Neq.
