@@ -26,8 +26,8 @@ function [EOverN,psych]=UncertainEOverN(MM,psych)
 %
 %% 'orthogonalLetter'
 % Provides orthonormal signals to the letter code to confirm that it
-% performs identically with the Gabor code. Currently the threshold
-% contrast thresholds agree to within 0.01 log unit.
+% performs identically with the Gabor code. Currently the contrast
+% thresholds agree to within 0.01 log unit.
 %
 % INPUT ARGUMENTS:
 % "MM" is an array of one or more degrees of uncertainty M, each a positive
@@ -170,13 +170,14 @@ switch psych.targetKind
         o.noiseSD=0.5;
         o.N=o.noiseSD^2;
         if ~ismember({psych.targetFont},{'Sloan'})
-            error(...
+            warning(...
                 ['UncertainEOverN: Currently, when psych.targetKind=''letter'', '...
-                'psych.targetFont must be ''Sloan'', not ''%s''.'],...
+                'psych.targetFont must be ''Sloan'', not ''%s''. Setting that threshold to NaN.'],...
                 psych.targetFont);
             EOverN=nan;
             return
         end
+        % These values assume the Sloan font.
         o.targetHeightOverWidth=1;
         o.targetFontHeightOverNominal=1;
         o.targetFont=psych.targetFont;
