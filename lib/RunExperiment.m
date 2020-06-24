@@ -36,6 +36,8 @@ function oooOut=RunExperiment(ooo)
 % TO DO: DELETE OBSOLETE EXPERIMENT SUMMARY. Once we save the new file we
 % ought to delete the old partial, since its data are now obsolete,
 % duplicated in the new complete experiment file.
+mainFolder=fileparts(fileparts(mfilename('fullpath'))); % Takes 0.1 s.
+addpath(fullfile(mainFolder)); 
 
 % Once we call onCleanup, until RunExperiment ends, CloseWindowsAndCleanup
 % will run (closing any open windows) when this function terminates for any
@@ -172,15 +174,13 @@ end % function RunExperiment
 %% Clean up whenever RunExperiment terminates, even by control-C.
 function CloseWindowsAndCleanup()
 % Close any window opened by the Psychtoolbox Screen command, and re-enable keyboard.
-global window oldDisplasySettings
+global window oldDisplaySettings screen
 if ~isempty(Screen('Windows'))
     % Screen CloseAll is very slow, so we call it only if we need to.
     Screen('CloseAll');
-    %     sca; % Originally equivalent to Screen('CloseAll').
+    % sca; % Originally equivalent to Screen('CloseAll').
     if ismac
-        % We ought to specify the screen here, but I don't think it's yet a
-        % global.
-        MacDisplaySettings(oldDisplasySettings);
+        MacDisplaySettings(screen,oldDisplaySettings);
     end
 end
 window=[];
