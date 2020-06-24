@@ -121,7 +121,7 @@ if 0
 %       o.useFractionOfScreenToDebug=0.4; % 0: normal, 0.5: small for debugging.
       o.experimenter='';
       o.observer=''; 
-      o.blankingRadiusReEccentricity=0;
+      o.fixationBlankingRadiusReEccentricity=0;
       if 0
          o.targetKind='letter';
          o.targetFont='Sloan';
@@ -138,11 +138,11 @@ if 0
       if all(o.eccentricityXYDeg==0)
          o.isTargetLocationMarked=0;
       end
-      o.blankingRadiusReTargetHeight=0;
+      o.fixationBlankingRadiusReTargetHeight=0;
       o.moviePreSec = 0.2;
       o.moviePostSec = 0.2;
       o.targetMarkDeg=1;
-      o.fixationCrossDeg=3;
+      o.fixationMarkDeg=3;
       o=NoiseDiscrimination(o);
       if o.quitExperiment
          break

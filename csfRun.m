@@ -31,9 +31,9 @@ o.targetGaborCycles=3;
 o.pThreshold=0.75;
 o.isNoiseDynamic=true;
 o.moviePreAndPostSecs=[0.2 0.2];
-o.fixationCrossDeg=3;
-o.blankingRadiusReEccentricity=0;
-o.blankingRadiusReTargetHeight=0;
+o.fixationMarkDeg=3;
+o.fixationBlankingRadiusReEccentricity=0;
+o.fixationBlankingRadiusReTargetHeight=0;
 o.targetMarkDeg=1;
 o.noiseType='ternary'; % 'gaussian' or 'uniform' or 'binary' or 'ternary'
 if 0
@@ -64,12 +64,12 @@ end
 
 %% SPECIFY CONDITIONS IN ooo STRUCT
 ooo={};
-o.blankingRadiusReTargetHeight=nan;
+o.fixationBlankingRadiusReTargetHeight=nan;
 o.targetDurationSecs=0.2;
 o.desiredLuminanceAtEye=[];
 o.desiredLuminanceFactor=1;
 o.useFilter=false;
-o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it thicker for scotopic testing.
+o.fixationThicknessDeg=0.03; % Typically 0.03. Make it thicker for scotopic testing.
 o.noiseType='ternary';
 o.contrast=1;
 o.saveStimulus=false;
@@ -92,12 +92,12 @@ for ecc=[0 1 4 16 32]
         o.noiseCheckDeg=o.targetHeightDeg/20;
         if all(o.eccentricityXYDeg==0)
             o.isTargetLocationMarked=false;
-            o.blankingRadiusReTargetHeight=0.6;
-            o.fixationCrossDeg=inf;
+            o.fixationBlankingRadiusReTargetHeight=0.6;
+            o.fixationMarkDeg=inf;
         else
             o.isTargetLocationMarked=true;
-            o.blankingRadiusReTargetHeight=0;
-            o.fixationCrossDeg=3;
+            o.fixationBlankingRadiusReTargetHeight=0;
+            o.fixationMarkDeg=3;
         end
         o.conditionName=sprintf('%.0f-deg-%.1f-cpd',o.eccentricityXYDeg(1),o.targetCyclesPerDeg);
         oo=[]; % Interleave these conditions.

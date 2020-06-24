@@ -14,6 +14,7 @@ clear o oo ooo
 ooo={};
 % o.useFractionOfScreenToDebug=0.4; % USE ONLY FOR DEBUGGING.
 % o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
+o.useRetinaResolution=false; % Speed up 4x.
 
 %% GEOMETRY
 o.viewingDistanceCm=40;
@@ -63,15 +64,16 @@ end
 %% FIXATION, NEAR POINT, AND TARGET MARKING
 o.setNearPointEccentricityTo='fixation';
 o.nearPointXYInUnitSquare=[0.5 0.5];
-o.blankingRadiusReTargetHeight=0;
-o.blankingRadiusReEccentricity=0;
-o.fixationCrossBlankedNearTarget=true;
+o.fixationBlankingRadiusReTargetHeight=0;
+o.fixationBlankingRadiusReEccentricity=0;
+o.isFixationBlankedNearTarget=true;
 o.fixationOffsetBeforeNoiseOnsetSecs=0;
 o.fixationOnsetAfterNoiseOffsetSecs=0;
-o.fixationCrossDrawnOnStimulus=false;% o.conditionName='Sloan';
-o.targetMarkDeg=1;
-o.isTargetLocationMarked=true; % Display a mark designating target position?
-o.fixationCrossWeightDeg=0.05; % Typically 0.03. Make it much thicker for scotopic testing.
+o.fixationMarkDrawnOnStimulus=false;% o.conditionName='Sloan';
+o.targetMarkDeg=3;
+o.isTargetLocationMarked=false; % Display a mark designating target position?
+o.fixationThicknessDeg=0.05; % Typically 0.03. Make it much thicker for scotopic testing.
+o.useFixationDots=false;
 
 %% RESPONSE SCREEN
 o.areAnswersLabeled=false;
@@ -90,11 +92,14 @@ if true
     % Spatial uncertainty in rectangular area centered on fixation.
     % Temporal uncertainty.
     for MSpace=[100 1]
-        for MTime=[30 1]
+        for MTime=[1 10]
             o.MSpace=MSpace;
             o.MTime=MTime;
-            o.showUncertainty=false;
-            o.uncertainDisplayDotDeg=0.5;
+            o.showUncertainty=true;
+            if  o.showUncertainty && o.isTargetLocationMarked
+                error('Please don''t enable both o.showUncertainty and o.isTargetLocationMarked.');
+            end
+            o.uncertainDisplayDotDeg=1;
             o.uncertainParameter={'eccentricityXYDeg' 'moviePreAndPostSecs'};
             % Uncertainty is MSpace equally spaced positions in a grid
             % filling a square. and MTime equally spaced positions in time.
@@ -103,14 +108,24 @@ if true
             % Create rectangle of dot locations with same aspect ratio as
             % screen.
             ratio=RectWidth(r)/RectHeight(r);
+            % Create square, to match shape of square noise area.
+            % ratio=1;
             n=round(sqrt(ratio*MSpace));
             m=round(MSpace/n);
             s=o.targetHeightDeg;
+            % o.noiseRadiusDeg=0.25*max([m n]+4)*s;
             x=(1:n)*s;
             x=x-mean(x);
             y=(1:m)*s;
             y=y-mean(y);
             eccentricityXYDegList={};
+            % Doesn't work because "block" and "oi" are not yet defined.
+            % fprintf('%d:%d Uncertain x:',block,oi);
+            % fprintf(' %.0f',x);
+            % fprintf('\n');
+            % fprintf('%d:%d Uncertain y:',block,oi);
+            % fprintf(' %.0f',y);
+            % fprintf('\n');
             for i=1:n
                 for j=1:m
                     eccentricityXYDegList{end+1}=[x(i) y(j)];
@@ -123,10 +138,11 @@ if true
             o.noiseCheckSecs=o.targetDurationSecs;
             totalSecs=(MTime-1)*o.targetDurationSecs;
             for i=1:MTime
+                % Each iteration plans a different start time.
                 preSecs=(i-1)*o.targetDurationSecs;
                 % Allow 0.1 dead time before earliest target onset so we
                 % can begin beep before target.
-                moviePreAndPostSecsList{i}=[preSecs totalSecs-preSecs]+0.1;
+                moviePreAndPostSecsList{i}=0.1+[preSecs totalSecs-preSecs];
             end
             o.uncertainValues={eccentricityXYDegList moviePreAndPostSecsList};
             o.targetFont='Sloan';
@@ -145,7 +161,7 @@ if true
             o.areAnswersLabeled=false;
             o.contrast=-1;
             o.viewingDistanceCm=25;
-            o.fixationCrossDrawnOnStimulus=false;
+            o.fixationMarkDrawnOnStimulus=false;
             o.fixationOnsetAfterNoiseOffsetSecs=0.6;
             ooo{end+1}=o;
             o.uncertainParameter={};
@@ -215,9 +231,9 @@ if false
         o.nearPointXYInUnitSquare=[0.5 0.5];
         o.viewingDistanceCm=30;
         o.eccentricityXYDeg=[10 0];
-        o.fixationCrossBlankedNearTarget=false;
+        o.isFixationBlankedNearTarget=false;
         o.fixationOnsetAfterNoiseOffsetSecs=0.5;
-        o.fixationCrossDrawnOnStimulus=false;
+        o.fixationMarkDrawnOnStimulus=false;
         oo=o;
         o.eccentricityXYDeg=-o.eccentricityXYDeg;
         oo(2)=o;

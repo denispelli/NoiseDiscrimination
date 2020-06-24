@@ -7,6 +7,6 @@ o.isNoiseDynamic = 1;
 o.moviePreSec = 0.3;
 o.moviePostSec = 0.3;
 o.targetMarkDeg=1;
-o.fixationCrossDeg=3;
+o.fixationMarkDeg=3;
 o.contrast=-1;
 o=NoiseDiscrimination(o);

@@ -21,6 +21,14 @@ if cal.nFirst==cal.nLast
     matches = image==cal.nFirst;
     imageLuminance(matches)=cal.LFirst;
 else
-    imageLuminance=cal.LFirst+(cal.LLast-cal.LFirst)*(double(image)-cal.nFirst)/(cal.nLast-cal.nFirst);
+    if false
+        % Original requires 2 adds and 2 multiplies per pixel.
+        imageLuminance=cal.LFirst+(cal.LLast-cal.LFirst)*(double(image)-cal.nFirst)/(cal.nLast-cal.nFirst);
+    else
+        % Faster version requires only 1 add and 1 multiply per pixel.
+        b=(cal.LLast-cal.LFirst)/(cal.nLast-cal.nFirst);
+        a=cal.LFirst-cal.nFirst*b;
+        imageLuminance=a+b*double(image);
+    end
 end
 

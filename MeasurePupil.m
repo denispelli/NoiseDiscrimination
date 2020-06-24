@@ -64,22 +64,9 @@ if ~isfield(cal,'old') || ~isfield(cal.old,'L')
    error('This screen has not yet been calibrated. Please use CalibrateScreenLuminance to calibrate it.\n');
 end
 
-%% Must call Brightness while no window is open.
-useBrightnessFunction=true;
-if useBrightnessFunction
-   Brightness(cal.screen,cal.brightnessSetting); % Set brightness.
-   cal.brightnessReading=Brightness(cal.screen); % Read brightness.
-   if cal.brightnessReading==-1
-      % If it failed, try again. The first attempt sometimes fails.
-      % Not sure why. Maybe it times out.
-      cal.brightnessReading=Brightness(cal.screen); % Read brightness.
-   end
-   if isfinite(cal.brightnessReading) && abs(cal.brightnessSetting-cal.brightnessReading)>0.01
-      error('Set brightness to %.2f, but read back %.2f',cal.brightnessSetting,cal.brightnessReading);
-   end
-end
-if ~useBrightnessFunction
+if false && cal.ScreenConfigureDisplayBrightnessWorks
    try
+      % [Brightness.m has now grown to become MacDisplaySettings.m]
       % Caution: Screen ConfigureDisplay Brightness gives a fatal error
       % if not supported, and is unsupported on many devices, including
       % a video projector under macOS. We use try-catch to recover.
@@ -108,18 +95,21 @@ if ~useBrightnessFunction
       cal.brightnessReading=NaN;
    end
 end
-if cal.ScreenConfigureDisplayBrightnessWorks
-	s=GetSecs;
-	ffprintf(ff,'Calling MacDisplaySettings. ... ');
-	newSettings.brightness=cal.brightnessSetting;
-	newSettings.automatically=false;
-	newSettings.trueTone=false;
-	newSettings.nightShiftSchedule='Off';
-	newSettings.nightShiftManual=false;
-	oldDisplaySettings=MacDisplaySettings(cal.screen,newSettings);
-	ffprintf(ff,'Done (%.1f s)\n',GetSecs-s);
-   ffprintf(ff,'Setting "brightness" to %.2f, on a scale of 0.0 to 1.0;\n',cal.brightnessSetting);
+
+s=GetSecs;
+ffprintf(ff,'Calling MacDisplaySettings. ... ');
+newSettings.brightness=cal.brightnessSetting;
+newSettings.automatically=false;
+newSettings.trueTone=false;
+newSettings.nightShiftSchedule='Off';
+newSettings.nightShiftManual=false;
+oldDisplaySettings=MacDisplaySettings(cal.screen,newSettings);
+cal.brightnessReading=MacDisplaySettings(cal.screen); % Read brightness.
+if isfinite(cal.brightnessReading) && abs(cal.brightnessSetting-cal.brightnessReading)>0.01
+  error('MacDisplaySettings set brightness to %.2f, but read back %.2f',cal.brightnessSetting,cal.brightnessReading);
 end
+ffprintf(ff,'Done (%.1f s)\n',GetSecs-s);
+ffprintf(ff,'Setting "brightness" to %.2f, on a scale of 0.0 to 1.0;\n',cal.brightnessSetting);
 
 %% TRY-CATCH BLOCK CONTAINS ALL CODE IN WHICH WINDOW IS OPEN
 try
@@ -468,7 +458,7 @@ try
          sca; % Screen('CloseAll'); ShowCursor;
          RestoreCluts;
          if ismac
-            AutoBrightness(cal.screen,1); % Restore autobrightness.
+            MacDisplaySettings(cal.screen,oldSettings);
          end
          if ~isempty(window)
             Screen('Preference','VisualDebugLevel',oldVisualDebugLevel);
@@ -483,7 +473,7 @@ try
             if exist('cal','var') && isfield(cal,'old') && isfield(cal.old,'gamma')
                Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
             end
-           MacDisplaySettings(cal.screen,oldSettings);
+            MacDisplaySettings(cal.screen,oldSettings);
             if dataFid>-1
                fclose(dataFid);
                dataFid=-1;

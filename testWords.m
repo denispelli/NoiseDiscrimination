@@ -41,16 +41,16 @@ o.eccentricityXYDeg=[0 0];
 o.targetHeightDeg=3;
 o.contrast=-1;
 o.noiseType='binary';
-o.blankingRadiusReTargetHeight= 0;
-o.blankingRadiusReEccentricity= 0;
+o.fixationBlankingRadiusReTargetHeight= 0;
+o.fixationBlankingRadiusReEccentricity= 0;
 o.noiseCheckDeg=o.targetHeightDeg/40;
 o.setNearPointEccentricityTo='fixation';
 o.nearPointXYInUnitSquare=[0.5 0.5];
 o.viewingDistanceCm=40;
 o.noiseSD=0;
 o.observer=''; % Test human
-o.fixationLineWeightDeg=0.2;
-o.fixationCrossDeg=3; % 0, 3, and inf are typical values.
+o.fixationThicknessDeg=0.2;
+o.fixationMarkDeg=3; % 0, 3, and inf are typical values.
 
 if 1
     % Calibri
@@ -87,9 +87,9 @@ if 1
     o.thresholdParameter='contrast';
     o.eccentricityXYDeg=[0 0];
     o.observer=''; % Test human
-    o.blankingRadiusReTargetHeight= 1.5;
-    o.fixationLineWeightDeg=0.2;
-    o.fixationCrossDeg=40; % 0, 3, and inf are typical values.
+    o.fixationBlankingRadiusReTargetHeight= 1.5;
+    o.fixationThicknessDeg=0.2;
+    o.fixationMarkDeg=40; % 0, 3, and inf are typical values.
     switch o.noiseType
         case 'gaussian'
             maxNoiseSD=0.16*2^0.5;
@@ -117,7 +117,7 @@ end
 for i=1:length(ooo)
     oo=ooo{i};
     for oi=1:length(oo)
-        oo(oi).fixationCrossBlankedNearTarget=true;
+        oo(oi).isFixationBlankedNearTarget=true;
         oo(oi).trialsDesired=40;
         oo(oi).practicePresentations=0;
         oo(oi).targetDurationSecs=0.2; % duration of display of target and flankers

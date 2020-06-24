@@ -53,8 +53,8 @@ o.contrast=-1;
 o.noiseType='gaussian';
 o.setNearPointEccentricityTo='fixation';
 o.nearPointXYInUnitSquare=[0.5 0.5];
-o.blankingRadiusReTargetHeight=0;
-o.blankingRadiusReEccentricity=0;
+o.fixationBlankingRadiusReTargetHeight=0;
+o.fixationBlankingRadiusReEccentricity=0;
 o.targetKind='letter';
 o.thresholdParameter='contrast';
 o.flankerSpacingDeg=0.2; % Used only for fixation check.
@@ -69,9 +69,9 @@ o.borderLetter='';
 o.areAnswersLabeled=false;
 o.getAlphabetFromDisk=false;
 o.isFixationCheck=false;
-o.fixationCrossBlankedNearTarget=true;
+o.isFixationBlankedNearTarget=true;
 o.fixationOnsetAfterNoiseOffsetSecs=0.6;
-o.fixationCrossDrawnOnStimulus=false;
+o.fixationMarkDrawnOnStimulus=false;
 o.isTargetFullResolution=false;
 o.useFlankers=false;
 o.flankerContrast=-1;
@@ -93,7 +93,7 @@ o.desiredLuminanceFactor=1; % 1.8 to maximize brightness.
 
 if 1
     % Sloan
-    o.fixationIsOffscreen=true;
+    o.isFixationOffscreen=true;
     o.conditionName='Sloan';
     o.targetFont='Sloan';
     o.targetHeightDeg=32;
@@ -149,9 +149,9 @@ if false
         o.nearPointXYInUnitSquare=[0.5 0.5];
         o.viewingDistanceCm=30;
         o.eccentricityXYDeg=[10 0];
-        o.fixationCrossBlankedNearTarget=false;
+        o.isFixationBlankedNearTarget=false;
         o.fixationOnsetAfterNoiseOffsetSecs=0.5;
-        o.fixationCrossDrawnOnStimulus=false;
+        o.fixationMarkDrawnOnStimulus=false;
         oo=o;
         o.eccentricityXYDeg=-o.eccentricityXYDeg;
         oo(2)=o;

@@ -68,19 +68,19 @@ o.noiseSpectrum='white'; % pink or white
 
 %{
 o.useFixation=true;
-o.fixationCrossDeg=3;
-o.fixationCrossWeightDeg=5;
-o.fixationCrossBlankedNearTarget=true;
+o.fixationMarkDeg=3;
+o.fixationThicknessDeg=5;
+o.isFixationBlankedNearTarget=true;
 o.fixationOnsetAfterNoiseOffsetSecs=0.6; % Pause after stimulus before display of fixation. 
-%               % Skipped when fixationCrossBlankedNearTarget. 
+%               % Skipped when isFixationBlankedNearTarget. 
 %               % Not needed when eccentricity is bigger than the target.
-o.fixationCrossDrawnOnStimulus=true;
+o.fixationMarkDrawnOnStimulus=true;
 o.isGazeRecorded=true;
 %}
 
-o.fixationCrossBlankedNearTarget=true;
+o.isFixationBlankedNearTarget=true;
 o.fixationOnsetAfterNoiseOffsetSecs=0.6;
-o.fixationCrossDrawnOnStimulus=false;
+o.fixationMarkDrawnOnStimulus=false;
 o.isTargetLocationMarked=true;
 o.alphabetPlacement='top'; % show possible answers on 'top' or 'right' for letters and gabors.
 
@@ -117,7 +117,7 @@ o.cropSnapshot=1; % If true (1), show only the target and noise, without unneces
 o.snapshotCaptionTextSizeDeg=0.5;
 o.snapshotShowsFixationBefore=1;
 o.snapshotShowsFixationAfter=0;
-% o.fixationCrossWeightDeg=0.05; % target line thickness
+% o.fixationThicknessDeg=0.05; % target line thickness
 o.speakInstructions=0;
 % o.useFractionOfScreenToDebug=0.3; % 0: normal, 0.5: small for debugging.
 o.askForPartingComments=false; % Disable until it's fixed.

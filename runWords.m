@@ -65,8 +65,8 @@ switch o.noiseType
         maxNoiseSD=0.16*2^2;
         p2=2;
 end
-o.blankingRadiusReTargetHeight= 0;
-o.blankingRadiusReEccentricity= 0;
+o.fixationBlankingRadiusReTargetHeight= 0;
+o.fixationBlankingRadiusReEccentricity= 0;
 o.noiseCheckDeg=o.targetHeightDeg/40;
 o.setNearPointEccentricityTo='fixation';
 o.nearPointXYInUnitSquare=[0.5 0.5];
@@ -77,7 +77,7 @@ o.observer=''; % Test human.
 o.setNearPointEccentricityTo='fixation';
 o.nearPointXYInUnitSquare=[0.5 0.5];
 o.observer=''; % Test human
-o.fixationCrossBlankedNearTarget=true;
+o.isFixationBlankedNearTarget=true;
 o.trialsDesired=40;
 o.targetDurationSecs=0.15; % duration of display of target and flankers
 o.practicePresentations=0;
@@ -92,9 +92,9 @@ if 1
     % Measure two thresholds, above and below fixation.
     o.thresholdParameter='size';
     o.eccentricityXYDeg=[0 10];
-    o.fixationLineWeightDeg=0.4;
-    o.fixationCrossDeg=3; % 0, 3, and inf are typical values.
-    o.blankingRadiusReTargetHeight= 1.5;
+    o.fixationThicknessDeg=0.4;
+    o.fixationMarkDeg=3; % 0, 3, and inf are typical values.
+    o.fixationBlankingRadiusReTargetHeight= 1.5;
     % Randomly interleave testing on opposite sides of fixation.
     oo=[o o];
     oo(2).eccentricityXYDeg=-oo(2).eccentricityXYDeg;
@@ -105,8 +105,8 @@ if 0
     % Block 2. Measure three thresholds, one in zero and two in high noise.
     o.thresholdParameter='contrast';
     o.eccentricityXYDeg=[0 0];
-    o.fixationLineWeightDeg=0.3;
-    o.fixationCrossDeg=40; % 0, 3, and inf are typical values.
+    o.fixationThicknessDeg=0.3;
+    o.fixationMarkDeg=40; % 0, 3, and inf are typical values.
     o.noiseCheckDeg=o.targetHeightDeg/40;
     o.setNearPointEccentricityTo='fixation';
     o.noiseSD=0;
@@ -123,9 +123,9 @@ if 1
     o.thresholdParameter='size';
     o.targetHeightDeg=1;
     o.eccentricityXYDeg=[0 0];
-    o.fixationLineWeightDeg=0.4;
-    o.fixationCrossDeg=40; % 0, 3, and inf are typical values.
-    o.blankingRadiusReTargetHeight=1.5;
+    o.fixationThicknessDeg=0.4;
+    o.fixationMarkDeg=40; % 0, 3, and inf are typical values.
+    o.fixationBlankingRadiusReTargetHeight=1.5;
     for block=1:length(ooo)
         % Add a fixation test condition to each block that does peripheral
         % testing.

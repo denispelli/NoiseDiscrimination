@@ -55,10 +55,10 @@ o.alphabetPlacement='right'; % 'top' or 'right';
 o.annularNoiseSD=0;
 o.noiseRadiusDeg=inf;
 o.isTargetLocationMarked=true;
-o.fixationCrossWeightDeg=0.09;
-o.fixationCrossDeg=3;
-o.blankingRadiusReEccentricity=0; % No blanking.
-o.blankingRadiusReTargetHeight=2;
+o.fixationThicknessDeg=0.09;
+o.fixationMarkDeg=3;
+o.fixationBlankingRadiusReEccentricity=0; % No blanking.
+o.fixationBlankingRadiusReTargetHeight=2;
 o.targetMarkDeg=15;
 if true
     % Target letter

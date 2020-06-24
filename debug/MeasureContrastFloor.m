@@ -64,14 +64,14 @@ o.noiseRadiusDeg=inf; % noise decay radius [1 1.7 3 5.2 9 Inf]
 
 % FIXATION & USER INTERFACE
 o.targetCross=1;
-o.fixationCrossWeightDeg = 0.05; % target line thickness
-% o.fixationCrossBlankedNearTarget=0; % always present fixation
+o.fixationThicknessDeg = 0.05; % target line thickness
+% o.isFixationBlankedNearTarget=0; % always present fixation
 % o.isWin=0; % use the Windows code even if we're on a Mac
 % o.noiseRaisedCosineEdgeThicknessDeg=0; % midpoint of raised cosine is at o.noiseRadiusDeg.
 % o.durationSec=inf; % Typically 0.2 or inf (wait indefinitely for response).
 % o.tGuess=log10(0.2); % Optionally tell Quest the initial log contrast on first trial.
 o.alphabetPlacement='top'; % show possible answers on 'top' or 'right' for letters and gabors.
-% o.fixationCrossWeightDeg=0.05; % target line thickness
+% o.fixationThicknessDeg=0.05; % target line thickness
 o.isKbLegacy=0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar, for Linux compatibility.
 
 % SNAPSHOT

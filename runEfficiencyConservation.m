@@ -36,11 +36,11 @@ o.nearPointXYInUnitSquare=[0.5 0.5];
 o.thresholdParameter='contrast';
 o.flankerSpacingDeg=0.2; % Used only for fixation check.
 o.isFixationCheck=false; % True designates the condition as a fixation check.
-o.blankingRadiusReTargetHeight=0.833; % One third letter width blank margin.
-o.blankingRadiusReEccentricity=0.5;
-o.fixationCrossBlankedNearTarget=true;
+o.fixationBlankingRadiusReTargetHeight=0.833; % One third letter width blank margin.
+o.fixationBlankingRadiusReEccentricity=0.5;
+o.isFixationBlankedNearTarget=true;
 o.fixationOnsetAfterNoiseOffsetSecs=0.6;
-o.fixationCrossDrawnOnStimulus=false;
+o.fixationMarkDrawnOnStimulus=false;
 o.useFlankers=false;
 o.flankerContrast=-1;
 o.isLuminanceRangeSymmetric=true; % False for maximum brightness.
@@ -98,12 +98,12 @@ for ecc=[0 2 8 32]
             o.viewingDistanceCm=50;
         end
         % o.viewingDistanceCm=200; % FOR DEMO
-        % o.fixationIsOffscreen=true; % FOR DEMO WITH ECCENTRIC TARGET.
+        % o.isFixationOffscreen=true; % FOR DEMO WITH ECCENTRIC TARGET.
         if norm(o.eccentricityXYDeg)<3 && o.targetHeightDeg<2
             % Use blanking only when target is small and near fixation.
-            o.blankingRadiusReTargetHeight=2;
+            o.fixationBlankingRadiusReTargetHeight=2;
         else
-            o.blankingRadiusReTargetHeight=0;
+            o.fixationBlankingRadiusReTargetHeight=0;
         end
         % EQUATE MARGINS
         % Shift right to equate right hand margin with
@@ -150,9 +150,9 @@ for ecc=32
             o.viewingDistanceCm=50;
         end
         if norm(o.eccentricityXYDeg)<3 && o.targetHeightDeg<2
-            o.blankingRadiusReTargetHeight=2;
+            o.fixationBlankingRadiusReTargetHeight=2;
         else
-            o.blankingRadiusReTargetHeight=0;
+            o.fixationBlankingRadiusReTargetHeight=0;
         end
         r=Screen('Rect',0);
         % Shift right to equate right hand margin with

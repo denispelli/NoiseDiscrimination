@@ -41,8 +41,8 @@ o.experiment='GaborEfficiency';
 o.targetHeightDeg=6;
 o.contrast=1;
 o.noiseType='gaussian';
-o.blankingRadiusReTargetHeight=0;
-o.blankingRadiusReEccentricity=0;
+o.fixationBlankingRadiusReTargetHeight=0;
+o.fixationBlankingRadiusReEccentricity=0;
 o.trials=50; 
 o.targetGaborOrientationsDeg=[0 45 90 135]; % Orientations relative to vertical.
 o.responseLabels='1234';
@@ -145,9 +145,9 @@ for block=1:length(ooo)
                 oo(oi).observer=old.observer;
             end
         end
-        oo(oi).fixationCrossBlankedNearTarget=false;
-        oo(oi).fixationLineWeightDeg=0.1;
-        oo(oi).fixationCrossDeg=1; % 0, 3, and inf are typical values.
+        oo(oi).isFixationBlankedNearTarget=false;
+        oo(oi).fixationThicknessDeg=0.1;
+        oo(oi).fixationMarkDeg=1; % 0, 3, and inf are typical values.
         oo(oi).trialsDesired=50;
         oo(oi).practicePresentations=0;
         oo(oi).targetDurationSecs=0.2; % duration of display of target and flankers

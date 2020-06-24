@@ -95,11 +95,11 @@ function o=NoiseDiscrimination(oIn)
 %
 % FIXATION CROSS. The fixation cross is quite flexible. You specify its
 % size (full width) and stroke thickness in deg. If you request
-% o.fixationCrossBlankedNearTarget=1 then it maintains a blank margin (with
+% o.isFixationBlankedNearTarget=1 then it maintains a blank margin (with
 % no fixation line) around the target that is at least a target width (to
 % avoid overlap masking) and at least half the eccentricity (to avoid
 % crowding). Otherwise the fixation cross is blanked during target
-% presentation and until o.fixationCrossBlankedUntilSecsAfterTarget.
+% presentation and until o.fixationMarkBlankedUntilSecsAfterTarget.
 
 % Maybe you have multiple keyboards connected and KbCheck etc. check the
 % wrong one. KbStrokeWait(-1) KbCheck(-1) etc. should then make a
@@ -183,10 +183,10 @@ o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
 o.noiseFrozenInTrial=0; % 0 or 1.  If true (1), use same noise at all locations
 o.noiseFrozenInRun=0; % 0 or 1.  If true (1), use same noise on every trial
 o.noiseFrozenInRunSeed=0; % 0 or positive integer. If o.noiseFrozenInRun, then any nonzero positive integer will be used as the seed for the run.
-o.fixationCrossDeg=inf; % Typically 1 or inf. Make this at least 4 deg for scotopic testing, since the fovea is blind scotopically.
-o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
-o.fixationCrossBlankedNearTarget=1; % 0 or 1.
-o.fixationCrossBlankedUntilSecsAfterTarget=0.6; % Pause after stimulus before display of fixation. Skipped when fixationCrossBlankedNearTarget. Not needed when eccentricity is bigger than the target.
+o.fixationMarkDeg=inf; % Typically 1 or inf. Make this at least 4 deg for scotopic testing, since the fovea is blind scotopically.
+o.fixationThicknessDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
+o.isFixationBlankedNearTarget=1; % 0 or 1.
+o.fixationMarkBlankedUntilSecsAfterTarget=0.6; % Pause after stimulus before display of fixation. Skipped when isFixationBlankedNearTarget. Not needed when eccentricity is bigger than the target.
 o.textSizeDeg=0.6;
 o.saveSnapshot=0; % 0 or 1.  If true (1), take snapshot for public presentation.
 o.snapshotLetterContrast=0.2; % nan to request program default. If set, this determines o.tSnapshot.
@@ -443,11 +443,11 @@ for cond=1:conds
     o.yellowAnnulusSmallRadiusDeg=min(o.yellowAnnulusSmallRadiusDeg,RectWidth(screenRect)/o.pixPerDeg);
     o.yellowAnnulusBigRadiusDeg=max(o.yellowAnnulusBigRadiusDeg,o.yellowAnnulusSmallRadiusDeg);
     
-    fixationCrossPix=round(o.fixationCrossDeg*o.pixPerDeg);
-    fixationCrossWeightPix=round(o.fixationCrossWeightDeg*o.pixPerDeg);
-    fixationCrossWeightPix=max(1,fixationCrossWeightPix);
-    o.fixationCrossWeightDeg=fixationCrossWeightPix/o.pixPerDeg;
-    maxOnscreenFixationOffsetPix=round(RectWidth(o.stimulusRect)/2-20*fixationCrossWeightPix); % allowable fixation offset, with 20 linewidth margin.
+    fixationMarkPix=round(o.fixationMarkDeg*o.pixPerDeg);
+    fixationThicknessPix=round(o.fixationThicknessDeg*o.pixPerDeg);
+    fixationThicknessPix=max(1,fixationThicknessPix);
+    o.fixationThicknessDeg=fixationThicknessPix/o.pixPerDeg;
+    maxOnscreenFixationOffsetPix=round(RectWidth(o.stimulusRect)/2-20*fixationThicknessPix); % allowable fixation offset, with 20 linewidth margin.
     maxTargetOffsetPix=RectWidth(o.stimulusRect)/2-o.targetHeightPix/2; % allowable target offset for eccentric viewing.
     if o.useFlankers
         maxTargetOffsetPix=maxTargetOffsetPix-o.flankerSpacingDeg*o.pixPerDeg;
@@ -668,7 +668,7 @@ try
     eccentricityPix=round(pixPerCm*o.distanceCm*tand(o.eccentricityDeg));
     if ~isfinite(o.eccentricityDeg)
         fixationOffscreenCm=0;
-        fixationIsOffscreen=0;
+        isFixationOffscreen=0;
         fixationOffsetPix=inf;
         targetOffsetPix=0;
     else
@@ -699,7 +699,7 @@ try
             answer=questdlg(question,'Fixation','Ok','Cancel','Ok');
             switch answer
                 case 'Ok',
-                    fixationIsOffscreen=1;
+                    isFixationOffscreen=1;
                     if fixationOffscreenCm<0
                         ffprintf(ff,'Offscreen fixation mark is %.0f cm left of the left edge of the stimulusRect.\n',-fixationOffscreenCm);
                     else
@@ -707,7 +707,7 @@ try
                     end
                     fixationOffsetPix=sign(fixationOffscreenCm)*(abs(fixationOffscreenCm)*pixPerCm+RectWidth(o.stimulusRect)/2);
                 otherwise,
-                    fixationIsOffscreen=0;
+                    isFixationOffscreen=0;
                     fixationOffscreenCm=0;
                     oldEcc=o.eccentricityDeg;
                     fixationOffsetPix=-sign(eccentricityPix)*maxOnscreenFixationOffsetPix;
@@ -719,17 +719,17 @@ try
             end
         else
             fixationOffscreenCm=0;
-            fixationIsOffscreen=0;
+            isFixationOffscreen=0;
             fixationOffsetPix=-sign(eccentricityPix)*min(abs(eccentricityPix),maxOnscreenFixationOffsetPix);
         end
         targetOffsetPix=eccentricityPix+fixationOffsetPix;
         assert(abs(targetOffsetPix)<=maxTargetOffsetPix);
     end
     
-    if o.fixationCrossBlankedNearTarget
+    if o.isFixationBlankedNearTarget
         ffprintf(ff,'Fixation cross is blanked near target. No delay in showing fixation after target.\n');
     else
-        ffprintf(ff,'Fixation cross is blanked during and until %.2f s after target. No selective blanking near target. \n',o.fixationCrossBlankedUntilSecsAfterTarget);
+        ffprintf(ff,'Fixation cross is blanked during and until %.2f s after target. No selective blanking near target. \n',o.fixationMarkBlankedUntilSecsAfterTarget);
     end
     gap=o.gapFraction4afc*o.targetHeightPix;
     o.targetWidthPix=o.targetHeightPix;
@@ -822,13 +822,13 @@ try
         fix.y=y; % y location of fixation
         fix.eccentricityPix=eccentricityPix;
         fix.clipRect=o.stimulusRect;
-        fix.fixationCrossPix=fixationCrossPix;
-        fix.fixationCrossBlankedNearTarget=o.fixationCrossBlankedNearTarget;
+        fix.fixationMarkPix=fixationMarkPix;
+        fix.isFixationBlankedNearTarget=o.isFixationBlankedNearTarget;
         fix.targetHeightPix=o.targetHeightPix;
         fixationLines=ComputeFixationLines(fix);
     end
     if window~=-1 && ~isempty(fixationLines)
-        Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,black); % fixation
+        Screen('DrawLines',window,fixationLines,fixationThicknessPix,black); % fixation
     end
     clear tSample
     switch o.noiseType
@@ -1060,7 +1060,7 @@ try
         if o.showCropMarks
             TrimMarks(window,frameRect);
         end
-        Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
+        Screen('DrawLines',window,fixationLines,fixationThicknessPix,0); % fixation
         if o.flipClick; Speak('before LoadNormalizedGammaTable delayed 1043');GetClicks; end
         if o.isWin; assert(all(all(diff(cal.gamma)>=0))); end; % monotonic for Windows
         if o.printGammaLoadings; fprintf('LoadNormalizedGammaTable %d; LRange/LMean=%.2f\n',930,2*(cal.LLast-LMean)/LMean); end
@@ -1072,7 +1072,7 @@ try
         
         Screen('DrawText',window,'Starting new run. ',0.5*textSize,1.5*textSize,black0,gray1,1);
         if isfinite(o.eccentricityDeg)
-            if fixationIsOffscreen
+            if isFixationOffscreen
                 speech{1}='Please fihx your eyes on your offscreen fixation mark,';
                 msg='Please fix your eyes on your offscreen fixation mark, ';
             else
@@ -1535,7 +1535,7 @@ try
                     r=OffsetRect(r,targetOffsetPix,0);
                     Screen('FillRect',window,gray,r);
                 end
-                Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
+                Screen('DrawLines',window,fixationLines,fixationThicknessPix,0); % fixation
                 rect=[0,0,1,1]*2*o(cond).annularNoiseBigRadiusDeg*o(cond).pixPerDeg/o(cond).noiseCheckPix;
                 if o(cond).newClutForEachImage
                     if 0 % Compute clut for the image
@@ -1674,7 +1674,7 @@ try
                     TrimMarks(window,frameRect); % This should be moved down, to be drawn AFTER the noise.
                 end
                 if o(cond).saveSnapshot && o(cond).snapshotShowsFixationBefore
-                    Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
+                    Screen('DrawLines',window,fixationLines,fixationThicknessPix,0); % fixation
                 end
                 switch o(cond).task
                     case 'identify'
@@ -1944,7 +1944,7 @@ try
                 if o(cond).flipClick; Speak('after Flip dontclear 1687');GetClicks; end
                 if o(cond).saveSnapshot
                     if o(cond).snapshotShowsFixationAfter
-                        Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,0); % fixation
+                        Screen('DrawLines',window,fixationLines,fixationThicknessPix,0); % fixation
                     end
                     if o(cond).cropSnapshot
                         if o(cond).showResponseNumbers
@@ -2119,12 +2119,12 @@ try
                             ffprintf(ff,'Duration requested %.2f, actual %.2f\n',o(cond).durationSec,actualDuration);
                         end
                     end
-                    if ~o(cond).fixationCrossBlankedNearTarget
-                        WaitSecs(o(cond).fixationCrossBlankedUntilSecsAfterTarget);
+                    if ~o(cond).isFixationBlankedNearTarget
+                        WaitSecs(o(cond).fixationMarkBlankedUntilSecsAfterTarget);
                     end
-                    Screen('DrawLines',window,fixationLines,fixationCrossWeightPix,black); % fixation
+                    Screen('DrawLines',window,fixationLines,fixationThicknessPix,black); % fixation
                     if o(cond).flipClick; Speak('before Flip dontclear 1681');GetClicks; end
-                    Screen('Flip',window,signalOffset+0.3,1,1); % After o(cond).fixationCrossBlankedUntilSecsAfterTarget, display new fixation.
+                    Screen('Flip',window,signalOffset+0.3,1,1); % After o(cond).fixationMarkBlankedUntilSecsAfterTarget, display new fixation.
                     if o(cond).flipClick; Speak('after Flip dontclear 1681');GetClicks; end
                 end
                 switch o(cond).task

@@ -39,11 +39,11 @@ o.nearPointXYInUnitSquare=[0.5 0.5];
 o.thresholdParameter='contrast';
 o.flankerSpacingDeg=0.2; % Used only for fixation check.
 o.isFixationCheck=false; % True designates the condition as a fixation check.
-o.blankingRadiusReTargetHeight=0.833; % One third letter width blank margin.
-o.blankingRadiusReEccentricity=0.5;
-o.fixationCrossBlankedNearTarget=true;
+o.fixationBlankingRadiusReTargetHeight=0.833; % One third letter width blank margin.
+o.fixationBlankingRadiusReEccentricity=0.5;
+o.isFixationBlankedNearTarget=true;
 o.fixationOnsetAfterNoiseOffsetSecs=0.6;
-o.fixationCrossDrawnOnStimulus=false;
+o.fixationMarkDrawnOnStimulus=false;
 o.useFlankers=false;
 o.flankerContrast=-1;
 o.isLuminanceRangeSymmetric=true; % False for maximum brightness.
@@ -98,16 +98,16 @@ for targetKind={'letter' 'gabor'}
             % else
             % 	o.noiseEnvelopeSpaceConstantDeg=inf;
             % end
-            if 1>ecc*(1-o.blankingRadiusReEccentricity) ...
-                    || 1>ecc-o.blankingRadiusReTargetHeight*deg
+            if 1>ecc*(1-o.fixationBlankingRadiusReEccentricity) ...
+                    || 1>ecc-o.fixationBlankingRadiusReTargetHeight*deg
                 % Make sure that fixation mark has at least 1 deg radius.
-                o.fixationCrossDeg=inf;
-                o.fixationCrossDrawnOnStimulus=true;
+                o.fixationMarkDeg=inf;
+                o.fixationMarkDrawnOnStimulus=true;
             else
-                o.fixationCrossDeg=2;
-                o.fixationCrossDrawnOnStimulus=false;
+                o.fixationMarkDeg=2;
+                o.fixationMarkDrawnOnStimulus=false;
             end
-            o.fixationCrossBlankedNearTarget=true;
+            o.isFixationBlankedNearTarget=true;
             o.eccentricityXYDeg=[ecc 0];
             o.targetHeightDeg=deg;
             degMin=NominalAcuityDeg(o.eccentricityXYDeg);
@@ -119,7 +119,7 @@ for targetKind={'letter' 'gabor'}
 %             nominalDistanceCm=25*heightMm/206;
             o.viewingDistanceCm=25/(o.targetHeightDeg/16);
             % o.viewingDistanceCm=200; % FOR DEMO
-            % o.fixationIsOffscreen=true; % FOR DEMO
+            % o.isFixationOffscreen=true; % FOR DEMO
             % EQUATE MARGINS
             r=Screen('Rect',0);
             aspectRatio=RectWidth(r)/RectHeight(r);
@@ -158,12 +158,12 @@ if false
             else
                 o.viewingDistanceCm=50;
             end
-            if 1<ecc*(1-o.blankingRadiusReEccentricity) ...
-                    || 1<ecc-o.blankingRadiusReTargetHeight*deg
+            if 1<ecc*(1-o.fixationBlankingRadiusReEccentricity) ...
+                    || 1<ecc-o.fixationBlankingRadiusReTargetHeight*deg
                 % Make sure that fixation mark has at least 1 deg radius.
-                o.fixationCrossDeg=inf;
+                o.fixationMarkDeg=inf;
             else
-                o.fixationCrossDeg=2;
+                o.fixationMarkDeg=2;
             end
             r=Screen('Rect',0);
             

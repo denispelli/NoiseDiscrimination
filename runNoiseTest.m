@@ -38,11 +38,11 @@ o.nearPointXYInUnitSquare=[0.5 0.5];
 o.thresholdParameter='contrast';
 o.flankerSpacingDeg=0.2; % Used only for fixation check.
 o.isFixationCheck=false; % True designates the condition as a fixation check.
-o.blankingRadiusReTargetHeight=0.833; % One third letter width blank margin.
-o.blankingRadiusReEccentricity=0.5;
-o.fixationCrossBlankedNearTarget=true;
+o.fixationBlankingRadiusReTargetHeight=0.833; % One third letter width blank margin.
+o.fixationBlankingRadiusReEccentricity=0.5;
+o.isFixationBlankedNearTarget=true;
 o.fixationOnsetAfterNoiseOffsetSecs=0.6;
-o.fixationCrossDrawnOnStimulus=false;
+o.fixationMarkDrawnOnStimulus=false;
 o.useFlankers=false;
 o.flankerContrast=-1;
 o.isLuminanceRangeSymmetric=true; % False for maximum brightness.
@@ -97,24 +97,24 @@ for targetKind={'letter' 'gabor'}
             % else
             % 	o.noiseEnvelopeSpaceConstantDeg=inf;
             % end
-            if 1>ecc*(1-o.blankingRadiusReEccentricity) ...
-                    || 1>ecc-o.blankingRadiusReTargetHeight*deg
+            if 1>ecc*(1-o.fixationBlankingRadiusReEccentricity) ...
+                    || 1>ecc-o.fixationBlankingRadiusReTargetHeight*deg
                 % Make sure that fixation mark has at least 1 deg radius.
-                o.fixationCrossDeg=inf;
-                o.fixationCrossDrawnOnStimulus=true;
+                o.fixationMarkDeg=inf;
+                o.fixationMarkDrawnOnStimulus=true;
             else
-                o.fixationCrossDeg=2;
-                o.fixationCrossDrawnOnStimulus=false;
+                o.fixationMarkDeg=2;
+                o.fixationMarkDrawnOnStimulus=false;
             end
             if false && deg>20
                 % When target overlaps fixation point and fills screen,
                 % there's no room for fixation lines at margins, so we
                 % present a small fixation cross, which may overlap
                 % target.
-                o.fixationCrossBlankedNearTarget=false;
-                o.fixationCrossDeg=1;
+                o.isFixationBlankedNearTarget=false;
+                o.fixationMarkDeg=1;
             else
-                o.fixationCrossBlankedNearTarget=true;
+                o.isFixationBlankedNearTarget=true;
             end
             o.eccentricityXYDeg=[ecc 0];
             o.targetHeightDeg=deg;
@@ -130,7 +130,7 @@ for targetKind={'letter' 'gabor'}
                 o.viewingDistanceCm=50;
             end
             % o.viewingDistanceCm=200; % FOR DEMO
-            % o.fixationIsOffscreen=true; % FOR DEMO
+            % o.isFixationOffscreen=true; % FOR DEMO
             % EQUATE MARGINS
             r=Screen('Rect',0);
             aspectRatio=RectWidth(r)/RectHeight(r);
@@ -154,7 +154,7 @@ end
         o=oo(oi);
         o.minNotBlankedMarginReHeight=0.1;
         screenCm=min(machine.mm{1})/10; % Min of width and height.
-        blankingDiameterDeg=2*o.blankingRadiusReTargetHeight*o.targetHeightDeg;
+        blankingDiameterDeg=2*o.fixationBlankingRadiusReTargetHeight*o.targetHeightDeg;
         o.minScreenDeg=blankingDiameterDeg/(1-2*o.minNotBlankedMarginReHeight);
         o.maxViewingDistanceCm=screenCm/2/tand(o.minScreenDeg/2);
         oo(oi)=o;
@@ -189,12 +189,12 @@ if false
             else
                 o.viewingDistanceCm=50;
             end
-            if 1<ecc*(1-o.blankingRadiusReEccentricity) ...
-                    || 1<ecc-o.blankingRadiusReTargetHeight*deg
+            if 1<ecc*(1-o.fixationBlankingRadiusReEccentricity) ...
+                    || 1<ecc-o.fixationBlankingRadiusReTargetHeight*deg
                 % Make sure that fixation mark has at least 1 deg radius.
-                o.fixationCrossDeg=inf;
+                o.fixationMarkDeg=inf;
             else
-                o.fixationCrossDeg=2;
+                o.fixationMarkDeg=2;
             end
             r=Screen('Rect',0);
             
@@ -351,7 +351,7 @@ t=struct2table(oo,'AsArray',true);
 %     'uncertainParameter'...
 disp(t(:,{'block' 'experiment' 'conditionName' 'observer'  'endsAtMin' 'trialsDesired'  'targetKind' 'noiseType' 'thresholdParameter'...
     'contrast'  'noiseSD' ...
-    'targetHeightDeg'  'eccentricityXYDeg' 'viewingDistanceCm' 'fixationCrossBlankedNearTarget'})); % Print the conditions in the Command Window.
+    'targetHeightDeg'  'eccentricityXYDeg' 'viewingDistanceCm' 'isFixationBlankedNearTarget'})); % Print the conditions in the Command Window.
 % return
 
 %% Measure threshold, one block per iteration.

@@ -122,7 +122,7 @@ if ~skipDataCollection && true
          % Setting o.useFilter false forces o.filterTransmission=1.
          o.filterTransmission=oOut.filterTransmission;
       end
-      o.blankingRadiusReEccentricity=0; % No blanking.
+      o.fixationBlankingRadiusReEccentricity=0; % No blanking.
       if true
          % Target letter
          o.targetKind='letter';
@@ -141,11 +141,11 @@ if ~skipDataCollection && true
       else
          o.isTargetLocationMarked=true;
       end
-      o.blankingRadiusReTargetHeight=0;
+      o.fixationBlankingRadiusReTargetHeight=0;
       o.moviePreSec=0.2;
       o.moviePostSec=0.2;
       o.targetMarkDeg=1;
-      o.fixationCrossDeg=3;
+      o.fixationMarkDeg=3;
       if o.questPlusEnable
          % Use QuestPlus when we don't know all the parameters.
          o.questPlusSteepnesses=1:0.1:5;

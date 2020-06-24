@@ -20,9 +20,9 @@ o.distanceCm=45;
 o.noiseSD=0.2;
 o.durationSec=0.2;
 o.noiseType='gaussian';
-o.fixationCrossDeg=inf; % Typically 1 or inf. Make this at least 2 deg for scotopic testing, since the fovea is blind scotopically.
-o.fixationCrossWeightDeg=0.05; % Typically 0.05. This should be much thicker for scotopic testing.
-o.fixationCrossBlankedNearTarget=0; % 0 or 1.
+o.fixationMarkDeg=inf; % Typically 1 or inf. Make this at least 2 deg for scotopic testing, since the fovea is blind scotopically.
+o.fixationThicknessDeg=0.05; % Typically 0.05. This should be much thicker for scotopic testing.
+o.isFixationBlankedNearTarget=0; % 0 or 1.
 % if  ~isfield(o,'idealEOverNThreshold') || ~isfinite(o.idealEOverNThreshold)
 %     o.observer='ideal';
 %     o.trials=1000;
@@ -55,7 +55,7 @@ else
     o.gapFraction4afc=1/30; % Typically 0, 0.03, or 0.2. Gap, as a fraction of o.targetHeightDeg, between the four squares in 4afc task, ignored in identify task.
     o.textSizeDeg=0.6;
     o.showResponseNumbers=0;
-    o.fixationCrossDeg=0; % Typically 1 or inf. Make this at least 2 deg for scotopic testing, since the fovea is blind scotopically.
+    o.fixationMarkDeg=0; % Typically 1 or inf. Make this at least 2 deg for scotopic testing, since the fovea is blind scotopically.
 end
 o.tGuess=log10(2);
 o.tSnapshot=log10(2-1);

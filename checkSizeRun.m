@@ -94,7 +94,7 @@ if 1
       if oi>1 && isempty(o.experimenter)
          o.experimenter=oOut.experimenter;
       end
-      o.blankingRadiusReEccentricity=0;
+      o.fixationBlankingRadiusReEccentricity=0;
       if 0
          o.targetKind='letter';
          o.targetFont='Sloan';
@@ -111,11 +111,11 @@ if 1
       if all(o.eccentricityXYDeg==0)
          o.isTargetLocationMarked=0;
       end
-      o.blankingRadiusReTargetHeight=0;
+      o.fixationBlankingRadiusReTargetHeight=0;
       o.moviePreSec = 0.2;
       o.moviePostSec = 0.2;
       o.targetMarkDeg=1;
-      o.fixationCrossDeg=3;
+      o.fixationMarkDeg=3;
       oOut=NoiseDiscrimination(o);
       if oOut.quitExperiment
          break

@@ -21,7 +21,7 @@ function [oldVolume,failed]=SoundVolume(newVolume)
 % work on all versions of macOS. I hope SoundVolume can be extended to
 % support Windows and Linux.
 %
-% See also: SoundMuting.m, Brightness.m
+% See also: SoundMuting.m, MacDisplaySettings.m
 
 % http://www.manpagez.com/man/1/osascript/
 % https://developer.apple.com/library/mac/documentation/AppleScript/Conceptual/AppleScriptLangGuide/reference/ASLR_cmds.html

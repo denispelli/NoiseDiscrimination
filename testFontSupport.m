@@ -34,8 +34,8 @@ o.noiseRadiusDeg=inf;
 o.noiseType='gaussian'; % ALWAYS use gaussian
 o.noiseSpectrum='white'; % pink or white
 o.targetCross=1;
-o.fixationCrossWeightDeg = 0.05; % target line thickness
-o.fixationCrossBlankedNearTarget=0; % always present fixation
+o.fixationThicknessDeg = 0.05; % target line thickness
+o.isFixationBlankedNearTarget=0; % always present fixation
 
 o.alphabetPlacement='top'; % show possible answers on 'top' or 'right' for letters and gabors.
 
@@ -58,7 +58,7 @@ o.alphabetPlacement='top'; % show possible answers on 'top' or 'right' for lette
 % o.snapshotCaptionTextSizeDeg=0.5;
 % o.snapshotShowsFixationBefore=1;
 % o.snapshotShowsFixationAfter=0;
-% o.fixationCrossWeightDeg=0.05; % target line thickness
+% o.fixationThicknessDeg=0.05; % target line thickness
 o.speakInstructions=1;
 o.isKbLegacy = 0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar, for Linux compatibility.
 % o.useFractionOfScreenToDebug=0.3; % 0: normal, 0.5: small for debugging.

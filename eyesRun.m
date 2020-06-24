@@ -53,11 +53,11 @@ o.viewingDistanceCm=40;
 o.eyes='right';
 o.trialsDesired=40;
 o.targetGaborCycles=3; % cycles of the sinewave in targetHeight
-o.blankingRadiusReEccentricity=0; % No blanking.
+o.fixationBlankingRadiusReEccentricity=0; % No blanking.
 o.moviePreSec=0.3;
 o.moviePostSec=0.3;
 o.targetMarkDeg=1;
-o.fixationCrossDeg=3;
+o.fixationMarkDeg=3;
 if false
     % Target letter
     o.targetKind='letter';
@@ -97,7 +97,7 @@ for domain=1:3
             o.desiredLuminance=2.5; % cd/m^2
             o.desiredLuminanceFactor=[];
             o.useFilter=true;
-            o.fixationCrossWeightDeg=0.1; % Typically 0.03. Make it much thicker for scotopic testing.
+            o.fixationThicknessDeg=0.1; % Typically 0.03. Make it much thicker for scotopic testing.
         case 2
             % cortical
             o.conditionName='cortical';
@@ -107,7 +107,7 @@ for domain=1:3
             o.desiredLuminance=[];
             o.desiredLuminanceFactor=1;
             o.useFilter=false;
-            o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
+            o.fixationThicknessDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
         case 3
             % ganglion
             o.conditionName='ganglion';
@@ -118,18 +118,18 @@ for domain=1:3
             o.desiredLuminance=[];
             o.desiredLuminanceFactor=1;
             o.useFilter=false;
-            o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
+            o.fixationThicknessDeg=0.03; % Typically 0.03. Make it much thicker for scotopic testing.
     end
     o.alternatives=length(o.alphabet);
     o.isNoiseDynamic=true;
     if all(o.eccentricityXYDeg==0)
         o.isTargetLocationMarked=false;
-        o.blankingRadiusReTargetHeight=2;
-        o.fixationCrossDeg=10;
+        o.fixationBlankingRadiusReTargetHeight=2;
+        o.fixationMarkDeg=10;
     else
         o.isTargetLocationMarked=true;
-        o.blankingRadiusReTargetHeight=0;
-        o.fixationCrossDeg=3;
+        o.fixationBlankingRadiusReTargetHeight=0;
+        o.fixationMarkDeg=3;
     end
     for eyes=Shuffle({'right' 'both'})
         %    for eyes={'right'}

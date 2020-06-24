@@ -135,7 +135,7 @@ if ~skipDataCollection && 0
          % Copy from previous run.
          o.experimenter=oOut.experimenter;
       end
-      o.blankingRadiusReEccentricity=0; % No blanking.
+      o.fixationBlankingRadiusReEccentricity=0; % No blanking.
       if 0
          % Target letter
          o.targetKind='letter';
@@ -155,11 +155,11 @@ if ~skipDataCollection && 0
       else
          o.isTargetLocationMarked=true;
       end
-      o.blankingRadiusReTargetHeight=0;
+      o.fixationBlankingRadiusReTargetHeight=0;
       o.moviePreSec=0.2;
       o.moviePostSec=0.2;
       o.targetMarkDeg=1;
-      o.fixationCrossDeg=3;
+      o.fixationMarkDeg=3;
       if false
          % We use QuestPlus to measure steepness.
          o.questPlusEnable=true;

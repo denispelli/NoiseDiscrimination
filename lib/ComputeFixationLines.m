@@ -9,9 +9,9 @@ function fixationLines=ComputeFixationLines(fix)
 % fix.bouma=0.5;                        % Critical spacing multiple of
 %                                       % eccentricity.
 % fix.clipRect=screenRect;              % Restrict lines to this rect.
-% fix.fixationCrossPix=fixationCrossPix;% Full width & height of fixation
+% fix.fixationMarkPix=fixationMarkPix;% Full width & height of fixation
 %                                       % cross.
-% fix.fixationCrossBlankedNearTarget=1; % 0 or 1. Blank the fixation line
+% fix.isFixationBlankedNearTarget=1; % 0 or 1. Blank the fixation line
 %                                       % near the target. We blank within
 %                                       % one critical spacing of the
 %                                       % target location, left and right,
@@ -20,7 +20,7 @@ function fixationLines=ComputeFixationLines(fix)
 %                                       % target eccentricity. We also
 %                                       % blank a radius proportional to
 %                                       % target radius.
-% fix.blankingRadiusReTargetHeight=1.5; % Make blanking radius 1.5 times
+% fix.fixationBlankingRadiusReTargetHeight=1.5; % Make blanking radius 1.5 times
 %                                       % target height. That's a good
 %                                       % value for letters, which are
 %                                       % strong right up to the edge of
@@ -34,7 +34,7 @@ function fixationLines=ComputeFixationLines(fix)
 % fix.isTargetLocationMarked=true;          % Draw vertical line indicating
 %                                       % target location.
 % fixationLines=ComputeFixationLines(fix);
-% Screen('DrawLines',window,fixationLines,fixationLineWeightPix,black);
+% Screen('DrawLines',window,fixationLines,fixationThicknessPix,black);
 %
 % History:
 % October, 2015. Denis Pelli wrote it.
@@ -55,13 +55,13 @@ end
 if ~isfield(fix,'isTargetLocationMarked')
     fix.isTargetLocationMarked=false; % Default is no vertical line indicating target location.
 end
-if ~isfield(fix,'fixationCrossBlankedNearTarget')
-    fix.fixationCrossBlankedNearTarget=1; % Default is yes.
+if ~isfield(fix,'isFixationBlankedNearTarget')
+    fix.isFixationBlankedNearTarget=1; % Default is yes.
 end
-if ~isfield(fix,'blankingRadiusReTargetHeight')
-    fix.blankingRadiusReTargetHeight=1.5; % Blank a radius of 1.5 times target height.
+if ~isfield(fix,'fixationBlankingRadiusReTargetHeight')
+    fix.fixationBlankingRadiusReTargetHeight=1.5; % Blank a radius of 1.5 times target height.
 end
-blankingRadiusPix=fix.blankingRadiusReTargetHeight*fix.targetHeightPix;
+blankingRadiusPix=fix.fixationBlankingRadiusReTargetHeight*fix.targetHeightPix;
 
 % We initially take only the length of the eccentricity vector, and compute
 % our lines as though fixation were at (0,0) and the eccentricity were
@@ -75,11 +75,11 @@ fix.eccentricityPix = sqrt(sum((fix.targetXYPix-[fix.x fix.y]).^2));
 r=OffsetRect(fix.clipRect,-fix.x,-fix.y);
 
 % Horizontal line indicating fixation 
-lineStart=-fix.fixationCrossPix/2;
-lineEnd=fix.fixationCrossPix/2;
+lineStart=-fix.fixationMarkPix/2;
+lineEnd=fix.fixationMarkPix/2;
 lineStart=max(lineStart,r(1)); % clip to fix.clipRect
 lineEnd=min(lineEnd,r(3)); % clip to fix.clipRect
-if fix.fixationCrossBlankedNearTarget
+if fix.isFixationBlankedNearTarget
     blankStart=min(abs(fix.eccentricityPix)*(1-fix.bouma),abs(fix.eccentricityPix)-blankingRadiusPix);
     blankEnd=max(abs(fix.eccentricityPix)*(1+fix.bouma),abs(fix.eccentricityPix)+blankingRadiusPix);
 else
@@ -112,12 +112,12 @@ end
 
 % Vertical fixation line
 if 0>=r(1) && 0<=r(3) % Fixation is on screen.
-    lineStart=-fix.fixationCrossPix/2;
-    lineEnd=fix.fixationCrossPix/2;
+    lineStart=-fix.fixationMarkPix/2;
+    lineEnd=fix.fixationMarkPix/2;
     lineStart=max(lineStart,r(2)); % clip to fix.clipRect
     lineEnd=min(lineEnd,r(4)); % clip to fix.clipRect
     fixationLinesV=[];
-    if ~fix.fixationCrossBlankedNearTarget || abs(fix.eccentricityPix)>blankingRadiusPix
+    if ~fix.isFixationBlankedNearTarget || abs(fix.eccentricityPix)>blankingRadiusPix
         % no blanking of line
         fixationLinesV(1:2,1:2)=[0 0;lineStart lineEnd];
     elseif lineStart<-blankingRadiusPix
@@ -136,12 +136,12 @@ xy=fix.targetXYPix;
 if fix.isTargetLocationMarked && IsInRect(xy(1),xy(2),fix.clipRect);
     % Compute at eccentricity zero, and then offset to desired target
     % eccentricity.
-    lineStart=-fix.fixationCrossPix/2;
-    lineEnd=fix.fixationCrossPix/2;
+    lineStart=-fix.fixationMarkPix/2;
+    lineEnd=fix.fixationMarkPix/2;
     lineStart=max(lineStart,r(2)); % vertical clip to fix.clipRect
     lineEnd=min(lineEnd,r(4)); % vertical clip to fix.clipRect
     fixationLinesV=[];
-    if ~fix.fixationCrossBlankedNearTarget
+    if ~fix.isFixationBlankedNearTarget
         % no blanking of line
         fixationLinesV(1:2,1:2)=[0 0;lineStart lineEnd];
     elseif lineStart < -blankingRadiusPix

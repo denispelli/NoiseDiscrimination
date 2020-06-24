@@ -49,12 +49,12 @@ if false
     o.annularNoiseEnvelopeRadiusDeg=o.flankerSpacingDeg;
     o.noiseEnvelopeSpaceConstantDeg=o.flankerSpacingDeg/2;
 end
-o.fixationCrossWeightDeg=0.09;
-o.blankingRadiusReEccentricity=0; % No blanking.
-o.blankingRadiusReTargetHeight=0;
+o.fixationThicknessDeg=0.09;
+o.fixationBlankingRadiusReEccentricity=0; % No blanking.
+o.fixationBlankingRadiusReTargetHeight=0;
 o.moviePreAndPostSecs=[0.2 0.2];
 o.targetMarkDeg=2;
-o.fixationCrossDeg=3;
+o.fixationMarkDeg=3;
 if true
     % Target letter
     o.targetKind='letter';

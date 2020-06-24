@@ -1,4 +1,4 @@
-% runUncertainty.m
+% runUncertainty2.m
 % MATLAB script to run NoiseDiscri mination.m
 % Copyright 2019 Denis G. Pelli, denis.pelli@nyu.edu
 % December 10, 2019
@@ -17,17 +17,17 @@ end
 % o.useFractionOfScreenToDebug=0.4; % USE ONLY FOR DEBUGGING.
 % o.skipScreenCalibration=true; % USE ONLY FOR DEBUGGING.
 o.isTargetFullResolution=true;
-o.askForPartingComments=true;
+o.askForPartingComments=false;
 o.isGazeRecorded=false;
 o.experiment='uncertainty';
 o.eccentricityXYDeg=[0 0];
 o.targetHeightDeg=6;
 o.contrast=-1;
-o.noiseType='gaussian';
+o.noiseType='ternary';
 o.setNearPointEccentricityTo='fixation';
 o.nearPointXYInUnitSquare=[0.5 0.5];
-o.blankingRadiusReTargetHeight=0;
-o.blankingRadiusReEccentricity=0;
+o.fixationBlankingRadiusReTargetHeight=0;
+o.fixationBlankingRadiusReEccentricity=0;
 o.targetKind='letter';
 o.targetHeightDeg=4;
 o.thresholdParameter='contrast';
@@ -43,9 +43,11 @@ o.borderLetter='';
 o.areAnswersLabeled=false;
 o.getAlphabetFromDisk=false;
 o.isFixationCheck=false;
-o.fixationCrossBlankedNearTarget=true;
+o.isFixationBlankedNearTarget=true;
 o.fixationOnsetAfterNoiseOffsetSecs=0.6;
-o.fixationCrossDrawnOnStimulus=false;
+o.fixationMarkDrawnOnStimulus=false;
+o.useFixationDots=false;
+o.isTargetLocationMarked=false;
 o.isTargetFullResolution=false;
 o.useFlankers=false;
 o.flankerContrast=-1;
@@ -72,7 +74,7 @@ if true
             o.showUncertainty=true;
             o.uncertainParameter={'eccentricityXYDeg'};
             % Uncertainty is M equally spaced positions in grid filling square.
-            o.uncertainDisplayDotDeg=0.5;
+            o.uncertainDisplayDotDeg=1;
             radiusDeg=10;
             r=Screen('Rect',0);
             % Create rectangle of dot locations with same aspect ratio as
@@ -110,12 +112,14 @@ if true
             o.areAnswersLabeled=false;
             o.contrast=-1;
             o.viewingDistanceCm=25;
-            o.fixationCrossDrawnOnStimulus=false;
+            o.fixationMarkDrawnOnStimulus=false;
             o.fixationOnsetAfterNoiseOffsetSecs=0.6;
+            ooo{end+1}=o;
+            
             o.uncertainParameter={};
             o.uncertainValues={};
             o.showUncertainty=false;
-            ooo{end+1}=o;
+            o.uncertainDisplayDotDeg=1;
     end
 end
 
@@ -188,10 +192,10 @@ if false
         o.contrast=-1;
         o.alternatives=length(o.alphabet);
         o.viewingDistanceCm=30;
-        o.fixationCrossDrawnOnStimulus=true;
+        o.fixationMarkDrawnOnStimulus=true;
         ooo{end+1}=o;
         o.uncertainParameter={};
-        o.fixationCrossDrawnOnStimulus=false;
+        o.fixationMarkDrawnOnStimulus=false;
         o.uncertainParameter={};
         o.uncertainValues={};
         o.showUncertainty=false;
@@ -233,9 +237,9 @@ if false
         o.nearPointXYInUnitSquare=[0.5 0.5];
         o.viewingDistanceCm=30;
         o.eccentricityXYDeg=[10 0];
-        o.fixationCrossBlankedNearTarget=false;
+        o.isFixationBlankedNearTarget=false;
         o.fixationOnsetAfterNoiseOffsetSecs=0.5;
-        o.fixationCrossDrawnOnStimulus=false;
+        o.fixationMarkDrawnOnStimulus=false;
         oo=o;
         o.eccentricityXYDeg=-o.eccentricityXYDeg;
         oo(2)=o;
@@ -351,10 +355,12 @@ for block=1:length(ooo)
     oo=[oo ooo{block}];
 end
 t=struct2table(oo,'AsArray',true);
-disp(t(:,{'block' 'experiment' 'targetKind' 'thresholdParameter'...
+% Print the conditions in the Command Window.
+disp(t(:,{'experiment' 'block' 'endsAtMin'  'noiseSD' 'targetKind' 'thresholdParameter'...
     'uncertainParameter' ...
-    'contrast' 'conditionName' 'observer' 'endsAtMin' 'noiseSD' ...
-    'targetFont' 'targetHeightDeg' 'eccentricityXYDeg' 'areAnswersLabeled' 'alternatives'})); % Print the conditions in the Command Window.
+    'contrast' 'conditionName' 'observer' ...
+    'targetFont' 'targetHeightDeg' 'eccentricityXYDeg' ...
+    'areAnswersLabeled' 'alternatives'}));
 % return
 
 %% Measure threshold, one block per iteration.

@@ -53,6 +53,7 @@ string=['You escaped. Any incomplete trial was canceled. ' ...
     nextBlockMsg nextTrialMsg];
 DrawFormattedText(window,string,textMarginPix,textMarginPix+0.5*textSize,black,textLineLength,[],[],1.3);
 Screen('Flip',window);
+WaitSecs(0.5); % Pause to prevent spurious double hit of escape.
 answer=GetKeypress([spaceKeyCode returnKeyCode escapeKeyCode graveAccentKeyCode],o.deviceIndex);
 quitExperiment=ismember(answer,[escapeChar,graveAccentChar]);
 quitBlock=ismember(answer,returnChar)||quitExperiment;

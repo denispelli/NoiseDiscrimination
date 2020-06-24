@@ -32,16 +32,16 @@ o.alternatives=length(o.alphabet); % number of letters to use from o.alphabet
 % o.targetHeightDeg=2*7.64; % Manoj used xHeight of 7.64 deg.
 
 % FIXATION
-o.fixationCrossDeg = 1; % Typically 1 or inf. Make this at least 4 deg for scotopic testing, since the fovea is blind scotopically.
+o.fixationMarkDeg = 1; % Typically 1 or inf. Make this at least 4 deg for scotopic testing, since the fovea is blind scotopically.
 o.targetCross=1;
-o.fixationCrossWeightDeg = 0.05; % target line thickness
-o.fixationCrossBlankedNearTarget = 0; % 0 or 1.
-o.fixationCrossBlankedUntilSecAfterTarget = 0.6; % Pause after stimulus before display of fixation.
-% Skipped when fixationCrossBlankedNearTarget. Not needed when eccentricity is bigger than the target.
+o.fixationThicknessDeg = 0.05; % target line thickness
+o.isFixationBlankedNearTarget = 0; % 0 or 1.
+o.fixationMarkBlankedUntilSecAfterTarget = 0.6; % Pause after stimulus before display of fixation.
+% Skipped when isFixationBlankedNearTarget. Not needed when eccentricity is bigger than the target.
 
 % USER INTERFACE
 o.alphabetPlacement='top'; % show possible answers on 'top' or 'right' for letters and gabors.
-% o.fixationCrossWeightDeg=0.05; % target line thickness
+% o.fixationThicknessDeg=0.05; % target line thickness
 o.isKbLegacy=0; % Uses KbWait, KbCheck, KbStrokeWait functions, instead of GetChar, for Linux compatibility.
 % o.tGuess=log10(0.2); % Optionally tell Quest the initial log contrast on first trial.
 

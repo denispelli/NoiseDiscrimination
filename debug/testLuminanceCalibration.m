@@ -12,7 +12,7 @@ try
    settings.trueTone=false;
    settings.nightShiftSchedule='Off';
    settings.nightShiftManual=false;
-   oldSettings=MacDisplaySettings(settings);
+   oldSettings=MacDisplaySettings(screen,settings);
    if true
       PsychImaging('PrepareConfiguration');
       PsychImaging('AddTask','General','UseRetinaResolution');
@@ -57,12 +57,12 @@ try
    end
    Screen('CloseAll');
    Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
-   MacDisplaySettings(oldSettings);
+   MacDisplaySettings(screen,oldSettings);
 catch me
    sca;
    if exist('cal','var') && isfield(cal,'old') && isfield(cal.old,'gamma')
       Screen('LoadNormalizedGammaTable',0,cal.old.gamma);
    end
-   MacDisplaySettings(oldSettings);
+   MacDisplaySettings(screen,oldSettings);
    rethrow(me);
 end

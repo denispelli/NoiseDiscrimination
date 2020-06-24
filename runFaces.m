@@ -51,9 +51,9 @@ o.observer='';
 o.noiseSD=0;
 o.thresholdParameter='contrast';
 o.conditionName='threshold';
-o.blankingRadiusReTargetHeight=0;
+o.fixationBlankingRadiusReTargetHeight=0;
 o.targetMarkDeg=1;
-o.fixationCrossDeg=3;
+o.fixationMarkDeg=3;
 o.alternatives=length(o.alphabet);
 if all(o.eccentricityXYDeg==0)
     o.isTargetLocationMarked=false;

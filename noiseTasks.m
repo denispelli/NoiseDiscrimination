@@ -40,11 +40,11 @@ o.contrast=-0.1;
 o.viewingDistanceCm=40;
 o.isLuminanceRangeSymmetric=true;
 o.alphabetPlacement='right'; % 'top' or 'right';
-o.fixationCrossWeightDeg=0.09;
-o.blankingRadiusReEccentricity=0; % No blanking.
-o.blankingRadiusReTargetHeight=0;
+o.fixationThicknessDeg=0.09;
+o.fixationBlankingRadiusReEccentricity=0; % No blanking.
+o.fixationBlankingRadiusReTargetHeight=0;
 o.targetMarkDeg=2;
-o.fixationCrossDeg=3;
+o.fixationMarkDeg=3;
 if true
     % Target letter
     o.targetKind='letter';
@@ -78,7 +78,7 @@ o.noiseRadiusDeg=o.targetHeightDeg/2;
 o.noiseCheckDeg=o.targetHeightDeg/20;
 o.noiseSD=0.2;
 o.targetDurationSec=0.2;
-o.fixationCrossDrawnOnStimulus=true;
+o.fixationMarkDrawnOnStimulus=true;
 o.isTargetLocationMarked=true; % Is there a mark designating target position?
 o.targetMarkDeg=0.1;
 o.contrast=-1;

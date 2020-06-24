@@ -17,7 +17,7 @@ o.noiseSD=0.2;
 o.durationSec=0.2;
 o.noiseType='gaussian';
 o.fixationWidthDeg=1; % Typically 1 or inf. Make this at least 2 deg for scotopic testing, since the fovea is blind scotopically.
-o.fixationLineWeightDeg=0.05; % Typically 0.05. This should be much thicker for scotopic testing.
+o.fixationThicknessDeg=0.05; % Typically 0.05. This should be much thicker for scotopic testing.
 o.fixationBlankedNearTarget=0; % 0 or 1.
 % if  ~isfield(o,'idealEOverNThreshold') || ~isfinite(o.idealEOverNThreshold)
 %     o.observer='ideal';

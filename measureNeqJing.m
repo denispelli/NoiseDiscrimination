@@ -19,14 +19,14 @@ o.alphabet='DHKNORSVZ';
 o.alternatives=length(o.alphabet); % number of letters to use from o.alphabet
 
 % FIXATION
-o.fixationCrossDeg = 1; % Typically 1 or inf. Make this at least 4 deg for scotopic testing, since the fovea is blind scotopically.
-% o.fixationCrossWeightDeg = 0.05; % fixation line thickness
-% o.fixationCrossBlankedNearTarget = 0; % 0 or 1.
-% o.fixationCrossBlankedUntilSecAfterTarget = 0.6; % Pause after stimulus before display of fixation.
+o.fixationMarkDeg = 1; % Typically 1 or inf. Make this at least 4 deg for scotopic testing, since the fovea is blind scotopically.
+% o.fixationThicknessDeg = 0.05; % fixation line thickness
+% o.isFixationBlankedNearTarget = 0; % 0 or 1.
+% o.fixationMarkBlankedUntilSecAfterTarget = 0.6; % Pause after stimulus before display of fixation.
 o.isTargetLocationMarked=1;
 o.targetMarkDeg=0.5;
-o.blankingRadiusReEccentricity=0;
-o.blankingRadiusReTargetHeight=0;
+o.fixationBlankingRadiusReEccentricity=0;
+o.fixationBlankingRadiusReTargetHeight=0;
 o.speakInstructions=0;
 
 % DEBUGGING

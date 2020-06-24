@@ -32,16 +32,16 @@ o.contrast=-1;
 o.noiseType='gaussian';
 o.setNearPointEccentricityTo='target';
 o.nearPointXYInUnitSquare=[0.5 0.5];
-o.blankingRadiusReTargetHeight=0;
-o.blankingRadiusReEccentricity=0;
+o.fixationBlankingRadiusReTargetHeight=0;
+o.fixationBlankingRadiusReEccentricity=0;
 o.thresholdParameter='contrast';
 o.flankerSpacingDeg=0.2; % Used only for fixation check.
 o.observer='';
 o.brightnessSetting=0.87;
 o.isFixationCheck=false;
-o.fixationCrossBlankedNearTarget=true;
+o.isFixationBlankedNearTarget=true;
 o.fixationOnsetAfterNoiseOffsetSecs=0.6;
-o.fixationCrossDrawnOnStimulus=false;
+o.fixationMarkDrawnOnStimulus=false;
 o.isTargetFullResolution=false;
 o.useFlankers=false;
 o.flankerContrast=-1;
@@ -99,12 +99,12 @@ for ecc=[0 2 8 32]
             o.viewingDistanceCm=50;
         end
         if norm(o.eccentricityXYDeg)<3 && o.targetHeightDeg<2
-            o.blankingRadiusReTargetHeight=2;
+            o.fixationBlankingRadiusReTargetHeight=2;
         else
-            o.blankingRadiusReTargetHeight=0;
+            o.fixationBlankingRadiusReTargetHeight=0;
         end
         % Sloan
-        o.fixationIsOffscreen=true;
+        o.isFixationOffscreen=true;
         r=Screen('Rect',0);
         % Shift right to equate right hand margin with
         % top and bottom margins.
@@ -147,9 +147,9 @@ for ecc=32
             o.viewingDistanceCm=50;
         end
         if norm(o.eccentricityXYDeg)<3 && o.targetHeightDeg<2
-            o.blankingRadiusReTargetHeight=2;
+            o.fixationBlankingRadiusReTargetHeight=2;
         else
-            o.blankingRadiusReTargetHeight=0;
+            o.fixationBlankingRadiusReTargetHeight=0;
         end
         r=Screen('Rect',0);
         % Shift right to equate right hand margin with

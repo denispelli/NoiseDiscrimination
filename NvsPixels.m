@@ -37,11 +37,11 @@ o.contrast=-0.1;
 o.viewingDistanceCm=40;
 o.isLuminanceRangeSymmetric=true;
 o.alphabetPlacement='right'; % 'top' or 'right';
-o.fixationCrossWeightDeg=0.09;
-o.blankingRadiusReEccentricity=0; % No blanking.
-o.blankingRadiusReTargetHeight=0;
+o.fixationThicknessDeg=0.09;
+o.fixationBlankingRadiusReEccentricity=0; % No blanking.
+o.fixationBlankingRadiusReTargetHeight=0;
 o.targetMarkDeg=2;
-o.fixationCrossDeg=3;
+o.fixationMarkDeg=3;
 if true
     % Target letter
     o.targetKind='letter';

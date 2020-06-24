@@ -60,7 +60,7 @@ o.askExperimenterToSetDistance=true;
 o.isLuminanceRangeSymmetric=true; % False for maximum brightness.
 o.desiredLuminanceFactor=1; % 1.8 to maximize brightness.
 o.isTargetFullResolution=true; % NEW December 6, 2019. denis.pelli@nyu.edu
-o.clipToStimulusRect=false;
+o.isFixationClippedToStimulusRect=false;
 o.eccentricityXYDeg=[0 0];
 o.targetHeightDeg=[];
 o.viewingDistanceCm=[];
@@ -69,22 +69,22 @@ machine=IdentifyComputer;
 
 %% FIXATION
 o.isFixationCheck=false; % True designates the condition as a fixation check.
-o.clipToStimulusRect=false;
+o.isFixationClippedToStimulusRect=false;
 if false
     % SEPARATE FIXATION IN TIME
-    o.fixationCrossBlankedNearTarget=true;
+    o.isFixationBlankedNearTarget=true;
     o.fixationOffsetBeforeNoiseOnsetSecs=0.6;
     o.fixationOnsetAfterNoiseOffsetSecs=0.6;
-    o.fixationCrossDrawnOnStimulus=false;
+    o.fixationMarkDrawnOnStimulus=false;
 else
     % SEPARATE FIXATION IN SPACE
     o.fixationOffsetBeforeNoiseOnsetSecs=0;
     o.fixationOnsetAfterNoiseOffsetSecs=0;
-    o.fixationCrossDrawnOnStimulus=true;
-    o.blankingRadiusReTargetHeight=0.833; % One third letter width blank margin.
-    o.blankingRadiusReEccentricity=0.5;
-    o.fixationCrossDeg=inf;
-    o.fixationCrossBlankedNearTarget=true;
+    o.fixationMarkDrawnOnStimulus=true;
+    o.fixationBlankingRadiusReTargetHeight=0.833; % One third letter width blank margin.
+    o.fixationBlankingRadiusReEccentricity=0.5;
+    o.fixationMarkDeg=inf;
+    o.isFixationBlankedNearTarget=true;
     o.alphabetPlacement='bottom';
 end
 
@@ -108,7 +108,7 @@ for targetKind={'gabor'} % 'letter' 'gabor'
                 o.targetGaborSpaceConstantCycles=0.75; % The 1/e space constant of the gaussian envelope in cycles of the sinewave.
                 o.targetGaborCycles=3; % Cycles of the sinewave in targetHeight.
             end
-            o.blankingRadiusReTargetHeight=2*o.targetGaborSpaceConstantCycles/o.targetGaborCycles; % Two space constants.
+            o.fixationBlankingRadiusReTargetHeight=2*o.targetGaborSpaceConstantCycles/o.targetGaborCycles; % Two space constants.
         case 'letter'
             o.conditionName='letterX';
             o.minimumTargetHeightChecks=8;
@@ -125,7 +125,7 @@ for targetKind={'gabor'} % 'letter' 'gabor'
             o.borderLetter='X';
             o.areAnswersLabeled=false;
             o.getAlphabetFromDisk=true;
-            o.blankingRadiusReTargetHeight=0.833; % One third letter width blank margin.
+            o.fixationBlankingRadiusReTargetHeight=0.833; % One third letter width blank margin.
         otherwise
             error('Unknown o.targetKind ''%s''.',o.targetKind);
     end
@@ -140,8 +140,8 @@ for targetKind={'gabor'} % 'letter' 'gabor'
             % else
             % 	o.noiseEnvelopeSpaceConstantDeg=inf;
             % end
-            if 1>ecc*(1-o.blankingRadiusReEccentricity) ...
-                    || 1>ecc-o.blankingRadiusReTargetHeight*deg
+            if 1>ecc*(1-o.fixationBlankingRadiusReEccentricity) ...
+                    || 1>ecc-o.fixationBlankingRadiusReTargetHeight*deg
                 % Make sure at least 1 deg of fixation mark can be seen.
             end
             % MAX viewingDistanceCm while showing 1 deg of
@@ -149,17 +149,17 @@ for targetKind={'gabor'} % 'letter' 'gabor'
             o.eccentricityXYDeg=[ecc 0];
             o.targetHeightDeg=deg;
             heightCm=machine.mm{1}(2)/10;
-            minScreenDeg=2*(1+o.blankingRadiusReTargetHeight*o.targetHeightDeg);
+            minScreenDeg=2*(1+o.fixationBlankingRadiusReTargetHeight*o.targetHeightDeg);
             maxViewingDistanceCm=floor(heightCm/2/tand(minScreenDeg/2));
             o.viewingDistanceCm=maxViewingDistanceCm;
             % WE NEED o.minScreenDeg
-            o.minScreenDeg=2*(1+o.blankingRadiusReTargetHeight*o.targetHeightDeg);
+            o.minScreenDeg=2*(1+o.fixationBlankingRadiusReTargetHeight*o.targetHeightDeg);
             degMin=NominalAcuityDeg(o.eccentricityXYDeg);
             if deg<2*degMin
                 continue
             end
             % o.viewingDistanceCm=200; % FOR DEMO
-            % o.fixationIsOffscreen=true; % FOR DEMO
+            % o.isFixationOffscreen=true; % FOR DEMO
             
             % EQUATE MARGINS
             % Shift right to equate right hand margin with top and bottom
@@ -194,7 +194,7 @@ for i=1:length(ooo)
         o=oo(oi);
         o.minNotBlankedMarginReHeight=0.1;
         screenCm=min(machine.mm{1})/10; % Min of width and height.
-        blankingDiameterDeg=2*o.blankingRadiusReTargetHeight*o.targetHeightDeg;
+        blankingDiameterDeg=2*o.fixationBlankingRadiusReTargetHeight*o.targetHeightDeg;
         o.minScreenDeg=blankingDiameterDeg/(1-2*o.minNotBlankedMarginReHeight);
         o.maxViewingDistanceCm=floor(screenCm/2/tand(o.minScreenDeg/2));
         oo(oi)=o;
@@ -229,12 +229,12 @@ if false
             else
                 o.viewingDistanceCm=50;
             end
-            if 1<ecc*(1-o.blankingRadiusReEccentricity) ...
-                    || 1<ecc-o.blankingRadiusReTargetHeight*deg
+            if 1<ecc*(1-o.fixationBlankingRadiusReEccentricity) ...
+                    || 1<ecc-o.fixationBlankingRadiusReTargetHeight*deg
                 % Make sure that fixation mark has at least 1 deg radius.
-                o.fixationCrossDeg=inf;
+                o.fixationMarkDeg=inf;
             else
-                o.fixationCrossDeg=2;
+                o.fixationMarkDeg=2;
             end
             r=Screen('Rect',0);
             
@@ -412,7 +412,7 @@ disp(t(:,{'block' 'experiment' 'conditionName' 'observer'  'endsAtMin' 'trialsDe
     'noiseCheckDeg' 'targetKind' 'noiseType' 'thresholdParameter'...
     'contrast'  'noiseSD' ...
     'targetHeightDeg' 'viewingDistanceCm' 'eccentricityXYDeg' 'viewingDistanceCm' ...
-    'fixationCrossBlankedNearTarget'})); % Print the conditions in the Command Window.
+    'isFixationBlankedNearTarget'})); % Print the conditions in the Command Window.
 % return
 
 %% Measure threshold, one block per iteration.

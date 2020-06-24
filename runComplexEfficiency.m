@@ -54,8 +54,8 @@ o.contrast=-1;
 o.noiseType='gaussian';
 o.setNearPointEccentricityTo='fixation';
 o.nearPointXYInUnitSquare=[0.5 0.5];
-o.blankingRadiusReTargetHeight=0;
-o.blankingRadiusReEccentricity=0;
+o.fixationBlankingRadiusReTargetHeight=0;
+o.fixationBlankingRadiusReEccentricity=0;
 o.targetKind='letter';
 o.targetHeightDeg=6;
 o.thresholdParameter='contrast';
@@ -71,9 +71,9 @@ o.borderLetter='';
 o.areAnswersLabeled=false;
 o.getAlphabetFromDisk=false;
 o.isFixationCheck=false;
-o.fixationCrossBlankedNearTarget=true;
+o.isFixationBlankedNearTarget=true;
 o.fixationOnsetAfterNoiseOffsetSecs=0.6;
-o.fixationCrossDrawnOnStimulus=false;
+o.fixationMarkDrawnOnStimulus=false;
 o.isTargetFullResolution=false;
 o.useFlankers=false;
 o.flankerContrast=-1;
@@ -145,10 +145,10 @@ if 1
     o.contrast=-1;
     o.alternatives=length(o.alphabet);
     o.viewingDistanceCm=30;
-    o.fixationCrossDrawnOnStimulus=true;
+    o.fixationMarkDrawnOnStimulus=true;
     ooo{end+1}=o;
     o.uncertainParameter={};
-    o.fixationCrossDrawnOnStimulus=false;
+    o.fixationMarkDrawnOnStimulus=false;
 end
 if 1
     % Sloan
@@ -324,9 +324,9 @@ if true
         o.nearPointXYInUnitSquare=[0.5 0.5];
         o.viewingDistanceCm=30;
         o.eccentricityXYDeg=[10 0];
-        o.fixationCrossBlankedNearTarget=false;
+        o.isFixationBlankedNearTarget=false;
         o.fixationOnsetAfterNoiseOffsetSecs=0.5;
-        o.fixationCrossDrawnOnStimulus=false;
+        o.fixationMarkDrawnOnStimulus=false;
         oo=o;
         o.eccentricityXYDeg=-o.eccentricityXYDeg;
         oo(2)=o;

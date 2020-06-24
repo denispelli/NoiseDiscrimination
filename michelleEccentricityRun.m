@@ -37,11 +37,11 @@ o.eyes='both';
 o.viewingDistanceCm=40;
 o.isLuminanceRangeSymmetric=true;
 o.alphabetPlacement='right'; % 'top' or 'right';
-o.fixationCrossWeightDeg=0.09;
-o.blankingRadiusReEccentricity=0; % No blanking.
-o.blankingRadiusReTargetHeight=0;
+o.fixationThicknessDeg=0.09;
+o.fixationBlankingRadiusReEccentricity=0; % No blanking.
+o.fixationBlankingRadiusReTargetHeight=0;
 o.targetMarkDeg=2;
-o.fixationCrossDeg=3;
+o.fixationMarkDeg=3;
 if true
     % Target letter
     o.targetKind='letter';
@@ -77,7 +77,7 @@ o.noiseRadiusDeg=o.targetHeightDeg/2;
 o.noiseCheckDeg=o.targetHeightDeg/10;
 o.noiseSD=0.2;
 o.targetDurationSec=0.2;
-o.fixationCrossDrawnOnStimulus=true;
+o.fixationMarkDrawnOnStimulus=true;
 o.isTargetLocationMarked=true; % Is there a mark designating target position?
 o.targetMarkDeg=0.1; % Just a dot.
 o.contrast=-1;
@@ -90,11 +90,11 @@ if true
     o.eccentricityXYDeg=[10 0];
     oo{end+1}=o;
     o.eccentricityXYDeg=[0 0];
-    o.blankingRadiusReTargetHeight=1.1;
-    o.fixationCrossDeg=inf;
+    o.fixationBlankingRadiusReTargetHeight=1.1;
+    o.fixationMarkDeg=inf;
     oo{end+1}=o;
-    o.blankingRadiusReTargetHeight=0;
-    o.fixationCrossDeg=3;
+    o.fixationBlankingRadiusReTargetHeight=0;
+    o.fixationMarkDeg=3;
 end
 if true
     o.conditionName='4afc noise';
@@ -108,8 +108,8 @@ o.noiseCheckDeg=o.targetHeightDeg/5;
     oo{end+1}=o;
     o.gapFraction4afc=0.03;
     o.eccentricityXYDeg=[0 0];
-    o.blankingRadiusReTargetHeight=1.1;
-    o.fixationCrossDeg=inf;
+    o.fixationBlankingRadiusReTargetHeight=1.1;
+    o.fixationMarkDeg=inf;
     oo{end+1}=o;
 end
 if false
