@@ -16,28 +16,87 @@ cd(dataFolder);
 close all
 
 %% READ ALL DATA OF experiment FILES INTO A LIST OF THRESHOLDS "oo".
-vars={'condition' 'conditionName' 'experiment' 'dataFilename' ...
+vars={'condition' 'conditionName' 'experiment' 'dataFilename' 'logFilename'...
     'experimenter' 'observer' 'trials' ...
-    'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' 'targetCyclesPerDeg' ...
+    'targetKind' 'targetGaborPhaseDeg' 'targetGaborCycles' 'targetGaborSpaceConstantCycles' 'targetCyclesPerDeg' ...
     'targetHeightDeg' 'targetDurationSecs' 'targetDurationSecsMean' 'targetDurationSecsSD'...
     'targetCheckDeg' 'isTargetFullResolution' ...
-    'targetFont' ...
-    'noiseType' 'noiseSD'  'noiseCheckDeg' ...
+    'targetFont' 'isTargetFullResolution' ...
+    'noiseType' 'noiseSD'  'noiseCheckDeg' 'noiseCheckFrames' 'isNoiseDynamic'...
+    'moviePreAndPostFrames'  'moviePreAndPostSecs' 'movieSignalFrames' ...
     'eccentricityXYDeg' 'viewingDistanceCm' 'eyes' ...
-    'contrast' 'E' 'E1' 'N' 'LBackground' 'luminanceAtEye' 'luminanceFactor'...
+    'contrast' 'E' 'E1' 'N' 'NUnits' 'LBackground' 'luminanceAtEye' 'luminanceFactor'...
     'filterTransmission' 'useFilter' 'retinalIlluminanceTd' 'pupilDiameterMm'...
-    'pixPerCm'  'nearPointXYPix' 'NUnits' 'beginningTime' 'thresholdParameter'...
-    'questMean' 'partingComments' 'blockSecs' 'blockSecsPerTrial'...
-    'isTargetFullResolution'...
-    'trial0Secs' 'trial1BeginComputeMovieSecs' ...
-    'trial2BeginComputeCLUTSecs' 'trial3BeginComputeTextureSecs' ...
-    'trial4BeginMovieSecs' 'trial5EndMovieSecs' 'trial6BeginFixationSecs'...
-    'trial7ShowInstructionsSecs' 'trial8GotResponseSecs' ...
-    'desiredLuminanceAtEye' ...
+    'pixPerCm'  'nearPointXYPix'  'beginningTime' 'thresholdParameter'...
+    'questMean' 'questSd' 'partingComments' 'blockSecs' 'blockSecsPerTrial'...
+    ... % Needed by ComputeE1
+    'task' 'stimulusRect' 'desiredLuminanceAtEye' 'beginningTime' 'targetGaborOrientationsDeg' ...
+    'targetXYPix' 'pixPerDeg'...
+    'targetWidthPix' 'targetHeightPix' 'targetCheckPix' 'getAlphabetFromDisk' 'screenRect'...
+    'allowAnyFont' 'words' 'alternatives'  'canvasSize' 'gapFraction4afc'...
     };
 oo=ReadExperimentData({experiment},vars); % Adds date and missingFields.
 fprintf('%s %d thresholds.\n',experiment,length(oo));
+oo=SortFields(oo);
+oo=ComputeE1(oo);
 
+%% Discard thresholds with bad estimates of frame rate.
+%% Assume display actually runs at 60 Hz. Reject errors exceeding 10%.
+for oi=1:length(oo)
+    if ~isfield(oo,'displayHz') || isempty(oo(oi).displayHz) || ~isfinite(oo(oi).displayHz)
+            oo(oi).movieHz=oo(oi).movieSignalFrames/oo(oi).targetDurationSecs;
+            oo(oi).displayHz=oo(oi).noiseCheckFrames*oo(oi).movieHz;
+    end
+end
+hz=[oo.displayHz];
+ok=abs(hz-60)<6;
+if ~all(ok)
+    fprintf('WARNING: Discarding %d thresholds with bad frame rates:',sum(~ok));
+    fprintf(' %.1f',sort([oo(~ok).displayHz]));
+    fprintf(' Hz.\n');
+end
+oo=oo(ok); % Discard thresholds with bad estimates of frame rate.
+
+% Fix the remaining oo(oi).targetDurationSecs for small errors in
+% displayHz.
+for oi=1:length(oo)
+    oo(oi).targetDurationSecs=oo(oi).targetDurationSecs*oo(oi).displayHz/60;
+end
+fprintf('Unique o.targetDurationSecs:');
+fprintf(' %.2f',unique([oo.targetDurationSecs]));
+fprintf(' s.\n');
+
+% x=1000./[oo.movieHz];
+% y=1000*[oo.targetDurationSecs]/[oo.movieSignalFrames]; 
+% loglog(x,y,'o');
+% xlabel('Movie frame (ms)');
+% ylabel('Signal frame (ms)');
+% fprintf('movie frame %.2f +/- %.2f ms\n',mean(x),std(x));
+% unique([oo.targetDurationSecs] ./ [oo.movieSignalFrames])
+% unique(2*[oo.movieSignalFrames] ./ [oo.targetDurationSecs] )
+
+%% Fix E1 and E if isNoiseDyname==true and duration was omitted.
+for oi=1:length(oo)
+    if oo(oi).logFilename(end-1)=='-'
+        oo(oi).logFilename(end)='1';
+    end
+    if ~oo(oi).isNoiseDynamic
+        continue
+    end
+    % If it says 'log E1/deg^2' then E1 and E omitted duration.
+    content=fileread(fullfile(dataFolder,[oo(oi).logFilename,'.txt']));
+    k=strfind(content,'log E1/deg^2');
+    if isempty(k)
+        continue
+    end
+    oo(oi).E1=oo(oi).E1*oo(oi).targetDurationSecs;
+    oo(oi).E=oo(oi).E*oo(oi).targetDurationSecs;
+end
+
+% same=ismember({oo.dataFilename},'runDynamicCSFTest-NoiseDiscrimination-ideal-gaborCosCos.2020.5.22.23.53.16');
+% oo(same)
+% same=ismember({oo.dataFilename},'runDynamicCSFTest-NoiseDiscrimination-ideal-gaborCosCos.2020.5.22.23.54.49');
+% oo(same)
 if false
     experiment2='NoiseTest';
     oo2=ReadExperimentData(experiment2,vars); % Adds date and missingFields.
@@ -63,107 +122,200 @@ if isfield(oo,'partingComments')
     end
 end
 
-% Rename condition 'GaborX' to 'Gabor3';
+%% Rename condition 'GaborX' to 'Gabor3';
 for oi=1:length(oo)
     if ismember({oo(oi).conditionName},{'gaborX'})
         oo(oi).conditionName='gabor3';
     end
 end
 
-% For enhanced matching, round each targetCyclesPerDeg greater than 2 to an
-% integer, less than 2 to one decimal.
+% ROUNDING
+% Round each targetCyclesPerDeg >4 to an integer, otherwise one decimal.
+% Round duration to two decimals.
 if true
     for oi=1:length(oo)
-        if oo(oi).targetCyclesPerDeg>2
+        switch oo(oi).targetKind
+            case 'gaborCosCos'
+                % Round duration to multiple of 50 ms.
+                oo(oi).targetDurationSecs=0.05*round(oo(oi).targetDurationSecs/0.05);
+            otherwise
+                % Round duration to multiple of 50 ms.
+                oo(oi).targetDurationSecs=0.05*round(oo(oi).targetDurationSecs/0.05);
+        end
+        if oo(oi).targetCyclesPerDeg>4
             oo(oi).targetCyclesPerDeg=round(oo(oi).targetCyclesPerDeg);
         else
-            oo(oi).targetCyclesPerDeg=round(10*oo(oi).targetCyclesPerDeg)/10;
+            oo(oi).targetCyclesPerDeg=round(oo(oi).targetCyclesPerDeg,1);
         end
     end
 end
 
-% COMPUTE EFFICIENCY
-% Select thresholdParameter='contrast', for each conditionName,
-% For each observer, including ideal, use all (E,N) data to estimate deltaNOverE and Neq.
-% Compute efficiency by comparing deltaNOverE of each to that of the ideal.
+%% KEEP DATA ONLY AT 230 and 250 cd/m^2
+ii=ismember([oo.desiredLuminanceAtEye],[230 250]);
+oo=oo(ii);
+
+%% KEEP ONLY THRESHOLDS WITH questSd<0.5
+ii=[oo.questSd]<0.5;
+oo=oo(ii);
+
+%% SKIP ASHLEY'S BAD THRESHOLD.
+fprintf('SKIPPING IMPOSSIBLY LOW THRESHOLDS\n');
+plusMinusChar=char(177); % Use this instead of literal plus minus sign to
+for oi=length(oo):-1:1
+    if abs(oo(oi).contrast)<0.01 && oo(oi).noiseSD>0 && ~ismember(oo(oi).observer,{'ideal'})
+        fprintf('%16s contrast %6.3f [%2.0f %2.0f] %2.0f c/deg, questMean%cquestSd %.2f%c%.2f %s %s\n',...
+            oo(oi).observer,oo(oi).contrast,oo(oi).eccentricityXYDeg,...
+            oo(oi).targetCyclesPerDeg,plusMinusChar,oo(oi).questMean,plusMinusChar,oo(oi).questSd,...
+            oo(oi).date,oo(oi).dataFilename);
+        oo(oi)=[];
+    end
+end
+fprintf('\n');
+
+%% UNIVERSAL WAY TO REPORT HEIGHT
+%% o.targetEnvelopeDeg = full extent of envelope at 1/e.
+for oi=1:length(oo)
+    switch oo(oi).targetKind
+        case {'gaborCos' 'gaborCosCos'}
+            % Half cosine. Nonzero full extent is o.targetHeightDeg.
+            oo(oi).targetEnvelopeDeg=oo(oi).targetHeightDeg*acos(exp(-1))/(pi/2); % trig scalar is 0.7602
+        case 'gabor'
+            oo(oi).targetEnvelopeDeg=2*oo(oi).targetGaborSpaceConstantCycles/oo(oi).targetCyclesPerDeg;
+        case {'letter' 'image'}
+            oo(oi).targetEnvelopeDeg=oo(oi).targetHeightDeg;
+        otherwise
+            error('Unknown o.targetKind ''%s''.',oo(oi).targetKind);
+    end % switch oo(oi).targetKind
+    oo(oi).targetEnvelopeCycles=oo(oi).targetEnvelopeDeg*oo(oi).targetCyclesPerDeg;
+    oo(oi).targetEnvelopeCycles=round(oo(oi).targetEnvelopeCycles,1);
+end
+
+%% COMPUTE EFFICIENCY
+% Select thresholdParameter='contrast', for each conditionName, For each
+% observer, including ideal, use all (E,N) data to estimate deltaNOverE and
+% Neq. Compute efficiency by comparing deltaNOverE of each to that of the
+% ideal.
 
 % Each element of aa is the average all thresholds in oo that match in:
 % noiseType, conditionName, observer, targetHeight, and eccentricityXY.
 % But ignore noiseType of thresholds for which noiseSD==0.
-conditionNames=unique({oo.conditionName});
-isIdeal=ismember(conditionNames,{'ideal'});
-if any(isIdeal)
-    % If present, put ideal observer first.
-    conditionNames=[condditionNames(isIdeal) conditionNames(~isIdeal)];
-end
 observers=unique({oo.observer});
-% If some names differ solely in case, then collapse all names to
+% If any names differ solely in case, then collapse all names to
 % lowercase.
 isObserversLower=length(unique(lower(observers)))<length(observers);
 if isObserversLower
     observers=unique(lower(observers));
 end
+isIdeal=ismember(observers,{'ideal'});
+if any(isIdeal)
+    % If present, put ideal observer first.
+    observers=[observers(isIdeal) observers(~isIdeal)];
+end
+conditionNames=unique({oo.conditionName});
 targetCyclesPerDegs=unique([oo.targetCyclesPerDeg]);
 eccXsfull=arrayfun(@(x) x.eccentricityXYDeg(1),oo);
 eccXs=unique(eccXsfull);
 noiseTypes=unique({oo.noiseType});
 luminances=unique([oo.desiredLuminanceAtEye]);
+if true
+    % Ignore luminances below 230 cd/m^2.
+    ok=luminances>=229;
+    luminances=luminances(ok);
+end
+
+oo=SortFields(oo);
+vars={'noiseSD' 'N' 'E' 'conditionName' 'targetCyclesPerDeg' 'observer' 'dataFilename'};
+t=struct2table(oo);
+disp(t(ismember(t.observer,'ideal')&ismember(t.conditionName,'gaborCosCos'),vars));
+
+%% COMPUTE Neq, E0, deltaEOverN
+% aa has one element for each deltaEOverN. That element reflects all
+% thresholds that contribute to its deltaEOverN. Efficiency is the ratio of
+% deltaEOverN for ideal over that for human.
 aa=[];
-for conditionName=conditionNames
-    for observer=observers
+for observer=observers
+    for conditionName=conditionNames
         for targetCyclesPerDeg=targetCyclesPerDegs
             for eccX=eccXs
                 for noiseType=noiseTypes
                     for luminance=luminances
-                        match=ismember({oo.conditionName},conditionName) ...
-                            & ismember(lower({oo.observer}),lower(observer)) ...
-                            & ismember([oo.targetCyclesPerDeg],targetCyclesPerDeg) ...
-                            & ismember(eccXsfull,eccX) ...
-                            & ismember([oo.desiredLuminanceAtEye],luminance) ...
-                        & (ismember({oo.noiseType},noiseType) | ismember([oo.noiseSD],0)) ...
-                            & ismember({oo.thresholdParameter},{'contrast'});
-                        % We included zero noise conditions without regard to
-                        % noiseType. But we keep the set of conditions only if
-                        % at least one has the right noiseType.
-                        if sum(match)>0 && any(ismember({oo(match).noiseType},noiseType))
-                            E=[oo(match).E];
-                            N=[oo(match).N];
-                            [Neq,E0,deltaEOverN]=EstimateNeq(E,N);
-                            m=ismember(N,max(N));
-                            if max(N)>0
-                                c=[oo(match).contrast];
-                                c=mean(c(m));
+                        for duration=unique([oo.targetDurationSecs])
+                            for cycle=unique([oo.targetEnvelopeCycles])
+                                try
+                                match=ismember({oo.conditionName},conditionName) ...
+                                    & ismember([oo.targetCyclesPerDeg],targetCyclesPerDeg) ...
+                                    & ismember(eccXsfull,eccX) ...
+                                    & ismember([oo.desiredLuminanceAtEye],luminance) ...
+                                    & (ismember({oo.noiseType},noiseType) | ismember([oo.noiseSD],0)) ...
+                                    & ismember({oo.thresholdParameter},{'contrast'}) ...
+                                    & ismember([oo.targetDurationSecs],duration) ...
+                                    & ismember([oo.targetEnvelopeCycles],cycle);
+                                catch
+                                    1;
+                                end
+                                idealMatch=match & ismember(lower({oo.observer}),'ideal');
+                                match=match & ismember(lower({oo.observer}),lower(observer));
+                                % We include all noise levels within the match
+                                % group, as they all contribute to estimating Neq.
+                                % E0, and delatEOverN. We include zero-noise
+                                % conditions without regard to noiseType. But we
+                                % keep the resulting set of conditions only if at
+                                % least one has the right noiseType.
+                                if any(match) && any(ismember({oo(match).noiseType},noiseType))
+                                    E=[oo(match).E];
+                                    N=[oo(match).N];
+                                    % EstimateNeq uses all noise levels.
+                                    [Neq,E0,deltaEOverN]=EstimateNeq(E,N);
+                                    % c and EOverN use only max noise level.
+                                    m=ismember(N,max(N));
+                                    if max(N)>0
+                                        c=[oo(match).contrast];
+                                        c=mean(c(m));
+                                    end
+                                    EOverN=mean(E(m))/max(N);
+                                    % c0 uses only zero noise.
+                                    m=ismember(N,0);
+                                    if any(m)
+                                        c0=[oo(match).contrast];
+                                        c0=mean(c0(m));
+                                    else
+                                        c0=nan;
+                                    end
+                                    oi=find(match,1);
+                                    aa(end+1).experiment=oo(oi).experiment;
+                                    aa(end).conditionName=oo(oi).conditionName;
+                                    aa(end).observer=oo(oi).observer;
+                                    aa(end).dates=sort({oo(match).date});
+                                    aa(end).date=aa(end).dates{end};
+                                    aa(end).c=c; % Scalar
+                                    aa(end).c0=c0; % Scalar
+                                    aa(end).EOverN=EOverN; % Scalar
+                                    aa(end).maxNoiseSD=max([oo(match).noiseSD]); % Scalar
+                                    aa(end).E=E; % Array
+                                    aa(end).N=N; % Array
+                                    aa(end).E0=E0; % Scalar
+                                    aa(end).Neq=Neq; % Scalar
+                                    aa(end).deltaEOverN=deltaEOverN; % Scalar
+                                    aa(end).dataFilenames=sort({oo(match).dataFilename});
+                                    aa(end).dataFilename=aa(end).dataFilenames{end};
+                                    aa(end).thresholdParameter=oo(oi).thresholdParameter;
+                                    aa(end).eccentricityDeg=eccX;
+                                    aa(end).targetCyclesPerDeg=targetCyclesPerDeg;
+                                    aa(end).targetGaborCycles=mean([oo(match).targetGaborCycles]);
+                                    aa(end).targetHeightDeg=mean([oo(match).targetHeightDeg]);
+                                    aa(end).contrast=[oo(match).contrast];
+                                    aa(end).noiseSD=[oo(match).noiseSD];
+                                    aa(end).noiseType=noiseType{1};
+                                    aa(end).desiredLuminanceAtEye=luminance;
+                                    aa(end).NUnits=oo(match).NUnits;
+                                    aa(end).targetEnvelopeCycles=mean([oo(match).targetEnvelopeCycles]);
+                                    aa(end).targetEnvelopeDeg=mean([oo(match).targetEnvelopeDeg]);
+                                    aa(end).targetDurationSecs=mean([oo(match).targetDurationSecs]); % =duration
+                                    aa(end).n=length(E);
+                                    aa(end).eccX=eccX;
+                                    aa(end).idealMatch=find(idealMatch);
+                                end
                             end
-                            EOverN=mean(E(m))/max(N);
-                            m=ismember(N,0);
-                            if sum(m)>0
-                                c0=[oo(match).contrast];
-                                c0=mean(c0(m));
-                            else
-                                c0=nan;
-                            end
-                            aa(end+1).experiment=oo(oi).experiment;
-                            aa(end).conditionName=conditionName{1};
-                            aa(end).observer=observer{1};
-                            aa(end).c=c; % Scalar
-                            aa(end).c0=c0; % Scalar
-                            aa(end).EOverN=EOverN; % Scalar
-                            aa(end).maxNoiseSD=max([oo(match).noiseSD]); % Scalar
-                            aa(end).E=E; % Array
-                            aa(end).N=N; % Array
-                            aa(end).E0=E0; % Scalar
-                            aa(end).Neq=Neq; % Scalar
-                            aa(end).deltaEOverN=deltaEOverN; % Scalar
-                            oi=find(match,1);
-                            aa(end).thresholdParameter=oo(oi).thresholdParameter;
-                            aa(end).eccentricityDeg=eccX;
-                            aa(end).targetCyclesPerDeg=targetCyclesPerDeg;
-                            aa(end).targetGaborCycles=oo(oi).targetGaborCycles;
-                            aa(end).targetHeightDeg=oo(oi).targetHeightDeg;
-                            aa(end).contrast=[oo(match).contrast];
-                            aa(end).noiseSD=[oo(match).noiseSD];
-                            aa(end).noiseType=noiseType{1};
-                            aa(end).desiredLuminanceAtEye=luminance;
                         end
                     end
                 end
@@ -171,28 +323,47 @@ for conditionName=conditionNames
         end
     end
 end
+aa=SortFields(aa);
+vars={'Neq' 'E0' 'deltaEOverN' 'noiseSD' 'N' 'E' 'conditionName' 'targetCyclesPerDeg' 'eccX' 'observer' 'dataFilename'};
+t=struct2table(aa);
+disp(t(t.n==1,vars));
+disp(t(t.n==2,vars));
 
-% Now analyze aa, matching each human record with the corresponding ideal observer record.
+% Now analyze aa, matching each human record with the corresponding ideal
+% observer record.
+[aa.efficiency]=deal(-1);
+[aa.touched]=deal(false);
 for conditionName=conditionNames
     for observer=observers
         for targetCyclesPerDeg=targetCyclesPerDegs
             for luminance=luminances
                 for eccX=eccXs
                     for noiseType=noiseTypes
-                        match=ismember({aa.thresholdParameter},{'contrast'})...
-                            & ismember({aa.conditionName},conditionName)...
-                            & ismember([aa.targetCyclesPerDeg],targetCyclesPerDeg)...
-                            & ismember([aa.desiredLuminanceAtEye],luminance)...
-                            & ismember([aa.eccentricityDeg], eccX) ...
-                            & ismember({aa.noiseType},noiseType);
-                        idealMatch=match & ismember({aa.observer},{'ideal'});
-                        match = match & ismember(lower({aa.observer}),lower(observer));
-                        if sum(match)>0
-                            aa(match).efficiency=nan;
-                        end
-                        if sum(match)>0 && sum(idealMatch)>0
-                            assert(sum(match)==1 & sum(idealMatch)==1);
-                            aa(match).efficiency=(aa(idealMatch).E/aa(idealMatch).N)/aa(match).deltaEOverN;
+                        for duration=unique([oo.targetDurationSecs])
+                            for cycle=unique([oo.targetEnvelopeCycles])
+                                match=ismember({aa.thresholdParameter},{'contrast'})...
+                                    & ismember({aa.conditionName},conditionName)...
+                                    & ismember([aa.targetCyclesPerDeg],targetCyclesPerDeg)...
+                                    & ismember([aa.desiredLuminanceAtEye],luminance)...
+                                    & ismember([aa.eccentricityDeg],eccX) ...
+                                    & ismember({aa.noiseType},noiseType) ...
+                                    & ismember([aa.targetDurationSecs],duration) ...
+                                    & ismember([aa.targetEnvelopeCycles],cycle);
+                                idealMatch=match & ismember({aa.observer},{'ideal'});
+                                match = match & ismember(lower({aa.observer}),lower(observer));
+                                if any(match)
+                                    aa(match).efficiency=nan;
+                                    aa(match).touched=true;
+                                    aa(match).idealMatch=find(idealMatch);
+                                end
+                                if any(match) && any(idealMatch)
+                                    assert(sum(match)==1 & sum(idealMatch)==1);
+                                    aa(match).efficiency=(aa(idealMatch).E/aa(idealMatch).N)/aa(match).deltaEOverN;
+                                    if isempty(aa(match).efficiency)
+                                        1;
+                                    end
+                                end
+                            end
                         end
                     end
                 end
@@ -200,17 +371,51 @@ for conditionName=conditionNames
         end
     end
 end
+
 for i=1:length(aa)
     % Convert noiseType (a name) to noiseIndex (an integer).
     aa(i).noiseIndex=find(ismember(noiseTypes,aa(i).noiseType));
 end
 % human=~ismember({aa.observer},'ideal');
 
+oo=SortFields(oo);
+
+%% CHECK FOR MISSING EFFICIENCY
+fprintf('CHECK FOR MISSING EFFICIENCY\n');
+fprintf('%d elements of aa are untouched.\n',sum(~[aa.touched]));
+for i=1:length(aa)
+    if -1==aa(i).efficiency
+        fprintf('aa(%d) touched %d, deltaEOverN %.1f, efficiency -1, conditionName %s, c/deg %.0f, eccX %.0f, luminance %.0f',...
+            i,aa(i).touched,aa(i).deltaEOverN,aa(i).conditionName,...
+            aa(i).targetCyclesPerDeg,aa(i).eccX,...
+            aa(i).desiredLuminanceAtEye);
+        fprintf(', ooIdealMatch');
+        fprintf(' %d',aa(i).idealMatch);
+        fprintf(', noiseSD');
+        fprintf(' %.2f',aa(i).noiseSD);
+        fprintf(', E ');
+        fprintf(' %f',aa(i).E);
+        fprintf('\n');
+        match=ismember({aa.thresholdParameter},{'contrast'})...
+            & ismember({aa.conditionName},'gabor')...
+            & ismember([aa.desiredLuminanceAtEye],[230 ])...
+            & ismember([aa.eccentricityDeg],[0 ]);
+        idealMatch=match & ismember({aa.observer},{'ideal'});
+        1;
+    end
+end
+fprintf('\n');
+
+
 %% SAVE TABLE TO DISK
+aa=SortFields(aa);
 t=struct2table(aa);
 t=sortrows(t,'conditionName');
 t=sortrows(t,'observer');
-disp(t(:,{'experiment' 'conditionName' 'targetHeightDeg' 'targetCyclesPerDeg' 'efficiency' 'c' 'contrast' 'observer' 'noiseType' 'noiseIndex' 'maxNoiseSD'}));
+disp(t(:,{'experiment' 'conditionName' 'targetHeightDeg' ...
+         'targetDurationSecs' 'targetEnvelopeCycles'...
+    'targetCyclesPerDeg' 'noiseSD' 'efficiency' 'c' 'contrast' 'observer' ...
+    'noiseType' 'maxNoiseSD' 'dataFilename' 'date'}));
 dataFolder=fullfile(fileparts(mfilename('fullpath')),'data');
 % On Feb, 20, 2020 I discovered that writetable may screw up xls tables,
 % but xlsx seems to be ok.
@@ -218,384 +423,20 @@ writetable(t,fullfile(dataFolder,[experiment '.xlsx']));
 jsonwrite(fullfile(dataFolder,[experiment '.json']), t);
 fprintf('Wrote files %s and %s to disk.\n',[experiment '.xlsx'],[experiment '.json']);
 
-%% PLOT CONTRAST FOR EACH OBSERVER
+%% PLOT THREE GRAPHS FOR EACH OBSERVER
 % Convert table t to struct a
 a=table2struct(t);
-% figure(1);
-% orient 'landscape'; % For printing.
-cyan        = [0.2 0.8 0.8];
-brown       = [0.2 0 0];
-orange      = [1 0.5 0];
-blue        = [0 0.5 1];
-green       = [0 0.6 0.3];
-red         = [1 0.2 0.2];
-colors={[0.5 0.5 0.5] green red brown blue cyan orange };
-assert(length(colors)>=length(targetCyclesPerDegs));
-observerStyle={':x' '-o' '--s' '-.d' '-.^' '-->' '--<'};
-if length(observerStyle)<length(observers)
-    error('Please define more "observerStyle" for %d observers.',length(observers));
-end
-% Put ideal observer first.
-observers=sort(observers);
-iIdeal=ismember(observers,{'ideal'});
-observers=[observers(iIdeal) observers(~iIdeal)];
 
-% PLOT c VERSUS targetCyclesPerDeg
-% figure(1);
-iFigure=1;
-clear lgd figureHandle
-figureHandle(iFigure)=figure('Name',[experiment ' Contrast'],'NumberTitle','off','pos',[10 10 500 900]);
-for conditionName=conditionNames
-    iCondition=find(ismember(conditionNames,conditionName));
-    subplot(length(conditionNames),1,iCondition);
-    
-    % Observers MSB and PJB from Banks, Bennet, and Geisler 1987
-    msb340C=[0.066 0.094 0.128 0.145 0.212 0.402 0.573];
-    msb34C=[0.087 0.126 0.191 0.223 0.339 0.510 0.696 ];
-    msb3p4C=[0.044 0.094 0.120 0.241 0.377];
-    msb340F=[4.9 7.0 9.9 13.9 19.7 27.7 40.4];
-    msb34F=[4.9 6.8 9.9 13.8 19.9 28.0 39.9];
-    msb3p4F=[5.017 7.101 10.076 14.42 20.27];
-    color34=mean([colors{6};0 0 0]);
-    color340=mean([colors{6};1 1 1]);
-    if true
-        loglog(msb340F,msb340C,'-ko','LineWidth',1.5,...
-            'MarkerEdgeColor',color340,...
-            'Color',color340,...
-            'DisplayName','0.00, 340, MSB from Banks et al. 1987');
-        hold on
-        loglog(msb34F,msb34C,'-ko','LineWidth',1.5,...
-            'MarkerEdgeColor',color34,...
-            'Color',color34,...
-            'DisplayName','0.00,  34, MSB from Banks et al. 1987');
-    end
-    pjb340F=[ 4.816 6.769 9.717 13.753 19.718 27.71 39.614];
-    pjb340C=[0.011 0.012 0.031 0.033 0.069 0.186 0.492];
-    pjb34F=[4.8 6.759 9.686 13.817 19.772 26.95];
-    pjb34C=[0.016 0.030 0.080 0.116 0.197 0.405];
-    pjb3p4F=[4.966 6.833 9.831 13.982 19.59];
-    pjb3p4C=[0.073 0.105 0.147 0.227 0.404];
-    color34=mean([colors{7};0 0 0]);
-    color340=mean([colors{7};1 1 1]);
-    loglog(pjb34F,pjb34C,'-ko','LineWidth',1.5,...
-    loglog(pjb340F,pjb340C,'-ko','LineWidth',1.5,...
-        'MarkerEdgeColor',color340,...
-        'Color',color340,...
-        'DisplayName','0.00, 340, PJB from Banks et al. 1987');
-    hold on
-        'MarkerEdgeColor',color34,...
-        'Color',color34,...
-        'DisplayName','0.00,  34, PJB from Banks et al. 1987');
-    hold on
-    for iObserver=1:length(observers)
-        for eccX=eccXs
-            for luminance=luminances
-                match=ismember({a.thresholdParameter},{'contrast'})...
-                    & ismember({a.conditionName},conditionName)...
-                    & ismember([a.desiredLuminanceAtEye],luminance)...
-                    & ismember([a.eccentricityDeg],eccX);
-                %         idealMatch=match & ismember({a.observer},{'ideal'});
-                match = match & ismember(lower({a.observer}),lower(observers(iObserver)));
-                for isZeroNoise=[false true]
-                    if isZeroNoise && ismember(observers(iObserver),{'ideal'})
-                        continue
-                    end
-                    x=[a(match).targetCyclesPerDeg];
-                    if isZeroNoise
-                        y=-[a(match).c0];
-                    else
-                        y=-[a(match).c];
-                    end
-                    ok=isfinite(x) & isfinite(y);
-                    if ~isempty(ok)
-                        if isZeroNoise
-                            faceColor=[1 1 1];
-                            sd=0;
-                        else
-                            faceColor=colors{iObserver};
-                            sd=max([a(match).noiseSD]);
-                        end
-                        legendText=sprintf('%4.2f, %3.0f, %s',...
-                            sd,...
-                            luminance,...
-                            observers{iObserver});
-                        switch luminance
-                            case luminances(1)
-                                color=mean([colors{iObserver};0 0 0]);
-                            case luminances(2)
-                                color=mean([colors{iObserver};1 1 1]);
-                        end
-                        loglog(x(ok),y(ok),...
-                            observerStyle{iObserver},...
-                            'MarkerSize',6,...
-                            'MarkerFaceColor',faceColor,...
-                            'MarkerEdgeColor',color,...
-                            'Color',color,...
-                            'LineWidth',1.5,...
-                            'DisplayName',legendText);
-                        hold on
-                    end
-                end
-            end
-        end
-    end
-    %     ax=gca;
-    %     ax.TickLength=[0.01 0.025]*2;
-    %     ax.XTick=1:4;
-    %     ax.XTickLabels={'Binary' 'Gaussian' 'Ternary' 'Uniform'};
-    ax=gca;
-    ax.TickLength=[0.01 0.025]*2;
-    ax.XLim=[0.5 32];
-    lgd(iCondition)=legend('Location','northwest','Box','off');
-    title(lgd(iCondition),'noiseSD, luminance, observer');
-    lgd(iCondition).FontName='Monaco';
-    name=conditionName{1};
-    title([upper(name(1)) name(2:end)],'fontsize',18)
-    xlabel('Spatial frequency (c/deg)','fontsize',18);
-    ylabel('Contrast threshold','fontsize',18);
-    % set(findall(gcf,'-property','FontSize'),'FontSize',12)
-    lgd(iCondition).FontSize=10;
-    if true
-        % Scale log unit to be 12 cm vertically.
-        ax=gca;
-        %ax.YLim=[0.005 0.16];
-        ax.Units='centimeters';
-        drawnow; % Needed for valid Position reading.
-        ax.Position(4)=8*diff(log10(ax.YLim));
-    end
-    hold off
-end
-
-% Set FontSize.
-set(findall(gcf,'-property','FontSize'),'FontSize',12);
-for iCondition=1:length(conditionNames)
-    lgd(iCondition).FontSize=8;
-end
-
-% Save plot to disk
-graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[experiment '-ContrastVsSizeBig.eps']);
-saveas(gcf,graphFile,'epsc');
+%% PLOT CONTRAST VERSUS targetCyclesPerDeg
+figureHandle(1)=PlotVariable(experiment,a,'Contrast','Contrast');
 
 %% PLOT EOverN FOR EACH OBSERVER
-% figure(2);
-iFigure=2;
-clear lgd
-figureHandle(iFigure)=figure('Name',[experiment ' E/N'],'NumberTitle','off','pos',[10 10 500 900]);
-for conditionName=conditionNames
-    iCondition=find(ismember(conditionNames,conditionName));
-    subplot(length(conditionNames),1,iCondition);
-    for iObserver=1:length(observers)
-        for eccX=eccXs
-            match=ismember({a.thresholdParameter},{'contrast'})...
-                & ismember({a.conditionName},conditionName)...
-                & ismember([a.eccentricityDeg],eccX);
-            %         idealMatch=match & ismember({a.observer},{'ideal'});
-            match = match & ismember(lower({a.observer}),lower(observers(iObserver)));
-            x=[a(match).targetCyclesPerDeg];
-            y=[a(match).EOverN];
-            ok=isfinite(x) & isfinite(y);
-            if ~isempty(ok)
-                if ismember(observers(iObserver),{'ideal'})
-                    faceColor=[1 1 1];
-                else
-                    faceColor=colors{iObserver};
-                end
-                loglog(x(ok),y(ok),...
-                    observerStyle{iObserver},...
-                    'MarkerSize',9,...
-                    'MarkerEdgeColor',colors{iObserver},...
-                    'MarkerFaceColor',faceColor,...
-                    'Color',colors{iObserver},...
-                    'LineWidth',1.5,...
-                    'DisplayName',sprintf(' %4.2f, %1.0f, %s',...
-                    max([a(match).noiseSD]),max([a(match).targetGaborCycles]),observers{iObserver}));
-                hold on
-            end
-        end
-    end
-    %     xlim([-4 4.5]);
-    %     ax=gca;
-    %     ax.TickLength=[0.01 0.025]*2;
-    %     ax.XTick=1:4;
-    %     ax.XTickLabels={'Binary' 'Gaussian' 'Ternary' 'Uniform'};
-    %     lgd(iCondition)=legend('Location','northwest','Box','off');
-    ax=gca;
-    ax.TickLength=[0.01 0.025]*2;
-    ax.XLim=[0.5 32];
-    lgd(iCondition)=legend('Location','northwest','Box','off');
-    title(lgd(iCondition),'noiseSD, targetGaborCycles, observer');
-    lgd(iCondition).FontName='Monaco';
-%     title(lgd(iCondition),'noiseSD, observer');
-%     lgd(iCondition).FontName='Monaco';
-    name=conditionName{1};
-    title([upper(name(1)) name(2:end)],'fontsize',18)
-    xlabel('Spatial frequency (c/deg)','fontsize',18);
-    ylabel('E/N threshold','fontsize',18);
-    % ax.YLim=[10 1000];
-    if true
-        % Scale log unit to be 12 cm vertically.
-        ax=gca;
-        %ax.YLim=[0.005 0.16];
-        ax.Units='centimeters';
-        drawnow; % Needed for valid Position reading.
-        ax.Position(4)=4*diff(log10(ax.YLim));
-    end
-    hold off
-end
-
-% Set FontSize.
-figure(figureHandle(iFigure));
-set(findall(gcf,'-property','FontSize'),'FontSize',12);
-for iCondition=1:length(conditionNames)
-    lgd(iCondition).FontSize=8;
-end
-
-% Save plot to disk
-graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[experiment '-EOverNVsSizeBig.eps']);
-saveas(gcf,graphFile,'epsc');
+figureHandle(2)=PlotVariable(experiment,a,'E/N','EOverN');
 
 %% PLOT EFFICIENCY FOR EACH OBSERVER
-% figure(3);
-iFigure=3;
-clear lgd
-figureHandle(iFigure)=figure('Name',[experiment ' Efficiency'],'NumberTitle','off','pos',[10 10 500 900]);
-for conditionName=conditionNames
-    iCondition=find(ismember(conditionNames,conditionName));
-    subplot(length(conditionNames),1,iCondition);
-    for iObserver=1:length(observers)
-        for eccX=eccXs
-            match=ismember({a.thresholdParameter},{'contrast'})...
-                & ismember({a.conditionName},conditionName)...
-                & ismember([a.eccentricityDeg],eccX);
-            %         idealMatch=match & ismember({a.observer},{'ideal'});
-            match = match & ismember(lower({a.observer}),lower(observers(iObserver)));
-            x=[a(match).targetCyclesPerDeg];
-            y=[a(match).efficiency];
-            ok=isfinite(x) & isfinite(y);
-            if ~isempty(ok)
-                if ismember(observers(iObserver),{'ideal'})
-                    faceColor=[1 1 1];
-                else
-                    faceColor=colors{iObserver};
-                end
-                loglog(x(ok),y(ok),...
-                    observerStyle{iObserver},...
-                    'MarkerSize',9,...
-                    'MarkerEdgeColor',colors{iObserver},...
-                    'MarkerFaceColor',faceColor,...
-                    'Color',colors{iObserver},...
-                    'LineWidth',1.5,...
-                    'DisplayName',sprintf(' %4.2f, %1.0f, %s',...
-                    max([a(match).noiseSD]),max([a(match).targetGaborCycles]),observers{iObserver}));
-                hold on
-            end
-        end
-    end
-    %     xlim([-4 4.5]);
-    %     ax=gca;
-    %     ax.XTick=1:4;
-    %     ax.XTickLabels={'Binary' 'Gaussian' 'Ternary' 'Uniform'};
-    %     ax.TickLength=[0.01 0.025]*2;
-    ax=gca;
-    ax.TickLength=[0.01 0.025]*2;
-    ax.XLim=[0.5 32];
-    lgd(iCondition)=legend('Location','northwest','Box','off');
-    title(lgd(iCondition),'noiseSD, targetGaborCycles, observer');
-    lgd(iCondition).FontName='Monaco';
-    name=conditionName{1};
-    title([upper(name(1)) name(2:end)],'fontsize',18)
-    xlabel('Spatial frequency (c/deg)','fontsize',18);
-    ylabel('Efficiency','fontsize',18);
-    if true
-        % Scale log unit to be 12 cm vertically.
-        ax=gca;
-        %ax.YLim=[0.005 0.16];
-        ax.Units='centimeters';
-        drawnow; % Needed for valid Position reading.
-        if all(isfinite(log10(ax.YLim)))
-            ax.Position(4)=4*diff(log10(ax.YLim));
-        end
-    end
-    hold off
-end
+figureHandle(3)=PlotVariable(experiment,a,'Efficiency','Efficiency');
 
-% Set FontSize.
-figure(figureHandle(iFigure));
-set(findall(gcf,'-property','FontSize'),'FontSize',12);
-for iCondition=1:length(conditionNames)
-    lgd(iCondition).FontSize=8;
-end
+%% PLOT Neq FOR EACH OBSERVER
+figureHandle(3)=PlotVariable(experiment,a,'Neq','Neq');
 
-% Save plot to disk
-graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[experiment '-EfficiencyVsSizeBig.eps']);
-saveas(gcf,graphFile,'epsc');
 
-%% FOR EACH OBSERVER: PLOT EFFICIENCY VS SIZE
-% figure(4);
-iFigure=4;
-clear lgd
-figureHandle(iFigure)=figure('Name',[experiment ' Efficiency vs Size'],'NumberTitle','off','pos',[10 10 500 900]);
-for conditionName=conditionNames
-    iCondition=find(ismember(conditionNames,conditionName));
-    subplot(length(conditionNames),1,iCondition);
-    for iObserver=1:length(observers)
-        for eccX=eccXs
-            match=ismember({a.thresholdParameter},{'contrast'})...
-                & ismember({a.conditionName},conditionName)...
-                & ismember([a.eccentricityDeg],eccX)...
-                & ismember({a.noiseType},{'ternary'})...
-                & ismember(lower({a.observer}),lower(observers(iObserver)));
-            x=[a(match).targetCyclesPerDeg];
-            y=[a(match).efficiency];
-            ok=isfinite(x) & isfinite(y);
-            if ~isempty(ok)
-                if ismember(observers(iObserver),{'ideal'})
-                    faceColor=[1 1 1];
-                else
-                    faceColor=colors{iObserver};
-                end
-                loglog(x(ok),y(ok),...
-                    observerStyle{iObserver},...
-                    'MarkerSize',9,...
-                    'MarkerEdgeColor',colors{iObserver},...
-                    'MarkerFaceColor',faceColor,...
-                    'Color',colors{iObserver},...
-                    'LineWidth',1.5,...
-                    'DisplayName',sprintf(' %4.2f, %1.0f, %s',...
-                    max([a(match).noiseSD]),max([a(match).targetGaborCycles]),observers{iObserver}));
-                hold on
-            end
-        end
-    end
-    ax=gca;
-    ax.TickLength=[0.01 0.025]*2;
-    ax.XLim=[0.5 32];
-    lgd(iCondition)=legend('Location','northwest','Box','off');
-    title(lgd(iCondition),'noiseSD, targetGaborCycles, observer');
-    lgd(iCondition).FontName='Monaco';
-    name=conditionName{1};
-    title([upper(name(1)) name(2:end)],'fontsize',18)
-    xlabel('Spatial frequency (c/deg)','fontsize',18);
-    ylabel('Efficiency','fontsize',18);
-    ax.YLim=[0.001 1];
-    if true
-        % Scale log unit to be 12 cm vertically.
-        ax=gca;
-        %ax.YLim=[0.005 0.16];
-        ax.Units='centimeters';
-        drawnow; % Needed for valid Position reading.
-        ax.Position(4)=4*diff(log10(ax.YLim));
-    end
-    hold off
-end
-
-% Set FontSize.
-set(findall(gcf,'-property','FontSize'),'FontSize',12);
-for conditionName=conditionNames
-    iCondition=find(ismember(conditionNames,conditionName));
-    lgd(iCondition).FontSize=8;
-end
-
-% Save plot to disk
-graphFile=fullfile(fileparts(mfilename('fullpath')),'data',[experiment '-EfficiencyVsSize.eps']);
-saveas(gcf,graphFile,'epsc');
