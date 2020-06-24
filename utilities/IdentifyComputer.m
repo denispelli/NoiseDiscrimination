@@ -177,11 +177,47 @@ if exist('PsychtoolboxVersion','file') && ~isempty(windowsOrScreens)
         machine.size{iScreen}=[resolution.width resolution.height];
         [screenWidthMm,screenHeightMm]=Screen('DisplaySize',windowsOrScreens(iScreen));
         machine.mm{iScreen}=[screenWidthMm screenHeightMm];
+        %% FIND MAX RES, AS ESTIMATE OF NATIVE RES.
         res=Screen('Resolutions',windowsOrScreens(iScreen));
         machine.nativeSize{iScreen}=[0 0];
         for i=1:length(res)
             if res(i).width>machine.nativeSize{iScreen}(1)
                 machine.nativeSize{iScreen}=[res(i).width res(i).height];
+            end
+        end
+        %% LOOK UP NATIVE RES, IF TABULATED.
+        % Based on Apple's web pages:
+        % "Identify your MacBook Pro model"
+        % https://support.apple.com/en-us/HT201300
+        % "Identify your iMac model"
+        % https://support.apple.com/en-us/HT201634
+        if ismac
+            switch MacModelName
+                case {'iMac15,1' 'iMac17,1' 'iMac18,3' 'iMac19,1'}
+                    % 27" iMac, Retina display
+                    % iMac (Retina 5K, 27-inch, Mid 2015)
+                    % iMac (Retina 5K, 27-inch, Late 2015)
+                    % iMac (Retina 5K, 27-inch, 2017)
+                    % iMac (Retina 5K, 27-inch, 2019)
+                    machine.nativeSize{iScreen}=[5120 2880];
+                case {'MacBookPro5,5' 'MacBookPro7,1' 'MacBookPro8,1' ...
+                        'MacBookPro9,2'}
+                    % 13" MacBook Pro, not Retina display
+                    machine.nativeSize{iScreen}=[1280 800];
+                case {'MacBookPro10,2' 'MacBookPro11,1' 'MacBookPro12,1' ...
+                        'MacBookPro13,1' 'MacBookPro13,2' 'MacBookPro14,1' ...
+                        'MacBookPro14,2' 'MacBookPro15,2' 'MacBookPro15,4' ...
+                        'MacBookPro16,2' 'MacBookPro16,3'}
+                    % 13" MacBook Pro, Retina display
+                    machine.nativeSize{iScreen}=[2560 1600];
+                case {'MacBookPro10,1' 'MacBookPro11,2' 'MacBookPro11,3' ...
+                        'MacBookPro11,4' 'MacBookPro11,5' 'MacBookPro13,3' ...
+                        'MacBookPro14,3' 'MacBookPro15,1' 'MacBookPro15,3'}
+                    % 15" MacBook Pro, Retina display
+                    machine.nativeSize{iScreen}=[2880 1800];
+                case 'MacBookPro16,1'
+                    % 16" MacBook Pro, Retina display
+                    machine.nativeSize{iScreen}=[3072 1920];
             end
         end
     end
@@ -439,7 +475,8 @@ if exist('PsychtoolboxVersion','file')
         InitializePsychSound;
         machine.psychPortAudio=true;
     catch em
-        warning('Failed to load PsychPortAudio driver, with error:\n%s\n\n',...
+        warning(em.identifier,...
+            'Failed to load PsychPortAudio driver, with error:\n%s\n\n',...
             em.message);
         machine.psychPortAudio=false;
     end
@@ -464,7 +501,7 @@ if exist('PsychtoolboxVersion','file')
         end
     end
 end
-%% Produce summary string useful in a filename.
+%% Produce summary string useful as a filename.
 machine.summary=[machine.model '-' machine.system '-' machine.psychtoolbox];
 machine.summary=strrep(machine.summary,'--','-');
 if machine.summary(1)=='-'
@@ -481,76 +518,49 @@ if isempty(machine.summary)
 end
 end % function IdentifyComputer
 
-function creationDatenum=GetFileCreationDatenum(filePath)
-% Try to get the file's creation date.
-ismacos=ismac;
-iswin=ispc;
-if exist('PsychtoolboxVersion','file')
-    islinux=IsLinux;
-else
-    % MATLAB recommends calling "contains" instead of "~isempty(strfind(",
-    % but it's not available in Octave.
-    islinux=ismember(computer,{'GLNX86' 'GLNXA64'}) ...
-        || ~isempty(strfind(computer,'linux-gnu'));
-end
-switch 4*ismacos+2*iswin+islinux
-    case 4
-        %% macOS
-        [~,b]=system(sprintf('GetFileInfo "%s"',filePath));
-        filePath=strfind(b,'created: ')+9;
-        crdat=b(filePath:filePath+18);
-        % In Octave, datenum fails without the explicit format.
-        creationDatenum=datenum(crdat,'mm/dd/yyyy HH:MM:SS');
-    case 2
-        %% Windows
-        % https://www.mathworks.com/matlabcentral/answers/288339-how-to-get-creation-date-of-files
-        d=System.IO.File.GetCreationTime(filePath);
-        % Convert the .NET DateTime d into a MATLAB datenum.
-        creationDatenum=datenum(datetime(...
-            d.Year,d.Month,d.Day,d.Hour,d.Minute,d.Second));
-    case 1
-        %% Linux
-        % Alas, depending on the file system used, Linux typically does not
-        % retain the creation date.
-        creationDatenum='';
-    otherwise
-        error('Unknown OS.');
-end % switch
-end % function GetFileCreationDatenum
-
 function modelDescription=GetAppleModelDescription(serialNumber)
-% This uses the internet to enter the last four characters of our
+% modelDescription=GetAppleModelDescription(serialNumber);
 % 12-character serial number into an Apple web page to get a model
 % description of our Apple computer. Returns '' if the serial number is not
 % in Apple's database, or we lack internet access. Currently we get the
-% error code if the lookup fails, but we don't report it.
+% error code if the lookup fails, but we don't report it. Note that there
+% is no significant privacy concern because the last four digits of the
+% serial number are barely enough to specify the computer model, not unique
+% to the user.
 % https://apple.stackexchange.com/questions/98080/can-a-macs-model-year-be-determined-with-a-terminal-command/98089
-% A version of this in python: https://gist.github.com/zigg/6174270
+% Someone else created something like this in python:
+% https://gist.github.com/zigg/6174270
+% 2019, denis.pelli@nyu.edu
 if nargin<1
     error('Input argument string "serialNumber" is required.');
 end
 if length(serialNumber)<11
     error('serialNumber string must be more than 10 characters long.');
 end
-[~,report]=system(...
+[status,report]=system(...
     ['bash -c ''curl -s https://support-sp.apple.com/sp/product?cc=' ...
     serialNumber(9:end-1) '''']);
 x=regexp(report,'<configCode>(?<description>.*)</configCode>','names');
 if isempty(x)
-    if isempty(err)
-        % warning(['Apple serial number lookup failed, '...
-        % 'possibly because of no internet access.']);
+    if status==0
+        errMsg='';
     else
-        % Probably tried to look up a non-Apple product.
-        warning('Apple serial number lookup failed with error ''%s''.',...
-            err.error);
+        errMsg=sprintf(' with status %d',status);
+        if ~isempty(report)
+            errMsg=sprintf('%s: %s',errMsg,report);
+        end
     end
+    warning(['Apple serial number lookup failed%s. '...
+        'Is internet working? '...
+        'Was it a valid Apple serial number?'],...
+        errMsg);
     modelDescription='';
 else
     modelDescription=x.description;
     s=modelDescription;
     if length(s)<3 || ~all(isstrprop(s(1:3),'alpha'))
-        [~,shell]=system('echo $0') % Display shell name.
+        [~,shell]=system('echo $0'); % Display shell name.
+        fprintf('shell: %s\n',shell);
         warning(['Oops. Failed in getting modelDescription. '...
             'Please send this line and those above to denis.pelli@nyu.edu: "%s"'],s);
         modelDescription='';
