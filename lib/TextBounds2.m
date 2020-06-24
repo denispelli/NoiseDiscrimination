@@ -58,6 +58,8 @@ function [bounds,ok]=TextBounds2(window,text,yPositionIsBaseline,centerTheText)
 % 6000x6000 window takes 0.7 s. So getting bounds of 10 letters takes 7 s,
 % which makes observers very impatient. So keep your window small.
 %
+% In my use TextBounds2 typically takes 70 ms.
+%
 % Also see Screen 'TextBounds'.
 % Also see TextCenteredBounds.
 
@@ -195,7 +197,7 @@ end
 % For a typical window size, more than 90% of the time in TextBounds is
 % spent doing this trivial copy from the screen buffer to a MATLAB array.
 % Read back only 1 color channel for efficiency reasons:
-image1=Screen('GetImage', window, [], 'drawBuffer', 0, 1);
+image1=Screen('GetImage', window, [], 'drawBuffer', 0, 1); % TAKES 61 ms, which is 87% of whole.
 
 % if unique(image1)==0
 %     error('The image of letter ''%s'' is blank.',string);
