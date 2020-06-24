@@ -3,59 +3,98 @@ function [fixationLines,fixationDots,isTargetLocationMarked]=ComputeFixationLine
 %
 % Now enhanced to support many targets at once. Thus eccentricityXYPix and
 % targetHeightPix have one row per target. All targets are blanked by the
-% same rules. For n targets:
-% Must have n rows: eccentricityXYPix targetHeightPix
-% Must have 1 or n rows: targetMarkPix isTargetLocationMarked
-% Must have 1 row: the rest.
-% The need for coping with many targets arises from randomly interleaving
-% various conditions with different targets, and the use of
-% o.uncertaintParameter to allow multiple values of o.eccentricityXYDeg
-% within each condition. The fixation mark should not reveal which
-% condition this trial is, so any marking of target locations and blanking
-% near target locations must consider all possible target locations across
-% the conditions being interleaved, without regard to which condition this
-% trial is. Here we merely accept and process multiple target locations.
+% same rules. For n targets, the input argument struct "fix" must have
+% these fields:
+% with n rows: eccentricityXYPix targetHeightPix
+% with 1 or n rows: targetMarkPix isTargetLocationMarked
+% with 1 row: the rest.
+% [Actually, the rule is a bit softer. For items that would have 1 column
+% and n rows, it's fine to instead have 1 row and n columns. Only the
+% length is checked.]
+%
+% GROUPS. The need for coping with many targets arises from randomly
+% interleaving various conditions with different targets, and the use of
+% fix.uncertaintParameter to allow multiple possible targets within each
+% condition. Within a group, the fixation mark should not reveal which
+% condition (of those in the group) this trial is, so any marking of target
+% locations and blanking near target locations must consider all possible
+% target locations across the conditions in the group, without regard to
+% which condition this trial is. Here we merely accept and process multiple
+% target locations.
 %
 % ComputeFixationLines3 returns an array "fixationLines" suitable for
 % Screen('Drawlines',window,fixationLines) to draw a cross at fixation and
 % (optionally) an X at each target location, as specified by the parameters
 % in the struct argument "fix". It also optionally blanks a square area
 % centered on each target. The blanking radius can depend on target size
-% and eccentricity, to avoid masking and crowding of the targets by the
-% fixation marks.
+% and eccentricity, to avoid masking and crowding of the target by the
+% fixation marks. This typically leaves several line segments that still
+% imply lines intersecting at fixation. Furthermore, blanking is restricted
+% to blankingClipRect, which is typically used to protect a screen margin
+% from blanking, so some trace of each of the fixation X's four branches
+% always remains.
 %
+%% fix.blankingClipRect
+% When there are many possible targets (due to multiple conditions in a
+% group and/or uncertainty within each condition) in a group, they would
+% they could easily produce complete blanking of the fixation marks, which
+% confuses the observer. To address this, iComputeFixationLines3.m now
+% accepts fix.blankingClipRect to clip the blanking, sparing the screen
+% outside that rect from blanking. (This supports a new parameter
+% o.blankingClipRectInUnitSquare in CriticalSpacing.m and
+% NoiseDiscrimination.m.) Thus, if fixation is onscreen and
+% fix.fixationMarkPix is infinite, then, by protecting all four edges of
+% the screen from blanking, you can guarantee a visble on-screen residue
+% from each of the 4 radii of the fixation cross. Observer instructions
+% typically ask the observer to keep her eyes on the fixation cross, which
+% makes no sense if it's entirely blanked. Right now none of my experiments
+% mark the target location, and I'm unsure whether we should spare blanking
+% of the target marks outside blankingClipRect. I coded it to apply the
+% same blankingClipRect to all marks, but perhaps it should apply only to
+% the fixation cross.
+%
+% OUTPUT:
 % "fixationLines" has two rows, x and y. Each column is a point. Each pair
 % of columns specifies a line.
+% "fixationDots"
+% "isTargetLocationMarked"
 %
-% April, 2020. Added random dots (to aid accomodation) which receive the
-% same blanking as the lines.
+% INPUT:
 %% ONE FIXATION CROSS
 % fix.xy=XYPixOfXYDeg(oo(1),[0 0]);     % screen location of fixation
-% fix.clipRect=screenRect;              % Restrict lines to this rect.
-% fix.fixationCrossPix=fixationCrossPix;% Diameter of fixation mark. 0 for none.
+% if oo(oi).isFixationClippedToStimulusRect
+%     fix.clipRect=oo(oi).stimulusRect;
+% else
+%     fix.clipRect=oo(oi).screenRect;
+% end
+% r=fix.ClipRect-fix.ClipRect([1 2 1 2]);
+% fix.blankingClipRect=oo(oi).blankingClipRectInUnitSquare .* r([3 4 3 4])+...
+%     fix.clipRect([1 2 1 2]);
+% fix.fixationMarkPix=fixationMarkPix;% Diameter of fixation mark. 0 for none.
 % fix.useFixationDots=oo(oi).useFixationDots;
 % fix.fixationDotsNumber=oo(oi).fixationDotsNumber;
 % fix.fixationDotsWithinRadiusPix=oo(oi).fixationDotsWithinRadiusDeg*oo(oi).pixPerDeg;
+%
 %% ONE X AND BLANKING PER TARGET. EACH ARRAY HAS ONE ROW PER TARGET.
 % for oi=1:length(oo)
 %     fix.eccentricityXYPix(oi,1:2)=oo(oi).eccentricityXYPix;  % xy offset of target from fixation.
 %     fix.targetHeightPix(oi)=oo(oi).targetHeightPix;
 % end
-%% PROVIDE JUST ONE ROW (FOR ALL TARGETS) OR ONE ROW PER TARGET. RETURNS ONE ROW PER TARGET.
-% fix.isTargetLocationMarked=true;      % false or true.
+%% PROVIDE ONE ROW FOR ALL TARGETS OR ONE ROW PER TARGET. RETURNS ONE ROW PER TARGET.
+% fix.isTargetLocationMarked=true;
 % fix.targetMarkPix=targetMarkPix;      % Diameter of target mark X
-%% THE blankingRadiusPix FOR EACH TARGET DEPENDS ON THESE. EACH APPLIES TO ALL TARGETS.
-% fix.fixationCrossBlankedNearTarget=true; 
-% fix.blankingRadiusReEccentricity=0.5; % Default value.
-% fix.blankingRadiusReTargetHeight=1; % Default value.
+%% THE blankingRadiusPix FOR EACH TARGET DEPENDS ON THESE, WHICH APPLY TO ALL TARGETS.
+% fix.isFixationBlankedNearTarget=true;
+% fix.fixationBlankingRadiusReEccentricity=0.5; % Default value.
+% fix.fixationBlankingRadiusReTargetHeight=1; % Default value.
 %% CALL IT.
 % fixationLines=ComputeFixationLines3(fix);
 %% DRAW IT AND SHOW IT.
-% Screen('DrawLines',window,fixationLines,fixationLineWeightPix,black);
+% Screen('DrawLines',window,fixationLines,fix.fixationThicknessPix,black);
 % Screen('Flip',window);
 %
-% The many calls to round() don't noticeably affect the display. They are
-% just to make the values easier to print while debugging.
+% The many calls to round() don't noticeably affect the display. They just
+% make the values easier to examine while debugging.
 %
 % History:
 % October, 2015. Denis Pelli wrote it.
@@ -66,8 +105,8 @@ function [fixationLines,fixationDots,isTargetLocationMarked]=ComputeFixationLine
 % June 28, 2017. The new code is general, and works correctly for any
 % locations of fixation and target. The target mark is now an X, to
 % distinguish it from the fixation cross.
-% February 18, 2020. Now support the logical flag 
-% fix.fixationCrossBlankedNearTarget.
+% February 18, 2020. Now support the logical flag
+% fix.isFixationBlankedNearTarget.
 % April 12, 2020. Now accept more than one target, and blank for each. The
 % main use of this is for randomly interleaving conditions with different
 % targets, where we must use the same fixation marks for all, so that
@@ -78,49 +117,59 @@ function [fixationLines,fixationDots,isTargetLocationMarked]=ComputeFixationLine
 % mark still won't reveal which condition this trial will pesent.
 % April 17.2020. Add 100 random dots (to aid accomodation) within a square
 % area in which the fixation cross is inscribed.
+% June 21, 2020. dgp. Supports groups (oo(oi).group) and
+% fix.blankingClipRect.
+
 if isempty(fix.eccentricityXYPix)
     error('fix.eccentricityXYPix is empty.');
 end
 %% NUMBER OF TARGETS
 n=size(fix.eccentricityXYPix,1); % One row per target.
 %% JUST ONE
-if ~isfield(fix,'fixationCrossBlankedNearTarget')
+if ~isfield(fix,'isFixationBlankedNearTarget')
     % Default is yes.
-    fix.fixationCrossBlankedNearTarget=true;
+    fix.isFixationBlankedNearTarget=true;
 end
-if ~fix.fixationCrossBlankedNearTarget
+if ~fix.isFixationBlankedNearTarget
     % A request for no blanking.
-    fix.blankingRadiusReTargetHeight=0;
-    fix.blankingRadiusReEccentricity=0;
-    fix.blankingRadiusPix=zeros(n,1);
+    fix.fixationBlankingRadiusReTargetHeight=0;
+    fix.fixationBlankingRadiusReEccentricity=0;
+    fix.blankingRadiusPix=zeros(1,n);
 end
-if ~isfield(fix,'blankingRadiusReEccentricity')
+if ~isfield(fix,'fixationBlankingRadiusReEccentricity')
     % Default ratio. This is what I usually want.
-    o.blankingRadiusReEccentricity=0.5;
+    fix.fixationBlankingRadiusReEccentricity=0.5;
 end
-if ~isfield(fix,'blankingRadiusReTargetHeight')
+if ~isfield(fix,'fixationBlankingRadiusReTargetHeight')
     % Default ratio. This is what I usually want.
-    o.blankingRadiusReTargetHeight=1;
+    fix.fixationBlankingRadiusReTargetHeight=1;
 end
-%% fixationCrossPix
-if ~isfield(fix,'fixationCrossPix') || isempty(fix.fixationCrossPix)
-   fix.fixationCrossPix=100; 
+if ~isfield(fix,'blankingClipRect') || isempty(fix.blankingClipRect)
+    fix.blankingClipRect=fix.clipRect;
 end
-switch length(fix.fixationCrossPix)
+if ~isfield(fix,'useFixationDots') || isempty(fix.useFixationDots)
+    fix.useFixationDots=false;
+end
+%% fixationMarkPix
+if ~isfield(fix,'fixationMarkPix') || isempty(fix.fixationMarkPix)
+    fix.fixationMarkPix=100;
+end
+switch length(fix.fixationMarkPix)
     case 1
         % ok
     otherwise
-    error('fix.fixationCrossPix must be a scalar.');
+        error('fix.fixationMarkPix must be a scalar.');
 end
 if ~isfield(fix,'targetHeightPix')
-    o.targetHeightPix=zeros(n,1);
+    fix.targetHeightPix=zeros(1,n);
 end
 if length(fix.targetHeightPix)~=n
-    error('fix.targetHeightPix should have %d rows, but has %d.',n,size(fix.targetHeightPix,1));
+    error('Length of fix.targetHeightPix should be %d, but is %d.',...
+        n,length(fix.targetHeightPix));
 end
 if ~isfield(fix,'isTargetLocationMarked')
-    % Default is no mark indicating target location.
-   fix.isTargetLocationMarked=false([n 1]); 
+    % Default is no marking of target location.
+    fix.isTargetLocationMarked=false([n 1]);
 end
 switch length(fix.isTargetLocationMarked)
     case 1
@@ -130,11 +179,11 @@ switch length(fix.isTargetLocationMarked)
     case n
         % Ok
     otherwise
-    error('fix.isTargetLocationMarked should have 1 or %d rows, but has %d.',n,size(fix.isTargetLocationMarked,1));
+        error('fix.isTargetLocationMarked should have 1 or %d rows, but has %d.',n,size(fix.isTargetLocationMarked,1));
 end
 if ~isfield(fix,'targetMarkPix')
     % Default size.
-   fix.targetMarkPix=100; 
+    fix.targetMarkPix=100;
 end
 switch length(fix.targetMarkPix)
     case 1
@@ -144,23 +193,26 @@ switch length(fix.targetMarkPix)
     case n
         % Ok
     otherwise
-    error('fix.targetMarkPix should have 1 or %d rows, but has %d.',n,size(fix.targetMarkPix,1));
+        error('fix.targetMarkPix should have 1 or %d rows, but has %d.',n,size(fix.targetMarkPix,1));
 end
-if ~isfield(fix,'blankingRadiusPix')
-   % Default is max of specified blanking re target height and blanking re
-   % eccentricity. Separately for each of n targets. This is what I usually
-   % want.
-   fix.blankingRadiusPix=zeros(n,1);
-   for i=1:n
-       eccentricityPix=norm(fix.eccentricityXYPix(i,1:2));
-       fix.blankingRadiusPix(i)=fix.blankingRadiusReEccentricity*eccentricityPix; % 0 for no blanking.
-       fix.blankingRadiusPix(i)=max(fix.blankingRadiusPix(i),fix.blankingRadiusReTargetHeight*fix.targetHeightPix(i));
-   end
+if ~isfield(fix,'blankingRadiusPix') || isempty(fix.blankingRadiusPix)
+    % Default is max of specified blanking re target height and blanking re
+    % eccentricity. Separately for each of n targets. This is what I usually
+    % want.
+    fix.blankingRadiusPix=zeros(1,n);
+    for i=1:n
+        eccentricityPix=norm(fix.eccentricityXYPix(i,1:2));
+        r(1)=fix.fixationBlankingRadiusReEccentricity*eccentricityPix; % 0 for no blanking.
+        r(2)=fix.fixationBlankingRadiusReTargetHeight*fix.targetHeightPix(i);
+        fix.blankingRadiusPix(i)=round(max(r));
+    end
 end
-if size(fix.blankingRadiusPix,1)~=n
-    error('fix.blankingRadiusPix should have %d rows, but has %d.',n,size(fix.blankingRadiusPix,1));
+if length(fix.blankingRadiusPix)~=n
+    error('length(fix.blankingRadiusPix) should be %d, but is %d.',...
+        n,length(fix.blankingRadiusPix));
 end
 fix.xy=round(fix.xy); % Printout is more readable for integers.
+
 %% FIXATION
 x0=fix.xy(1);
 y0=fix.xy(2);
@@ -188,26 +240,22 @@ else
 end
 
 % Compute a list of 2+2*n lines to draw a cross at fixation and an X at
-% each of the n target locations. We clip with the (screen) clipRect. We
-% then define a blanking rect around each target and use it to
+% each of the n target locations. We clip with the (screen) fix.clipRect. We
+% then define a blanking rect around each target (which we clip with
+% fix.blankingClipRect) and use it to
 % ErasePartOfLineSegment for all the lines in the line list (and all the
 % dots in the dot list). This may increase or decrease the list length.
 % Two lines create a cross at fixation.
-x=[x0-fix.fixationCrossPix/2 x0+fix.fixationCrossPix/2 x0 x0];
-y=[y0 y0 y0-fix.fixationCrossPix/2 y0+fix.fixationCrossPix/2];
+x=[x0-fix.fixationMarkPix/2 x0+fix.fixationMarkPix/2 x0 x0];
+y=[y0 y0 y0-fix.fixationMarkPix/2 y0+fix.fixationMarkPix/2];
 for i=1:n
     % Mark each of n target locations.
     tXY=fix.xy+fix.eccentricityXYPix(i,1:2);
     tX=tXY(1);
     tY=tXY(2);
-    % Skip if this "X" is completely blanked.
-    if 2*fix.blankingRadiusPix(i)>=fix.targetMarkPix(i) % 2* converts radius to diameter.
-        fix.isTargetLocationMarked(i)=false;
-        continue
-    end
     assert(isfinite(fix.blankingRadiusPix(i)));
     if fix.isTargetLocationMarked
-        % Add two lines to mark target location.
+        % Add two lines forming X to mark target location.
         r=0.5*fix.targetMarkPix(i)/2^0.5;
         r=min(r,1e8); % Need finite value to draw tilted lines.
         % Add the "X" to the lines already in x and y.
@@ -234,12 +282,14 @@ for i=1:n
         blankingRect=OffsetRect(blankingRect,tX,tY);
         blankingRect=round(blankingRect);
         %    'fixation cross pix'
-        %    fix.fixationCrossPix
+        %    fix.fixationMarkPix
         %    'Fixation, and marks (at fixation and target), before blanking'
         %    x0,y0
         %    x
         %    y
         if ~isempty(x)
+            % Limit blanking to blankingClipRect.
+            blankingRect=ClipRect(blankingRect,fix.blankingClipRect); % dgp June 21, 2020
             [x,y]=ErasePartOfLineSegment(x,y,blankingRect);
         end
         %    'Marks, after blanking'
@@ -257,6 +307,6 @@ for i=1:n
     end
 end
 fixationLines=[x;y];
-% fixationDots; 
+% fixationDots;
 isTargetLocationMarked=fix.isTargetLocationMarked;
 return
