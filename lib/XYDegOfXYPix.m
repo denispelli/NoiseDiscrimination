@@ -10,10 +10,11 @@ function xyDeg=XYDegOfXYPix(o,xyPix)
 % SEE XYPixOfXYDeg.m
 assert(isfield(o,'nearPointXYDeg'));
 assert(length(o.nearPointXYDeg)==2);
-assert(length(xyPix)==2);
-if isempty(o.nearPointXYPix)
+if ~isfield(o,'nearPointXYPix') || isempty(o.nearPointXYPix)
     error('You must set o.nearPointXYPix before calling XYDegOfXYPix.');
 end
+assert(length(o.nearPointXYDeg)==2);
+assert(length(xyPix)==2);
 if isempty(o.pixPerCm) || isempty(o.viewingDistanceCm)
     error('You must set o.pixPerCm and o.viewingDistanceCm before calling XYDegOfXYPix.');
 end
