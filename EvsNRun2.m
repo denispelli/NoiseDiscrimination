@@ -33,9 +33,9 @@ o.targetGaborCycles=3;
 o.pThreshold=0.75;
 o.isNoiseDynamic=true;
 o.moviePreAndPostSecs=[0.2 0.2];
-o.fixationCrossDeg=3;
-o.blankingRadiusReEccentricity=0;
-o.blankingRadiusReTargetHeight=0;
+o.fixationMarkDeg=3;
+o.fixationBlankingRadiusReEccentricity=0;
+o.fixationBlankingRadiusReTargetHeight=0;
 o.targetMarkDeg=1;
 o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary' or 'ternary'
 o.desiredRetinalIlluminanceTd=[];
@@ -70,7 +70,7 @@ end
 ooo={};
 % THREE DOMAINS: photon, cortical, ganglion
 for domain=1
-    o.blankingRadiusReTargetHeight=nan;
+    o.fixationBlankingRadiusReTargetHeight=nan;
     switch domain
         case 1
             % photon
@@ -81,8 +81,8 @@ for domain=1
             o.desiredLuminanceAtEye=10; % cd/m^2
             o.desiredLuminanceFactor=[];
             o.useFilter=true;
-            o.fixationCrossWeightDeg=0.05; % Typically 0.03. Use 0.05 for scotopic testing.
-            o.blankingRadiusReTargetHeight=3;
+            o.fixationThicknessDeg=0.05; % Typically 0.03. Use 0.05 for scotopic testing.
+            o.fixationBlankingRadiusReTargetHeight=3;
             o.noiseCheckFrames=3;
             o.noiseType='ternary';
             o.contrast=1; 
@@ -95,7 +95,7 @@ for domain=1
             o.desiredLuminanceAtEye=[];
             o.desiredLuminanceFactor=1;
             o.useFilter=false;
-            o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it thicker for scotopic testing.
+            o.fixationThicknessDeg=0.03; % Typically 0.03. Make it thicker for scotopic testing.
             o.noiseType='ternary';
         case 3
             % ganglion
@@ -107,17 +107,17 @@ for domain=1
             o.desiredLuminanceAtEye=[];
             o.desiredLuminanceFactor=1;
             o.useFilter=false;
-            o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it thicker for scotopic testing.
+            o.fixationThicknessDeg=0.03; % Typically 0.03. Make it thicker for scotopic testing.
             o.noiseType='ternary';
     end
     o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
     if all(o.eccentricityXYDeg==0)
         o.isTargetLocationMarked=false;
-        o.fixationCrossDeg=inf;
+        o.fixationMarkDeg=inf;
     else
         o.isTargetLocationMarked=true;
-        o.blankingRadiusReTargetHeight=0;
-        o.fixationCrossDeg=3;
+        o.fixationBlankingRadiusReTargetHeight=0;
+        o.fixationMarkDeg=3;
     end
     oo=[];
     for noiseSD=[0 2.^(-6:1.5:0)]*MaxNoiseSD(o.noiseType,SignalNegPos(oo(oi)))

@@ -33,9 +33,9 @@ o.targetGaborCycles=3;
 o.pThreshold=0.75;
 o.isNoiseDynamic=true;
 o.moviePreAndPostSecs=[0.2 0.2];
-o.fixationCrossDeg=3;
-o.blankingRadiusReEccentricity=0;
-o.blankingRadiusReTargetHeight=0;
+o.fixationMarkDeg=3;
+o.fixationBlankingRadiusReEccentricity=0;
+o.fixationBlankingRadiusReTargetHeight=0;
 o.targetMarkDeg=1;
 o.noiseType='gaussian'; % 'gaussian' or 'uniform' or 'binary'
 if 0
@@ -66,7 +66,7 @@ end
 oo={};
 % THREE DOMAINS: photon, cortical, ganglion
 for domain=0:3
-    o.blankingRadiusReTargetHeight=nan;
+    o.fixationBlankingRadiusReTargetHeight=nan;
     switch domain
         case 0
             % photon, binary noise
@@ -77,8 +77,8 @@ for domain=0:3
             o.desiredLuminanceFactor=2.5/500; % cd/m^2
             o.noiseCheckFrames=10;
             o.useFilter=true;
-            o.fixationCrossWeightDeg=0.05; % Typically 0.03. Use 0.05 for scotopic testing.
-            o.blankingRadiusReTargetHeight=3;
+            o.fixationThicknessDeg=0.05; % Typically 0.03. Use 0.05 for scotopic testing.
+            o.fixationBlankingRadiusReTargetHeight=3;
             o.noiseType='gaussian';
         case 1
             % photon, gaussian noise
@@ -89,8 +89,8 @@ for domain=0:3
             o.desiredLuminance=[];
             o.desiredLuminanceFactor=2.5/500;
             o.useFilter=true;
-            o.fixationCrossWeightDeg=0.05; % Typically 0.03. Use 0.05 for scotopic testing.
-            o.blankingRadiusReTargetHeight=3;
+            o.fixationThicknessDeg=0.05; % Typically 0.03. Use 0.05 for scotopic testing.
+            o.fixationBlankingRadiusReTargetHeight=3;
             o.noiseType='binary';
         case 2
             % cortical
@@ -101,7 +101,7 @@ for domain=0:3
             o.desiredLuminance=[];
             o.desiredLuminanceFactor=1;
             o.useFilter=false;
-            o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it thicker for scotopic testing.
+            o.fixationThicknessDeg=0.03; % Typically 0.03. Make it thicker for scotopic testing.
             o.noiseType='binary';
         case 3
             % ganglion
@@ -113,17 +113,17 @@ for domain=0:3
             o.desiredLuminance=[];
             o.desiredLuminanceFactor=1;
             o.useFilter=false;
-            o.fixationCrossWeightDeg=0.03; % Typically 0.03. Make it thicker for scotopic testing.
+            o.fixationThicknessDeg=0.03; % Typically 0.03. Make it thicker for scotopic testing.
             o.noiseType='binary';
     end
     o.targetHeightDeg=o.targetGaborCycles/o.targetCyclesPerDeg;
     if all(o.eccentricityXYDeg==0)
         o.isTargetLocationMarked=false;
-        o.fixationCrossDeg=inf;
+        o.fixationMarkDeg=inf;
     else
         o.isTargetLocationMarked=true;
-        o.blankingRadiusReTargetHeight=0;
-        o.fixationCrossDeg=3;
+        o.fixationBlankingRadiusReTargetHeight=0;
+        o.fixationMarkDeg=3;
     end
     switch o.noiseType
         case 'gaussian'
